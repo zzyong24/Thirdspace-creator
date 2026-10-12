@@ -1,0 +1,16 @@
+{
+  "extends": "@md/config/tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "components.d.ts",
+    "auto-imports.d.ts",
+    "./.wxt/wxt.d.ts"
+  ]
+}

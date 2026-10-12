@@ -1,0 +1,21 @@
+{
+  "destination": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audits/stage-source-v6-14122ad1de6c950199e1c9ec.json",
+  "sha256": "f70fb8817204b544e80dad365a4cfe60fd6bc11c016b626a9812e6a6e4ffcc7f",
+  "head": "533224f334c43cdb81a344424e420cad93784dd1",
+  "sourceCount": 348,
+  "driverCount": 100,
+  "deleted": 53,
+  "unknown": 0,
+  "stageAuditNotFinalCommitSeal": true,
+  "actualFiveGitConsumersCoveredByAuditEntry": true,
+  "approvedGitRenameProjection": {
+    "file": "docs/verification/t1246/round-2/final-source-audit-provenance-v6/EXACT_52_APPROVED_GIT_RENAME_PROJECTIONS.json",
+    "sha256": "da5a68a70f0ee2aafd6ae895429da7b848f5cae4d0012d420de44a9dd905b486",
+    "approvedPinnedPairs": 52,
+    "observedApprovedRenamePairs": 52,
+    "GitOriginalRRowsPreserved": true,
+    "interpretation": "exact-approved-delete-plus-write-display",
+    "copyStatusRejected": true,
+    "originalActualFAILSha256": "96958f03e431314836fb313f83c3cfd211264ef4b456b34c1314a54e836c42c0"
+  }
+}

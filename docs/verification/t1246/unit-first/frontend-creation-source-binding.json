@@ -1,0 +1,55 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "observedAt": "2026-10-11T16:46:17.180Z",
+  "noRepairsOrReruns": true,
+  "bindings": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/quick-create-work.test.tsx",
+      "sha256": "ba3f8276c5c1f5316c624f792eb7224e14e39f80c1e5edabc7b5df56c25c27e5"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/quick-create-work.tsx",
+      "sha256": "fa2b541e66598aac8b40ebec1756e199d45994781abc82d204e8ec17674efe8d"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/project-creation.ts",
+      "sha256": "4a6075931ed3f142fd5905e8ca67a7212cc4e1b994b5690447626675ad6439e2"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/lib/creation-workspace-scope.ts",
+      "sha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/publication-result-actions.test.tsx",
+      "sha256": "e6d79cda51993379b128eecbe8c23e6ab61679cba553a01ce1bcf35d23391e41"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/publication-result-actions.tsx",
+      "sha256": "c2b88d6c5184762b580831b6520cd3c3c10d4ab047a76b938261b467bf1bbb43"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/work-editing-recovery.test.tsx",
+      "sha256": "a744b940e39fce83fa3978688009479934856b5b90feb6e25bc49213c050eace"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/overlays/new-project-dialog.prefill.test.tsx",
+      "sha256": "31d3d42b299befabf402343e1b22e609f44608f22ea0502e0209b81f726a0008"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/overlays/new-project-dialog.tsx",
+      "sha256": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/copilot/chat-diagnosis-card.test.tsx",
+      "sha256": "086c4cf03c38c2d83b5819f5c7879188a5c443a2aeef67eb808768a97116097f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/copilot/chat-result-cards.tsx",
+      "sha256": "75f58cf8609e3e309f56286c5413533706d097e563b168c6f44acdac450101c6"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/docs/features/t1179-asset-upload-regression-diagnosis.md",
+      "sha256": "a27e32dcbfca6eec2a5666f5e5e2ed840ee2e8b688d6a3f6e2250964e3a94868"
+    }
+  ]
+}

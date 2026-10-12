@@ -1,0 +1,10 @@
+{
+  "path": "frontend/public/reference-editors/doocs-md/native/native.js",
+  "after": {
+    "sha256": "97fd33de2e8caa7fb0afb587cede58b9c57ea4e432ec0c5d7df96a9f4253bf97",
+    "size": 113702,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

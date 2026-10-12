@@ -1,0 +1,5 @@
+{
+  "backend/src/modules/ai-runtime/chat-system-tool-host.ts": "512966ceab46ef91bfa39ba8081b9a05af3671c0854fe4136e40b6c4dc144049",
+  "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts": "1ec1beb1eaeb8895600f6079e020cdabab4fb86c47af238d9173ab217147c89c",
+  "backend/src/application/chat/assistant-system-root.integration.test.ts": "44c031cac341b9b1c0e8986d3bd363fd7eec9c69d806a7d91affa39eeb853c59"
+}

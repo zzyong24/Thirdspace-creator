@@ -1,0 +1,158 @@
+{
+  "task": "T-1254",
+  "结论": "PASS_STATIC_EXACT_V13_CANDIDATE_ONLY",
+  "at": "2026-10-12T04:50:11.123844+00:00",
+  "scope": "T1254_POST_V12_TWO_REAL_RED_PRIVATE_V2_MODE_REPAIR_REMAINING19_TYPES_BUILD_GRAPH_ONLY",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "26b028843e335f4234f29603baa2ed50aaa1d663710c0b2917cd537ff6088823",
+  "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+  "runner": {
+    "path": "/tmp/t1254-readonly/run-owned-doocs-post-v12-continuation-v13.cjs",
+    "sha256": "0c4a7d06e7c6c02babfea41e42e236144693d54c980e97b31cec76e9db7e8641",
+    "size": 37249
+  },
+  "seal": {
+    "path": "/tmp/t1254-readonly/POST_V12_CONTINUATION_V13_FULL_SEAL.json",
+    "sha256": "948448ff91957eeb0d7d613f7716d292f6c44c780d67072f7c651bfc54c634b5"
+  },
+  "prepare": {
+    "path": "/tmp/t1254-readonly/POST_V12_CONTINUATION_V13_PREPARE.json",
+    "sha256": "3becc6b2137316f014e76b0413b5c62203be1798026a632c460db03a28f3b0cc",
+    "size": 56383214
+  },
+  "fullRecheck": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_POST_V12_CONTINUATION_V13_FULL_RECHECK.json",
+    "sha256": "f0b622e37a8b287b93a0559f103bf88bc1dfccfcef6a1f3210a1172a7927d40a",
+    "inputRows": 1752,
+    "toolRows": 141220,
+    "artifactRows": 17,
+    "actualAllRows": 142989,
+    "readBytes": 2854155725,
+    "elapsedMs": 22519.95412504766,
+    "drift": []
+  },
+  "完整阅读": [
+    "最终 V13 runner 全文",
+    "V12→V13 完整 diff",
+    "final HANDOFF / DELTA / FULL_SEAL",
+    "实际快照 producer / full snapshot / before-copy chronology",
+    "V13 sealer 全文",
+    "原 6 个 child exit / raw log SHA / log archive / 两个 old8 / 两个真实 RED / 四 before 副本",
+    "V12 原 runner / helper / REAL / GRAPH / dyld 消费者承继前序独立评审"
+  ],
+  "代码审查": [
+    {
+      "项": "原证据与写集",
+      "事实": "原 V12 exit1、6/25、模式漂移失败与 missing application/source-after 保持；每 binding 检查原 6 阶段真实关闭、两原8全过、a46原模块真实31s请求在30s AbortError/1POST/未释放body、真实close event1=Promise1/Set0；禁止在V2上重拍RED或补写旧missing。仅两个owned static文件模式0644→原0664，四V2 SHA及Graph017保持；inode/uid/常规文件/非symlink/sha前后核。"
+    },
+    {
+      "项": "完整剩余流程",
+      "事实": "STEPS严格等V12.steps.slice(6)，原19positive/各生命周期2.16M/断言与顺序均不变；whole24双根、31/120/130真实green、原构建/类型/图/lease4/DOM/image/combinedpatch核均保留。"
+    },
+    {
+      "项": "继承截止",
+      "事实": "原process monotonic未持久化，不补造；继承实际startedAt+109980000固定UTC 2026-10-13T10:50:47.959Z。新段仅一次performance出生，总额min(88020000,原UTC剩余)，Date.now回退拒绝，1s观察及每关键调用显式deadline。"
+    },
+    {
+      "项": "修改前完整准入",
+      "事实": "chmod前明确核APPLY900k+剩余19全部positive与19生命周期+AFTER3600k所需余量，取新段monotonic与原UTC较小；不足即拒绝修改。每child重核完整future，不削减原槽。"
+    },
+    {
+      "项": "归属/日志/闭包",
+      "事实": "原6d owned root marker/inode/uid和全原安装字节模式链接保持；HOME deny/localhost方向网络profile、fixed Node、helper与recursive dyld142k工具绑定未改变。private日志所有可接受exit均真实closed/group0/FD先关闭，再父SHA归档并校code；helper无receipt诚实保留private原件。"
+    },
+    {
+      "项": "最终结果边界",
+      "事实": "source-after同步写完后再次显式deadline检查原UTC/clock回退/local>=；截止与AFTER失败保exit1，最后才clear两timers。summary区分新segment与原prefix6，原exit1不改变。"
+    }
+  ],
+  "实际核查": {
+    "originalPrefix": [
+      {
+        "name": "owned-network-boundary",
+        "code": 0,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "elapsedMs": 200
+      },
+      {
+        "name": "static-resource-checker-tests",
+        "code": 0,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "elapsedMs": 315
+      },
+      {
+        "name": "native-old8",
+        "code": 0,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "elapsedMs": 659
+      },
+      {
+        "name": "native-red",
+        "code": 1,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "elapsedMs": 30284
+      },
+      {
+        "name": "static-old8",
+        "code": 0,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "elapsedMs": 743
+      },
+      {
+        "name": "static-red",
+        "code": 1,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "elapsedMs": 30278
+      }
+    ],
+    "actualFourV2Files": [
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.ts",
+        "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+        "actualMode": 420,
+        "inode": 351267608,
+        "uid": 501
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.test.ts",
+        "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+        "actualMode": 420,
+        "inode": 351267607,
+        "uid": 501
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+        "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+        "actualMode": 420,
+        "inode": 351268570,
+        "uid": 501
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts",
+        "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+        "actualMode": 420,
+        "inode": 351268569,
+        "uid": 501
+      }
+    ],
+    "originalMissingReceipts": [
+      "approved-v2-private-application.json",
+      "source-after.json"
+    ],
+    "originalExitCode": 1,
+    "onlyStaticOriginalModeRepairPending": true,
+    "originalToolsArrayExactlySame": true,
+    "actualFiveRpathFirstExistingInherited": true
+  },
+  "concerns": [],
+  "限制": [
+    "本报告只批准精确候选静态代码与当前封印事实供ROOT决定一次运行，不代替19阶段实际结果、安装包或浏览器验收。",
+    "审查者未chmod、未执行候选、未运行依赖/请求/浏览器、未产品copy；App授权暂未提供，App验收仍未完成。"
+  ]
+}

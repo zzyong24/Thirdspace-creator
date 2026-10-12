@@ -17,15 +17,18 @@ import { NoteRelayEditor } from "@/features/reference-editors/noterelay/noterela
 import {
   editorDigest,
   useDraftChatRequest,
+  withEditorCandidateSave,
   type EditorSaveCandidate,
 } from "@/features/draft-workbench/draft-chat-request";
-import { saveWorkEditorCandidate } from "./chat-work-editor-card";
+import { saveWorkEditorCandidate,useAssistedWorkReview,AssistedWorkSelection,type WorkCandidateLocation } from "./chat-work-editor-card";
 export function ChatWorkCreationCard({
   result,
   toolCallId,
+  location=null,
 }: {
   result: unknown;
   toolCallId: string;
+  location?:WorkCandidateLocation|null;
 }) {
   const parsed = workCreationProposalResult.safeParse(result),
     read = workCreationReadResult.safeParse(result);
@@ -65,6 +68,7 @@ export function ChatWorkCreationCard({
           value={parsed.data}
           kind={kind}
           toolCallId={toolCallId}
+          location={location}
         />
       ))}
     </section>
@@ -74,7 +78,9 @@ function CreationMember({
   value,
   kind,
   toolCallId,
+  location,
 }: {
+  location:WorkCandidateLocation|null;
   value: WorkCreationProposalResult;
   kind: "article" | "image";
   toolCallId: string;
@@ -89,6 +95,8 @@ function CreationMember({
     document = kind === "article" ? value.article : value.graphic,
     contentDigest =
       kind === "article" ? value.articleDigest : value.graphicDigest;
+  const candidate:EditorSaveCandidate={kind:'work.creation.member',proposal:value,member:kind};
+  const review=useAssistedWorkReview(client,candidate,location,creationScopeKey(scope));
   const [expanded, setExpanded] = React.useState(false),
     [previewReady, setPreviewReady] = React.useState(false),
     [busy, setBusy] = React.useState(false),
@@ -123,6 +131,7 @@ function CreationMember({
         proposal: value,
         member: kind,
       };
+      const run=async()=>{
       let adoption = await editor.adoptEditorCandidate(candidate, requestId);
       if (!adoption) {
         const output = await saveWorkEditorCandidate(
@@ -134,6 +143,9 @@ function CreationMember({
           status: output.currentMatches ? "adopted" : "saved-not-synced",
         };
       }
+      return adoption;
+      };
+      const adoption=await withEditorCandidateSave(candidate,requestId,()=>review.save(requestId),run);
       if (alive.current) {
         setSaved(true);
         setStatus(
@@ -163,6 +175,7 @@ function CreationMember({
           {document.title || "未命名作品"}
         </p>
       </div>
+      <AssistedWorkSelection review={review}/>
       <div className="flex flex-wrap gap-2">
         <Dialog open={expanded} onOpenChange={setExpanded}>
           <DialogTrigger asChild><Button size="sm" variant="outline">预览候选</Button></DialogTrigger>
@@ -176,7 +189,7 @@ function CreationMember({
               outputId={member.outputId}
               sourceVersionId={sourceVersionId}
               platform={kind === "article" ? "wechat" : "rednote"}
-              value={document}
+              value={review.ready?review.document:document}
               readOnlyCandidate
               onLayoutChange={() => {}}
               onPreviewReady={() => setPreviewReady(true)}
@@ -185,7 +198,7 @@ function CreationMember({
         </Dialog>
         <Button
           size="sm"
-          disabled={!previewReady || busy || saved}
+          disabled={!previewReady || !review.ready || busy || saved}
           onClick={() => void adopt()}
         >
           {busy

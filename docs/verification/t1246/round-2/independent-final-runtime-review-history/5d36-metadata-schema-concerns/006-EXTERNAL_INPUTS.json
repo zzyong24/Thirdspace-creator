@@ -1,0 +1,557 @@
+[
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/LEGACY_INPUT_SNAPSHOT.json",
+    "sha256": "606121b451a27b09599f4c6717f0571f1c3c6013913ab26827e8a1d72afb9112",
+    "size": 7079
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/README.md",
+    "sha256": "9ca7b6351a136ad6d72e73cbb2434ddad1f35fefbbcd9bca71e1bb6d36932e23",
+    "size": 5137
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/REUSED_SOURCE_EXACT.diff",
+    "sha256": "59b1529f8713a9885ea84699a49e7728d3aec3d7932f1de113c24c6c77ac248c",
+    "size": 58500
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/SOURCE_DELTA_AND_BUDGET.json",
+    "sha256": "fa05af97452399fcba6095ca1612b58da507b94575fac219e20f3a8ab3a7bc7a",
+    "size": 3491
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/STATIC_PARSE_BEFORE_BROWSER_ROOTS_HISTORY.json",
+    "sha256": "6bdfe1ad29c0fa5e950fd43d816e9d4d74163ad088a73f1ab3488c5141d8116d",
+    "size": 3396
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/STATIC_PARSE_RESULT.json",
+    "sha256": "797ae052d0c277084a7a1a70220242bc60591d052ccfcd4ca36bdd84cddce215",
+    "size": 3092
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/common.cjs",
+    "sha256": "0ea77c01e132b08f14efcf94206d5f62122366c859e219d76b7d831bf871642d",
+    "size": 19122
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/discover-joint-pairs.py",
+    "sha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b",
+    "size": 13768
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/EVIDENCE.json",
+    "sha256": "6076a97150ce4f408266cb532dbed1d3f2a84ff511fb6d25457da6bf42930c8f",
+    "size": 3229
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/common.cjs",
+    "sha256": "48719fd983307e1672041de6088cf62cef865ce0c6df745c8a0cc601df7a972f",
+    "size": 19016
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/discover-joint-pairs.py",
+    "sha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b",
+    "size": 13768
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/owned-dyld.cjs",
+    "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+    "size": 10866
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/prepare-joint-dyld.py",
+    "sha256": "bc8f0e75fb11e919702f81782ab6c8e92901585efa9865d7d6f3fc62e77dd2aa",
+    "size": 16404
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/prepare-metadata-input.cjs",
+    "sha256": "d1e1b55ba3edc7c4d6ba1a1531d5b7790e17545346efbfcfb90a27689a3da119",
+    "size": 4799
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/reseal.cjs",
+    "sha256": "cc85f6a35d08b67c2774d3a8fae9bc9c38c05963c608753b0923882c444d3480",
+    "size": 10984
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/run.cjs",
+    "sha256": "fb2465842df087b259453809e87d64b7b6e89afe94e3c51cab7f0ba03b915d58",
+    "size": 9281
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/supervise.cjs",
+    "sha256": "53185fcf4525b1f253bbb2d61ea38605cc7a05266b5b31ff45b910bb1dc2623e",
+    "size": 3639
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/owned-dyld.cjs",
+    "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+    "size": 10866
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/prepare-joint-dyld.py",
+    "sha256": "22c3e3b06dcc85678c93a59c765a4cfeed8ad3700d01874d83a8226084abfe9c",
+    "size": 16403
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/prepare-metadata-input.cjs",
+    "sha256": "d1e1b55ba3edc7c4d6ba1a1531d5b7790e17545346efbfcfb90a27689a3da119",
+    "size": 4799
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/reseal.cjs",
+    "sha256": "cc85f6a35d08b67c2774d3a8fae9bc9c38c05963c608753b0923882c444d3480",
+    "size": 10984
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/run.cjs",
+    "sha256": "fb2465842df087b259453809e87d64b7b6e89afe94e3c51cab7f0ba03b915d58",
+    "size": 9281
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/supervise.cjs",
+    "sha256": "53185fcf4525b1f253bbb2d61ea38605cc7a05266b5b31ff45b910bb1dc2623e",
+    "size": 3639
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/README.md",
+    "sha256": "478e161796fc8cb29606cee055683d2a0c021a9c7ad960bc5087be299a84d585",
+    "size": 2337
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/budget-consumers.json",
+    "sha256": "d41408b2ec0134d7fad9a727f2889c64688e85ec7ffa8fc2708578352d46fbc1",
+    "size": 27311
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+    "sha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+    "size": 22102
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/manifest.json",
+    "sha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+    "size": 1183546
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/playwright.config.ts",
+    "sha256": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe",
+    "size": 3353
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/prepare-browser-driver.cjs",
+    "sha256": "22535480f510e8d94544182b987af068ed1f784824c7ea05eff0b1ede4f2d091",
+    "size": 20236
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+    "sha256": "c0cef4eeaae77fb66569442870b06250a1e59c72ffe62b67a50f21d30493a712",
+    "size": 10509
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/runtime-closure.json",
+    "sha256": "350d1e8febe75ba228a36e81a80e3fc89aeae3cb3b63b336f94e79b493666240",
+    "size": 2239
+  },
+  {
+    "path": "docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+    "sha256": "e159718f4d3ef197612e67ed33d1843ebffb8a362b5b4ec091df06ade390dbe6",
+    "size": 7403
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/README.md",
+    "sha256": "84c849be9139aa265f372c27a257786336fb22d8cc926ed30216f3fce0336564",
+    "size": 4754
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/budget-consumers.json",
+    "sha256": "5aaadbe196fa55f601aba12f78de962b67915a95bacab42acf9d1d37f27086bb",
+    "size": 160043
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/coverage-mapping.json",
+    "sha256": "d26ceefc81b4329fe73dc53e1a11d3fd662cb77edabfff3c216351e088f2f7b4",
+    "size": 145333
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+    "sha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+    "size": 31817
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/manifest.json",
+    "sha256": "0406a01c3d2e73ba3da66601aa496f338f3c9489c309cff8f89b88beab8b8724",
+    "size": 934070
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/playwright.config.ts",
+    "sha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e",
+    "size": 1387
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+    "sha256": "6d7706baaa4f9272d1cf64572689395bc9cbd14573470a8030e98fd711f31962",
+    "size": 12494
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/runtime-closure.json",
+    "sha256": "36268470200b452b2e2ae45c2deefa5c044330aeb1fbb3d3661541e0b39c28c2",
+    "size": 80604
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/driver/verify-binding.cjs",
+    "sha256": "92b653b3ac3cfe34610f158d1488c52737bbb622e78d283a5703d03f442f0d55",
+    "size": 5091
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+    "sha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1",
+    "size": 18905
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+    "sha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+    "size": 12629
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+    "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+    "size": 22409
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+    "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8",
+    "size": 25307
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+    "sha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+    "size": 7729
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-routes.spec.ts",
+    "sha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+    "size": 13500
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+    "sha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c",
+    "size": 3166
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+    "sha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865",
+    "size": 11524
+  },
+  {
+    "path": "docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+    "sha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453",
+    "size": 10930
+  },
+  {
+    "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+    "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+    "size": 15668
+  },
+  {
+    "path": "frontend/playwright.config.ts",
+    "sha256": "9b4ea64f81fadc0282a33ae0223c45a75a8649d98ef2c91ee97b2580caa597b6",
+    "size": 7250
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/SOURCE_TOOL_BINDING.json",
+    "sha256": "29b3d1d379ab656b9d780bd5274577d0f1a12ea6bf3251d4deecb7864e22678c",
+    "size": 13713
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+    "sha256": "044dd5003a1eda8595f76a4328e30d41e8a4851bc9d0927bb7d62b46357c7c08",
+    "size": 17414
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/driver/runtime-dyld.cjs",
+    "sha256": "2a872b3ffef2cf10c4d43f08312ceb52568a2d8cfcb2e3ae3d51d52ae8bf6aaa",
+    "size": 10749
+  },
+  {
+    "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/prepare-browser-dyld-closure.py",
+    "sha256": "258b4a1dde102fcad8cc6354e8040882227680b99bbc0fa61033c29810caf324",
+    "size": 14116
+  },
+  {
+    "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/prepare-browser-dyld-closure-budget-v3.py",
+    "sha256": "dabd652e7456c83c942e333b3230bdb88a31b08b52b4b7dce2587b0699aa10ac",
+    "size": 14778
+  },
+  {
+    "path": "docs/verification/t1246/round-2/unit/current-exact-source-write-set-partial-latest.json",
+    "sha256": "f5d0e51c21b32800bdbf41852591a16b6368cdd902bb732f43f36336ba8a4d85",
+    "size": 130574
+  },
+  {
+    "path": "node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/index.js",
+    "sha256": "36faa53b7c6fa8f76788f2bcfa21d72edc22e5f528c45328b71d07e215d79a32",
+    "size": 34490
+  },
+  {
+    "path": "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js",
+    "sha256": "f74353fcb8e406756a70a6af0dfc4a5069acd577e35ec9d923ccf36ac009c2f5",
+    "size": 3206963
+  },
+  {
+    "path": "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/browsers.json",
+    "sha256": "af53e32ffe35a024ddb34563700956b01ada00ac7e9270ba5df0604ec57e38e1",
+    "size": 1941
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/BUDGET_V3_DELTA_PROOF.json",
+    "sha256": "d20b582656d2d6b8acadbbb998d58979d4340b860e19631d66e273a0f937ecbc",
+    "size": 5815
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/D0EB_TO_FINAL_PS_ADMISSION.diff",
+    "sha256": "aabf766bbdf7e115232c42f48169ab1adc7e61cb31ee7b5c882ece76fd36d94f",
+    "size": 15477
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/INHERITED_PROVENANCE.json",
+    "sha256": "1ce36489006ee2149738587686502cf939e45f2f38bcc0789849161e914f2e58",
+    "size": 2120
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/LAUNCH_FROM_V3.diff",
+    "sha256": "f6834a0933175eaf94f7fc3d56d421abbcc1738154889eed7050eb4888fd00ac",
+    "size": 34150
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/PENDING_INPUTS.json",
+    "sha256": "da53dcf9592764dc3cf1d0ba332f8ea2cd2edaee1916d572772a9f92c7032978",
+    "size": 3066
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/PREPARE_FROM_V3.diff",
+    "sha256": "29d30b720ddfcb14de7c6a1d02cac49804d738b48674a0ef7d9bcf1b6a302367",
+    "size": 18217
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/README.md",
+    "sha256": "32577344c8f9e118487e1111490b3b5a45e0cd94ec62542bce1ff6ab0d3538d5",
+    "size": 8291
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/SOURCE_V2_DELTA_PROOF.json",
+    "sha256": "e222e1766d211a396813037ad6d2d9227fea1c8f3a31e0c39fa581bbbeba3edd",
+    "size": 4167
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/TOOL_31C_TO_SOURCE_V2.diff",
+    "sha256": "c0eac95c21e74fa9e448804753edd3552bdee83c12e136c42c546a6e0d1de9d2",
+    "size": 51492
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/TOOL_6816_TO_BUDGET_V3.diff",
+    "sha256": "71dc7b5572e19dd9b5e9eeec031446be869f537fcbe173ba8a67331249d0f7b5",
+    "size": 58976
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_BEFORE_FINAL_PS_HISTORY.json",
+    "sha256": "44afc3835bbbfb7b5e7058f53676f779e0e4985b934e1297bbea98c4e9809545",
+    "size": 2776
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_RESULT.json",
+    "sha256": "eb3b2ec70bcdadc8b6c99dc93f496ab371cbd49130154a20a4fc7dd788a1a76c",
+    "size": 2860
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/FINAL_STATIC_PARSE_RESULT.json",
+    "sha256": "0b8a08dec55c24cb665e503b66e7dd21ee938e0d98469673d390e6efafb6923b",
+    "size": 3674
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V2_SYNTAX_PRE_GIT_HISTORY.json",
+    "sha256": "68777a403194d5ab0aaa0ed16b33397b1c44b17911d7e87a24ef8b3f859941dd",
+    "size": 4089
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V2_SYNTAX_RESULT.json",
+    "sha256": "cc582228a66950edbd57f3998a1a160351b11afee2949ece79a864c59fcfda6c",
+    "size": 4131
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V3_STATIC_BEFORE_FINAL_PS_HISTORY.json",
+    "sha256": "955812e680abab2ca83261eb36ffc6164bdc10509617a967710ebed2c9373498",
+    "size": 4163
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V3_STATIC_BEFORE_SINGLE_CLOCK_HISTORY.json",
+    "sha256": "48198d1c9d12282b619152f81bb4a88ce7d15c5f65ac60dbf277330f7fa96380",
+    "size": 4133
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V3_STATIC_RESULT.json",
+    "sha256": "56d1e10ee6f2b725c8122ec7aec461a78e70dae0ab3a11719ab694018c7f922c",
+    "size": 4186
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/STATIC_RESULT.json",
+    "sha256": "80f5b21575f7565036dbfc4973febe1d3c1fb07b95dd0e38dda84ffae7a5d67b",
+    "size": 4686
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/budget-result.json",
+    "sha256": "3ba874e99925c9da6d86a7e9f2db4a6d56076b3aaae93f55a6f67b9cef29cff1",
+    "size": 960
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/budget-v3.cjs",
+    "sha256": "32387981f1098d0128afd6b04641175bba2ac3db98491155b38435e90649d480",
+    "size": 3104
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/budget.cjs",
+    "sha256": "8092ed140ed90f0493eceaf2dd9f190e3c0ac03f5a67eb9926c07b6c52a77616",
+    "size": 1479
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/dynamic-priority-result.json",
+    "sha256": "15b89671c0dbcce459cb2c576abcc03a9d79ef307c2ca9e5e93dea3c474a280e",
+    "size": 367
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/dynamic-priority.cjs",
+    "sha256": "687fc6efa4e133dacf9d2f2c8d4fd21ac4598d6ab6f8f8b85bfea8f844a6eb19",
+    "size": 2904
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/STATIC_RESULT.json",
+    "sha256": "fa306bee1187cebe1c12c530d789fb36dc727bb066bf250979de99b69a762d1f",
+    "size": 4192
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/budget-result.json",
+    "sha256": "6360d922eb3c306b8e183c52e75a764b813acd5b74aedc561039289b65985f97",
+    "size": 960
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/pg-preconnect-result.json",
+    "sha256": "ec3bae6bbcb228c7c8b986f54865003e24ebfca1c3727faca7f24c0f1ad16af4",
+    "size": 4661
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/pg-preconnect-result.json",
+    "sha256": "9cc23214e9c86dab2ec5a85748f4b5eb0a81f31e46bc0c6c73bfd7309bd9556d",
+    "size": 4661
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/pg-preconnect.cjs",
+    "sha256": "b6886ff18555a85489d1b1be38511b384e5a333170b08c5cfd645b8e038d3711",
+    "size": 3504
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/source-types-result.json",
+    "sha256": "632b316392180ebc2c33d32c371f3e900b743d8ddbf096735e7bea5482a5d9fa",
+    "size": 1028
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/checks/source-types.cjs",
+    "sha256": "0dc275174a45bf34e64337501d5d6ee66d88e5a97ddaf2b02322561324d9d433",
+    "size": 1644
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+    "sha256": "2275adcb1a30e3751bbf0910d4242920e4c44761a16bb976881c623c0a6e4b09",
+    "size": 5999
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/driver/driver-types.cjs",
+    "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+    "size": 1166
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/driver/launch.cjs",
+    "sha256": "d97c16a89878f15eae39874fdb50088634a815ea13355a013989945b2e275f42",
+    "size": 32317
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/driver/playwright.config.ts",
+    "sha256": "7077666eaae6cbf1ffc01017b0f64b0aa71832d5e1d9fcd7f0bd04b44b9e8b69",
+    "size": 902
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+    "sha256": "a38e0a0a62c3251444a1fb40f3334ccb794f97aa31cea799600105d5e257eb2a",
+    "size": 12024
+  },
+  {
+    "path": "docs/verification/t1254/browser-tool/driver/seal.cjs",
+    "sha256": "78428c2b8c996ad60295e0660d7285386c83d38fc536e157377b73e3c1c505bc",
+    "size": 7753
+  },
+  {
+    "path": "docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+    "sha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+    "size": 9921
+  },
+  {
+    "path": "docs/verification/t1254/browser-candidate/SOURCE_V2_BINDING.json",
+    "sha256": "74e21edf5b2803b2dbd5f885233c40363a3a8d5dc0d339d12f5293e9895acbcc",
+    "size": 887
+  },
+  {
+    "path": "docs/verification/t1254/INDEPENDENT_BROWSER_SOURCE_V2_REVIEW.json",
+    "sha256": "44f627a6ed04215c104fb83c47c4c79880116db0c9eb4921a8e0d126347f7683",
+    "size": 4923
+  },
+  {
+    "path": "docs/verification/t1254/INDEPENDENT_BROWSER_TOOL_31C_FIRST_CONCERNS.json",
+    "sha256": "230881f0489ff292a13749c822c83523912a9f70f58ebe2506fb62e9c7079e27",
+    "size": 12641
+  },
+  {
+    "path": "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+    "sha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+    "size": 9823
+  },
+  {
+    "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/CURRENT_READONLY_BINDING.json",
+    "sha256": "25e3bade794bb3e5da1a5d4ea6f9a642628604e6c9c4b8f8820fc008ca57f15d",
+    "size": 313040
+  },
+  {
+    "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/BROWSER_DYLD_CLOSURE_CURRENT.json",
+    "sha256": "074af906fd38110e7c2e1dd9d8caf151a6e3e18d50f76ad6961ed0ccc5cc7110",
+    "size": 1517834
+  },
+  {
+    "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/PRODUCER_FROM_BUILDER_V10_FINAL.diff",
+    "sha256": "a4eb6016a94dad7d4c077159bb8d47febf37123c17424bd6fc72f2625167eade",
+    "size": 18595
+  },
+  {
+    "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/PRODUCER_BUDGET_V3_ONLY.diff",
+    "sha256": "644027f8930c7d7dd456cda30b72693f41622f604ea4031a32ded2110c0abc17",
+    "size": 5855
+  },
+  {
+    "path": "docs/verification/t1254/INDEPENDENT_BROWSER_TOOL_SOURCE_V2_BUDGET_CONCERNS.json",
+    "sha256": "b4f68cedef44e55bf835da10aafdaafdd1439149d0c3409940064e20ca7be836",
+    "size": 3022
+  },
+  {
+    "path": "docs/verification/t1254/INDEPENDENT_BROWSER_CURRENT_READONLY_DYLD_RECHECK.json",
+    "sha256": "9a8c812fec8989683610840907c1aa7e523692c4889edc100b4c869c63ad5ba7",
+    "size": 1175
+  },
+  {
+    "path": "docs/verification/t1246/round-2/final-runtime-guard/SOURCE_TOOL_BINDING.json",
+    "sha256": "a7384b4022a8e886194d2e7a4d7480d3cc290de6060aad6c0fa0f743c5acb8c8",
+    "size": 14240
+  },
+  {
+    "path": "docs/verification/t1246/round-2/INDEPENDENT_EXTERNAL_A738_SOURCE_REVIEW_CONCERNS.json",
+    "sha256": "74ab58bcbd19d6290129d0d1bbc94be3d7ab3b1df8d0f73897def6b3c3e3f4c9",
+    "size": 7847
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-11T20:49:20.167265+00:00",
+  "records": [
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "sha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "archive": "docs/verification/t1250/native-red/original/ipc.rs"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "sha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "archive": "docs/verification/t1250/native-red/original/ipc_windows.rs"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "sha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "archive": "docs/verification/t1250/native-red/original/browser_ipc.rs"
+    }
+  ],
+  "beforeNewTests": true,
+  "beforeImplementation": true,
+  "noHistoricalRedClaim": true
+}

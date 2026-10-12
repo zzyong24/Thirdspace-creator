@@ -1,0 +1,4 @@
+src/server/legacy-frozen-source-read.integration.test.ts > 已登记账号只选account创建项目/全局会话和两种稿件，原RETURNING与严格group owner均可读取
+src/server/legacy-frozen-source-read.integration.test.ts > 104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+src/server/legacy-frozen-source-read.integration.test.ts > 104→0130 canonical-null-conversation 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+src/server/legacy-frozen-source-read.integration.test.ts > 104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放

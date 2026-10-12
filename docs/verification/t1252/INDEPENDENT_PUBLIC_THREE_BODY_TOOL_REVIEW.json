@@ -1,0 +1,114 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-12T00:45:13.526111+00:00",
+  "result": "PASS_TOOL_ONLY_PENDING_ROOT_SOURCE_COPY_AND_FINAL_LIVE_BINDING",
+  "handoff": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/HANDOFF.json",
+    "sha256": "bbb68945763566aff3b37bada9f1bbf9f1723dd84f6209afaff661f0e90f3474"
+  },
+  "tool": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/launch.cjs",
+    "sha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9"
+  },
+  "binding": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/input-binding.json",
+    "sha256": "4233f0db803e7aa359a6ccaccc43004b10bdcefa710bfaec0816e226737e7bde"
+  },
+  "priorFullInputProof": {
+    "path": "docs/verification/t1252/INDEPENDENT_PUBLIC_TOOL_INPUT_SHA_CHECK.json",
+    "sha256": "7201baefdcdd1c39612ed40e0853b68854d96b4db5cf21977277b230f12439d8",
+    "counts": {
+      "source": 2207,
+      "installed": 111831,
+      "browser": 337
+    },
+    "bytesActuallyHashed": 2466725682,
+    "actualHashDrift": []
+  },
+  "exactPostProofChangedInput": [
+    {
+      "kind": "inputs",
+      "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "before": {
+        "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+        "sha256": "17916593a3dde3a115359c5cf6e47ff57c6da9ec0010e1eb00ac31a287cf2ff8"
+      },
+      "after": {
+        "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+        "sha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9"
+      }
+    }
+  ],
+  "findings": [],
+  "closedToolFinding": {
+    "id": "PT001",
+    "constraint": "完整assertAll重hash结束后再remaining同positive+lifecycle+after+margin，signal或absolute剩余不足时在boundedProcess前拒；static逆构只这一句，source/budget/copy/body unchanged",
+    "evidence": "START_REMAINING_DELTA_PROOF.json与真实32468 execute语句；没有运行该失败分支，不冒实际红"
+  },
+  "budget": {
+    "MIN": 120000,
+    "HOOK": 180000,
+    "LIFECYCLE": 2160000,
+    "CLI": 8280000,
+    "NATIVE": 420000,
+    "prepareMs": 240000,
+    "listMs": 240000,
+    "lastSourceMs": 600000,
+    "marginMs": 120000,
+    "cases": [
+      {
+        "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+        "bodyMs": 80040000,
+        "minimumDerivedMs": 80040000,
+        "childMs": 80880000,
+        "fixtureDoneMs": 80160000
+      },
+      {
+        "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+        "bodyMs": 36000000,
+        "minimumDerivedMs": 29470000,
+        "childMs": 36840000,
+        "fixtureDoneMs": 36120000
+      },
+      {
+        "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+        "bodyMs": 42000000,
+        "minimumDerivedMs": 35760000,
+        "childMs": 42840000,
+        "fixtureDoneMs": null
+      }
+    ],
+    "outerMs": 170400000
+  },
+  "scenarios": [
+    {
+      "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+      "bodyMs": 80040000
+    },
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "bodyMs": 36000000
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "bodyMs": 42000000
+    }
+  ],
+  "reviewedProof": [
+    "原8完整case仅private观察80.04M/ready/automatic wait120k/timer80.16M及绝对import机械转换；23UTF16 edits inverse exact回2a15，原实际期望及budget60k不变，不修改原producer Task D",
+    "新36M task只出生冻结并真实row D读回；3HTTP+4setupNative+310s队列独立预算29.47M≤body36M，Rust WAIT36.12M；原未知call/CAS/同ID费用/resume回放保",
+    "render4HTTP整8.28M与真实两个format stage并行110s各≤原120s，body42M≥35.76M，源版本/MIME/size/hash/PNG/PDF/越权负例原样",
+    "4helper（collect+3body）各2.16M完整lifecycle，两个hook180k/4slot120k加child，entry170.4M覆盖prepare/list/allcases/after/margin，不续外层",
+    "b88真实main锁compiled hash独立新inode复制成原regex允许名，exact Rust fixture原名称已真实list唯一；这里只列表既有证明，不签ignored执行",
+    "2207包含backend/contract/migrations/真实route/auth/loopback/ai-worker src+package；111831实际installed与deep link/337Chromium发布目录逐SHA验证，不读用户profiles",
+    "envDir/Vite cache和8CREATOROS根/private tmp owned、无HOME替代；connection/access失效私有路径阻默认用户描述符，loopback helper每call才临时synthetictoken/显式account",
+    "failfast任何非零/取消/漂移/ownedunclosed止后续；每case JSON唯一原name passed及真实close/group0，其它被过滤原case不计PASS；不sign未知PID/不启动App或模型"
+  ],
+  "constraints": [
+    "当前2a15尚未copy，ROOT精确apply后必须fresh seal实际live源并再准入；现4233绑定不伪称未来源0漂移",
+    "此tool只选择原native8HTTP一个body+新2body，后续actual list严格3；不把其它recovery/原native122RPC/6资格或49模型标完成",
+    "原任务更短deadline/剩余与内部观察政策不被大body外层续期；任何过期限或原观察失败必须保真实非零，不声称可等任意历史任务完成",
+    "用户App不授权且未验；此无Vitest/list/body/PG/Chrome/Native或官方生成实际运行，只读tool与输入哈希"
+  ],
+  "runtimePermissionByReviewer": false
+}

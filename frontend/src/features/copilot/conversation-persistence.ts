@@ -69,6 +69,7 @@ export interface WireAIMessage {
   // [T-128] 落库的 useChat UIMessage parts(text + tool-result 部件)。存量行/旧后端读到 undefined
   // 或 [] → 回落 content 文本气泡(向后兼容)。assistant 回复带完整 parts → 卡刷新可重渲。
   readonly parts?: readonly unknown[];
+  readonly modelMetadata?:Record<string,unknown>|null;
   // [T-239e] assistant 行的 token 用量(ai_messages 新列投影)。老行/user 行/旧后端 → null 或
   // undefined,累计时跳过(不崩、不计 0)。
   readonly inputTokens?: number | null;
@@ -152,6 +153,7 @@ export function toUIMessages(rows: readonly WireAIMessage[]): UIMessage[] {
         id: row.id,
         role,
         parts: storedParts as UIMessage["parts"],
+        ...(typeof row.modelMetadata?.sourceMessageId==='string'?{metadata:{sourceMessageId:row.modelMetadata.sourceMessageId}}:{}),
       } as UIMessage);
       continue;
     }

@@ -5152,3 +5152,83 @@ Status: decided within DEC-T1238-001 confirmed scope
 用户依据：已确认选择Codex时文本与图片不要求独立模型配置，原ASR/视频能力保留。实施选择：未读取可信服务偏好前不展示独立文本/图片卡、引导或启用其连接测试；Pi就绪保原卡，Codex就绪免两类配置。渠道共享媒体服务按已有明确capability→serviceId关联保留，禁止服务名称猜测。原client公开services及原PUT端口已使用该opaque ID；脱敏只恢复该公开user_input集合成员的关联，未知/受管ID仍null，provider/baseUrl/名称/其它实现信息仍清空。不新增API字段、权限或数据归属，不修改原任意ID/受管Key拒绝；仅落实原已确认范围，未新增产品方向选择。
 
 当场证据：pending/cards/services真实红4、真实sanitize投影红1→最终三文件43PASS/0SKIP；独立只读复核实际canonical ready/defaultProbe/testSession、媒体共享服务和原PUT边界无新增阻断。真实浏览器新增有限延迟偏好GET与模型探测计数验收，最终状态以ui-final.json及GATES.md为准，不把fixture写成真机。
+
+
+## DEC-T1246-WORK-CANDIDATE-001（2026-10-12）：真实选择接线与原候选人采纳
+
+**Owner**：user（集中修复授权来源为2026-10-11本会话的实际指令）；技术合同编写root、独评codex_route_inventory。**Status**：已确认范围内的缺陷修复；合同独评PASS，产品实施及完整验收待完成。不是新增用户答复或accepted-risk。
+
+**来源与授权**：用户要求整合已完成会话，开发版打包，AI编写流程和用例，子Agent实际浏览器/App验收留图，发现问题记录后统一解决。既有T1097登记的身份/参考文档未接当前编导、字段默认保护和联合事实对照缺口属于本次确认缺陷修复；遵已确认文章图文联合创作、右侧编导微调，不恢复旧按钮。
+
+**决定**：严格writingContext仅选择真实身份版本和资料file IDs，后台以原owner ports核归属，解析快照进入原hostContext及read/model输入；中性/无资料合法，旧task恢复原快照、原预算。新增唯一只读ai.workCandidates.source核原sourceMessage/task/call/tool、成功候选与完整摘要；外部原参数只在新reserve原事务写原task.payload.externalToolInputs，不补历史证明。原versions.create增加严格assistant分支，用户明确字段/事实选择由后台机械投影、原owner CAS/独立artifact receipt保存；不接受候选document override、不让模型直接写稿或授权采用。原同位置相同历史引用继续合法正文保存；新/改引用及归属撤销保持原门。
+
+**边界**：独立图文精调/native视频继续manual。两个作品各自receipt，ACK重放原意图不增模型、不覆盖后续手工稿。无新表/迁移/SDK/供应商，无真实用户资料迁移或平台发布。Codex免独立文本/图片API与Pi兼容分别实测。2026-10-11用户实际回复暂不授权macOS Automation Mode，App保持未验，不用浏览器或包校验代签。
+
+**可审证据**：[正式SPEC](../docs/features/t1097-article-director-options-diagnosis.md)SHA8221447156d8ae0194ab343cde1413a378e2fa18a552dbf869b576b5eb26b232；[初评需修订](../docs/verification/t1246/first-diagnosis/t1097-formal-spec-independent-review.md)与[真实复评](../docs/verification/t1246/first-diagnosis/t1097-formal-spec-independent-rereview.md)均保留。实际控制面receipt由reviewctl另记；本DEC不等于typed process-review-cycle capability，也不代签实现或测试。
+
+
+## DEC-T1246-CONCENTRATED-REPAIR-002 — 首轮完整结束后的精确集中实施
+
+依据用户2026-10-11已授权首轮逐项记录后统一修复/重包/复测，以及实际App暂不授权回复。本次四包Vitest与四types全部真实结束，原结果与源指纹封存。b295cb6f正式parent修订由独立Agent完成复评并真实reviewctl PASS（integration fbf854b33596、canonical3364f753ed46）；T1097正式822144合同已有独评回执。本决定只落实既有用户授权和该准确写集，不补新用户回答/历史红测，不是发布或AC5 accepted-risk。
+
+解除冻结仅供198绑定中明确的产品/测试窄修、两份现存历史fixture和已列新工具；不以69文件或195 ENV许可扫改其他断言，余205新根因须精准追加/独评。真实公共Codex/ACP/Pi/图片文件/同ID恢复与包、UI图及操作、原负例下游、所有实际checks仍待，原红和未知保持。App不建立原生会话、不启动，T1246不得完整complete。
+
+
+## DEC-T1246-CONCENTRATED-REPAIR-003（2026-10-12）
+
+沿用户2026-10-11原授权完成首轮登记后集中修复；最后精确71追加路径与后端205正文完整map通过真实独立复核，T1246 SPEC SHA fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a，reviewctl integration REV:e75e32a6b7a8 / canonical REV:883f7fe733ba，cycle1 round3/3。这是合同批准，不是实现验收。B044未知授权policy仍冻结，B045/B046因果UNKNOWN；不得改expect粉饰。FF001/PB001原41、D01/D02 34、BA001 37、设置controller/Shell/nav13及真实Dialog3 targeted exit0，各自回执单列，原全套首红不变，完整外层超时/公共浏览器/打新包仍待执行。App按用户原回复“暂不授权，保留App验收未完成”，不启授权、不代签AC5、不complete整任务。
+
+
+## DEC-1250 · 2026-10-12 · 真实短预算修复与精确静态分类
+
+依据本次用户 T1246 全功能问题集中修复授权，以及用户本次提供的 AGENTS LED-053：采用 T1250 已登记 SPEC 0c9468d5 的24精确路径，修正11正执行/有限观察与必要私有signal及下层IO，保10冻结vendor和原90秒idle/5分钟life。保原deadline、取消、unknown/原ID、receipt/CAS/资源归属与完整串行外层。独立SPEC报告及root复核见 docs/verification/t1250；正式reviewctl记录负责准入。当前尚未实施/新验收，不代签App或Windows。标准frontend首轮100的4个既有错误保真实非零、不得删除排除；PG27/78仍在途前backend信号路径只读。
+
+
+## DEC-1251 · 2026-10-12 · 可信失败叶与受控崩溃验收
+
+依据本轮用户全功能问题集中修复授权，采用SPEC25431075三精确文件：只在结构化生成叶保留真实GenerationFailure/cause，保complete回读优先与未知、不改global分类/公开预算/Pi顺序。原21和9红全留；串行ACK屏障与同任务spy隔离、真实continuous无期限/合法finite入队、新unknown刺激及计数都按真实consumer和独立候选逐项证明，不能改期望洗绿。独立SPEC由codex_contract_review出具，root正式record负责准入；PG27/78源窗结束前不改本任务输入。没有签新测试、完整有限链、全功能或App通过。
+
+### DEC-1251-OUTCOME：纠正两族真实失败回执名称
+
+依据T1246集中修复授权与独立澄清复核，badOutput/diagnosisEmpty的已安装完整工具失败回执为transient/retryable=true/sideEffect=none，不能伪称no_evidence。仅纠正规格字面事实，保持三文件写集与公开生产合同；其他族no_evidence断言保留。实际工具/完成账本、计数与新断言仍需独评及完整运行，不从partial状态推断通过。复核：docs/verification/t1251/INDEPENDENT_OUTCOME_CLARIFICATION_REVIEW.json；原规格已封存spec-history/candidate-254310755165.md。App仍未授权/未验。
+
+
+## DEC-T1253-EXACT-FIXTURE-001（2026-10-12）
+
+依据用户2026-10-11 T1246整合/全部验收/首轮登记后集中修复授权。正式T1253 SPEC SHA093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19，独立packet3559300884278286de836130dbb17765d409e2415f2335deebdfc6fdbb589adf；reviewctl integration aec1a066db72 / canonical bdc68eac9f3f、taskctl start真实0。这是合同准入，不代签实现或runtime通过。
+
+仅ports/hooks/draft三原test文件8红窄校准，生产源码/公开schema/原预算/unknown/accounting冻结。先只观察原res.destroy两未知族，保原刺激和期望完整原25执行；若第三HTTP重发原unknown调用则生产阻断、必须精确追加SPEC，不能换刺激掩盖。429可信superseded、partial正式结果/准确流提示与Pi缺usage安全unknown分别按实际消费者独评后实施；401/400、原成功case、同ID/父子/CAS/调用次数/unknown保护都留。
+
+原9/46=38PASS8FAIL完整保留，后端/Worker types真实绿不覆盖8红。后续每个精确fixture/工具绑定候选仍需root+独立peer真实窄审；未审不得apply/执行，不引入新模型/服务/数据库。App用户未授权保持未验，不以隔离fixture或打包代签全系统。
+
+
+## DEC-T1252-HTTP-OBSERVATION-001（2026-10-12）
+
+依据用户2026-10-11 T1246全功能整合/实际验收/首轮后集中修复授权与AGENTS LED-053。最终SPEC SHA f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402，经root全文复核与独立initial findings[]，正式reviewctl integration fc42b1d42391 / canonical5ceaed23e00c，taskctl start真实0。合同准入不是实现/300秒运行/包/App PASS。
+
+仅6产品与9原tests：private每dispatch Undici7.27.2 Agent供原fetch dispatcher，有限绝对入口观察贯穿原login/明确401唯一重登/POST/完整JSON EOF/owned cleanup。global不改，原headers/auth/group/key保；已有可信success或error receipt不可被finally cleanup覆盖，诊断分离，不重发未知/不延task deadline。legacy历史无基数上限诚实保；外部MCP默认60秒由caller控制，不能签任意peer慢链。
+
+当前所有源/lock在途窗口冻结；仅模块/pending/context、私有候选和受控RED工具准备，工具独评后才执行，root释放观察25源窗后才apply。原未发生的300秒RED不补历史；打包CLI Node25和真实公共b88 Rust/file/render需独立真实回执，标准types历史红/T1026旧write_set不修或藏。Windows/App/官方语义未验保持。
+
+
+## DEC-T1253-UNKNOWN-PI-LICENSE-002（2026-10-12）
+
+原 DEC-T1253-EXACT-FIXTURE-001 与 SPEC093bbe2、两次原25观察各17PASS8FAIL保留。第二轮实际11个HTTP/ledger快照确认：两任务冻结Pi，原行锁、pending父工具、原摘要/key/parent/预留及原租约内的retryOf授权均吻合既有T1022无外部副作用模型候选合同；不能只凭第三HTTP次数断定无许可重发。root514fb862与独立50550661实际窄复核后，SPEC b132114ba0b561dc362b9f10d2cb5471a12206a35ef6377bfa3324859661059c 原样正式recheck：integration REV5f15e51c94ab / canonical REV0ae4b371a9c9，cycle1round2，均0 open。
+
+仅澄清三原tests内UNKNOWN验收，沿用户T1246集中修复授权；不新增重试策略、产品方向、写集或用户授权。hooks保原三次真实请求身份并最终unknown/null回执；draft保原四次身份及可信no_evidence/none/partial，后续必须直接查询原归属产品表核0作品/0稿件任务/0可采纳正式候选，当前观察未查询不得补签。Codex thread/turn、asset与外部工具未知不获此Pi许可，旧null usage/预留不得归零，原deadline不续期。每份新断言/工具仍须完整diff窄独评与实际原25→46/types/Gate；本次SPEC准入不是runtime PASS。App用户暂不授权，继续未验。
+
+
+## DEC-T1253-USAGE-FAILURE-REPORT-003（2026-10-12）
+
+正式SPEC3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484仅澄清FR-USAGE原成功候选commit与失败状态通报；b132及093b、原8红和两次观察25各17/8全部保留。Worker原requires_reconciliation在新reserve/start/provider前停止，原catch仍经commitResult IPC通报unknown_result/CHECKPOINT_REQUIRES_RECONCILIATION；严格DTO与生产dispatcher将其交failure状态端口而非候选owner。不能要求该IPC数量0或推undefined正文；仍须真实原所有调用、唯一raw失败通报、候选owner0、0正式结果与原null用量/检查点保护。
+
+root b2951412和独立route f469a7e4实际18输入闭包核无漂移，reviewctl真实integration REV908ff8f5d3da / canonical REVe890e7d4ffac，cycle1round3均0 open。不新增产品策略、生产写集或用户确认，不把静态CP001说成runtime红。三测试v3另有独评8c0b0498，须fresh实际SPEC/source/tool准入并执行原25→46/types；本次合同准入不签通过。App保持用户暂不授权及未完成。
+
+
+## DEC-T1254-REQUEST-SOURCE-001（2026-10-12）
+
+依据用户T1246集中修复/开发包与逐项验收授权，闭合完整门两真实30秒请求；选择两原适配根分别真实锁构建、同shared预算修改、完整对应源及static新增精确校验。原CSP和bridge不变，root index.html只机械更新本地产物引用；首次CONCERNS REV001历史保留，4066ef合同round2正式PASS（integration433e70ede4d7/canonical1ebe2f90de0b）。每份源码/测试/工具与最终完整复制清单仍需双审，未签已build/验收；App用户明确不授权保持未完成。
+
+## DEC-1256：原static三无用声明的编译清理（2026-10-12）
+
+用户T1246集中修复/整合/打包/逐项自动验收与“继续”的既有授权覆盖V13当场完整build三TS6133的最小清理。仅owned static EditorPanel.vue三个无用声明，保V6实际0644/inode/UID、模板/样式/操作/原命令/类型策略；对应新source/combined patch经T1254exact清单双审交付。首SPEC模式描述CONCERNS真实保留，第二轮ed320dba0189/b3d116e19a48 PASS；候选仍待V14精确工具准入。原V12/V13失败/missing不补，App仍未授权未验，不新增发布或系统权限。

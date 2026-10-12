@@ -1,0 +1,2329 @@
+{
+  "task": "T-1254",
+  "originalArgv": [
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/tmp/t1254-readonly/doocs-static-pathname-red-green-probe-v15.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/reports/graph-consumer-red-green-results.json",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/frozen-entry/index.html",
+    "/tmp/t1254-readonly/V14_ACTUAL_COMPLETE_STATIC_BUILT_GRAPH.json"
+  ],
+  "sourceRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+  "originalGraphSha256": "017ac911172822e211411fa1a24241f2cdfcf96795559b822252cf079594f564",
+  "newGraphSha256": "95326b4c711e96f95761ce1fe362d52ce421d5a1143c07866fbb4d15ef0e91b4",
+  "actualStaticManifestSha256": "22712ecfe0b166394d0f5ee90dac613da7ccc3752ddf0be31ca8d5387dd98d16",
+  "originalNine": {
+    "moduleSha256": "b9e5f051a81d4d306aca67249aee616eb8591cc4f367ef3433f92f75d9a6fcd2",
+    "resultFile": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/reports/originalNine-results.json",
+    "actualOriginalFixtureBodyAndExpectationsUnchanged": true,
+    "result": {
+      "task": "T-1254",
+      "actualViteParser": true,
+      "actualGenerationConsumerShape": true,
+      "fixtureOnlyNotRealBuild": true,
+      "cases": [
+        {
+          "name": "Vite真实参数拼base是前缀",
+          "mustFail": false,
+          "checked": [],
+          "prefixes": [
+            {
+              "kind": "vite-preload-base-prefix",
+              "from": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/js/md-entry.js",
+              "reference": "/reference-editors/doocs-md/",
+              "notAFile": true,
+              "parameterConcatConfirmed": true
+            }
+          ],
+          "mapDepsAst": null,
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "Vite压缩arrow参数拼base是前缀",
+          "mustFail": false,
+          "checked": [],
+          "prefixes": [
+            {
+              "kind": "vite-preload-base-prefix",
+              "from": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/js/md-entry.js",
+              "reference": "/reference-editors/doocs-md/",
+              "notAFile": true,
+              "parameterConcatConfirmed": true
+            }
+          ],
+          "mapDepsAst": null,
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "真实mapDeps检查base相对JS及CSS",
+          "mustFail": false,
+          "checked": [
+            {
+              "reference": "/reference-editors/doocs-md/static/js/child.js",
+              "kind": "vite-preload-table"
+            },
+            {
+              "reference": "/reference-editors/doocs-md/static/css/theme.css",
+              "kind": "vite-preload-table"
+            }
+          ],
+          "prefixes": [],
+          "mapDepsAst": {
+            "initType": "ArrowFunctionExpression",
+            "tableParameter": {
+              "type": "AssignmentPattern",
+              "left": {
+                "type": "Identifier",
+                "name": "d",
+                "start": 43,
+                "end": 44
+              },
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "LogicalExpression",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 46,
+                      "end": 47
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 48,
+                      "end": 49
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 46,
+                    "end": 49
+                  },
+                  "operator": "||",
+                  "right": {
+                    "type": "ParenthesizedExpression",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "m",
+                          "start": 52,
+                          "end": 53
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "f",
+                          "start": 54,
+                          "end": 55
+                        },
+                        "optional": false,
+                        "computed": false,
+                        "start": 52,
+                        "end": 55
+                      },
+                      "right": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "Literal",
+                            "value": "static/js/child.js",
+                            "raw": "\"static/js/child.js\"",
+                            "start": 57,
+                            "end": 77
+                          },
+                          {
+                            "type": "Literal",
+                            "value": "static/css/theme.css",
+                            "raw": "\"static/css/theme.css\"",
+                            "start": 78,
+                            "end": 100
+                          }
+                        ],
+                        "start": 56,
+                        "end": 101
+                      },
+                      "start": 52,
+                      "end": 101
+                    },
+                    "start": 51,
+                    "end": 102
+                  },
+                  "start": 46,
+                  "end": 102
+                },
+                "start": 45,
+                "end": 103
+              },
+              "start": 43,
+              "end": 103
+            }
+          },
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "静态template dynamic import检查真实文件",
+          "mustFail": false,
+          "checked": [
+            {
+              "reference": "./child.js",
+              "kind": "js-import"
+            }
+          ],
+          "prefixes": [],
+          "mapDepsAst": null,
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "普通ESM相对import检查真实文件",
+          "mustFail": false,
+          "checked": [
+            {
+              "reference": "./child.js",
+              "kind": "js-import"
+            }
+          ],
+          "prefixes": [],
+          "mapDepsAst": null,
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "缺失mapDeps JS拒绝",
+          "mustFail": true,
+          "checked": [],
+          "prefixes": [],
+          "mapDepsAst": {
+            "initType": "ArrowFunctionExpression",
+            "tableParameter": {
+              "type": "AssignmentPattern",
+              "left": {
+                "type": "Identifier",
+                "name": "d",
+                "start": 43,
+                "end": 44
+              },
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "LogicalExpression",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 46,
+                      "end": 47
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 48,
+                      "end": 49
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 46,
+                    "end": 49
+                  },
+                  "operator": "||",
+                  "right": {
+                    "type": "ParenthesizedExpression",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "m",
+                          "start": 52,
+                          "end": 53
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "f",
+                          "start": 54,
+                          "end": 55
+                        },
+                        "optional": false,
+                        "computed": false,
+                        "start": 52,
+                        "end": 55
+                      },
+                      "right": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "Literal",
+                            "value": "static/js/missing.js",
+                            "raw": "\"static/js/missing.js\"",
+                            "start": 57,
+                            "end": 79
+                          }
+                        ],
+                        "start": 56,
+                        "end": 80
+                      },
+                      "start": 52,
+                      "end": 80
+                    },
+                    "start": 51,
+                    "end": 81
+                  },
+                  "start": 46,
+                  "end": 81
+                },
+                "start": 45,
+                "end": 82
+              },
+              "start": 43,
+              "end": 82
+            }
+          },
+          "error": {
+            "name": "Error",
+            "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/js/missing.js'"
+          },
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "缺失mapDeps CSS拒绝",
+          "mustFail": true,
+          "checked": [],
+          "prefixes": [],
+          "mapDepsAst": {
+            "initType": "ArrowFunctionExpression",
+            "tableParameter": {
+              "type": "AssignmentPattern",
+              "left": {
+                "type": "Identifier",
+                "name": "d",
+                "start": 43,
+                "end": 44
+              },
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "LogicalExpression",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 46,
+                      "end": 47
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 48,
+                      "end": 49
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 46,
+                    "end": 49
+                  },
+                  "operator": "||",
+                  "right": {
+                    "type": "ParenthesizedExpression",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "m",
+                          "start": 52,
+                          "end": 53
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "f",
+                          "start": 54,
+                          "end": 55
+                        },
+                        "optional": false,
+                        "computed": false,
+                        "start": 52,
+                        "end": 55
+                      },
+                      "right": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "Literal",
+                            "value": "static/css/missing.css",
+                            "raw": "\"static/css/missing.css\"",
+                            "start": 57,
+                            "end": 81
+                          }
+                        ],
+                        "start": 56,
+                        "end": 82
+                      },
+                      "start": 52,
+                      "end": 82
+                    },
+                    "start": 51,
+                    "end": 83
+                  },
+                  "start": 46,
+                  "end": 83
+                },
+                "start": 45,
+                "end": 84
+              },
+              "start": 43,
+              "end": 84
+            }
+          },
+          "error": {
+            "name": "Error",
+            "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/css/missing.css'"
+          },
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "缺失template import拒绝",
+          "mustFail": true,
+          "checked": [],
+          "prefixes": [],
+          "mapDepsAst": null,
+          "error": {
+            "name": "Error",
+            "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/js/missing.js'"
+          },
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "无真实参数拼接的base文件引用拒绝",
+          "mustFail": true,
+          "checked": [],
+          "prefixes": [],
+          "mapDepsAst": null,
+          "error": {
+            "name": "AssertionError",
+            "message": "The expression evaluated to a falsy value:\n\n  assert.ok(target.startsWith(artifactRoot + path.sep))\n"
+          },
+          "assertionError": null,
+          "passed": true
+        }
+      ],
+      "passed": true,
+      "stoppedCase": null,
+      "partial": false
+    }
+  },
+  "newNine": {
+    "moduleSha256": "8d5eb0494acb7c0932ac319d6c6deceebf60a7970740cb9683a434fcc97f981e",
+    "resultFile": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/reports/newNine-results.json",
+    "actualOriginalFixtureBodyAndExpectationsUnchanged": true,
+    "result": {
+      "task": "T-1254",
+      "actualViteParser": true,
+      "actualGenerationConsumerShape": true,
+      "fixtureOnlyNotRealBuild": true,
+      "cases": [
+        {
+          "name": "Vite真实参数拼base是前缀",
+          "mustFail": false,
+          "checked": [],
+          "prefixes": [
+            {
+              "kind": "vite-preload-base-prefix",
+              "from": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/newNine/resource-checker-fixture/static/js/md-entry.js",
+              "reference": "/reference-editors/doocs-md/",
+              "notAFile": true,
+              "parameterConcatConfirmed": true
+            }
+          ],
+          "mapDepsAst": null,
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "Vite压缩arrow参数拼base是前缀",
+          "mustFail": false,
+          "checked": [],
+          "prefixes": [
+            {
+              "kind": "vite-preload-base-prefix",
+              "from": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/newNine/resource-checker-fixture/static/js/md-entry.js",
+              "reference": "/reference-editors/doocs-md/",
+              "notAFile": true,
+              "parameterConcatConfirmed": true
+            }
+          ],
+          "mapDepsAst": null,
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "真实mapDeps检查base相对JS及CSS",
+          "mustFail": false,
+          "checked": [
+            {
+              "reference": "/reference-editors/doocs-md/static/js/child.js",
+              "kind": "vite-preload-table"
+            },
+            {
+              "reference": "/reference-editors/doocs-md/static/css/theme.css",
+              "kind": "vite-preload-table"
+            }
+          ],
+          "prefixes": [],
+          "mapDepsAst": {
+            "initType": "ArrowFunctionExpression",
+            "tableParameter": {
+              "type": "AssignmentPattern",
+              "left": {
+                "type": "Identifier",
+                "name": "d",
+                "start": 43,
+                "end": 44
+              },
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "LogicalExpression",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 46,
+                      "end": 47
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 48,
+                      "end": 49
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 46,
+                    "end": 49
+                  },
+                  "operator": "||",
+                  "right": {
+                    "type": "ParenthesizedExpression",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "m",
+                          "start": 52,
+                          "end": 53
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "f",
+                          "start": 54,
+                          "end": 55
+                        },
+                        "optional": false,
+                        "computed": false,
+                        "start": 52,
+                        "end": 55
+                      },
+                      "right": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "Literal",
+                            "value": "static/js/child.js",
+                            "raw": "\"static/js/child.js\"",
+                            "start": 57,
+                            "end": 77
+                          },
+                          {
+                            "type": "Literal",
+                            "value": "static/css/theme.css",
+                            "raw": "\"static/css/theme.css\"",
+                            "start": 78,
+                            "end": 100
+                          }
+                        ],
+                        "start": 56,
+                        "end": 101
+                      },
+                      "start": 52,
+                      "end": 101
+                    },
+                    "start": 51,
+                    "end": 102
+                  },
+                  "start": 46,
+                  "end": 102
+                },
+                "start": 45,
+                "end": 103
+              },
+              "start": 43,
+              "end": 103
+            }
+          },
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "静态template dynamic import检查真实文件",
+          "mustFail": false,
+          "checked": [
+            {
+              "reference": "./child.js",
+              "kind": "js-import"
+            }
+          ],
+          "prefixes": [],
+          "mapDepsAst": null,
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "普通ESM相对import检查真实文件",
+          "mustFail": false,
+          "checked": [
+            {
+              "reference": "./child.js",
+              "kind": "js-import"
+            }
+          ],
+          "prefixes": [],
+          "mapDepsAst": null,
+          "error": null,
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "缺失mapDeps JS拒绝",
+          "mustFail": true,
+          "checked": [],
+          "prefixes": [],
+          "mapDepsAst": {
+            "initType": "ArrowFunctionExpression",
+            "tableParameter": {
+              "type": "AssignmentPattern",
+              "left": {
+                "type": "Identifier",
+                "name": "d",
+                "start": 43,
+                "end": 44
+              },
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "LogicalExpression",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 46,
+                      "end": 47
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 48,
+                      "end": 49
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 46,
+                    "end": 49
+                  },
+                  "operator": "||",
+                  "right": {
+                    "type": "ParenthesizedExpression",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "m",
+                          "start": 52,
+                          "end": 53
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "f",
+                          "start": 54,
+                          "end": 55
+                        },
+                        "optional": false,
+                        "computed": false,
+                        "start": 52,
+                        "end": 55
+                      },
+                      "right": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "Literal",
+                            "value": "static/js/missing.js",
+                            "raw": "\"static/js/missing.js\"",
+                            "start": 57,
+                            "end": 79
+                          }
+                        ],
+                        "start": 56,
+                        "end": 80
+                      },
+                      "start": 52,
+                      "end": 80
+                    },
+                    "start": 51,
+                    "end": 81
+                  },
+                  "start": 46,
+                  "end": 81
+                },
+                "start": 45,
+                "end": 82
+              },
+              "start": 43,
+              "end": 82
+            }
+          },
+          "error": {
+            "name": "Error",
+            "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/newNine/resource-checker-fixture/static/js/missing.js'"
+          },
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "缺失mapDeps CSS拒绝",
+          "mustFail": true,
+          "checked": [],
+          "prefixes": [],
+          "mapDepsAst": {
+            "initType": "ArrowFunctionExpression",
+            "tableParameter": {
+              "type": "AssignmentPattern",
+              "left": {
+                "type": "Identifier",
+                "name": "d",
+                "start": 43,
+                "end": 44
+              },
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "LogicalExpression",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 46,
+                      "end": 47
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 48,
+                      "end": 49
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 46,
+                    "end": 49
+                  },
+                  "operator": "||",
+                  "right": {
+                    "type": "ParenthesizedExpression",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "m",
+                          "start": 52,
+                          "end": 53
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "f",
+                          "start": 54,
+                          "end": 55
+                        },
+                        "optional": false,
+                        "computed": false,
+                        "start": 52,
+                        "end": 55
+                      },
+                      "right": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "Literal",
+                            "value": "static/css/missing.css",
+                            "raw": "\"static/css/missing.css\"",
+                            "start": 57,
+                            "end": 81
+                          }
+                        ],
+                        "start": 56,
+                        "end": 82
+                      },
+                      "start": 52,
+                      "end": 82
+                    },
+                    "start": 51,
+                    "end": 83
+                  },
+                  "start": 46,
+                  "end": 83
+                },
+                "start": 45,
+                "end": 84
+              },
+              "start": 43,
+              "end": 84
+            }
+          },
+          "error": {
+            "name": "Error",
+            "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/newNine/resource-checker-fixture/static/css/missing.css'"
+          },
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "缺失template import拒绝",
+          "mustFail": true,
+          "checked": [],
+          "prefixes": [],
+          "mapDepsAst": null,
+          "error": {
+            "name": "Error",
+            "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/newNine/resource-checker-fixture/static/js/missing.js'"
+          },
+          "assertionError": null,
+          "passed": true
+        },
+        {
+          "name": "无真实参数拼接的base文件引用拒绝",
+          "mustFail": true,
+          "checked": [],
+          "prefixes": [],
+          "mapDepsAst": null,
+          "error": {
+            "name": "AssertionError",
+            "message": "The expression evaluated to a falsy value:\n\n  assert.ok(target.startsWith(artifactRoot + path.sep))\n"
+          },
+          "assertionError": null,
+          "passed": true
+        }
+      ],
+      "passed": true,
+      "stoppedCase": null,
+      "partial": false
+    }
+  },
+  "actualPublicOldGraphFailure": {
+    "actualOriginalModuleMainPromiseRejected": true,
+    "error": {
+      "name": "AssertionError",
+      "message": "静态引用必须属于本套图：/reference-editors/doocs-md/",
+      "stack": "AssertionError [ERR_ASSERTION]: 静态引用必须属于本套图：/reference-editors/doocs-md/\n    at localReference (file:///private/tmp/t1254-readonly/doocs-static-delivery-graph.mjs?public-main=actualPublicOldGraphFailure:124:10)\n    at visit (file:///private/tmp/t1254-readonly/doocs-static-delivery-graph.mjs?public-main=actualPublicOldGraphFailure:63:10)\n    at file:///private/tmp/t1254-readonly/doocs-static-delivery-graph.mjs?public-main=actualPublicOldGraphFailure:66:54\n    at Array.forEach (<anonymous>)\n    at visit (file:///private/tmp/t1254-readonly/doocs-static-delivery-graph.mjs?public-main=actualPublicOldGraphFailure:66:37)\n    at visit (file:///private/tmp/t1254-readonly/doocs-static-delivery-graph.mjs?public-main=actualPublicOldGraphFailure:67:50)\n    at file:///private/tmp/t1254-readonly/doocs-static-delivery-graph.mjs?public-main=actualPublicOldGraphFailure:66:54\n    at Array.forEach (<anonymous>)\n    at visit (file:///private/tmp/t1254-readonly/doocs-static-delivery-graph.mjs?public-main=actualPublicOldGraphFailure:66:37)\n    at visit (file:///private/tmp/t1254-readonly/doocs-static-delivery-graph.mjs?public-main=actualPublicOldGraphFailure:67:50)"
+    },
+    "reportAbsentAsOriginal": true,
+    "separateChildExitCodeNotFabricated": true,
+    "originalActualClosedExit1Source": "V14 nonceba7a4e28f106fe98777e78428b4fb135 static-delivery-graph-exit.json"
+  },
+  "actualPublicNewGraph": {
+    "resultFile": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/reports/actualPublicNewGraph-results.json",
+    "completeLocalGraph": true,
+    "sourceArtifacts": 304,
+    "outputArtifacts": 300,
+    "parsedJs": 288,
+    "classification": [
+      {
+        "kind": "host-pathname-membership-prefix",
+        "from": "static/js/md-storage-Cjhmscw8.js",
+        "reference": "/reference-editors/doocs-md/",
+        "notAFile": true,
+        "exactWindowLocationPathnameIncludesArgument": true
+      }
+    ]
+  },
+  "actualStorageAst": {
+    "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/apps/web/dist/static/js/md-storage-Cjhmscw8.js",
+    "sha256": "b53d994897d6666a03063538cbf8828f6cd4c6b15fb3e58a17f337dab3b3882c",
+    "actualParser": true,
+    "baseNodes": [
+      {
+        "node": {
+          "type": "TemplateLiteral",
+          "quasis": [
+            {
+              "type": "TemplateElement",
+              "value": {
+                "raw": "/reference-editors/doocs-md/",
+                "cooked": "/reference-editors/doocs-md/"
+              },
+              "tail": true,
+              "start": 20108,
+              "end": 20136
+            }
+          ],
+          "expressions": [],
+          "start": 20107,
+          "end": 20137
+        },
+        "ancestors": [
+          {
+            "type": "Program"
+          },
+          {
+            "type": "FunctionDeclaration"
+          },
+          {
+            "type": "BlockStatement"
+          },
+          {
+            "type": "ReturnStatement"
+          },
+          {
+            "type": "LogicalExpression"
+          },
+          {
+            "type": "ParenthesizedExpression"
+          },
+          {
+            "type": "SequenceExpression"
+          },
+          {
+            "type": "AssignmentExpression"
+          },
+          {
+            "type": "CallExpression",
+            "callee": {
+              "type": "ParenthesizedExpression",
+              "expression": {
+                "type": "ArrowFunctionExpression",
+                "expression": false,
+                "async": true,
+                "params": [],
+                "body": {
+                  "type": "BlockStatement",
+                  "body": [
+                    {
+                      "type": "IfStatement",
+                      "test": {
+                        "type": "CallExpression",
+                        "callee": {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "window",
+                                "start": 20073,
+                                "end": 20079
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "location",
+                                "start": 20080,
+                                "end": 20088
+                              },
+                              "optional": false,
+                              "computed": false,
+                              "start": 20073,
+                              "end": 20088
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "pathname",
+                              "start": 20089,
+                              "end": 20097
+                            },
+                            "optional": false,
+                            "computed": false,
+                            "start": 20073,
+                            "end": 20097
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "includes",
+                            "start": 20098,
+                            "end": 20106
+                          },
+                          "optional": false,
+                          "computed": false,
+                          "start": 20073,
+                          "end": 20106
+                        },
+                        "arguments": [
+                          {
+                            "type": "TemplateLiteral",
+                            "quasis": [
+                              {
+                                "type": "TemplateElement",
+                                "value": {
+                                  "raw": "/reference-editors/doocs-md/",
+                                  "cooked": "/reference-editors/doocs-md/"
+                                },
+                                "tail": true,
+                                "start": 20108,
+                                "end": 20136
+                              }
+                            ],
+                            "expressions": [],
+                            "start": 20107,
+                            "end": 20137
+                          }
+                        ],
+                        "optional": false,
+                        "start": 20073,
+                        "end": 20138
+                      },
+                      "consequent": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "ExpressionStatement",
+                            "expression": {
+                              "type": "SequenceExpression",
+                              "expressions": [
+                                {
+                                  "type": "CallExpression",
+                                  "callee": {
+                                    "type": "Identifier",
+                                    "name": "it",
+                                    "start": 20140,
+                                    "end": 20142
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "UnaryExpression",
+                                      "operator": "!",
+                                      "argument": {
+                                        "type": "Literal",
+                                        "value": 1,
+                                        "raw": "1",
+                                        "start": 20144,
+                                        "end": 20145
+                                      },
+                                      "prefix": true,
+                                      "start": 20143,
+                                      "end": 20145
+                                    }
+                                  ],
+                                  "optional": false,
+                                  "start": 20140,
+                                  "end": 20146
+                                },
+                                {
+                                  "type": "CallExpression",
+                                  "callee": {
+                                    "type": "Identifier",
+                                    "name": "at",
+                                    "start": 20147,
+                                    "end": 20149
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "UnaryExpression",
+                                      "operator": "!",
+                                      "argument": {
+                                        "type": "Literal",
+                                        "value": 0,
+                                        "raw": "0",
+                                        "start": 20151,
+                                        "end": 20152
+                                      },
+                                      "prefix": true,
+                                      "start": 20150,
+                                      "end": 20152
+                                    }
+                                  ],
+                                  "optional": false,
+                                  "start": 20147,
+                                  "end": 20153
+                                },
+                                {
+                                  "type": "CallExpression",
+                                  "callee": {
+                                    "type": "MemberExpression",
+                                    "object": {
+                                      "type": "Identifier",
+                                      "name": "B",
+                                      "start": 20154,
+                                      "end": 20155
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "setEngine",
+                                      "start": 20156,
+                                      "end": 20165
+                                    },
+                                    "optional": false,
+                                    "computed": false,
+                                    "start": 20154,
+                                    "end": 20165
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "NewExpression",
+                                      "callee": {
+                                        "type": "Identifier",
+                                        "name": "Ie",
+                                        "start": 20170,
+                                        "end": 20172
+                                      },
+                                      "arguments": [],
+                                      "start": 20166,
+                                      "end": 20172
+                                    }
+                                  ],
+                                  "optional": false,
+                                  "start": 20154,
+                                  "end": 20173
+                                },
+                                {
+                                  "type": "AwaitExpression",
+                                  "argument": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "MemberExpression",
+                                      "object": {
+                                        "type": "Identifier",
+                                        "name": "Z",
+                                        "start": 20180,
+                                        "end": 20181
+                                      },
+                                      "property": {
+                                        "type": "Identifier",
+                                        "name": "loadAll",
+                                        "start": 20182,
+                                        "end": 20189
+                                      },
+                                      "optional": false,
+                                      "computed": false,
+                                      "start": 20180,
+                                      "end": 20189
+                                    },
+                                    "arguments": [],
+                                    "optional": false,
+                                    "start": 20180,
+                                    "end": 20191
+                                  },
+                                  "start": 20174,
+                                  "end": 20191
+                                }
+                              ],
+                              "start": 20140,
+                              "end": 20191
+                            },
+                            "start": 20140,
+                            "end": 20192
+                          },
+                          {
+                            "type": "ReturnStatement",
+                            "argument": null,
+                            "start": 20192,
+                            "end": 20198
+                          }
+                        ],
+                        "start": 20139,
+                        "end": 20199
+                      },
+                      "alternate": null,
+                      "start": 20070,
+                      "end": 20199
+                    },
+                    {
+                      "type": "IfStatement",
+                      "test": {
+                        "type": "BinaryExpression",
+                        "left": {
+                          "type": "UnaryExpression",
+                          "operator": "typeof",
+                          "argument": {
+                            "type": "Identifier",
+                            "name": "indexedDB",
+                            "start": 20209,
+                            "end": 20218
+                          },
+                          "prefix": true,
+                          "start": 20202,
+                          "end": 20218
+                        },
+                        "operator": ">",
+                        "right": {
+                          "type": "TemplateLiteral",
+                          "quasis": [
+                            {
+                              "type": "TemplateElement",
+                              "value": {
+                                "raw": "u",
+                                "cooked": "u"
+                              },
+                              "tail": true,
+                              "start": 20220,
+                              "end": 20221
+                            }
+                          ],
+                          "expressions": [],
+                          "start": 20219,
+                          "end": 20222
+                        },
+                        "start": 20202,
+                        "end": 20222
+                      },
+                      "consequent": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "ExpressionStatement",
+                            "expression": {
+                              "type": "AwaitExpression",
+                              "argument": {
+                                "type": "CallExpression",
+                                "callee": {
+                                  "type": "Identifier",
+                                  "name": "Ct",
+                                  "start": 20230,
+                                  "end": 20232
+                                },
+                                "arguments": [
+                                  {
+                                    "type": "TemplateLiteral",
+                                    "quasis": [
+                                      {
+                                        "type": "TemplateElement",
+                                        "value": {
+                                          "raw": "IndexedDB unavailable",
+                                          "cooked": "IndexedDB unavailable"
+                                        },
+                                        "tail": true,
+                                        "start": 20234,
+                                        "end": 20255
+                                      }
+                                    ],
+                                    "expressions": [],
+                                    "start": 20233,
+                                    "end": 20256
+                                  }
+                                ],
+                                "optional": false,
+                                "start": 20230,
+                                "end": 20257
+                              },
+                              "start": 20224,
+                              "end": 20257
+                            },
+                            "start": 20224,
+                            "end": 20258
+                          },
+                          {
+                            "type": "ReturnStatement",
+                            "argument": null,
+                            "start": 20258,
+                            "end": 20264
+                          }
+                        ],
+                        "start": 20223,
+                        "end": 20265
+                      },
+                      "alternate": null,
+                      "start": 20199,
+                      "end": 20265
+                    },
+                    {
+                      "type": "TryStatement",
+                      "block": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "VariableDeclaration",
+                            "kind": "let",
+                            "declarations": [
+                              {
+                                "type": "VariableDeclarator",
+                                "id": {
+                                  "type": "Identifier",
+                                  "name": "e",
+                                  "start": 20273,
+                                  "end": 20274
+                                },
+                                "init": {
+                                  "type": "NewExpression",
+                                  "callee": {
+                                    "type": "Identifier",
+                                    "name": "Fe",
+                                    "start": 20279,
+                                    "end": 20281
+                                  },
+                                  "arguments": [],
+                                  "start": 20275,
+                                  "end": 20281
+                                },
+                                "start": 20273,
+                                "end": 20281
+                              },
+                              {
+                                "type": "VariableDeclarator",
+                                "id": {
+                                  "type": "Identifier",
+                                  "name": "t",
+                                  "start": 20282,
+                                  "end": 20283
+                                },
+                                "init": {
+                                  "type": "AwaitExpression",
+                                  "argument": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "Identifier",
+                                      "name": "je",
+                                      "start": 20290,
+                                      "end": 20292
+                                    },
+                                    "arguments": [
+                                      {
+                                        "type": "Identifier",
+                                        "name": "ve",
+                                        "start": 20293,
+                                        "end": 20295
+                                      }
+                                    ],
+                                    "optional": false,
+                                    "start": 20290,
+                                    "end": 20296
+                                  },
+                                  "start": 20284,
+                                  "end": 20296
+                                },
+                                "start": 20282,
+                                "end": 20296
+                              },
+                              {
+                                "type": "VariableDeclarator",
+                                "id": {
+                                  "type": "Identifier",
+                                  "name": "n",
+                                  "start": 20297,
+                                  "end": 20298
+                                },
+                                "init": null,
+                                "start": 20297,
+                                "end": 20298
+                              }
+                            ],
+                            "start": 20269,
+                            "end": 20299
+                          },
+                          {
+                            "type": "IfStatement",
+                            "test": {
+                              "type": "BinaryExpression",
+                              "left": {
+                                "type": "Identifier",
+                                "name": "t",
+                                "start": 20302,
+                                "end": 20303
+                              },
+                              "operator": "!==",
+                              "right": {
+                                "type": "TemplateLiteral",
+                                "quasis": [
+                                  {
+                                    "type": "TemplateElement",
+                                    "value": {
+                                      "raw": "1",
+                                      "cooked": "1"
+                                    },
+                                    "tail": true,
+                                    "start": 20307,
+                                    "end": 20308
+                                  }
+                                ],
+                                "expressions": [],
+                                "start": 20306,
+                                "end": 20309
+                              },
+                              "start": 20302,
+                              "end": 20309
+                            },
+                            "consequent": {
+                              "type": "BlockStatement",
+                              "body": [
+                                {
+                                  "type": "VariableDeclaration",
+                                  "kind": "let",
+                                  "declarations": [
+                                    {
+                                      "type": "VariableDeclarator",
+                                      "id": {
+                                        "type": "Identifier",
+                                        "name": "t",
+                                        "start": 20315,
+                                        "end": 20316
+                                      },
+                                      "init": {
+                                        "type": "AwaitExpression",
+                                        "argument": {
+                                          "type": "CallExpression",
+                                          "callee": {
+                                            "type": "Identifier",
+                                            "name": "yt",
+                                            "start": 20323,
+                                            "end": 20325
+                                          },
+                                          "arguments": [
+                                            {
+                                              "type": "Identifier",
+                                              "name": "e",
+                                              "start": 20326,
+                                              "end": 20327
+                                            }
+                                          ],
+                                          "optional": false,
+                                          "start": 20323,
+                                          "end": 20328
+                                        },
+                                        "start": 20317,
+                                        "end": 20328
+                                      },
+                                      "start": 20315,
+                                      "end": 20328
+                                    }
+                                  ],
+                                  "start": 20311,
+                                  "end": 20329
+                                },
+                                {
+                                  "type": "IfStatement",
+                                  "test": {
+                                    "type": "UnaryExpression",
+                                    "operator": "!",
+                                    "argument": {
+                                      "type": "MemberExpression",
+                                      "object": {
+                                        "type": "Identifier",
+                                        "name": "t",
+                                        "start": 20333,
+                                        "end": 20334
+                                      },
+                                      "property": {
+                                        "type": "Identifier",
+                                        "name": "ok",
+                                        "start": 20335,
+                                        "end": 20337
+                                      },
+                                      "optional": false,
+                                      "computed": false,
+                                      "start": 20333,
+                                      "end": 20337
+                                    },
+                                    "prefix": true,
+                                    "start": 20332,
+                                    "end": 20337
+                                  },
+                                  "consequent": {
+                                    "type": "BlockStatement",
+                                    "body": [
+                                      {
+                                        "type": "ExpressionStatement",
+                                        "expression": {
+                                          "type": "SequenceExpression",
+                                          "expressions": [
+                                            {
+                                              "type": "CallExpression",
+                                              "callee": {
+                                                "type": "MemberExpression",
+                                                "object": {
+                                                  "type": "Identifier",
+                                                  "name": "console",
+                                                  "start": 20339,
+                                                  "end": 20346
+                                                },
+                                                "property": {
+                                                  "type": "Identifier",
+                                                  "name": "error",
+                                                  "start": 20347,
+                                                  "end": 20352
+                                                },
+                                                "optional": false,
+                                                "computed": false,
+                                                "start": 20339,
+                                                "end": 20352
+                                              },
+                                              "arguments": [
+                                                {
+                                                  "type": "TemplateLiteral",
+                                                  "quasis": [
+                                                    {
+                                                      "type": "TemplateElement",
+                                                      "value": {
+                                                        "raw": "[Storage] localStorage migration failed; will retry on next launch",
+                                                        "cooked": "[Storage] localStorage migration failed; will retry on next launch"
+                                                      },
+                                                      "tail": true,
+                                                      "start": 20354,
+                                                      "end": 20420
+                                                    }
+                                                  ],
+                                                  "expressions": [],
+                                                  "start": 20353,
+                                                  "end": 20421
+                                                }
+                                              ],
+                                              "optional": false,
+                                              "start": 20339,
+                                              "end": 20422
+                                            },
+                                            {
+                                              "type": "AwaitExpression",
+                                              "argument": {
+                                                "type": "CallExpression",
+                                                "callee": {
+                                                  "type": "Identifier",
+                                                  "name": "Ct",
+                                                  "start": 20429,
+                                                  "end": 20431
+                                                },
+                                                "arguments": [
+                                                  {
+                                                    "type": "TemplateLiteral",
+                                                    "quasis": [
+                                                      {
+                                                        "type": "TemplateElement",
+                                                        "value": {
+                                                          "raw": "Migration incomplete",
+                                                          "cooked": "Migration incomplete"
+                                                        },
+                                                        "tail": true,
+                                                        "start": 20433,
+                                                        "end": 20453
+                                                      }
+                                                    ],
+                                                    "expressions": [],
+                                                    "start": 20432,
+                                                    "end": 20454
+                                                  }
+                                                ],
+                                                "optional": false,
+                                                "start": 20429,
+                                                "end": 20455
+                                              },
+                                              "start": 20423,
+                                              "end": 20455
+                                            }
+                                          ],
+                                          "start": 20339,
+                                          "end": 20455
+                                        },
+                                        "start": 20339,
+                                        "end": 20456
+                                      },
+                                      {
+                                        "type": "ReturnStatement",
+                                        "argument": null,
+                                        "start": 20456,
+                                        "end": 20462
+                                      }
+                                    ],
+                                    "start": 20338,
+                                    "end": 20463
+                                  },
+                                  "alternate": null,
+                                  "start": 20329,
+                                  "end": 20463
+                                },
+                                {
+                                  "type": "ExpressionStatement",
+                                  "expression": {
+                                    "type": "SequenceExpression",
+                                    "expressions": [
+                                      {
+                                        "type": "AwaitExpression",
+                                        "argument": {
+                                          "type": "CallExpression",
+                                          "callee": {
+                                            "type": "Identifier",
+                                            "name": "Me",
+                                            "start": 20469,
+                                            "end": 20471
+                                          },
+                                          "arguments": [
+                                            {
+                                              "type": "Identifier",
+                                              "name": "ve",
+                                              "start": 20472,
+                                              "end": 20474
+                                            },
+                                            {
+                                              "type": "TemplateLiteral",
+                                              "quasis": [
+                                                {
+                                                  "type": "TemplateElement",
+                                                  "value": {
+                                                    "raw": "1",
+                                                    "cooked": "1"
+                                                  },
+                                                  "tail": true,
+                                                  "start": 20476,
+                                                  "end": 20477
+                                                }
+                                              ],
+                                              "expressions": [],
+                                              "start": 20475,
+                                              "end": 20478
+                                            }
+                                          ],
+                                          "optional": false,
+                                          "start": 20469,
+                                          "end": 20479
+                                        },
+                                        "start": 20463,
+                                        "end": 20479
+                                      },
+                                      {
+                                        "type": "AssignmentExpression",
+                                        "operator": "=",
+                                        "left": {
+                                          "type": "Identifier",
+                                          "name": "n",
+                                          "start": 20480,
+                                          "end": 20481
+                                        },
+                                        "right": {
+                                          "type": "MemberExpression",
+                                          "object": {
+                                            "type": "Identifier",
+                                            "name": "t",
+                                            "start": 20482,
+                                            "end": 20483
+                                          },
+                                          "property": {
+                                            "type": "Identifier",
+                                            "name": "keys",
+                                            "start": 20484,
+                                            "end": 20488
+                                          },
+                                          "optional": false,
+                                          "computed": false,
+                                          "start": 20482,
+                                          "end": 20488
+                                        },
+                                        "start": 20480,
+                                        "end": 20488
+                                      }
+                                    ],
+                                    "start": 20463,
+                                    "end": 20488
+                                  },
+                                  "start": 20463,
+                                  "end": 20488
+                                }
+                              ],
+                              "start": 20310,
+                              "end": 20489
+                            },
+                            "alternate": null,
+                            "start": 20299,
+                            "end": 20489
+                          },
+                          {
+                            "type": "ExpressionStatement",
+                            "expression": {
+                              "type": "SequenceExpression",
+                              "expressions": [
+                                {
+                                  "type": "AwaitExpression",
+                                  "argument": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "MemberExpression",
+                                      "object": {
+                                        "type": "Identifier",
+                                        "name": "e",
+                                        "start": 20495,
+                                        "end": 20496
+                                      },
+                                      "property": {
+                                        "type": "Identifier",
+                                        "name": "preload",
+                                        "start": 20497,
+                                        "end": 20504
+                                      },
+                                      "optional": false,
+                                      "computed": false,
+                                      "start": 20495,
+                                      "end": 20504
+                                    },
+                                    "arguments": [],
+                                    "optional": false,
+                                    "start": 20495,
+                                    "end": 20506
+                                  },
+                                  "start": 20489,
+                                  "end": 20506
+                                },
+                                {
+                                  "type": "AwaitExpression",
+                                  "argument": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "Identifier",
+                                      "name": "_t",
+                                      "start": 20513,
+                                      "end": 20515
+                                    },
+                                    "arguments": [
+                                      {
+                                        "type": "Identifier",
+                                        "name": "e",
+                                        "start": 20516,
+                                        "end": 20517
+                                      }
+                                    ],
+                                    "optional": false,
+                                    "start": 20513,
+                                    "end": 20518
+                                  },
+                                  "start": 20507,
+                                  "end": 20518
+                                },
+                                {
+                                  "type": "AwaitExpression",
+                                  "argument": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "Identifier",
+                                      "name": "vt",
+                                      "start": 20525,
+                                      "end": 20527
+                                    },
+                                    "arguments": [
+                                      {
+                                        "type": "Identifier",
+                                        "name": "e",
+                                        "start": 20528,
+                                        "end": 20529
+                                      }
+                                    ],
+                                    "optional": false,
+                                    "start": 20525,
+                                    "end": 20530
+                                  },
+                                  "start": 20519,
+                                  "end": 20530
+                                },
+                                {
+                                  "type": "AwaitExpression",
+                                  "argument": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "MemberExpression",
+                                      "object": {
+                                        "type": "Identifier",
+                                        "name": "e",
+                                        "start": 20537,
+                                        "end": 20538
+                                      },
+                                      "property": {
+                                        "type": "Identifier",
+                                        "name": "remove",
+                                        "start": 20539,
+                                        "end": 20545
+                                      },
+                                      "optional": false,
+                                      "computed": false,
+                                      "start": 20537,
+                                      "end": 20545
+                                    },
+                                    "arguments": [
+                                      {
+                                        "type": "Identifier",
+                                        "name": "O",
+                                        "start": 20546,
+                                        "end": 20547
+                                      }
+                                    ],
+                                    "optional": false,
+                                    "start": 20537,
+                                    "end": 20548
+                                  },
+                                  "start": 20531,
+                                  "end": 20548
+                                },
+                                {
+                                  "type": "LogicalExpression",
+                                  "left": {
+                                    "type": "BinaryExpression",
+                                    "left": {
+                                      "type": "AwaitExpression",
+                                      "argument": {
+                                        "type": "CallExpression",
+                                        "callee": {
+                                          "type": "Identifier",
+                                          "name": "je",
+                                          "start": 20555,
+                                          "end": 20557
+                                        },
+                                        "arguments": [
+                                          {
+                                            "type": "Identifier",
+                                            "name": "ye",
+                                            "start": 20558,
+                                            "end": 20560
+                                          }
+                                        ],
+                                        "optional": false,
+                                        "start": 20555,
+                                        "end": 20561
+                                      },
+                                      "start": 20549,
+                                      "end": 20561
+                                    },
+                                    "operator": "!==",
+                                    "right": {
+                                      "type": "TemplateLiteral",
+                                      "quasis": [
+                                        {
+                                          "type": "TemplateElement",
+                                          "value": {
+                                            "raw": "1",
+                                            "cooked": "1"
+                                          },
+                                          "tail": true,
+                                          "start": 20565,
+                                          "end": 20566
+                                        }
+                                      ],
+                                      "expressions": [],
+                                      "start": 20564,
+                                      "end": 20567
+                                    },
+                                    "start": 20549,
+                                    "end": 20567
+                                  },
+                                  "operator": "&&",
+                                  "right": {
+                                    "type": "ParenthesizedExpression",
+                                    "expression": {
+                                      "type": "SequenceExpression",
+                                      "expressions": [
+                                        {
+                                          "type": "CallExpression",
+                                          "callee": {
+                                            "type": "Identifier",
+                                            "name": "ht",
+                                            "start": 20570,
+                                            "end": 20572
+                                          },
+                                          "arguments": [
+                                            {
+                                              "type": "Identifier",
+                                              "name": "n",
+                                              "start": 20573,
+                                              "end": 20574
+                                            }
+                                          ],
+                                          "optional": false,
+                                          "start": 20570,
+                                          "end": 20575
+                                        },
+                                        {
+                                          "type": "AwaitExpression",
+                                          "argument": {
+                                            "type": "CallExpression",
+                                            "callee": {
+                                              "type": "Identifier",
+                                              "name": "Me",
+                                              "start": 20582,
+                                              "end": 20584
+                                            },
+                                            "arguments": [
+                                              {
+                                                "type": "Identifier",
+                                                "name": "ye",
+                                                "start": 20585,
+                                                "end": 20587
+                                              },
+                                              {
+                                                "type": "TemplateLiteral",
+                                                "quasis": [
+                                                  {
+                                                    "type": "TemplateElement",
+                                                    "value": {
+                                                      "raw": "1",
+                                                      "cooked": "1"
+                                                    },
+                                                    "tail": true,
+                                                    "start": 20589,
+                                                    "end": 20590
+                                                  }
+                                                ],
+                                                "expressions": [],
+                                                "start": 20588,
+                                                "end": 20591
+                                              }
+                                            ],
+                                            "optional": false,
+                                            "start": 20582,
+                                            "end": 20592
+                                          },
+                                          "start": 20576,
+                                          "end": 20592
+                                        }
+                                      ],
+                                      "start": 20570,
+                                      "end": 20592
+                                    },
+                                    "start": 20569,
+                                    "end": 20593
+                                  },
+                                  "start": 20549,
+                                  "end": 20593
+                                },
+                                {
+                                  "type": "CallExpression",
+                                  "callee": {
+                                    "type": "MemberExpression",
+                                    "object": {
+                                      "type": "Identifier",
+                                      "name": "B",
+                                      "start": 20594,
+                                      "end": 20595
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "setEngine",
+                                      "start": 20596,
+                                      "end": 20605
+                                    },
+                                    "optional": false,
+                                    "computed": false,
+                                    "start": 20594,
+                                    "end": 20605
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "Identifier",
+                                      "name": "e",
+                                      "start": 20606,
+                                      "end": 20607
+                                    }
+                                  ],
+                                  "optional": false,
+                                  "start": 20594,
+                                  "end": 20608
+                                },
+                                {
+                                  "type": "AwaitExpression",
+                                  "argument": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "MemberExpression",
+                                      "object": {
+                                        "type": "Identifier",
+                                        "name": "B",
+                                        "start": 20615,
+                                        "end": 20616
+                                      },
+                                      "property": {
+                                        "type": "Identifier",
+                                        "name": "restorePendingWrites",
+                                        "start": 20617,
+                                        "end": 20637
+                                      },
+                                      "optional": false,
+                                      "computed": false,
+                                      "start": 20615,
+                                      "end": 20637
+                                    },
+                                    "arguments": [],
+                                    "optional": false,
+                                    "start": 20615,
+                                    "end": 20639
+                                  },
+                                  "start": 20609,
+                                  "end": 20639
+                                },
+                                {
+                                  "type": "AwaitExpression",
+                                  "argument": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "MemberExpression",
+                                      "object": {
+                                        "type": "Identifier",
+                                        "name": "Z",
+                                        "start": 20646,
+                                        "end": 20647
+                                      },
+                                      "property": {
+                                        "type": "Identifier",
+                                        "name": "loadAll",
+                                        "start": 20648,
+                                        "end": 20655
+                                      },
+                                      "optional": false,
+                                      "computed": false,
+                                      "start": 20646,
+                                      "end": 20655
+                                    },
+                                    "arguments": [],
+                                    "optional": false,
+                                    "start": 20646,
+                                    "end": 20657
+                                  },
+                                  "start": 20640,
+                                  "end": 20657
+                                }
+                              ],
+                              "start": 20489,
+                              "end": 20657
+                            },
+                            "start": 20489,
+                            "end": 20657
+                          }
+                        ],
+                        "start": 20268,
+                        "end": 20658
+                      },
+                      "handler": {
+                        "type": "CatchClause",
+                        "param": {
+                          "type": "Identifier",
+                          "name": "e",
+                          "start": 20664,
+                          "end": 20665
+                        },
+                        "body": {
+                          "type": "BlockStatement",
+                          "body": [
+                            {
+                              "type": "ExpressionStatement",
+                              "expression": {
+                                "type": "SequenceExpression",
+                                "expressions": [
+                                  {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                      "type": "MemberExpression",
+                                      "object": {
+                                        "type": "Identifier",
+                                        "name": "console",
+                                        "start": 20667,
+                                        "end": 20674
+                                      },
+                                      "property": {
+                                        "type": "Identifier",
+                                        "name": "error",
+                                        "start": 20675,
+                                        "end": 20680
+                                      },
+                                      "optional": false,
+                                      "computed": false,
+                                      "start": 20667,
+                                      "end": 20680
+                                    },
+                                    "arguments": [
+                                      {
+                                        "type": "TemplateLiteral",
+                                        "quasis": [
+                                          {
+                                            "type": "TemplateElement",
+                                            "value": {
+                                              "raw": "[Storage] IndexedDB init failed:",
+                                              "cooked": "[Storage] IndexedDB init failed:"
+                                            },
+                                            "tail": true,
+                                            "start": 20682,
+                                            "end": 20714
+                                          }
+                                        ],
+                                        "expressions": [],
+                                        "start": 20681,
+                                        "end": 20715
+                                      },
+                                      {
+                                        "type": "Identifier",
+                                        "name": "e",
+                                        "start": 20716,
+                                        "end": 20717
+                                      }
+                                    ],
+                                    "optional": false,
+                                    "start": 20667,
+                                    "end": 20718
+                                  },
+                                  {
+                                    "type": "AwaitExpression",
+                                    "argument": {
+                                      "type": "CallExpression",
+                                      "callee": {
+                                        "type": "Identifier",
+                                        "name": "Ct",
+                                        "start": 20725,
+                                        "end": 20727
+                                      },
+                                      "arguments": [
+                                        {
+                                          "type": "TemplateLiteral",
+                                          "quasis": [
+                                            {
+                                              "type": "TemplateElement",
+                                              "value": {
+                                                "raw": "IndexedDB init error",
+                                                "cooked": "IndexedDB init error"
+                                              },
+                                              "tail": true,
+                                              "start": 20729,
+                                              "end": 20749
+                                            }
+                                          ],
+                                          "expressions": [],
+                                          "start": 20728,
+                                          "end": 20750
+                                        }
+                                      ],
+                                      "optional": false,
+                                      "start": 20725,
+                                      "end": 20751
+                                    },
+                                    "start": 20719,
+                                    "end": 20751
+                                  }
+                                ],
+                                "start": 20667,
+                                "end": 20751
+                              },
+                              "start": 20667,
+                              "end": 20751
+                            }
+                          ],
+                          "start": 20666,
+                          "end": 20752
+                        },
+                        "start": 20658,
+                        "end": 20752
+                      },
+                      "finalizer": null,
+                      "start": 20265,
+                      "end": 20752
+                    }
+                  ],
+                  "start": 20069,
+                  "end": 20753
+                },
+                "id": null,
+                "generator": false,
+                "start": 20060,
+                "end": 20753
+              },
+              "start": 20059,
+              "end": 20754
+            }
+          },
+          {
+            "type": "ParenthesizedExpression"
+          },
+          {
+            "type": "ArrowFunctionExpression"
+          },
+          {
+            "type": "BlockStatement"
+          },
+          {
+            "type": "IfStatement"
+          },
+          {
+            "type": "CallExpression",
+            "callee": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "window",
+                    "start": 20073,
+                    "end": 20079
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "location",
+                    "start": 20080,
+                    "end": 20088
+                  },
+                  "optional": false,
+                  "computed": false,
+                  "start": 20073,
+                  "end": 20088
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "pathname",
+                  "start": 20089,
+                  "end": 20097
+                },
+                "optional": false,
+                "computed": false,
+                "start": 20073,
+                "end": 20097
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "includes",
+                "start": 20098,
+                "end": 20106
+              },
+              "optional": false,
+              "computed": false,
+              "start": 20073,
+              "end": 20106
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "pathnameCases": [
+    {
+      "name": "实际pathname membership参数",
+      "source": "if(window.location.pathname.includes(`/reference-editors/doocs-md/`)){}",
+      "mustFail": false,
+      "checked": [],
+      "classifications": [
+        {
+          "kind": "host-pathname-membership-prefix",
+          "from": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/apps/web/dist/static/js/md-storage-Cjhmscw8.js",
+          "reference": "/reference-editors/doocs-md/",
+          "notAFile": true,
+          "exactWindowLocationPathnameIncludesArgument": true
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "name": "真实OXC括号参数和成员链",
+      "source": "if((window).location.pathname.includes((`/reference-editors/doocs-md/`))){}",
+      "mustFail": false,
+      "checked": [],
+      "classifications": [
+        {
+          "kind": "host-pathname-membership-prefix",
+          "from": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/apps/web/dist/static/js/md-storage-Cjhmscw8.js",
+          "reference": "/reference-editors/doocs-md/",
+          "notAFile": true,
+          "exactWindowLocationPathnameIncludesArgument": true
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "name": "错误对象仍按未知BASE拒绝",
+      "source": "if(other.location.pathname.includes(`/reference-editors/doocs-md/`)){}",
+      "mustFail": true,
+      "checked": [],
+      "classifications": [],
+      "error": {
+        "name": "AssertionError",
+        "message": "The expression evaluated to a falsy value:\n\n  assert.ok(target.startsWith(snapshot.root + path.sep))\n"
+      },
+      "passed": true
+    },
+    {
+      "name": "错误属性仍按未知BASE拒绝",
+      "source": "if(window.location.hash.includes(`/reference-editors/doocs-md/`)){}",
+      "mustFail": true,
+      "checked": [],
+      "classifications": [],
+      "error": {
+        "name": "AssertionError",
+        "message": "The expression evaluated to a falsy value:\n\n  assert.ok(target.startsWith(snapshot.root + path.sep))\n"
+      },
+      "passed": true
+    },
+    {
+      "name": "错误方法仍按未知BASE拒绝",
+      "source": "if(window.location.pathname.startsWith(`/reference-editors/doocs-md/`)){}",
+      "mustFail": true,
+      "checked": [],
+      "classifications": [],
+      "error": {
+        "name": "AssertionError",
+        "message": "The expression evaluated to a falsy value:\n\n  assert.ok(target.startsWith(snapshot.root + path.sep))\n"
+      },
+      "passed": true
+    },
+    {
+      "name": "真实root资源import仍拒绝目录",
+      "source": "import(`/reference-editors/doocs-md/`)",
+      "mustFail": true,
+      "checked": [],
+      "classifications": [],
+      "error": {
+        "name": "AssertionError",
+        "message": "The expression evaluated to a falsy value:\n\n  assert.ok(target.startsWith(snapshot.root + path.sep))\n"
+      },
+      "passed": true
+    },
+    {
+      "name": "真实root资源URL仍拒绝目录",
+      "source": "new URL(`/reference-editors/doocs-md/`,import.meta.url)",
+      "mustFail": true,
+      "checked": [],
+      "classifications": [],
+      "error": {
+        "name": "AssertionError",
+        "message": "The expression evaluated to a falsy value:\n\n  assert.ok(target.startsWith(snapshot.root + path.sep))\n"
+      },
+      "passed": true
+    }
+  ],
+  "complete": true,
+  "noGlobalFetchOverride": true,
+  "noApp": true,
+  "noProductCopy": true,
+  "partial": false,
+  "error": null
+}

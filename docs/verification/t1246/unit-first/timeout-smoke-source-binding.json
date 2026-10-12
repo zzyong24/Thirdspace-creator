@@ -1,0 +1,39 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "actualOriginalTestBudgetMs": 550000,
+  "plannedOuterBudgetMs": 1200000,
+  "sources": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/timeout-browser-public.test.ts",
+      "sha256": "8f138d6c99152718c9250cfea25dbbb65c859667a7053f983b093d6148a2964d"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/douyin-traffic.ts",
+      "sha256": "35a0316dcb7dbcbf40c380e4184c7995bf87cdee394766fc74f54982774e505a"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/browser-timeouts.ts",
+      "sha256": "308bca28dd44bc732a0011cfe1f878789b16f5dafff36a1525c292e78027e8c4"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/analytics/index.ts",
+      "sha256": "ccbd6ebbb3fff821884692c86cbe259b483dc2ba4f9706f586a65273bfb3a26f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/analytics/traffic-parser.ts",
+      "sha256": "47ff91b1f0b63e48423ac5e34d90d2bf5218515f69a87c9991cee92f0a67a494"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/test/setup.ts",
+      "sha256": "10d841e42fdb88ca4e51afef9447253a1860513384c412db170437e6849dbb81"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/ai-worker/src/runtime/douyin-errors.ts",
+      "sha256": "2139c37ff704a640298466d7a98c3d19417a03d6e3c8956e8b0e3113eb62383a"
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+stdout | src/modules/ai/ai.learnings-project-scope.integration.test.ts > [T-118a gate-F3] review.analyze → confirm → project-scoped candidate read > confirmed review.analyze learnings are readable by learnings.list(projectId, candidate)
+[ai-task-runner] taskId=ai-task-1 taskType=review.analyze status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ✓ src/modules/ai/ai.learnings-project-scope.integration.test.ts (1 test) 4313ms
+     ✓ confirmed review.analyze learnings are readable by learnings.list(projectId, candidate)  4312ms
+stdout | src/modules/ai/ai.task-execution.integration.test.ts > T-513 AI task idempotency and atomic execution ownership > retryOf must be a same-owner, same-taskType terminal task and is fingerprinted
+[ai-task-runner] taskId=ai-task-1 taskType=script.draft status=cancelled finishReason=null usage=null candidateCount=0
+
+stdout | src/modules/ai/ai.task-execution.integration.test.ts > T-513 AI task idempotency and atomic execution ownership > production lease scope lets only one runner execute and makes legacy candidate writes atomic
+[ai-task-runner] taskId=ai-task-1 taskType=script.draft status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ✓ src/modules/ai/ai.task-execution.integration.test.ts (19 tests) 51245ms
+     ✓ 映射任务不得通过 retryOfTaskId 重建并重置执行预算  3763ms
+     ✓ 映射任务不得通过 spec.params.retryOf 重建并重置执行预算  2582ms
+     ✓ 按原 attempt 回读真实任务时保持账号隔离且不泄漏运行配置  2600ms
+     ✓ same attempt and payload returns one task, changed payload fails, runtimeData stays server-only  2594ms
+     ✓ server-only runtimeData read is account-scoped and never enters task DTO  2681ms
+     ✓ 视频决策断点只写 server-only 固定键，并保留 Skill 快照  2599ms
+     ✓ 连续口播断点只写 server-only 固定键，并保留 Skill 快照  2684ms
+     ✓ 渠道 authority 的异步任务只记录 channel-managed，不把本地或真实渠道 model 当展示真值  2931ms
+     ✓ retryOf must be a same-owner, same-taskType terminal task and is fingerprinted  2628ms
+     ✓ claim and beginModelCall each have one winner; renew and terminal writes are token-bound  2599ms
+     ✓ expired pre-call lease requeues, but a started model call becomes reconciliation-required  2585ms
+     ✓ production lease scope lets only one runner execute and makes legacy candidate writes atomic  2624ms
+     ✓ [T-522] runner 终态日志关联 taskId、finishReason、usage 与真实结果行数  2662ms
+     ✓ reuses the active lease when the same task is wrapped by a nested production entry  2538ms
+     ✓ a reclaimed lease cannot leave a candidate row or report success through legacy methods  2954ms
+     ✓ candidate insert failure rolls back awaiting_confirmation in the same lease transaction  2547ms
+     ✓ renews a live execution on the 30 second heartbeat before allowing success  2538ms
+     ✓ binds legacy failed and cancelled terminal writes to the active lease  2592ms
+     ✓ heartbeats every 30 seconds and aborts the runner when renewal loses the lease  2544ms
+ ✓ src/modules/learnings/learnings-calibration-reflow.integration.test.ts (2 tests) 6652ms
+     ✓ reflows a Learning into a real suggestion the 校准中心 reads + adopts (rubric bumped)  4072ms
+     ✓ a Learning with no rubric reflows into nothing (honest ConflictError)  2579ms
+ ✓ src/modules/learnings/learnings.acceptance.test.ts (7 tests) 19074ms
+     ✓ has the foundation §5 module layout files  3601ms
+     ✓ imports NO peer module's repository (cross-module access only via injected ports)  2572ms
+     ✓ user scope: A cannot read B's learning (OwnershipError → 404)  2529ms
+     ✓ a Learning exists independently of a Project and is reusable across many  2541ms
+     ✓ the application DTO never leaks user_id (built explicitly, not the Drizzle row)  2750ms
+     ✓ exposes the Reviews bridge + Wave-4 feed on the public service  2548ms
+     ✓ registers the owned ops into the module op-id list  2531ms
+ ✓ src/modules/reviews/reviews.acceptance.test.ts (7 tests) 20115ms
+     ✓ has the foundation §5 module layout files  3914ms
+     ✓ imports NO peer module's repository (cross-module access only via injected ports)  2553ms
+     ✓ user scope: A cannot read B's review (OwnershipError → 404)  2590ms
+     ✓ reviews.complete is idempotent (no re-stamp on the second call)  2617ms
+     ✓ the DTO mapper never leaks user_id (built explicitly, not the Drizzle row)  2663ms
+     ✓ exposes the G14/G15 bridge read on the public service  2704ms
+     ✓ registers the six owned ops into the module op-id list  3073ms
+ ✓ src/modules/platform-account/platform-account.service.test.ts (16 tests) 43493ms
+     ✓ createAccount happy path → active, baseline echoed  3909ms
+     ✓ createAccount defaults followerBaseline to 0  2623ms
+     ✓ 合同支持的每种平台都可建立账号登记，包含抖音、小红书和快手  2569ms
+     ✓ rejects an invalid platform string with ValidationError  2663ms
+     ✓ rejects a negative followerBaseline with ValidationError  3053ms
+     ✓ rejects an empty handle with ValidationError  2768ms
+     ✓ rejects a duplicate external_account_id with ConflictError; allows duplicate handle  2671ms
+     ✓ updateAccount patches only provided fields and rejects unknown status  2632ms
+     ✓ getAccount cross-user → OwnershipError (404)  2560ms
+       ✓ passes for an owned, active, same-platform account  2932ms
+       ✓ throws OwnershipError for another user's account  2559ms
+       ✓ throws ValidationError on platform mismatch  2544ms
+       ✓ throws ValidationError for an archived account  2555ms
+       ✓ 允许隐藏最后一个active号，真0活跃且原组历史仍可读，外人仍拒绝  2478ms
+       ✓ 多active先隐藏其一，再隐藏末号成功，两账号与原组历史都保留  2485ms
+     ✓ listAccounts is platform-filtered and user-scoped  2491ms
+ ✓ src/modules/ai/group-task-scope.integration.test.ts (8 tests) 22727ms
+     ✓ 空组无需平台账号能创建会话和候选任务，子消息按父组授权  3752ms
+     ✓ 执行任务创建冻结组；恢复后仍是原组且相同幂等键跨组独立  2634ms
+     ✓ 空组聊天公共入口原子提交消息、AI任务与冻结执行输入  2712ms
+     ✓ 雷达是共享组域，空组同名集合独立且平台筛选不改变共享内容  2911ms
+     ✓ 空组每日创作任务中断后按原冻结组恢复运行，跨组不能恢复  2628ms
+     ✓ 平台任务先创建时转组锁检测阻止转组，转组先完成时旧freeze不能创建  2596ms
+     ✓ Worker外部副作用前复核member版本，stale冻结不会发送  2751ms
+     ✓ 归档组允许读已有会话任务，拒绝写入  2742ms
+ ✓ src/modules/reviews/reviews.contract.test.ts (7 tests) 20126ms
+     ✓ reviews.create → reviewResource (in_progress, completedAt null)  4008ms
+     ✓ reviews.get → reviewResource  3204ms
+     ✓ [T-356④] reviews.list → 完整 listEnvelope(listMeta page/pageSize/total 必填)可 parse  2535ms
+     ✓ reviews.insights.create → reviewInsightResource (evidence object, priority int)  2542ms
+     ✓ reviews.insights.list → 完整 listEnvelope，可读回复盘里的手动洞察  2519ms
+     ✓ reviews.complete → reviewResource (completed, non-null completedAt)  2513ms
+     ✓ no ctx → AuthenticationError  2804ms
+ ✓ src/modules/learnings/learnings.contract.test.ts (6 tests) 16919ms
+     ✓ learnings.list → learningResource[] (each item validates)  3633ms
+     ✓ learnings.create → 人工采纳后直接返回知识库 validated experience  2575ms
+     ✓ learnings.create 相同内容重复采纳 → 返回同一 Learning，活动列表只有一条  2540ms
+     ✓ learnings.applications.create → learningApplicationResource (evaluatedAt null)  2882ms
+     ✓ learnings.evaluate → 已采纳经验仍可显式 discarded  2686ms
+     ✓ no ctx → AuthenticationError  2602ms
+ ✓ src/modules/ai/ai-task-submission.service.test.ts (5 tests) 14785ms
+   ✓ 创建后响应丢失，修改稿件后恢复仍使用首次快照并走原派发入口  3862ms
+   ✓ 同次并发准备读到不同稿件，只接受第一个已保存任务  2937ms
+   ✓ 相同提交键修改或删除明确输入字段，不借首次快照掩盖另一个意图  2604ms
+   ✓ 未声明快照字段、用快照覆盖意图、准备期间取消均不提交  2737ms
+   ✓ 等待原任务查询期间调用方修改账号或输入，不改变快照归属  2643ms
+ ✓ src/modules/learnings/learning-adoption-key.integration.test.ts (2 tests) 6500ms
+   ✓ 领域提交回执丢失和并发重投只创建同一经验，保留真实来源与状态  3930ms
+   ✓ 稳定项键按用户账号隔离，未提供项键保持原创建语义  2569ms
+ ✓ src/modules/ai-runtime/agentic-business-execution.service.test.ts (9 tests) 4016ms
+ ✓ src/modules/learnings/review-adoption-scope.integration.test.ts (1 test) 3771ms
+   ✓ 相同经验在不同来源项目采纳不会串归属，同项目重试不重复  3770ms
+
+ Test Files  13 passed (13)
+      Tests  90 passed (90)
+   Start at  03:08:13
+   Duration  250.52s (transform 3.10s, setup 0ms, import 14.28s, tests 233.74s, environment 1ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b005-and-further-fixture-third.json

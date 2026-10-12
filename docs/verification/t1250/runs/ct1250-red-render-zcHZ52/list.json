@@ -1,0 +1,6 @@
+[
+  {
+    "name": "T1250 真实离线document超过30秒仍生成原PNG/PDF，完整请求允许串行尾轮",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  }
+]

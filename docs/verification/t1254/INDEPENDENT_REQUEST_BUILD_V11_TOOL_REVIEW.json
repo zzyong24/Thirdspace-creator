@@ -1,0 +1,98 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T03:56:48.472547+00:00",
+  "status": "PASS_STATIC_EXACT_TOOL_REVIEW_NOT_EXECUTED",
+  "approvedForRootExactAdmission": true,
+  "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "092790967ee0b4922083aacf9e5cb365e9e0dc8f6a7c973329084fe48c511eab",
+  "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+  "runnerSha256": "c8690c4cefae06b166dfb98eb422c592443f8ecdc87527c508f984208e533b1b",
+  "sealSha256": "683e8b5703f61d9a5333eee48bf3a3e53435b580a1fdd7726dc12e7bc88c08a7",
+  "prepareSha256": "173c81504bab12881a20c5c94360e95f70c03871ecc1ac59997dda1644cd5b2f",
+  "readSourceAndDiffs": [
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V11_FULL_SEAL.json",
+      "sha256": "683e8b5703f61d9a5333eee48bf3a3e53435b580a1fdd7726dc12e7bc88c08a7"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V11_PREPARE.json",
+      "sha256": "173c81504bab12881a20c5c94360e95f70c03871ecc1ac59997dda1644cd5b2f"
+    },
+    {
+      "file": "/tmp/t1254-readonly/run-owned-doocs-request-and-build-v11.cjs",
+      "sha256": "c8690c4cefae06b166dfb98eb422c592443f8ecdc87527c508f984208e533b1b"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V11_HANDOFF.md",
+      "sha256": "325570a1d1659add283ee2ef07f220200bd59db07833f9ec34639b6a3f2d73e5"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V11_DELTA.json",
+      "sha256": "5a27125eb4697dbc3d53cc59da6c161bceb4e0446da4678b467089008b489ee5"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V11_FROM_V10.diff",
+      "sha256": "f14d57ca89de5cf4ac4ed119d29f8d6456975df1d54b72cb39ce33d15b505d5a"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V11_GRAPH_CHECKER_FROM_V10.diff",
+      "sha256": "f5c80927fc092ad4b59fe6c53388ecfdb29b6fdda3d49a430fe5bb1db3ff80b5"
+    },
+    {
+      "file": "/tmp/t1254-readonly/doocs-static-delivery-graph.mjs",
+      "sha256": "017ac911172822e211411fa1a24241f2cdfcf96795559b822252cf079594f564"
+    },
+    {
+      "file": "/tmp/t1254-readonly/doocs-static-resource-checker-tests.mjs",
+      "sha256": "b9e5f051a81d4d306aca67249aee616eb8591cc4f367ef3433f92f75d9a6fcd2"
+    }
+  ],
+  "actualParserContractRead": [
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/rolldown@1.2.11/node_modules/rolldown/dist/shared/binding-BTa6BPQe.d.mts",
+      "sha256": "98137390854c0f377037ccdee5f3964c34c0179ca58ae8f386132125f6fc5ecc"
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/rolldown@1.2.11/node_modules/rolldown/dist/shared/parse-WKtEKiA6.mjs",
+      "sha256": "06844a9024d43dcc4b6f315c76cb0bdb6f592d035424fee7b7432d4a5fcbf4d9"
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/@oxc-project+types@0.151.0/node_modules/@oxc-project/types/types.d.ts",
+      "sha256": "f76d2226b20ec0d3e884114cfbbb933cb4d25d26cc306e8315e21a0e3afafc39"
+    }
+  ],
+  "independentFullByteRecheck": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_V11_FULL_INPUT_RECHECK.json",
+    "sha256": "837372f42869c2279ea8c8e9517e84639754b067fb2350d2b8434376f8ce3695",
+    "inputCount": 1703,
+    "toolRows": 141220,
+    "fullHashChecks": 135469,
+    "linkChecks": 7488,
+    "bytesIncludingArtifactsAndMutableConsumers": 2724405148,
+    "elapsedMs": 22846.015,
+    "drift": []
+  },
+  "reviewConclusion": {
+    "actualFailurePreserved": "V10 nonce2829e301398ddc9461fe76cb1ff133f1真实EOF1/1of25；network0/215ms/closed/group0且TESTNET EPERM、nonce相等和socket0；checker1/2096ms/closed/group0，原LogicalExpression断言失败、旧结果JSON缺失。不是原fetch的TDD RED，无原8/RED/apply/build。原10raw逐字节入绑定，旧graph/checker历史1dc/1780完整保。",
+    "priorStaticGap": "旧V8/V9/V10静态审核未覆盖真实parser preserveParens默认消费者；旧报告不追写为识别该实际分支，当前真实失败保留。",
+    "actualParserConsumer": "rolldown parseSync直接转native并wrap JSON AST，无options调用沿用ParserOptions.preserveParens默认true；OXC ParenthesizedExpression严格type及唯一expression真实d.ts已读。旧FAIL没有AST projection，不能补造其实际node.type；本契约支持当前窄修方向，真实shape待V11实际保存。",
+    "graphOnlyNarrowFix": "新增unwrapParenthesized只剥严格ParenthesizedExpression，expression须存在且有string type，seen拒循环；仅tableParam.right及reuse.right两处用。原LogicalExpression ||、Assignment =、cache member owner、ArrayExpression和每个真实JS/CSS引用校验完全保，不改parse options、base/import/HTML/CSS/CSP消费者。",
+    "checkerSameNineFamilies": "旧9run完整源码字符串、expected references和mustFail调用行机械相同；5正/4负完整路径断言保留。解析后、inspect前保存实际mapDeps tableParameter AST。每例先存error/assertionError/passed/partial再throw原失败；初始import/setup未进case时仍只保真实log，不伪case。全部9例实际PASS仍待运行。",
+    "unchangedToolBoundary": "tools完整141220 array等V10并重新全SHA/size/mode/uid/link/旧realPath核0；dyn82regular/37chain/@rpath firstexists与OS cache边界、private日志闭合后父SHA归档原V10 consumers均不变。",
+    "unchangedRuntimeContract": "25steps和109260000ms全部相同；childEnv至整个main/finally字节机械相同。原V2fe239/fed3候选不改，4private fetch/test实际仍old a46/026114；two真实RED先exit1后同V2，原8/24/lease4、31/120/130请求、两build/types/sourcepack/patch/原scanner全保。",
+    "ownershipAndCleanup": "单出生deadline/future slots/原helper393f887清理/所有closed/group0与FAIL日志断言原样；HOME/network方向、App/TCC、无生产copy原样。"
+  },
+  "notExecutedOrProven": [
+    "reviewer未运行parseSync/新依赖/probe/producer runtime",
+    "V11 actual AST与9checker PASS",
+    "原fetch两真实RED/whole24/三慢body",
+    "两构建/source provenance/生产交付copy",
+    "最终DMG及browser截图",
+    "App原生自动化"
+  ],
+  "browserSourceReviewStillPending": "INDEPENDENT_BROWSER_TOOL_SOURCE_REVIEW_PENDING.json9e098记录31c400预审待完成及最终actual输入；未签source/runtime准入。",
+  "executionAuthority": "ROOT全文读本exact报告及其独立full0漂移后，可对runner c869/prepare173c/seal683e/source092790/toolcd995同字节准入一次；真实失败继续保留，不用静态PASS代运行。",
+  "noProductSourceChanged": true,
+  "noRuntimeExecutedByReviewer": true
+}

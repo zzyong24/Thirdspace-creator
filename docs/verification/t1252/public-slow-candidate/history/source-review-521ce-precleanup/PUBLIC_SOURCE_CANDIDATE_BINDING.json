@@ -1,0 +1,158 @@
+{
+  "schema": "private-public-source-candidate-binding/v1",
+  "at": "2026-10-12T00:01:54.262494+00:00",
+  "scope": "T1252已批准原测试路径：追加2个真实公共链用例；仅私有候选源码独评，未apply/未运行公共服务/PG/Native正文/Chromium",
+  "specAmendmentNotNeededRootConfirmed": true,
+  "specSha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+  "sourceRecords": [
+    {
+      "path": "docs/features/t1252-cli-http-consumer-budget-closure.md",
+      "sha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c"
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "sha256": "476c4a857b72b172f47923e8f98c0519d7d4d49222d6044a8d4f8d504e02f9d8"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "sha256": "1a5613702ab81e92cc4a33d437d9aa78c58c6f318dd5c2ae838e63887bcb892b"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-public.transport.ts",
+      "sha256": "5275d186348b44c2cc88ab62153d8179a4fae67ff7c13b61ec8fc20c7ac27ef3"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+      "sha256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.ts",
+      "sha256": "7adff0dc79e3d3bba9b0b67f2be47f0b8fb112947414b4ae9390c9ffc053f60e"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "sha256": "89df7926d81f68b8b6dbca54b8b773fd846dc5ab6f7536545144af4bc0e89f01"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "sha256": "402b5e5554568d839a5d9326230dcd7ce4739d70f110d21c5c5827f9709b6e63"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.ts",
+      "sha256": "8347d45f00a32841a62dd65490f557282b998b431a5dc1562ffd431c62db886f"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "sha256": "620a03ac625a1f0e5c407f9d9facf4f89c835a2265cd290497b5930919807b55"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.ts",
+      "sha256": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816"
+    },
+    {
+      "path": "mcp-server/tests/helpers/loopback-cli.ts",
+      "sha256": "396da24a2758d789d5f97ae2d21ef3c49c139be9d7b1d8364a124479419e1617"
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "sha256": "7b3b056f7873a9b5e4df35da6d14d6d3a10730ecd22529529f541fcea082c677"
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "sha256": "3bbbfa9f115eba36d1ba40de3a243d60b65534b383e425b2a1cb113d1f9ccb98"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "sha256": "46ace3fab56c8ed39ebd40e8826f4a00dde09d3d3f76e7b9a15419eaf84568a2"
+    }
+  ],
+  "privateArtifacts": [
+    {
+      "path": "docs/verification/t1252/public-slow-candidate/file-recovery-public-slow-candidate.test.ts",
+      "sha256": "583be69931492591d018279e12d64a5dd5a0f2e8e685d228bd4ed9f870e5dcb0"
+    },
+    {
+      "path": "docs/verification/t1252/public-slow-candidate/public-slow.diff",
+      "sha256": "7b57c440ab3ba1f68b0e19b6b2f50edda50fc6e76649637994cccd0c80254fc0"
+    },
+    {
+      "path": "docs/verification/t1252/public-slow-candidate/ORIGINAL_BODY_INVERSE_PROOF.json",
+      "sha256": "0a483cc2dd2f50efdc82cf1f255e3d0673a6d0158702b8a7c234b07afe78353a"
+    },
+    {
+      "path": "docs/verification/t1252/public-slow-candidate/PRIVATE_TYPE_DIAGNOSTICS.json",
+      "sha256": "bd7deec470eb37fc522dfb7ee35d0caad9924c73781cd1d5f4c7efc0babdf790"
+    },
+    {
+      "path": "docs/verification/t1252/public-slow-candidate/check-private-source.cjs",
+      "sha256": "9b62988fdc6a977526457a800b79ab32f3130ef1e1c04501c49fe99a1b916b90"
+    },
+    {
+      "path": "docs/verification/t1252/public-slow-candidate/b88-actual-list.log",
+      "sha256": "9018520a652afb39714670e072a3dd84372ebd6b49c980915b80fcab2cbe0c36"
+    },
+    {
+      "path": "docs/verification/t1252/public-slow-candidate/b88-final.json",
+      "sha256": "3de8f5e79c40b30c1d3ba61b80e2768ddf85bc042e1e1ec75f8f943a866ce942"
+    },
+    {
+      "path": "docs/verification/t1252/public-slow-candidate/list-b88-only.cjs",
+      "sha256": "1ef3c9555fb0140894f2f4cb53c8b98c03e249113762444f2c3357132e2fa9eb"
+    }
+  ],
+  "privateTypeResult": {
+    "actualExit": 0,
+    "diagnostics": 0,
+    "kind": "原路径in-memory noEmit overlay；不是标准frontend全量types"
+  },
+  "actualB88List": {
+    "actualExit": 0,
+    "listedTests": 72,
+    "exactJournalName": "ipc::tests::external_node_file_journal_fixture",
+    "exactJournalOccurrences": 1,
+    "originalBinarySha256": "b88eec4446f78c6bc3b2e94b936b1a91651b28dae4352eece12aaa135b06295d",
+    "closed": true,
+    "remainingOwnedGroupMembers": [],
+    "ignoredBodyExecuted": false
+  },
+  "bodies": [
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "testMs": 36000000,
+      "newBornDeadlineMs": 36000000,
+      "queueMs": 310000,
+      "maxHttpCalls": 3,
+      "nativeRpcSetupCalls": 4,
+      "httpAlreadyIncludesNativeRecovery": true,
+      "proof": "真实enqueue有限budget，数据库原executionTasks行在claim/reserve前读出生deadline；unknown原call经公共HTTP/真实Rust receipt CAS结算，再原IDresume仅回放保存receipt。原8不延时/不续期。"
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "testMs": 42000000,
+      "newBornDeadlineMs": 36000000,
+      "maxHttpCalls": 4,
+      "actualChromiumStagesPerFormat": 3,
+      "parallelFixedDelayPerStageMs": 110000,
+      "stageOriginalPositiveMs": 120000,
+      "proof": "实际artifact.register事务/currentVersion/sourceHash；受控file source按旧35s fixture明确标注，真实SDK立即开始与固定stage延迟并行；2格式各累计330s，原HTTP/JSON/PNG像素/PDF文字/MIME/hash/跨账号/错版本及原D不续。"
+    }
+  ],
+  "actualRunBoundary": {
+    "originalNative8": "保完整原body、全部assert/default60000；待私有机械预算工具+独评实际跑，不声称当前已跑",
+    "bundledSlowGreen": "另actual-bundled-slow-green/EVIDENCE.json证明原bundle84260+Node32e两310s真实成功，不代公共业务",
+    "publicCandidateRuntimeApproved": false
+  },
+  "findingsHistory": "history/private-dto-deadline-type-red 保5个DTO字段错误；新候选只读DB行代替，未改公开schema"
+}

@@ -1,0 +1,42 @@
+{
+  "kind": "static--list-only，无Next/browser/PG/model。不是运行checkout准入",
+  "dependencyReadOnlyLink": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules",
+  "files": [
+    {
+      "path": "tests-t1246-v3/e2e/acceptance-support.ts",
+      "sha256": "9a0cf984302d842e3f9617b30f57dd43ef76713135b165ae18ba7566484d62c4"
+    },
+    {
+      "path": "tests-t1246-v3/e2e/integrated-browser.spec.ts",
+      "sha256": "6d199d82636d9da584c9b8cbe844bfce9631e838d8db43d9dcf716af58f039e5"
+    },
+    {
+      "path": "tests-t1246-v3/e2e/integrated-dependent.spec.ts",
+      "sha256": "e8b3c8979ffb541771c67a8b51b5b3d4c320b301a88fc9118282ec90b60d340a"
+    },
+    {
+      "path": "tests-t1246-v3/e2e/integrated-native.spec.ts",
+      "sha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33"
+    },
+    {
+      "path": "tests-t1246-v3/e2e/integrated-protocol.spec.ts",
+      "sha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8"
+    },
+    {
+      "path": "tests-t1246-v3/e2e/integrated-routes.spec.ts",
+      "sha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f"
+    },
+    {
+      "path": "tests-t1246-v3/e2e/pi-support.ts",
+      "sha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c"
+    },
+    {
+      "path": "tests-t1246-v3/e2e/protocol-support.ts",
+      "sha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865"
+    },
+    {
+      "path": "tests-t1246-v3/fixtures/codex-protocol.cjs",
+      "sha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453"
+    }
+  ]
+}

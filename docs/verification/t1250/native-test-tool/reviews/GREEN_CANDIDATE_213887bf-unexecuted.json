@@ -1,0 +1,87 @@
+{
+  "status": "PENDING_ROOT_INDEPENDENT_REVIEW",
+  "toolPath": "docs/verification/t1250/native-test-tool/launch-green.cjs",
+  "toolSha256": "d806cb70c66e1c44b5419c3a0aed0a0231ad94f95060ee70b45b3133a17d408e",
+  "inputBindingPath": "docs/verification/t1250/native-test-tool/input-binding-green.json",
+  "inputBindingSha256": "213887bf93d8fa31f624cf11e2ac9237345b33d6ece62f97ae7abfb81dbed0e6",
+  "rootRedToolUnchanged": true,
+  "redInputBindingUnchanged": true,
+  "actualRedRun": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59",
+  "greenFilter": "ipc::tests",
+  "declaredSourceNames": [
+    "t1250_partial_frame_activity_does_not_renew_frozen_deadline",
+    "t1250_backpressured_reply_uses_one_deadline",
+    "t1250_cancel_wakes_owned_reply_without_claiming_write_rollback",
+    "accepted_socket_waits_for_the_authorized_child_to_finish_writing",
+    "t1250_authorized_frame_after_thirty_seconds_keeps_original_operation",
+    "t1250_owned_bridge_stop_wakes_incomplete_frame_without_effect",
+    "file_journal_replays_original_operation_after_host_restart",
+    "file_journal_rejects_same_operation_with_changed_request_before_writing",
+    "file_journal_replay_does_not_overwrite_a_later_version",
+    "authenticated_peer_can_write_read_and_cannot_escape_task",
+    "unauthorized_child_probe",
+    "authorized_child_probe",
+    "exact_spawned_child_can_connect",
+    "different_real_process_is_rejected_even_with_socket_path",
+    "private_socket_runs_reads_and_cancels_mac_process_for_same_task_only",
+    "private_socket_runs_a_real_packaged_node_task_script",
+    "external_node_file_journal_fixture",
+    "external_node_files_host_fixture"
+  ],
+  "originalIgnoredPreserved": true,
+  "greenRuntimeStarted": false,
+  "rustParserReadonlyExitCode": 0,
+  "browserCompiled": false,
+  "windowsCompiled": false,
+  "publicChainNotYetExecuted": true,
+  "sourceBindings": [
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.lock",
+      "sha256": "a2aea4e2b53e7e9aaad471e7fe8daffb450348f83b27e651e0204de1e0546613"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.toml",
+      "sha256": "48b53dc32c591b2ff41f40f38605c542ec34b844e45b624147a2d9b7f5f5f688"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser.rs",
+      "sha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "sha256": "d204948fd4b80291e6dcffa9f5fbb43cc2e1dd9f5609bb05bfca732a3cf35358"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command.rs",
+      "sha256": "5e7245ff479f13014ed854e42fab2b1432396941bd97bb1cf7dd6f121db4b626"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command_windows.rs",
+      "sha256": "562a5151148533f3554ba90687c0efb42df4d2f5de537e64ce00c292bf41d768"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command_windows_sandbox.rs",
+      "sha256": "38b3a678dffef3682a9e61b19c8dbd73d88bdf9a017bc41a976c32e00654d107"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/files.rs",
+      "sha256": "f7fd569c00ba2821511178d14ce88949c53e3ef87a7cb9f71df9d73e5d24d661"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/files_windows.rs",
+      "sha256": "f1400bf8b7582f46b2cc871a816d9746390e9302bddbf11f098e4c4c52a1c2c9"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "sha256": "96d2d4df08422c458b248328940e18308b4de45048c8086309545a9d6dc47cb7"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "sha256": "d0a6b971c28aae27d49134fc091d2eab25edb9fa338ef029a5738aa9b3df508f"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/mod.rs",
+      "sha256": "c8ecef697def879cb1937510679155ff03add7d3c14b24e9f2790766238b3f5e"
+    }
+  ]
+}

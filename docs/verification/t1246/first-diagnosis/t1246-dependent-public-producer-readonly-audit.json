@@ -1,0 +1,761 @@
+{
+  "schema": "t1246-dependent-public-producer-readonly-audit/v1",
+  "createdAt": "2026-10-11T17:50:56.750061+00:00",
+  "frozenProductCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "privateSourceRoot": "/private/tmp/t1246-native-runtime-533",
+  "scope": "原49中的六个依赖key，未扩key",
+  "executionPerformed": {
+    "model": false,
+    "postgres": false,
+    "app": false,
+    "producerHttp": false
+  },
+  "firstRoundOfficialGenerationCalls": 0,
+  "approval": "仅静态生产链审查；不是用例准入PASS或49生成验收",
+  "artifacts": [
+    {
+      "path": "docs/verification/t1246/V3_CONCENTRATED_PROPOSAL.md",
+      "sha256": "b7ba07ae327bf986b20f3f6ce865bfdcede84876d8ce62c46d07aeaf880807b9"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/new-native-v2/FINAL_FIRST_ROUND.json",
+      "sha256": "014db4093d6efb940bdf4c73ddac3b31bca4a3000e85aa680e87903d53bd6f23"
+    }
+  ],
+  "records": [
+    {
+      "key": "reconstruct.project",
+      "testId": "05d77e355062c9acafd9-d6f57ee72c9b5996b112",
+      "staticStatus": "公共生产可实施；真实作品输入尚未交付",
+      "operations": [
+        "projects.create POST /projects",
+        "projects.outputs.create",
+        "artifacts.create",
+        "artifacts.versions.create",
+        "ai.tasks.create POST /ai/tasks taskType=reconstruct.project"
+      ],
+      "producer": "公开 projects.create 接受 source=imported、platformRef；service 只 requireWorkspace 后按 source 设置 review。读稿遍历同项目 output_script 当前版本，优先 contentData.transcript，其次 contentText。原新59仅寻找现有 imported 行，不是公开入口不存在。",
+      "qualification": "同一个真实可写组/项目；task.projectId 与 inputData.projectId 相等；source 必须 imported；至少一个真实非空 output_script 当前逐字稿；所有 IDs 从实际创建响应取得。不能把手动新创作品谎称真实平台采集。",
+      "fixture": "最窄：有权使用的既存历史作品及人工核对逐字稿，公开登记为用户导入，原稿保存 createdByType=user；platformRef 只填实际可证值，没数据保空。不声称采集/ASR/已发布指标实测；指标 0/空可由原读侧诚实处理。纯人工测试作品可测协议，但不能代签历史作品真实来源。",
+      "external": "不要求新供应商或登录；需要真实作品/文本的使用授权与明确输入身份。平台采集覆盖若要宣称，另须真实采集绑定。",
+      "errors": [
+        "仅 source='imported' 的历史作品可重建",
+        "项目无逐字稿，无法反推重建",
+        "历史重建项目与任务归属不符"
+      ],
+      "expected": "prepare 前置失败应保实际 ai task 与准备错误；不能由 driver 固定 throw 伪称产品阻断。完成走 reconstructed-artifact 专用非候选事务，须核原 business/execution/call、真实生成稿与 origin=reconstructed，不能强套 awaiting_confirmation+listResults>0 的通用候选 helper。",
+      "evidence": [
+        "backend/src/modules/projects/projects.service.ts:1044",
+        "backend/src/modules/ai-runtime/reconstruct-business-adapter.ts:12",
+        "backend/src/application/generation/media.ts:79",
+        "backend/src/modules/artifacts/reconstructed-artifact.service.ts:58"
+      ]
+    },
+    {
+      "key": "comment.qa-sift",
+      "testId": "05d77e355062c9acafd9-95513ea51f6e7b0e3a99",
+      "staticStatus": "模型消费者可达；fresh browser 公共评论生产依赖真实采集资格",
+      "operations": [
+        "scheduledJobs.create POST /scheduled-jobs sourceKind=comments",
+        "scheduledJobs.runNow POST /scheduled-jobs/:jobId/run-now",
+        "jobRuns.get / jobRuns.listByJob",
+        "audienceSignals.list GET /audience-signals",
+        "ai.tasks.create taskType=comment.qa-sift"
+      ],
+      "producer": "signals 无公开手工写 op。ingestion 原四 batch-push 已退役。真正写入是 comments collector 取平台评论→ingestComments→candidate.ingestAudienceSignal；后者用 ingestionRunId/source=ingestion 与账号归属。target.awemeId 可走单作品读取，或真实 published publicationIds（最多20）走精确选择。",
+      "qualification": "真实合法平台账号/组与作品来源；run/job/task/signal 同归属。comments input={signalId,rawText,likeCount|null}，执行前按 IDs 重读当前正文，不信客户端原文。无信号不能拿知识 UUID 或仅创建 ingestion run。",
+      "fixture": "公共 browser 当前最窄是合法真实抖音作品+已授权真实账号采集，不打开未获授权登录。已有 test-only collector readComments/readCommentsForWorks 端口可提供明确受控平台响应，真实 service 入库/去重+真实 Codex 可以另做服务集成覆盖，但冻结 composition 没有公共切换夹具入口；该结果不能算 fresh browser/真实平台采集闭包。禁止添生产后门、假 cookie/profile、SQL signals。",
+      "external": "平台读取及可能登录许可；当前未交付真实资格，不能仅用任意公开 RSS 代评论。",
+      "errors": [
+        "评论已删除或不属于当前工作区",
+        "选中的作品不存在或当前账号不可采集"
+      ],
+      "expected": "真实 DouyinNotLoggedInError 使 job_run=needs_reconnect，当前 markWaitingUser 有装配时保任务等待；legacy fallback markFailed，需读回实际状态。其它抓取异常 job_run=failed/task failed。新组无作品可能真实采0成功，它只证明采集运行，不证明 qa-sift 已调用。",
+      "evidence": [
+        "contract/src/operations/candidate.ts:112",
+        "contract/src/operations/ingestion.ts:112",
+        "backend/src/application/collection/comments.ts:55",
+        "backend/src/application/collection/comments.ts:140",
+        "backend/src/modules/ai-runtime/knowledge-generation-business-adapters.ts:35",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.ts:307"
+      ]
+    },
+    {
+      "key": "transcribe postprocess",
+      "testId": "05d77e355062c9acafd9-2d4693048e322256eb0d",
+      "staticStatus": "真实 public transcribe.douyin 可到后处理；资产 ASR 不能代替",
+      "operations": [
+        "projects.create source=imported with truthful platformRef.platform=douyin/externalId",
+        "projects.transcribe POST /projects/:projectId/transcribe {attemptId}",
+        "ai.tasks.get / execution.tasks.get original ID"
+      ],
+      "producer": "projects.transcribe 原公共提交锁目标、读取真实 Douyin锚与已有稿、冻结 awemeIds；Worker 顺序真实取流→ffmpeg抽音→ASR→runTranscribePostprocessInWorker→saveTranscribeArtifact。outputs.production.editor.transcripts.create 只创建 asset.asr owner，虽然真实上传媒体可识别，却没有目标文本后处理消费。",
+      "qualification": "原project/真实awemeId、同group、无既有该aweme逐字稿、attemptId16..128；取得真实音频并经实际 ASR 分片/settled回执聚合。后处理只读完整已确认 ASR 原文，冻结 sourceDigest/template/modelIdentity；不能注入人工稿当ASR或手调 internalport。",
+      "fixture": "可用的最窄公共输入是有使用权、匿名原平台取流可达的真实 Douyin 音视频，沿现有取流不替换域名；匿名失败转登录详情需既有真实授权账号，未授权时停止在真实 waiting_user。本地 WAV/MP4 可以验 asset.asr，但该key还未覆盖。test-only source extractor/ASR provider seam 不可假算官方生成；不得伪ASR产物。",
+      "external": "本地 Whisper 默认 small；ffmpeg + Transformers/ONNX runtime + 对应完整真实模型权重。仅 env.allowLocalModels=true 不证明离线命中/不下载；先核独立 task cache 的模型/配置/tokenizer/ONNX 文件和依赖，再实际离线识别原字节。此次未核权重完整性，也未跑ASR。保 HOME/CODEX_HOME，不复制auth。云ASR需要独立配置，与本轮免独立模型验收不合，不能引新供应商。",
+      "errors": [
+        "ValidationError: 该项目没有关联抖音作品(无 platformRef.externalId),无法抓取逐字稿",
+        "ConflictError: 该项目已经有逐字稿，不支持重复抓取",
+        "后处理需要完整已确认的 ASR 原文",
+        "LOCAL_WHISPER_MODEL_LOAD",
+        "LOCAL_WHISPER_AUDIO_DECODE",
+        "TRANSCRIBE_LOGIN_REQUIRED",
+        "TRANSCRIBE_SOURCE_UNAVAILABLE",
+        "TRANSCRIBE_CAPTCHA_REQUIRED"
+      ],
+      "expected": "来源登录/验证码/不可用走 GenerationFailure waiting_user 真实安全码，保原task/runtime；普通ASR失败原 item=failed→最终 failed/TRANSCRIBE_ITEMS_FAILED，已完成子集不丢；Host/付费回执不明走 unknown_result 原ID，不重发。缺后处理模型/预算会保原文 result.applied=false，转写成功本身不证明 Codex后处理。应核 transcribe:<awemeId>/postprocess:<digest>/model/N 原 tokens ledger +真实Codexbinding与 applied结果。",
+      "evidence": [
+        "backend/src/modules/ai/project-transcription-submission.ts:77",
+        "backend/src/modules/production/production-transcripts.service.ts:60",
+        "ai-worker/src/execution/transcribe-worker-run.ts:33",
+        "ai-worker/src/execution/transcribe-worker-source.ts:58",
+        "backend/src/modules/execution/execution-transcribe-postprocess.service.ts:55",
+        "ai-worker/src/execution/transcribe-postprocess-run.ts:20",
+        "ai-worker/src/runtime/multimodal-whisper-local.ts:264"
+      ]
+    },
+    {
+      "key": "video.visual-review",
+      "testId": "05d77e355062c9acafd9-b9dbd73a2d12175fa241",
+      "staticStatus": "真实 public render生产可实施；不能只list或用素材图片审核",
+      "operations": [
+        "assets.uploads.create→实际PUT→assets.uploads.complete",
+        "outputs.production.editor.save→outputs.production.editor.render POST /outputs/:outputId/production/editor/render {revision,requestId}",
+        "execution.tasks.create POST /execution/tasks spec.taskType=video.render (公开API替代入口，非UI证明)",
+        "execution.tasks.get→execution.tasks.confirm→真实同资产文件 blob200/hash"
+      ],
+      "producer": "保存真实工程并 render 当前冻结revision，经 createEditorRender→execution.tasks.create→exec.video.render。执行器在真实成片产出后 ffmpeg contact-sheet visual-review.jpg→原 parent running 与期限冻结→专用 Codex审核 child。不存在独立公共 video.visual-review op；list renders只读无触发。",
+      "qualification": "同scope project/output、真实active原asset+精确assetFileId/digest；save严格body={expectedRevision,requestId16..128,plan,source:manual}，render严格body={revision正整数,requestId}。已有原editorVersion=3不得强行覆写/降级；该旧renderer准备应新独立output使用支持的v1/v2合法工程，或者明确公开execution.tasks.create API覆盖。props/mountAs必须引用已物化真实字节；真实ffmpeg/ffprobe/Chromium就绪。审核JPEG1..24MB由renderer生成，parent必须 exec.video.render/running；原期限需至少完整120s+收割余量，不人为续期。",
+      "fixture": "最窄：有授权的本地短MP4（真实音视频文件）公共上传，明确手工编辑简单合法工程；可用本轮自己生成的确定性短测试媒体，保FFmpeg命令/字节SHA/ffprobe结果，不能声称AI或真人原片。制作默认安全layout不为洗绿删质量断言；确认 renderManifest 待采纳→同taskconfirm→真实videoasset文件读取。无需平台/登录/ASR。",
+      "external": "现有 Chromium/ffmpeg/ffprobe 本地依赖+官方Codex真实登录/视觉能力；此审查不调用。",
+      "errors": [
+        "随包渲染组件 ffmpeg/ffprobe 缺失或不可用。",
+        "原视频剩余期限不足完整审核预算，已保留生成的成片",
+        "成片审核原视频任务不存在",
+        "原成片审核尚未完成，请核对执行"
+      ],
+      "expected": "渲染失败真实 task failed；审核是可选非阻断：skipped/unavailable可能仍有合法成片 awaiting_confirmation，不能以render成功算该keyPASS。必须原parent + child payload.stageKind=video.visual-review/requestDigest + kind=model settled + officialCodexbinding/result + actualcontactsheet/成片资产证据。Pi无视觉配置返回null；Codex仍实际resolve规格。",
+      "evidence": [
+        "backend/src/modules/production/production.service.ts:391",
+        "frontend/src/server/persistence-client.ts:2065",
+        "backend/src/modules/execution/video-render/executor.ts:1254",
+        "backend/src/modules/execution/execution-video-visual-review.service.ts:33",
+        "backend/src/modules/execution/execution-video-visual-review.service.ts:59"
+      ]
+    },
+    {
+      "key": "intelligence generation",
+      "testId": "05d77e355062c9acafd9-2b1dc2b77d87e0c163d6",
+      "staticStatus": "strategy_backed 当前公共生产可实施；旧草稿“只能历史恢复”判断错误",
+      "operations": [
+        "intelligence.sources.create POST /intelligence/sources runInitial=true→intelligence.runs.get真实状态",
+        "intelligence.transcripts.uploadManual POST /intelligence/transcripts/upload-manual {itemId,inputMode:paste,text}",
+        "positioning.profile.upsert→positioning.statements.create POST /positioning/statements {oneLiner,keywords exactly3,productAnchorIds:[]}",
+        "intelligence.projects.enqueue POST /intelligence/projects/enqueue {itemIds,positioningVersionId,idempotencyKey}"
+      ],
+      "producer": "radar_project_upgrade 原父在122行调用 startTopicPreview strategyBacked:true，topic_preview子经原 generationbridge/Worker 消费 strategy模式，再真实 ensureRadarProject；不是只能恢复历史。公开 previewTopic 不接 strategyBacked 字段，传 positioningVersionId 也不能强制旧模式。",
+      "qualification": "真实item及sourceSnapshot属于原scope；非空 done transcript；定位母版先真实保存，再建statement版本（有masterSnapshot），getStatement校验同属主；父按item固定幂等，原已在途任务不随偏好/版本变化重建。需逐父/子冻结group/engine/deadline，非只模型helper成功。",
+      "fixture": "有限真实公开RSS或受控自有HTTP RSS，经现有公共采集产生snapshot；内容源URL与内容Hash真实。可明确手工稿，不冒称原视频ASR。受控localhost能否通过source/URL安全校验尚未证明，不绕SSRF；优先现已使用W3C公开RSS或自有公网授权源。保存人工定位不需模型API。",
+      "external": "真实RSS网络读取；无需平台登录或ASR。官方Codex可用与此审查分开。",
+      "errors": [
+        "ProfileRequiredError: a CreatorProfile is required before a positioning statement",
+        "批量升级缺少定位版本",
+        "请先等待这条作品的逐字稿完成，再生成改写稿",
+        "作品缺少来源快照"
+      ],
+      "expected": "RSS read真实run可 succeeded_with_items/succeeded_no_change/partial/blocked/failed；无item不进入生成。radar父等子 retry_wait，子failed/blocked/cancelled/paused→父 blocked原child/code；catch RADAR_PROJECT_BLOCKED。成功需真实topic_preview officialcall及 strategy output/persistence，原first blocked仍保留。",
+      "evidence": [
+        "contract/src/operations/intelligence.ts:444",
+        "backend/src/modules/intelligence/radar-project-queue.service.ts:122",
+        "backend/src/modules/intelligence/intelligence.service.ts:4542",
+        "backend/src/modules/positioning/positioning.service.ts:788"
+      ]
+    },
+    {
+      "key": "script.source_similarity",
+      "testId": "05d77e355062c9acafd9-cf9175ae94d765127f5b",
+      "staticStatus": "公共候选采纳可实施；V3摘要漏显式attach与模型前硬门",
+      "operations": [
+        "真实RSS/manual transcript→intelligence.transforms.previewTopic→execution.tasks.get succeeded",
+        "intelligence.transforms.confirmTopic POST /intelligence/transforms/:transformId/confirm-topic",
+        "projects.intelligence.attach POST /projects/:projectId/intelligence {topicId,itemId,sourceSnapshotId,idempotencyKey}（或实际candidates.promote桥，不可假自动）",
+        "projects.scripts.generateCandidate POST /projects/:projectId/scripts/candidates {referenceIds,strategy,idempotencyKey}",
+        "projects.scripts.acceptCandidate POST /projects/:projectId/scripts/candidates/:taskId/accept {editedText?,idempotencyKey}"
+      ],
+      "producer": "confirmTopic只产topic/provenance，不自动给现有j.project建reference；必须真实attach或promote桥。script_candidate父必须succeeded且checkpoint真实referenceIds/candidateText。accept先查同task已采纳版本，再原reference/hash重读与连续30字确定性硬门，之后 evaluator才建立原source_similarity独立ai任务。",
+      "qualification": "原topic已confirmed、item/snapshot完全匹配；project/reference同组；原source transcript hash仍一致；script_candidate ownerType=project/ownerId=project/status=succeeded。sourceDigest由 backend 按 reference.id/transcript.hash/text生成；不能由driver任意拼UUID/digest。",
+      "fixture": "使用上面RSS/manual来源并真实模型生成候选。若要确保测试到语义模型门，可明确用户编辑自写与来源没有连续30字复用的候选，但须保实际原candidate/task/reference；不固定低相似输出、不删除high-risk测试。若真实模型判high，记录有调用但采纳拒绝，不能改threshold。",
+      "external": "RSS真实来源+官方Codex前置两个真实生成，不能计为本key两次独立验收；用原reference与独立similaritycall区分。",
+      "errors": [
+        "Intelligence topic provenance not found",
+        "itemId 与已确认选题的来源作品不一致",
+        "sourceSnapshotId 与已确认选题的来源快照不一致",
+        "Project 稿件候选尚未生成完成",
+        "候选稿与来源逐字稿高度相似，请修改或重新生成后再采纳",
+        "来源逐字稿已变化，请重新采纳",
+        "相似度评估尚未完成（<original taskID>：<real status>），请稍后重试采纳"
+      ],
+      "expected": "高连续复用在模型前拒绝是合法保护而非生成失败；语义调用unknown/waiting/未完成只保原similaritytask，accept不写稿。核原script_candidate.sourceTaskId/projectId/ref/sourceDigest与独立 kind=model settled score；low/medium才保存artifactVersion.aiTaskId=原script_candidate。幂等accept命中已版本不会新调用，不能拿replay当新官方call。",
+      "evidence": [
+        "backend/src/modules/intelligence/project-reference.service.ts:167",
+        "backend/src/modules/intelligence/project-script-candidate.service.ts:202",
+        "backend/src/modules/intelligence/project-script-candidate.service.ts:228",
+        "backend/src/modules/ai-runtime/script-similarity-business-adapter.ts:15"
+      ]
+    }
+  ],
+  "sourceMap": [
+    {
+      "path": "contract/src/operations/projects.ts",
+      "exists": true,
+      "frozen533Sha256": "ab9944821f758fbf8ab94aed746a7a82ec3c673bcb6aaa092b31957912910c68",
+      "privateCurrentSha256": "ab9944821f758fbf8ab94aed746a7a82ec3c673bcb6aaa092b31957912910c68",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "ab9944821f758fbf8ab94aed746a7a82ec3c673bcb6aaa092b31957912910c68",
+      "canonicalCurrentSha256": "ab9944821f758fbf8ab94aed746a7a82ec3c673bcb6aaa092b31957912910c68",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/ai.ts",
+      "exists": true,
+      "frozen533Sha256": "f0774d320edac0afa7c26f15cc2c12a6e58158dca7b7534a278f7bbb775e1afb",
+      "privateCurrentSha256": "f0774d320edac0afa7c26f15cc2c12a6e58158dca7b7534a278f7bbb775e1afb",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "f0774d320edac0afa7c26f15cc2c12a6e58158dca7b7534a278f7bbb775e1afb",
+      "canonicalCurrentSha256": "f0774d320edac0afa7c26f15cc2c12a6e58158dca7b7534a278f7bbb775e1afb",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/artifacts.ts",
+      "exists": true,
+      "frozen533Sha256": "a5e81077e64d45182029b42432eb9459050ff5971a6378cebdba97b5f2136459",
+      "privateCurrentSha256": "a5e81077e64d45182029b42432eb9459050ff5971a6378cebdba97b5f2136459",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "a5e81077e64d45182029b42432eb9459050ff5971a6378cebdba97b5f2136459",
+      "canonicalCurrentSha256": "a5e81077e64d45182029b42432eb9459050ff5971a6378cebdba97b5f2136459",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/candidate.ts",
+      "exists": true,
+      "frozen533Sha256": "4a772d0a7ae372bb2a54b0237f2eaf0912a793622467657c6a95302e018f1c57",
+      "privateCurrentSha256": "4a772d0a7ae372bb2a54b0237f2eaf0912a793622467657c6a95302e018f1c57",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "4a772d0a7ae372bb2a54b0237f2eaf0912a793622467657c6a95302e018f1c57",
+      "canonicalCurrentSha256": "4a772d0a7ae372bb2a54b0237f2eaf0912a793622467657c6a95302e018f1c57",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/ingestion.ts",
+      "exists": true,
+      "frozen533Sha256": "1e262749f302800f0ce8d2c16363cd27e3bbb53c16e6b746befa6859ecd87e28",
+      "privateCurrentSha256": "1e262749f302800f0ce8d2c16363cd27e3bbb53c16e6b746befa6859ecd87e28",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "1e262749f302800f0ce8d2c16363cd27e3bbb53c16e6b746befa6859ecd87e28",
+      "canonicalCurrentSha256": "1e262749f302800f0ce8d2c16363cd27e3bbb53c16e6b746befa6859ecd87e28",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/scheduling.ts",
+      "exists": true,
+      "frozen533Sha256": "77fec5533c3d6e025e48ed15a9d6ba2ec41bf410259a804499b4753996fd07d4",
+      "privateCurrentSha256": "77fec5533c3d6e025e48ed15a9d6ba2ec41bf410259a804499b4753996fd07d4",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "77fec5533c3d6e025e48ed15a9d6ba2ec41bf410259a804499b4753996fd07d4",
+      "canonicalCurrentSha256": "77fec5533c3d6e025e48ed15a9d6ba2ec41bf410259a804499b4753996fd07d4",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/intelligence.ts",
+      "exists": true,
+      "frozen533Sha256": "d7b9474e48cc081613d46bbca17a273a1d536ad6db1c9330784a7107dfc43d8a",
+      "privateCurrentSha256": "d7b9474e48cc081613d46bbca17a273a1d536ad6db1c9330784a7107dfc43d8a",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "d7b9474e48cc081613d46bbca17a273a1d536ad6db1c9330784a7107dfc43d8a",
+      "canonicalCurrentSha256": "d7b9474e48cc081613d46bbca17a273a1d536ad6db1c9330784a7107dfc43d8a",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/positioning.ts",
+      "exists": true,
+      "frozen533Sha256": "be977cc10c8b10d6002475c4b9ec440a36e5ef5fef80dfddea8403b18a23a880",
+      "privateCurrentSha256": "be977cc10c8b10d6002475c4b9ec440a36e5ef5fef80dfddea8403b18a23a880",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "be977cc10c8b10d6002475c4b9ec440a36e5ef5fef80dfddea8403b18a23a880",
+      "canonicalCurrentSha256": "be977cc10c8b10d6002475c4b9ec440a36e5ef5fef80dfddea8403b18a23a880",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/assets.ts",
+      "exists": true,
+      "frozen533Sha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "privateCurrentSha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "canonicalCurrentSha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/production.ts",
+      "exists": true,
+      "frozen533Sha256": "db61251a44b0f800d8fd2e41667a98ba1dfb80f7d9a07a634efece1f1f34b4e2",
+      "privateCurrentSha256": "db61251a44b0f800d8fd2e41667a98ba1dfb80f7d9a07a634efece1f1f34b4e2",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "db61251a44b0f800d8fd2e41667a98ba1dfb80f7d9a07a634efece1f1f34b4e2",
+      "canonicalCurrentSha256": "db61251a44b0f800d8fd2e41667a98ba1dfb80f7d9a07a634efece1f1f34b4e2",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/operations/execution.ts",
+      "exists": true,
+      "frozen533Sha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da",
+      "privateCurrentSha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da",
+      "canonicalCurrentSha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/resources/production-transcripts.ts",
+      "exists": true,
+      "frozen533Sha256": "ab39326d00a5d34f7354eddd7c17a5aa7cafd5a2fb7fbf1f40c12e3e35d95a8f",
+      "privateCurrentSha256": "ab39326d00a5d34f7354eddd7c17a5aa7cafd5a2fb7fbf1f40c12e3e35d95a8f",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "ab39326d00a5d34f7354eddd7c17a5aa7cafd5a2fb7fbf1f40c12e3e35d95a8f",
+      "canonicalCurrentSha256": "ab39326d00a5d34f7354eddd7c17a5aa7cafd5a2fb7fbf1f40c12e3e35d95a8f",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/resources/production-editor.ts",
+      "exists": true,
+      "frozen533Sha256": "eda919052eeab995b1a743dc0296bdb598d43f4fd8ed3d374d5d49958e82d0cc",
+      "privateCurrentSha256": "eda919052eeab995b1a743dc0296bdb598d43f4fd8ed3d374d5d49958e82d0cc",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "eda919052eeab995b1a743dc0296bdb598d43f4fd8ed3d374d5d49958e82d0cc",
+      "canonicalCurrentSha256": "eda919052eeab995b1a743dc0296bdb598d43f4fd8ed3d374d5d49958e82d0cc",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/resources/video-render.ts",
+      "exists": true,
+      "frozen533Sha256": "a288df4916bafde556e5ba10dbc2de2259916187fb9440b572bf7bde52b857f3",
+      "privateCurrentSha256": "a288df4916bafde556e5ba10dbc2de2259916187fb9440b572bf7bde52b857f3",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "a288df4916bafde556e5ba10dbc2de2259916187fb9440b572bf7bde52b857f3",
+      "canonicalCurrentSha256": "a288df4916bafde556e5ba10dbc2de2259916187fb9440b572bf7bde52b857f3",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "contract/src/resources/execution.ts",
+      "exists": true,
+      "frozen533Sha256": "de91eb498230997373abaa225b05120c2a3c24e1d99aa92c9c823b093ce41dab",
+      "privateCurrentSha256": "de91eb498230997373abaa225b05120c2a3c24e1d99aa92c9c823b093ce41dab",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "de91eb498230997373abaa225b05120c2a3c24e1d99aa92c9c823b093ce41dab",
+      "canonicalCurrentSha256": "de91eb498230997373abaa225b05120c2a3c24e1d99aa92c9c823b093ce41dab",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/projects/projects.service.ts",
+      "exists": true,
+      "frozen533Sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925",
+      "privateCurrentSha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925",
+      "canonicalCurrentSha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/projects/project-transcription-target.service.ts",
+      "exists": true,
+      "frozen533Sha256": "9eadb07a7fa02e2cad74d019f0e7e15414ecb0e81f8b89eb710c7ec5a02dc2e4",
+      "privateCurrentSha256": "9eadb07a7fa02e2cad74d019f0e7e15414ecb0e81f8b89eb710c7ec5a02dc2e4",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "9eadb07a7fa02e2cad74d019f0e7e15414ecb0e81f8b89eb710c7ec5a02dc2e4",
+      "canonicalCurrentSha256": "9eadb07a7fa02e2cad74d019f0e7e15414ecb0e81f8b89eb710c7ec5a02dc2e4",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/ai/project-transcription-submission.ts",
+      "exists": true,
+      "frozen533Sha256": "3cb51a485087880598e834c1f976463dfdb5a52afbc19efd8bf1a90d989b01a5",
+      "privateCurrentSha256": "3cb51a485087880598e834c1f976463dfdb5a52afbc19efd8bf1a90d989b01a5",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "3cb51a485087880598e834c1f976463dfdb5a52afbc19efd8bf1a90d989b01a5",
+      "canonicalCurrentSha256": "3cb51a485087880598e834c1f976463dfdb5a52afbc19efd8bf1a90d989b01a5",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/application/generation/media.ts",
+      "exists": true,
+      "frozen533Sha256": "6349c9bb69bebe763b8eb7634d216faf266a45eb52777ef6e8d4095ba28716a8",
+      "privateCurrentSha256": "6349c9bb69bebe763b8eb7634d216faf266a45eb52777ef6e8d4095ba28716a8",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "6349c9bb69bebe763b8eb7634d216faf266a45eb52777ef6e8d4095ba28716a8",
+      "canonicalCurrentSha256": "6349c9bb69bebe763b8eb7634d216faf266a45eb52777ef6e8d4095ba28716a8",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/application/collection/comments.ts",
+      "exists": true,
+      "frozen533Sha256": "1e897edfbbc3c63dab621ff6bec8723fe4852d38b0d7dfd160beef0608787b2c",
+      "privateCurrentSha256": "1e897edfbbc3c63dab621ff6bec8723fe4852d38b0d7dfd160beef0608787b2c",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "1e897edfbbc3c63dab621ff6bec8723fe4852d38b0d7dfd160beef0608787b2c",
+      "canonicalCurrentSha256": "1e897edfbbc3c63dab621ff6bec8723fe4852d38b0d7dfd160beef0608787b2c",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/application/collection/comment-ingestion.ts",
+      "exists": true,
+      "frozen533Sha256": "58285ff922a29f8a34b574b274525d5482c1b09dfd520476e327389073de8bd6",
+      "privateCurrentSha256": "58285ff922a29f8a34b574b274525d5482c1b09dfd520476e327389073de8bd6",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "58285ff922a29f8a34b574b274525d5482c1b09dfd520476e327389073de8bd6",
+      "canonicalCurrentSha256": "58285ff922a29f8a34b574b274525d5482c1b09dfd520476e327389073de8bd6",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/reconstruct-business-adapter.ts",
+      "exists": true,
+      "frozen533Sha256": "fbc8d02652f59fd971817aa241637744ddfde4fffb3e55ec407b3435378aa2dc",
+      "privateCurrentSha256": "fbc8d02652f59fd971817aa241637744ddfde4fffb3e55ec407b3435378aa2dc",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "fbc8d02652f59fd971817aa241637744ddfde4fffb3e55ec407b3435378aa2dc",
+      "canonicalCurrentSha256": "fbc8d02652f59fd971817aa241637744ddfde4fffb3e55ec407b3435378aa2dc",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+      "exists": true,
+      "frozen533Sha256": "a37dc0c65b2022c95d032de89f09ddc40d2824d7c3513eb73ed227e3d0952b20",
+      "privateCurrentSha256": "a37dc0c65b2022c95d032de89f09ddc40d2824d7c3513eb73ed227e3d0952b20",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "a37dc0c65b2022c95d032de89f09ddc40d2824d7c3513eb73ed227e3d0952b20",
+      "canonicalCurrentSha256": "a37dc0c65b2022c95d032de89f09ddc40d2824d7c3513eb73ed227e3d0952b20",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/knowledge-generation-business-adapters.ts",
+      "exists": true,
+      "frozen533Sha256": "f4350f80216344b1e3c75995c000cd59177cebc2f018a75e4d428883d4e23fac",
+      "privateCurrentSha256": "f4350f80216344b1e3c75995c000cd59177cebc2f018a75e4d428883d4e23fac",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "f4350f80216344b1e3c75995c000cd59177cebc2f018a75e4d428883d4e23fac",
+      "canonicalCurrentSha256": "f4350f80216344b1e3c75995c000cd59177cebc2f018a75e4d428883d4e23fac",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/candidate/candidate.service.ts",
+      "exists": true,
+      "frozen533Sha256": "0cb3fa786a34dff34404959dfe7cd5b079d15c2755dbe4896273a4dbee5e63de",
+      "privateCurrentSha256": "0cb3fa786a34dff34404959dfe7cd5b079d15c2755dbe4896273a4dbee5e63de",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "0cb3fa786a34dff34404959dfe7cd5b079d15c2755dbe4896273a4dbee5e63de",
+      "canonicalCurrentSha256": "0cb3fa786a34dff34404959dfe7cd5b079d15c2755dbe4896273a4dbee5e63de",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/scheduled-collection-runner.ts",
+      "exists": true,
+      "frozen533Sha256": "b4596437091ac86f05d0569ce42bfb76a9c7668546a60e146d653e03670f8669",
+      "privateCurrentSha256": "b4596437091ac86f05d0569ce42bfb76a9c7668546a60e146d653e03670f8669",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "b4596437091ac86f05d0569ce42bfb76a9c7668546a60e146d653e03670f8669",
+      "canonicalCurrentSha256": "b4596437091ac86f05d0569ce42bfb76a9c7668546a60e146d653e03670f8669",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/intelligence/radar-project-queue.service.ts",
+      "exists": true,
+      "frozen533Sha256": "3ece48d9dc431c736d29e934decbc4a3ac9dfcf00283357caffb9fb5951b5e39",
+      "privateCurrentSha256": "3ece48d9dc431c736d29e934decbc4a3ac9dfcf00283357caffb9fb5951b5e39",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "3ece48d9dc431c736d29e934decbc4a3ac9dfcf00283357caffb9fb5951b5e39",
+      "canonicalCurrentSha256": "3ece48d9dc431c736d29e934decbc4a3ac9dfcf00283357caffb9fb5951b5e39",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence.service.ts",
+      "exists": true,
+      "frozen533Sha256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d",
+      "privateCurrentSha256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d",
+      "canonicalCurrentSha256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/intelligence/project-reference.service.ts",
+      "exists": true,
+      "frozen533Sha256": "7bbc60f1f1a40285817dfcd8cff4c6e5ca0abb5467b5277f3bace23966fec84a",
+      "privateCurrentSha256": "7bbc60f1f1a40285817dfcd8cff4c6e5ca0abb5467b5277f3bace23966fec84a",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "7bbc60f1f1a40285817dfcd8cff4c6e5ca0abb5467b5277f3bace23966fec84a",
+      "canonicalCurrentSha256": "7bbc60f1f1a40285817dfcd8cff4c6e5ca0abb5467b5277f3bace23966fec84a",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/intelligence/project-script-candidate.service.ts",
+      "exists": true,
+      "frozen533Sha256": "5bd82088b250e4e2aa0e962ff4a7648b2ea998fa30efcd513a2fda1bc994db3d",
+      "privateCurrentSha256": "5bd82088b250e4e2aa0e962ff4a7648b2ea998fa30efcd513a2fda1bc994db3d",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "5bd82088b250e4e2aa0e962ff4a7648b2ea998fa30efcd513a2fda1bc994db3d",
+      "canonicalCurrentSha256": "5bd82088b250e4e2aa0e962ff4a7648b2ea998fa30efcd513a2fda1bc994db3d",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/script-similarity-business-adapter.ts",
+      "exists": true,
+      "frozen533Sha256": "8505629cebeac620e3fe581300deb5cc780d15d9cffc7125bdd36127d6f4df0d",
+      "privateCurrentSha256": "8505629cebeac620e3fe581300deb5cc780d15d9cffc7125bdd36127d6f4df0d",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "8505629cebeac620e3fe581300deb5cc780d15d9cffc7125bdd36127d6f4df0d",
+      "canonicalCurrentSha256": "8505629cebeac620e3fe581300deb5cc780d15d9cffc7125bdd36127d6f4df0d",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/ai/script-similarity-completion.service.ts",
+      "exists": true,
+      "frozen533Sha256": "3be807bb47735f661c4ecd5f08871a507d88403311747e7ac447f0c3dd508a60",
+      "privateCurrentSha256": "3be807bb47735f661c4ecd5f08871a507d88403311747e7ac447f0c3dd508a60",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "3be807bb47735f661c4ecd5f08871a507d88403311747e7ac447f0c3dd508a60",
+      "canonicalCurrentSha256": "3be807bb47735f661c4ecd5f08871a507d88403311747e7ac447f0c3dd508a60",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/positioning/positioning.service.ts",
+      "exists": true,
+      "frozen533Sha256": "d6a91da495c6ee8db09bca8d6ace6d233cb59de16ebfa24e1d1450ed617cdaeb",
+      "privateCurrentSha256": "d6a91da495c6ee8db09bca8d6ace6d233cb59de16ebfa24e1d1450ed617cdaeb",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "d6a91da495c6ee8db09bca8d6ace6d233cb59de16ebfa24e1d1450ed617cdaeb",
+      "canonicalCurrentSha256": "d6a91da495c6ee8db09bca8d6ace6d233cb59de16ebfa24e1d1450ed617cdaeb",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/multimodal/resolve.ts",
+      "exists": true,
+      "frozen533Sha256": "16df4d73b47d64287c82d057f7790522b3145e84bd786fec9d3c648e5e77dcc8",
+      "privateCurrentSha256": "16df4d73b47d64287c82d057f7790522b3145e84bd786fec9d3c648e5e77dcc8",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "16df4d73b47d64287c82d057f7790522b3145e84bd786fec9d3c648e5e77dcc8",
+      "canonicalCurrentSha256": "16df4d73b47d64287c82d057f7790522b3145e84bd786fec9d3c648e5e77dcc8",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/transcribe-business-execution.service.ts",
+      "exists": true,
+      "frozen533Sha256": "9b89c0d9d6b919e2716ceee2c1aed0fcc5b82988e91a29af0898a7eb2bf91d1c",
+      "privateCurrentSha256": "9b89c0d9d6b919e2716ceee2c1aed0fcc5b82988e91a29af0898a7eb2bf91d1c",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "9b89c0d9d6b919e2716ceee2c1aed0fcc5b82988e91a29af0898a7eb2bf91d1c",
+      "canonicalCurrentSha256": "9b89c0d9d6b919e2716ceee2c1aed0fcc5b82988e91a29af0898a7eb2bf91d1c",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-execution-binding.ts",
+      "exists": true,
+      "frozen533Sha256": "e0be33e2bf1256e0015a6ac0eabc2257abb894a0272c70715b699a1b257032ea",
+      "privateCurrentSha256": "e0be33e2bf1256e0015a6ac0eabc2257abb894a0272c70715b699a1b257032ea",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "e0be33e2bf1256e0015a6ac0eabc2257abb894a0272c70715b699a1b257032ea",
+      "canonicalCurrentSha256": "e0be33e2bf1256e0015a6ac0eabc2257abb894a0272c70715b699a1b257032ea",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-postprocess.service.ts",
+      "exists": true,
+      "frozen533Sha256": "d193e790462aeee934864231470711e58585c8fb4d37c747cc9819bf241d6e51",
+      "privateCurrentSha256": "d193e790462aeee934864231470711e58585c8fb4d37c747cc9819bf241d6e51",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "d193e790462aeee934864231470711e58585c8fb4d37c747cc9819bf241d6e51",
+      "canonicalCurrentSha256": "d193e790462aeee934864231470711e58585c8fb4d37c747cc9819bf241d6e51",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+      "exists": true,
+      "frozen533Sha256": "929f2dd63843b9871a221b0011ec5f8333c9d612b9187b0716c67ee2236f577b",
+      "privateCurrentSha256": "929f2dd63843b9871a221b0011ec5f8333c9d612b9187b0716c67ee2236f577b",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "929f2dd63843b9871a221b0011ec5f8333c9d612b9187b0716c67ee2236f577b",
+      "canonicalCurrentSha256": "929f2dd63843b9871a221b0011ec5f8333c9d612b9187b0716c67ee2236f577b",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/production/production-transcripts.service.ts",
+      "exists": true,
+      "frozen533Sha256": "f0b881cbed033c3c8296810d27b9e718437fa72aab0d3c58e60b4e3ea832588c",
+      "privateCurrentSha256": "f0b881cbed033c3c8296810d27b9e718437fa72aab0d3c58e60b4e3ea832588c",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "f0b881cbed033c3c8296810d27b9e718437fa72aab0d3c58e60b4e3ea832588c",
+      "canonicalCurrentSha256": "f0b881cbed033c3c8296810d27b9e718437fa72aab0d3c58e60b4e3ea832588c",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/production/production.service.ts",
+      "exists": true,
+      "frozen533Sha256": "8d4606840c0640a340663cc81f41cdf8274652abdebbadecfc96657580589b26",
+      "privateCurrentSha256": "8d4606840c0640a340663cc81f41cdf8274652abdebbadecfc96657580589b26",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "8d4606840c0640a340663cc81f41cdf8274652abdebbadecfc96657580589b26",
+      "canonicalCurrentSha256": "8d4606840c0640a340663cc81f41cdf8274652abdebbadecfc96657580589b26",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/execution/execution-video-visual-review.service.ts",
+      "exists": true,
+      "frozen533Sha256": "b595af50cec305f52a2b7bdb338b25d9f298cd6439d086f36fd7c8300afadf9b",
+      "privateCurrentSha256": "b595af50cec305f52a2b7bdb338b25d9f298cd6439d086f36fd7c8300afadf9b",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "b595af50cec305f52a2b7bdb338b25d9f298cd6439d086f36fd7c8300afadf9b",
+      "canonicalCurrentSha256": "b595af50cec305f52a2b7bdb338b25d9f298cd6439d086f36fd7c8300afadf9b",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "backend/src/modules/execution/video-render/executor.ts",
+      "exists": true,
+      "frozen533Sha256": "5342d4567efe8f5557da8c76ea547f7b747d119267f529b65a4736e81d06b2a7",
+      "privateCurrentSha256": "5342d4567efe8f5557da8c76ea547f7b747d119267f529b65a4736e81d06b2a7",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "5342d4567efe8f5557da8c76ea547f7b747d119267f529b65a4736e81d06b2a7",
+      "canonicalCurrentSha256": "5342d4567efe8f5557da8c76ea547f7b747d119267f529b65a4736e81d06b2a7",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "ai-worker/src/execution/transcribe-worker-run.ts",
+      "exists": true,
+      "frozen533Sha256": "dd6e27ce858d45aec5bc5445d345fc48bb77079045eb069cedd6723a9c9c82ad",
+      "privateCurrentSha256": "dd6e27ce858d45aec5bc5445d345fc48bb77079045eb069cedd6723a9c9c82ad",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "dd6e27ce858d45aec5bc5445d345fc48bb77079045eb069cedd6723a9c9c82ad",
+      "canonicalCurrentSha256": "dd6e27ce858d45aec5bc5445d345fc48bb77079045eb069cedd6723a9c9c82ad",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "ai-worker/src/execution/transcribe-worker-source.ts",
+      "exists": true,
+      "frozen533Sha256": "81dc2e7b3bff6b79a54635a7328444a14987371e88bd6f6c32f7436c7abfe19c",
+      "privateCurrentSha256": "81dc2e7b3bff6b79a54635a7328444a14987371e88bd6f6c32f7436c7abfe19c",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "81dc2e7b3bff6b79a54635a7328444a14987371e88bd6f6c32f7436c7abfe19c",
+      "canonicalCurrentSha256": "81dc2e7b3bff6b79a54635a7328444a14987371e88bd6f6c32f7436c7abfe19c",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "ai-worker/src/execution/transcribe-postprocess-run.ts",
+      "exists": true,
+      "frozen533Sha256": "fc05b6fd3f3f5770129317ecda75e97e096cd31203e5753d44caa30099d23832",
+      "privateCurrentSha256": "fc05b6fd3f3f5770129317ecda75e97e096cd31203e5753d44caa30099d23832",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "fc05b6fd3f3f5770129317ecda75e97e096cd31203e5753d44caa30099d23832",
+      "canonicalCurrentSha256": "fc05b6fd3f3f5770129317ecda75e97e096cd31203e5753d44caa30099d23832",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "ai-worker/src/execution/transcribe-asr-registry.ts",
+      "exists": true,
+      "frozen533Sha256": "25546bf1b7abc955a53d1eaf09ec24beb9d2d574546d7a98dbcff2b1436b1eaa",
+      "privateCurrentSha256": "25546bf1b7abc955a53d1eaf09ec24beb9d2d574546d7a98dbcff2b1436b1eaa",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "25546bf1b7abc955a53d1eaf09ec24beb9d2d574546d7a98dbcff2b1436b1eaa",
+      "canonicalCurrentSha256": "25546bf1b7abc955a53d1eaf09ec24beb9d2d574546d7a98dbcff2b1436b1eaa",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "exists": true,
+      "frozen533Sha256": "8c295e01d73700674b8ca1b9e2fdcfc58c19499667fbb772edcfad1f8c124d07",
+      "privateCurrentSha256": "8c295e01d73700674b8ca1b9e2fdcfc58c19499667fbb772edcfad1f8c124d07",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "8c295e01d73700674b8ca1b9e2fdcfc58c19499667fbb772edcfad1f8c124d07",
+      "canonicalCurrentSha256": "8c295e01d73700674b8ca1b9e2fdcfc58c19499667fbb772edcfad1f8c124d07",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "ai-worker/src/execution/video-visual-review-worker-run.ts",
+      "exists": true,
+      "frozen533Sha256": "44f6623b4b7d7ecc048308f4ac9c182e2ff73e43be90e5aaeb61d85e55e8b01d",
+      "privateCurrentSha256": "44f6623b4b7d7ecc048308f4ac9c182e2ff73e43be90e5aaeb61d85e55e8b01d",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "44f6623b4b7d7ecc048308f4ac9c182e2ff73e43be90e5aaeb61d85e55e8b01d",
+      "canonicalCurrentSha256": "44f6623b4b7d7ecc048308f4ac9c182e2ff73e43be90e5aaeb61d85e55e8b01d",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "frontend/src/server/projects-transcribe-wrap.ts",
+      "exists": true,
+      "frozen533Sha256": "48f13668324c23f9ac5ef88b083bbd166f659adbc39ecf426c3b1252a6d7e93a",
+      "privateCurrentSha256": "48f13668324c23f9ac5ef88b083bbd166f659adbc39ecf426c3b1252a6d7e93a",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "48f13668324c23f9ac5ef88b083bbd166f659adbc39ecf426c3b1252a6d7e93a",
+      "canonicalCurrentSha256": "48f13668324c23f9ac5ef88b083bbd166f659adbc39ecf426c3b1252a6d7e93a",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "exists": true,
+      "frozen533Sha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d",
+      "privateCurrentSha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d",
+      "privateMatchesFrozen533": true,
+      "integrationCurrentSha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d",
+      "canonicalCurrentSha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d",
+      "newDriverNotInProductCommit": false
+    },
+    {
+      "path": "frontend/tests-t1246-new/e2e/integrated-dependent.spec.ts",
+      "exists": true,
+      "frozen533Sha256": null,
+      "privateCurrentSha256": "173f8502b9a746b512f217448b37dce19b3a7646d3aebeff642371f899e65962",
+      "privateMatchesFrozen533": null,
+      "integrationCurrentSha256": null,
+      "canonicalCurrentSha256": null,
+      "newDriverNotInProductCommit": true
+    },
+    {
+      "path": "frontend/tests-t1246-new/e2e/acceptance-support.ts",
+      "exists": true,
+      "frozen533Sha256": null,
+      "privateCurrentSha256": "984252a5099e369b6d6e13567d7903bfd2554b5a17d5aaa794e75658650c02b0",
+      "privateMatchesFrozen533": null,
+      "integrationCurrentSha256": null,
+      "canonicalCurrentSha256": null,
+      "newDriverNotInProductCommit": true
+    }
+  ],
+  "findings": [
+    {
+      "id": "DP001",
+      "finding": "strategy_backed 公共原父可新建，不应固定旧历史BLOCKED",
+      "affectedKey": "intelligence generation"
+    },
+    {
+      "id": "DP002",
+      "finding": "confirmTopic后显式attach与连续复用硬门不可遗漏",
+      "affectedKey": "script.source_similarity"
+    },
+    {
+      "id": "DP003",
+      "finding": "asset.asr并未调用transcribe postprocess；上传媒体预约方案不能代签此key",
+      "affectedKey": "transcribe postprocess"
+    },
+    {
+      "id": "DP004",
+      "finding": "评论无公共手工写入入口；外部受控collector seam只能明确服务集成覆盖",
+      "affectedKey": "comment.qa-sift"
+    },
+    {
+      "id": "DP005",
+      "finding": "render成功与可选visual审核成功必须独立核原parent/child账本",
+      "affectedKey": "video.visual-review"
+    },
+    {
+      "id": "DP006",
+      "finding": "reconstruct非候选专用完成事务与真实导入输入须分别核，通用helper不能误判",
+      "affectedKey": "reconstruct.project"
+    }
+  ]
+}

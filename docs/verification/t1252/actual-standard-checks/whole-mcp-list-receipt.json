@@ -1,0 +1,38 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/vitest.mjs",
+    "list",
+    "--json=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/actual-list.json",
+    "--maxWorkers=1",
+    "--no-file-parallelism"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/whole-mcp-list.log",
+  "pid": 33880,
+  "identity": {
+    "pid": 33880,
+    "pgid": 33880,
+    "uid": 501,
+    "birth": "Mon Oct 12 07:22:31 2026",
+    "startedAt": 1791760951663
+  },
+  "startedAt": "2026-10-11T23:22:31.663Z",
+  "endedAt": "2026-10-11T23:22:35.694Z",
+  "elapsedMs": 4031,
+  "budgetMs": 900000,
+  "deadlineAt": "2026-10-11T23:37:31.663Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

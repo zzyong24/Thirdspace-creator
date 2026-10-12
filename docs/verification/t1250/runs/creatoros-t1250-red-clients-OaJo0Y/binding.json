@@ -1,0 +1,88 @@
+{
+  "approved": true,
+  "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "phase": "red",
+  "group": "clients",
+  "toolSha256": "ed30d07285d6cf07a3f076c515d14b5a9c9857c3da47d3d88493c285eb628e06",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "selectedInputDigest": "6235ff0644a3e767cf8807e4a0d5858ad9c95736aa2c886e226f0be1d7ef3713",
+  "reviewPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools/ROOT_RED_CLIENTS_REVIEW.json",
+  "reviewSha256": "30653af304b6e884e90efe38c105df2b3fb3f92772a31858f47e50ad2531f597",
+  "files": [
+    "frontend/src/server/workbench-native-client.test.ts",
+    "frontend/src/server/workbench-browser-client.test.ts"
+  ],
+  "selectedInputsBefore": [
+    {
+      "path": "ai-worker/package.json",
+      "sha256": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460"
+    },
+    {
+      "path": "backend/package.json",
+      "sha256": "ee9db46bbe172a6d8f6f634b30733321cbf2c64409659c746991484da356e9bf"
+    },
+    {
+      "path": "contract/package.json",
+      "sha256": "6327650d290062fa602963a587e5787ef3621cada56f50e45883c3287cfc99dc"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea"
+    },
+    {
+      "path": "frontend/package.json",
+      "sha256": "5b4aa71a1e29ca0682f023c6c45a870ade2deacc42342530c9fefdb193648fda"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.test.ts",
+      "sha256": "65a8897fdcbda175f404440cea5a7800cfb0a1b5ab3374fc0745da4b2c146272"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "sha256": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.test.ts",
+      "sha256": "c9798ec5a3a7c5edc076d66aa0f13b428d6bbf2e8efeb740ede6d9da18fe4a53"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "sha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc"
+    },
+    {
+      "path": "frontend/src/test/empty-module.ts",
+      "sha256": "fa112415005059d40400625def97154acc13079693545398c47c210070a9ab1f"
+    },
+    {
+      "path": "frontend/src/test/setup.ts",
+      "sha256": "10d841e42fdb88ca4e51afef9447253a1860513384c412db170437e6849dbb81"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6"
+    }
+  ],
+  "tmp": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1250-red-clients-OaJo0Y",
+  "actualDataRoots": {
+    "app": "CREATOROS_APP_DATA_DIR",
+    "db": "CREATOROS_DB_DIR",
+    "media": "CREATOROS_MEDIA_ROOT",
+    "browser": "CREATOROS_BROWSER_POOL_DIR",
+    "workbench": "CREATOROS_WORKBENCH_ROOT",
+    "backups": "CREATOROS_DATABASE_BACKUP_DIR",
+    "douyin": "CREATOROS_DOUYIN_AUTH_DIR",
+    "web": "CREATOROS_WEB_AUTH_DIR"
+  },
+  "HOMEUnchanged": true,
+  "CODEX_HOMEUnchanged": true,
+  "sharedBuild": false,
+  "backendWriter": false,
+  "nativeApp": false,
+  "officialModel": false
+}

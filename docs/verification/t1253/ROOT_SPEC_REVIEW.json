@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-11T22:08:51.857047+00:00",
+  "verdict": "PASS_SPEC_ONLY",
+  "specSha256": "093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19",
+  "packetSha256": "3559300884278286de836130dbb17765d409e2415f2335deebdfc6fdbb589adf",
+  "actualProducerAndTestDrift": 0,
+  "fullSpecAndThreeTestAndEightOriginalFailureStacksRead": true,
+  "unknownMustObserveOriginalStimulusBeforeCandidate": true,
+  "notRuntimePass": true,
+  "noProductionWritesAuthorized": true
+}

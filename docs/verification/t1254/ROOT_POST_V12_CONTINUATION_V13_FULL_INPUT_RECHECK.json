@@ -1,0 +1,20 @@
+{
+  "task": "T-1254",
+  "asOf": "2026-10-12T04:48:04.260996+00:00",
+  "scope": "T1254_POST_V12_TWO_REAL_RED_PRIVATE_V2_MODE_REPAIR_REMAINING19_TYPES_BUILD_GRAPH_ONLY",
+  "sealSha256": "948448ff91957eeb0d7d613f7716d292f6c44c780d67072f7c651bfc54c634b5",
+  "prepareSha256": "3becc6b2137316f014e76b0413b5c62203be1798026a632c460db03a28f3b0cc",
+  "sourceSnapshotDigest": "26b028843e335f4234f29603baa2ed50aaa1d663710c0b2917cd537ff6088823",
+  "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+  "inputs": 1752,
+  "tools": 141220,
+  "artifactCount": 17,
+  "allRowsChecked": 142989,
+  "bytesRead": 2854096009,
+  "elapsedSeconds": 23.601610957994126,
+  "drift": [],
+  "fourRealPathSymlinksActuallyChecked": true,
+  "actualRpathPriorityChecked": true,
+  "noCandidateExecution": true,
+  "noModeChange": true
+}

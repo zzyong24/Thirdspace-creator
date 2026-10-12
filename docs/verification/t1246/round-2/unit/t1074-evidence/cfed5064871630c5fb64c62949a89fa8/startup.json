@@ -1,0 +1,41 @@
+{
+  "file": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/pg_ctl",
+  "args": [
+    "-D",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3/data",
+    "-l",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3/postgres.log",
+    "-w",
+    "-t",
+    "180",
+    "-o",
+    "-h 127.0.0.1 -p 53415 -k /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3",
+    "start"
+  ],
+  "pid": 87481,
+  "identity": {
+    "pid": 87481,
+    "pgid": 87481,
+    "uid": 501,
+    "birth": "Mon Oct 12 05:15:08 2026",
+    "startedAt": 1791753308196
+  },
+  "startedAt": "2026-10-11T21:15:08.196Z",
+  "endedAt": "2026-10-11T21:15:08.411Z",
+  "elapsedMs": 215,
+  "budgetMs": 360000,
+  "deadlineAt": "2026-10-11T21:21:08.196Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": true,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "waiting for server to start.... done\nserver started\n",
+  "stderr": ""
+}

@@ -1,0 +1,22 @@
+{
+  "count": 2,
+  "tests": [
+    {
+      "id": "87418b536bb3b16b9965-9d167bbc2a2b29b9bb07",
+      "title": "renders the settings structure on the /settings route",
+      "file": "e2e/settings.spec.ts",
+      "line": 158,
+      "project": "e2e",
+      "timeout": 74100000
+    },
+    {
+      "id": "87418b536bb3b16b9965-1daf9239c5bf49000f59",
+      "title": "[T-1232] 外观主题与密度按本地消费者持久并返回刷新",
+      "file": "e2e/settings.spec.ts",
+      "line": 283,
+      "project": "e2e",
+      "timeout": 74100000
+    }
+  ],
+  "notExecuted": true
+}

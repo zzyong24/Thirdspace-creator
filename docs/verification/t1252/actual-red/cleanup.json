@@ -1,0 +1,33 @@
+{
+  "elapsedMs": 244.11779199994635,
+  "budgetMs": 1200000,
+  "confirmed": true,
+  "survivors": [],
+  "proofErrors": [],
+  "children": [
+    {
+      "label": "headers",
+      "pid": 20151,
+      "registered": {
+        "pid": 20151,
+        "ppid": 20142,
+        "uid": 501,
+        "birth": "Mon Oct 12 06:33:28 2026",
+        "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/red-http-tool/protocol-red.cjs headers /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-ANZdLY f0757f924f378ed53b8680c5"
+      },
+      "closed": true
+    },
+    {
+      "label": "body",
+      "pid": 21612,
+      "registered": {
+        "pid": 21612,
+        "ppid": 20142,
+        "uid": 501,
+        "birth": "Mon Oct 12 06:38:29 2026",
+        "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/red-http-tool/protocol-red.cjs body /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-ANZdLY f0757f924f378ed53b8680c5"
+      },
+      "closed": true
+    }
+  ]
+}

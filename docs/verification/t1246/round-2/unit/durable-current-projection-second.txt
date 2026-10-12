@@ -1,0 +1,141 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+stderr | src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：http429
+[ai-model-stream] output=false class=Error reason=http_429 status=429 message="429: {\"message\":\"[REDACTED] rate limit\"}"
+
+stderr | src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：http429
+GenerationFailure [Error]: http_429
+    at generationFailure (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/generation-error.ts:28:40)
+    at wrapStream (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-stream-model.ts:166:27)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Object.doStream (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:14101:27)
+    at execute (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8008:26)
+    at runWithTracingChannelSpan (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4084:12)
+    at executeLanguageModelCall (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4292:14)
+    at streamLanguageModelCall (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8006:7)
+    at _retryWithExponentialBackoff (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:2690:12)
+    at streamStep (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:9280:15) {
+  outcome: 'retry_wait',
+  errorCode: 'http_429',
+  retryAfterMs: 1000
+}
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts (8 tests | 2 failed) 24610ms
+   × 真实聊天 Worker 回合绑定账本并恢复：completed 4145ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：unknown  2742ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：approval  3244ms
+   × 真实聊天 Worker 回合绑定账本并恢复：denied 2851ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：empty  2670ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：length  3205ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：http429  2645ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：repeat  3106ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：completed
+AssertionError: expected [ { type: 'step-start', …(5) }, …(4) ] to deeply equal [ { type: 'step-start', …(5) }, …(4) ]
+
+- Expected
++ Received
+
+@@ -6,10 +6,18 @@
+      "text": undefined,
+      "toolCallId": undefined,
+      "type": "step-start",
+    },
+    {
++     "input": undefined,
++     "output": undefined,
++     "state": "done",
++     "text": "先查询。",
++     "toolCallId": undefined,
++     "type": "text",
++   },
++   {
+      "input": {
+        "query": "真实查询",
+      },
+      "output": {
+        "__creatorosOutcome": {
+@@ -27,18 +35,10 @@
+      },
+      "state": "output-available",
+      "text": undefined,
+      "toolCallId": "read-1",
+      "type": "tool-web_read",
+-   },
+-   {
+-     "input": undefined,
+-     "output": undefined,
+-     "state": "done",
+-     "text": "先查询。",
+-     "toolCallId": undefined,
+-     "type": "text",
+    },
+    {
+      "input": undefined,
+      "output": undefined,
+      "state": undefined,
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts:169:50
+    167|         return part;
+    168|       });
+    169|       expect(visible(saved!.parts as unknown[])).toEqual(visible(expec…
+       |                                                  ^
+    170|     }
+    171|     expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：denied
+AssertionError: expected [ { type: 'step-start' }, …(3) ] to deep equally contain ObjectContaining{…}
+
+- Expected:
+ObjectContaining {
+  "approval": ObjectContaining {
+    "approved": false,
+  },
+  "state": "approval-responded",
+  "type": "tool-web_read",
+}
+
++ Received:
+[
+  {
+    "type": "step-start",
+  },
+  {
+    "approval": {
+      "approved": false,
+      "id": "chat-approval:call_46c0c2b6-2647-4b77-b728-3e4d7c6f4b9b:read-1",
+    },
+    "input": {
+      "query": "真实查询",
+    },
+    "state": "output-denied",
+    "toolCallId": "read-1",
+    "type": "tool-web_read",
+  },
+  {
+    "type": "step-start",
+  },
+  {
+    "state": "done",
+    "text": "未执行读取",
+    "type": "text",
+  },
+]
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts:154:35
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  03:46:12
+   Duration  28.39s (transform 2.23s, setup 0ms, import 3.61s, tests 24.61s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/durable-current-projection-second.json

@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-11T15:08:01.695712+00:00",
+  "id": "DR005",
+  "productCandidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "phase": "startup/test-file configuration loader; no test bodies executed",
+  "actualReport": "docs/verification/t1246/round-1/533224f/browser-original-ready/results.json",
+  "actualStats": {
+    "startTime": "2026-10-11T14:56:36.090Z",
+    "duration": 55821.825000000004,
+    "expected": 0,
+    "skipped": 116,
+    "unexpected": 54,
+    "flaky": 0
+  },
+  "testBodyExecutions": 0,
+  "reportedLoaderFailures": 54,
+  "notRun": 116,
+  "reason": "original globalSetup wrote owned baseline-fingerprint.json to frozen frontend/tests, worker repeated config exact100 guard rejected added file",
+  "notProductFailure": true,
+  "redLog": "docs/verification/t1246/round-1-original-console-ready.txt",
+  "repairScope": "only copied runtime OUTPUT roots; input/assertion bytes untouched; independent rereview before execution"
+}

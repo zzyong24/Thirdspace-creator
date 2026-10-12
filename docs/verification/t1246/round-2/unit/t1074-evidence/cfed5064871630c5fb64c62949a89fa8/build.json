@@ -1,0 +1,35 @@
+{
+  "file": "pnpm",
+  "args": [
+    "--filter",
+    "@creatoros/ai-worker",
+    "build"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "pid": 87504,
+  "identity": {
+    "pid": 87504,
+    "pgid": 87504,
+    "uid": 501,
+    "birth": "Mon Oct 12 05:15:08 2026",
+    "startedAt": 1791753308587
+  },
+  "startedAt": "2026-10-11T21:15:08.587Z",
+  "endedAt": "2026-10-11T21:15:09.855Z",
+  "elapsedMs": 1268,
+  "budgetMs": 1800000,
+  "deadlineAt": "2026-10-11T21:45:08.587Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "\n> @creatoros/ai-worker@0.1.0 build /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker\n> node scripts/build.mjs\n\n",
+  "stderr": "▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-acp-host.ts:11:88:\n      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));\n         ╵                                                    ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    vendor/acpx/src/version.ts:6:90:\n      6 │ ...string\" ? __dirname : path.dirname(fileURLToPath(import.meta.url));\n        ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    vendor/acpx/src/agent-registry.ts:319:42:\n      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));\n          ╵                                           ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    vendor/codex-acp/src/CodexCli.ts:29:89:\n      29 │ ...= \"string\" ? __filename : import.meta.url).resolve(\"@openai/cod...\n         ╵                              ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:\n      27 │ ...= \"string\" ? __filename : import.meta.url).resolve(\"@openai/cod...\n         ╵                              ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n▲ [WARNING] \"import.meta\" is not available with the \"cjs\" output format and will be empty [empty-import-meta]\n\n    src/execution/codex-app-server.ts:47:76:\n      47 │ ...re(typeof __filename === \"string\" ? __filename : import.meta.url);\n         ╵                                                     ~~~~~~~~~~~\n\n  You need to set the output format to \"esm\" for \"import.meta\" to work correctly.\n\n"
+}

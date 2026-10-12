@@ -1,0 +1,41 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/scripts/creatoros-request-budget-static-delivery.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/frozen-entry/index.html",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/delivery-static",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/reports/static-delivery-graph.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/child-logs/static-delivery-graph.log",
+  "pid": 53602,
+  "identity": {
+    "pid": 53602,
+    "pgid": 53602,
+    "uid": 501,
+    "birth": "Mon Oct 12 14:37:25 2026",
+    "startedAt": 1791787045349
+  },
+  "startedAt": "2026-10-12T06:37:25.349Z",
+  "endedAt": "2026-10-12T06:37:28.628Z",
+  "elapsedMs": 3279,
+  "budgetMs": 900000,
+  "deadlineAt": "2026-10-12T06:52:25.349Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

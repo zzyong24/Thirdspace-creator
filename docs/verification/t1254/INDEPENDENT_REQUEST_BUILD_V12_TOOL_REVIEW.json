@@ -1,0 +1,95 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T04:15:52.715086+00:00",
+  "status": "PASS_STATIC_EXACT_TOOL_REVIEW_NOT_EXECUTED",
+  "approvedForRootExactAdmission": true,
+  "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "e4973dc465af506a910d6344a75d75af47e2e2c5607365b36061d31449bd17b7",
+  "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+  "runnerSha256": "2f8258b5a1e08587b47a819299390e9252dc9784ce4165c0ba0edbef0c4e6a48",
+  "realRequestDriverSha256": "c383e974e470eb8285685d6ca3a06a0686b5daa93470da02a23fe2737aa35963",
+  "sealSha256": "bb4a5a9b9882d01f69f45f1bbf4580db263ca4d3c24ed89a7e1db51ed1824512",
+  "prepareSha256": "04add95c23a5443890e98553885369699e37094cc7acd50d6ed79efd58edd9f6",
+  "readSourceAndDiffs": [
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V12_HANDOFF.md",
+      "sha256": "c2ed90e395882669e08f87264c56cca1371140734c31f8ab81188b87042ec2ce"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V12_FULL_SEAL.json",
+      "sha256": "bb4a5a9b9882d01f69f45f1bbf4580db263ca4d3c24ed89a7e1db51ed1824512"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V12_PREPARE.json",
+      "sha256": "04add95c23a5443890e98553885369699e37094cc7acd50d6ed79efd58edd9f6"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V12_DELTA.json",
+      "sha256": "374558a285ee0170af80ee4301f395f90d669cef9c1d22bc599838edab1154ba"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V12_FROM_V11.diff",
+      "sha256": "1448252396436d50cbf60f4df5587f180ee9529a6bdf61c2bfe0a77b9753918f"
+    },
+    {
+      "file": "/tmp/t1254-readonly/run-owned-doocs-request-and-build-v12.cjs",
+      "sha256": "2f8258b5a1e08587b47a819299390e9252dc9784ce4165c0ba0edbef0c4e6a48"
+    },
+    {
+      "file": "/tmp/t1254-readonly/doocs-real-request-lifecycle.mjs",
+      "sha256": "c383e974e470eb8285685d6ca3a06a0686b5daa93470da02a23fe2737aa35963"
+    },
+    {
+      "file": "/tmp/t1254-readonly/seal-request-build-v12.py",
+      "sha256": "ff565ff79b265a7af19da5b4944c61ad537e9a6ae648ed22937391864c5cdd45"
+    }
+  ],
+  "independentActualFullByteCheck": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_V12_FULL_INPUT_RECHECK.json",
+    "sha256": "2e8a1731101828bbbd0d57e3f239d9b4da2c17b8ce8bd9f1ae15868d2114a758",
+    "inputCount": 1713,
+    "toolRows": 141220,
+    "hashChecks": 135479,
+    "linksIncludingOldRealPathSchema": 7488,
+    "bytesIncludingArtifactsAndFourMutableOriginals": 2780821762,
+    "elapsedMs": 26507.47,
+    "drift": [],
+    "toolsEntireArrayEqualV11": true
+  },
+  "reviewConclusion": {
+    "realCloseEventProof": "connection回调立即登记唯一close Promise；仅真实socket close事件增加计数、删除该Set成员并resolve。closing期间新connection同登记/destroy；没有socket.closed/destroyed getter、tick等替代或Set.clear/提前删成员。",
+    "cleanupOrderingAndAllConnections": "单finally先closing=true、server.close停止接受，再destroy现有socket/closeAllConnections；同一120k出生窗并行await listener+全部已登记Promise，继续await Set中后来加入的真实Promise直到Set0，events严格等promiseCount。",
+    "withinBudgetMonotonic": "每setup/cleanup withinBudget只有一个performance出生和一个120k timer；完成then再次查同一elapsed>=budget即失败，不能靠eventloop晚调度和清timer延限。while等待新增连接不重新创建截止。",
+    "cleanupFailureAndCaseContinuation": "实际cleanupError/cleanupComplete=false保记录并break；setup/原断言错误保overall failed，只有完整清理后可继续剩余独立case。HANDOFF曾写setup也stop，已只修文案准确，不更代码/封印/预算。",
+    "bodyAssertionsUnchanged": "原module import/global fetch、1POST、nonce/MIME/JSON、31/125/130 delay和120自然abort/160显式budget、完整body/原AbortError与出生阈值断言均保持，不拿cleanup错误冒充请求断言RED。",
+    "runnerStrictAdmission": "原sourcea46/passedfalse/errorAbortError/1POST/assertionError/listenerClosed/remaining0/elapsed>=29500严格门仍在，再拒cleanupError/不完整/events!=promises；绿色三case也增加相同清理门。两真实RED完整接受后才同V2四private源apply。",
+    "fullBudgets": "仅native-red/static-red由180k→540k，覆盖setup120k+旧请求30k+cleanup120k+完整启动/退出余量；green1.8M覆盖三次各最大setup120k+request160k+cleanup120k=1.2M及600k余量。原其余23positive slots/helper生命周期/PREPARE/APPLY/AFTER不减，TOTAL增加720k至109980000，future槽仍按完整剩余sum准入、出生不续期。",
+    "scopeUnchanged": "25step顺序、Graph017ac/checkerb9e5、V2fe239/fed3、types/24完整/lease4/两build/sourcepack/patch/原scanner、dyn82/37/firstexists、private日志先闭合后父SHA归档、HOME/network/TCC无改；无生产copy/App/model。"
+  },
+  "primaryCloseConsumers": {
+    "actualNodeBuiltinProof": {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/ROOT_NODE25_CLOSED_STATE_BEFORE_CLOSE_EVENT_READONLY.json",
+      "sha256": "55dc14f658ea7b5cc3537aa996f1f3938565845a56b60deca92e4b91035fe746",
+      "fact": "实际Node25 builtin kClosed先置，再nextTick emitCloseNT发event，故getter不等真实事件已观察。报告全文已读，不运行候选。"
+    },
+    "officialExactVersionReference": "https://nodejs.org/download/release/v25.9.0/docs/api/http.html#servercloseallconnections",
+    "officialProtocolFact": "Node25.9官方HTTP文档建议server.close之后调用closeAllConnections，避免关闭期间新增连接race；本候选顺序一致。"
+  },
+  "preservedActualHistory": {
+    "V11": "nonce7898956真实network0/checker9/nativeold8通过；native旧31s成功断言实际失败且AbortError/1POST，elapsed30003.785833、child30288code1/closed/group0；remainingSockets1使runner停止，wrapperEOF1/4of25/245642ms，未staticred/apply/build。真实RED已观察但清理准入未通过，不能回写为完整TDD通过。",
+    "oldReal0253": "完整history原字节保留，10raw入V12实际input并全SHA核。",
+    "olderFailures": "V8 syntax/V9 bootstrap/V10checker及missing历史均保，不因新静态PASS改变。"
+  },
+  "pendingOutsideThisReview": [
+    "V12 actual真实close/两套RED完整准入",
+    "同V2 whole24及31/120/130秒绿测",
+    "两构建/完整交付/sourcearchive/patch实际通过及生产copy准入",
+    "新HEAD/11Worker/DMG与browser freshfinalseal",
+    "browser source31c BT001/002/003下一候选",
+    "App原生自动化验收（用户不授权）"
+  ],
+  "executionAuthority": "ROOT读取本exact code报告及其独立full0 proof后可对2f825/c383/bb4a/04add/e497/cd995同字节准入一次；本静态PASS不替真实运行结果。",
+  "noRuntimeCandidateExecutedByReviewer": true,
+  "noProductSourceChangedByReviewer": true
+}

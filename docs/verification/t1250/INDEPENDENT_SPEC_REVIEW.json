@@ -1,0 +1,292 @@
+{
+  "schema": "independent-spec-source-review/v1",
+  "reviewedAt": "2026-10-11T20:45:09.877537+00:00",
+  "reviewer": "/root/engine_coverage_audit",
+  "task": "T-1250",
+  "verdict": "PASS_SPEC_ONLY",
+  "spec": {
+    "path": "docs/features/t1250-positive-timeout-consumer-closure.md",
+    "sha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+    "canonicalSameBytes": true
+  },
+  "formalPacket": "docs/verification/t1250/spec-review-initial.json",
+  "formalPacketSha256": "cd9ecba8dc54428efc1b9891f34d2b6044f4375b07b7ff7c06925043f343fd80",
+  "sourceBindingDocument": {
+    "path": "docs/verification/t1250/SPEC_CANDIDATE_SOURCE_BINDING.json",
+    "sha256": "c19e08211a162322fcfbbe5c51983a554a7ab5a143951c4100ca8bb6e61304a1",
+    "historicalSpecSha256": "ba618de983bccaed60476af010bdaeba60b4607c2c604682ad42f5f42e87ebb1",
+    "note": "原source binding仍记录ba618历史候选；本审直接按最新0c9468 SPEC及当前24源逐SHA核，不拿旧specSHA签最终。"
+  },
+  "writeSet": [
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "exists": true,
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "checkedCurrentSha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "exists": true,
+      "sha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "checkedCurrentSha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "exists": true,
+      "sha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "checkedCurrentSha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "exists": true,
+      "sha256": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866",
+      "checkedCurrentSha256": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "exists": true,
+      "sha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "checkedCurrentSha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.ts",
+      "exists": true,
+      "sha256": "5e020792798d29f08ccb85b1799a223f6239674f81f096259b84c859794cc2a3",
+      "checkedCurrentSha256": "5e020792798d29f08ccb85b1799a223f6239674f81f096259b84c859794cc2a3"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "exists": true,
+      "sha256": "af0ad5df4f281725c20cf3d4d9450de2cd45590730a4e72ac26b2195c0660e00",
+      "checkedCurrentSha256": "af0ad5df4f281725c20cf3d4d9450de2cd45590730a4e72ac26b2195c0660e00"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "exists": true,
+      "sha256": "bcad3a9bb7cdbe57de165108d5ed4836c54e7ff58ab78e36113e1e0bee93d3b5",
+      "checkedCurrentSha256": "bcad3a9bb7cdbe57de165108d5ed4836c54e7ff58ab78e36113e1e0bee93d3b5"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "exists": true,
+      "sha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "checkedCurrentSha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "exists": true,
+      "sha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "checkedCurrentSha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "exists": true,
+      "sha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "checkedCurrentSha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7"
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "exists": true,
+      "sha256": "25326430f1cef5b3ef6abdf7c54d89ce4787e5164cdad81d6430fe216c772d91",
+      "checkedCurrentSha256": "25326430f1cef5b3ef6abdf7c54d89ce4787e5164cdad81d6430fe216c772d91"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "exists": true,
+      "sha256": "930bafd2538d1f2fe7aab03b5535ed182b3d12b580a2fad8463254760e7fa310",
+      "checkedCurrentSha256": "930bafd2538d1f2fe7aab03b5535ed182b3d12b580a2fad8463254760e7fa310"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "exists": true,
+      "sha256": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa",
+      "checkedCurrentSha256": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.test.ts",
+      "exists": true,
+      "sha256": "fc446fcb85924ceadf715e186f24b54eb03855da707f699ab827e1e49ff23abb",
+      "checkedCurrentSha256": "fc446fcb85924ceadf715e186f24b54eb03855da707f699ab827e1e49ff23abb"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.test.ts",
+      "exists": true,
+      "sha256": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+      "checkedCurrentSha256": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab"
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "exists": true,
+      "sha256": "faecdb2955617fa23362cfeb82ceba82ec9db66c2a0c5946fb65d0cb0b51eac0",
+      "checkedCurrentSha256": "faecdb2955617fa23362cfeb82ceba82ec9db66c2a0c5946fb65d0cb0b51eac0"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.test.ts",
+      "exists": true,
+      "sha256": "a24837f2abda9f7a03ae0a95af2ebc804b76d63d5610c5151ace848d6b3d0b81",
+      "checkedCurrentSha256": "a24837f2abda9f7a03ae0a95af2ebc804b76d63d5610c5151ace848d6b3d0b81"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "exists": true,
+      "sha256": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a",
+      "checkedCurrentSha256": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.test.ts",
+      "exists": true,
+      "sha256": "8dd2bee68dc566db777803ec81f8c233bfbb35278c04eb5d5393ffbf21d324e0",
+      "checkedCurrentSha256": "8dd2bee68dc566db777803ec81f8c233bfbb35278c04eb5d5393ffbf21d324e0"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "exists": true,
+      "sha256": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2",
+      "checkedCurrentSha256": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.test.ts",
+      "exists": true,
+      "sha256": "9871b6a64dfb86b06e6e8dc6c24e01a8922ad643f7ae02b302ee2d99adcfaf2d",
+      "checkedCurrentSha256": "9871b6a64dfb86b06e6e8dc6c24e01a8922ad643f7ae02b302ee2d99adcfaf2d"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "exists": true,
+      "sha256": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008",
+      "checkedCurrentSha256": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008"
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "exists": true,
+      "sha256": "3013d2a308c81c68bbc6a1f23bc6676c78e54498b73af13a69a6152d2f902d66",
+      "checkedCurrentSha256": "3013d2a308c81c68bbc6a1f23bc6676c78e54498b73af13a69a6152d2f902d66"
+    }
+  ],
+  "original22Evidence": {
+    "path": "docs/verification/t1246/first-diagnosis/timeout-22-consumer-readonly-audit.json",
+    "sha256": "e049f64a8cf465c023b6d44d91e152253dcc43d30a8fa3995bf39d1567bd8c36",
+    "counts": {
+      "hits": 22,
+      "uniqueFiles": 9,
+      "vendorHits": 10,
+      "vendorUniqueFiles": 5,
+      "idleTTLHits": 1,
+      "positiveHits": 11
+    },
+    "allCurrentSourceMatchesOriginal": true,
+    "originalReceiptsVerified": [
+      {
+        "path": "/tmp/t1248-calibration/timeout-verify.log",
+        "sha256": "7d7f892efdb9ec73e870a149de487882baa632062a218227b3503aeff9b69e4f"
+      },
+      {
+        "path": "/tmp/t1248-calibration/timeout-verify-receipt.json",
+        "sha256": "8e2a4eb66116de43afbf97f94e3df6c863555eb7bec206f6320e71140f582037"
+      },
+      {
+        "path": "/tmp/t1248-calibration/timeout-check-failures-binding.json",
+        "sha256": "642a0faccb545d3a873294b8d195d3d32011919005a669a156c0c8643eeffed2"
+      }
+    ]
+  },
+  "additionalReadonlySources": [
+    {
+      "path": "frontend/src-tauri/src/workbench/browser.rs",
+      "sha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command.rs",
+      "sha256": "5e7245ff479f13014ed854e42fab2b1432396941bd97bb1cf7dd6f121db4b626"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.ts",
+      "sha256": "7adff0dc79e3d3bba9b0b67f2be47f0b8fb112947414b4ae9390c9ffc053f60e"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.ts",
+      "sha256": "8347d45f00a32841a62dd65490f557282b998b431a5dc1562ffd431c62db886f"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-public.transport.ts",
+      "sha256": "5275d186348b44c2cc88ab62153d8179a4fae67ff7c13b61ec8fc20c7ac27ef3"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts",
+      "sha256": "ba1068dfdc06ccdfab81c2d2d65d8f2ba89f8b5653e1640c9c7b35aba6a75edb"
+    },
+    {
+      "path": "contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/frontend-standard-types-attempt2.txt",
+      "sha256": "2e208178bc387ffcaed994dadd231e6b4f53aa2f57b881c81206b2be9ceb081f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/frontend-standard-types-attempt2-exit.json",
+      "sha256": "437d4b063a009e70ccf5302ca431cb9f777d83948049aab8ab1b8a0108fd9a45"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/frontend-standard-types-attempt2-binding.json",
+      "sha256": "f2274f633b651c2c9608dbf309660bcadc8cca8702ebcc2c937b0335de8cd822"
+    }
+  ],
+  "observations": [
+    {
+      "id": "R1250-DEADLINE",
+      "source": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts:194,203,240,322-354",
+      "observation": "原300s life在start生成；idle90s原touch在active step起点重挂会误中止，inspect/observe分别1s竞速，checkout5s/goto15s/click5s为正执行；SPEC保life/idle数值，用更早原deadline和共享观察期限闭包，不续期。",
+      "contract": "FR-1250-DEADLINE、AC-1250-CDP"
+    },
+    {
+      "id": "R1250-SERIAL",
+      "source": "frontend/src/server/workbench-artifact-render.ts:65-123；frontend/src/server/workbench-browser-host.ts:162-190",
+      "observation": "render setup/launch/goto/output/真实close目录清理串行；PDF within20s亦为漏扫；恢复两mode lookup再cleanup与DB fresh-check，不可用单次120s当外层；SPEC明确实际槽求和和独立清理余量。",
+      "contract": "FR-1250-EXEC、AC-1250-RENDER/RECOVER"
+    },
+    {
+      "id": "R1250-STOP",
+      "source": "frontend/src-tauri/src/workbench/browser.rs:799-845,894-940；frontend/src/server/workbench-browser-host.ts:182-190",
+      "observation": "cleanup确实执行cleanup_bound_owner_lanes后stop_proof；原proof同时核bound scope/原profile lease、inflight、hub lanes/hosts/pending、OS无进程。SPEC不延admission TTL、不改proof布尔逻辑，不以断连接替停止。",
+      "contract": "FR-1250-BOUNDARY、AC-1250-RECOVER"
+    },
+    {
+      "id": "R1250-SIGNAL",
+      "source": "frontend/src/server/workbench-native-client.ts:41-95,161-170；frontend/src/server/workbench-native-host.ts:136-185；frontend/src/server/workbench-artifact-host.ts:83-94；backend/src/modules/execution/workbench-file-recovery.service.ts:92-112",
+      "observation": "原native send只socket10s活动计时、没有signal；host只前后check，artifact分页回调也未带signal；readReceipt发生在DB事务外已有control检查但未将signal送入read port。SPEC只沿私有参数改这些原端口，派发后unknown与原named receipt保持，不write retry。",
+      "contract": "FR-1250-CANCEL、AC-1250-NATIVE"
+    },
+    {
+      "id": "R1250-IPC",
+      "source": "frontend/src-tauri/src/workbench/ipc.rs:313-331；ipc_windows.rs:52,367-434；browser_ipc.rs:70-122",
+      "observation": "真实mac读写10s、Windows每块IO10s、browser读10s写120s；活动计时/partial bytes可续单块计时，不能代签墙钟；SPEC要求冻结本次观察期限或完整独立outer、保peer/ACL/大小限制及CancelIoEx栈回收。必须以实际实现证明取消与收尾，不由本静态审签测试。",
+      "contract": "FR-1250-EXEC/DEADLINE/CANCEL、AC-1250-NATIVE"
+    },
+    {
+      "id": "R1250-VENDOR",
+      "source": "原22绑定的5个冻结vendor文件/10命中；tools/timeout-policy/check.mjs:11-23,44-58",
+      "observation": "实际读取证明3 requestIdleCallback max调度等待、6已明确UI关闭后destroy/unmount、Axios38974 timeout:y绑定邻近function y合并策略不是数字。扫描器当前全文件Map忽略scope。SPEC限真实API/词法绑定与已证明消费者，保未知/短正执行反例，无路径豁免或vendor改写。",
+      "contract": "FR-1250-CLASSIFY、AC-1250-SCAN"
+    },
+    {
+      "id": "R1250-TYPES",
+      "source": "docs/verification/t1246/round-2/unit/frontend-standard-types-attempt2.txt / -exit.json / -binding.json",
+      "observation": "实际未裁剪standard tsc exit2：T1062 document三错和T1070 resolve一错，共两文件四错。最新SPEC明确保首轮100输入，不删改排除；必须完整真实非零回执并证新增错误0与四处SHA首轮一致后，才按范围外规则说明，不签全局types或T1246全验。",
+      "contract": "AC-1250-GATE"
+    }
+  ],
+  "constraints": [
+    "Windows在mac未执行；实际Windows缺回执须明确未验",
+    "所有公共链、Rust/Chromium和取消/未知测试均实施后实际执行，不由本报告代签",
+    "PG27/78源窗期间backend唯一readReceipt signal路径不得写入",
+    "保持原task/call/operation、版本digest/effect/CAS/媒体/响应/权限",
+    "仅合同准入，最终types/timeout全门非零必须按实登记"
+  ],
+  "notRun": [
+    "未运行新增或长测试",
+    "未操作浏览器/PG/用户数据库/原生App",
+    "未修改产品/test/vendor/SPEC/状态",
+    "未record正式独评/未start任务"
+  ]
+}

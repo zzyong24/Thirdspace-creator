@@ -1,0 +1,22 @@
+{
+  "scope": "首修5红后，父已批B009固定迁移尾与root明确授权output fixture真实groupId；尚未新PG执行",
+  "firstEvidence": "evidence/0e808708c36f04da3a422326ab565b02/backend.json",
+  "files": [
+    {
+      "file": "backend/src/legacy-source-migration.test.ts",
+      "sha256": "00a072eb3aa63a7957109cd7342cb51e59b6137942fdc30dbbfbe5e84b3d2b07"
+    },
+    {
+      "file": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "sha256": "fbc925c14f717e572b094d5cb356a69f9d5a91965deaf8a639e4e01a315a4278"
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "sha256": "439dfef2377fa388cab31004df783a981f98c06c3a7551b481d080f73f6a397b"
+    }
+  ],
+  "approvedOriginalManifestPreserved": true,
+  "newNonceAndReviewRequiredBeforeRerun": true,
+  "originalExpectNotDeleted": true,
+  "newOutputLockStateNotClaimed": true
+}

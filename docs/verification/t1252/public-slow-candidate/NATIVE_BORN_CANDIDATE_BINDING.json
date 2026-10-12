@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-11T23:38:18.501412+00:00",
+  "scope": "private native-born source/spec candidate only; original8 and originalsource remain unchanged; no public or model/App run",
+  "originalSpecSha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+  "originalSourceSha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c",
+  "candidateSourceSha256": "c0606537612674480b0d1e9219e3a09516d9143cd53b4a0c9ee75fe717caec70",
+  "candidateDiffSha256": "720399b0586108baa7accdc3060ded75d8ca6a7aa747dd35365b3c0cf9eb15c0",
+  "candidateSpecSha256": "8a95afd7d0e45fc68cfa28c298dc7c53ee27d9ad9c9de6e58c9b6cd325dae6cb",
+  "specDiffSha256": "1f78022a4c77a69eedaa7b3afa1df9d720e08ed3d634d7776a6653abc605084f",
+  "taskBornBudgetMs": 36000000,
+  "taskBudgetDataMeaning": "new enqueue and same ledger config before firstreserve; no old task renewal",
+  "newCaseObserver120ms": "native ready120000/naturalclose120000; API client original8280000; queue310000 is fixed latency not limit",
+  "remainingNeeded": [
+    "source/body budget exactreview",
+    "root+peer minimal spec qualification recheck if needed",
+    "privatecopy original8 full allassert inverse",
+    "actual b88 executable list/filter/owned wait budget binding",
+    "public runtime inputs/tool independent review before any execution"
+  ],
+  "consumers": [
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.ts",
+      "sha256": "7adff0dc79e3d3bba9b0b67f2be47f0b8fb112947414b4ae9390c9ffc053f60e"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "sha256": "89df7926d81f68b8b6dbca54b8b773fd846dc5ab6f7536545144af4bc0e89f01"
+    },
+    {
+      "path": "mcp-server/tests/helpers/loopback-cli.ts",
+      "sha256": "396da24a2758d789d5f97ae2d21ef3c49c139be9d7b1d8364a124479419e1617"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.ts",
+      "sha256": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "sha256": "46ace3fab56c8ed39ebd40e8826f4a00dde09d3d3f76e7b9a15419eaf84568a2"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "task": "T-1246",
+  "at": "2026-10-12T07:18:45.394041+00:00",
+  "bindingSha256": "27cf7abc90b0a2cdb295e59a8a744178ccfc2ba7180125dc86a06ae983d80092",
+  "ownFiles": 97,
+  "externalInputs": 118,
+  "actualFullBytesRead": 9979215,
+  "SHAAndSizeZeroDrift": true,
+  "candidateExecuted": false,
+  "sourceReviewComplete": false,
+  "runtimeApproved": false
+}

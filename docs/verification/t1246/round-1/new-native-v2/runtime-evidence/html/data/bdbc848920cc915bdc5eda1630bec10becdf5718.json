@@ -1,0 +1,315 @@
+{
+  "task": "T-1246",
+  "candidateCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "testId": "e001182671dd9993fecb-3f9b60c1f67a6d8e13dc",
+  "titlePath": [
+    "e2e/integrated-browser.spec.ts",
+    "INT-ENGINE-FAIL：真实GET透传等待、PATCH故障保服务原值、能力fixture明确分界"
+  ],
+  "caseId": "INT-ENGINE-FAIL",
+  "generationKey": null,
+  "boundary": "real-app + explicit browser 503/capability fixture, 非官方生成",
+  "status": "fail",
+  "browserStepStatus": "fail",
+  "acceptanceRequiresOriginalLedger": false,
+  "startedAt": "2026-10-11T15:46:37.767Z",
+  "endedAt": "2026-10-11T15:49:03.395Z",
+  "groupId": "grp-3812e00f-118",
+  "projectId": "project-3812e00f-122",
+  "taskIds": [],
+  "tasks": [],
+  "receipts": [
+    {
+      "time": "2026-10-11T15:46:37.795Z",
+      "id": "accountGroups.create",
+      "input": {
+        "body": {
+          "name": "整合验收-INT-ENGINE-FAIL-t1246-b9f88ac7-5f05-4edc-8d47-14e7cf3c520e",
+          "idempotencyKey": "t1246-5088b6e4-9677-4307-948a-f367d4a509a6"
+        }
+      },
+      "groupId": "",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "grp-3812e00f-118",
+          "userId": "user-3812e00f-1",
+          "name": "整合验收-INT-ENGINE-FAIL-t1246-b9f88ac7-5f05-4edc-8d47-14e7cf3c520e",
+          "status": "active",
+          "version": 1,
+          "createdAt": "2026-10-11T15:46:37.786Z",
+          "updatedAt": "2026-10-11T15:46:37.786Z",
+          "members": []
+        },
+        "meta": {
+          "requestId": "req-3812e00f-117"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:46:38.747Z",
+      "id": "settings.preferences.patch",
+      "input": {
+        "body": {
+          "assistantExecutionEngine": "codex"
+        }
+      },
+      "groupId": "grp-3812e00f-118",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-3812e00f-1",
+          "userId": "user-3812e00f-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-120"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:46:38.777Z",
+      "id": "projects.create",
+      "input": {
+        "body": {
+          "title": "整合真实项目-INT-ENGINE-FAIL",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+        }
+      },
+      "groupId": "grp-3812e00f-118",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "project-3812e00f-122",
+          "userId": "user-3812e00f-1",
+          "title": "整合真实项目-INT-ENGINE-FAIL",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "briefDetail": {
+            "targetPlatforms": []
+          },
+          "contentCategory": "",
+          "source": "manual",
+          "platformRef": {
+            "platform": "",
+            "externalId": ""
+          },
+          "creationMode": "guided",
+          "status": "active",
+          "currentStage": "brief",
+          "progressPct": 0,
+          "starred": false,
+          "startedAt": "2026-10-11T15:46:38.765Z",
+          "targetCompletedAt": null,
+          "completedAt": null,
+          "archivedAt": null,
+          "createdAt": "2026-10-11T15:46:38.765Z",
+          "updatedAt": "2026-10-11T15:46:38.765Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-121"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:46:38.803Z",
+      "id": "projects.outputs.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-122"
+        },
+        "body": {
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "clientRequestId": "t1246-b29bcdcb-f20e-44ec-bdb1-928dc287d7c7"
+        }
+      },
+      "groupId": "grp-3812e00f-118",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "output-3812e00f-133",
+          "projectId": "project-3812e00f-122",
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "targetPlatform": null,
+          "format": "",
+          "aspectRatio": "",
+          "targetDurationSeconds": 0,
+          "status": "drafting",
+          "contentRole": null,
+          "primaryAssetId": null,
+          "createdAt": "2026-10-11T15:46:38.791Z",
+          "updatedAt": "2026-10-11T15:46:38.791Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-132"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:46:38.833Z",
+      "id": "artifacts.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-122"
+        },
+        "body": {
+          "title": "原始测试文稿",
+          "artifactType": "output_script",
+          "stage": "script",
+          "contentOutputId": "output-3812e00f-133"
+        }
+      },
+      "groupId": "grp-3812e00f-118",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifact-3812e00f-140",
+          "projectId": "project-3812e00f-122",
+          "contentOutputId": "output-3812e00f-133",
+          "currentVersionId": "artifactversion-3812e00f-141",
+          "stage": "script",
+          "artifactType": "output_script",
+          "title": "原始测试文稿",
+          "status": "drafting",
+          "archivedAt": null,
+          "origin": null,
+          "createdAt": "2026-10-11T15:46:38.824Z",
+          "updatedAt": "2026-10-11T15:46:38.824Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-139"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:46:38.869Z",
+      "id": "artifacts.versions.create",
+      "input": {
+        "params": {
+          "artifactId": "artifact-3812e00f-140"
+        },
+        "body": {
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "heading": "桌面整理",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+              }
+            ]
+          }
+        }
+      },
+      "groupId": "grp-3812e00f-118",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifactversion-3812e00f-143",
+          "artifactId": "artifact-3812e00f-140",
+          "versionNumber": 2,
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+                "heading": "桌面整理"
+              }
+            ]
+          },
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "createdByType": "user",
+          "aiTaskId": null,
+          "createdAt": "2026-10-11T15:46:38.861Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-142"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:46:45.434Z",
+      "id": "settings.preferences.get",
+      "input": {},
+      "groupId": "grp-3812e00f-118",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-3812e00f-1",
+          "userId": "user-3812e00f-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-168"
+        }
+      }
+    }
+  ],
+  "captures": [
+    {
+      "label": "real-get-held",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-browser-INT-50917-、PATCH故障保服务原值、能力fixture明确分界-e2e/real-get-held.png",
+      "url": "http://127.0.0.1:61347/settings",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "at": "2026-10-11T15:46:43.801Z"
+    },
+    {
+      "label": "explicit-patch-503",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-browser-INT-50917-、PATCH故障保服务原值、能力fixture明确分界-e2e/explicit-patch-503.png",
+      "url": "http://127.0.0.1:61347/settings",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "at": "2026-10-11T15:46:45.367Z"
+    },
+    {
+      "label": "final-state",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-browser-INT-50917-、PATCH故障保服务原值、能力fixture明确分界-e2e/final-state.png",
+      "url": "http://127.0.0.1:61347/settings",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "at": "2026-10-11T15:49:03.395Z"
+    }
+  ],
+  "events": [
+    {
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 428 (Precondition Required)"
+    },
+    {
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 428 (Precondition Required)"
+    },
+    {
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    }
+  ],
+  "independentBrowserModelProbes": 0,
+  "workerApiZero": "须独立对账原持久 ledger；此回执不代签",
+  "error": {
+    "name": "Error",
+    "message": "\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"assistant-engine-card\"]').getByRole('status')\nExpected substring: \u001b[32m\"尚未登录\"\u001b[39m\nReceived string:    \u001b[31m\"本地 Codex 状态暂未核实\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"assistant-engine-card\"]').getByRole('status')\u001b[22m\n\u001b[2m    2 × locator resolved to <p role=\"status\" class=\"text-sm text-muted-foreground\">引擎保存失败，请重试</p>\u001b[22m\n\u001b[2m      - unexpected value \"引擎保存失败，请重试\"\u001b[22m\n\u001b[2m    240 × locator resolved to <p role=\"status\" class=\"text-sm text-muted-foreground\">本地 Codex 状态暂未核实</p>\u001b[22m\n\u001b[2m        - unexpected value \"本地 Codex 状态暂未核实\"\u001b[22m\n"
+  }
+}

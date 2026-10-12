@@ -1,0 +1,61 @@
+{
+  "phase": "regression-whole46",
+  "total": 46,
+  "passed": 44,
+  "failed": 2,
+  "skip": 0,
+  "files": [
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "status": "passed",
+      "assertions": 14
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-redfox-worker.test.ts",
+      "status": "passed",
+      "assertions": 5
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-research-worker.test.ts",
+      "status": "passed",
+      "assertions": 5
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+      "status": "failed",
+      "assertions": 8
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-patch-worker.test.ts",
+      "status": "passed",
+      "assertions": 4
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-video-edit-worker.test.ts",
+      "status": "passed",
+      "assertions": 4
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/platform-adapt-execution.integration.test.ts",
+      "status": "passed",
+      "assertions": 1
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-research-preparation.test.ts",
+      "status": "passed",
+      "assertions": 2
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "status": "failed",
+      "assertions": 3
+    }
+  ],
+  "allClean": false,
+  "caseComplete": true,
+  "sourceUnchanged": true,
+  "candidateCalibration": true,
+  "originalPositiveAssertionsKept": true,
+  "originalStimulusUnchanged": true,
+  "neverClaimFullSystem": true
+}

@@ -1,0 +1,41 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "observedAt": "2026-10-11T16:36:12.764Z",
+  "bindings": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts",
+      "sha256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "kind": "frozen_source"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "sha256": "141cb1f32bde1c24b46eedb8a34731bdd07fb8af4d0194c6a0e6ec3855cdf4a4",
+      "kind": "frozen_source"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-work-editor-worker.test.ts",
+      "sha256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+      "kind": "frozen_source"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/pi-provider.ts",
+      "sha256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "kind": "frozen_source"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/provider-factory.ts",
+      "sha256": "f83abd6c64796dd43e7000f98b12b71e5fd8c1a8ac94045944d3d13cdc1828af",
+      "kind": "frozen_source"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/docs/features/t1085-chat-integration-fixture-calibration.md",
+      "sha256": "2727868808d5992828fc13d3a6ee75502143124bf4ae187c13264f67a6f332c1",
+      "kind": "frozen_source"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js",
+      "sha256": "1ab8f0a8ac42ea108f976b5023285d31a9fa0d4b4ac859bb6d089f788a0c94e6",
+      "kind": "locked_dependency_primary_consumer"
+    }
+  ]
+}

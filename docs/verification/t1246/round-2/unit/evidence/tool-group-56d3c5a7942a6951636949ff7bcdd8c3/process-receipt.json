@@ -1,0 +1,77 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "-e",
+    "process.on('SIGTERM',()=>console.log('TERM_IGNORED'));const cp=require('node:child_process');const child=cp.spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)\"],{stdio:'ignore'});console.log(JSON.stringify({parent:process.pid,grandchild:child.pid}));setInterval(()=>{},1000);"
+  ],
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/evidence/tool-group-56d3c5a7942a6951636949ff7bcdd8c3/actual-group.log",
+  "pid": 2780,
+  "identity": {
+    "pid": 2780,
+    "pgid": 2780,
+    "uid": 501,
+    "birth": "Mon Oct 12 02:46:27 2026",
+    "startedAt": 1791744387705
+  },
+  "startedAt": "2026-10-11T18:46:27.705Z",
+  "endedAt": "2026-10-11T18:49:28.716Z",
+  "elapsedMs": 181011,
+  "budgetMs": 180000,
+  "deadlineAt": "2026-10-11T18:49:27.705Z",
+  "budgetExhausted": true,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [
+    {
+      "signal": "SIGTERM",
+      "at": "2026-10-11T18:46:28.268Z",
+      "alreadyExited": false,
+      "members": [
+        {
+          "pid": 2780,
+          "pgid": 2780,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:46:27 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>console.log('TERM_IGNORED'));const cp=require('node:child_process');const child=cp.spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)\"],{stdio:'ignore'});console.log(JSON.stringify({parent:process.pid,grandchild:child.pid}));setInterval(()=>{},1000);"
+        },
+        {
+          "pid": 2784,
+          "pgid": 2780,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:46:27 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>{});setInterval(()=>{},1000)"
+        }
+      ]
+    },
+    {
+      "signal": "SIGKILL",
+      "at": "2026-10-11T18:49:28.432Z",
+      "alreadyExited": false,
+      "members": [
+        {
+          "pid": 2780,
+          "pgid": 2780,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:46:27 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>console.log('TERM_IGNORED'));const cp=require('node:child_process');const child=cp.spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)\"],{stdio:'ignore'});console.log(JSON.stringify({parent:process.pid,grandchild:child.pid}));setInterval(()=>{},1000);"
+        },
+        {
+          "pid": 2784,
+          "pgid": 2780,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:46:27 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>{});setInterval(()=>{},1000)"
+        }
+      ]
+    }
+  ],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": true,
+  "code": null,
+  "signal": "SIGKILL",
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

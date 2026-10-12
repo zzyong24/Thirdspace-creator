@@ -1,0 +1,60 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+  "exitCode": 1,
+  "startedAt": "2026-10-12T04:17:47.959Z",
+  "elapsedMs": 494006.856042,
+  "totalBudgetMs": 109980000,
+  "stepComplete": 6,
+  "stepTotal": 25,
+  "signals": [],
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-14bcbffb7152bdb2b58cd5a252c2d27e-y0vweC",
+  "rootRetained": true,
+  "appliedToPrivateOnly": true,
+  "records": [
+    {
+      "name": "owned-network-boundary",
+      "code": 0,
+      "elapsedMs": 200,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-resource-checker-tests",
+      "code": 0,
+      "elapsedMs": 315,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-old8",
+      "code": 0,
+      "elapsedMs": 659,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-red",
+      "code": 1,
+      "elapsedMs": 30284,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-old8",
+      "code": 0,
+      "elapsedMs": 743,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-red",
+      "code": 1,
+      "elapsedMs": 30278,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "noProductCopy": true,
+  "noApp": true
+}

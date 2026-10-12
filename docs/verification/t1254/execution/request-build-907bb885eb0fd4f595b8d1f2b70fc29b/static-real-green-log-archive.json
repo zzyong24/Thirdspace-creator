@@ -1,0 +1,19 @@
+{
+  "privateLog": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-907bb885eb0fd4f595b8d1f2b70fc29b-l8MDFC/child-logs/static-real-green.log",
+  "archived": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-907bb885eb0fd4f595b8d1f2b70fc29b/static-real-green.log",
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "size": 0,
+  "mode": 420,
+  "uid": 501,
+  "ownedRoot": {
+    "task": "T-1254",
+    "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-907bb885eb0fd4f595b8d1f2b70fc29b-l8MDFC",
+    "nonce": "907bb885eb0fd4f595b8d1f2b70fc29b",
+    "uid": 501,
+    "inode": 351819666
+  },
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "helperClosesFdBeforeReceipt": true,
+  "archivedBeforeExitCodeAssertion": true
+}

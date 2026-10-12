@@ -1,0 +1,154 @@
+{
+  "task": "T-1254",
+  "evidenceLevel": "只读归档字节与构建输入存在性，不是安装/构建或静态 import graph 运行证明",
+  "archives": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/reference-editors/doocs-md/native/native-source.tar.gz",
+      "sha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "sha256": "9335e7d501df0271a861b787fbc3bd155da45c29bd3af5a328e421c19f655822"
+    }
+  ],
+  "commonAndAdaptationSourceComparison": [
+    {
+      "file": "apps/web/src/bootstrap.ts",
+      "nativeSha256": "87260958e2fdb68230d363c65f418af7a6bb285c5df5b9c976897de52a5a4e67",
+      "staticFixedSha256": "a599accf8ac1e2a2c5fc927434b709cb4df7d75dc9129b7e53919695043f8523",
+      "equal": false
+    },
+    {
+      "file": "apps/web/src/App.vue",
+      "nativeSha256": "8542e91f68d5ab23a6043b1c8cece89a3181d2a6292df244ef3d56e8e593d0bb",
+      "staticFixedSha256": "4fb3fe2aa0e46a5da06b15c06c4e448d1980c33d4aa770f1308054dbb1c61408",
+      "equal": false
+    },
+    {
+      "file": "apps/web/src/storage/index.ts",
+      "nativeSha256": "246d9a84bbc44390547306a3d2e9d6a334d7dd6b3be19839e1334f2ba2bd4ae6",
+      "staticFixedSha256": "eb772e62ba41ba5008ab3bb32a5a54d4024d28dfb4fcf7136113f3c575311be5",
+      "equal": false
+    },
+    {
+      "file": "apps/web/src/main.ts",
+      "nativeSha256": "4b5f6431fae5c847b422187ae56cf785b4377e77e0296ea22853c65babfc7cc4",
+      "staticFixedSha256": "4b5f6431fae5c847b422187ae56cf785b4377e77e0296ea22853c65babfc7cc4",
+      "equal": true
+    },
+    {
+      "file": "apps/web/index.html",
+      "nativeSha256": "1a64cd09af275dbd85ee2b15b2ad5344339cdc4f5b1850d269b1006ec6b37cec",
+      "staticFixedSha256": "1a64cd09af275dbd85ee2b15b2ad5344339cdc4f5b1850d269b1006ec6b37cec",
+      "equal": true
+    },
+    {
+      "file": "apps/web/vite.config.ts",
+      "nativeSha256": "fdd144a48488d55dcca0ba77c2256805ed2177ffb06a29736f7d0bc7ef677ae5",
+      "staticFixedSha256": "31fe094de0c8cf480373ae65252641e8fd26177520d1516b8a6255e3f789d5cd",
+      "equal": false
+    },
+    {
+      "file": "packages/shared/src/utils/fetch.ts",
+      "nativeSha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "staticFixedSha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "equal": true
+    },
+    {
+      "file": "packages/core/package.json",
+      "nativeSha256": "dd1c45e78ee0fd2a689f584dc08ae5c6bb91ead4d77f4d33a70de366dd98e30f",
+      "staticFixedSha256": "fb8bd72f592a9f90608109fba7d7949f5608f4670dad2027ac3d2c4e7250d7cb",
+      "equal": false
+    },
+    {
+      "file": "packages/shared/package.json",
+      "nativeSha256": "3bac8c0411b90985fb224054a9ae348ec25e422b7c48784be59f8a7a169aa72c",
+      "staticFixedSha256": "3bac8c0411b90985fb224054a9ae348ec25e422b7c48784be59f8a7a169aa72c",
+      "equal": true
+    },
+    {
+      "file": "package.json",
+      "nativeSha256": "fdab72823157a3ae6494848cf70ba333f8308da20b8170334868de6f37857e77",
+      "staticFixedSha256": "fdab72823157a3ae6494848cf70ba333f8308da20b8170334868de6f37857e77",
+      "equal": true
+    },
+    {
+      "file": "pnpm-workspace.yaml",
+      "nativeSha256": "871a00bc76b9d250d424e595366c6f99df543acedb465cc44ca7e3d3f66ed69c",
+      "staticFixedSha256": "871a00bc76b9d250d424e595366c6f99df543acedb465cc44ca7e3d3f66ed69c",
+      "equal": true
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "nativeSha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+      "staticFixedSha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+      "equal": true
+    }
+  ],
+  "nativeBuildInputPresence": [
+    {
+      "file": "apps/web/src/main.ts",
+      "present": true
+    },
+    {
+      "file": "apps/web/src/sidepanel.ts",
+      "present": true
+    },
+    {
+      "file": "apps/web/plugins/vite-plugin-utools-local-assets.ts",
+      "present": true
+    },
+    {
+      "file": "packages/config/tsconfig.base.json",
+      "present": true
+    },
+    {
+      "file": "patches/@codemirror__view@6.43.13.patch",
+      "present": true
+    },
+    {
+      "file": "apps/web/tsconfig.app.json",
+      "present": true
+    },
+    {
+      "file": "LICENSE",
+      "present": true
+    }
+  ],
+  "staticFixedBuildInputPresence": [
+    {
+      "file": "apps/web/src/main.ts",
+      "present": true
+    },
+    {
+      "file": "apps/web/src/sidepanel.ts",
+      "present": true
+    },
+    {
+      "file": "apps/web/plugins/vite-plugin-utools-local-assets.ts",
+      "present": true
+    },
+    {
+      "file": "packages/config/tsconfig.base.json",
+      "present": true
+    },
+    {
+      "file": "patches/@codemirror__view@6.43.13.patch",
+      "present": true
+    },
+    {
+      "file": "apps/web/tsconfig.app.json",
+      "present": true
+    },
+    {
+      "file": "LICENSE",
+      "present": true
+    }
+  ],
+  "notProven": [
+    "完整依赖锁安装成功",
+    "两构建入口真实产物",
+    "静态完整 import graph",
+    "原静态 CSP 外置脚本后处理可复现"
+  ]
+}

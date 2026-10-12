@@ -1,0 +1,43 @@
+{
+  "exitCode": 1,
+  "durationMs": 134323,
+  "outerTimedOut": false,
+  "outerMs": 4000000,
+  "cleanupMs": 180000,
+  "pid": 23347,
+  "scope": "producer",
+  "attempt": "third",
+  "before": {
+    "frontend/src/server/legacy-frozen-source-read.integration.test.ts": "c1bc0a2c9daff7ba8ac9e4bab68901429a68b45054b0ea9c2886c492aaced653",
+    "bundles": {
+      "agentic-worker.cjs": "cc6f15cf5fa8a9392084f356e7aa09bad106b1c328054fa7aaf27c2e7a3124f3",
+      "browser-runtime.cjs": "8f1d142e90ae22940ad96deab3b409c9e6a229f0c67180e477c31aea43130828",
+      "codex-acp.cjs": "2200680338bc6a960cfe776687c72c2e8cf977b1656e079e8e32f53690066425",
+      "codex-status-worker.cjs": "1a11a9b3ac5f2f4fc16593a0d55cc02ed30a9415814226741fec455ab6ceac45",
+      "embedding-worker.cjs": "69c742f6dec5f50e436934ee362680a2e8edccf2d5379363b82800db50b4a3e4",
+      "execution-worker.cjs": "3bf7f7f449236b731ff51bfd4274bcbfcd2a2439175e55e363d55e4901b3eb80",
+      "flywheel-generation-worker.cjs": "305f8295c3af6e832ba41904b0cc70b63a9a1b3b7b3b446f1729bb70775c7dcf",
+      "intelligence-generation-worker.cjs": "f7a6a6d6b2f01aadd075e0e586289692b63b2552fe797a65c0692ed3fd5b821c",
+      "intelligence-transcript-worker.cjs": "a3bf65f91cf385c6d2e2a2ca3c55762d5fe1e82ea6fd381430c36cd361df7b6e",
+      "model-probe-worker.cjs": "ca3d53902dc78897654dd9b3c613b7040de1685073c5bba83bbdd19abb24aa26",
+      "video-visual-review-worker.cjs": "664eb91279b56ea91d05efc43bd368f7c2a19e8cf85db57c7d9011f6be4f3d86"
+    }
+  },
+  "after": {
+    "frontend/src/server/legacy-frozen-source-read.integration.test.ts": "c1bc0a2c9daff7ba8ac9e4bab68901429a68b45054b0ea9c2886c492aaced653",
+    "bundles": {
+      "agentic-worker.cjs": "cc6f15cf5fa8a9392084f356e7aa09bad106b1c328054fa7aaf27c2e7a3124f3",
+      "browser-runtime.cjs": "8f1d142e90ae22940ad96deab3b409c9e6a229f0c67180e477c31aea43130828",
+      "codex-acp.cjs": "2200680338bc6a960cfe776687c72c2e8cf977b1656e079e8e32f53690066425",
+      "codex-status-worker.cjs": "1a11a9b3ac5f2f4fc16593a0d55cc02ed30a9415814226741fec455ab6ceac45",
+      "embedding-worker.cjs": "69c742f6dec5f50e436934ee362680a2e8edccf2d5379363b82800db50b4a3e4",
+      "execution-worker.cjs": "3bf7f7f449236b731ff51bfd4274bcbfcd2a2439175e55e363d55e4901b3eb80",
+      "flywheel-generation-worker.cjs": "305f8295c3af6e832ba41904b0cc70b63a9a1b3b7b3b446f1729bb70775c7dcf",
+      "intelligence-generation-worker.cjs": "f7a6a6d6b2f01aadd075e0e586289692b63b2552fe797a65c0692ed3fd5b821c",
+      "intelligence-transcript-worker.cjs": "a3bf65f91cf385c6d2e2a2ca3c55762d5fe1e82ea6fd381430c36cd361df7b6e",
+      "model-probe-worker.cjs": "ca3d53902dc78897654dd9b3c613b7040de1685073c5bba83bbdd19abb24aa26",
+      "video-visual-review-worker.cjs": "664eb91279b56ea91d05efc43bd368f7c2a19e8cf85db57c7d9011f6be4f3d86"
+    }
+  },
+  "environment": "HOME/CODEX_HOME原值不变，清真实App/PG/供应商变量，owned TMP/App/media/profile；仅PGlite+受控localhost SSE/HTTP，不App/官方模型/真实PG"
+}

@@ -1,0 +1,36 @@
+{
+  "task": "T-1249",
+  "reviewer": "root, independent of candidate author",
+  "at": "2026-10-11T19:54:41.370012+00:00",
+  "verdict": "PASS_TWO_CASE_TEST_DIFF_ONLY",
+  "candidateSha256": "6c5bb19192fd7bf258896cbe588a1502da2d4cfed44869548cab4c2cd393209e",
+  "currentFileSha256": "50cf523285a5bdf5efcd37342f5b7aef61c2a8747dea9c57bef0b6b87ea6158f",
+  "bindings": [
+    {
+      "file": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "sha256": "50cf523285a5bdf5efcd37342f5b7aef61c2a8747dea9c57bef0b6b87ea6158f"
+    },
+    {
+      "file": "ai-worker/src/runtime/chat/chat-pi-loop.ts",
+      "sha256": "4f26ac95534c041bd042d9d43d24feff13d64092f837c4b1435640eb25aba001"
+    },
+    {
+      "file": "ai-worker/src/execution/durable-stream-model.ts",
+      "sha256": "deea4d1917c3ebbb296728ac80802570609c1b5113469a63c3005894a4c42f6e"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44"
+    }
+  ],
+  "reviewedFacts": [
+    "Pi Worker临时parts明确先push tool card再回合末累积text，durable provider receipt按text-start初次出现保持event顺序；不能把两层顺序做相同映射",
+    "completed候选分别literal核真实provider2parts、Worker全5parts、backend全5parts，不排序/剥字段或调用同projection helper造expect；保唯一前文/完整正文/token/allcall/身份/CAS",
+    "denied当前Pi终态output-denied精确匹配真实modelCall审批ID/read1/原参数/approved:false；后台partial/完整notice/0execute/HTTP2/ledger3/spent10全部保持"
+  ],
+  "firstEight3Pass5FailPreserved": true,
+  "secondEight6Pass2FailPreserved": true,
+  "runtimeApproval": "待T1248源修改结束重新source绑定，完整原八body而非两例挑跑",
+  "productionChange": false,
+  "functionalityPassClaim": false
+}

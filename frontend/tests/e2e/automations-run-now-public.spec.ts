@@ -246,9 +246,13 @@ test("组内真实作业通过立即运行准入并保原任务显示待扫码",
   expect(beforeJob.membershipVersion).toBeGreaterThanOrEqual(1);
   expect(beforeJob.groupVersion).toBeGreaterThanOrEqual(1);
   expect(await listRuns(page, job.id, target)).toEqual([]);
-  await context.clearCookies({ name: /^creatoros_current_(account|group)$/ });
-  await context.addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(groupA.id), url: baseURL! }]);
-  await page.addInitScript((id) => { localStorage.setItem("creatoros:current-group", id); localStorage.removeItem("creatoros:current-account"); }, groupA.id);
+  await page.reload({waitUntil:"domcontentloaded",timeout:REQUEST_MS});
+  await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state","ready");
+  await page.getByTestId("account-switcher-trigger").click();
+  await page.getByTestId("account-switcher-menu").locator(`[data-group-id="${groupA.id}"]`).click();
+  await expect.poll(()=>page.evaluate(()=>localStorage.getItem("creatoros:current-group"))).toBe(groupA.id);
+  await expect.poll(async()=> (await context.cookies(baseURL!)).find(c=>c.name==="creatoros_current_group")?.value).toBe(encodeURIComponent(groupA.id));
+  await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state","ready");
   await page.goto("/automations");
   await expect(page.getByTestId("automations-current-group")).toContainText(groupA.name);
   const row = page.locator(`[data-slot="automations-list"] li[data-job-id="${job.id}"]`);

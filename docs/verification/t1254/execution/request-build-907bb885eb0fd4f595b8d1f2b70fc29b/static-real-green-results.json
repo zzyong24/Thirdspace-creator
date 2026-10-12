@@ -1,0 +1,92 @@
+{
+  "task": "T-1254",
+  "phase": "green",
+  "modulePath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+  "sourceSha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+  "records": [
+    {
+      "name": "默认预算收到31秒完整正文",
+      "delayMs": 31000,
+      "expected": "success",
+      "nonce": "06db6291e4b26cb14106f4ab45ff7a6f",
+      "endpoint": "http://127.0.0.1:49649/owned/06db6291e4b26cb14106f4ab45ff7a6f",
+      "requests": 1,
+      "elapsedMs": 31026.959417,
+      "setupElapsedMs": 6.72145900000001,
+      "setupBudgetMs": 120000,
+      "bodyReleaseElapsedMs": 31013.229874999997,
+      "value": {
+        "nonce": "06db6291e4b26cb14106f4ab45ff7a6f",
+        "kind": "owned-loopback-complete-body"
+      },
+      "error": null,
+      "assertionError": null,
+      "cleanupError": null,
+      "cleanupComplete": true,
+      "cleanupElapsedMs": 1.393207999997685,
+      "cleanupBudgetMs": 120000,
+      "socketCloseEvents": 1,
+      "socketClosePromiseCount": 1,
+      "listenerClosed": true,
+      "remainingSockets": 0
+    },
+    {
+      "name": "默认120秒在完整body上abort",
+      "delayMs": 125000,
+      "expected": "abort",
+      "nonce": "593fb69ce9dbda988c155395f142e525",
+      "endpoint": "http://127.0.0.1:49791/owned/593fb69ce9dbda988c155395f142e525",
+      "requests": 1,
+      "elapsedMs": 120014.04716700001,
+      "setupElapsedMs": 1.8281669999996666,
+      "setupBudgetMs": 120000,
+      "bodyReleaseElapsedMs": null,
+      "value": null,
+      "error": {
+        "name": "AbortError",
+        "message": "This operation was aborted"
+      },
+      "assertionError": null,
+      "cleanupError": null,
+      "cleanupComplete": true,
+      "cleanupElapsedMs": 0.6977079999924172,
+      "cleanupBudgetMs": 120000,
+      "socketCloseEvents": 1,
+      "socketClosePromiseCount": 1,
+      "listenerClosed": true,
+      "remainingSockets": 0
+    },
+    {
+      "name": "显式160秒保留130秒完整正文",
+      "delayMs": 130000,
+      "timeoutMs": 160000,
+      "expected": "success",
+      "nonce": "dadbbf874e6ea5f63f1e3af607aec51a",
+      "endpoint": "http://127.0.0.1:50458/owned/dadbbf874e6ea5f63f1e3af607aec51a",
+      "requests": 1,
+      "elapsedMs": 130004.95312499997,
+      "setupElapsedMs": 0.17699999999604188,
+      "setupBudgetMs": 120000,
+      "bodyReleaseElapsedMs": 130002.09487499998,
+      "value": {
+        "nonce": "dadbbf874e6ea5f63f1e3af607aec51a",
+        "kind": "owned-loopback-complete-body"
+      },
+      "error": null,
+      "assertionError": null,
+      "cleanupError": null,
+      "cleanupComplete": true,
+      "cleanupElapsedMs": 0.44274999998742715,
+      "cleanupBudgetMs": 120000,
+      "socketCloseEvents": 1,
+      "socketClosePromiseCount": 1,
+      "listenerClosed": true,
+      "remainingSockets": 0
+    }
+  ],
+  "expectedRed": false,
+  "passed": true,
+  "noGlobalFetchOverride": true,
+  "actualLoopback": true,
+  "noOfficialModelOrApp": true
+}

@@ -1,0 +1,51 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "mode": "readonly-source-review",
+  "files": [
+    {
+      "path": "backend/src/modules/ai/external-task-tool.service.ts",
+      "sha256": "b6cb06d2c087ab174d3fba9cac3fd37b624c36e82531f4781c533b2786ca8a5e",
+      "matchesFrozenProduct": true
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "sha256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+      "matchesFrozenProduct": true
+    },
+    {
+      "path": "backend/src/schema/intelligence.ts",
+      "sha256": "2ac7b3d136452ce7759847175a62f5a303e9e92b03af4b001eb0945cfe587fcc",
+      "matchesFrozenProduct": true
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "sha256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "matchesFrozenProduct": true
+    },
+    {
+      "path": "backend/src/modules/ai/canonical-json.ts",
+      "sha256": "26de0ae0bf2a1bf4640c1a66075f76b4f7012f2ee005044bf1b36748aa69b595",
+      "matchesFrozenProduct": true
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-turn.service.ts",
+      "sha256": "28a85e06c3762283e20ade420f007d9187a6c7c99fef73ca79763939a7641ea6",
+      "matchesFrozenProduct": true
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-call-tree.ts",
+      "sha256": "92cf1becdc4e897755879d875eaa0e2273f815e8f531dc52b3e6563cfd544b78",
+      "matchesFrozenProduct": true
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0",
+      "matchesFrozenProduct": true
+    },
+    {
+      "path": "backend/src/modules/execution/execution-codex-call.service.ts",
+      "sha256": "1682b95eadc5f70e02be2abb519541ed2ed474ee15ca4d6cce258c390db68bb6",
+      "matchesFrozenProduct": true
+    }
+  ]
+}

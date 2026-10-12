@@ -1,0 +1,52 @@
+{
+  "schema": "spec-review-recheck-context/v1",
+  "task_id": "T-1256",
+  "previous_round": 1,
+  "previous_verdict": "CONCERNS",
+  "previous_spec_sha256": "b7bddf48b56b3590ad95c22dd88d0c41be067f6cc4881a1870cce39e3a0f5fe3",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "独立全文读取86bc宪法、b7bddf完整T1256合同、a7归档/55ab原补丁/实际a076整个Panel及V13完整build日志与69原件逐SHA；三绑定仅声明、模板直接viewMode，精确清理与原构建验收必要。发现FR-ORIGIN把tar0664混作已封adaptation0644基线的唯一可复核REV-001；其余合同与继承更早UTC/旧FAIL保全可实施。未写源码或执行候选，未签实际构建/交付/浏览器/App通过。",
+    "findings": [
+      {
+        "id": "REV-001",
+        "status": "open",
+        "severity": "major",
+        "category": "completeness",
+        "requirement_anchor": {
+          "id": "FR-ORIGIN",
+          "quote": "原mode0664和inode/UID核后应用"
+        },
+        "acceptance_anchor": {
+          "id": "AC-TYPES",
+          "quote": "独立完整diff确认仅三处声明删除且script剩余、template/style逐字不变"
+        },
+        "where": "SPEC FR-ORIGIN；实际owned static apps/web/src/components/editor/EditorPanel.vue；V6 static-actual-installed-implementation.json对应mode行",
+        "failure_mode": "SPEC把原a7归档的0664当作已应用55ab适配后的Panel基线；实际已封V6原适配与当前a076均0644。按该0664前置守门会拒绝当前合法精确源，若额外chmod至0664则改变本任务三声明清理之外的真实基线权限，且与冻结原inventory不符。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "docs/verification/t1256/INDEPENDENT_SPEC_SOURCE_BINDING.json；V6 static inventory EditorPanel行mode420；实际lstat0644/hash a076；a7 tar唯一regular member mode0664/hash57ad。",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "initial full b7bddf48 SPEC and actual original adapted static consumer",
+        "suggestion": "FR-ORIGIN明确保持已封V6原static适配及实际当前Panel mode0644、inode/UID；区分a7归档0664仅来源事实，不能为此次清理新增chmod。候选与V14相同守当前已封原mode，保其他原断言/命令/范围。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      }
+    ]
+  },
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:22:73ceb9871251930f",
+      "text": "- FR-ORIGIN：仅已验证owned static源根的这一个文件，按独立候选完整diff/前后SHA/V6实际适配后原mode0644（库存mode420与当前0644一致；a7归档成员0664不作为应用后模式）和inode/UID核后应用。native根不改；fetch/test/Graph维持V13已审SHA。原a7归档/旧creatoros.patch与历史收据保持。新修后static source archive和对应combined patch准确含该清理；T1254 exact交付清单须显式列它的源改动及该原build重试来源。"
+    }
+  ],
+  "origin_ref_formats": {
+    "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+    "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+    "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+  }
+}

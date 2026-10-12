@@ -1,0 +1,25 @@
+{
+  "task": "T-1254",
+  "stage": "CONTRACT候选仅私有源码草稿，不应用/执行",
+  "beforeSha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+  "candidate": "/tmp/t1254-readonly/fetch-budget-candidate.ts",
+  "candidateSha256": "38e7b302b2fcfe404d363a40a9bced2003d59957a08b61820dc5bdb7319ec387",
+  "diff": "/tmp/t1254-readonly/fetch-budget-candidate.diff",
+  "diffSha256": "57d202a6e29b0a3b805bbd774b75ba270f719d3507c5f29ebea470d30832fe64",
+  "sameBytesForBothSourceRoots": true,
+  "preserved": [
+    "原RequestConfig/公开入口",
+    "method/header/body/FormData",
+    "自身AbortController",
+    "fetch与完整body同一timer",
+    "finally clearTimeout最后timer",
+    "原JSON/HTTP/empty处理",
+    "单请求不重试"
+  ],
+  "notYetProven": [
+    "独立候选评审",
+    "类型检查/测试",
+    "真实loopback",
+    "完整两根构建与产物图"
+  ]
+}

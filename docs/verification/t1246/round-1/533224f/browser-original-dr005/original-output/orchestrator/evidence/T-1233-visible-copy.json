@@ -1,0 +1,147 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-1233",
+  "commit_sha": "533224f334c43cdb81a344424e420cad93784dd1",
+  "captures": [
+    {
+      "checkpoint": "radar-draft-body-visible",
+      "check_ids": [
+        "AC-RADAR-REWRITE-BODY-VISIBLE"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "验收正文第一段：这段中性示例用于验证改写初稿从公开预览进入雷达编辑框与项目稿面。\n验收正文第二段：保留本段与来源快照，用于核对完整正文和段落顺序。它只用于隔离验收，不是实际创作建议。"
+    },
+    {
+      "checkpoint": "project-created-script-body-visible",
+      "check_ids": [
+        "AC-RADAR-PROJECT-SEED-VISIBLE"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 720
+      },
+      "text": "验收正文第一段：这段中性示例用于验证改写初稿从公开预览进入雷达编辑框与项目稿面。\n验收正文第二段：保留本段与来源快照，用于核对完整正文和段落顺序。它只用于隔离验收，不是实际创作建议。"
+    },
+    {
+      "checkpoint": "project-reloaded-script-body-visible",
+      "check_ids": [
+        "AC-RADAR-PROJECT-SEED-RELOAD"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 720
+      },
+      "text": "验收正文第一段：这段中性示例用于验证改写初稿从公开预览进入雷达编辑框与项目稿面。\n验收正文第二段：保留本段与来源快照，用于核对完整正文和段落顺序。它只用于隔离验收，不是实际创作建议。"
+    }
+  ],
+  "evidence": {
+    "fixture_body_sha256": "0308445a41614fedeaf82d1ed038a4f22001641e302734be9f178ff9bdc5fb8a",
+    "fixture_paragraph_count": 2,
+    "body_chain_assertions_completed": true,
+    "account_id": "acct-81b98377-846",
+    "source_group_id": "grp_legacy_acct-81b98377-846",
+    "item_id": "intelligence-item-81b98377-936",
+    "source_snapshot_id": "intelligence-snapshot-81b98377-938",
+    "transcript_hash": "sha256:a0213368e9543ec7f95a4591072bcfc592ecd331690455c2ead9bf763c65af46",
+    "preview_task_id": "execution-task-81b98377-955",
+    "transform_id": "intelligence-transform-81b98377-954",
+    "transform_body_readback": {
+      "generation_mode": "rewrite_only",
+      "source_snapshot_id": "intelligence-snapshot-81b98377-938",
+      "transcript_hash": "sha256:a0213368e9543ec7f95a4591072bcfc592ecd331690455c2ead9bf763c65af46",
+      "template_version": "v3+methods-operations-2026-09-27@official+user-facing-response-2026-09-27.2",
+      "ai_task_id": "execution-task-81b98377-955",
+      "content_matches_fixture": true
+    },
+    "model_protocol": {
+      "requestCount": 1,
+      "requests": [
+        {
+          "method": "POST",
+          "path": "/v1/chat/completions",
+          "stream": true,
+          "responseFormatPresent": false,
+          "includeUsageRequested": true,
+          "responseProtocol": "text/event-stream",
+          "outcome": "responded"
+        }
+      ],
+      "protocolErrors": []
+    },
+    "promote_headers": {
+      "x_group_id": "grp_legacy_acct-81b98377-846",
+      "x_account_id": null
+    },
+    "project_id": "project-81b98377-970",
+    "project_seed_readback": {
+      "generation_mode": "rewrite_only",
+      "source_snapshot_id": "intelligence-snapshot-81b98377-938",
+      "transcript_hash": "sha256:a0213368e9543ec7f95a4591072bcfc592ecd331690455c2ead9bf763c65af46",
+      "template_version": "v3+methods-operations-2026-09-27@official+user-facing-response-2026-09-27.2",
+      "ai_task_id": "execution-task-81b98377-955",
+      "content_matches_fixture": true,
+      "source_references": [
+        {
+          "kind": "source_page",
+          "platform": "www.w3.org",
+          "label": "来源页面",
+          "url": "https://www.w3.org/news/2026/first-public-working-draft-character-model-for-the-world-wide-web-string-matching/",
+          "intelligenceItemId": "intelligence-item-81b98377-936"
+        }
+      ]
+    },
+    "replay_project_id": "project-81b98377-970",
+    "wrong_group_id": "grp-81b98377-992",
+    "denied_reads": [
+      {
+        "scope": "wrong_group",
+        "status": 404,
+        "code": "OwnershipError"
+      },
+      {
+        "scope": "legacy_account",
+        "status": 404,
+        "code": "OwnershipError"
+      }
+    ],
+    "reload_seed_readback": {
+      "project_id": "project-81b98377-970",
+      "generation_mode": "rewrite_only",
+      "source_snapshot_id": "intelligence-snapshot-81b98377-938",
+      "transcript_hash": "sha256:a0213368e9543ec7f95a4591072bcfc592ecd331690455c2ead9bf763c65af46",
+      "template_version": "v3+methods-operations-2026-09-27@official+user-facing-response-2026-09-27.2",
+      "ai_task_id": "execution-task-81b98377-955",
+      "content_matches_fixture": true
+    },
+    "reload_body_dom_matches_fixture": true,
+    "reload_group_mirror": {
+      "current_group_local_storage_matches": true,
+      "current_account_local_storage_empty": true,
+      "current_group_cookie_matches": true,
+      "current_account_cookie_absent": true
+    },
+    "local_model_protocol": {
+      "requestCount": 1,
+      "requests": [
+        {
+          "method": "POST",
+          "path": "/v1/chat/completions",
+          "stream": true,
+          "responseFormatPresent": false,
+          "includeUsageRequested": true,
+          "responseProtocol": "text/event-stream",
+          "outcome": "responded"
+        }
+      ],
+      "protocolErrors": []
+    },
+    "screenshot_files": [
+      "radar-ready-1536x1024.png",
+      "project-created-1024x720.png",
+      "project-reloaded-1024x720.png"
+    ]
+  }
+}

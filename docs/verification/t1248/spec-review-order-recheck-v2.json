@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS（第3轮最新窄合同/候选复核）。原REV-001全部冻结resolved字段保留；REV-002真实wholefirst次序失败的合同销账保留，更新精确候选；新增REV-003来自unknown-only真实选例RED的新证据，既有STRICT/未知拒绝要求由same matcher提前校验闭合，resolved。未签实施、类型、全量Gate、官方模型或App。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "blocker",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-1248-RECOVER",
+        "quote": "- FR-1248-RECOVER：上述已知旧 action 定义与既有 read v1/v2 的严格组合可恢复原任务；不修改 frozen/modelInput、工具定义、旧 hash、task/call/tool ID、预算、deadline、已结算回执或领域数据。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1248-ADOPTION",
+        "quote": "- AC-1248-ADOPTION：真实 backend root/host候选原task/call/tool与digest seal、原effect/ack、用户采纳与同receipt重放/跨scope拒绝通过；兼容不产生模型或自动正式写入。保现行当前偏好候选真实采用回归。"
+      },
+      "where": "backend/src/application/chat/assistant-system-root.ts:225-229；backend/src/modules/ai/chat-proposal-source.service.ts:50-58、73-75；原SPEC第35行",
+      "failure_mode": "SR001：旧冻结system.action.propose候选虽能经旧字段子集parse，正式来源服务仍只持当前工具version/schema；原Pi binding和最终version/parameterSchema门会拒绝旧8d426…定义。原三路径写集排除root/source，无法兑现旧候选正式采纳。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/verification/t1248/INDEPENDENT_SPEC_REVIEW.json（原a060877独立只读评审及source SHA）；root静态tools与source真实version/schema门直接源码证据，未执行测试。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:35:a46b311b0ee1ee32",
+      "suggestion": "闭合可信完整catalog→root/source采用版本选择，在真实冻结/会话/history/host证明后通过代码内固定原型建立同一版本Pi binding/decode/reused及最终version/schema门；精确补root/source及必要测试写集，保所有原身份/claim/外部turn/digest/permission/receipt/CAS门，验旧/当前preferences候选host→seal→ledger→root采用/重放/跨scope拒绝。不得信任务自报schema或删除版本门。",
+      "resolution_evidence": "修订SPEC SHA46e35cb87e7de24066cff1b805bd38f74ff6053fac93bfa9a0136896f40d6a88明确：通过原scope/frozen/history/hostContext验证后调用root提供的内部可信固定wholecatalog resolver；同次工具集用于Pi binding/decode每个原/复用call以及最终version/effect/execution/schema/输入比较，外部parent/turn/toolVersion/digest等门保持；新增精确root/source及source.test写集，AC-1248-ADOPTION明确旧/当前偏好host→seal→settled ledger→root采用/重放/跨scope拒绝，未安装capability拒绝。只读源码复核确认此最小方向可落地；仅关闭SPEC缺口，不签实现、测试、模型、App或全局Gate。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-1248-STRICT",
+        "quote": "- FR-1248-STRICT：工具 schema、名称、顺序、description、version、effect、execution 等完整定义必须与代码内固定已知原型相等。任何非白名单或篡改继续拒绝，不能只忽略 action、只比 name/hash或使用任务自报 schema 构造执行器。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1248-CLOSURE",
+        "quote": "- AC-1248-CLOSURE：read1/2 × action1/2 的已知完整组合、合法工具子集与无read的已知action通过；definition任一名称/schema字段/description/version/effect/execution/order/重复漂移拒绝，不借已知单项白名单通过未知整体。原scope/fence/lease错拒绝；原read版本能力差异仍保。"
+      },
+      "where": "backend/src/modules/ai-runtime/chat-system-tool-host.ts:22-23 wholefirst新增knownOrder门；原buildChatTools whitelist消费；原assistant-system-root.integration.test.ts功能发现成功body",
+      "failure_mode": "实施后真实wholefirst原功能发现合法action→read冻结子集被新增全局固定顺序拒绝，341PASS1FAIL3skip；原buildChatTools依调用whitelist装配合法次序，不能把原合法次序当存储篡改。",
+      "evidence_kind": "runtime-observation",
+      "evidence_ref": "docs/verification/t1248/INDEPENDENT_SPEC_ORDER_RECHECK.json绑定原fullfirst JSON/receipt/source SHA、唯一原失败完整stack、候选及消费者SHA。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "new-evidence",
+      "origin_ref": "EVIDENCE-SHA256:b4acce3314a93f220e8e3aaa2b6c712b5dc84a3a16174e700c01050143b098b5:docs/verification/t1248/INDEPENDENT_SPEC_ORDER_RECHECK.json",
+      "suggestion": "澄清沿原whitelist合法次序逐项完整匹配可信原型，不新增全局排序或sort/normalize；duplicate/unknown/完整definition门保持，已冻结工具次序篡改由原task/business modelInputDigest拒绝。保原成功body；新增真实stored reverse保旧digest的公共采用拒绝、owner0/receipt0/正式数据与原call不变、恢复原bytes原source读回反例。",
+      "resolution_evidence": "SPEC a815e5da23ef92579ae722ba9bd4227259d0bb9d14960d6c9dffa626395195de第33行明确原whitelist次序和order漂移指已冻结task/business/digest篡改，不新增全局order/sort；候选product458d77fc…仅去global knownOrder并保duplicate与固定prototype逐项相等，新rootcase4d537705…真实owner.adopt spy0、stored reverse公共adopt冻结映射拒绝、正式数据/receipt/call不变且恢复原source读回。此为合同/精确候选独复，最终实际产品落地/Gate仍待formal准入后执行，不借临时second343绿代签。 最新候选仅同已批host内把完整matcher移至空工具早返回前守unknown-only，product512966ce…/hosttest1ec1beb…/root44c031…；同owner0测试及两test窄类型修已只读核，不借旧candidate测试代签。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-1248-STRICT",
+        "quote": "- FR-1248-STRICT：工具 schema、名称、顺序、description、version、effect、execution 等完整定义必须与代码内固定已知原型相等。任何非白名单或篡改继续拒绝，不能只忽略 action、只比 name/hash或使用任务自报 schema 构造执行器。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1248-CLOSURE",
+        "quote": "- AC-1248-CLOSURE：read1/2 × action1/2 的已知完整组合、合法工具子集与无read的已知action通过；definition任一名称/schema字段/description/version/effect/execution/order/重复漂移拒绝，不借已知单项白名单通过未知整体。原scope/fence/lease错拒绝；原read版本能力差异仍保。"
+      },
+      "where": "backend/src/modules/ai-runtime/chat-system-tool-host.ts resolve空definitions早return在完整matcher前；新增unknown-only真实选例",
+      "failure_mode": "仅未知system.unknown的整套冻结目录过滤后空definitions，原resolve提前返回{}，跳过已有wholecatalog未知系统名拒绝；真实RED显示promise resolved {} instead of rejecting。",
+      "evidence_kind": "runtime-observation",
+      "evidence_ref": "docs/verification/t1248/unknown-only-red.json / unknown-only-red-receipt.json原1选例FAIL、exit1；最新512966ce/1ec1beb/44c031候选源码仅窄移同matcher。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "new-evidence",
+      "origin_ref": "EVIDENCE-SHA256:8c15c46ecff3c2bbdc78bf6a3537c26671128c216448b77d6d0ea26c66315471:docs/verification/t1248/unknown-only-red.json",
+      "suggestion": "真实scope核验后且空definitions早return之前执行同固定wholecatalog matcher，未知系统名继续明确拒绝；正常非system空子集保原{}，两输入均owner0；不新增catalog/供应商/公开API/owner或放宽knownprototype门。",
+      "resolution_evidence": "既有SPEC a815… FR-1248-STRICT与AC-1248-CLOSURE明示未知/整套definition漂移拒绝；最新host候选512966ce…只移动原完整matcher到empty earlyreturn之前，scope原门先行，normal无system子集仍matcher null→{}。hosttest1ec1beb…新增unknown-only拒绝及non-system空子集成功/4owner0正负例；root44c031…仍真实stored reverse owner.adopt0/receipt0/CAS数据与原call保持。独评仅闭合原范围合同及具体实现候选，不签实际全量GREEN或原source前后历史证明。",
+      "parent_id": ""
+    }
+  ]
+}

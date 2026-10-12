@@ -1,0 +1,13 @@
+{
+  "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/creatoros.cjs",
+  "sha256": "84260be6df120ec18b9b91b17112cbee37fd1bba448205ccfbbd147646218caf",
+  "node": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+  },
+  "originalBuildScriptSha256": "312cf5a13083730702e8e5e92f042c317b8e24737fdd17ecff7e0a7078c13fdb",
+  "actualSmokeViaBuildScript": true,
+  "actualMcpBodies": 116,
+  "standardTypesSucceeded": true,
+  "officialModelsOrAppNotRun": true
+}

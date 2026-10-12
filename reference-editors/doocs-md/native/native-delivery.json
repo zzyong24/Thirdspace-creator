@@ -1,5 +1,5 @@
 {
-  "task": "T-1062",
+  "task": "T-1254",
   "upstream": {
     "repository": "https://github.com/doocs/md",
     "commit": "a7c17fc4cda92e3c13aa7e24f06615cfa4219b31",
@@ -7,13 +7,13 @@
   },
   "sourceArchive": {
     "path": "native-source.tar.gz",
-    "sha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583",
+    "sha256": "e93e5fe4da962637fa6eb5612b8bf8fad8c0d42d53b6af8d31dda4dc9cc159fe",
     "sourceFiles": 819,
     "download": "/reference-editors/sources/doocs-md/native-source.tar.gz"
   },
   "patch": {
     "path": "NATIVE_PATCHES_FROM_T1049.diff",
-    "sha256": "d91dec8b68d8a2c7564f45df4ba828dd1a8b139d2c58c583336a489ac1a3555a",
+    "sha256": "ba256e44dacee468db1d3ae82c17ad98a3d607bedb67149c15a57a8a86a41cbd",
     "baseline": "T1049 固定来源适配源码",
     "changedFiles": [
       "NATIVE_README.md",
@@ -106,14 +106,16 @@
       "scripts/verify-native-build.mjs",
       "scripts/verify-native-dom.mjs",
       "scripts/verify-native-image-variants.mjs",
-      "scripts/verify-native-rebuild.mjs"
+      "scripts/verify-native-rebuild.mjs",
+      "packages/shared/src/utils/fetch.ts",
+      "packages/shared/src/utils/fetch.test.ts"
     ]
   },
   "dist": {
     "path": "native",
     "base": "/reference-editors/doocs-md/native/",
     "entry": "native.js",
-    "entrySha256": "46140ff69a76da7b1aa0f4654364ea52520b90cd7b02c2d97de664667ee63b9e",
+    "entrySha256": "97fd33de2e8caa7fb0afb587cede58b9c57ea4e432ec0c5d7df96a9f4253bf97",
     "css": "native.css",
     "cssSha256": "cf6a66b7e51c1b4251b663f7b03edbc1eebd74154993e263d80698e528407e57",
     "filesSha256": "native/SHA256.json",
@@ -532,99 +534,14 @@
     }
   ],
   "verification": {
-    "buildTypecheck": "historical_not_reexecuted_current",
-    "actualDistDOM": "historical_not_reexecuted_current",
-    "ESMAndCSS": "historical_not_reexecuted_current",
-    "leaseTests": "historical_not_reexecuted_current",
-    "whitespace": "historical_not_reexecuted_current",
-    "rebuildDeterminism": "not_run_current",
-    "independentBuild": "not_run_current",
-    "imageSevenFamiliesRed": "historical_not_reexecuted_current",
-    "imageSevenFamiliesGreen": "historical_not_reexecuted_current",
-    "svgImageRed": "historical_not_reexecuted_current",
-    "noProcessRed": "historical_not_reexecuted_current",
-    "noProcessGreen": "historical_not_reexecuted_current",
-    "noProcessReviewer": "historical_not_reexecuted_current",
-    "actualCommands": [
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-production-build-r6.json",
-          "sha256": "20ea3533e8b504b4f1b3d5f9005fb4813a66a20a93ec40952ec87aa540b9b080"
-        },
-        "argv": [
-          "node",
-          "scripts/build-native.mjs"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-production-build-r6.log",
-        "logSHA": "139bec3f96a4a5581a5312635159251e6f1505d0afb7e852464610defa6197db",
-        "startedUTC": "2026-10-05T17:43:24.981996+00:00",
-        "finishedUTC": "2026-10-05T17:43:34.525221+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-no-process-r6.json",
-          "sha256": "864b9de63d3943d5da3910d99316c4e91620472e32050f6cd49abfb917d9f5fb"
-        },
-        "argv": [
-          "node",
-          "scripts/verify-native-dom.mjs",
-          "--without-process"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-no-process-r6.log",
-        "logSHA": "67ae8af6b3acb90dda5f6b8f0bde32fbb02a458b8dd33a33b8cb5c6aa8598b0f",
-        "startedUTC": "2026-10-05T17:43:34.637613+00:00",
-        "finishedUTC": "2026-10-05T17:43:36.939624+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-r6.json",
-          "sha256": "ec3567c812b9a3a5208f1f7384b36cebf0965de15c231dad74a5418ead4fce66"
-        },
-        "argv": [
-          "node",
-          "scripts/verify-native-dom.mjs"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-r6.log",
-        "logSHA": "0eba2d22778266ece4e0d1e48f2c237cc1334829d93de1862406dc59590ce28f",
-        "startedUTC": "2026-10-05T17:43:37.068064+00:00",
-        "finishedUTC": "2026-10-05T17:43:39.177920+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-image-variants-r6.json",
-          "sha256": "065b1001fa55a20cc4a8d94d711d526d0a2169d22f411728f7268efcf73c739d"
-        },
-        "argv": [
-          "node",
-          "scripts/verify-native-image-variants.mjs"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-image-variants-r6.log",
-        "logSHA": "f1f5ada429957b0b980a67285862e9d7b98eed8512172d148683312610ccfe58",
-        "startedUTC": "2026-10-05T17:43:39.291860+00:00",
-        "finishedUTC": "2026-10-05T17:43:41.117692+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-native-lease-r6.json",
-          "sha256": "ba744f1c61f340d8936e1f718da279e2289e1f13851ee0cc90986bde2c4961e0"
-        },
-        "argv": [
-          "./node_modules/.bin/vitest",
-          "run",
-          "src/native-lease.test.ts"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-native-lease-r6.log",
-        "logSHA": "029a9d8629bdfbd167719bdc4cfebfb9820b602f56e49d3970070d1f5cf2526c",
-        "startedUTC": "2026-10-05T17:43:41.227330+00:00",
-        "finishedUTC": "2026-10-05T17:43:41.778204+00:00"
-      }
-    ],
-    "currentStatus": "build_and_original_DOM_imageVariants_lease_commands_exit0"
+    "task": "T-1254",
+    "actualEvidence": "docs/verification/t1254/V15_ACTUAL_ALL_TAIL_GREEN_AND_COMPLETE_SOURCE_PROVENANCE.json",
+    "nativeAndStaticOriginalBuildsActualExit0": true,
+    "eachSourceSharedTests": 24,
+    "nativeLeaseTests": 4,
+    "completeGeneratedGraphAndSourceArchivesActualVerified": true,
+    "publicBrowserAcceptanceSeparate": true,
+    "appAcceptanceIncompleteByUserChoice": true
   },
   "unverified": [
     "原Canvas/Fabric夹具与JSDOM环境不等于真实浏览器像素或安装。",
@@ -939,5 +856,116 @@
     "noProcessRed": "evidence/no-process-red.log",
     "noProcessGreen": "evidence/no-process-green.log",
     "noProcessReviewer": "evidence/no-process-reviewer-green.log"
+  },
+  "historicalPreT1254Verification": {
+    "buildTypecheck": "historical_not_reexecuted_current",
+    "actualDistDOM": "historical_not_reexecuted_current",
+    "ESMAndCSS": "historical_not_reexecuted_current",
+    "leaseTests": "historical_not_reexecuted_current",
+    "whitespace": "historical_not_reexecuted_current",
+    "rebuildDeterminism": "not_run_current",
+    "independentBuild": "not_run_current",
+    "imageSevenFamiliesRed": "historical_not_reexecuted_current",
+    "imageSevenFamiliesGreen": "historical_not_reexecuted_current",
+    "svgImageRed": "historical_not_reexecuted_current",
+    "noProcessRed": "historical_not_reexecuted_current",
+    "noProcessGreen": "historical_not_reexecuted_current",
+    "noProcessReviewer": "historical_not_reexecuted_current",
+    "actualCommands": [
+      {
+        "report": {
+          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-production-build-r6.json",
+          "sha256": "20ea3533e8b504b4f1b3d5f9005fb4813a66a20a93ec40952ec87aa540b9b080"
+        },
+        "argv": [
+          "node",
+          "scripts/build-native.mjs"
+        ],
+        "exit": 0,
+        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-production-build-r6.log",
+        "logSHA": "139bec3f96a4a5581a5312635159251e6f1505d0afb7e852464610defa6197db",
+        "startedUTC": "2026-10-05T17:43:24.981996+00:00",
+        "finishedUTC": "2026-10-05T17:43:34.525221+00:00"
+      },
+      {
+        "report": {
+          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-no-process-r6.json",
+          "sha256": "864b9de63d3943d5da3910d99316c4e91620472e32050f6cd49abfb917d9f5fb"
+        },
+        "argv": [
+          "node",
+          "scripts/verify-native-dom.mjs",
+          "--without-process"
+        ],
+        "exit": 0,
+        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-no-process-r6.log",
+        "logSHA": "67ae8af6b3acb90dda5f6b8f0bde32fbb02a458b8dd33a33b8cb5c6aa8598b0f",
+        "startedUTC": "2026-10-05T17:43:34.637613+00:00",
+        "finishedUTC": "2026-10-05T17:43:36.939624+00:00"
+      },
+      {
+        "report": {
+          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-r6.json",
+          "sha256": "ec3567c812b9a3a5208f1f7384b36cebf0965de15c231dad74a5418ead4fce66"
+        },
+        "argv": [
+          "node",
+          "scripts/verify-native-dom.mjs"
+        ],
+        "exit": 0,
+        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-r6.log",
+        "logSHA": "0eba2d22778266ece4e0d1e48f2c237cc1334829d93de1862406dc59590ce28f",
+        "startedUTC": "2026-10-05T17:43:37.068064+00:00",
+        "finishedUTC": "2026-10-05T17:43:39.177920+00:00"
+      },
+      {
+        "report": {
+          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-image-variants-r6.json",
+          "sha256": "065b1001fa55a20cc4a8d94d711d526d0a2169d22f411728f7268efcf73c739d"
+        },
+        "argv": [
+          "node",
+          "scripts/verify-native-image-variants.mjs"
+        ],
+        "exit": 0,
+        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-image-variants-r6.log",
+        "logSHA": "f1f5ada429957b0b980a67285862e9d7b98eed8512172d148683312610ccfe58",
+        "startedUTC": "2026-10-05T17:43:39.291860+00:00",
+        "finishedUTC": "2026-10-05T17:43:41.117692+00:00"
+      },
+      {
+        "report": {
+          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-native-lease-r6.json",
+          "sha256": "ba744f1c61f340d8936e1f718da279e2289e1f13851ee0cc90986bde2c4961e0"
+        },
+        "argv": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "src/native-lease.test.ts"
+        ],
+        "exit": 0,
+        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-native-lease-r6.log",
+        "logSHA": "029a9d8629bdfbd167719bdc4cfebfb9820b602f56e49d3970070d1f5cf2526c",
+        "startedUTC": "2026-10-05T17:43:41.227330+00:00",
+        "finishedUTC": "2026-10-05T17:43:41.778204+00:00"
+      }
+    ],
+    "currentStatus": "build_and_original_DOM_imageVariants_lease_commands_exit0"
+  },
+  "t1254": {
+    "sourceAndOutputActualEvidence": "docs/verification/t1254/V15_ACTUAL_ALL_TAIL_GREEN_AND_COMPLETE_SOURCE_PROVENANCE.json",
+    "independentActualRecheck": "docs/verification/t1254/INDEPENDENT_V15_ACTUAL_ALL_TAIL_AND_PROVENANCE_RECHECK.json",
+    "nativeFiles": 395,
+    "staticFilesIncludingEntry": 300,
+    "sharedTestsEachSource": 24,
+    "nativeLeaseTests": 4,
+    "realRequestsEachSource": [
+      "31秒完整body",
+      "120秒实际AbortError且完整清理",
+      "显式160秒预算下130秒完整body"
+    ],
+    "historicalAttachmentsUnchanged": true,
+    "browserAcceptanceSeparate": true,
+    "appAcceptanceIncompleteByUserChoice": true
   }
 }

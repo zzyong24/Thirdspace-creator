@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { basename, join, relative } from 'node:path';
 import type { Locator, Page, Request, TestInfo } from '@playwright/test';
-import { ENDPOINTS, productionReferencePlan, projectProductionRoughPlan } from '@creatoros/contract';
+import { ENDPOINTS, articleManualVersionBody, productionReferencePlan, projectProductionRoughPlan } from '@creatoros/contract';
 import { expect, test } from '../helpers/test-environment';
 
 // 本文件只验证真实浏览器、公共服务和原生剪辑工作流。loopback粗剪输出是协议夹具，
@@ -612,7 +612,7 @@ async function saveInitializedArticle(page: Page, article: Locator, outputId: st
       () => article.getByRole('button', { name: '保存修改', exact: true }).click());
     expect(saveRequest.headers()['x-group-id']).toBe(groupId);
     expect(saveRequest.headers()['x-account-id']).toBeUndefined();
-    const command = ENDPOINTS.createArticleVersion.body!.parse(requestInput(saveRequest)!.input.body);
+    const command = articleManualVersionBody.parse(requestInput(saveRequest)!.input.body);
     expect(command.document.title).toBe(title); expect(command.expectedCurrentVersionId).toBeTruthy();
     expect(command.clientRequestId).toBeTruthy();
     const saveResponse = await saveRequest.response();
@@ -880,7 +880,8 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B�
     expect(browserCreates).toBe(0); expect(browserProjectCreates).toBe(0);
     // 等待产品真实15s超时状态，不sleep、不给挂起响应放行。
     const error = page.getByTestId('workspace-initialization-error');
-    await expect(error).toContainText('工作区页面打开超时，请重试。', { timeout: 20_000 });
+    // 覆盖真实120s RSC请求结束及UI落地；原失败/重试/晚响应拒绝断言保持。
+    await expect(error).toContainText('工作区页面打开超时，请重试。', { timeout: 300_000 });
     observation.elapsedToErrorMs = Date.now() - started;
     await expect(page.locator('[data-page="article-workbench"]')).toHaveCount(0);
     await expect(page.locator('[data-page="projects"]')).toHaveCount(0);

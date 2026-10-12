@@ -12,7 +12,7 @@ export const GRAPHIC_POST_OP_IDS = [
   "graphicPosts.candidates.adopt",
 ] as const;
 
-export function createGraphicPostsTransport(serviceFor: (ctx: RequestContext) => GraphicPostsService): Transport {
+export function createGraphicPostsTransport(serviceFor: (ctx: RequestContext) => GraphicPostsService, assisted?: (ctx:RequestContext,outputId:string,body:unknown)=>Promise<unknown>): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
       if (!ctx) throw new AuthenticationError();
@@ -43,7 +43,7 @@ export function createGraphicPostsTransport(serviceFor: (ctx: RequestContext) =>
         }
         case "graphicPosts.get": return {data: await service.getGraphicPost(ctx, params.outputId ?? ""), meta};
         case "graphicPosts.versions.get": return {data: await service.getVersion(ctx, params.outputId ?? "", params.versionId ?? ""), meta};
-        case "graphicPosts.versions.create": return {data: await service.createVersion(ctx, params.outputId ?? "", {
+        case "graphicPosts.versions.create": if(body.adoptionMode==='assistant'){if(!assisted)throw new Error('候选采纳服务尚未装配');return {data:await assisted(ctx,params.outputId??'',body),meta};} return {data: await service.createVersion(ctx, params.outputId ?? "", {
           expectedCurrentVersionId: String(body.expectedCurrentVersionId ?? ""),
           document: body.document as Parameters<GraphicPostsService["createVersion"]>[2]["document"],
           clientRequestId: String(body.clientRequestId ?? ""),

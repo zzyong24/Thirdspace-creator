@@ -1,0 +1,10 @@
+{
+  "node": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "wrapperSHA": "36d31709c2dca705b63d2ec631396a5245c6a13ae9ad93703ef10a45e4ef3531",
+  "exit": 0,
+  "positiveMs": 120000,
+  "stdoutSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "parserOnlyNoWrapperBodyExecution": true
+}

@@ -1,0 +1,20 @@
+{
+  "task": "T-1250",
+  "verdict": "PASS_TEST_BUDGET_CANDIDATE_ONLY",
+  "diffSha256": "4f65c05dd34e364fa4741c70ad0a080cd1c5bffec26ae3672de35c38a18f4d1a",
+  "findings": [],
+  "summary": "仅三cfg(test)原fixture增加可信测试专用WAIT解析；bind前拒非法/短/Instant不可加，ready后一次冻结。原ignore/body/生产请求字段不变。",
+  "defaultMs": {
+    "journal": 120000,
+    "files": 120000,
+    "browser": 180000
+  },
+  "remainingRuntimePrerequisites": [
+    "逐case真实串行RPC/render/Worker/DB/ready/cleanup完整有限预算",
+    "测试专用env严格safeInteger与覆盖公式",
+    "新main-lock私有compile精确binary/filter/SHA",
+    "独立工具审查与自有IPC/Unix子进程闭合"
+  ],
+  "actualCompileOrExecutionByReviewer": false,
+  "runtimePermission": false
+}

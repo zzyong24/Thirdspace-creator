@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "bindingSHA": "73a3efc43afbb0d41c5e4a2f4ce1bbffb4f9450f66bce64bec9661cb84300478",
+  "rows": 472,
+  "originalScriptSHA": "162557019cfc099019e46263753b0375e31c3abdb62587f3f6da5c73c86d3e2b",
+  "rootFullSourceRead": true,
+  "noAuditOrGitMutationExecuted": true
+}

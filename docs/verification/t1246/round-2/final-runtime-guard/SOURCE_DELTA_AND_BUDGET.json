@@ -1,0 +1,71 @@
+{
+  "at": "2026-10-12T06:16:49.401118+00:00",
+  "sourceCandidateOnly": true,
+  "old9Unchanged": true,
+  "allDenominatorsAndFirst100Unchanged": true,
+  "sourceOnlyParserCodes": 0,
+  "firstSyntaxFailurePreserved": true,
+  "actualCollectorResealLegacyServicesBrowserExecuted": false,
+  "reusedExactDiffSHA": "59b1529f8713a9885ea84699a49e7728d3aec3d7932f1de113c24c6c77ac248c",
+  "doocsToolBindingSHA": "29b3d1d379ab656b9d780bd5274577d0f1a12ea6bf3251d4deecb7864e22678c",
+  "staticDifferences": [
+    "full public/scripts/package/native/pnpm source roots",
+    "legacy253 current approved production SHA; retain first-source and previous SHA lineage",
+    "new driver selfmanifest exact moves to external full inventory+physical SHA",
+    "fixture ffmpeg full closure",
+    "actual fullChrome + actual default headlessShell directory/helpers/dylibs; real registry cacheRoot",
+    "single-birth <=60k segments for >int32 old profiles",
+    "source before oldprepare, actualprivate graph before oldlist/launch and multiple fullafter checks",
+    "only explicit approved protocol CJS/newinode/marker source substitution",
+    "runtime cannot override sealed source fields or approved driver bytes"
+  ],
+  "productionProvenanceCorrection": {
+    "partialPath": "docs/verification/t1246/round-2/unit/current-exact-source-write-set-partial-latest.json",
+    "partialSHA": "f5d0e51c21b32800bdbf41852591a16b6368cdd902bb732f43f36336ba8a4d85",
+    "productionChatPath": "ai-worker/src/execution/chat-generation-worker.ts",
+    "productionChatCurrentSHA": "de1a62340a7ec38d7b1a51fa00bce27acfcd9af86f679f504c0faf44b2a1b273",
+    "productionSpec": "T1251 trusted failure/projection",
+    "minimumTestPath": "frontend/src/server/workbench-file-recovery.test.ts",
+    "minimumCurrentSHA": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+    "minimumSpec": "T1252 public PNG/PDF test; not production chat worker"
+  },
+  "budgets": {
+    "sourceVerifyMs": 1860000,
+    "runtimeVerifyMs": 3000000,
+    "originalPrepareMs": 3600000,
+    "metadataInputMs": 1140000,
+    "binaryDiscoveryIoMs": 900000,
+    "sourceGraphSerialMs": "fresh unique(file,arch)*(120000+120000)+900000+900000+600000; no known131 reuse",
+    "actualOwnedMetadataMs": "same formula fresh profile graph plus actual absolute-source variants",
+    "resealMs": 1860000,
+    "parentPerProfileFormula": "oldRunnerMs +3600000 +freshMetadataMs +2*1860000 +3*3000000 +2*2160000 +180000 +600000",
+    "oldOriginalRunnerMs": 49181520000,
+    "old103RunnerMs": 14879520000,
+    "old9BudgetsNotEdited": true
+  },
+  "remainingStaticConsumerBoundary": {
+    "status": "not-signed-closed",
+    "sourcePaths": [
+      "browser-original/driver/launch.cjs nextOnly/ledgerOnly/run",
+      "new-v3/driver/launch.cjs nextOnly/ledgerOnly/run"
+    ],
+    "oldReadyAdmissionMs": 420000,
+    "oldLedgerMs": [
+      1200000,
+      1800000
+    ],
+    "oldVerifyGitPerCommandMs": 120000,
+    "oldSourceVerifyGitCount": 2,
+    "oldRuntimeReadsSourceAndOwnedInputs": true,
+    "oldLaunchEntryAndFinalRepeatedVerifiersRemain": true,
+    "outerWrapperDoesNotAlterInnerWatchdogs": true,
+    "mustResolveBeforeRuntimeAdmission": true
+  },
+  "pending": [
+    "final clean HEAD/native delivery/11worker/package/DMG receipts",
+    "fresh joint roots/pair inventory/actual metadata raw/fullsource proof",
+    "ROOT apply reviewed private legacy manifests",
+    "remaining original inner consumer budget review",
+    "exact fresh peer+ROOT runtime admission"
+  ]
+}

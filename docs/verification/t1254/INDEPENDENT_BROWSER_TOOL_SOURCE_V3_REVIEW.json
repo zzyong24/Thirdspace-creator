@@ -1,0 +1,84 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T05:32:53.448417+00:00",
+  "conclusion": "PASS_STATIC_SOURCE_V3_ONLY_NO_RUNTIME_ADMISSION",
+  "sourceToolBinding": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/SOURCE_TOOL_BINDING.json",
+    "sha256": "29b3d1d379ab656b9d780bd5274577d0f1a12ea6bf3251d4deecb7864e22678c",
+    "files": 39,
+    "inputs": 14,
+    "driverFiles": 8
+  },
+  "fullIndependentProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_BROWSER_TOOL_SOURCE_V3_FULL_RECHECK.json",
+    "sha256": "9c194f2e43b92c221cd689b69d1b2390ebb4a927b7173207075879deaf854597",
+    "all53RowsSHAZeroDrift": true,
+    "fullUnifiedDiffSixSourcesExact": true
+  },
+  "readScope": [
+    "31c/6816所有8driver全文与真实PG/clock/closure消费者",
+    "6816→最新sourceV3完整统一diff及final PS窄diff",
+    "预算derive/complete/prepare/metadata/launch所有实际调用、future入场与最终同步截止",
+    "当前readonly Python producer全文、新预算Python完整差异及131raw→194context实际metadata独核",
+    "pure预算脚本全文与真实parser/pure回执及原b16严格源审"
+  ],
+  "findingDisposition": [
+    {
+      "id": "BT001",
+      "status": "resolved-in-static-code-only",
+      "evidence": "complete末双verify后与finally显式born截止；launch两个真实cleanup及末source/runtime守门后再判born截止，prepare/seal同步后显式deadline；未借timer停止签晚结果。"
+    },
+    {
+      "id": "BT002",
+      "status": "resolved-in-static-code-only",
+      "evidence": "ownedcopy读取实际FD LC_LOAD/RPATH并选actualrelative loader及firstexisting，absolute保原absolute；canonical source provenance完全相等且actualbytes/mode/uid/link/edges及每raw闭合receipt每次严格守门。actualcollector尚未执行。"
+    },
+    {
+      "id": "BT003",
+      "status": "resolved-in-static-code-only",
+      "evidence": "dynamicRoots覆盖实际Chrome所有browserInputs MachO及每Helpers独立main；actualknownreadonly图94roots/128files/50links/0unresolved，最终运行工具与图仍需freshbinding。"
+    },
+    {
+      "id": "BT004",
+      "status": "resolved-in-static-code-only",
+      "evidence": "131串行×120k正+131×120kstart/close/raw+旧entry/postIO900k×2+600k margin=33840k；verify source4×240k+900k=1860k/runtime5×240k+1800k=3000k。完整所有实际source/runtime调用入上层，Next原420k admission追加其3000k入口校验，ledger保旧1800k并追加3000k；finallyps120k显式用既有600k margin槽，enterPhase和最终future门共同保。"
+    }
+  ],
+  "budgets": {
+    "metadata": 33840000,
+    "sourceVerify": 1860000,
+    "runtimeVerify": 3000000,
+    "prepare": 47160000,
+    "launch": 391500000,
+    "complete": 453300000,
+    "staticSeal": 3000000,
+    "launchFinalPS": 120000,
+    "globalMargin": 600000,
+    "remainingGlobalMarginAfterPS": 480000
+  },
+  "semantics": [
+    "出生clock一次，不把任何新工具外层预算当产品持久任务D，不续任务期限；prepare完整baseline余量用单次now计算，剔除实际verify/metadata耗时避免双计。",
+    "完整复制/实际typed driver/list2/两真实body/PNG+trace+公开资源/source SHA/registered ownedPG readonly账本/两次process birth归属cleanup与sourceafter都保原步骤；9继承函数/原b16/170/111/first100不变。",
+    "Git实际白名单Homebrew入口与localclone aliases在任何Git前检查，禁global/system配置；Node/PG/Chrome/installed全部actualMachO闭包最后门守，不加载被读MachO来伪metadata。"
+  ],
+  "actualChecks": {
+    "parser": "7 current CJS --check真实0，仅parser；两TS未改沿原driver-only语义0",
+    "pure": "新budget-v3真实0：只预算函数+readonlyJSON；131完整future/1ms不足/absolutevariant capacity；未调用verify/Git/otool/collector/服务/SQL/browser",
+    "reviewerExecutedCandidate": false
+  },
+  "pending": [
+    "final delivery/newHEAD/11Worker/DMG",
+    "fresh physical runtime final seal and exact peer+ROOT",
+    "actual private copy metadata/raw receipts plus proper types/list2/body2/screenshots/trace/readonly/cleanup/sourceafter"
+  ],
+  "manifestExists": false,
+  "runtimeApproved": false,
+  "productionCopy": false,
+  "AppUnverified": true,
+  "limitations": [
+    "此PASS只准精确source candidate代码结论，不能预签最终cleanHEAD/11Worker/DMG/delivery/physicaldyld/freshseal。",
+    "readonly Python预算candidate只已知图复核、未执行；old074a/25e3真实metadata不被补造为新producer结果。",
+    "原170/new111执行还需单独externalguard覆盖ffmpeg及protocol唯一合法CJS替换；本Doocs源候选不代签它们。"
+  ],
+  "concerns": []
+}

@@ -1,0 +1,40 @@
+{
+  "scenario": "headers",
+  "pid": 20151,
+  "ppid": 20142,
+  "nonce": "f0757f924f378ed53b8680c5",
+  "actualNode": "v25.9.0",
+  "builtinUndici": "7.24.4",
+  "declaredFixtureDelayMs": 310000,
+  "probeMs": 780000,
+  "cleanupMs": 120000,
+  "elapsedMs": 301418.836084,
+  "requests": 1,
+  "headersAt": null,
+  "releaseAt": null,
+  "expectedResponseHash": "dcf5b35a688fd31a19b835698e9e8c69d6c5220a632815a069fe5805a142569a",
+  "result": null,
+  "failure": {
+    "name": "TypeError",
+    "code": "UND_ERR_HEADERS_TIMEOUT"
+  },
+  "cleanupError": null,
+  "actualBaselineFailure": true,
+  "productTestStatus": "FAIL",
+  "notOfficialModel": true,
+  "notPublicBusinessChain": true,
+  "events": [
+    {
+      "kind": "original_global_fetch_started",
+      "elapsedMs": 6.695
+    },
+    {
+      "kind": "request_received",
+      "elapsedMs": 39.198417000000006
+    },
+    {
+      "kind": "owned_http_closed",
+      "elapsedMs": 301418.834417
+    }
+  ]
+}

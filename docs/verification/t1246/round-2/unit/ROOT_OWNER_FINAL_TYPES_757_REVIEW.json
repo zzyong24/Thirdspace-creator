@@ -1,0 +1,21 @@
+{
+  "phase": "types",
+  "scope": "original-owner-complete-final-batch",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "sourceSnapshotDigest": "ddbd5024891648e40612b8304194890d8ff17537c2e371051b0155c1d757a651",
+  "toolDigest": "500459bec882d4ba1a558919e7c4ddb466306769da93f0fe1c84f3b12a6dd16e",
+  "approved": true,
+  "at": "2026-10-11T21:56:30.228002+00:00",
+  "toolSha256": "7574289d8ecd6345f6d0992f1bc2c0b31ddc425127c808c584bf86fc363d4a6c",
+  "actualInputCount": 3035,
+  "actualInputDrift": 0,
+  "actualToolDrift": 0,
+  "sharedDistExclusive": false,
+  "reviewNotes": [
+    "实际完整读取工具和runtime.run；四环境证明失败会抛出，不放行body",
+    "原B029 exact SHA和原9文件46例，不删过滤失败",
+    "每phase有freshnonce、owned env、原source后绑定和真实EOF/组归零",
+    "完整单例/钩子/清理预算包含在有限独立外层；无PG或App"
+  ],
+  "notRuntimePass": true
+}

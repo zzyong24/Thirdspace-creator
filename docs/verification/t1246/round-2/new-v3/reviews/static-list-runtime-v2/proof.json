@@ -1,0 +1,94 @@
+{
+  "kind": "\u4ec5static --list/typecheck\uff0c\u65e0server/browser/PG/model",
+  "additionalReadonlyInputs": [
+    {
+      "source": "frontend/tests/e2e/settings-return.spec.ts",
+      "sourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "generated": "frontend/tests-t1246-v3/e2e/settings-return.spec.ts",
+      "generatedSha256": "34956ddfbed3cfc9ccd79a4a2ed47c65bffc9b8a22b804c67d037c87a3b6204a",
+      "exactInverse": true,
+      "changes": [
+        "\u5355\u4e00helper import\u8fc1\u5230\u672c\u8f6e\u65e0\u5386\u53f2\u5199\u5165helper",
+        "3\u58f0\u660ecase\u9884\u7b97\u63d0\u9ad872M\uff0c\u4e0d\u51cf\u539fassert"
+      ],
+      "oldTimeouts": [
+        "test.setTimeout(900_000)",
+        "test.setTimeout(1_200_000)",
+        "test.setTimeout(1_800_000)"
+      ]
+    },
+    {
+      "source": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "sourceSha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e",
+      "generated": "frontend/tests-t1246-v3/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "generatedSha256": "51cbf6fc2b21ddf4ad3b3f138b95bebf5308ca253f23f6dc4d1131f06800e335",
+      "exactInverse": true,
+      "changes": [
+        "\u5355\u4e00helper import\u8fc1\u5230\u672c\u8f6e\u65e0\u5386\u53f2\u5199\u5165helper"
+      ],
+      "oldTimeouts": []
+    }
+  ],
+  "files": [
+    {
+      "path": "frontend/tests-t1246-v3/e2e/acceptance-support.ts",
+      "sha256": "9a0cf984302d842e3f9617b30f57dd43ef76713135b165ae18ba7566484d62c4"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-browser.spec.ts",
+      "sha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-dependent.spec.ts",
+      "sha256": "e8b3c8979ffb541771c67a8b51b5b3d4c320b301a88fc9118282ec90b60d340a"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-native.spec.ts",
+      "sha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-protocol.spec.ts",
+      "sha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-routes.spec.ts",
+      "sha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/pi-support.ts",
+      "sha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/protocol-support.ts",
+      "sha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/settings-return.spec.ts",
+      "sha256": "34956ddfbed3cfc9ccd79a4a2ed47c65bffc9b8a22b804c67d037c87a3b6204a"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "sha256": "51cbf6fc2b21ddf4ad3b3f138b95bebf5308ca253f23f6dc4d1131f06800e335"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/fixtures/codex-protocol.cjs",
+      "sha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453"
+    },
+    {
+      "path": "frontend/driver/launch.cjs",
+      "sha256": "d43ffa092ddb16c2f86f09a581e74760bf0eaee71193980ff7dfbba5520b43b8"
+    },
+    {
+      "path": "frontend/driver/playwright.config.ts",
+      "sha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e"
+    },
+    {
+      "path": "frontend/driver/prepare-runtime.cjs",
+      "sha256": "69844fcf9af7bf6172b4d43046499ca26fc1aea672c0a57a4621454331e305fe"
+    },
+    {
+      "path": "frontend/driver/verify-binding.cjs",
+      "sha256": "a99372cf752d6914fb39159bb4cff4bdd3358aae503cfa9d13090a991a0ebc2c"
+    }
+  ]
+}

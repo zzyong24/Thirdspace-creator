@@ -1,0 +1,15 @@
+{
+  "originalHomePreserved": true,
+  "originalCodexHomePreserved": true,
+  "nativePGAbsent": true,
+  "pgUrlAbsent": true,
+  "explicitEmptyUserConfig": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/empty-user.npmrc",
+  "explicitEmptyGlobalConfig": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/empty-global.npmrc",
+  "ownedCache": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/npm-cache",
+  "ownedTmp": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tmp",
+  "requestTimeoutMs": 300000,
+  "fetchRetries": 0,
+  "ignoreScripts": true,
+  "registry": "https://registry.npmjs.org/",
+  "noCredentialValuesLogged": true
+}

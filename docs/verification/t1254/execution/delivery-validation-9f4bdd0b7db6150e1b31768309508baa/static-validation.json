@@ -1,0 +1,155 @@
+{
+  "passed": true,
+  "actual": {
+    "passed": true,
+    "files": 299,
+    "parsedJs": 288,
+    "references": 2177,
+    "entrySha256": "c0be4acb626c66fff914878d8baaa35549db73ac9937f9a125c052dbf5946b77",
+    "sourceArchiveSha256": "d63e3e278f135c47dfd4e7c290b91f9504b0a5ac874d548ce57ccbcebb0dc602",
+    "patchSha256": "43ee5ddfdcad6ae0a0a49f32e5069691c3fdd0345f167a4c15b93f5c2445a14e",
+    "preservedCsp": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self' data:; worker-src 'self' blob:; media-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'",
+    "readOnly": true,
+    "browserExecutionNotClaimed": true
+  },
+  "cases": [
+    {
+      "name": "pathname真实consumer",
+      "expected": "pass",
+      "passed": true,
+      "error": null
+    },
+    {
+      "name": "pathname括号真实consumer",
+      "expected": "pass",
+      "passed": true,
+      "error": null
+    },
+    {
+      "name": "Vite函数base前缀",
+      "expected": "pass",
+      "passed": true,
+      "error": null
+    },
+    {
+      "name": "Vite预载真实本地表",
+      "expected": "pass",
+      "passed": true,
+      "error": null
+    },
+    {
+      "name": "无表达式template导入",
+      "expected": "pass",
+      "passed": true,
+      "error": null
+    },
+    {
+      "name": "真实base文件仍须核",
+      "expected": "pass",
+      "passed": true,
+      "error": null
+    },
+    {
+      "name": "pathname错误对象",
+      "expected": "reject",
+      "passed": true,
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(typeof relative === 'string' && relative && !path.isAbsolute(relative))\n"
+    },
+    {
+      "name": "pathname错误属性",
+      "expected": "reject",
+      "passed": true,
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(typeof relative === 'string' && relative && !path.isAbsolute(relative))\n"
+    },
+    {
+      "name": "pathname错误方法",
+      "expected": "reject",
+      "passed": true,
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(typeof relative === 'string' && relative && !path.isAbsolute(relative))\n"
+    },
+    {
+      "name": "真实root动态import",
+      "expected": "reject",
+      "passed": true,
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(typeof relative === 'string' && relative && !path.isAbsolute(relative))\n"
+    },
+    {
+      "name": "真实rootURL",
+      "expected": "reject",
+      "passed": true,
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(typeof relative === 'string' && relative && !path.isAbsolute(relative))\n"
+    },
+    {
+      "name": "未知BASE字面量",
+      "expected": "reject",
+      "passed": true,
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(typeof relative === 'string' && relative && !path.isAbsolute(relative))\n"
+    },
+    {
+      "name": "真实base不存在文件",
+      "expected": "reject",
+      "passed": true,
+      "error": "ENOENT: no such file or directory, lstat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/fault-root/frontend/public/reference-editors/doocs-md/static/js/t1254-missing.js'"
+    },
+    {
+      "name": "静态import缺文件",
+      "expected": "reject",
+      "passed": true,
+      "error": "ENOENT: no such file or directory, lstat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/fault-root/frontend/public/reference-editors/doocs-md/static/js/t1254-missing.js'"
+    },
+    {
+      "name": "无表达式template缺文件",
+      "expected": "reject",
+      "passed": true,
+      "error": "ENOENT: no such file or directory, lstat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/fault-root/frontend/public/reference-editors/doocs-md/static/js/t1254-missing.js'"
+    },
+    {
+      "name": "预载表缺文件",
+      "expected": "reject",
+      "passed": true,
+      "error": "ENOENT: no such file or directory, lstat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/fault-root/frontend/public/reference-editors/doocs-md/static/js/t1254-missing.js'"
+    },
+    {
+      "name": "预载表协议错误",
+      "expected": "reject",
+      "passed": true,
+      "error": "The expression evaluated to a falsy value:\n\n  assert.ok(reuse && ts.isBinaryExpression(reuse) && reuse.operatorToken.kind === ts.SyntaxKind.BarBarToken)\n"
+    },
+    {
+      "name": "完整hash漂移",
+      "expected": "reject",
+      "passed": true,
+      "error": "static实际摘要：js/creatoros-t1254-verifier-fault.js\n+ actual - expected\n\n+ '091d438b353e544b066eccdec2cc8b89fd374f9f3adf5b8c6a05fbd3fc95aa43'\n- '0000000000000000000000000000000000000000000000000000000000000000'\n"
+    },
+    {
+      "name": "完整文件集拒绝漏声明",
+      "expected": "reject",
+      "passed": true,
+      "error": "static整套文件集一致\n+ actual - expected\n... Skipped lines\n\n  [\n    'css/md-CssEditor-CDObKMKm.css',\n    'css/md-Progress-DKm73uaH.css',\n    'css/md-RightSlider-BStZXqZr.css',\n    'css/md-SearchTab-Cz97grH-.css',\n...\n    'js/creatoros-inline-8d1adf9446d74929ad59ecb8e1c10e24eeccb18689a4712d3ae6837e6b65c920.js',\n+   'js/creatoros-t1254-verifier-fault.js',\n    'js/md-AboutDialog-BoPOe_zm.js',\n    'js/md-AccountDialog-BShGTSED.js',\n    'js/md-Alert-BSx4tLK8.js',\n    'js/md-AlertDialogTitle-bMWHbm0J.js',\n    'js/md-CheckboxIndicator-IogcPg4j.js',\n"
+    },
+    {
+      "name": "源码归档hash漂移",
+      "expected": "reject",
+      "passed": true,
+      "error": "源码／补丁／固定a7实际摘要：sources/doocs-md/request-budget-static-source.tar.gz\n+ actual - expected\n\n+ 'd63e3e278f135c47dfd4e7c290b91f9504b0a5ac874d548ce57ccbcebb0dc602'\n- '0000000000000000000000000000000000000000000000000000000000000000'\n"
+    },
+    {
+      "name": "原CSP不准放宽",
+      "expected": "reject",
+      "passed": true,
+      "error": "原全部CSP字节一致\n+ actual - expected\n\n+ \"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self' data:; worker-src 'self' blob:; media-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'\"\n- \"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self' data:; worker-src 'self' blob:; media-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; connect-src *\"\n"
+    },
+    {
+      "name": "HTML真实引用缺文件",
+      "passed": true,
+      "expected": "reject"
+    },
+    {
+      "name": "CSS真实引用缺文件",
+      "passed": true,
+      "expected": "reject"
+    }
+  ],
+  "readOnlyProduct": true,
+  "noBrowserExecution": true
+}

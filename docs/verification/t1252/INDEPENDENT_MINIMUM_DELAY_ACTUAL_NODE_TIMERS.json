@@ -1,0 +1,67 @@
+{
+  "at": "2026-10-12T02:18:13.185Z",
+  "version": "v25.9.0",
+  "execPath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "modules": [
+    {
+      "module": "timers",
+      "sha256": "23e988eb60371fea0b5eb8a7aeb8a50665fea00483a9f6eb8f3742fe3c2c2b27",
+      "snippets": [
+        {
+          "line": 115,
+          "text": " * @returns {Timeout}\n */\nfunction setTimeout(callback, after, ...args) {\n  validateFunction(callback, 'callback');\n  const timeout = new Timeout(callback, after, args.length ? args : undefined, false, true);\n  insert(timeout, timeout._idleTimeout);\n  return timeout;\n}\n"
+        },
+        {
+          "line": 117,
+          "text": "function setTimeout(callback, after, ...args) {\n  validateFunction(callback, 'callback');\n  const timeout = new Timeout(callback, after, args.length ? args : undefined, false, true);\n  insert(timeout, timeout._idleTimeout);\n  return timeout;\n}\n\nObjectDefineProperty(setTimeout, customPromisify, {\n  __proto__: null,"
+        },
+        {
+          "line": 118,
+          "text": "  validateFunction(callback, 'callback');\n  const timeout = new Timeout(callback, after, args.length ? args : undefined, false, true);\n  insert(timeout, timeout._idleTimeout);\n  return timeout;\n}\n\nObjectDefineProperty(setTimeout, customPromisify, {\n  __proto__: null,\n  enumerable: true,"
+        },
+        {
+          "line": 161,
+          "text": "function setInterval(callback, repeat, ...args) {\n  validateFunction(callback, 'callback');\n  const timeout = new Timeout(callback, repeat, args.length ? args : undefined, true, true);\n  insert(timeout, timeout._idleTimeout);\n  return timeout;\n}\n\n/**\n * Cancels an interval."
+        },
+        {
+          "line": 162,
+          "text": "  validateFunction(callback, 'callback');\n  const timeout = new Timeout(callback, repeat, args.length ? args : undefined, true, true);\n  insert(timeout, timeout._idleTimeout);\n  return timeout;\n}\n\n/**\n * Cancels an interval.\n * @param {Timeout | string | number} timer"
+        }
+      ]
+    },
+    {
+      "module": "internal/timers",
+      "sha256": "3b5e3c4fa7230bb688d9400c8726c52cdde346ff46f480a5847660c0f79d29d3",
+      "snippets": [
+        {
+          "line": 387,
+          "text": "\n// We need to use the binding as the receiver for fast API calls.\nfunction insert(item, msecs, start = binding.getLibuvNow()) {\n  // Truncate so that accuracy of sub-millisecond timers is not assumed.\n  msecs = MathTrunc(msecs);\n  item._idleStart = start;\n\n  // Use an existing list if there is one, otherwise we need to make a new one.\n  let list = timerListMap[msecs];"
+        },
+        {
+          "line": 390,
+          "text": "  // Truncate so that accuracy of sub-millisecond timers is not assumed.\n  msecs = MathTrunc(msecs);\n  item._idleStart = start;\n\n  // Use an existing list if there is one, otherwise we need to make a new one.\n  let list = timerListMap[msecs];\n  if (list === undefined) {\n    debug('no %d list was found in insert, creating a new one', msecs);\n    const expiry = start + msecs;"
+        },
+        {
+          "line": 414,
+          "text": "  validateFunction(callback, 'callback');\n\n  const timer = new Timeout(callback, after, undefined, false, false);\n  insert(timer, timer._idleTimeout);\n\n  return timer;\n}\n\n// Type checking used by timers.enroll() and Socket#setTimeout()"
+        },
+        {
+          "line": 541,
+          "text": "      else\n        ranAtLeastOneList = true;\n      listOnTimeout(list, now);\n    }\n    return 0;\n  }\n\n  function listOnTimeout(list, now) {\n    const msecs = list.msecs;"
+        },
+        {
+          "line": 546,
+          "text": "  }\n\n  function listOnTimeout(list, now) {\n    const msecs = list.msecs;\n\n    debug('timeout callback %d', msecs);\n\n    let ranAtLeastOneTimer = false;\n    let timer;"
+        },
+        {
+          "line": 558,
+          "text": "      // Check if this loop iteration is too early for the next timer.\n      // This happens if there are more timers scheduled for later in the list.\n      if (diff < msecs) {\n        list.expiry = MathMax(timer._idleStart + msecs, now + 1);\n        list.id = timerListId++;\n        timerListQueue.percolateDown(1);\n        debug('%d list wait because diff is %d', msecs, diff);\n        return;\n      }"
+        },
+        {
+          "line": 599,
+          "text": "      if (timer._repeat) {\n        // We need to use the binding as the receiver for fast API calls.\n        start = binding.getLibuvNow();\n      }\n\n      try {\n        const args = timer._timerArgs;\n        if (args === undefined)\n          timer._onTimeout();"
+        }
+      ]
+    }
+  ]
+}

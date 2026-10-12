@@ -1,0 +1,63 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-11T23:32:10.976097+00:00",
+  "result": "PASS_TOOL_CONTROLLED_BUNDLED_SLOW_HTTP_ONLY",
+  "scope": "仅实际构建CLI bundle的两个受控localhost310秒协议header/body链；不签公共业务任务、模型、Rust/App/物理最终安装包验收",
+  "toolSha256": "de048571a626864a14b2e590be84b5847bb87664c2ea1931e67d214f8e9d6642",
+  "bindingSha256": "e5d37451ddad1968a624894775c5f701b8f1ae86799b9da2dce0f635b5afb003",
+  "node": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+  },
+  "bundle": {
+    "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/creatoros.cjs",
+    "sha256": "84260be6df120ec18b9b91b17112cbee37fd1bba448205ccfbbd147646218caf",
+    "actualStandardBuildComplete": true,
+    "actualOriginalBuildScriptSha256": "312cf5a13083730702e8e5e92f042c317b8e24737fdd17ecff7e0a7078c13fdb",
+    "archivedSameBytesPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/actual-standard-checks/creatoros.cjs",
+    "actualBuildEvidenceSha256": "8ac5032e277a80970468cd701eaa36cc7d287a70911085c4378ccf5832c0190b"
+  },
+  "helper": {
+    "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+    "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea"
+  },
+  "sourceInputs": 212,
+  "sourceDrift": [],
+  "actualStandardEvidenceSha256": "8ac5032e277a80970468cd701eaa36cc7d287a70911085c4378ccf5832c0190b",
+  "actualStandardEvidenceObserved": {
+    "files": 8,
+    "passed": 116,
+    "failed": 0,
+    "skipped": 0,
+    "scannerPassed": 8,
+    "typesExit": 0,
+    "buildExit": 0,
+    "allRawFileShaMatched": true
+  },
+  "slots": {
+    "prepareMs": 240000,
+    "twoStartListenMs": 240000,
+    "twoChildMs": 16800000,
+    "twoHelperLifecycleMs": 4320000,
+    "twoServerCloseMs": 240000,
+    "afterMs": 600000,
+    "marginMs": 120000
+  },
+  "fullOuterMs": 22560000,
+  "findings": [],
+  "staticConclusions": [
+    "bundle实际原build-runtime/smoke输出，runRoot与归档84260be6字节全同，fixedNode已核；未拿源码入口代bundle",
+    "未替fetch/Response/Agent，直接Node调用真实creatoros.cjs；loopbackhost127.0.0.1/port0/exclusive且只本父进程ownedserver",
+    "合成token/明确CREATOROS_BASE_URL/显式account/group，真实cli.clientFor开发分支不读取官方连接；email/password空不login，不带真实凭据",
+    "两个原POST1输入/范围头严格；headers分支真实delay310秒后给完整body，body分支先真实headers与partial8bytes再延迟补其余；原requestId/data/meta完整EOF/hash核验",
+    "child8.4M保实际8.28M dispatch观察＋入口余量，2.16M原393f每child；监听和serverclose各120k完整串行，22.56M一次入口outer分段",
+    "取消不发第二case，关闭仅本ownedHTTP连接；任何child非零/unknownclose/group残留/hash或scope错都FAIL，不伪装供应商/业务结果"
+  ],
+  "conditions": [
+    "root精确de048/e5d3准入后才运行，源/lock/bundle/Node/helper冻结",
+    "实际header/body release及事件/原request/childclose/serverclose必须保存，静态310常量不冒实际等待证明",
+    "两个控制协议用例通过仅证明此bundle传输；真实public >300生产业务/Rust原体另工具另验",
+    "保两原301s RED和所有历史失败；本评审没有启动HTTP、CLI、模型或App"
+  ],
+  "actualSlowHttpExecutedByReviewer": false
+}

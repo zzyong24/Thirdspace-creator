@@ -1,0 +1,28 @@
+{
+  "schema": "t1251-outcome-recheck-binding/v1",
+  "model": "unknown/inherited",
+  "oldSpec": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1251/spec-history/candidate-254310755165.md",
+    "sha256": "254310755165eff65156a919176345124d00424bb809d2ab8bc7f8f92db1c810"
+  },
+  "currentSpec": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+    "sha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84"
+  },
+  "diffSha256": "c0ca6c765fd58abcbf99172a9a2a0d7da345b4367f047a78a108b414768ffd6d",
+  "sources": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.ts",
+      "sha256": "43d1fc7d75859c628fd66bcb3372cc3d95cf6fb8d44eb7b906d655f74968b06c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/chat-receipt-projection.ts",
+      "sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/chat-receipt-projection.test.ts",
+      "sha256": "36955411c5d51fceb11ae68c2f40e0d1abb83dfef185516a7031c9f061004eb4"
+    }
+  ],
+  "testsExecuted": false
+}

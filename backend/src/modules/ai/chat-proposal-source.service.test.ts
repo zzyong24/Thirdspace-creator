@@ -113,3 +113,13 @@ it.each(["identity","parent","input","protocol","engine"])("ACP拒绝%s不符的
  if(mode==="protocol"||mode==="engine")await db.update(executionCalls).set({providerResult:{...parent!.providerResult as object,...(mode==="protocol"?{protocolVersion:2}:{engine:"codebuddy"})}}).where(eq(executionCalls.id,parent!.id));
  await expect(f.reader.read(f.ctx,f.reference)).rejects.toThrow();
 });
+
+it('T1248 可信resolver选择原冻结版本且Pi binding与decode不落回静态当前工具',async()=>{
+ const f=await fixture(),chosen:unknown[]=[];
+ const stale={[name]:{...f.tools[name]!,version:'different-current-version'}};
+ const reader=createChatProposalSourceService(db,{tools:stale,resolveTools:async frozen=>{chosen.push(frozen);return f.tools;},parseCandidate:(_name,data)=>candidateSchema.parse(data)});
+ const read=await reader.read(f.ctx,f.reference);expect(read.source).toEqual(f.reference);expect(chosen).toHaveLength(1);
+ await expect(reader.read({...f.ctx,accountId:'foreign'},f.reference)).rejects.toThrow();expect(chosen).toHaveLength(1);
+ const wrong=createChatProposalSourceService(db,{tools:f.tools,resolveTools:async()=>stale,parseCandidate:(_name,data)=>candidateSchema.parse(data)});
+ await expect(wrong.read(f.ctx,f.reference)).rejects.toThrow();
+},120000);

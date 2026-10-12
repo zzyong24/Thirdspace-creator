@@ -5,6 +5,23 @@ import { createChatWorkEditorToolHost } from './chat-work-editor-tool-host';
 import { workEditorContentDigest } from './work-editor-candidate';
 import type { WorkEditorTarget } from '@creatoros/contract';
 const ctx = { userId: 'u', accountId: 'a', groupId: 'g', source: 'user' as const, requestId: 'r' }, ref = { executionTaskId: 'task', attempt: 1, fenceToken: 'fence' };
+it('T1097 模型实际read逐文件返回原文后结构化截断通知，短文不伪截断',async()=>{
+ const {createWorkWritingContext}=await import('../../application/generation/work-writing-context');
+ const long='原始😀资料'.repeat(15000),short='完整短资料';
+ const writingContext={schemaVersion:1 as const,brandProfileVersionId:null,sourceAssets:[{assetId:'long',assetFileId:'long-f'},{assetId:'short',assetFileId:'short-f'},{assetId:'second',assetFileId:'second-f'}]};
+ const resolved=await createWorkWritingContext({assertProject:async()=>{},readCenter:async()=>{throw Error('中性不读品牌');},readStatement:async()=>{throw Error('中性不读品牌');},readDocument:async(_ctx,_project,id)=>({label:id,text:id==='short'?short:long})}).resolve(ctx,'p',writingContext);
+ const document={schemaVersion:1 as const,title:'原文',summary:'',sections:[],factItems:[],visualBriefs:[],imageUses:[]};
+ const target:WorkEditorTarget={schemaVersion:1,projectId:'p',outputId:'o',owner:'wechat_article',contentType:'article',savedBase:{kind:'artifact',artifactId:'artifact',versionId:'v'},documentDigest:workEditorContentDigest(document),selection:{kind:'article',sectionIds:[]},writingContext};
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(['work.editor.read','work.editor.propose'],{humanizeError:()=>null} as any),{workWritingContext:true})).definitions;
+ const host=createChatWorkEditorToolHost({read:async()=>({context:ctx,hostContext:{chatContext:{surface:'project',projectId:'p',editorTarget:target},resolvedWritingContext:resolved},modelInput:{tools:definitions}})} as any,{readArticle:async()=>({projectId:'p',outputId:'o',artifactId:'artifact',currentVersionId:'v',current:document,versions:[]}),readGraphicPost:async()=>{throw Error('不读');},readProduction:async()=>{throw Error('不读');},readMedia:async()=>{throw Error('不读');}});
+ const signal=new AbortController().signal,tools=await host(ctx,{} as any,ref,signal);
+ const outcome=await tools['work.editor.read']!.execute!(ctx,{view:'document'},{execution:ref,aiTaskId:'ai',callId:'call',toolCallId:'tool',signal});
+ const actual=(outcome.data as {resolvedWritingContext:typeof resolved}).resolvedWritingContext;
+ expect(actual).toEqual(resolved);
+ expect(actual.sourceMaterials.map(item=>item.text)).toEqual([long.slice(0,60000),short,long.slice(0,60000)]);
+ expect(actual.sourceMaterials.map(item=>({originalLength:item.originalLength,providedLength:item.providedLength,truncated:item.truncated}))).toEqual([{originalLength:long.length,providedLength:60000,truncated:true},{originalLength:short.length,providedLength:short.length,truncated:false},{originalLength:long.length,providedLength:60000,truncated:true}]);
+ for(const item of actual.sourceMaterials){const keys=Object.keys(item);for(const notification of ['originalLength','providedLength','truncated'])expect(keys.indexOf(notification)).toBeGreaterThan(keys.indexOf('text'));}
+});
 it('原短host严格核三维owner/冻结effect版本并只产原owner候选', async () => {
     const document = { schemaVersion: 1 as const, title: '真实文章', summary: '摘要', sections: [{ sectionId: 's', order: 0, heading: '原标题', headingLevel: 2, body: '原正文', sourceRefs: [] }], factItems: [], visualBriefs: [], imageUses: [] };
     const target: WorkEditorTarget = { schemaVersion: 1, projectId: 'p', outputId: 'o', owner: 'wechat_article', contentType: 'article', savedBase: { kind: 'artifact', artifactId: 'a', versionId: 'v' }, documentDigest: workEditorContentDigest(document), selection: { kind: 'article_sections', sectionIds: ['s'] } };

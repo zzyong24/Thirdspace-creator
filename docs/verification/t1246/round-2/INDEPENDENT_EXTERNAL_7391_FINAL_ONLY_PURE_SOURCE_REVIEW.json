@@ -1,0 +1,78 @@
+{
+  "task": "T-1246",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T07:51:58.913532+00:00",
+  "status": "PASS",
+  "reviewScope": "7391两source窄修+完整343输入；只推荐ROOT独立only-pure准入，不准metadata/reseal/runtime",
+  "bindingSha256": "7391c163398d7fe7f7b11fbcd51d5482da3005e07fef5aa9e2c974b028a6047c",
+  "pureSha256": "dae6513613692a7ac7cd4549694610b5a17a74eb6600441779aabcca30e4cd0a",
+  "resealSha256": "05825374a61c5c10e95d8f0d4319994da804dac289638b21745f8d42610495bb",
+  "findings": [],
+  "independentFullReadProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/INDEPENDENT_EXTERNAL_7391_FULL_INPUT_AND_BUDGET_LINEAGE_RECHECK.json",
+    "sha256": "bb4df8a612544f99b8cc6e11b7b63aeb717de1b5a02ac9ebe1fd0ef1f06c55a1",
+    "rows": 343,
+    "drift": [],
+    "sixForwardInverseCompleteReconstruction": true
+  },
+  "oldSourceReviewRetained": {
+    "27cf": "5b184bbb4d6858cc23f26fcdaa24503b2c61be89d25d6a34141d418df1a40a98",
+    "onlyTwoCodeChanged": [
+      "tool/reseal.cjs",
+      "budget-test.cjs"
+    ],
+    "allOtherSixToolAndExternalCodeByteIdentical": true
+  },
+  "actualFailureHistory": "65266392真实pure child66912 code1/209ms/closed/group0和原wrapperEOF1、未到after原状态保持；前27cf静态评审没有发现历史JSON与当前函数600k不一致，不能将旧静态PASS或已保历史改写为真实pure通过。",
+  "currentOriginalBudgetLineage": {
+    "oldB994JSONSha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+    "oldStartupMs": 1800000,
+    "oldOuterMs": 49181520000,
+    "actualCurrentE159FunctionStartupMs": 2400000,
+    "actualCurrentOriginalOuterMs": 49182120000,
+    "currentRevisedOuterMs": 49197000000,
+    "allFieldsIndependentlyCalculatedFrom170And54": {
+      "bodyCount": 170,
+      "fileCount": 54,
+      "serialBodySumMs": 24219180000,
+      "separatePerBodyFixtureHookAllowanceMs": 24280380000,
+      "globalSetupTeardownAllowanceMs": 240000,
+      "workerProjectCleanupSlotMs": 672840000,
+      "startupFullSlotsMs": 2400000,
+      "commandListMs": 480000,
+      "readonlyLedgerSlotMs": 1200000,
+      "cleanupFullMs": 4800000,
+      "marginMs": 600000,
+      "outerMs": 49182120000,
+      "monotonicSegmentsMaxMs": 60000,
+      "notPersistentDeadlineInput": true
+    },
+    "oldAndCurrentFunctionOnlyTwoFieldsDifferBy600k": true,
+    "actualOriginalFunctionWholeBodySameAsPrivate": true,
+    "noFunctionBudgetLoweredToFitHistoricalJSON": true
+  },
+  "fullTwoSourceReview": {
+    "pure": "已全文读取dae651；核旧完整b994履历、根listed170/budgets54同、真实原9导出current函数和私有函数逐字段同，只startup/outer增600k；保旧remainingfuture与close-deadline纯断言。所有require仅定义模块、读取固定JSON、调用纯函数，不verify/Git/helper/supervise/SDK/collector/服务。",
+    "reseal": "058253已完整新delta+此前全文旧代码保并严格正逆重建；future私有原manifest.runnerBudget由真实原9 current originalRunnerBudget整字段赋值，与私有verifier全字段等，history旧JSON和function路径SHA显式lineage，旧JSON纳joint sourceFiles每次重核；新111不消费JSON.runnerBudget，无原JSON实体应用。"
+  },
+  "onlyPureRecommendation": {
+    "entry": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/budget-test.cjs",
+    "entrySha256": "dae6513613692a7ac7cd4549694610b5a17a74eb6600441779aabcca30e4cd0a",
+    "sourceBindingSha256": "7391c163398d7fe7f7b11fbcd51d5482da3005e07fef5aa9e2c974b028a6047c",
+    "minimumPositiveMs": 120000,
+    "separateHelperLifecycleMs": 2160000,
+    "rootMustReserveBeforeAfterRawAndProcessProofSlots": true,
+    "rootMustFreshlyVerifyExactNodeDyldAndAll343Bindings": true,
+    "oneNewNonceAndActualClosedCodeReceiptRequired": true,
+    "previousPureFailKept": true,
+    "reviewerExecutedPure": false,
+    "approvalIssuedByReviewer": false,
+    "metadataResealPrepareSDKServicesAndBrowserNotApproved": true
+  },
+  "parserFacts": "仅2变更CJS实际parser0，13未变parser原输入与rawSHA保持；完整15当前source/raw独核。未重复或执行任何模块body。",
+  "allOriginal170New111First100SQLConfigAndOld9Preserved": true,
+  "freshRealHeadWorkersDMGJointGraphStillPending": true,
+  "reviewerCandidateExecution": false,
+  "reviewerProductionWrite": false,
+  "AppAcceptanceIncompletePerUser": true
+}

@@ -1,0 +1,416 @@
+{
+  "task": "T-1254",
+  "actualViteParser": true,
+  "actualGenerationConsumerShape": true,
+  "fixtureOnlyNotRealBuild": true,
+  "cases": [
+    {
+      "name": "Vite真实参数拼base是前缀",
+      "mustFail": false,
+      "checked": [],
+      "prefixes": [
+        {
+          "kind": "vite-preload-base-prefix",
+          "from": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/js/md-entry.js",
+          "reference": "/reference-editors/doocs-md/",
+          "notAFile": true,
+          "parameterConcatConfirmed": true
+        }
+      ],
+      "mapDepsAst": null,
+      "error": null,
+      "assertionError": null,
+      "passed": true
+    },
+    {
+      "name": "Vite压缩arrow参数拼base是前缀",
+      "mustFail": false,
+      "checked": [],
+      "prefixes": [
+        {
+          "kind": "vite-preload-base-prefix",
+          "from": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/js/md-entry.js",
+          "reference": "/reference-editors/doocs-md/",
+          "notAFile": true,
+          "parameterConcatConfirmed": true
+        }
+      ],
+      "mapDepsAst": null,
+      "error": null,
+      "assertionError": null,
+      "passed": true
+    },
+    {
+      "name": "真实mapDeps检查base相对JS及CSS",
+      "mustFail": false,
+      "checked": [
+        {
+          "reference": "/reference-editors/doocs-md/static/js/child.js",
+          "kind": "vite-preload-table"
+        },
+        {
+          "reference": "/reference-editors/doocs-md/static/css/theme.css",
+          "kind": "vite-preload-table"
+        }
+      ],
+      "prefixes": [],
+      "mapDepsAst": {
+        "initType": "ArrowFunctionExpression",
+        "tableParameter": {
+          "type": "AssignmentPattern",
+          "left": {
+            "type": "Identifier",
+            "name": "d",
+            "start": 43,
+            "end": 44
+          },
+          "right": {
+            "type": "ParenthesizedExpression",
+            "expression": {
+              "type": "LogicalExpression",
+              "left": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "m",
+                  "start": 46,
+                  "end": 47
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "f",
+                  "start": 48,
+                  "end": 49
+                },
+                "optional": false,
+                "computed": false,
+                "start": 46,
+                "end": 49
+              },
+              "operator": "||",
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 52,
+                      "end": 53
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 54,
+                      "end": 55
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 52,
+                    "end": 55
+                  },
+                  "right": {
+                    "type": "ArrayExpression",
+                    "elements": [
+                      {
+                        "type": "Literal",
+                        "value": "static/js/child.js",
+                        "raw": "\"static/js/child.js\"",
+                        "start": 57,
+                        "end": 77
+                      },
+                      {
+                        "type": "Literal",
+                        "value": "static/css/theme.css",
+                        "raw": "\"static/css/theme.css\"",
+                        "start": 78,
+                        "end": 100
+                      }
+                    ],
+                    "start": 56,
+                    "end": 101
+                  },
+                  "start": 52,
+                  "end": 101
+                },
+                "start": 51,
+                "end": 102
+              },
+              "start": 46,
+              "end": 102
+            },
+            "start": 45,
+            "end": 103
+          },
+          "start": 43,
+          "end": 103
+        }
+      },
+      "error": null,
+      "assertionError": null,
+      "passed": true
+    },
+    {
+      "name": "静态template dynamic import检查真实文件",
+      "mustFail": false,
+      "checked": [
+        {
+          "reference": "./child.js",
+          "kind": "js-import"
+        }
+      ],
+      "prefixes": [],
+      "mapDepsAst": null,
+      "error": null,
+      "assertionError": null,
+      "passed": true
+    },
+    {
+      "name": "普通ESM相对import检查真实文件",
+      "mustFail": false,
+      "checked": [
+        {
+          "reference": "./child.js",
+          "kind": "js-import"
+        }
+      ],
+      "prefixes": [],
+      "mapDepsAst": null,
+      "error": null,
+      "assertionError": null,
+      "passed": true
+    },
+    {
+      "name": "缺失mapDeps JS拒绝",
+      "mustFail": true,
+      "checked": [],
+      "prefixes": [],
+      "mapDepsAst": {
+        "initType": "ArrowFunctionExpression",
+        "tableParameter": {
+          "type": "AssignmentPattern",
+          "left": {
+            "type": "Identifier",
+            "name": "d",
+            "start": 43,
+            "end": 44
+          },
+          "right": {
+            "type": "ParenthesizedExpression",
+            "expression": {
+              "type": "LogicalExpression",
+              "left": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "m",
+                  "start": 46,
+                  "end": 47
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "f",
+                  "start": 48,
+                  "end": 49
+                },
+                "optional": false,
+                "computed": false,
+                "start": 46,
+                "end": 49
+              },
+              "operator": "||",
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 52,
+                      "end": 53
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 54,
+                      "end": 55
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 52,
+                    "end": 55
+                  },
+                  "right": {
+                    "type": "ArrayExpression",
+                    "elements": [
+                      {
+                        "type": "Literal",
+                        "value": "static/js/missing.js",
+                        "raw": "\"static/js/missing.js\"",
+                        "start": 57,
+                        "end": 79
+                      }
+                    ],
+                    "start": 56,
+                    "end": 80
+                  },
+                  "start": 52,
+                  "end": 80
+                },
+                "start": 51,
+                "end": 81
+              },
+              "start": 46,
+              "end": 81
+            },
+            "start": 45,
+            "end": 82
+          },
+          "start": 43,
+          "end": 82
+        }
+      },
+      "error": {
+        "name": "Error",
+        "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/js/missing.js'"
+      },
+      "assertionError": null,
+      "passed": true
+    },
+    {
+      "name": "缺失mapDeps CSS拒绝",
+      "mustFail": true,
+      "checked": [],
+      "prefixes": [],
+      "mapDepsAst": {
+        "initType": "ArrowFunctionExpression",
+        "tableParameter": {
+          "type": "AssignmentPattern",
+          "left": {
+            "type": "Identifier",
+            "name": "d",
+            "start": 43,
+            "end": 44
+          },
+          "right": {
+            "type": "ParenthesizedExpression",
+            "expression": {
+              "type": "LogicalExpression",
+              "left": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "m",
+                  "start": 46,
+                  "end": 47
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "f",
+                  "start": 48,
+                  "end": 49
+                },
+                "optional": false,
+                "computed": false,
+                "start": 46,
+                "end": 49
+              },
+              "operator": "||",
+              "right": {
+                "type": "ParenthesizedExpression",
+                "expression": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "m",
+                      "start": 52,
+                      "end": 53
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "f",
+                      "start": 54,
+                      "end": 55
+                    },
+                    "optional": false,
+                    "computed": false,
+                    "start": 52,
+                    "end": 55
+                  },
+                  "right": {
+                    "type": "ArrayExpression",
+                    "elements": [
+                      {
+                        "type": "Literal",
+                        "value": "static/css/missing.css",
+                        "raw": "\"static/css/missing.css\"",
+                        "start": 57,
+                        "end": 81
+                      }
+                    ],
+                    "start": 56,
+                    "end": 82
+                  },
+                  "start": 52,
+                  "end": 82
+                },
+                "start": 51,
+                "end": 83
+              },
+              "start": 46,
+              "end": 83
+            },
+            "start": 45,
+            "end": 84
+          },
+          "start": 43,
+          "end": 84
+        }
+      },
+      "error": {
+        "name": "Error",
+        "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/css/missing.css'"
+      },
+      "assertionError": null,
+      "passed": true
+    },
+    {
+      "name": "缺失template import拒绝",
+      "mustFail": true,
+      "checked": [],
+      "prefixes": [],
+      "mapDepsAst": null,
+      "error": {
+        "name": "Error",
+        "message": "ENOENT: no such file or directory, stat '/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/originalNine/resource-checker-fixture/static/js/missing.js'"
+      },
+      "assertionError": null,
+      "passed": true
+    },
+    {
+      "name": "无真实参数拼接的base文件引用拒绝",
+      "mustFail": true,
+      "checked": [],
+      "prefixes": [],
+      "mapDepsAst": null,
+      "error": {
+        "name": "AssertionError",
+        "message": "The expression evaluated to a falsy value:\n\n  assert.ok(target.startsWith(artifactRoot + path.sep))\n"
+      },
+      "assertionError": null,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "stoppedCase": null,
+  "partial": false
+}

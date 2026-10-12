@@ -1,0 +1,27 @@
+{
+  "requestMs": 120000,
+  "expectMs": 120000,
+  "actionMs": 120000,
+  "navigationMs": 120000,
+  "boundedOriginalTaskObserveMs": 1980000,
+  "testOuterMs": 21600000,
+  "fixtureAndHooksAtLeastMs": 180000,
+  "retries": 0,
+  "workers": 1,
+  "globalTimeout": 0,
+  "consumerNotes": [
+    "acceptance-support.raw/page.request HTTP120s",
+    "uiOp response wait120s",
+    "waitTask only original task ID observes terminal status up to33min",
+    "native/dependent describe6h includes multi-call series",
+    "browser describe5h covers38 route width traversals",
+    "generated helpers fixture retains reviewed180s minimum and existing longer settings",
+    "base startup300s and shutdown120s inherited; no worker build",
+    "separate testcase modes default, not serial dependent skip"
+  ],
+  "pendingPrerequisitesNotSkipped": [
+    "external platform authorization",
+    "old strategy_backed saved original identity",
+    "original ASR/render parent fixtures; assertions remain non-PASS until real chain"
+  ]
+}

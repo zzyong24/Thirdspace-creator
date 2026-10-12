@@ -1,0 +1,4 @@
+--prepared:/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/creatoros-server
+--validated:/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/creatoros-server
+frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app: valid on disk
+frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app: satisfies its Designated Requirement

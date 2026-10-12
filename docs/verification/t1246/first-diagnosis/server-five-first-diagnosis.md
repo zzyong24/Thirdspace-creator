@@ -1,0 +1,12 @@
+# 五个前端服务测试的原失败补充分诊
+
+原candidate533224f、共12条实际FAIL；仅追加来源因果，不改源码/断言、不运行复测。首轮原stack见unit-first/frontend-failures.json，13文件精确SHA见server-five-first-source-binding.json。下游未到即未验，不将修改提案写成PASS。
+
+- favorites-diagnostics两红：静态indexOf函数签名缺新signal，得到-1/空slice。真实persistence4109–4155仍透传requestId/collectorAccountId、先folders匹配精确名称/真实ID再抓videos，signal保持续控制。集中仅测试修精确定位/真实装配核查，原无secret/FOLDER_MISSING/调用先后不能删。
+- platform-worker发布一红/review-insights三红：真实withTarget→assertOwnedAccount→getAccount拒绝不存在的硬编码worker-entry-test/insights-entry-test，未到模型/lost-receipt/invalid或用户采纳。集中仅这两个测试先以公共端口登记真实当前账号/组/项目/作品，冻结同scope并保真实Worker及候选采纳/指标证据；禁止关闭owner。platform同文件planning两例原PASS保窄scope。
+- legacy第一红：原frontend.log1337确实EXECUTION_WORKER_BUILD_MISSING；本文件first case未构建Worker，后each205才调用正式build。persistence6036得workerEntry=null，7161不装chatWorker，6875durable getter拒绝。可集中为独立fresh单测正式Worker准备/beforeAll，不依赖其他测试之前构建；保真实bundle SHA/加载/退出，不能改getter空对象或套用WF005旧esbuild根因。
+- legacy后3红：真实缺assistant_execution_engine列。测试mockcreateConfiguredDb返回真实历史104库，当前244先启最新composition、347后才真实createDb升级；当前T1238最早读取133偏好列，所以新消费者被接到旧schema。不能手工ADD列、不删新偏好查询、不假造0130迁移PASS。集中方案必须把真实旧104数据/冻结来源生产与当前完整migrator→runtime分开，保104原ledger、130归属映射、原payload/checkpoint/source/settled receipt深等与已结算禁止新模型、当前133 lineage。旧期望105条及末尾130亦需精确以完整当前journal核，但原104前缀仍强等。准确fixture重构实现仍需独评后验证，当前不锁无证据的快捷改法。
+- script retry一红：test180–216先cancel原持久任务再create新task retryOf，当前ai.service978已明确拒绝复制已有executionTask重置预算。保原拒绝负例；正式等待授权后恢复必须用原execution command resume、原ID/预算与call历史，不取消后克隆重发，取消后resume另守取消终态。集中仅原测试，不取消后端保护。
+- script malformed一红：真实storyboard HTTP计数3，而旧断言<=2。structured-node347默认两次格式修复，429–431逐消耗，与script-pipeline91最多两次语义分镜attempt不是同一计数。该fixture格式错误当前可到initial+2修复，首轮没有持久完整请求正文，不能补造第三请求内容。集中需核实际请求修复提示/原operation及call ledger/budget，再精确断格式修复终止和partial保冻结口播/安全基础分镜，禁止仅把2改3或放宽泛union。原normal/verbatim/mismatch三例PASS不能代签retry/malformed后置采用。
+
+所有私有等待/build/外层预算按真实消费者保至少120秒和更长串行预算，不能依赖CLI180秒覆盖旧5/15/30秒私有值。产品/原例首轮仍冻结；最终集中scope独评后才能实际修复。

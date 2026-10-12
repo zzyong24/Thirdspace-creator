@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-11T21:05:26.858837+00:00",
+  "reviewer": "root",
+  "approved": true,
+  "scope": "T1250-exact-two-native-unix-red-no-App",
+  "mode": "red",
+  "toolSha256": "09c4f18a93f8fba44b7bdfcb8e40403dbcdc97cba97f45d299b046900496c59c",
+  "inputBindingSha256": "851f882c54fab7eaf45a8625641c88dfbc2c382879e30df80a7d81781e8202a1",
+  "inputsActuallyRehashed": 12,
+  "status": "PASS_TOOL_RED_ONLY",
+  "facts": [
+    "09c4全工具与归属判定12例源/回执已读：父birth/UID现场匹配，原spawn与wrapper登记",
+    "run入口起6180s总期限；prepare240s与各phase完整余链/cleanup余量核验，不声称同步IO可抢占",
+    "私有源码/target/offline无Tauri；真实Cargo binary与实际list只准新增两个Unix RED",
+    "TERM/INT/KILL仅相同birth/UID登记后代；stdio/log close与survivor/unknown非零",
+    "12源与Node/Cargo二进制真实重算一致；三准入负例只证明工具拒绝"
+  ],
+  "rustTestsExecutedByThisReview": false,
+  "AppAcceptance": false,
+  "windowsAcceptance": false,
+  "greenRequiresNewBindingReview": true
+}

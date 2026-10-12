@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-12T02:23:40.662553+00:00",
+  "bindingSha256": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3",
+  "handoffSha256": "5367f6c5b03466fdb0b49f69aac24f6cc59af1eb46f863b3f89dbb367861bb26",
+  "sourceInputs": 2211,
+  "installedInputs": 111831,
+  "browserInputs": 337,
+  "fullBytesHashed": 2572480048,
+  "symbolicLinksChecked": 4974,
+  "elapsedSeconds": 16.56652979197679,
+  "drift": [],
+  "runtimeApproved": false,
+  "candidateSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+  "launchSha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+  "scope": "新11907 minimum一行/live一致性guard与4证据输入；原launch/budget/copy-generator未改；原FAIL/missing不补拍"
+}

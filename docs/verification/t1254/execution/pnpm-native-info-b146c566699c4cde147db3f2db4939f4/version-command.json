@@ -1,0 +1,11 @@
+{
+  "program": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-native-info-b146c566699c4cde147db3f2db4939f4-4NvOOq/child-restriction.sb",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/@pnpm/exe.darwin-arm64/pnpm",
+    "--version"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-native-info-b146c566699c4cde147db3f2db4939f4-4NvOOq",
+  "environmentProof": "environment-restriction-proof.json"
+}

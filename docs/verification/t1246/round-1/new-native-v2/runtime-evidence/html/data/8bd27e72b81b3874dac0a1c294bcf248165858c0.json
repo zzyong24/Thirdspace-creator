@@ -1,0 +1,515 @@
+{
+  "task": "T-1246",
+  "candidateCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "testId": "e001182671dd9993fecb-f861c03aeb3a262c2ca7",
+  "titlePath": [
+    "e2e/integrated-browser.spec.ts",
+    "INT-PI：合法Pi入口与Codex切换，原HTTP模型配置仅独立fixture批次允许"
+  ],
+  "caseId": "INT-PI",
+  "generationKey": null,
+  "boundary": "real-app + 独立Pi本地HTTP fixture批次；不代签官方API",
+  "status": "blocked",
+  "browserStepStatus": "blocked",
+  "acceptanceRequiresOriginalLedger": false,
+  "startedAt": "2026-10-11T15:49:56.993Z",
+  "endedAt": "2026-10-11T15:50:02.513Z",
+  "groupId": "grp-3812e00f-490",
+  "projectId": "project-3812e00f-494",
+  "taskIds": [],
+  "tasks": [],
+  "receipts": [
+    {
+      "time": "2026-10-11T15:49:57.473Z",
+      "id": "accountGroups.create",
+      "input": {
+        "body": {
+          "name": "整合验收-INT-PI-t1246-1d1dc8bc-1ca2-4134-8e9f-aa013a6608f7",
+          "idempotencyKey": "t1246-b19d42ed-5b2b-410e-b706-e9bfc8a17af5"
+        }
+      },
+      "groupId": "",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "grp-3812e00f-490",
+          "userId": "user-3812e00f-1",
+          "name": "整合验收-INT-PI-t1246-1d1dc8bc-1ca2-4134-8e9f-aa013a6608f7",
+          "status": "active",
+          "version": 1,
+          "createdAt": "2026-10-11T15:49:57.465Z",
+          "updatedAt": "2026-10-11T15:49:57.465Z",
+          "members": []
+        },
+        "meta": {
+          "requestId": "req-3812e00f-489"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:58.399Z",
+      "id": "settings.preferences.patch",
+      "input": {
+        "body": {
+          "assistantExecutionEngine": "codex"
+        }
+      },
+      "groupId": "grp-3812e00f-490",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-3812e00f-1",
+          "userId": "user-3812e00f-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-492"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:58.432Z",
+      "id": "projects.create",
+      "input": {
+        "body": {
+          "title": "整合真实项目-INT-PI",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+        }
+      },
+      "groupId": "grp-3812e00f-490",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "project-3812e00f-494",
+          "userId": "user-3812e00f-1",
+          "title": "整合真实项目-INT-PI",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "briefDetail": {
+            "targetPlatforms": []
+          },
+          "contentCategory": "",
+          "source": "manual",
+          "platformRef": {
+            "platform": "",
+            "externalId": ""
+          },
+          "creationMode": "guided",
+          "status": "active",
+          "currentStage": "brief",
+          "progressPct": 0,
+          "starred": false,
+          "startedAt": "2026-10-11T15:49:58.416Z",
+          "targetCompletedAt": null,
+          "completedAt": null,
+          "archivedAt": null,
+          "createdAt": "2026-10-11T15:49:58.416Z",
+          "updatedAt": "2026-10-11T15:49:58.416Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-493"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:58.518Z",
+      "id": "projects.outputs.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-494"
+        },
+        "body": {
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "clientRequestId": "t1246-73a95c11-0d9d-4f8b-a0b8-8d32b03e4f48"
+        }
+      },
+      "groupId": "grp-3812e00f-490",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "output-3812e00f-505",
+          "projectId": "project-3812e00f-494",
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "targetPlatform": null,
+          "format": "",
+          "aspectRatio": "",
+          "targetDurationSeconds": 0,
+          "status": "drafting",
+          "contentRole": null,
+          "primaryAssetId": null,
+          "createdAt": "2026-10-11T15:49:58.508Z",
+          "updatedAt": "2026-10-11T15:49:58.508Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-504"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:58.587Z",
+      "id": "artifacts.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-494"
+        },
+        "body": {
+          "title": "原始测试文稿",
+          "artifactType": "output_script",
+          "stage": "script",
+          "contentOutputId": "output-3812e00f-505"
+        }
+      },
+      "groupId": "grp-3812e00f-490",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifact-3812e00f-513",
+          "projectId": "project-3812e00f-494",
+          "contentOutputId": "output-3812e00f-505",
+          "currentVersionId": "artifactversion-3812e00f-514",
+          "stage": "script",
+          "artifactType": "output_script",
+          "title": "原始测试文稿",
+          "status": "drafting",
+          "archivedAt": null,
+          "origin": null,
+          "createdAt": "2026-10-11T15:49:58.579Z",
+          "updatedAt": "2026-10-11T15:49:58.579Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-512"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:58.618Z",
+      "id": "artifacts.versions.create",
+      "input": {
+        "params": {
+          "artifactId": "artifact-3812e00f-513"
+        },
+        "body": {
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "heading": "桌面整理",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+              }
+            ]
+          }
+        }
+      },
+      "groupId": "grp-3812e00f-490",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifactversion-3812e00f-516",
+          "artifactId": "artifact-3812e00f-513",
+          "versionNumber": 2,
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+                "heading": "桌面整理"
+              }
+            ]
+          },
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "createdByType": "user",
+          "aiTaskId": null,
+          "createdAt": "2026-10-11T15:49:58.610Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-515"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:50:02.341Z",
+      "id": "settings.models.list",
+      "input": {},
+      "groupId": "grp-3812e00f-490",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "ai-model-user-3812e00f-1-copilot.assist",
+            "userId": "user-3812e00f-1",
+            "capability": "copilot.assist",
+            "provider": "",
+            "modelName": "",
+            "baseUrl": null,
+            "apiFormat": "anthropic",
+            "settings": {
+              "effort": "medium"
+            },
+            "isDefault": true,
+            "hasSecret": false
+          },
+          {
+            "id": "ai-model-user-3812e00f-1-copy.generate",
+            "userId": "user-3812e00f-1",
+            "capability": "copy.generate",
+            "provider": "",
+            "modelName": "",
+            "baseUrl": null,
+            "apiFormat": "anthropic",
+            "settings": {
+              "effort": "high"
+            },
+            "isDefault": false,
+            "hasSecret": false
+          },
+          {
+            "id": "ai-model-user-3812e00f-1-planning.contract",
+            "userId": "user-3812e00f-1",
+            "capability": "planning.contract",
+            "provider": "",
+            "modelName": "",
+            "baseUrl": null,
+            "apiFormat": "anthropic",
+            "settings": {
+              "effort": "high"
+            },
+            "isDefault": false,
+            "hasSecret": false
+          },
+          {
+            "id": "ai-model-user-3812e00f-1-planning.outline",
+            "userId": "user-3812e00f-1",
+            "capability": "planning.outline",
+            "provider": "",
+            "modelName": "",
+            "baseUrl": null,
+            "apiFormat": "anthropic",
+            "settings": {
+              "effort": "high"
+            },
+            "isDefault": false,
+            "hasSecret": false
+          },
+          {
+            "id": "ai-model-user-3812e00f-1-research.analyze",
+            "userId": "user-3812e00f-1",
+            "capability": "research.analyze",
+            "provider": "",
+            "modelName": "",
+            "baseUrl": null,
+            "apiFormat": "anthropic",
+            "settings": {
+              "effort": "high"
+            },
+            "isDefault": false,
+            "hasSecret": false
+          },
+          {
+            "id": "ai-model-user-3812e00f-1-review.insights",
+            "userId": "user-3812e00f-1",
+            "capability": "review.insights",
+            "provider": "",
+            "modelName": "",
+            "baseUrl": null,
+            "apiFormat": "anthropic",
+            "settings": {
+              "effort": "high"
+            },
+            "isDefault": false,
+            "hasSecret": false
+          },
+          {
+            "id": "ai-model-user-3812e00f-1-script.rewrite",
+            "userId": "user-3812e00f-1",
+            "capability": "script.rewrite",
+            "provider": "",
+            "modelName": "",
+            "baseUrl": null,
+            "apiFormat": "anthropic",
+            "settings": {
+              "effort": "high"
+            },
+            "isDefault": false,
+            "hasSecret": false
+          }
+        ],
+        "meta": {
+          "requestId": "req-3812e00f-549"
+        }
+      }
+    }
+  ],
+  "captures": [
+    {
+      "label": "pi-real-setting",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-browser-INT-28594-x切换，原HTTP模型配置仅独立fixture批次允许-e2e/pi-real-setting.png",
+      "url": "http://127.0.0.1:61347/settings",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "at": "2026-10-11T15:50:02.238Z"
+    },
+    {
+      "label": "final-state",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-browser-INT-28594-x切换，原HTTP模型配置仅独立fixture批次允许-e2e/final-state.png",
+      "url": "http://127.0.0.1:61347/settings",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "at": "2026-10-11T15:50:02.512Z"
+    }
+  ],
+  "events": [
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/api/v1/dispatch",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 428 (Precondition Required)"
+    },
+    {
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 428 (Precondition Required)"
+    },
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/api/chat/engines",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/api/chat/engines",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 428 (Precondition Required)"
+    },
+    {
+      "kind": "console",
+      "text": "Failed to load resource: the server responded with a status of 428 (Precondition Required)"
+    }
+  ],
+  "independentBrowserModelProbes": 0,
+  "workerApiZero": "须独立对账原持久 ledger；此回执不代签",
+  "error": {
+    "name": "Error",
+    "message": "T1246_BLOCKED: 此新私有批次只允许无API模型配置；Pi真实HTTP兼容生成需单独外部fixture实例，不能污染后续Codex无配置前置",
+    "detail": {
+      "models": [
+        {
+          "id": "ai-model-user-3812e00f-1-copilot.assist",
+          "userId": "user-3812e00f-1",
+          "capability": "copilot.assist",
+          "provider": "",
+          "modelName": "",
+          "baseUrl": null,
+          "apiFormat": "anthropic",
+          "settings": {
+            "effort": "medium"
+          },
+          "isDefault": true,
+          "hasSecret": false
+        },
+        {
+          "id": "ai-model-user-3812e00f-1-copy.generate",
+          "userId": "user-3812e00f-1",
+          "capability": "copy.generate",
+          "provider": "",
+          "modelName": "",
+          "baseUrl": null,
+          "apiFormat": "anthropic",
+          "settings": {
+            "effort": "high"
+          },
+          "isDefault": false,
+          "hasSecret": false
+        },
+        {
+          "id": "ai-model-user-3812e00f-1-planning.contract",
+          "userId": "user-3812e00f-1",
+          "capability": "planning.contract",
+          "provider": "",
+          "modelName": "",
+          "baseUrl": null,
+          "apiFormat": "anthropic",
+          "settings": {
+            "effort": "high"
+          },
+          "isDefault": false,
+          "hasSecret": false
+        },
+        {
+          "id": "ai-model-user-3812e00f-1-planning.outline",
+          "userId": "user-3812e00f-1",
+          "capability": "planning.outline",
+          "provider": "",
+          "modelName": "",
+          "baseUrl": null,
+          "apiFormat": "anthropic",
+          "settings": {
+            "effort": "high"
+          },
+          "isDefault": false,
+          "hasSecret": false
+        },
+        {
+          "id": "ai-model-user-3812e00f-1-research.analyze",
+          "userId": "user-3812e00f-1",
+          "capability": "research.analyze",
+          "provider": "",
+          "modelName": "",
+          "baseUrl": null,
+          "apiFormat": "anthropic",
+          "settings": {
+            "effort": "high"
+          },
+          "isDefault": false,
+          "hasSecret": false
+        },
+        {
+          "id": "ai-model-user-3812e00f-1-review.insights",
+          "userId": "user-3812e00f-1",
+          "capability": "review.insights",
+          "provider": "",
+          "modelName": "",
+          "baseUrl": null,
+          "apiFormat": "anthropic",
+          "settings": {
+            "effort": "high"
+          },
+          "isDefault": false,
+          "hasSecret": false
+        },
+        {
+          "id": "ai-model-user-3812e00f-1-script.rewrite",
+          "userId": "user-3812e00f-1",
+          "capability": "script.rewrite",
+          "provider": "",
+          "modelName": "",
+          "baseUrl": null,
+          "apiFormat": "anthropic",
+          "settings": {
+            "effort": "high"
+          },
+          "isDefault": false,
+          "hasSecret": false
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+--- backend/src/modules/ai-runtime/chat-system-tool-host.ts (wholefirst actual patch context)
++++ candidate
+@@
+- const names=definitions.map(tool=>tool.name),knownOrder=Object.keys(ASSISTANT_SYSTEM_TOOL_EFFECTS).filter(name=>names.includes(name));
+- if(canonicalJson(names)!==canonicalJson(knownOrder))throw Error('系统工具定义与冻结任务不符');
++ const names=definitions.map(tool=>tool.name);
++ if(new Set(names).size!==names.length)throw Error('系统工具定义与冻结任务不符');
++ // whitelist原本按调用方顺序装配合法子集；不能新设全局排序反杀旧任务。
++ // 原型按冻结顺序逐字段比较，不排序；实际顺序篡改由原modelInputDigest映射拒绝。
+--- backend/src/modules/ai-runtime/chat-system-tool-host.test.ts (actual patch context)
++++ candidate
+@@
+-  (d:typeof definitions)=>{d[2]!.name='system.unknown';},(d:typeof definitions)=>{d.reverse();},(d:typeof definitions)=>{d.push(structuredClone(d[2]!));},
++  (d:typeof definitions)=>{d[2]!.name='system.unknown';},(d:typeof definitions)=>{d.push(structuredClone(d[2]!));},

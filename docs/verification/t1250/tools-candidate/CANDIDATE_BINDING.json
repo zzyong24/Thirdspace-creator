@@ -1,0 +1,65 @@
+{
+  "schema": "t1250-private-regression-candidate-binding/v1",
+  "candidateOnly": true,
+  "notApplied": true,
+  "noCollectionOrPublicTestExecution": true,
+  "oldTool": {
+    "path": "docs/verification/t1250/tools/run-focused.cjs",
+    "sha256": "9ed9d747a44ccf947a837486e8b17b9f1d93cdd20ef0f555ef261eb5798eb5e2"
+  },
+  "newTools": [
+    {
+      "path": "docs/verification/t1250/tools-candidate/run-focused-v7-candidate.cjs",
+      "sha256": "4341a0999b55a1b8e2521132879e8ee7ff18b0b021ef39779de8b246527739c7"
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/runner-budget-inventory-v7.cjs",
+      "sha256": "ccdd5db1edbca67b691bf24736bc17a8c957b18f783612147ce6d67cd28c9d3d"
+    }
+  ],
+  "test": {
+    "original": "frontend/src/server/workbench-artifact-representation.test.ts",
+    "originalSha256": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+    "candidate": "docs/verification/t1250/tools-candidate/representation-test-candidate.ts",
+    "candidateSha256": "fe65915e0d07b2a14a310c9d763936bab3debfff5ecf1fd368e1941a57e53cda",
+    "inverseExactlyOriginal": true,
+    "onlyTwoBodyTimeouts": 3600000
+  },
+  "exactAddedInputBindings": [
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.ts",
+      "sha256": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816"
+    },
+    {
+      "path": "frontend/src/app/api/v1/auth/_session.ts",
+      "sha256": "70d683efd30b08c9d8d3178348ea18badbd1afe613715bd4f94f52081e28c2c6"
+    },
+    {
+      "path": "frontend/src/lib/loopback-guard.server.ts",
+      "sha256": "a261a0ee2efc22eec0a14935f913344303f4d1842867c4afe76e34d6904c228f"
+    },
+    {
+      "path": "mcp-server/package.json",
+      "sha256": "2ab421c76f3977b43e052699fefec3000816475eb78c26c80cd110dc38df0c3b"
+    },
+    {
+      "path": "frontend/tsconfig.json",
+      "sha256": "895dc494185b91b5848eea41db3df0302d3406fc3bb98dbb4e8186e96f967b2d"
+    }
+  ],
+  "mockedModulesNotClaimedExecuted": [
+    "@/lib/request-context.server (both public loopback fixtures)",
+    "@/server/persistence-client (CDP/recovery injection)",
+    "server-only/client-only aliases -> frontend/src/test/empty-module.ts"
+  ],
+  "transitiveRealInputsAlreadyPresent": [
+    "@creatoros/contract -> contract/src",
+    "@creatoros/backend identity/gateway/SQL -> backend/src + backend/drizzle",
+    "workbench renderer/preview/profiles -> frontend/src/server",
+    "runCliCommand -> mcp-server/src/**",
+    "loopback fixture -> mcp-server/tests/helpers/loopback-cli.ts"
+  ],
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "staticInventorySha256": "4f9569fa6e80ca025cb2a07ff3ccbcc6b4916aee42869f7ee71da4979f5215d0",
+  "runtimeAdmission": null
+}

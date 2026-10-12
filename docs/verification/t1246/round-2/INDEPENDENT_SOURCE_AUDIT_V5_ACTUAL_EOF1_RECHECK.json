@@ -1,0 +1,410 @@
+{
+  "task": "T-1246",
+  "at": "2026-10-12T10:01:03.832288+00:00",
+  "status": "ACTUAL_SOURCE_AUDIT_V5_NATURAL_EOF1_REAL_TOOL_FAILURE_INDEPENDENTLY_CONFIRMED",
+  "evidenceSHA": "251d3e7f616dffc3e651e5a917475a5b3eb7f490a50712beae47ce6e1774b96e",
+  "actualReportSHA": "96958f03e431314836fb313f83c3cfd211264ef4b456b34c1314a54e836c42c0",
+  "session": 67892,
+  "childPID": 25701,
+  "childCode": 1,
+  "childClosedGroupZeroSignalsEmpty": true,
+  "childElapsedMs": 8220,
+  "rawPrivateFiles14OriginalArchiveBytesSame": true,
+  "wrapperOriginalNaturalEOF1": true,
+  "actualErrorsCount": 52,
+  "errorCause": "原工具一律拒绝Git R/C；真实Git将批准的Doocs资产删除+新增识别为R 。52个原错误全部精确对应这些R对。",
+  "actualOnly52RenamePairsAllApprovedDeleteAndWrite": [
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-rDOOcLd1.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-B_etG6Rp.js",
+      "targetSHA": "09f05f98c596f542e8d9ad15ca6ce8e5ec1a0ec6bbcaa6ea44063526ad4bb6cc",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-DUTywkQa.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-luI7Wkxl.js",
+      "targetSHA": "988f1e4564bac558f7d687bf9ac8d2293e837aae218c58e941612386b296538c",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-BEywkWYm.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-Cl7WEyAt.js",
+      "targetSHA": "c52539a25c375f28392164a570063c26472d4a885a3bc0798e4644e28633f604",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-CPpQMmMv.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-B7Jpldbh.js",
+      "targetSHA": "4d1e9bc24b5162d892a64b06994aa930a875f6c34953f295f71bdd89d8759c4c",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-0WQyHr22.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-BXHl_kMQ.js",
+      "targetSHA": "0bdd901b555e5ea2d62c7fd282b18fd7ab2b6363737790f930e4e5e09cb1eb9e",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-B64hzoVj.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-wZLC_pTV.js",
+      "targetSHA": "225fe0a6e514bd29fc2de0404bb880b19804e5e7472c1d2653fd10c9c971f460",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/config-CS1KboEo.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "targetSHA": "5b423cc59e3d081ad8a7e5002d8240ea4cb1a69dfa61acde4edd3856f590ed7f",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bubu1InB.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bd_SEvWI.js",
+      "targetSHA": "0205ec1a922d9d04a12c5b3941aa4422e9b49546bde118e928202b23914858a2",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-B-yEgkSe.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-CN0-Wcs0.js",
+      "targetSHA": "a7f4b8844fff89f87a9437b5a596b456f146136867708205f67ec1a831eaf8a0",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/providers-Bmgr2ar7.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/providers-5OiUFt8V.js",
+      "targetSHA": "2424a250858f3d366a86015873e2c710adde669ebef3f8cf3a3f8f374f37d421",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/render-BKss5lW7.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/render-C0-GwsvR.js",
+      "targetSHA": "8bc05eb4382ee40a1ff0466a17a1e3163f1a1c71031f42265aab4b9e031a4e3f",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bp20Gpjz.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bz80_cwg.js",
+      "targetSHA": "98ba2b7784da56e8a7e7f0bb3032bf0acba903626b343d4a49326052e6e18a29",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-w4Z-KUpo.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-CP-K_yWo.js",
+      "targetSHA": "e73eff8cf9ad6d3706b60751dac4f029c18a1f956769833f7c3fb6f05d89d364",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-ClCBoDF9.js",
+      "old": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-BawQ5Q6I.js",
+      "targetSHA": "4554424d3fa55677b3d9eef6edd0d43119b905a1f2a2c3ddc4d513fb5e472038",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/css/md-index-BloSDdq8.css",
+      "old": "frontend/public/reference-editors/doocs-md/static/css/md-index-9PNpNGUa.css",
+      "targetSHA": "ec4dc490c97f5e284ca0d47449b7daabe1b0a631afb3e0a89f7211c447e7a390",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-BShGTSED.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-C-l5A6vK.js",
+      "targetSHA": "e91c25e309c9ca9c26f20e07cf786b259f741d8c485ed32f789ebe64ce7aa332",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-Uxnqxt0m.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-DfNpoxs6.js",
+      "targetSHA": "551448e87f21ac853a6393ceec34811f5aa27c3e96c1b2a8c9e43eadb09981fe",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-CAAfHrue.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-BO3RH86h.js",
+      "targetSHA": "305193a0e9d0ed42313767c099f40228840c53b1453b20ecf815556462d78cd0",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Dwecx1yJ.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Be9_RozG.js",
+      "targetSHA": "5d4854e05b96c9817ddb3e326aaedbee17289937411332993f4ad9d5102cc65c",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-FVBRez8G.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-BJdrURW-.js",
+      "targetSHA": "4f7aeaef754f718e01f9fbeb390839e4e89ef798430ef0fe9124976d3e32c477",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-BjP8WUy_.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-C1zEtBm-.js",
+      "targetSHA": "581b8ad49813c5809a29a7898ccdd56843cfa7a1a0fbe26815f7da91452f23d3",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CM7_3dsC.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CB74oqBL.js",
+      "targetSHA": "9bc7b363ccb0a25ce4215f3adedda033c1453afa34df89c727abafa98b906a43",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D5100ikB.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D8m8Y5IS.js",
+      "targetSHA": "ee1862dc105291e215caaebed34606842b3833ac76a461ebf941a528c1218877",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-NF3jLaOG.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-TEm2HKiq.js",
+      "targetSHA": "720976275db0b2751d2f2028e3fcd2b6256eefec1d579b4f1eafb09396fa91ba",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-CguVq_vs.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-C-hBAbgh.js",
+      "targetSHA": "577580cba9a4302a7a1fcf41f8b929add2d29884ab1799a1e7f736a8789b8d7a",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-Cbto2qFZ.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-9ZpYLtCg.js",
+      "targetSHA": "f7507e1a740b60401c568e32c27564f62f8dde6d52ac1a271ab1fd2910197925",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-fbhZdm1E.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-DEpTD7Ru.js",
+      "targetSHA": "2328539153335f16041d1b8e613da6a677e4991f022c48c4a3f6df7c9e65c7fa",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-DDERPDI0.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-CNJopoPm.js",
+      "targetSHA": "10181435a73d824e13a17a6c1318a771a13b31cc0fd89015a769847b856b9bdc",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-Cue0FhPF.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-eximbpzJ.js",
+      "targetSHA": "f47d4b9a253defdfa9bfec5f7bad9767bf70e36fc0a101be14202f96dc36e50c",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-DCHHMNez.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-BXqfIH1Q.js",
+      "targetSHA": "d3cf8ca72a77fdae593ef78bb935cf75c430c5670807b225165cda2de243c26a",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CM56dGUF.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CPsXDRjK.js",
+      "targetSHA": "b425e6c58eaeaa95bc111d5391505b995b06e36f884d8859cded8337e9ca1e1a",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-DtMUyz1f.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-BjUIeOur.js",
+      "targetSHA": "8ba120fd1651ebb823078e1e0464ca02f280ac77df3388b752e89c78fc715f27",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-CO41N3bd.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-BsDUHnIi.js",
+      "targetSHA": "743767353cf7882af662eeca05ee98777bb593bba1488c12adf604e4723c5c27",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-auth-BXbgldX_.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-auth-Lj20kOUp.js",
+      "targetSHA": "01bb0d0ed289cfeee787d2432ba95aa95a3a476448f2e0ee10d29746a2da071b",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-client-BB2xPD1D.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-client-BtSlI_Gv.js",
+      "targetSHA": "2ae12107995f72430f1fb124c7e2169fe7ce50a9ef86a59a0eff4d3864b7f8d7",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-AxY1c5Fn.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-BLaxswny.js",
+      "targetSHA": "0204615fbd007c1a039d90c57cf07ead2a70dce9be8ad050d04bf8bdc9d8f0c6",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-export-D0-VySQO.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-export-BG6p5-Wz.js",
+      "targetSHA": "5fc139dc0513bcc9f762212200b899cc29b70a54e149456990dd975e709b79d8",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-B304ID7X.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-DYwdTMDU.js",
+      "targetSHA": "4ac7bd1f2e17d0e698476ae47b2c0addf78dfc2d66595defe7e79caf2b7ea43a",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-index-CpBfvD8M.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "targetSHA": "a40919eb7e218b223a76e50a89372d55ce006a1876902a8e9755e9dbb92d57b3",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-DOEEgCa0.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-CFPNYZKu.js",
+      "targetSHA": "7728e0a09272a1e554f26212084c145dc8606ac91b894084bf7b7139be1cfd97",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-DkjF6lU2.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-CSX1gdNq.js",
+      "targetSHA": "0763cc1cb7abf333e4094a8086fd2f7d7557859779e4c45ad8b4051159425a9f",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-DuO7yV8Y.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-BCzwh0d_.js",
+      "targetSHA": "e2f3e0a4c4e82ce5773c62fdaad51ef58d90a2cf45928cacf10ee5596a25eda7",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-BiY6y-Z9.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-aZldM3cv.js",
+      "targetSHA": "a88434b6a1b53d1a871b4072b168fb2434a1c4318c6a90f01b3c6a1fcd4fb750",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dg1U5yAr.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dc8_KifI.js",
+      "targetSHA": "f26dc85a743ab8d153a978d7d7b2bea022756aaff910a4870cc7793fcbd9c0a0",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-BGmxJIbL.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-y0FDEGp1.js",
+      "targetSHA": "5abe07ffcffc6e29734ce5690cab69d0dd2d553c8ea948ad986dcb4a718104e8",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-sync-pbgNQam0.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-sync-DJtROAMh.js",
+      "targetSHA": "a9695044dcbcb61428b320e45e11282af4a0341efc08c26857aa354b0725e8af",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Blb0P3M9.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js",
+      "targetSHA": "602839a1bfc78342bf394d71244b6310d183a2e7ac2253bb84d746eec12ab063",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-zoTJhDnV.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-Cv1siQDW.js",
+      "targetSHA": "17376ce37f494e8c33b3f9884c23e25dba4b7590c5dd0062ae0e36ece6a4e39d",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-C5h1ZRIv.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-B72X2veA.js",
+      "targetSHA": "834aa227d660262f4985bb2605284c82c69cbd34156de9cc62dce74156dbf466",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-D5hGf28N.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-BYymQo69.js",
+      "targetSHA": "ca23240cf89865dd7086210762a80602c4467414b9d4af784fd3104891d5dffc",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-DWbsbzfW.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-D-3eBhAl.js",
+      "targetSHA": "57461a04c4ea8375ac75bdf48a881cf7d500afe8de6ffb85477501fab4682e58",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    },
+    {
+      "new": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-dvEItN-h.js",
+      "old": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-Cw9gwpgj.js",
+      "targetSHA": "8fa69dd4524dcf830f8caa56f477561b8a3903096a5692a4375ad37dad0975f4",
+      "approvedWrite": true,
+      "approvedDeleteAbsent": true
+    }
+  ],
+  "sourceCount": 348,
+  "driverCount": 100,
+  "deletedCount": 53,
+  "legacyCount": 253,
+  "first100Unchanged": true,
+  "unknown": [],
+  "unstagedRawEmpty": true,
+  "actualProductInventoryCount": 6369,
+  "actualStatusRows": 449,
+  "sourceRuntimeBeforeAfterDriftZeroFacts": {
+    "sourceRows": 531,
+    "sourceDrift": 0,
+    "nodeFiles": 82,
+    "nodeLinks": 37,
+    "nodeEdges": 51,
+    "gitFiles": 4,
+    "gitLinks": 4,
+    "gitEdges": 3,
+    "gitHistoricalRaw": 4,
+    "runtimeDrift": 0,
+    "newMetadataCollected": false
+  },
+  "FA00131ActualRuntimeProofConsumedSuccessfully": true,
+  "actualAuditPASS": false,
+  "old52ErrorsAndExit1NotOverwritten": true,
+  "reviewerReranNoAuditOrGit": true,
+  "remediationScope": "ROOT已授权下一v6 SOURCE：仅绑定本真实52 R对并机械核批准删除/写入、948实际copy-stage及目标SHA；保C/未知/未批准全拒，仍需独审+唯一准入。",
+  "nativeAppAcceptance": "未完成，用户暂不授权。"
+}

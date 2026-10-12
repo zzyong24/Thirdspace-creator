@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-12T10:13:52.381467+00:00",
+  "actualExecSession": 95729,
+  "actualEOF": 0,
+  "evidenceSHA256": "4dba3e146db9c59fb0e85b6a91fd038273a5d05d3feff133f5242aada43be8dc",
+  "auditReportSHA256": "f70fb8817204b544e80dad365a4cfe60fd6bc11c016b626a9812e6a6e4ffcc7f",
+  "all15PrivateOriginalAndArchiveBytesAndModeUIDChecked": true,
+  "actualProductInventoryFullCurrentBytesChecked": 6369,
+  "allSource348Driver100Delete53CurrentChecked": true,
+  "unknown": [],
+  "sourceBeforeAfterSame": true,
+  "closedGroupZero": true,
+  "originalV5ActualFAILPreserved": true,
+  "stageAuditOnlyNoCommitPackageOrBrowserClaim": true
+}

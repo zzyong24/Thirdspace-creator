@@ -1,0 +1,323 @@
+{
+  "records": [
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "cases": [
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "真实SPA由菜单进入并选择真实作品，前4普通button不抢导航预算，网络只自然触发且不泄露值",
+          "titleRegex": "真实SPA由菜单进入并选择真实作品，前4普通button不抢导航预算，网络只自然触发且不泄露值$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 34
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "observe原子废旧ref，重渲染/移出导航不以旧handle点击，重复advance只执行一次",
+          "titleRegex": "observe原子废旧ref，重渲染\\/移出导航不以旧handle点击，重复advance只执行一次$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 47
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "跨账号零宿主动作；作品删改后observe不再发token但原owner仍可close",
+          "titleRegex": "跨账号零宿主动作；作品删改后observe不再发token但原owner仍可close$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 58
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "同真实profile池与采集互斥，checkout取消不遗留排队；close失败不按TTL释放占用",
+          "titleRegex": "同真实profile池与采集互斥，checkout取消不遗留排队；close失败不按TTL释放占用$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 67
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "正常采集cooldown拒绝不导航",
+          "titleRegex": "正常采集cooldown拒绝不导航$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 86
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "已派发后popup异常保留unknown/dispatched，原动作重复不重派",
+          "titleRegex": "已派发后popup异常保留unknown\\/dispatched，原动作重复不重派$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 93
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "独审红测：aria-controls不能替不安全anchor href发放expand token",
+          "titleRegex": "独审红测：aria-controls不能替不安全anchor href发放expand token$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 109
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "独审红测：native/role dialog的status及嵌套导航不公开正文或发动作token",
+          "titleRegex": "独审红测：native\\/role dialog的status及嵌套导航不公开正文或发动作token$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 116
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "独审红测：重复关闭旧A不得释放新B的账号占用",
+          "titleRegex": "独审红测：重复关闭旧A不得释放新B的账号占用$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 120
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "anchor展开不接受不安全或会重载的href：%s",
+          "titleRegex": "anchor展开不接受不安全或会重载的href：.*$",
+          "multiplicity": 5,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 127
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "合法无href/同页fragment展开仍可执行：%s",
+          "titleRegex": "合法无href\\/同页fragment展开仍可执行：.*$",
+          "multiplicity": 3,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 130
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "多root红测：全document发现第二导航，首栏不能垄断候选额度，补充侧栏只结构",
+          "titleRegex": "多root红测：全document发现第二导航，首栏不能垄断候选额度，补充侧栏只结构$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 134
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "多root：根上限/发现预算给下界和不完整标记，零语义根不声称侧栏不存在",
+          "titleRegex": "多root：根上限\\/发现预算给下界和不完整标记，零语义根不声称侧栏不存在$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 142
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "多root：节点搬到同标签/同祖先摘要的另root仍拒旧token；dialog根和正文不可发现",
+          "titleRegex": "多root：节点搬到同标签\\/同祖先摘要的另root仍拒旧token；dialog根和正文不可发现$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 148
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "多root：native与role同元素不重复、嵌套导航各自归属，补充menu不泄漏表单/正文且不给token",
+          "titleRegex": "多root：native与role同元素不重复、嵌套导航各自归属，补充menu不泄漏表单\\/正文且不给token$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 154
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "多root：共享12KiB输出限制后root/group数量仍与实际候选一致",
+          "titleRegex": "多root：共享12KiB输出限制后root\\/group数量仍与实际候选一致$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 158
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "多root不能让补充根吞掉既有nav内的合法入口：%s",
+          "titleRegex": "多root不能让补充根吞掉既有nav内的合法入口：.*$",
+          "multiplicity": 4,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 164
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "终审红测：超额省略的导航仍是边界，父根不能发token或允许跨省略根移动",
+          "titleRegex": "终审红测：超额省略的导航仍是边界，父根不能发token或允许跨省略根移动$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 168
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "终审预算红测：深度裁剪的宽兄弟也计入发现预算，不能无计费遍历整批",
+          "titleRegex": "终审预算红测：深度裁剪的宽兄弟也计入发现预算，不能无计费遍历整批$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 174
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "T1250 真实控件active超过90秒不触发idle，结束后仍按原idle及life截止",
+          "titleRegex": "T1250 真实控件active超过90秒不触发idle，结束后仍按原idle及life截止$",
+          "multiplicity": 1,
+          "explicitBodyMs": 1800000,
+          "effectiveBodyMs": 1800000,
+          "line": 180
+        }
+      ],
+      "hooks": [
+        {
+          "name": "beforeAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 8
+        },
+        {
+          "name": "afterAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 9
+        }
+      ],
+      "declaredCaseCount": 29,
+      "runnableCaseCount": 29,
+      "originalQualifiedSkipCount": 0,
+      "perCaseHookMs": 6000000,
+      "allHooksMs": 6000000,
+      "serialCasesMs": 226200000,
+      "shortExplicitDeclarations": []
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "cases": [
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "真实runCliCommand→HTTP正式dispatch→SQL幂等账本→Chromium：同key只点一次、跨账号隔离、失效作品可关闭、进程后pending不重派",
+          "titleRegex": "真实runCliCommand→HTTP正式dispatch→SQL幂等账本→Chromium：同key只点一次、跨账号隔离、失效作品可关闭、进程后pending不重派$",
+          "multiplicity": 1,
+          "explicitBodyMs": 900000,
+          "effectiveBodyMs": 1800000,
+          "line": 23
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "T1250 公共CLI→HTTP→service→Chromium慢checkout及动作超过30秒仍保原session和同key回执",
+          "titleRegex": "T1250 公共CLI→HTTP→service→Chromium慢checkout及动作超过30秒仍保原session和同key回执$",
+          "multiplicity": 1,
+          "explicitBodyMs": 1800000,
+          "effectiveBodyMs": 1800000,
+          "line": 58
+        }
+      ],
+      "hooks": [
+        {
+          "name": "beforeAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 18
+        },
+        {
+          "name": "afterAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 19
+        }
+      ],
+      "declaredCaseCount": 2,
+      "runnableCaseCount": 2,
+      "originalQualifiedSkipCount": 0,
+      "perCaseHookMs": 6000000,
+      "allHooksMs": 6000000,
+      "serialCasesMs": 15600000,
+      "shortExplicitDeclarations": []
+    }
+  ],
+  "staticCaseCount": 31,
+  "runnableCaseCount": 31,
+  "originalQualifiedSkipCount": 0,
+  "staticChildMs": 254520000,
+  "collectMs": 1800000,
+  "prepareMs": 120000,
+  "eachProcessTerminationReserveMs": 2160000,
+  "afterSourceReceiptMs": 720000,
+  "outerMs": 261480000,
+  "defaultBodyMs": 1800000,
+  "defaultHookMs": 3000000,
+  "poolStartTeardownMs": 240000,
+  "childCleanupReportMs": 480000,
+  "helperLifecycleSourceFacts": {
+    "identityPsCount": 3,
+    "eachPsMs": 180000,
+    "normalInitialAndFinalSnapshots": 2,
+    "maxSignalSnapshots": 2,
+    "termKillEachGraceMs": 180000,
+    "lastPollingSnapshotOvershootEachMs": 180000,
+    "pollIntervalEachMs": 100,
+    "worstNormalLifecycleMs": 1980200,
+    "allocatedLifecycleMs": 2160000
+  },
+  "shortExplicitDeclarations": []
+}

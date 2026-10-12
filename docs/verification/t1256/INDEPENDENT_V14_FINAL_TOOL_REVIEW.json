@@ -1,0 +1,122 @@
+{
+  "task": "T-1254",
+  "rootCauseTask": "T-1256",
+  "at": "2026-10-12T05:47:02.525014+00:00",
+  "conclusion": "PASS_STATIC_EXACT_V14_CANDIDATE_ONLY",
+  "scope": "T1256_STATIC_PANEL_CLEANUP_POST_V13_REMAINING9_ORIGINAL_BUILD_GRAPH_PROVENANCE_ONLY",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "rootCauseSpecSha256": "b9dc30e952da0239038e8f8c9ce4a33c30d291aede4ba556a553b60d21cc0a3e",
+  "sourceSnapshotDigest": "42ba082e18c46ef3378807edf2a3dc03e678c0d561387017a3978772289929f7",
+  "toolDigest": "1724b9b96eae4f890e189539fecb98231249b407c97630b465d912c6a6c1f0b0",
+  "runner": {
+    "path": "/tmp/t1254-readonly/run-owned-doocs-post-v13-static-panel-continuation-v14.cjs",
+    "sha256": "7a5a33c0f67ba70da3d93e337f6e52f87bde260cb0ff8fb64d84c8b6fcb67c7e"
+  },
+  "prepare": {
+    "path": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_PREPARE.json",
+    "sha256": "57ceee241c854b73d7e9da3cf90036b41f574d8c7eb1f834d2c51af0679d85ad"
+  },
+  "seal": {
+    "path": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_FULL_SEAL.json",
+    "sha256": "37512ddaa83918292b35bd55bde8fab397185a6993b398e5be1bb53fea9faa20"
+  },
+  "index": {
+    "path": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_INDEX.json",
+    "sha256": "a18e426bde7b6c7e423dfd14f4e0bad2216ba5facd8336a1b5080214f762698e"
+  },
+  "fullIndependentRecheck": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1256/INDEPENDENT_V14_FINAL_FULL_INPUT_AND_NATIVE_GRAPH_RECHECK.json",
+    "sha256": "eab4b5e01e4d32c5c37d070a9ac707acb637b266cbc59300010233d2f65998fd",
+    "inputs": 1837,
+    "tools": 141614,
+    "artifactRows": 25,
+    "indexRows": 10,
+    "allCheckedRows": 143486,
+    "readBytes": 3095916107,
+    "elapsedMs": 22250.822875008453,
+    "drift": []
+  },
+  "sourceReview": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1256/INDEPENDENT_STATIC_PANEL_CANDIDATE_SOURCE_REVIEW.json",
+    "sha256": "d439115bd0070ab00d9e74505e459fd37b6f2e1ad7916eab57b5c89d16774612"
+  },
+  "readScope": [
+    "最终7a5a runner完整源；旧V13全文；新跨段native guard和tools数组所有变化",
+    "完整V13→V14统一diff所有context与原全源逐字重建当前，9原步骤/槽严格同slice16",
+    "cb4002新provenance全文与937718完整差异；prepareproducer2da95全文、sealer2dea8全文",
+    "native snapshot producer ea2e85全文、395全生成图+原SHA256.json精确集合/字节/模式UID/rootinode及V13原build/verify所有originreceipts",
+    "V12原6真实关闭与两原RED/两原8、V13原10成功/第11FAIL/69raw及两24/两31-120-130原模块完整前序事实，承继本独立69raw实际proof",
+    "正式T1256初轮CONCERNS与recheck、b9dc单行mode纠正、ROOT/peer独立source review精确输入"
+  ],
+  "codeFindingsResolved": [
+    {
+      "finding": "Panel mode原tar与实际基线不同",
+      "result": "原CONCERNS永久保留，最终代码只按V6原420/当前0644；原inode351268609/UID501及唯一a076→30b字节writeFileSync前后核，无chmod。"
+    },
+    {
+      "finding": "跨段native395生成consumer未封",
+      "result": "旧d2b/56a18完整静态history保；新sourceinputs纳72333snapshot+ea2eproducer，395实际文件入tools、每binding核全文件集和所有bytes/size/mode/UID/rootinode+SHA256自manifest394精确entries；原V13build/verify闭合0原来源无新PASS补拍。"
+    }
+  ],
+  "codeConclusions": [
+    "唯一Panel由原T1256合同/候选双审明确允许；机械仅三声明，完整template/style同，native及四V2/Graph017其余源依赖冻结。",
+    "仅原9后续positive+9helper生命周期完整36.72M，min新monotonic出生/V12原UTC/V13更早UTC2026-10-13T05:18:07.699Z；回退或future不足拒应用/下一child，最终sourceafter同步写后显式deadline，再清timers。",
+    "前序old6与V13原10成功和static完整typeFAIL都每binding逐SHA/closed/group0重核；不重拍旧RED/慢请求，不改旧exit1/missing或partial静态构建。",
+    "新provenance只增加Panel实际a076→30b完整patch，tar包括实际修后全部原regular/symlinks+原Graph复现入口，不归档依赖/cache；后续原git两combinedpatch仍必须真实--check通过。",
+    "原HOME deny/localhost方向SB、固定Node/PNPM/helper393f、82非OSdyld+37链接/firstexistingrpath保持，OS缓存边界明确。日志所有可接受code先真实closed/group0/FD关闭后父SHA归档，无receipt保私有原件，不签EOF。"
+  ],
+  "actualFacts": {
+    "currentPanelStillOldAnd0644": {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/apps/web/src/components/editor/EditorPanel.vue",
+      "mode": 420,
+      "uid": 501,
+      "inode": 351268609,
+      "sha256": "a076d986b80fc88a7416e305d125690d0c626c11cf43c4ba6cda1ccfc133046c"
+    },
+    "fourV2Consumers": [
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.ts",
+        "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+        "mode": 420
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.test.ts",
+        "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+        "mode": 420
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+        "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+        "mode": 436
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts",
+        "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+        "mode": 436
+      }
+    ],
+    "native395": {
+      "manifestSHA": "72333d489389f50828383cdd585bf8bb1632b805f83074d52b6ba8a604ae3c55",
+      "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web/dist-native",
+      "files": 395,
+      "rootInode": 351826429,
+      "exactAllFilesModeUIDBytes": true,
+      "selfSHA256JSONCompleteFileSetAndDigests": true,
+      "actualOriginReceiptsFullSHASame": true
+    },
+    "allOtherToolRowsIdenticalToV13": true,
+    "remaining9SlotsIdentical": true,
+    "allRpathFirstExistingActualSame": true
+  },
+  "staticPreparationHistory": [
+    "mode0644合同finding与旧static候选真实保history",
+    "const顺序ReferenceError session98192 EOF1/nochild/apply/runDir真实保",
+    "native rows遗漏seal断言 session48627 EOF1实际保，未放宽395追加断言；新prepare19123与seal10346只读EOF0不冒runtime通过"
+  ],
+  "concerns": [],
+  "reviewerExecutedOrApplied": false,
+  "productionCopy": false,
+  "runtimeOutcome": "pending ROOT exact one-time admission and actual9 closed results",
+  "delivery": "pending all9/sourceafter then exact outputs double review",
+  "AppIncomplete": true
+}

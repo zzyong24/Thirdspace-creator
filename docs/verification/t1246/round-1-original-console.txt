@@ -1,0 +1,23 @@
+[playwright.config] Isolated test data root: /tmp/t1246-original-533224f-20261012
+[playwright.config] Isolated media root: /tmp/t1246-original-533224f-20261012/media
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22mnode:internal/modules/cjs/loader:1478
+[2m[WebServer] [22m  throw err;
+[2m[WebServer] [22m  ^
+[2m[WebServer] [22m
+[2m[WebServer] [22mError: Cannot find module '/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/docs/verification/t1246/driver/start-isolated-next.cjs'
+[2m[WebServer] [22m[90m    at Module._resolveFilename (node:internal/modules/cjs/loader:1475:15)[39m
+[2m[WebServer] [22m[90m    at wrapResolveFilename (node:internal/modules/cjs/loader:1048:27)[39m
+[2m[WebServer] [22m[90m    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1072:10)[39m
+[2m[WebServer] [22m[90m    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1093:12)[39m
+[2m[WebServer] [22m[90m    at Module._load (node:internal/modules/cjs/loader:1261:25)[39m
+[2m[WebServer] [22m[90m    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)[39m
+[2m[WebServer] [22m[90m    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)[39m
+[2m[WebServer] [22m[90m    at node:internal/main/run_main_module:33:47[39m {
+[2m[WebServer] [22m  code: [32m'MODULE_NOT_FOUND'[39m,
+[2m[WebServer] [22m  requireStack: []
+[2m[WebServer] [22m}
+[2m[WebServer] [22m
+[2m[WebServer] [22mNode.js v25.9.0
+Error: Process from config.webServer was not able to start. Exit code: 1
+

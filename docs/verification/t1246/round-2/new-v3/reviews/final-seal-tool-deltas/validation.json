@@ -1,0 +1,152 @@
+{
+  "at": "2026-10-11T20:34:59.529Z",
+  "scope": "仅纯Node静态源码消费者与预算反例；无DB/PG/Next/browser/模型/App",
+  "sourceGateCases": [
+    {
+      "tool": "new-v3",
+      "case": "all-owned",
+      "accepted": true,
+      "snapshotCalls": 1,
+      "expected": true,
+      "error": null,
+      "launchSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "new-v3",
+      "case": "many-owned",
+      "accepted": true,
+      "snapshotCalls": 1,
+      "expected": true,
+      "error": null,
+      "launchSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "new-v3",
+      "case": "empty",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "new-v3",
+      "case": "foreign",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "new-v3",
+      "case": "wrong-birth",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "new-v3",
+      "case": "wrong-uid",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "new-v3",
+      "case": "missing-process",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "browser-original",
+      "case": "all-owned",
+      "accepted": true,
+      "snapshotCalls": 1,
+      "expected": true,
+      "error": null,
+      "launchSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "browser-original",
+      "case": "many-owned",
+      "accepted": true,
+      "snapshotCalls": 1,
+      "expected": true,
+      "error": null,
+      "launchSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "browser-original",
+      "case": "empty",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "browser-original",
+      "case": "foreign",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "browser-original",
+      "case": "wrong-birth",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "browser-original",
+      "case": "wrong-uid",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    },
+    {
+      "tool": "browser-original",
+      "case": "missing-process",
+      "accepted": false,
+      "snapshotCalls": 1,
+      "expected": false,
+      "error": "FOREIGN_OR_UNPROVEN_READY_LISTENER",
+      "launchSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "scope": "真实源码ready gate表达式；pure Node fixtures，不读取系统进程或启动server"
+    }
+  ],
+  "syntaxChecks": 6,
+  "originalOldBudgetRejected": true,
+  "originalNewStartupSlotsMs": 2400000,
+  "originalBudgetNegatives": 5,
+  "nativeRootPendingFinalSeal": true,
+  "runtimePermission": false
+}

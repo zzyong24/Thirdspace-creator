@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-12T05:15:31.082070+00:00",
+  "task": "T-1254",
+  "phase": "complete-tool-source-candidate-only",
+  "runtimeStarted": false,
+  "actualTypesCopyListAndBodies": "pending",
+  "runtimeAdmission": "pending exact fresh peer + ROOT; pending final delivery/commit/11 Worker/DMG",
+  "freshFieldsRequired": [
+    "final clean product HEAD40",
+    "final original170 manifest (same original denominator)",
+    "final new111 manifest (official103/protocol7/pi1)",
+    "exact11Worker physical SHA from final HEAD",
+    "successful real package receipt with same HEAD and new DMG physical SHA",
+    "new Doocs full native delivery plus sourceArchive SHA",
+    "actual Node/Chrome/PG/installed Mach-O roots complete dynamic closure manifest and priority/links/bytes/modes/uid",
+    "reviewed closed-loop tool manifest SHA",
+    "unique fresh24hex nonce"
+  ],
+  "dynamicProducerReuse": {
+    "path": "/tmp/t1254-readonly/NODE_DYLD_CLOSURE_V10.json",
+    "schemaSha256AtRead": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+    "supersedesTemporarySchema": "c8a5de9c9889fef7ae190a746929cc89ce5f559f1c3ce3d9fd9ff3ec148d3923",
+    "onlyAlreadyListedRootsCovered": true,
+    "mustExtendForActualBrowserRuntimeRootsIfMissing": true,
+    "builderPeerRootReviewStillPendingAtRead": true,
+    "sourceNewCurrentReadOnlyBinding": "/private/tmp/t1254-browser-dyld-7l0dxkzf/CURRENT_READONLY_BINDING.json",
+    "sourceNewCurrentReadOnlyBindingSha256": "25e3bade794bb3e5da1a5d4ea6f9a642628604e6c9c4b8f8820fc008ca57f15d",
+    "currentReadOnlyGraphSHA": "074af906fd38110e7c2e1dd9d8caf151a6e3e18d50f76ad6961ed0ccc5cc7110",
+    "currentRoots": 94,
+    "actualOwnedCollectorExecuted": false,
+    "currentGitRealPath": "/opt/homebrew/Cellar/git/2.53.0/bin/git",
+    "rootGitReadOnlyFindingClosedInSource": true
+  },
+  "App": "用户暂不授权；未验收",
+  "historicalAuthSeed": "来源/使用未确认；本Doocs无生成，只运行fresh ownedDB current ensureLocalUser，不读/复制Codex auth seed",
+  "old31cConcerns": {
+    "report": "docs/verification/t1254/INDEPENDENT_BROWSER_TOOL_31C_FIRST_CONCERNS.json",
+    "sha256": "230881f0489ff292a13749c822c83523912a9f70f58ebe2506fb62e9c7079e27",
+    "staticFindings": [
+      "BT001 synchronous finaldeadline",
+      "BT002 private actual loader graph",
+      "BT003 Chrome helper roots"
+    ],
+    "noActualBrowserFailure": true
+  },
+  "sourceCandidateVersion": "v3-budget",
+  "staticBT004": {
+    "report": "docs/verification/t1254/INDEPENDENT_BROWSER_TOOL_SOURCE_V2_BUDGET_CONCERNS.json",
+    "sha256": "b4f68cedef44e55bf835da10aafdaafdd1439149d0c3409940064e20ca7be836",
+    "actualRuntimeFailure": false,
+    "closedInCandidateOnly": true,
+    "original6816PreservedAt": "docs/verification/t1254/browser-tool-history/tool6816-original",
+    "finalPs120kExplicitFromExistingMargin": true
+  },
+  "budgetMs": {
+    "metadata": 33840000,
+    "sourceVerify": 1860000,
+    "runtimeVerify": 3000000,
+    "prepare": 47160000,
+    "launch": 391500000,
+    "complete": 453300000,
+    "staticSeal": 3000000
+  }
+}

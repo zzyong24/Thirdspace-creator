@@ -2,6 +2,12 @@ import "server-only";
 import { createConnection } from "node:net";
 import { randomUUID } from "node:crypto";
 import type { ExecutionRef } from "@creatoros/contract/execution-worker";
+import {completionWaitMs,MIN_EXECUTION_TIMEOUT_MS} from "@creatoros/contract/timeout-policy";
+
+/** 私有宿主控制，不进入原生strict请求或公开工具输入。 */
+export type NativeCallControl={signal?:AbortSignal};
+// framing + 原生结果观察 + 完整回执写入；结算/传输另外60秒，partial字节不续期。
+const NATIVE_RPC_WAIT_MS=completionWaitMs([MIN_EXECUTION_TIMEOUT_MS,MIN_EXECUTION_TIMEOUT_MS,MIN_EXECUTION_TIMEOUT_MS],60_000);
 
 export type NativeFileAction =
   | { kind: "list"; path?: string }
@@ -38,24 +44,32 @@ export class NativeFileError extends Error {
 
 type NativeReply = { ok: boolean; operationId?: string; value?: unknown; code?: string; currentVersion?: number };
 
-function send(socketPath: string, request: object, operationId: string, isWrite: boolean): Promise<unknown> {
+function send(socketPath: string, request: object, operationId: string, isWrite: boolean,control:NativeCallControl={}): Promise<unknown> {
+  const signal=control.signal;
+  if(signal?.aborted)return Promise.reject(new NativeFileError("NATIVE_ABORTED",false));
   return new Promise((resolve, reject) => {
     let dispatched = false;
     let settled = false;
     let body = "";
     const socket = createConnection({ path: socketPath });
-    socket.setTimeout(10_000);
+    socket.setTimeout(NATIVE_RPC_WAIT_MS);
+    const timer=setTimeout(()=>fail("NATIVE_TIMEOUT"),NATIVE_RPC_WAIT_MS);
+    const cleanup=()=>{clearTimeout(timer);signal?.removeEventListener("abort",onAbort);socket.destroy();};
     const fail = (code: string) => {
       if (settled) return;
       settled = true;
-      socket.destroy();
+      cleanup();
       reject(new NativeFileError(dispatched ? "NATIVE_RESULT_UNKNOWN" : code, dispatched));
     };
+    const onAbort=()=>fail("NATIVE_ABORTED");
+    signal?.addEventListener("abort",onAbort,{once:true});
     socket.once("connect", () => {
+      if(signal?.aborted){onAbort();return;}
       dispatched = true;
       socket.write(`${JSON.stringify(request)}\n`);
     });
     socket.on("data", chunk => {
+      if(settled)return;
       body += chunk.toString("utf8");
       if (body.length > 1_400_000) return fail("INVALID_NATIVE_REPLY");
       const end = body.indexOf("\n");
@@ -65,7 +79,7 @@ function send(socketPath: string, request: object, operationId: string, isWrite:
       catch { return fail("INVALID_NATIVE_REPLY"); }
       if (settled) return;
       settled = true;
-      socket.destroy();
+      cleanup();
       if (reply.ok === true && reply.operationId === operationId) resolve(reply.value);
       else if (reply.ok === false && typeof reply.code === "string") {
         reject(new NativeFileError(isWrite && reply.code === "FILE_IO_ERROR" ? "NATIVE_RESULT_UNKNOWN" : reply.code,
@@ -81,12 +95,12 @@ function send(socketPath: string, request: object, operationId: string, isWrite:
 /** Named read-only recovery port. Scope is supplied by the owned backend snapshot,
  * never by a model or a public request. No stale lease path can dispatch a write. */
 export function createNativeFileReceiptReader(options:{platform?:NodeJS.Platform;desktop?:boolean;socketPath?:string}={}) {
-  return async(query:NativeFileReceiptQuery):Promise<unknown>=>{
+  return async(query:NativeFileReceiptQuery,signal?:AbortSignal):Promise<unknown>=>{
     const platform=options.platform??process.platform,socketPath=options.socketPath??process.env.CREATOROS_WORKBENCH_SOCKET;
     if(!["darwin","win32"].includes(platform)||!(options.desktop??process.env.CREATOROS_DESKTOP==="1")||!socketPath)
       throw new NativeFileError("NATIVE_UNAVAILABLE",false);
     const {scope,operationId,path,expectedVersion,contentSha256,byteLength}=query;
-    return send(socketPath,{operationId,scope,action:{kind:"file_receipt",targetOperationId:operationId,path,expectedVersion,contentSha256,byteLength}},operationId,false);
+    return send(socketPath,{operationId,scope,action:{kind:"file_receipt",targetOperationId:operationId,path,expectedVersion,contentSha256,byteLength}},operationId,false,{signal});
   };
 }
 
@@ -145,7 +159,8 @@ export function createWorkbenchNativeClient(lease: NativeLeasePort, options: {
     watchers.set(targetOperationId,timer);
   }
   async function invoke(ref: ExecutionRef, operationId: string, action: NativeFileAction | NativeCommandAction,
-    onVerified?: (scope:{userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string})=>void): Promise<unknown> {
+    onVerified?: (scope:{userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string})=>void,control:NativeCallControl={}): Promise<unknown> {
+    if(control.signal?.aborted)throw new NativeFileError("NATIVE_ABORTED",false);
     if (platform !== "darwin" && platform !== "win32") throw new NativeFileError("UNSUPPORTED_PLATFORM", false);
     if (platform === "win32" && action.kind.startsWith("command_"))
       throw new NativeFileError("UNSUPPORTED_PLATFORM", false);
@@ -166,7 +181,8 @@ export function createWorkbenchNativeClient(lease: NativeLeasePort, options: {
     });
     onVerified?.(verified);
     const mutating=action.kind === "write" || action.kind === "command_run" || action.kind === "command_cancel";
-    const value=await send(socketPath, {operationId,scope:verified,action}, operationId, mutating);
+    const value=await send(socketPath, {operationId,scope:verified,action}, operationId, mutating,control);
+    if(control.signal?.aborted)throw new NativeFileError("NATIVE_RESULT_UNKNOWN",true);
     try {
       await lease.withLease(ref,"admission",async({context,task})=>{
         if(context.userId!==verified.userId || context.accountId!==verified.accountId || task.id!==verified.taskId ||
@@ -182,11 +198,11 @@ export function createWorkbenchNativeClient(lease: NativeLeasePort, options: {
     return value;
   }
   return {
-    file: (ref: ExecutionRef, operationId: string, action: NativeFileAction) => invoke(ref, operationId, action),
-    async command(ref: ExecutionRef, operationId: string, action: NativeCommandAction) {
+    file: (ref: ExecutionRef, operationId: string, action: NativeFileAction,control?:NativeCallControl) => invoke(ref, operationId, action,undefined,control),
+    async command(ref: ExecutionRef, operationId: string, action: NativeCommandAction,control?:NativeCallControl) {
       let verified: {userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string}|undefined;
       try {
-        const value=await invoke(ref,operationId,action,scope=>{verified=scope;});
+        const value=await invoke(ref,operationId,action,scope=>{verified=scope;},control);
         if (action.kind==="command_run" && verified && value && typeof value==="object" && "state" in value && value.state==="running")
           watch(ref,operationId,verified);
         if (action.kind==="command_cancel") stopWatching(action.targetOperationId);

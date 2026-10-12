@@ -1,0 +1,18 @@
+{
+  "schema": "root-spec-review/v1",
+  "at": "2026-10-11T23:22:57.544698+00:00",
+  "result": "PASS_USAGE_CLARIFICATION_SPEC_ONLY",
+  "candidateSha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484",
+  "independentReviewSha256": "f469a7e4c9d90ac11b1edc2b55035a79ab60b1113df770c1ed4b3713818856a3",
+  "independentSourceBindingSha256": "ad8920c3a5156d03f839333d88700abccd5d4bc1cf67fdcd67bed16e55d784a6",
+  "allBoundInputsActualDrift": [],
+  "reviewedSourceRows": 18,
+  "readActualWorkerCatchAndStrictIpcUnionAndDispatcherFailureBranchAndCandidateOnlySuccessBoundary": true,
+  "readLeaseSettlementFenceAndLedgerTotals": true,
+  "productionOrPolicyChanged": false,
+  "threeOriginalTestWriteSetUnchanged": true,
+  "rawFailureStatusReportNotCandidateSuccess": true,
+  "noNullTokenReplacement": true,
+  "candidateV3AndRuntimeNotApprovedByThisReview": true,
+  "appUserDeclined": true
+}

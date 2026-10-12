@@ -1,0 +1,9 @@
+{
+  "privateRoot": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "wrapperSha256": "feda355a3f2c66565eb15dba3253deeee6d9ac15d30b134cc173021a6e8491ce",
+  "preGuardSha256": "16edd7bbd665070021645cd72af5b852726d5178a10df70677fe13947686d82e",
+  "copiesAreMetadataOnlyNoProductCopy": true,
+  "childLogUsesPrivateRootForActualNodeFd1Initialization": true,
+  "actualCandidateExecBeforeThis": 0
+}

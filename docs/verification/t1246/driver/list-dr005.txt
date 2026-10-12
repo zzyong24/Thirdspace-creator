@@ -1,0 +1,175 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-EFIBGE
+[playwright.config] Isolated media root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-EFIBGE/media
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+Listing tests:
+  [e2e] › e2e/ai-copilot.spec.ts:19:7 › AI Copilot dialog › opens the centered dialog from any page via ?copilot=open
+  [e2e] › e2e/ai-copilot.spec.ts:45:7 › AI Copilot dialog › close button removes only ?copilot=open and preserves the pathname
+  [e2e] › e2e/ai-copilot.spec.ts:54:7 › AI Copilot dialog › Escape closes the dialog
+  [e2e] › e2e/ai-copilot.spec.ts:61:7 › AI Copilot dialog › browser Back closes the dialog
+  [e2e] › e2e/ai-copilot.spec.ts:68:7 › AI Copilot dialog › submit button does not post a real network request
+  [e2e] › e2e/ai-nonblocking-recovery.spec.ts:113:5 › E2E-T1022-01 没有模型时保留输入并直达模型设置
+  [e2e] › e2e/ai-nonblocking-recovery.spec.ts:137:5 › E2E-T1022-02 / E2E-T1023-01 临时失败沿同一轮自动恢复并交付完整结果
+  [e2e] › e2e/ai-nonblocking-recovery.spec.ts:192:5 › E2E-T1023-02 / E2E-T1023-03 持续提交失败会停止自动请求，继续恢复仍沿原轮完成
+  [e2e] › e2e/ai-nonblocking-recovery.spec.ts:253:5 › E2E-T1023-04 已收到持久任务回执时停止重连也明确保留后台任务
+  [e2e] › e2e/ai-recovery-guidance.spec.ts:115:5 › E2E-T913-01 模型未配置时直接打开模型配置
+  [e2e] › e2e/ai-recovery-guidance.spec.ts:149:5 › E2E-T913-02 定位缺失时直达定位中心
+  [e2e] › e2e/ai-recovery-guidance.spec.ts:194:5 › E2E-T913-03 自带 AI 额度不足时只显示真实额度入口
+  [e2e] › e2e/ai-recovery-guidance.spec.ts:217:5 › E2E-T913-04 / E2E-T913-05 未知故障自动恢复且不泄露内部状态
+  [e2e] › e2e/ai-reliability-recovery.spec.ts:57:5 › 视频决策失败可见、终态停轮询，重新运行显式携带来源任务
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route dashboard (/) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route projects (/projects) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route project-overview (/projects/ai-native-browser) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route research-workspace (/projects/ai-native-browser/research) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route planning-workspace (/projects/ai-native-browser/planning) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route script-workspace (/projects/ai-native-browser/script) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route publishing-workspace (/projects/ai-native-browser/publishing) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route analytics-review (/projects/ai-native-browser/review) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route knowledge (/knowledge) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route assets (/assets) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route publishing-center (/publishing) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route experience (/experience) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route search (/search) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route settings (/settings) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route new-project-overlay (/projects/new) renders with single shell and correct active state
+  [e2e] › e2e/all-routes.spec.ts:18:9 › Whole-system route matrix (Task 26) › route ai-copilot-overlay (/?copilot=open) renders with single shell and correct active state
+  [e2e] › e2e/app-shell.spec.ts:17:7 › AppShell › renders one Sidebar and one TopHeader on the root route
+  [e2e] › e2e/app-shell.spec.ts:31:7 › AppShell › lists the seven approved primary nav items
+  [e2e] › e2e/app-shell.spec.ts:47:7 › AppShell › derives the active nav item from the pathname
+  [e2e] › e2e/app-shell.spec.ts:58:7 › AppShell › focus order: sidebar -> top header -> page content
+  [e2e] › e2e/app-shell.spec.ts:109:7 › AppShell › the page scroll area is the only scrollable region in the main frame
+  [e2e] › e2e/app-shell.spec.ts:119:7 › AppShell › dashboard wheel scroll stays inside the Radix viewport
+  [e2e] › e2e/app-shell.spec.ts:187:7 › AppShell › applies shared page spacing tokens in the browser
+  [e2e] › e2e/asr-configuration.spec.ts:16:7 › ASR 建议配置与小米 MiMo 轻量配置 › 普通路径只需预设、模型与 Key，高级字段可按需展开
+  [e2e] › e2e/assets.spec.ts:264:7 › Assets Center page › renders the assets gallery with toolbar, type sidebar, and detail panel
+  [e2e] › e2e/assets.spec.ts:374:7 › Assets Center page › clicking a different card updates the AssetDetailPanel
+  [e2e] › e2e/assets.spec.ts:486:7 › Assets Center page › 真实空账号组显示零素材并能打开系统文件选择器
+  [e2e] › e2e/audience-task-topics.spec.ts:5:79 › 九宫格退役、普通选题入口保留及历史配置无损 1366
+  [e2e] › e2e/audience-task-topics.spec.ts:5:79 › 九宫格退役、普通选题入口保留及历史配置无损 1024
+  [e2e] › e2e/automations-group-media-jobs.spec.ts:85:7 › 账号组内多平台定时任务可见性（T-1199） › 组总览读到真实多平台作业，平台与账号筛选只收窄私有作业并保留共享项
+  [e2e] › e2e/automations-group-media-jobs.spec.ts:128:7 › 账号组内多平台定时任务可见性（T-1199） › 切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同
+  [e2e] › e2e/automations-group-media-jobs.spec.ts:166:7 › 账号组内多平台定时任务可见性（T-1199） › 归档账号的历史作业仍可读，按账号筛选会标明归档状态
+  [e2e] › e2e/automations-group-media-jobs.spec.ts:184:7 › 账号组内多平台定时任务可见性（T-1199） › 没有作业的账号组显示真实无计划空态和账号入口
+  [e2e] › e2e/automations-run-now-public.spec.ts:229:5 › 组内真实作业通过立即运行准入并保原任务显示待扫码
+  [e2e] › e2e/built-in-ip-course.spec.ts:48:5 › 内置 IP 课程从目录到学习进度形成连续真实旅程
+  [e2e] › e2e/channel-public-links.spec.ts:28:7 › T-729/T-871 当前桌面包公开入口 › 设置页不展示常驻官网入口，人工反馈仍只使用包级链接
+  [e2e] › e2e/content-radar-one-click-project.spec.ts:488:5 › 内容雷达只有改写初稿和局部选题字段时仍可一键升级项目
+  [e2e] › e2e/copilot-project-reference.spec.ts:54:7 › Copilot 项目引用直读（T-642） › 长标题只显示一次，正文不重复，窄屏不溢出
+  [e2e] › e2e/creative-canvas.spec.ts:40:5 › T-993 画布可保存、重开，切换账号后列表和直链隔离
+  [e2e] › e2e/creative-canvas.spec.ts:91:5 › T-993 首次自动选账号后画布可创建，新增节点不会重叠
+  [e2e] › e2e/creative-canvas.spec.ts:153:5 › T-993 视口缩放只保存在本地，不改画布内容版本
+  [e2e] › e2e/creative-canvas.spec.ts:176:5 › T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚动
+  [e2e] › e2e/creative-canvas.spec.ts:194:5 › T-993 旧版无尺寸画布可读，保存后补默认尺寸且连线不丢
+  [e2e] › e2e/creative-canvas.spec.ts:220:5 › T-993 当前账号图片与视频能插入画布并实际预览
+  [e2e] › e2e/creative-canvas.spec.ts:246:5 › T-994 作品素材入口、项目画布过滤与安全返回
+  [e2e] › e2e/creative-canvas.spec.ts:310:5 › T-994 画布版本冲突时不离开并给出恢复动作
+  [e2e] › e2e/creative-canvas.spec.ts:328:5 › T-994 生成结果就地保留并加入当前作品（模拟任务回执）
+  [e2e] › e2e/creative-canvas.spec.ts:373:5 › T-1021 首页案例独立浏览、取消无写入，多页模板创建原画布并可重新读取
+  [e2e] › e2e/creative-canvas.spec.ts:395:5 › T-1021 资产独立上传，选用追加原画布并冻结真实文件
+  [e2e] › e2e/creative-canvas.spec.ts:416:5 › T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）
+  [e2e] › e2e/creative-canvas.spec.ts:508:5 › T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区
+  [e2e] › e2e/draft-ammo-media-preview.spec.ts:49:5 › 稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持
+  [e2e] › e2e/experience.spec.ts:19:7 › 经验裁决台 page › renders the adjudication workbench on the /experience route
+  [e2e] › e2e/group-skill-customization.spec.ts:124:5 › 空账号组通过设置页定制官方 Skill 的首写入口可用
+  [e2e] › e2e/group-skill-customization.spec.ts:587:5 › 账号组 Skill 首写、刷新、二次 CAS、历史与跨组版本归属
+  [e2e] › e2e/group-skill-customization.spec.ts:948:5 › 同组双页面保存只接受一个 CAS revision 并保留冲突草稿
+  [e2e] › e2e/group-skill-customization.spec.ts:1177:5 › 切组 RSC 与原组保存回执迟到时阻止旧写并通过 ABA 保持归属
+  [e2e] › e2e/group-skill-customization.spec.ts:1598:5 › 组内 Skill 历史回滚与恢复默认通过真实按钮新增版本并刷新保留
+  [e2e] › e2e/knowledge-library.spec.ts:53:7 › library-journey 1366 真实读写、整理与项目引用
+  [e2e] › e2e/knowledge-library.spec.ts:53:7 › library-journey 1024 真实读写、整理与项目引用
+  [e2e] › e2e/media-root-isolation.spec.ts:79:5 › T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根
+  [e2e] › e2e/new-project.spec.ts:102:7 › New Project dialog › opens from the dashboard, follows the current form contract, and creates selected formats
+  [e2e] › e2e/new-project.spec.ts:145:7 › New Project dialog › creates and enters the new project workspace when requested
+  [e2e] › e2e/onboarding-and-small-sidebar.spec.ts:52:7 › 新手成果路径与低高度侧栏 › 重新打开后真实回到首页，并保留新号/已有作品两条连续路径
+  [e2e] › e2e/onboarding-and-small-sidebar.spec.ts:132:7 › 新手成果路径与低高度侧栏 › 低高度窗口始终保留账号和用户身份
+  [e2e] › e2e/overlay-routing.spec.ts:18:7 › overlay routing › direct visit to /projects/new renders the new-project overlay shell
+  [e2e] › e2e/overlay-routing.spec.ts:39:7 › overlay routing › ?copilot=open on / opens the copilot overlay and preserves pathname
+  [e2e] › e2e/overlay-routing.spec.ts:65:7 › overlay routing › pressing Back closes the copilot overlay before leaving the page
+  [e2e] › e2e/overlay-routing.spec.ts:83:7 › overlay routing › Tab focus stays inside an open overlay
+  [e2e] › e2e/platform-work-catalog.spec.ts:13:5 › 平台作品页按当前账号显示真实空目录和待核验能力
+  [e2e] › e2e/platform-work-catalog.spec.ts:42:5 › 本地账号完成多平台目标项目与发布草稿，账号归属隔离
+  [e2e] › e2e/platform-work-catalog.spec.ts:102:5 › 账号页绑定成功后可直接切换到对应的小红书与快手作品页
+  [e2e] › e2e/production-broll-remove.spec.ts:95:5 › 已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧素材
+  [e2e] › e2e/production-empty-workbench.spec.ts:43:5 › 新项目无视频作品时可进入剪辑备料并导入人物视频
+  [e2e] › e2e/projects.spec.ts:45:7 › 项目排期闭环（T-599） › 可在项目行新增、修改并取消发布排期
+  [e2e] › e2e/publish-package-readback.spec.ts:48:5 › 查看发布物料优先回读完整简介与标签，刷新和小窗口仍保持
+  [e2e] › e2e/publishing-center.spec.ts:45:7 › 发布中心日历主视图（T-599） › 真实项目排期出现在 70/30 日历视图，旧重复列表已移除
+  [e2e] › e2e/publishing-workspace.spec.ts:16:5 › 旧发布阶段链接进入当前项目稿面的发布区
+  [e2e] › e2e/qwen-asr-configuration.spec.ts:4:7 › Qwen 方言 ASR 设置预设 › 选择 Qwen 后带出可直接保存的真实 provider、模型与接口
+  [e2e] › e2e/recent-data-safety.spec.ts:78:5 › 已有定位进入从零前采时，正式母版和历史始终可见，搜索默认国内中文
+  [e2e] › e2e/recent-data-safety.spec.ts:182:5 › 信源确认删除后从工作台消失，并展示真实级联清理结果
+  [e2e] › e2e/review-empty-diagnosis-entry.spec.ts:275:7 › T-1239 无指标项目复盘入口与诚实空态 › 真实同组稿件在桌面、窄屏与刷新后显示内容诊断入口
+  [e2e] › e2e/review-history.spec.ts:44:7 › 项目复盘记录闭环（T-634） › 手动洞察可从历史记录读回，时间友好且窄屏不溢出
+  [e2e] › e2e/search.spec.ts:20:7 › Global Search page › renders the global search structure on the /search route
+  [e2e] › e2e/search.spec.ts:93:7 › Global Search page › URL ?q=... is reflected in the search input value
+  [e2e] › e2e/semantic-material-generation.spec.ts:48:5 › 图片按确认稿需要预填多个候选，视频默认预填一个候选，点击不自动发送
+  [e2e] › e2e/settings-responsive-layout.spec.ts:292:5 › [T-1237] 设置在窄屏与桌面保持分类可达、正文完整和未提交草稿
+  [e2e] › e2e/settings.spec.ts:139:7 › Settings page › [T-606] 模型来源状态在桌面与 390px 都可辨认且本地表单可用
+  [e2e] › e2e/settings.spec.ts:158:7 › Settings page › renders the settings structure on the /settings route
+  [e2e] › e2e/settings.spec.ts:243:7 › Settings page › [T-1232] 账户昵称由真实 UI 保存并公开读回同用户及刷新
+  [e2e] › e2e/settings.spec.ts:261:7 › Settings page › [T-1232] 自动保存偏好由真实开关保存并读回 userId 及刷新
+  [e2e] › e2e/settings.spec.ts:283:7 › Settings page › [T-1232] 外观主题与密度按本地消费者持久并返回刷新
+  [e2e] › e2e/settings.spec.ts:309:7 › Settings page › [T-1232] 默认本地模型真实保存及正式流式文本探针并脱敏读回
+  [e2e] › e2e/settings.spec.ts:368:7 › Settings page › [T-1232] RedFox 密钥真实保存及移除公开脱敏读回并刷新
+  [e2e] › e2e/shared-resource-lifecycle.spec.ts:5:5 › TEST-T1105-RESOURCE 共享资源真实空态、刷新返回与失败重读
+  [e2e] › e2e/smoke.spec.ts:3:5 › root route exposes the CreatorOS application container
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:362:7 › T1062 账号组真实原生粗剪 › 纯组无平台账号仍可通过真实创建弹层创建项目、保存画布和打开原生剪辑
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:398:7 › T1062 账号组真实原生粗剪 › 同组多个账号/平台筛选保留dirty和真实native实例，公共保存始终冻结组根
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:420:7 › T1062 账号组真实原生粗剪 › 跨组时取消真实在途素材响应，旧组晚到结果不能回写或继续保存
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:446:7 › T1062 账号组真实原生粗剪 › 真实迁组历史画布保留account出处，group归属可读写；错误组读回明确结束loading
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:484:57 › T1062 账号组真实原生粗剪 › 真实默认ASR与原生原声：普通AAC完整自然播放、单独核对、明确采用与保存刷新
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:484:57 › T1062 账号组真实原生粗剪 › 真实默认ASR与原生原声：非零视频起点仅此项手工降级，原工程仍可保存
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:640:5 › 真实首载组列表延迟时不发创建，根就绪后文章可创建保存刷新
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:697:5 › 真实首次RSC同步中手动切B：旧A完成不能放行，B就绪才可创建保存刷新
+  [e2e] › e2e/t1062-group-native-rough.spec.ts:822:5 › 真实首载RSC一直未交付：有界超时后显式整页重试，同B根可创建保存回读
+  [e2e] › e2e/t1069-asset-picker.spec.ts:20:5 › 公共全库分页与模板照片选择：后页可见、搜索和取消保留精确照片
+  [e2e] › e2e/t1069-media-tab-session.spec.ts:12:5 › 本地视频逐个导入、未保存切Tab返回、保存刷新保留原素材和工程
+  [e2e] › e2e/t1070-director-editor.spec.ts:83:5 › 真实文章保存、指定版本刷新、同项目编导窄屏打开、NoteRelay HTML交付
+  [e2e] › e2e/t1070-director-editor.spec.ts:178:5 › 真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片入口与历史保留
+  [e2e] › e2e/t1136-calendar-dialog-layout.spec.ts:78:5 › T-1136 当前真实排期长名称的四种窗口尺寸
+  [e2e] › e2e/t1136-calendar-dialog-layout.spec.ts:97:5 › T-1136 真实保存回读重开、目标转组重选与失败保留输入
+  [e2e] › e2e/t1136-calendar-dialog-layout.spec.ts:144:5 › T-1136 读取中及共享反馈、参考素材弹窗仍可操作
+  [e2e] › e2e/t1140-picker-low-height.spec.ts:86:1 › T-1140 六种窗口完整预览、统一滚动、搜索与取消不写
+  [e2e] › e2e/t1140-picker-low-height.spec.ts:114:1 › T-1140 精确选用、正式回读、刷新返回与原gallery流程
+  [e2e] › e2e/t1149-cover-aspect-group.spec.ts:52:5 › T1149 共同支持画幅同步、正式保存、刷新返回及重复修改
+  [e2e] › e2e/t1149-cover-aspect-group.spec.ts:69:5 › T1149 能力禁用、两个模式入口保引用与保存失败后公开重试
+  [e2e] › e2e/t1159-wechat-native-report.spec.ts:22:5 › T1159 两微信账号从组成员进入真实0报告，刷新返回与身份拒绝
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「首页」/ 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「创作者总览」/overview 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「定位中心」/positioning 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「内容雷达」/intelligence 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「选题」/topics 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「项目」/projects 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「知识库」/knowledge 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「素材中心」/assets 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「创作画布」/canvases 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「发布中心」/publishing 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「运营分析」/daily-report 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「自动化」/automations 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:131:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「设置」/settings 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:143:7 › T-1207 补充真实页面路由矩阵 › 账号管理页可以打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:147:7 › T-1207 补充真实页面路由矩阵 › 当前账号的作品目录页可以打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:151:7 › T-1207 补充真实页面路由矩阵 › 项目快速创建路由显示真实内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:155:7 › T-1207 补充真实页面路由矩阵 › 发布中心日历子页可以打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:171:9 › T-1207 补充真实页面路由矩阵 › 项目「主稿面」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:171:9 › T-1207 补充真实页面路由矩阵 › 项目「选题兼容入口」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:171:9 › T-1207 补充真实页面路由矩阵 › 项目「计划兼容入口」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:171:9 › T-1207 补充真实页面路由矩阵 › 项目「脚本兼容入口」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:171:9 › T-1207 补充真实页面路由矩阵 › 项目「发布兼容入口」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:171:9 › T-1207 补充真实页面路由矩阵 › 项目「复盘页」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:171:9 › T-1207 补充真实页面路由矩阵 › 项目「组合创作工作台」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:171:9 › T-1207 补充真实页面路由矩阵 › 项目「视频剪辑工作台」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:181:7 › T-1207 补充真实页面路由矩阵 › 文章工作台读取真实隔离文章作品
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:186:7 › T-1207 补充真实页面路由矩阵 › 图文工作台按真实隔离作品 ID 打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:191:7 › T-1207 补充真实页面路由矩阵 › 图文深链按真实隔离作品 ID 打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:196:7 › T-1207 补充真实页面路由矩阵 › 视频工作台按真实隔离作品 ID 打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:201:7 › T-1207 补充真实页面路由矩阵 › 项目画布详情按真实隔离画布 ID 打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:205:7 › T-1207 补充真实页面路由矩阵 › 朋友圈工作台按真实隔离稿件 ID 打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:211:9 › T-1207 补充真实页面路由矩阵 › 旧入口「/login」有效回到本地首页
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:211:9 › T-1207 补充真实页面路由矩阵 › 旧入口「/register」有效回到本地首页
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:211:9 › T-1207 补充真实页面路由矩阵 › 旧入口「/activate」有效回到本地首页
+  [e2e] › e2e/t954-director-review.spec.ts:10:5 › T954 无发布数据的真实复盘页面可用，补采返回空结果，诊断入口不强制成功经验
+  [e2e] › e2e/web-material-read-save.spec.ts:36:7 › 联网素材先阅读后保存 › 搜索线索只能阅读全文，成功后才允许按稳定素材保存到当前项目
+  [e2e] › e2e/wechat-article-workbench.spec.ts:39:5 › 公众号文章从项目目标到手写版本、刷新回读和跨账号隔离
+  [e2e] › e2e/wechat-article-workbench.spec.ts:119:5 › 公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读
+  [e2e] › e2e/zz-account-isolation.spec.ts:77:7 › 双号切换端到端隔离(T-332 S6) › A 号只见 A 的项目;切到 B 号后只见 B 的(无残影)
+Total: 170 tests in 54 files

@@ -1,0 +1,53 @@
+{
+  "scope": "只读真实消费者与失败绑定，未执行新B029测试，未解冻repeat断言",
+  "files": [
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+      "sha256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-research-worker.fixture.ts",
+      "sha256": "43da10f1016a367a44b56a8e47e263d563918d101a07c4ff080e2d5962caa79b"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-research-tools.ts",
+      "sha256": "75aa3d903657aa527d2dcdf7ed9d3fd1deba8a08ea5c5ef1635b2a03f31f0d72"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-research-evidence.service.ts",
+      "sha256": "62b154ae1ae7d92b99ed06929b7bb17d8c6ef1f3f22c24a160e9913309f8ecea"
+    },
+    {
+      "path": "ai-worker/src/execution/agentic-worker-run.ts",
+      "sha256": "671437a207fe8ad5fd42a43a7bd76baa31aa3d774877efed742aa7e5b9871277"
+    },
+    {
+      "path": "ai-worker/src/runtime/agentic/pi-engine.ts",
+      "sha256": "dcf0e0625527c7e92be57d1511609480bf60945cbfa22440cd961782a4e79a77"
+    },
+    {
+      "path": "ai-worker/src/runtime/agentic/continuation.ts",
+      "sha256": "8b1ccb5d04d5433b24ccb64a1804f384d9f97f3b86f2e75c0ea45be38e2950c5"
+    },
+    {
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "sha256": "ca5efd4f88333f3769db9e526e3b448f8a4cf9558ee4d5dd317f680e5efc3f77"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+      "sha256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-completion.service.ts",
+      "sha256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4"
+    },
+    {
+      "path": "ai-worker/src/execution/durable-pi-stream.ts",
+      "sha256": "eba966db87f38d3e1816d8f48318016bead97315a3fe55fc5ef6a3a198f38bbf"
+    }
+  ]
+}

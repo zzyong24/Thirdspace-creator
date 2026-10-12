@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Endpoint, RequestContext } from "@creatoros/contract";
 import {
   compositeTransport,
@@ -18,12 +18,19 @@ import { canonicalDataset } from "@/fixtures/canonical";
 //      且 void→await 消竞态:create 返回后立刻搜即命中)。
 //   5. video/publication tab 对齐:发布作品索引 entity_type='video',video tab 可搜。
 
+// T1246 显式受控平台适配器，只验证原发布事务/幂等/索引；不启动浏览器或发布真人内容。
+vi.mock("@creatoros/backend/modules/publishing", async importOriginal => {
+  const actual = await importOriginal<typeof import("@creatoros/backend/modules/publishing")>();
+  return {...actual,createUnavailablePublisher:()=>actual.createMockPublisher()};
+});
+
 const ep = (id: string, isList = false) =>
   ({ id, isList }) as unknown as Endpoint;
 // [T-332 S2] strict 账号门:search_documents 及其源实体(projects/knowledge/publications)
 // 全部 per-account,ctx 必须带 accountId(未选号 → AccountRequiredError,SPEC §4.2)。
 // 同一派生号贯穿写入与搜索,保证投影/命中在同号域内闭环。
-const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
+let fixtureAccountId = "";
+const ctx = (userId: string, accountId = userId === canonicalDataset.user.id ? fixtureAccountId : `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
@@ -70,8 +77,13 @@ async function createProject(
   return created.data.id;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   __resetPersistenceForTests();
+  const created = await compositeTransport.request(ep("accounts.create"), {
+    params: undefined, query: undefined,
+    body: {platform:"bilibili",accountHandle:"@t1246-owned-fixture",followerBaseline:0},
+  } as never, {userId:canonicalDataset.user.id,requestId:"t1246-public-account",source:"user"}) as {data:{id:string}};
+  fixtureAccountId = created.data.id;
 });
 
 describe("实体 create/update/delete 写搜索索引(全局搜索可用)", () => {

@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-11T21:56:30.228002+00:00",
+  "approved": true,
+  "verdict": "PASS_PRIVATE_COMPILE_TOOL_ONLY",
+  "toolSha256": "ef4c57a52001522217bec9dcbce490cdadc54bd38be3267753df2962d032fa50",
+  "bindingSha256": "c75261ca0d6ecfeadabf4a3593d4a199483d722eb408bc607a3f16d5e74bff4f",
+  "actualInputCount": 328,
+  "actualInputDrift": 0,
+  "onlySourceDeltas": [
+    "已独评ipc.rs与browser_ipc.rs的原cfg测试预算段"
+  ],
+  "actualToolRead": true,
+  "mainLockSubsetProofRequired": true,
+  "original12ListAndIgnoredPreserved": true,
+  "outerBudgetMs": 8520000,
+  "noApp": true,
+  "notPublicRuntimePass": true,
+  "oldBinaryPreserved": true
+}

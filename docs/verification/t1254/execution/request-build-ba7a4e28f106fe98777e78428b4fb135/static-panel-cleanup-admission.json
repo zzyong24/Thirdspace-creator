@@ -1,0 +1,9 @@
+{
+  "remainingMs": 36669187.162292,
+  "requiredMs": 33120000,
+  "applyMs": 900000,
+  "remainingOriginalChildren": 9,
+  "inheritedV12WallDeadline": "2026-10-13T10:50:47.959Z",
+  "inheritedV13WallDeadline": "2026-10-13T05:18:07.699Z",
+  "effectiveInheritedWallDeadline": "2026-10-13T05:18:07.699Z"
+}

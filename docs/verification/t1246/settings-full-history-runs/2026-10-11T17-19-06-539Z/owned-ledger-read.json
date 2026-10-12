@@ -1,0 +1,31 @@
+{
+  "phase": "read-only SQL diagnosis after owned Next/browser cleanup; no model or App invocation",
+  "dataRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-t1246-settings-full-NSLDW7",
+  "dbPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-t1246-settings-full-NSLDW7/pglite",
+  "toolSHA256": "e3e07776f072f7be671cff220ddc1ecd95a18491f5438e9db2a0599cf6a17a80",
+  "startedAt": "2026-10-11T17:29:29.489Z",
+  "queries": [
+    {
+      "sql": "SELECT kind,status,count(*)::int AS count FROM execution_calls GROUP BY kind,status ORDER BY kind,status",
+      "rows": []
+    },
+    {
+      "sql": "SELECT count(*)::int AS count FROM execution_calls WHERE kind IN ('model','external')",
+      "rows": [
+        {
+          "count": 0
+        }
+      ]
+    },
+    {
+      "sql": "SELECT count(*)::int AS count FROM model_configurations WHERE coalesce(provider,'')<>'' OR coalesce(model_name,'')<>'' OR coalesce(secret_value,'')<>'' OR coalesce(secret_reference,'')<>''",
+      "rows": [
+        {
+          "count": 0
+        }
+      ]
+    }
+  ],
+  "status": "READ_COMPLETED",
+  "finishedAt": "2026-10-11T17:29:30.056Z"
+}

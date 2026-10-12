@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-12T00:08:42.691160+00:00",
+  "reviewSha256": "512754a08f14d2b870a6072f7423b285c42706562c690897ea04606b7038eba0",
+  "actualApplied": true,
+  "actualRuntime": false,
+  "rows": [
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "beforeSha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105",
+      "afterSha256": "71ca29aefa7535d48b8d627e462587fa2fae92e974b6588cc29a75a0051be879",
+      "preserved": "docs/verification/t1250/approved-hosts-cdp-isolation-originals/workbench-browser-host.test.ts"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "beforeSha256": "bbd3b552830a1410ec3b5424eac14e8c3637d6148718ba3cf3a371c3a908693d",
+      "afterSha256": "2eda778df59bba89905e68249403c3819c22a5579f952c0fa19c2c43a308d561",
+      "preserved": "docs/verification/t1250/approved-hosts-cdp-isolation-originals/douyin-cdp-comment-diagnosis.integration.test.ts"
+    }
+  ]
+}

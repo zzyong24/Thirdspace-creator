@@ -1,0 +1,124 @@
+{
+  "at": "2026-10-12T07:14:19.547738+00:00",
+  "type": "mechanical-full-context-source-diff-reconstruction-not-candidate-code-execution",
+  "sixOriginalToCandidate": [
+    {
+      "source": "docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "sourceSha256": "c0cef4eeaae77fb66569442870b06250a1e59c72ffe62b67a50f21d30493a712",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/prepare-runtime.cjs",
+      "candidateSha256": "7ea85e26381261a0d6d60ef2a218df4b611a162d6cdaf107184395c2f000a99f",
+      "sourceUntouched": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "sourceSha256": "e159718f4d3ef197612e67ed33d1843ebffb8a362b5b4ec091df06ade390dbe6",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/verify-binding.cjs",
+      "candidateSha256": "204975e5ef71689d127eacae445b91e0f8bf4a28496c15305bc5a5b63d79d3b6",
+      "sourceUntouched": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "sourceSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/launch.cjs",
+      "candidateSha256": "74c5dda545a1583d9d43d7ce42dd22bbafd0d47cff9fbf058efdae050b8e35f0",
+      "sourceUntouched": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+      "sourceSha256": "6d7706baaa4f9272d1cf64572689395bc9cbd14573470a8030e98fd711f31962",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/prepare-runtime.cjs",
+      "candidateSha256": "3dda6c2ac7d4a0aae158684b5e4d810401749323a344d4733cd466da788b2af6",
+      "sourceUntouched": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/new-v3/driver/verify-binding.cjs",
+      "sourceSha256": "92b653b3ac3cfe34610f158d1488c52737bbb622e78d283a5703d03f442f0d55",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/verify-binding.cjs",
+      "candidateSha256": "93329aa95e829baaa5a941797959314958735f7cedc51fa066ac9cbdfa2f764c",
+      "sourceUntouched": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+      "sourceSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/launch.cjs",
+      "candidateSha256": "8c391110ca66326f5da1f8a2165c3466238ef11188f235efc8c396c63ca255cb",
+      "sourceUntouched": true,
+      "fullContextForwardAndInverseExact": true
+    }
+  ],
+  "eightToolSourceRows": [
+    {
+      "source": "docs/verification/t1246/round-2/final-runtime-guard/common.cjs",
+      "sourceSha256": "0ea77c01e132b08f14efcf94206d5f62122366c859e219d76b7d831bf871642d",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/common.cjs",
+      "candidateSha256": "5fac7f48b0db4bc6befac1fe319364815244f6d80fcc2ae913364f65063805a1",
+      "changed": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/final-runtime-guard/discover-joint-pairs.py",
+      "sourceSha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/discover-joint-pairs.py",
+      "candidateSha256": "3324eb3f4bf006349e56f85ba17248b3b04c5f1b1a91423ea9ef782d17937845",
+      "changed": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/final-runtime-guard/owned-dyld.cjs",
+      "sourceSha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/owned-dyld.cjs",
+      "candidateSha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "changed": false,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/final-runtime-guard/prepare-joint-dyld.py",
+      "sourceSha256": "22c3e3b06dcc85678c93a59c765a4cfeed8ad3700d01874d83a8226084abfe9c",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/prepare-joint-dyld.py",
+      "candidateSha256": "0430982cd69814dcd76ddfe0289d93a6254dc01dbecca8731a5dc809216d2c4a",
+      "changed": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/final-runtime-guard/prepare-metadata-input.cjs",
+      "sourceSha256": "d1e1b55ba3edc7c4d6ba1a1531d5b7790e17545346efbfcfb90a27689a3da119",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/prepare-metadata-input.cjs",
+      "candidateSha256": "b5bf7f6b63d8065c1c9615f0cf661c537ba71156b20b783f86cc58790b93238d",
+      "changed": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/final-runtime-guard/reseal.cjs",
+      "sourceSha256": "cc85f6a35d08b67c2774d3a8fae9bc9c38c05963c608753b0923882c444d3480",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/reseal.cjs",
+      "candidateSha256": "ad6fc364035ca1eb0c258ca3d43e7608b00c1200a22637422f0982fe62693ce0",
+      "changed": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/final-runtime-guard/run.cjs",
+      "sourceSha256": "fb2465842df087b259453809e87d64b7b6e89afe94e3c51cab7f0ba03b915d58",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/run.cjs",
+      "candidateSha256": "79521b70a41ba1195859b6d2c45580bbfc8b7fd391c8793b422cfb3488eb0494",
+      "changed": true,
+      "fullContextForwardAndInverseExact": true
+    },
+    {
+      "source": "docs/verification/t1246/round-2/final-runtime-guard/supervise.cjs",
+      "sourceSha256": "53185fcf4525b1f253bbb2d61ea38605cc7a05266b5b31ff45b910bb1dc2623e",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/supervise.cjs",
+      "candidateSha256": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4",
+      "changed": true,
+      "fullContextForwardAndInverseExact": true
+    }
+  ],
+  "original9BytesMutated": false,
+  "candidateModuleBodiesExecuted": false,
+  "firstStaticParserFailurePreserved": true,
+  "previous203SnapshotsAndSchemaConcernsPreserved": true
+}

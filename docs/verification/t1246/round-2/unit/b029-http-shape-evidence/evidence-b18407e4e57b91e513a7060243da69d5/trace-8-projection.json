@@ -1,0 +1,197 @@
+{
+  "nonce": "b18407e4e57b91e513a7060243da69d5",
+  "rawBytes": 2082,
+  "rawSha256": "7f10d0cd32bb6f72e5d881e96010b94895c5acb11b65dbce201de118d37165af",
+  "projection": [
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "readTaskContext"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "resolveModelCredential"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "reserveAgenticModel"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "startCall"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "settleGenerationCall"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "reserveAgenticTool"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "startAgenticTool"
+    },
+    {
+      "pid": 53917,
+      "type": "context",
+      "hasFixtureCookie": false
+    },
+    {
+      "pid": 53917,
+      "type": "navigation",
+      "url": "[脱敏URL]"
+    },
+    {
+      "pid": 53917,
+      "type": "context-close"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "settleAgenticTool"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "reserveAgenticModel"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "startCall"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "settleGenerationCall"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "reserveAgenticTool"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "startAgenticTool"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "readBrowserSession"
+    },
+    {
+      "pid": 53917,
+      "type": "context",
+      "hasFixtureCookie": true
+    },
+    {
+      "pid": 53917,
+      "type": "navigation",
+      "url": "https://research.example.com/article"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "saveBrowserSession"
+    },
+    {
+      "pid": 53917,
+      "type": "context-close"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "settleResearchRead"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "settleAgenticTool"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "reserveAgenticModel"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "startCall"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "settleGenerationCall"
+    },
+    {
+      "pid": 53917,
+      "type": "server-close"
+    },
+    {
+      "pid": 53917,
+      "type": "browser-close"
+    },
+    {
+      "pid": 53917,
+      "type": "server-close"
+    },
+    {
+      "pid": 53917,
+      "type": "ipc",
+      "port": "commitResult"
+    }
+  ]
+}

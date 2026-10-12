@@ -1,0 +1,12 @@
+{
+  "command": [
+    "fixedNode32e",
+    "--check",
+    "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/run-once.cjs"
+  ],
+  "code": 0,
+  "stdout": "",
+  "stderr": "",
+  "wrapperSha256": "2aa33d3c34dae41edbf85609c3852ae6ee8a0885bc6a9e84134eb407ad09e036",
+  "candidateBodyOrWrapperBodyExecuted": false
+}

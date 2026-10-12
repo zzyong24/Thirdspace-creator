@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-12T10:05:17.481471+00:00",
+  "sourceBindingSHA256": "ddcec3baa62c6cb4f5a481dc284569fa50d8d34325ee0689455be9be8600679c",
+  "fullRows": 556,
+  "fullReadBytes": 47762733,
+  "completeNewToolAndFourConsumerDiffRead": true,
+  "pairsFullReadAndMechanicalAuthorizationChecked": 52,
+  "originalFAILSHA256": "96958f03e431314836fb313f83c3cfd211264ef4b456b34c1314a54e836c42c0",
+  "errors": [],
+  "pureTestsNotYetExecuted": true,
+  "auditNotYetExecuted": true,
+  "unchangedSpecAdapterSHA256": "8f8d3399137bee36e5116fe2caeeb9d13aba4cf430e1b4cdc643cbebaf4cc504"
+}

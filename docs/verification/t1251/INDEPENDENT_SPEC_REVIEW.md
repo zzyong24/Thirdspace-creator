@@ -1,0 +1,15 @@
+# T1251 独立首轮规格核对
+
+严格reviewctl packet为 spec-review-initial.json；findings为空，由主会话正式record裁决。SPEC SHA `254310755165eff65156a919176345124d00424bb809d2ab8bc7f8f92db1c810`，全部输入SHA见同名JSON。评审模型标识unknown/inherited，没有重新运行任何Worker、HTTP模型、PG或App。
+
+真实当前chat-generation-worker catch在complete失败后调用generationFailure(error,false)，确会丢失已结算账本产生的GenerationFailure实例/cause；generation-error的findGenerationFailure只沿真实实例与cause查找且防环；structured-node与text-node已用该机制，backend fail/recovery仍核原task/calls/operation/superseded/retryOf。仅该叶保留可信状态可实现，不需globalclassifier/SDK策略变化。
+
+原integration21mode表完整存在；第一工具ACK等待allSettled、第二工具未派发时不能推进的屏障源码与超时原证据一致。新规格明确去屏障而不改Pi串行，并按本executionTaskId隔离spy/真实stop/ACKdrop与draining cleanup。不能只用isolation修复预签positioning产品根因。
+
+continuous现无deadline；旧Date.parse(null)错误入口已被SPEC明确禁止SQL补deadline。persistent-task service在enqueue解析executionBudget并生成原deadline，可作为新增有限构造入口；本评审不宣称当前三路径足以合法装配完整模型链实测。必须按FR-FIXTURE保真实construct/frozen task/call/operation，到不了完整入口就未验，不能删AC或拿continuous改SQL替代。
+
+badOutput/diagnosisEmpty的partial受原no_evidence/后台completion事实约束；crashUnknownChild必须注入可信回执缺失，不能把已允许候选discard重试的res.destroy当未知。旧5/6HTTP和31/38tokens不可先改，SPEC要求逐候选真实ledger/串行/fallback/同toolCallId等因果独评，当前仅设计约束，不是这些数字已获准。原21body、旧9红、中间失败都保留。
+
+新增 ai-worker/src/execution/chat-generation-worker.test.ts 当前不存在，属于本三路径中明确授权的新叶测试，不冒称已有文件。运行工具需另独评，源/共享dist必须等PG27/78窗口EOF。模型候选与采纳、权限/effect/CAS/schema不扩；无新的用户批准流程。
+
+未发现要求/验收在当前文本下必然矛盾的阻断。此结论只评规格，不签生产修复、原21实测、propertypes、timeoutGate、全功能或App。

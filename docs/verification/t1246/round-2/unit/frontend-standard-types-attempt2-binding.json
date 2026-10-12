@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-10-11T20:27:20.478171+00:00",
+  "result": "FAIL_RETAINED",
+  "standardCommand": "node frontend/node_modules/typescript/bin/tsc --noEmit",
+  "actualExit": 2,
+  "errors": 4,
+  "files": 2,
+  "evidence": "frontend-standard-types-attempt2.txt",
+  "receipt": "frontend-standard-types-attempt2-exit.json",
+  "configSha256AtObservation": "895dc494185b91b5848eea41db3df0302d3406fc3bb98dbb4e8186e96f967b2d",
+  "configModifiedByRunner": false,
+  "firstGenerated100MatchesActualFirstManifest": true,
+  "mismatches": [],
+  "limitation": "原100生成稿已tracked并封存；其中旧manual/assisted字段访问3错和缺resolve1错。不能删/排除/改旧稿洗标准类型绿；新driver局部types0不是标准前端类型PASS。"
+}

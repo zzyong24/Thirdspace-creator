@@ -9,7 +9,16 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1246|整合完成会话并打开发包及浏览器和App逐项验收|🔨 待办|PASS[REV:2741683c854d]|待验|[需求与验收标准](docs/features/t1246-integrated-dev-package-acceptance.md)|用户授权合并双方源码、开发版打包、AI编写用例、子Agent Playwright/Appium留图；首轮问题即时记录后集中修复，不代签App或全绿。|
+|T-1256|修复Doocs静态原适配三处无用绑定编译失败|🔨 待办|PASS[REV:ed320dba0189]|待验|[真实类型红与精确范围](docs/features/t1256-doocs-static-unused-bindings-build-closure.md)|T1254 V13两根24/slow/types及nativebuild已过，static完整原build三TS6133真失败；仅核并删三无用声明，保模板/原命令/旧FAIL，独评后续原余步骤。|
+|T-1254|闭合内置Doocs两份真实请求30秒默认预算与源码交付一致性|🔨 待办|PASS[REV:433e70ede4d7]|待验|[当场两红与待评边界](docs/features/t1254-doocs-request-budget-and-source-closure.md)|完整Gate剩两真实网络abort；先核共享fetch原源/两包/使用路径与重建来源，独评后修，不扩动画豁免或只改产物洗绿。|
+|T-1253|闭合原Worker夹具可信回执与未知恢复验收|🔨 待办|PASS[REV:908ff8f5d3da]|待验|[真实8红与精确范围](docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md)|原9文件46例38PASS8FAIL；仅ports/hooks/draft三原测试，核429 superseded、partial与缺usage unknown，先独评不改生产/洗期望。|
+|T-1246|整合完成会话并打开发包及浏览器和App逐项验收|🔨 待办|PASS[REV:e75e32a6b7a8]|待验|[需求与验收标准](docs/features/t1246-integrated-dev-package-acceptance.md)|用户授权合并双方源码、开发版打包、AI编写用例、子Agent Playwright/Appium留图；首轮问题即时记录后集中修复，不代签App或全绿。|
+|T-1252|闭合CLI/MCP HTTP默认300秒早于合法原生RPC的消费者预算|🔨 待办|PASS[REV:fc42b1d42391]|待验|[真实缺口与待补合同](docs/features/t1252-cli-http-consumer-budget-closure.md)|真实Node25.9/Undici默认300s而Native完整RPC420s；先盘点专用非全局transport、完整串行与取消/unknown，再独评和实际慢公共链，不用父测试预算代签。|
+|T-1250|闭合真实短执行预算与静态消费者误判|🔨 待办|PASS[REV:9edb7f4eb67d]|待验|[精确范围与验收](docs/features/t1250-positive-timeout-consumer-closure.md)|两次完整门真实22FAIL：11正执行/观察、1idle与10vendor误报；先独评，保原deadline/取消/归属/未知与完整库存，再公共链复验。|
+|T-1251|保留结构化生成可信失败状态并校准原受控崩溃验收|🔨 待办|PASS[REV:07e80ff95068]|待验|[实际9红与精确范围](docs/features/t1251-chat-generation-failure-and-fixture-closure.md)|真实原21中9红；429可信retry_wait丢失为unknown生产缺陷，另串行屏障/跨case污染与continuous入口待窄校准，先独评不洗期望。|
+|T-1249|校准持久聊天原八例的当前受控回执合同|🔨 待办|PASS[REV:ea71437a2662]|—|[精确合同](docs/features/t1249-durable-chat-current-receipts.md)|真实原8例3PASS5FAIL；只校准五族新读/重放、末失败partial与账本UI投影，不改生产或删除原安全断言。|
+|T-1247|修复超时门完整Git库存读取缓冲区溢出|🔨 待办|PASS[REV:10d3c405ae0f]|—|[精确范围](docs/features/t1247-timeout-git-inventory-buffer.md)|T1246真实Gate在git ls-files的默认1MiB缓冲ENOBUFS；独評只增有界缓冲与120秒命令预算，保原规则/完整扫描/非零失败。|
+|T-1248|恢复已知旧冻结系统候选工具的严格合同兼容|🔨 待办|PASS[REV:657048db2fb1]|—|[真实失败与精确合同](docs/features/t1248-frozen-system-action-compatibility.md)|真实旧104→当前133原4例1PASS3FAIL，旧preferences action新增引擎字段哈希漂移；只内置可信固定旧schema，完整工具定义/归属/回执保护不降级，先独評。|
 |T-1238|本地Codex统一执行文本与生图并免独立模型配置|🔨 待办|PASS[REV:6b70a2a85595]|待验|[用户确认与合同](docs/features/t1238-codex-unified-text-image-engine.md)|用户明确继续实现：Codex承担文本与生图，页面/子任务/后台统一路由，无供应商回退；先独评合同，保旧任务与原失败。 已整合本地源码；独立工作树taskctl严格完成77b939320ddf，共享43项/真实10项通过。他人未提交改动保留，不代签共享HEAD；见GATES。|
 |T-1245|修复自动化窄窗口筛选挤出与任务查看不便|🔨 待办|—|待验|[原图与范围](docs/features/t1245-automations-narrow-layout.md)|3938操作PASS但390原图账号下拉挤出、快捷标题逐字；保原结果，oil最小响应式独评后修，不删功能或代签窄屏可达。|
 |T-1244|验收自动化立即运行的准入与授权等待|🔨 待办|—|待验|[公开链与验收](docs/features/t1244-automation-run-now-login-wait.md)|现四浏览器case仅禁用列表，runNow UI尚未验；fresh无绑定账号一次真点，核同run/AI/execution和授权等待，先独评，不把缺凭据签成采集成功。|
@@ -43,7 +52,7 @@
 |T-1201|核对知识图谱错误提示回归的旧原始异常断言|🔨 待办|—|—|[实际诊断](docs/features/t1201-knowledge-graph-error-contract.md)|T1200实际知识回归19文件148例中147PASS、1FAIL；原图谱测试期望原始无LLM凭据字符串，当前组件显示人话错误。保失败，先核真实错误合同，不削弱断言或改产品洗绿。|
 |T-1202|核对自动化复杂排期编辑的旧术语断言|🔨 待办|—|—|[实际诊断](docs/features/t1202-automation-cadence-error-contract.md)|T1199自动化原回归113PASS6FAIL，五例为本任务多平台文案已授权变化，另复杂cron旧期待无法反解而实际已有用户友好说明。保失败，先核合同，不改时间或删除保存保护。|
 |T-1203|消除自动化既有React编译与effect静态检查欠债|📋 待办|—|待验|[实际诊断](docs/features/t1203-automation-react-lint-debt.md)|T1199实lint触发旧effects/ref等错误，HEAD stdin基线也失败。保真实结果，新增依赖/声明先修，既有静态债单列；不得关闭规则或删切组/轮询保护洗绿。|
-|T-1204|核对本轮全局对账29项失败及新增触发项|🔨 待办|—|—|[实际诊断](docs/features/t1204-current-reconcile-failures.md)|多次全局对账失败原日志保留；已机械归档完成行，稳定树仍需完整非concise逐根因核对。 [原记录](BACKLOG-details.md#b-577cb0da68f4) T-1238收尾实测保留22条范围外静态短超时、T-1026 write_set进度生成失败；完整全量对账原回执见docs/verification/t1238/reconcile-final.txt，禁止把本任务通过扩写为全局全绿。|
+|T-1204|核对本轮全局对账29项失败及新增触发项|🔨 待办|—|—|[实际诊断](docs/features/t1204-current-reconcile-failures.md)|T1246完整对账当场23ERROR，逐条同T1238原25错误；阶段日期和LED053本轮不再报错。原档案docs/verification/t1246/round-2/control-close-94775，三lesson前置独核中，历史审核欠债不补拍、不称全绿。 [原记录](BACKLOG-details.md#b-577cb0da68f4)|
 |T-1197|核对旧外部MCP窄权限配对来源与当前账号组兼容|📋 待办|—|待验|[SPEC](docs/features/t1197-external-agent-pairing-source-convergence.md)|T1080独立分支审计实发现71d2cc77未投用配对源码缺口；原来源与27文件保留，先核授权/账号组/凭据及0101同号迁移，不恢复已淘汰ACP、不假称全CLI等价窄grant。|
 |T-1196|排查新安装版启动配置同步502与运行摘要拒绝|📋 待办|—|—|[实际诊断](docs/features/t1196-installed-config-sync-502.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-bc11f0a7b5b2)。|
 |T-1193|核对结果待确认时的重复发送暗示与恢复状态可读性|📋 待办|—|—|[实际诊断](docs/features/t1193-copilot-unknown-request-presentation.md)|fresh视觉及独立receipt确认等待回执时同原话预填、生成disabled=false；POST仍1，未签重复请求。另核真实字号与短高分段阅读，先精确独评，不清新草稿或阻断合法创作。|
@@ -75,7 +84,7 @@
 |T-1096|核对文章工作流与任务父归属旧回归断言的实际漂移|📋|—|—|[当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-19048143f3aa)。|
 |T-1099|修复工具明确业务拒绝回执缺失与末次失败被算成功|⏸️|PASS[REV:b5aa667d8485]|—|[SPEC](docs/features/t1099-tool-domain-recovery.md) · [实际缺陷](docs/features/t1099-tool-domain-recovery-diagnosis.md) [详情](BACKLOG-details.md#t-1099)|见详情。|
 |T-1098|核对安装重启后的定期同步失败与采集未启动|📋|—|—|[缺陷登记](docs/features/t1098-installed-scheduled-failure-diagnosis.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-32f22df52b82)。|
-|T-1097|修复文章编导参考资料与候选审读保护缺口|📋|—|—|[缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-e634c6a1c42a)。|
+|T-1097|修复文章编导参考资料与候选审读保护缺口|🔨|PASS[REV:75d84c709f8e]|—|[缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-e634c6a1c42a)。|
 |T-1095|验证Pi联合创作必填nullable字段遵循与原任务恢复方法|⏸️|PASS[REV:b3b9dda4753e]|—|[SPEC](docs/features/t1095-tool-parameter-recovery.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1095)|见详情。|
 |T-1093|校准编导数字参数、联合首次读取与真实候选失败恢复|🔨|PASS[REV:267bf399a6b1]|—|[SPEC](docs/features/t1093-director-method-recovery.md)|完整范围、失败与待验条件见 [原记录](BACKLOG-details.md#b-3158c3fcebbd)。|
 |T-1091|补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收|🔨|PASS[REV:dcd0b932fca7]|—|[SPEC](docs/features/t1091-public-director-context.md) [详情](BACKLOG-details.md#t-1091)|见详情。|

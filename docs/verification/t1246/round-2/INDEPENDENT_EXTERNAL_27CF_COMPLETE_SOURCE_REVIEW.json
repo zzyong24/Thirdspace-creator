@@ -1,0 +1,72 @@
+{
+  "task": "T-1246",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T07:19:05.729278+00:00",
+  "status": "PASS",
+  "reviewKind": "精确整单源码评审闭合，不准入浏览器或metadata运行",
+  "bindingSha256": "27cf7abc90b0a2cdb295e59a8a744178ccfc2ba7180125dc86a06ae983d80092",
+  "files": 97,
+  "externalInputs": 118,
+  "findings": [],
+  "fullInputProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/INDEPENDENT_EXTERNAL_27CF_FULL_INPUT_SCHEMA_AND_INVERSE_RECHECK.json",
+    "sha256": "51fb39ce26dfba40b955a6752ca62e3bd7580eaf4cc6e6718f922368b859b771",
+    "actualReadRows": 215,
+    "drift": [],
+    "sixFullForwardInverseReconstructionExact": true
+  },
+  "priorCompleteSourceReview": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/INDEPENDENT_EXTERNAL_5D36_COMPLETE_SOURCE_REVIEW_CONCERNS.json",
+    "sha256": "6c6649cc489cd8d2f3bc610d44ff185cc81506afb3bd027b6ae0c734d06fddf0",
+    "allUnchangedSourceConclusionsRetained": true
+  },
+  "resolvedFinding": "FG-METADATA-INPUT-SCHEMA：两Python各仅一处r.path→r.file，writer/common/两实际consumer现在统一file+sha256，仍严格8bac/3bc9原builder SHA；完整正逆及当前字节核相等。",
+  "completeFiveFindingDisposition": {
+    "inner": "PASS/source：完整S1.14/R2.04串行、ready/ledger/watchdog/entry/final及三cleanup均接入单birth future",
+    "prepare": "PASS/source：原3.6M非verify保持+四完整verify6.36M=9.96M，内外预算同源，按序保clone/checkout/3Git/新ffmpeg及copyIO",
+    "metadataInput": "PASS/source：真实browserRoots与builder字段供给/两个Pythonfile消费匹配；discovery仅库存、actualotool独立freshpair预算",
+    "sourceRaw": "PASS/source：rawstdout/stderr/实际closedreceipt与完整upstream/discovery纳seal与每verifySHA，rawpairs必须实际完整相等",
+    "supervisor": "PASS/source：真实close monotonic严格单child出生deadline，晚code0亦exhausted，生命周期独立"
+  },
+  "unchanged": [
+    "原a738/旧9/Doocs29b3字节不动",
+    "170/new103/7/1/first100/SQL/配置/产品/模型调用语义不变",
+    "源码private三工具明确批准替换，原官方vendor仅protocol唯一CJS新inode+marker，其余profiles原厂入口",
+    "原失败与缺失回执保持，未补造TDD或nativeApp通过"
+  ],
+  "pureBudgetExactRecommendation": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/budget-test.cjs",
+    "sha256": "c6a959c118a82d7dcbad8a7319f636e56454d652c438a54ccd07b7eb1f3b3c1c",
+    "sourceBindingSha256": "27cf7abc90b0a2cdb295e59a8a744178ccfc2ba7180125dc86a06ae983d80092",
+    "inputManifests": [
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/manifest.json",
+        "sha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/manifest.json",
+        "sha256": "0406a01c3d2e73ba3da66601aa496f338f3c9489c309cff8f89b88beab8b8724"
+      }
+    ],
+    "moduleBodiesReviewed": "只读取两固定JSON，纯预算、future门和pure close-deadline函数；不调用verify/Git/metadata/collector/helper/supervise/prepare/服务/模型。",
+    "recommendedPositiveMs": 120000,
+    "recommendedSeparateLifecycleMs": 2160000,
+    "parentMustKeepCompleteStartCleanupAndRawReceiptSlots": true,
+    "performedByReviewer": false,
+    "ROOTMustIssueSpecificAdmission": true,
+    "doesNotApproveMetadataResealPrepareSDKOrBrowser": true
+  },
+  "parserFacts": "2改Python actual AST0与13未改CJS prior parser0当前source/rawSHA均核，未重复CJS执行、未执行pure。",
+  "freshRuntimePrerequisites": [
+    "真实finalcleanHEAD/native完整交付与源码包",
+    "同HEAD实际11Worker/DMG/package receipts及批准scope",
+    "完整bootstrap依赖实物封印",
+    "fresh实际联合ffmpeg/fullChrome/headlessShell/PG/Node/addon actualotool及raw",
+    "私有manifests精确双审应用",
+    "actualownedcopy loader/root/bytes/原始闭包与实际runtime双审"
+  ],
+  "runtimeAdmittedByReviewer": false,
+  "reviewerExecutedCandidateParserPureOrCollector": false,
+  "reviewerProductionCopy": false,
+  "AppStillUnverifiedPerUser": true
+}

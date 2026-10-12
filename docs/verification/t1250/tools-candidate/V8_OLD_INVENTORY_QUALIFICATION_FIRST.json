@@ -1,0 +1,14 @@
+{
+  "scope": "pure readonly AST reproduction; no Vitest/body/list",
+  "oldParserSha256": "ccdd5db1edbca67b691bf24736bc17a8c957b18f783612147ce6d67cd28c9d3d",
+  "oldRunnerSha256": "4341a0999b55a1b8e2521132879e8ee7ff18b0b021ef39779de8b246527739c7",
+  "declared": 36,
+  "expectedOriginalQualifiedSkip": 6,
+  "actualOldParserQualifiedSkip": 0,
+  "status": "CONFIRMED_PREPARATION_TOOL_DEFECT",
+  "newQualifiedSkip": 6,
+  "fullOuterBefore": 306480000,
+  "fullOuterAfter": 306480000,
+  "childBefore": 299520000,
+  "childAfter": 299520000
+}

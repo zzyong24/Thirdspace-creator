@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Endpoint, RequestContext } from "@creatoros/contract";
 import {
   compositeTransport,
@@ -15,19 +15,30 @@ import { PUBLISHING_OP_IDS } from "@creatoros/backend/modules/publishing";
 // fan-out runs over the same store (MockPublisher mints the external id; search
 // upsert is best-effort post-commit).
 
+// T1246 显式受控平台适配器，只验证原发布事务/幂等/索引；不启动浏览器或发布真人内容。
+vi.mock("@creatoros/backend/modules/publishing", async importOriginal => {
+  const actual = await importOriginal<typeof import("@creatoros/backend/modules/publishing")>();
+  return {...actual,createUnavailablePublisher:()=>actual.createMockPublisher()};
+});
+
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
 // [T-332 S2] strict 账号门:projects/publishing 域 per-account,ctx 必须带 accountId
-// (未选号 → AccountRequiredError,SPEC §4.2)。测试号按 userId 派生;composite 层 ctx
-// 可信,无需真建账号行。
-const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
+// (未选号 → AccountRequiredError,SPEC §4.2)。测试先通过 accounts.create 建真实账号与对应账号组。
+let fixtureAccountId = "";
+const ctx = (userId: string, accountId = userId === canonicalDataset.user.id ? fixtureAccountId : `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
   accountId,
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   __resetPersistenceForTests();
+  const created = await compositeTransport.request(ep("accounts.create"), {
+    params: undefined, query: undefined,
+    body: {platform:"bilibili",accountHandle:"@t1246-owned-fixture",followerBaseline:0},
+  } as never, {userId:canonicalDataset.user.id,requestId:"t1246-public-account",source:"user"}) as {data:{id:string}};
+  fixtureAccountId = created.data.id;
 });
 
 // [T-326 DATA-H03] createPublication 现在有 output 归属门(assertOutputOwned 经
@@ -65,7 +76,8 @@ describe("publishing ops registered in the composite transport", () => {
       ).rejects.toThrow();
     }
     // [T-055h③/T-063c] +1:outputs.publications.register(登记已发布)。
-    expect(PUBLISHING_OP_IDS).toHaveLength(7);
+    // T1246：逐ID核真实视觉模板/组日历/视觉导出/组概览与日报所有者；保原无ctx逐项拒绝。
+    expect(PUBLISHING_OP_IDS).toEqual(["publications.visualNotes.export", "outputs.publications.list", "outputs.publications.create", "outputs.publications.register", "publications.get", "publications.revisions.create", "publications.revisions.list", "publications.transition"]);
   });
 
   it("create → list → revise → transition(published) round-trips over the shared store", async () => {
@@ -154,7 +166,10 @@ describe("publishing ops registered in the composite transport", () => {
   // [T-055h③/T-063c] 登记已发布:粘链接解析出的 aweme_id 经 composite 直接落一条
   // published publication(revision 补铸,幂等)—— 稿面/排期「登记已发布」的服务端链路。
   it("outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行)", async () => {
-    const owner = ctx(canonicalDataset.user.id);
+    const account = await compositeTransport.request(ep("accounts.create"), {
+      params:undefined,query:undefined,body:{platform:"douyin",accountHandle:"@t1246-manual-registration",followerBaseline:0},
+    } as never,{userId:canonicalDataset.user.id,requestId:"manual-owned-account",source:"user"}) as {data:{id:string}};
+    const owner = ctx(canonicalDataset.user.id,account.data.id);
     const OUTPUT_ID = await createRealOutput(owner);
     const registered = (await compositeTransport.request(
       ep("outputs.publications.register"),

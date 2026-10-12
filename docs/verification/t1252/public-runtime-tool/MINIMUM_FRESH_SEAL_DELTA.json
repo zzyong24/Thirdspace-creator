@@ -1,0 +1,309 @@
+{
+  "at": "2026-10-12T02:21:53.752389+00:00",
+  "priorBindingSha256": "978bd84566b88c8512cf5e75ceed60fc034775207dc99f3cbd4774a5822d3360",
+  "freshBindingSha256": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3",
+  "delta": {
+    "inputs": {
+      "oldCount": 2207,
+      "newCount": 2211,
+      "added": [
+        {
+          "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_SOURCE_REVIEW.json",
+          "sha256": "55e04e7ee339c0ecd37b5c472b998e1c69661bcfb0015772cc8db31951a35f0d"
+        },
+        {
+          "path": "docs/verification/t1252/ROOT_MINIMUM_DELAY_SOURCE_APPROVED_APPLICATION.json",
+          "sha256": "6019e72e0049b2b491fdd7a44ab50d5f7b5873012ff8c5d4141819592f6ff5ad"
+        },
+        {
+          "path": "docs/verification/t1252/public-minimum-delay-candidate/CANDIDATE_BINDING.json",
+          "sha256": "946d98fb88c8f769d860d61e2715c53923c2a8ec6c458a6309cab9433b8438d8"
+        },
+        {
+          "path": "docs/verification/t1252/public-minimum-delay-candidate/workbench-file-recovery.test.ts",
+          "sha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884"
+        }
+      ],
+      "removed": [],
+      "changed": [
+        {
+          "old": {
+            "path": "docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+            "sha256": "4c2533d3c07e7603bfdf94bc517d930ac0d8b8d11e9742f9fb95d0e8d172d3a4"
+          },
+          "new": {
+            "path": "docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+            "sha256": "3997609ee28cc64e144f4a8d03f491ba471ad6a1a755d18308017136a7aa73e2"
+          }
+        },
+        {
+          "old": {
+            "path": "docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+            "sha256": "5c4133785470cf5b838858f8745e4ad5edaf9614995b65542301b8e45e908e45"
+          },
+          "new": {
+            "path": "docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+            "sha256": "b52122ae46cfb91e3bf8af4cbf1e7149900674ac4169f9191536f30439a3ebea"
+          }
+        },
+        {
+          "old": {
+            "path": "docs/verification/t1252/public-runtime-tool/prepare.cjs",
+            "sha256": "c95cf85e40ca4993cde3d74b8baa9151c9c90d50b62ce51a3b614fbaad088b10"
+          },
+          "new": {
+            "path": "docs/verification/t1252/public-runtime-tool/prepare.cjs",
+            "sha256": "963e08cd5ea8e52dd482490ea8bb34c420e381da94ccd9a20e6abf60cb5cba9f"
+          }
+        },
+        {
+          "old": {
+            "path": "frontend/src/server/workbench-file-recovery.test.ts",
+            "sha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d"
+          },
+          "new": {
+            "path": "frontend/src/server/workbench-file-recovery.test.ts",
+            "sha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884"
+          }
+        }
+      ]
+    },
+    "installedInputs": {
+      "oldCount": 111831,
+      "newCount": 111831,
+      "added": [],
+      "removed": [],
+      "changed": []
+    },
+    "browserInputs": {
+      "oldCount": 337,
+      "newCount": 337,
+      "added": [],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "launchSame": true,
+  "copyAndBudgetSame": true,
+  "privateInverse": {
+    "candidateSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+    "generatedSha256": "b52122ae46cfb91e3bf8af4cbf1e7149900674ac4169f9191536f30439a3ebea",
+    "inverseSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+    "inverseEqualsCandidate": true,
+    "unit": "UTF16 offsets and ms",
+    "edits": [
+      {
+        "start": 686,
+        "end": 750,
+        "from": "\"../../../backend/src/modules/execution/persistent-task.service\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/persistent-task.service\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 686,
+        "outputEnd": 819
+      },
+      {
+        "start": 799,
+        "end": 869,
+        "from": "\"../../../backend/src/modules/execution/execution-call-ledger.service\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-call-ledger.service\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 868,
+        "outputEnd": 1007
+      },
+      {
+        "start": 914,
+        "end": 988,
+        "from": "\"../../../backend/src/modules/execution/execution-chat-tool-ports.service\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-chat-tool-ports.service\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 1052,
+        "outputEnd": 1195
+      },
+      {
+        "start": 1035,
+        "end": 1102,
+        "from": "\"../../../backend/src/modules/execution/workbench-public.transport\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/workbench-public.transport\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 1242,
+        "outputEnd": 1378
+      },
+      {
+        "start": 1198,
+        "end": 1270,
+        "from": "\"../../../backend/src/modules/execution/workbench-file-recovery.service\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/workbench-file-recovery.service\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 1474,
+        "outputEnd": 1615
+      },
+      {
+        "start": 1313,
+        "end": 1376,
+        "from": "\"../../../backend/src/modules/ai-runtime/chat-tool-definitions\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-tool-definitions\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 1658,
+        "outputEnd": 1790
+      },
+      {
+        "start": 1416,
+        "end": 1472,
+        "from": "\"../../../backend/src/modules/ai-runtime/chat-tool-gate\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-tool-gate\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 1830,
+        "outputEnd": 1955
+      },
+      {
+        "start": 1542,
+        "end": 1567,
+        "from": "\"./workbench-native-host\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 2025,
+        "outputEnd": 2146
+      },
+      {
+        "start": 1648,
+        "end": 1675,
+        "from": "\"./workbench-native-client\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 2227,
+        "outputEnd": 2350
+      },
+      {
+        "start": 1723,
+        "end": 1750,
+        "from": "\"./workbench-file-recovery\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 2398,
+        "outputEnd": 2521
+      },
+      {
+        "start": 1794,
+        "end": 1858,
+        "from": "\"../../../backend/src/modules/execution/execution-lease.service\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-lease.service\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 2565,
+        "outputEnd": 2698
+      },
+      {
+        "start": 1901,
+        "end": 1964,
+        "from": "\"../../../backend/src/modules/execution/workbench-plan.service\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/workbench-plan.service\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 2741,
+        "outputEnd": 2873
+      },
+      {
+        "start": 2014,
+        "end": 2086,
+        "from": "\"../../../backend/src/modules/ai-runtime/chat-workbench-capability-host\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-workbench-capability-host\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 2923,
+        "outputEnd": 3064
+      },
+      {
+        "start": 2118,
+        "end": 2180,
+        "from": "\"../../../backend/src/modules/ai/chat-turn-submission.service\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/chat-turn-submission.service\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 3096,
+        "outputEnd": 3227
+      },
+      {
+        "start": 2201,
+        "end": 2231,
+        "from": "\"../app/api/v1/dispatch/route\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/api/v1/dispatch/route\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 3248,
+        "outputEnd": 3366
+      },
+      {
+        "start": 2271,
+        "end": 2319,
+        "from": "\"../../../mcp-server/tests/helpers/loopback-cli\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/tests/helpers/loopback-cli\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 3406,
+        "outputEnd": 3523
+      },
+      {
+        "start": 2365,
+        "end": 2413,
+        "from": "\"../../../backend/src/application/recovery-wake\"",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/application/recovery-wake\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 3569,
+        "outputEnd": 3686
+      },
+      {
+        "start": 26729,
+        "end": 26734,
+        "from": "60000",
+        "to": "80160000",
+        "reason": "fixture done observation: full original case80040000+positive close120000",
+        "outputStart": 28002,
+        "outputEnd": 28010
+      },
+      {
+        "start": 26974,
+        "end": 26979,
+        "from": "10000",
+        "to": "120000",
+        "reason": "positive finite original ready/automatic observation min120000",
+        "outputStart": 28250,
+        "outputEnd": 28256
+      },
+      {
+        "start": 29560,
+        "end": 29565,
+        "from": "10000",
+        "to": "120000",
+        "reason": "positive finite original ready/automatic observation min120000",
+        "outputStart": 30837,
+        "outputEnd": 30843
+      },
+      {
+        "start": 34402,
+        "end": 34407,
+        "from": "60000",
+        "to": "80040000",
+        "reason": "derived original8 CLI/native/setup/cleanup case observer; original task deadline60000 is unchanged",
+        "outputStart": 35680,
+        "outputEnd": 35688
+      },
+      {
+        "start": 51192,
+        "end": 51219,
+        "from": "'./workbench-artifact-host'",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-host\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 52473,
+        "outputEnd": 52596
+      },
+      {
+        "start": 51274,
+        "end": 51311,
+        "from": "'./workbench-artifact-representation'",
+        "to": "\"/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-representation\"",
+        "reason": "private-copy relative import points to exact bound original consumer",
+        "outputStart": 52651,
+        "outputEnd": 52784
+      }
+    ],
+    "originalNativeBodyMs": 80040000,
+    "originalNativeTaskDeadlineMs": 60000
+  },
+  "sourceCandidateMatchesLive": true,
+  "historicalRawOrMissingReceiptNotChanged": true,
+  "runtimeExecuted": false
+}

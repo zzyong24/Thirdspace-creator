@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-12T10:10:37.273111+00:00",
+  "wrapperBindingSHA256": "bd993c2da9f2b564476d0453defb6554ee4a7d57539eea48bb7f9f7e549e1132",
+  "wrapperSHA256": "cd4ede74308408e051dcd00c5f081b8d86fd260c335d35d44701bcbd1d495471",
+  "fullRows": 672,
+  "fullReadBytes": 654463874,
+  "errors": [],
+  "wholeWrapperSourceAndFullDeltaRead": true,
+  "actualNodeAndGitGraphFilesLinksAndFirstExistsRechecked": true,
+  "positiveMs": 3000000,
+  "lifecycleMs": 2160000,
+  "outerMs": 6720000,
+  "auditNotYetExecuted": true,
+  "priorReadonlyCheckerSchemaMismatch": "v6 wrapperSHA字段不是v5 wrapperSha256；旧KeyError保留，未派发"
+}

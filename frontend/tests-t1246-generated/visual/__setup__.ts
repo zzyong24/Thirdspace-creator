@@ -11,7 +11,7 @@ const REFERENCE_BASELINES_DIR = resolve(
   "__screenshots__",
   "reference-images",
 );
-const ARTIFACT_DIR = resolve(HERE, "tests", "visual", "__artifacts__");
+const ARTIFACT_DIR = resolve(process.env.CREATOROS_T1246_RUN_DIR!, "visual-baseline");
 const FINGERPRINT_PATH = resolve(
   ARTIFACT_DIR,
   "baseline-fingerprint.json",

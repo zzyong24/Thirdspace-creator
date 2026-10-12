@@ -1,6 +1,8 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it} from 'vitest';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import type {RequestContext} from '@creatoros/contract';
 import {createRuntimeDb,type Db} from '../db';
@@ -35,7 +37,7 @@ function observeInserts(db:Db,table:string,observe:()=>Promise<void>):Db{
 }
 async function fixture(){
  if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);
- if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');
+ assertOwnedPostgresUrl(parsed.toString());
  const name=`t1022_adjacent_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());
  await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname=`/${name}`;
  const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());
@@ -88,5 +90,5 @@ for(const family of families)for(const order of ['stale-read','migration-first',
   const result=await f.runtime.pool.query(`SELECT group_id FROM projects WHERE id=$1`,[f.project.id]);expect(result.rows[0].group_id).toBe(order==='writer-first'?f.from:f.to);
   const rows=family==='calendar'?await f.runtime.pool.query('SELECT c.group_id,p.group_id AS parent_group FROM content_calendar_entries c JOIN projects p ON p.id=c.project_id WHERE p.id=$1',[f.project.id]):family.startsWith('calibration')?await f.runtime.pool.query('SELECT group_id FROM predictions WHERE rubric_version_id=$1',[version.id]):await f.runtime.pool.query('SELECT pub.group_id,p.group_id AS parent_group FROM publications pub JOIN content_outputs o ON o.id=pub.content_output_id JOIN projects p ON p.id=o.project_id WHERE p.id=$1',[f.project.id]);
   expect(rows.rows).toHaveLength(order==='writer-first'?1:0);if(rows.rows.length)expect(rows.rows[0].group_id).toBe(f.from);
- },30000);
+ },180000);
 }

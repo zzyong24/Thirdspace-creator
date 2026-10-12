@@ -1,0 +1,10 @@
+{
+  "task": "T-1254",
+  "exitCode": 1,
+  "failure": "ARCHIVE_NON_REGULAR_MEMBER:.claude/skills/create-pr",
+  "phase": "私有读取归档；保守提取器发现真实 symlink 停止",
+  "patchCheckExecuted": false,
+  "buildExecuted": false,
+  "sourceChanged": false,
+  "historicalArchiveChanged": false
+}

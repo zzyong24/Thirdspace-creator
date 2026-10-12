@@ -1,0 +1,199 @@
+{
+  "at": "2026-10-12T03:40:58.826Z",
+  "checks": [
+    {
+      "name": "marker-nonce",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "marker-root",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "marker-dataDir",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "marker-role",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "marker-port",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "marker-pid",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "marker-birth",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "marker-uid",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "marker-parentPid",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "pidfile-pid",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "pidfile-directory",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "pidfile-port",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "process-pid",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "process-birth",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "process-uid",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "process-ppid",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "process-command",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "url-foreign-host",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "url-wrong-port",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "url-wrong-role",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "url-database",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "url-password",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "url-query",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "url-hash",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "url-scheme",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "expected-port-5432",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "expected-port-50028",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "expected-port-55422",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "expected-port-0",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "expected-port-NaN",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    },
+    {
+      "name": "missing-birth",
+      "refusedBeforeClient": true,
+      "clientConstructionSpy": 0,
+      "connectionSpy": 0
+    }
+  ],
+  "count": 31,
+  "bothActualConsumersPreconnect": true,
+  "validBaseline": "纯协议元数据fixture，仅验证字段逻辑；非真实PG连接/PID证明",
+  "launchSha256": "603bac5e123e6d58bc89913bb3b6a1884e0cf39ebc5ecf67c37c8db8afc0c224",
+  "noPgStarted": true,
+  "noSQL": true,
+  "noModel": true,
+  "noBrowser": true
+}

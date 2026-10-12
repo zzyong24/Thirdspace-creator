@@ -1,0 +1,8 @@
+{
+  "source": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "preserved": "/tmp/t1246-package-first-preserved/CreatorOS-1.2.0.dmg",
+  "sha256": "e63202df379c8c39f6470b4153f8b06100ff8aceed5f46be3c6bab3eb686f402",
+  "bytes": 864213887,
+  "preservedAt": "2026-10-11T15:11:17.019401+00:00",
+  "purpose": "保留真实首包以便集中修后同固定入口重新打包，不覆盖首轮证据"
+}

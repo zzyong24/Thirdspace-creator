@@ -1,0 +1,17 @@
+{
+  "specSha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84",
+  "phase": "leaf-green",
+  "scope": "original-source-generation-whole-phase",
+  "sourceSnapshotDigest": "2331c00b6a8d7d41859dc159cce3a05d039443cc084b4bdf861097e470d6a9ce",
+  "toolDigest": "cb0d92d0e741dfd32bd8d6d4d89a5dd821ee6fe1cf382618bb7ff62d20e53770",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "approved": true,
+  "reviewer": "root",
+  "reviewedAt": "2026-10-11T21:28:34.986165+00:00",
+  "redEvidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1251/execution/leaf-red-eeb49f32bbbf0e4a4955cfdfbc561b78",
+  "constraints": [
+    "已真实10例3PASS7可信状态丢失FAIL；仅准应用de1a两行生产候选",
+    "leaf3758/whole590不变；完整10绿须真实EOF和绑定清理",
+    "不借此签whole/partial/unknown fixture或App"
+  ]
+}

@@ -1,0 +1,437 @@
+{
+  "phase": "regression",
+  "fullDeclaredInventory": [
+    {
+      "file": "frontend/src/server/workbench-native-host.test.ts",
+      "cases": [
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "没有私有桌面通道时目录不向模型开放，读写副作用分别冻结",
+          "titleRegex": "没有私有桌面通道时目录不向模型开放，读写副作用分别冻结$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 31
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "Windows 私有通道只开放文件能力，命令继续拒绝",
+          "titleRegex": "Windows 私有通道只开放文件能力，命令继续拒绝$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 38
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "只把宿主上下文中的 task/fence 与经过验证的相对路径交给原生端口",
+          "titleRegex": "只把宿主上下文中的 task\\/fence 与经过验证的相对路径交给原生端口$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 51
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "%s 列举任务根目录接受点路径，但不开放绝对路径或父目录",
+          "titleRegex": ".* 列举任务根目录接受点路径，但不开放绝对路径或父目录$",
+          "multiplicity": 2,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 63
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "回读文本与冲突版本有确定结果，未知写入保留原 operationId 等待对账",
+          "titleRegex": "回读文本与冲突版本有确定结果，未知写入保留原 operationId 等待对账$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 76
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "目录分别声明启动、查询、取消；只把原任务中的目标 operation ID 交给原生端口",
+          "titleRegex": "目录分别声明启动、查询、取消；只把原任务中的目标 operation ID 交给原生端口$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 94
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "启动使用 argv 与已批准 runtime，输出分页保留游标，取消只引用本任务原操作",
+          "titleRegex": "启动使用 argv 与已批准 runtime，输出分页保留游标，取消只引用本任务原操作$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 108
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "缺失的随包运行时明确失败；已分发但断联的启动保持待对账",
+          "titleRegex": "缺失的随包运行时明确失败；已分发但断联的启动保持待对账$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 126
+        },
+        {
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform===\"darwin\" && process.env.CREATOROS_TEST_PACKAGED_RUNTIME_ROOT\n  && (process.env.CREATOROS_T1007_REAL_FILES===\"1\" || process.env.CREATOROS_T1009_REAL_HOST===\"1\" || realModel)",
+          "qualificationKnown": true,
+          "title": "真实 Mac socket + 模型工具调用、双版本 Blob 与导出，跨账号与旧 fence 拒绝",
+          "titleRegex": "真实 Mac socket \\+ 模型工具调用、双版本 Blob 与导出，跨账号与旧 fence 拒绝$",
+          "multiplicity": 1,
+          "explicitBodyMs": 180000,
+          "effectiveBodyMs": 1800000,
+          "line": 139
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "T1250 私有文件和命令端口传原dispatch signal，原operation/action不变",
+          "titleRegex": "T1250 私有文件和命令端口传原dispatch signal，原operation\\/action不变$",
+          "multiplicity": 1,
+          "explicitBodyMs": 1800000,
+          "effectiveBodyMs": 1800000,
+          "line": 382
+        }
+      ],
+      "hooks": [],
+      "declaredCaseCount": 11,
+      "runnableCaseCount": 10,
+      "originalQualifiedSkipCount": 1,
+      "perCaseHookMs": 6000000,
+      "allHooksMs": 6000000,
+      "serialCasesMs": 85800000,
+      "shortExplicitDeclarations": []
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.test.ts",
+      "cases": [
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "only a desktop Mac with private socket advertises browser tools",
+          "titleRegex": "only a desktop Mac with private socket advertises browser tools$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 58
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "浏览器原生调用等待期间任务读取仍可完成，不占用 PGlite 事务通道",
+          "titleRegex": "浏览器原生调用等待期间任务读取仍可完成，不占用 PGlite 事务通道$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 68
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "截图只写可信媒体引用，回执和 Pi 工具目录不含原始 base64",
+          "titleRegex": "截图只写可信媒体引用，回执和 Pi 工具目录不含原始 base64$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 89
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "拒绝%s截图",
+          "titleRegex": "拒绝.*截图$",
+          "multiplicity": 3,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 112
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "native open failure releases the claimed profile only after stop proof",
+          "titleRegex": "native open failure releases the claimed profile only after stop proof$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 126
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "a new host only reconciles a stopped old owner before reusing the same physical profile",
+          "titleRegex": "a new host only reconciles a stopped old owner before reusing the same physical profile$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 144
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "reconciles a cancelled task without waiting for another task to claim its profile",
+          "titleRegex": "reconciles a cancelled task without waiting for another task to claim its profile$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 187
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "waits for in-flight profile reconciliation before disposing the database owner",
+          "titleRegex": "waits for in-flight profile reconciliation before disposing the database owner$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 223
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "open obtains the Rust physical profile and binds it to the current DB task before native dispatch",
+          "titleRegex": "open obtains the Rust physical profile and binds it to the current DB task before native dispatch$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 253
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "close waits for a transient native stop proof before releasing its physical profile",
+          "titleRegex": "close waits for a transient native stop proof before releasing its physical profile$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 331
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "close reports unknown and keeps the lease when native stop cannot be proven",
+          "titleRegex": "close reports unknown and keeps the lease when native stop cannot be proven$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 350
+        },
+        {
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform===\"darwin\"&&process.env.CREATOROS_TEST_CFT_ROOT",
+          "qualificationKnown": true,
+          "title": "interrupted real Chromium host recovers the same task profile on attempt two",
+          "titleRegex": "interrupted real Chromium host recovers the same task profile on attempt two$",
+          "multiplicity": 1,
+          "explicitBodyMs": 180000,
+          "effectiveBodyMs": 1800000,
+          "line": 402
+        },
+        {
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform===\"darwin\"&&process.env.CREATOROS_TEST_CFT_ROOT",
+          "qualificationKnown": true,
+          "title": "Node/DB leases use the PID-bound Rust socket and real Chromium",
+          "titleRegex": "Node\\/DB leases use the PID-bound Rust socket and real Chromium$",
+          "multiplicity": 1,
+          "explicitBodyMs": 180000,
+          "effectiveBodyMs": 1800000,
+          "line": 453
+        },
+        {
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform===\"darwin\"&&process.env.CREATOROS_TEST_CFT_ROOT",
+          "qualificationKnown": true,
+          "title": "a restarted Rust host proves a stopped old DB lease before a new task opens the same profile",
+          "titleRegex": "a restarted Rust host proves a stopped old DB lease before a new task opens the same profile$",
+          "multiplicity": 1,
+          "explicitBodyMs": 180000,
+          "effectiveBodyMs": 1800000,
+          "line": 527
+        },
+        {
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform===\"darwin\"&&process.env.CREATOROS_TEST_CFT_ROOT",
+          "qualificationKnown": true,
+          "title": "two accounts keep separate primary profiles and one cancellation leaves the other running",
+          "titleRegex": "two accounts keep separate primary profiles and one cancellation leaves the other running$",
+          "multiplicity": 1,
+          "explicitBodyMs": 180000,
+          "effectiveBodyMs": 1800000,
+          "line": 580
+        },
+        {
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform===\"darwin\"&&process.env.CREATOROS_TEST_CFT_ROOT",
+          "qualificationKnown": true,
+          "title": "a live legacy Playwright profile blocks Rust until the real context stops",
+          "titleRegex": "a live legacy Playwright profile blocks Rust until the real context stops$",
+          "multiplicity": 1,
+          "explicitBodyMs": 180000,
+          "effectiveBodyMs": 1800000,
+          "line": 649
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "browser.act 的实际参数缺失在原生派发前明确拒绝并给出修复说明",
+          "titleRegex": "browser\\.act 的实际参数缺失在原生派发前明确拒绝并给出修复说明$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 703
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "七类合法 action 及 timeout_ms 经任务租约完整传至原生宿主",
+          "titleRegex": "七类合法 action 及 timeout_ms 经任务租约完整传至原生宿主$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 714
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放",
+          "titleRegex": "T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放$",
+          "multiplicity": 1,
+          "explicitBodyMs": 1800000,
+          "effectiveBodyMs": 1800000,
+          "line": 737
+        }
+      ],
+      "hooks": [
+        {
+          "name": "beforeAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 16
+        },
+        {
+          "name": "afterAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 17
+        },
+        {
+          "name": "afterEach",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 18
+        }
+      ],
+      "declaredCaseCount": 21,
+      "runnableCaseCount": 16,
+      "originalQualifiedSkipCount": 5,
+      "perCaseHookMs": 6000000,
+      "allHooksMs": 6000000,
+      "serialCasesMs": 163800000,
+      "shortExplicitDeclarations": []
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-host.test.ts",
+      "cases": [
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "%s 私有宿主把真实任务文件登记为可回读的 HTML 版本，不向模型泄露存储键",
+          "titleRegex": ".* 私有宿主把真实任务文件登记为可回读的 HTML 版本，不向模型泄露存储键$",
+          "multiplicity": 2,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 15
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "并发任务同路径、重放与下一版本诊断均绑定原 hash；诊断回读失败仍保留登记成功",
+          "titleRegex": "并发任务同路径、重放与下一版本诊断均绑定原 hash；诊断回读失败仍保留登记成功$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 85
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "T1250 同宿主两dispatch取消隔离：原signal贯穿文件页，取消任务不登记Blob",
+          "titleRegex": "T1250 同宿主两dispatch取消隔离：原signal贯穿文件页，取消任务不登记Blob$",
+          "multiplicity": 1,
+          "explicitBodyMs": 1800000,
+          "effectiveBodyMs": 1800000,
+          "line": 146
+        }
+      ],
+      "hooks": [
+        {
+          "name": "beforeAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 12
+        },
+        {
+          "name": "afterAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 13
+        }
+      ],
+      "declaredCaseCount": 4,
+      "runnableCaseCount": 4,
+      "originalQualifiedSkipCount": 0,
+      "perCaseHookMs": 6000000,
+      "allHooksMs": 6000000,
+      "serialCasesMs": 31200000,
+      "shortExplicitDeclarations": []
+    }
+  ],
+  "declaredOriginalCases": 36,
+  "runnableListedCases": 30,
+  "originalQualifiedSkips": 6,
+  "actualJsonDeclaredCases": 36,
+  "actualJsonPendingCases": 6,
+  "actualJsonExecutedCases": 30,
+  "actualJsonPassedCases": 29,
+  "actualJsonFailedCases": 1,
+  "notRunQualifiedCasesNeverPassed": true
+}

@@ -1,7 +1,9 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {afterEach,expect,it} from 'vitest';
 import {randomUUID,createHash} from 'node:crypto';
 import {appendFileSync} from 'node:fs';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {ENDPOINTS,createClient,type RequestContext} from '@creatoros/contract';
 import {createContinuousExecutionBudget} from '@creatoros/contract/execution-worker';
 import {createDb,createRuntimeDb} from '../db';
@@ -29,7 +31,7 @@ afterEach(async()=>{const errors:unknown[]=[];for(const cleanup of cleanups.spli
 async function openIsolated(postgres=false){
  if(!postgres){const opened=await createDb();cleanups.push(()=>opened.client.close());return opened.db;}
  const address=process.env.CREATOROS_TEST_POSTGRES_URL;if(!address)throw Error('并发回归需要显式 CREATOROS_TEST_POSTGRES_URL');const parsed=new URL(address);
- if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422'||!(parsed.pathname==='/postgres'||parsed.pathname.startsWith('/creatoros_test')))throw Error('只允许已确认本机 55422 隔离服务');
+ assertOwnedPostgresUrl(parsed.toString());
  const name=`creatoros_test_t1217_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:address});cleanups.push(()=>admin.end());await admin.query(`CREATE DATABASE ${name}`);const owner=await admin.query<{owner:string}>('SELECT pg_get_userbyid(datdba) AS owner FROM pg_database WHERE datname=$1',[name]);databaseEvidence({witness:'T1217 isolated database created',name,owner:owner.rows[0]?.owner});cleanups.push(async()=>{await admin.query(`DROP DATABASE ${name}`);const remaining=await admin.query('SELECT 1 FROM pg_database WHERE datname=$1',[name]);expect(remaining.rowCount).toBe(0);databaseEvidence({witness:'T1217 isolated database removed',name});});parsed.pathname=`/${name}`;
  const opened=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>opened.pool.end());return opened.db;
 }

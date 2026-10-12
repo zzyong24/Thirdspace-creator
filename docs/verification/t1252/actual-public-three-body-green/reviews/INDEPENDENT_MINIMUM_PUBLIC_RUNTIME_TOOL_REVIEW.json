@@ -1,0 +1,77 @@
+{
+  "schema": "independent-tool-narrow-full-recheck/v1",
+  "task": "T-1252",
+  "at": "2026-10-12T02:23:41.405555+00:00",
+  "result": "PASS_TOOL_FRESH_MINIMUM_SOURCE_SAME_THREE_PUBLIC_BODIES",
+  "files": [
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "sha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/prepare.cjs",
+      "sha256": "963e08cd5ea8e52dd482490ea8bb34c420e381da94ccd9a20e6abf60cb5cba9f"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/budget.cjs",
+      "sha256": "6d69a3f2799c3a00730f72bcbe5a59d91eb94c9fad6a2313c6cd916a57a5c8e1"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/copy-source.cjs",
+      "sha256": "2274e942f735e2c517e7dc635004a0694956a9ea69b85d611f4e07c221e05b18"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/HANDOFF.json",
+      "sha256": "5367f6c5b03466fdb0b49f69aac24f6cc59af1eb46f863b3f89dbb367861bb26"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/input-binding.json",
+      "sha256": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+      "sha256": "b52122ae46cfb91e3bf8af4cbf1e7149900674ac4169f9191536f30439a3ebea"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+      "sha256": "3997609ee28cc64e144f4a8d03f491ba471ad6a1a755d18308017136a7aa73e2"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/MINIMUM_PREPARE_ONLY.diff",
+      "sha256": "9f7f4990eb454c718fda681b926fe3af8aa1859ccca0c5a97ac1bca23fb6d9b9"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/MINIMUM_FRESH_SEAL_DELTA.json",
+      "sha256": "2a0c6013f34bb17fce45d2d5860b8a92552e4d3103fc895abfbc0e56f6c33b10"
+    }
+  ],
+  "sourceCandidateSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+  "exactSourceReviewSha256": "55e04e7ee339c0ecd37b5c472b998e1c69661bcfb0015772cc8db31951a35f0d",
+  "fullInputProof": {
+    "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_PUBLIC_FULL_INPUT_RECHECK.json",
+    "sha256": "45cca187c9ef27d8e361a35b752a96a5fd4bf14d2a5265cda2f80d91e923a7ae",
+    "sourceRecords": 2211,
+    "installedRecords": 111831,
+    "browserRecords": 337,
+    "actualFullStreamBytes": 2466809942,
+    "hashDrift": []
+  },
+  "findings": [],
+  "reviewProof": [
+    "全文读新prepare diff963e08/唯一candidate11907 guard及4批准输入；全部其它production输入同原978，installed/browser arrays零差。",
+    "full实际109405regular和4974links全部读回校验，2.466GB/source2211/installed111831/browser337，约21.3s，无漂移；不是只比较数组。",
+    "generated b52122按23项UTF16输出offset实际inverse与11907candidate逐字节完全相同；保全部57例与原60秒TaskD。",
+    "launch7cb/budget6d69/copy2274完整全文读，和先前approved byte相同：唯一文件resolved.test.include+CLI filter、短owned0700 /private/tmp/socket<104、新inodeb88、环境隔离、helper固定393f。",
+    "完整170.4M外层、240k collect与3原body80.04M/36M/42M不缩不扩大；afterassertAll重新remaining，串行未来槽/取消/ownedchildnonzero/close/group0守门同前。",
+    "新scope只source11907重封，原83BEIDcollectFAIL、QT第二case2 actual109999.8515 FAIL及missingchild/proof/final永远保留；新run需fresh nonce与真实EOF/sourceafter/group0。"
+  ],
+  "limits": [
+    "工具静态审不代表任何新正文PASS/截图/App/Windows/官方49；reviewer不执行list/body/服务。",
+    "只有ROOT可以给exact当前7cb/dd018运行准入；报告本身不配置环境授权。",
+    "共享绑定输入必须保持freeze至新run真正EOF。"
+  ],
+  "runtimePermissionByReviewer": false,
+  "reviewerRanLauncher": false,
+  "AppPassed": false,
+  "historicalMissingFinalBackfilled": false
+}

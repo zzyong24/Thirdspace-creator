@@ -1,0 +1,21 @@
+{
+  "oldCommit": "6e4689b3180f91189110208267708ad72b03ae64",
+  "producer": "T1246真实私有旧producer catalog probe，1PASS，17.468s，明确合成库非用户历史实测",
+  "oldInput": "/tmp/t1246-legacy-calibration/catalog-differences.json",
+  "goldenSHA256": "83875e1553e87f13f37820e6f97881b81e2d11001ebb53316c8ac2c3f9566e0c",
+  "implementationSourceSHA256": {
+    "contract/src/resources/assistant-system.ts": "190f828977a7f69fd5823942ad5dd1908f21afa7b2fe9096fa8d035a25fab715",
+    "contract/src/assistant-system.test.ts": "fff4016197b673c7e79b0eb83901d8b14da165650e8fd787e35da34bafd9bf9f",
+    "backend/src/modules/ai-runtime/chat-tools.ts": "9b3750b92a9a07ec077883752767535ec4b3faa4b0953b539eb902bc6a05eede",
+    "backend/src/modules/ai-runtime/chat-tools.test.ts": "c3eadefeb911e72c16dfffef05e91825fb4b8c147988b4d7572050bd5ea9febc",
+    "backend/src/modules/ai-runtime/chat-system-tool-host.ts": "310586b85ec56efca0434ec165eac0d316fd4eaef12701d8bcd06d17ea416286",
+    "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts": "38ca68d172e887740d1161a8036717f1a0b3b7588be5aa8a955fc8804573acee",
+    "backend/src/application/chat/assistant-system-root.integration.test.ts": "eb46ac4d8782962c003396b7d8cced7556d5d03725e5177a530550c1f803f7dd",
+    "backend/src/application/chat/assistant-system-root.ts": "7fc71a6c6a86805760a663d60aac7b3fd04443f389b6f2de23199f0b860b5fa3",
+    "backend/src/modules/ai/chat-proposal-source.service.ts": "cbf2961a08a2cf228b70574fa45d69e62166bfff0cce7936581821108da6b0e7",
+    "backend/src/modules/ai/chat-proposal-source.service.test.ts": "cfcdd1237440fecfc6155189da1356d40518f69ef1a7778bd9453f9827c14491"
+  },
+  "status": "SPEC候选；无实现或恢复PASS",
+  "trueFailure": "legacyfirst1PASS3FAIL；current matchFrozenAssistantReadCatalog整体action漂移",
+  "specRevision": "SR001 adopted source version gate closure; candidate only"
+}

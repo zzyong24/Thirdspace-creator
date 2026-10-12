@@ -1,0 +1,50 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "checkedAt": "2026-10-11T16:24:24.490803+00:00",
+  "sourceFacts": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/test/function-key-invariant.test.ts",
+      "sha256": "4def088daa3fba0f548a74446b0245df50ba34019c026f139dc54defa9135de0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/fixtures/selectors/copilot.ts",
+      "sha256": "ea73a54c463b6d22bfedbe100339caebf16c9b5efb197d3a931115339f98be85"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-assembly.ts",
+      "sha256": "dc35a2c20d031e79e1c2e09dec8a8f9156cac42003a6c41b534981490f693985"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-material-task-host.ts",
+      "sha256": "a456daaa432d6b3ddb76d4a5b6e8d041fded34646def16172ebe8fa5ec80007e"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-material-task-host.test.ts",
+      "sha256": "65a55f51ec90cada239cd572697bf954ec56ad2ea40250fccfced019ec6f4fd3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-tools.ts",
+      "sha256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/test/icons.test.ts",
+      "sha256": "d0b0930c2f182de4f3bb16cfc5023a3964d1ca85fb13078ba6df3e13fc5c3cc0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/lib/icons.ts",
+      "sha256": "20b80c5ffc0e7e7d79b9bdac048681bb936e66bbc176a71e338c1ed322dea1b7"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/lib/platform-icons.ts",
+      "sha256": "60631f5cb517b84fd8aa92b9565971915a5dddc0670983573ea6da0bc1b71d15"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1022-account-group-workspace.md",
+      "sha256": "6bd95c85af7c09612acb36c3596cc43e5e48ed789b5284c7bc8f5d5c3e5ca29f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1101-canvas-binding-collection.md",
+      "sha256": "ab538c5ec2faf1bba8f7b68347c019b679f0dd1924ef52800da52cf2f39af008"
+    }
+  ]
+}

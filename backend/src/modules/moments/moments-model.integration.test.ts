@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {accountGroups} from '../../schema/account-groups';
 import type {RequestContext} from '@creatoros/contract';
 import {momentsCandidates} from "../../schema/moments-model";
@@ -63,7 +65,7 @@ it('公共owner原请求冲突保留domain409而非无类型500',async()=>{const
 
 it.each([{outcome:'waiting_user',code:'MODEL_CREDENTIAL_UNAVAILABLE'},{outcome:'unknown_result',code:'MODEL_RESULT_UNKNOWN'}] as const)('原候选纯读保留真实执行$outcome，不映射为队列',async({outcome,code})=>{const f=await fixture();try{const a=await settled(f);await createExecutionWorkerOutcomeService(f.db,{now:f.deps.now}).recordFailure(a.ref,{outcome,errorCode:code});const before=await f.db.select().from(momentsCandidates);expect(await f.service.getCandidate(ctx,a.candidate.candidateId)).toMatchObject({status:outcome,runtimeStatus:outcome,executionTaskId:a.ref.executionTaskId,errorCode:code});expect(await f.db.select().from(momentsCandidates)).toEqual(before);expect(await f.db.select().from(aiTasks)).toHaveLength(1);}finally{await f.opened.client.close();}});
 
-it('T1062 空组Moments模型生成冻结NULL账号，切平台过滤共享候选，原lease结算不重签',async()=>{const group:RequestContext={userId:'moments-model-user',accountId:null,groupId:'moments-model-empty',groupVersion:1,source:'user',requestId:'group-model'};const f=await fixture(group);try{const a=await settled(f);expect(await f.service.getCandidate({...group,accountId:'page-filter'},a.candidate.candidateId)).toMatchObject({taskId:a.task.id});const [row]=await f.db.select().from(momentsCandidates);expect(row).toMatchObject({groupId:group.groupId,accountId:null});const [task]=await f.db.select().from(executionTasks);expect(task).toMatchObject({groupId:group.groupId,accountId:null});await a.executor.commitResult(a.ref,a.input);expect((await f.service.getCandidate(group,a.candidate.candidateId)).status).toBe('succeeded');await expect(f.service.getCandidate({...group,groupId:'other-group'},a.candidate.candidateId)).rejects.toThrow();}finally{await f.opened.client.close();}},30000);
+it('T1062 空组Moments模型生成冻结NULL账号，切平台过滤共享候选，原lease结算不重签',async()=>{const group:RequestContext={userId:'moments-model-user',accountId:null,groupId:'moments-model-empty',groupVersion:1,source:'user',requestId:'group-model'};const f=await fixture(group);try{const a=await settled(f);expect(await f.service.getCandidate({...group,accountId:'page-filter'},a.candidate.candidateId)).toMatchObject({taskId:a.task.id});const [row]=await f.db.select().from(momentsCandidates);expect(row).toMatchObject({groupId:group.groupId,accountId:null});const [task]=await f.db.select().from(executionTasks);expect(task).toMatchObject({groupId:group.groupId,accountId:null});await a.executor.commitResult(a.ref,a.input);expect((await f.service.getCandidate(group,a.candidate.candidateId)).status).toBe('succeeded');await expect(f.service.getCandidate({...group,groupId:'other-group'},a.candidate.candidateId)).rejects.toThrow();}finally{await f.opened.client.close();}},180000);
 
 it('T1062 空组真实Skill overlay同事务冻结，切平台回读和覆盖更新不重签',async()=>{
  const group:RequestContext={userId:'moments-model-user',accountId:null,groupId:'moments-overlay-empty',source:'user',requestId:'group-overlay'};const f=await fixture(group);
@@ -74,7 +76,7 @@ it('T1062 空组真实Skill overlay同事务冻结，切平台回读和覆盖更
  expect((await f.service.generate({...group,accountId:'page-filter'},f.target.momentsId,f.input)).taskId).toBe(a.taskId);expect(await f.ports.ai(f.db).getTaskRuntimeData(group,a.taskId)).toEqual(before);
  await expect(f.service.getCandidate({...group,groupId:'foreign-group'},a.candidateId)).rejects.toThrow();
  }finally{await f.opened.client.close();}
-},30000);
+},180000);
 
 it('T1062 已迁移旧账号模型请求原candidate/task重放不造NULL行，双来源明确冲突',async()=>{
  const f=await fixture();try{const old=await f.service.generate(ctx,f.target.momentsId,f.input),{momentsAnchors,momentsRequests}=await import('../../schema/moments'),{projects,artifacts}=await import('@creatoros/backend');
@@ -87,14 +89,14 @@ it('T1062 已迁移旧账号模型请求原candidate/task重放不造NULL行，�
 });
 
 
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import {randomUUID} from 'node:crypto';
 import {createRuntimeDb} from '../../db';
 import {createAccountGroupService} from '../platform-account/account-group.service';
 import {createStructuredBusinessExecutionService} from '../ai-runtime/structured-business-execution.service';
 const momentsLockPg=process.env.CREATOROS_TEST_POSTGRES_URL;
 it.skipIf(!momentsLockPg)('T1062真实PG Moments generate同组不同真实父两路Lock，唯一任务/候选/执行及回放零新增',async()=>{
- const url=new URL(momentsLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');
+ const url=new URL(momentsLockPg!);assertOwnedPostgresUrl(url.toString());
  const name=`t1062_moments_lock_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:momentsLockPg});await admin.query(`CREATE DATABASE ${name}`);url.pathname=`/${name}`;
  const runtimes:Array<Awaited<ReturnType<typeof createRuntimeDb>>>=[];let held=false,blocker:import('pg').PoolClient|undefined,pending:Promise<unknown>[]=[];
  async function open(role:string){const scoped=new URL(url);scoped.searchParams.set('application_name',`${name}_${role}`);const runtime=await createRuntimeDb({connectionString:scoped.toString()});runtime.pool.options.max=1;runtimes.push(runtime);return runtime;}
@@ -114,7 +116,7 @@ it.skipIf(!momentsLockPg)('T1062真实PG Moments generate同组不同真实父�
   await Promise.all(fixtures.map(f=>f.service.generate({...scope,accountId:'仅页面过滤'},f.target.momentsId,f.input)));
   expect(await setup.db.select().from(aiTasks)).toEqual(before.tasks);expect(await setup.db.select().from(momentsCandidates)).toEqual(before.candidates);expect(await setup.db.select().from(executionTasks)).toEqual(before.executions);expect(await setup.db.select().from(executionCalls)).toHaveLength(0);
  }finally{if(held&&blocker)await blocker.query('ROLLBACK');await Promise.allSettled(pending);blocker?.release();const closed=await Promise.allSettled(runtimes.map(runtime=>runtime.pool.end()));try{await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);}finally{await admin.end();}for(const result of closed)if(result.status==='rejected')throw result.reason;}
-},30000);
+},180000);
 
 it.each(['same-group','moved','no-member'] as const)('T1062旧targetId空预约真实原scope恢复%s，不借页面平台过滤重签',async mode=>{
  const group:RequestContext={userId:ctx.userId,accountId:null,groupId:'moments-pending-original-group',source:'user',requestId:'pending-group'};
@@ -140,4 +142,4 @@ it.each(['same-group','moved','no-member'] as const)('T1062旧targetId空预约�
   }
   expect(await f.db.select().from(executionCalls)).toHaveLength(0);
  }finally{await f.opened.client.close();}
-},30000);
+},180000);

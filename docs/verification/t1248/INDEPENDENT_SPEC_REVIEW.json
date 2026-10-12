@@ -1,0 +1,69 @@
+{
+  "task": "T-1248",
+  "reviewer": "/root/engine_coverage_audit",
+  "reviewedAt": "2026-10-11T19:43:10.385707+00:00",
+  "verdict": "REQUEST_CHANGES",
+  "specSha256": "a060877011480ca5a5922c3cf59a5c91d124eeef51465f43d4e6114526980772",
+  "canonicalSpecSameBytes": true,
+  "goldenSha256": "83875e1553e87f13f37820e6f97881b81e2d11001ebb53316c8ac2c3f9566e0c",
+  "canonicalGoldenSameBytes": true,
+  "readOnlyReview": true,
+  "productChanged": false,
+  "testsExecuted": false,
+  "sourceBindings": [
+    {
+      "file": "docs/features/t1248-frozen-system-action-compatibility.md",
+      "sha256": "a060877011480ca5a5922c3cf59a5c91d124eeef51465f43d4e6114526980772"
+    },
+    {
+      "file": "docs/verification/t1248/system-action-v1.definition.json",
+      "sha256": "83875e1553e87f13f37820e6f97881b81e2d11001ebb53316c8ac2c3f9566e0c"
+    },
+    {
+      "file": "contract/src/resources/assistant-system.ts",
+      "sha256": "190f828977a7f69fd5823942ad5dd1908f21afa7b2fe9096fa8d035a25fab715"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "sha256": "9b3750b92a9a07ec077883752767535ec4b3faa4b0953b539eb902bc6a05eede"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+      "sha256": "310586b85ec56efca0434ec165eac0d316fd4eaef12701d8bcd06d17ea416286"
+    },
+    {
+      "file": "backend/src/application/chat/assistant-system-root.ts",
+      "sha256": "7fc71a6c6a86805760a663d60aac7b3fd04443f389b6f2de23199f0b860b5fa3"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-proposal-source.service.ts",
+      "sha256": "cbf2961a08a2cf228b70574fa45d69e62166bfff0cce7936581821108da6b0e7"
+    }
+  ],
+  "findings": [
+    {
+      "id": "SR001",
+      "severity": "blocking",
+      "title": "旧action候选的正式采纳版本门未被三路径写集覆盖",
+      "evidence": [
+        "assistant-system-root.ts:225-229 仅当前buildChatTools候选原型构建static source.tools",
+        "chat-proposal-source.service.ts:50-58 原piBinding+version/parameterSchema完整相等门",
+        "chat-proposal-source.service.ts:73-75 外部候选同样要求可信tool.version与外部identity/digest绑定"
+      ],
+      "impact": "matcher接纳旧8d426…action而source静态原型仍ea897…时，旧system.action.propose候选无法通过真实adopt；当前schema能parse旧字段子集不足以越过已存在来源版本门。",
+      "requiredRevision": "明确可信完整catalog与原候选source/adoption消费者的版本选择闭包及精确必要写集，保原scope/冻结/claim/version/schema/digest/effect/ack等所有门；增加真实旧action(例如旧preferences.update)实际host→seal→root采用/回放/跨scope拒绝测试，不能只用旧canvas或只schema通过代签。不得放宽any版本/忽略不匹配字段。"
+    }
+  ],
+  "positiveAssessment": [
+    "fixed历史preferences分支及完整有限组合严格匹配方向合理；不是动态omit/任务schema驱动",
+    "当前公开schema不变、scope/lease/权限/effect/回执与未知拒绝保留",
+    "既有read v1/v2承诺、任意组合漂移拒绝、无read仍核action方向明确",
+    "原legacy3失败及hash/frozen保护保留、预算与全4body再验诚实"
+  ],
+  "limitations": [
+    "不签实施/RED/Gate/真实用户升级/官方模型/App",
+    "仍需上述source/adoption消费者修订独评；原legacy canvas恢复绿不能替代旧action采用"
+  ],
+  "goldenEqualsActualFrozenDefinition": true,
+  "diagnosticOldProducerCommit": "6e4689b3180f91189110208267708ad72b03ae64"
+}

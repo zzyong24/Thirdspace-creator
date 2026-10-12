@@ -1,0 +1,23 @@
+{
+  "accepted": false,
+  "originalPackageCount": 3,
+  "actualPackageCount": 4,
+  "privateRootCount": 0,
+  "differences": [
+    [
+      "creatoros-workbench-test",
+      "0.0.0",
+      "registry+https://example.invalid/test",
+      null
+    ]
+  ],
+  "differenceCount": 1,
+  "comparisonFields": [
+    "name",
+    "version",
+    "source",
+    "checksum"
+  ],
+  "productionSubsetConfirmed": false,
+  "noBuildPermissionOnMismatch": true
+}

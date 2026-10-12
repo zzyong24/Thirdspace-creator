@@ -1,0 +1,30 @@
+{
+  "scope": "T1250/scanner-clients-focused-only",
+  "actualRuns": {
+    "ct1250-green-scanner-35qvgU": {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/ct1250-green-scanner-35qvgU",
+      "resultSha256": "cb0e71505ff99a16601bd1f13b2121ff9de9c08f2a00810505f44918afe73d40",
+      "exitCode": 0,
+      "sourceInputUnchanged": true,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "outerExhausted": false
+    },
+    "ct1250-green-clients-iyaKIR": {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/ct1250-green-clients-iyaKIR",
+      "resultSha256": "eff2434517a089d7215c469b988775ee7adcda3f06dbf160cccea5cf230f90a7",
+      "exitCode": 0,
+      "sourceInputUnchanged": true,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "outerExhausted": false
+    }
+  },
+  "scanner": "7PASS0FAIL",
+  "clients": "4PASS0FAIL15原过滤SKIP；两文件19body库存。实际Unix延迟35秒通过，partial/trickle绝对截止与预先取消拒绝通过",
+  "limits": [
+    "不是原19客户端完整回归",
+    "不是CDP/render/host/Rust公共链或完整timeout verify Gate",
+    "不是App/官方模型验收"
+  ]
+}

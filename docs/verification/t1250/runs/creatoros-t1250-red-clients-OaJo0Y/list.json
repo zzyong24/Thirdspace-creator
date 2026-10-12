@@ -1,0 +1,14 @@
+[
+  {
+    "name": "T1250 活动socket不能续期原完整RPC墙钟，原派发结果保持unknown",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-client.test.ts"
+  },
+  {
+    "name": "T1250 原Unix请求超过30秒仍回读同operation，不以10秒活动窗口切断",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "T1250 已取消的原control在派发前拒绝，原operation没有原生副作用",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-12T03:45:57.119Z",
+  "kind": "pure-filesystem-protocol-fixture-only",
+  "fixtureRoot": "/private/tmp/t1254-dynamic-pure-fixture-gYrDF6",
+  "positive": 2,
+  "negative": 5,
+  "priorMissingSearchTargetInsertionRefused": true,
+  "realDynamicRuntimeClaimed": false,
+  "noExecutableRun": true,
+  "noService": true,
+  "noBrowser": true,
+  "noSQL": true
+}

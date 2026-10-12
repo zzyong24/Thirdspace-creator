@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-12T00:11:25.121150+00:00",
+  "actualApplied": true,
+  "actualRuntime": false,
+  "reviewSha256": "9ea966cca5513197cd01947a78d256cc994d4f1aaea5cc282e42ecc77facae70",
+  "rows": [
+    {
+      "path": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "beforeSha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60",
+      "candidateSha256": "6b4ec47460d0eb931b490be41d63e85929b61abe4295b92ff18592fe28468e1d",
+      "preserved": "docs/verification/t1253/approved-v4-shape-originals/chat-script-draft-worker.test.ts"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "beforeSha256": "17de16b8a1234dcff377a3c4b1c01b3e65af5cf53f59b8131798f0b2b5ab02f6",
+      "candidateSha256": "308870e9d169ed4d56dfbaefbad04e566b791f4997acb6a43a1760767a551167",
+      "preserved": "docs/verification/t1253/approved-v4-shape-originals/execution-worker-call-ports.integration.test.ts"
+    }
+  ]
+}

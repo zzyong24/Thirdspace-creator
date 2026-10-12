@@ -1,0 +1,96 @@
+{
+  "task": "T-1254",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T07:46:05.466666+00:00",
+  "status": "PASS",
+  "scope": "DOOCS_COMPLETE_DELIVERY_CANDIDATE_READONLY_VALIDATION",
+  "reviewKind": "v3整单精确静态source及全输入准入评审，复制另审",
+  "exact": {
+    "indexSha256": "77ef0bbc0c9189cca8d0f7e96705a72c02904b78ad252f16cd411a79debb7643",
+    "manifestSha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd",
+    "inputsSha256": "cb1233c8e03c5bbc3abbfe3316b25c507fc602c1053cd1cda1bc4ad462d663c7",
+    "runnerSha256": "dc6eb3a0632dddce4e7a8751fe2b79b04c4af92fba3fc650b325d98646047737",
+    "buildScriptSha256": "08c9d827e85df4296de24f319834da707b245f47819aed12306f97c3c1e6b134",
+    "staticScriptSha256": "57875f61e4ab8356abe0a803d21ee93807ae355128ac4ea50e17166ba5151c49",
+    "nativeScriptSha256": "aa452bfe9131f3f1b056f56bda6a286daa96b03ab4428857abbcb0793033edf0",
+    "deltaSha256": "75d3065f05978f9a2344791703294fdba14acf340b781b2cafa7a309e26b11bb"
+  },
+  "fullProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_DELIVERY_77EF_FRESH_FULL_INPUT_AND_FOUR_GUARDS_RECHECK.json",
+    "sha256": "4778b0efe66ec6a38f26b1c22ad48aaee677b179ef69a1ce420b902c0aacfca3",
+    "inputRows": 143462,
+    "mirrorFiles": 1018,
+    "candidateFiles": 709,
+    "readBytes": 2328840925,
+    "elapsedMs": 45950.023459037766,
+    "drift": []
+  },
+  "findings": [],
+  "previousFullReviewRetained": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_DELIVERY_718_COMPLETE_SOURCE_REVIEW_CONCERNS.json",
+    "sha256": "4dfa0abbfc6f22481721a3adb9743d7b1e7d840611ee02ad433c7a1d75a7dd3c",
+    "old718AndFourStaticConcernsPreserved": true
+  },
+  "narrowChange": "10860字节四守卫diff已全文，所有context严格机械重建新08c9；runner仅candidate BASE v2→v3，producer同步路径与sealer旧评审输入。708其它候选每byte/mode/UID同，73/53/636路径集合及原702before inventory全部同。",
+  "fourFindingDisposition": {
+    "DELIVERY-BUILD-MINIMUM-FUTURE": "PASS/source：prepare入口继承余期须覆盖完整3.6M只读槽；execute minLimit timer之前显式>=120k；之后原全部positive+cleanup+AFTER future不减、不续期。",
+    "DELIVERY-BUILD-MACHO-ROOTS": "PASS/source：实际字节magic附完整绑定，Node/manager及每实际scope MachO realpath必须全在已封dyn roots，每次binding核实际全tree。独立查55 scope/manager roots，另Node共56（作者55是scope/manager数量），全部属于旧58，无遗漏。",
+    "DELIVERY-BUILD-SOURCE-FILESET": "PASS/source：只剪node_modules与apps/web/.wxt/dist/dist-native，其余regular/link全部fileSet严格等sourceFiles；独立native819/static804当前extra0/missing0。",
+    "DELIVERY-BUILD-SCOPE-LINK-OWNER": "PASS/source：scope.kind/boundary明确source owner与managerToolsRoot，根realpath及每link.resolved强制归属；独立全部scope/link无逃逸。"
+  },
+  "completeImmutableAreas": [
+    "其它3编辑器manifest完整JSON与原相同，原native四body仅static hook/result增，原assert都保",
+    "native395/static300和源码包/patch真实V15输出已全byte核，原CSP/bridge/原a7与55ab/root资源保持",
+    "原独立静态23positive/fault源码0e786、两个checker57875/aa452与此前全文版本原字节",
+    "V15真实EOF0及旧V12/V13/V14 wrapper1和缺失回执保，不伪造新测试结果"
+  ],
+  "corePrepareActual": {
+    "session": 11089,
+    "actualFinalExitCode": 0,
+    "receiptPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v3/DELIVERY_VALIDATION_DRIVER_PREPARE.json",
+    "receiptSha256": "11de93816d4783251b64882fdb239c1159f67bd41b3c6eb81dbd8c8f0235b377",
+    "receiptExactlyCurrentInputRunnerManifest": true,
+    "onlyCoreReadOnlyFullBinding": true,
+    "candidateChildExecuted": false,
+    "downloadedModuleExecuted": false,
+    "repeatRun": false
+  },
+  "exactReadonlyExecutionRecommendation": {
+    "ROOTMayIssueSeparateExactOneTimeAdmission": true,
+    "inputSha256": "cb1233c8e03c5bbc3abbfe3316b25c507fc602c1053cd1cda1bc4ad462d663c7",
+    "manifestSha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd",
+    "runnerSha256": "dc6eb3a0632dddce4e7a8751fe2b79b04c4af92fba3fc650b325d98646047737",
+    "localSingleBirthMs": 19320000,
+    "inheritedDeadline": "2026-10-12T15:56:11.789Z",
+    "stages": [
+      [
+        "static-complete-and-faults",
+        540000
+      ],
+      [
+        "native-all-four-verifier",
+        900000
+      ],
+      [
+        "build-entry-prepare-only",
+        4200000
+      ]
+    ],
+    "prepareMs": 3600000,
+    "afterMs": 3600000,
+    "eachHelperLifecycleMs": 2160000,
+    "allOriginalFuturePreserved": true,
+    "rootMustCheckCurrentRemainingDeadlineCanCoverCompleteFuture": true,
+    "actualStatic23NativeAll4BuildEntryPrepareOnlyPending": true,
+    "doesNotAdmitStandaloneNewBuildExecute": true
+  },
+  "productionCopy": {
+    "approved": false,
+    "performed": false,
+    "afterActualThreeChildAndFullAfterRequired": true,
+    "exact73Writes53Deletes636SameManifestForLaterSeparateDoubleReview": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd"
+  },
+  "reviewerCandidateExecution": false,
+  "AppAcceptanceIncompletePerUser": true,
+  "browserPixelsOfficialGenerationAndFinalPackageNotClaimed": true
+}

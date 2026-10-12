@@ -39,6 +39,8 @@ import type { ReactNode } from "react";
 // AssetsInteractiveRegion, module 07 E2–E6) can call `useRouter()` without an
 // App Router provider mounted in the unit test.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({
     refresh: vi.fn(),
     replace: vi.fn(),

@@ -1,0 +1,1 @@
+这是只写docs/candidates的未来交付工具草稿，尚未独审、执行或应用，不能签最终验收。static字段精确实际值等待V13两build与产物/完整sourcearchive/patch。verify-native原其它三个编辑器检查完整保留，仅接static新校验。build入口只接HOME外同owned根下、已分别原锁安装的两独立修后源及显式pnpm12.6可执行文件，独立完整串行槽，不读取真实.env/用户配置、不启动App、不安装依赖、不复制生产；完整工具/依赖封印、故障负族以及实际输出比对仍须在统一exact交付中独审与运行。V13旧实际Source证据与当前私有执行工具不改。

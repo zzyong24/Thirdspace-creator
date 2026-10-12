@@ -1,0 +1,17 @@
+{
+  "actualCollectedCases": 19,
+  "actualFiles": 2,
+  "bodyMs": 1800000,
+  "perCaseBeforeAfterHooksMs": 6000000,
+  "perFileBeforeAfterAllMs": 6000000,
+  "poolStartTeardownMs": 240000,
+  "childCleanupReportMs": 480000,
+  "collectPhaseMs": 1800000,
+  "executionPhaseOuterMs": 162000000,
+  "fullSerialDeclaredMs": 164880000,
+  "psAndSourceReportReserveMs": 720000,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "segmentsMaxMs": 60000,
+  "noPersistentDeadlineChange": true
+}

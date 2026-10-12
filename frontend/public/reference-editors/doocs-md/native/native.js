@@ -1,9 +1,9 @@
 import { A as e, C as t, E as n, Y as r, b as i, ft as a, gt as o, ht as s, lt as c, mt as l, nt as u, ut as d, vt as f, w as p } from "./chunks/codemirror-C3tEDw1q.js";
 import { B as m, C as h, Ct as g, D as _, E as v, F as y, G as b, H as x, I as S, Q as C, S as w, St as T, T as E, W as D, X as ee, Z as O, _t as k, a as A, b as j, c as te, d as ne, dt as M, et as N, g as re, gt as P, h as ie, i as ae, k as F, mt as oe, n as se, ot as ce, p as le, pt as ue, q as de, r as fe, s as pe, t as me, tt as he, w as I, wt as L, x as R, xt as ge, y as z, yt as B, z as _e } from "./chunks/vendor_vue-OlfIOlFg.js";
 import { f as ve, i as ye, n as be, o as V, p as xe, r as H, s as Se, u as Ce } from "./chunks/native-host-BoAU4GnD.js";
-import { B as we, C as U, D as Te, E as Ee, F as De, I as Oe, L as W, M as ke, N as Ae, O as je, P as G, R as Me, S as Ne, T as Pe, V as Fe, _ as Ie, a as Le, b as Re, c as ze, d as Be, f as Ve, g as He, h as K, i as Ue, j as We, l as Ge, n as Ke, o as qe, p as Je, r as Ye, s as Xe, t as Ze, u as Qe, v as $e, w as et, x as tt, y as nt, z as rt } from "./chunks/render-C0-GwsvR.js";
+import { B as we, C as U, D as Te, E as Ee, F as De, I as Oe, L as W, M as ke, N as Ae, O as je, P as G, R as Me, S as Ne, T as Pe, V as Fe, _ as Ie, a as Le, b as Re, c as ze, d as Be, f as Ve, g as He, h as K, i as Ue, j as We, l as Ge, n as Ke, o as qe, p as Je, r as Ye, s as Xe, t as Ze, u as Qe, v as $e, w as et, x as tt, y as nt, z as rt } from "./chunks/render-BKss5lW7.js";
 import { A as it, D as at, O as q, c as ot, j as st, k as J, l as ct, n as lt, t as ut } from "./chunks/storage-jiCkQUgy.js";
-import { i as dt } from "./chunks/config-DbfjmaEn.js";
+import { i as dt } from "./chunks/config-CS1KboEo.js";
 import { n as ft } from "./chunks/vue-i18n-8AnKzzG6.js";
 import { a as pt, i as mt, n as Y, r as ht } from "./chunks/translate-CUv9RhnO.js";
 import { n as X, t as gt } from "./chunks/lib-DIiEqr8B.js";
@@ -17,16 +17,16 @@ import { a as Lt, c as Rt, d as zt, f as Bt, i as Vt, l as Ht, m as Ut, n as Wt,
 import { c as Zt, i as Qt } from "./chunks/PopperContent-RtMDF-yC.js";
 import { a as $t, i as en, n as tn, r as nn, t as rn } from "./chunks/DialogTitle-w1SUV50e.js";
 import { t as $ } from "./chunks/createLucideIcon-CFmwvUbS.js";
-import { C as an, S as on, _ as sn, a as cn, b as ln, c as un, d as dn, f as fn, g as pn, h as mn, l as hn, m as gn, o as _n, p as vn, s as yn, u as bn, v as xn, w as Sn, x as Cn, y as wn } from "./chunks/slashCommands-Bz80_cwg.js";
+import { C as an, S as on, _ as sn, a as cn, b as ln, c as un, d as dn, f as fn, g as pn, h as mn, l as hn, m as gn, o as _n, p as vn, s as yn, u as bn, v as xn, w as Sn, x as Cn, y as wn } from "./chunks/slashCommands-Bp20Gpjz.js";
 import { t as Tn } from "./chunks/chevron-right-BTkVQ4BO.js";
 import { n as En, t as Dn } from "./chunks/file-text-DscvNBZB.js";
 import { t as On } from "./chunks/trash-DHg1WvRr.js";
 import { i as kn, r as An } from "./chunks/table-neeg7dzE.js";
 import { t as jn } from "./chunks/formula-BY10rzjJ.js";
 import { t as Mn } from "./chunks/confirm-BRFdpM55.js";
-import { t as Nn } from "./chunks/useEditorRefresh-CP-K_yWo.js";
+import { t as Nn } from "./chunks/useEditorRefresh-w4Z-KUpo.js";
 import { n as Pn, t as Fn } from "./chunks/provider-registry-C_yJEJu8.js";
-import { a as In, i as Ln, r as Rn } from "./chunks/marketplace-Bd_SEvWI.js";
+import { a as In, i as Ln, r as Rn } from "./chunks/marketplace-Bubu1InB.js";
 import { t as zn } from "./chunks/_plugin-vue_export-helper-B3W2xDgE.js";
 function Bn(e, t = "untitled") {
 	let n = we(t);
@@ -1910,7 +1910,7 @@ function ci(t) {
 	}), s.high(c.of(e.filter((e) => e.key !== "Tab")))];
 }
 async function li(e, t) {
-	let { fileUpload: n } = await import("./chunks/providers-5OiUFt8V.js");
+	let { fileUpload: n } = await import("./chunks/providers-Bmgr2ar7.js");
 	return n(e, t);
 }
 var ui = "uploaded_image_map";
@@ -2302,7 +2302,7 @@ function Ji(e) {
 var Yi = ["lang"], Xi = /*#__PURE__*/ zn(/* @__PURE__ */ _({
 	__name: "EditorPanel",
 	setup(e, { expose: t }) {
-		let n = v(() => import("./chunks/SlashCommandMenu-B7Jpldbh.js")), r = v(() => import("./chunks/SearchTab-DCLuJ11n.js")), { t: o, locale: f } = ft(), p = Mi(), g = H(), _ = !1, y = () => !_ && (!g || g.live && !g.signal.aborted), b = vt(), C = _t(), T = Ze(), D = Ke(), k = K(), te = Oi(), { upload: re } = fi(), { editorRefresh: P, scheduleEditorRefresh: ie } = Nn(), { visible: ae, position: F, filter: oe, activeIndex: se, basicCommands: ce, commonCommands: le, editCommands: de, styleCommands: fe, filteredCommands: pe, closeMenu: me, executeCommand: I, createExtension: L } = Ni();
+		let n = v(() => import("./chunks/SlashCommandMenu-CPpQMmMv.js")), r = v(() => import("./chunks/SearchTab-DCLuJ11n.js")), { t: o, locale: f } = ft(), p = Mi(), g = H(), _ = !1, y = () => !_ && (!g || g.live && !g.signal.aborted), b = vt(), C = _t(), T = Ze(), D = Ke(), k = K(), te = Oi(), { upload: re } = fi(), { editorRefresh: P, scheduleEditorRefresh: ie } = Nn(), { visible: ae, position: F, filter: oe, activeIndex: se, basicCommands: ce, commonCommands: le, editCommands: de, styleCommands: fe, filteredCommands: pe, closeMenu: me, executeCommand: I, createExtension: L } = Ni();
 		function ge(e) {
 			ae.value && (e.preventDefault(), e.stopPropagation());
 		}
@@ -3592,7 +3592,7 @@ var Na = /* @__PURE__ */ _({
 }, Ra = /* @__PURE__ */ _({
 	__name: "NativeApp",
 	setup(e) {
-		let t = v(() => import("./chunks/CssEditor-B_etG6Rp.js")), n = v(() => import("./chunks/RightSlider-Cl7WEyAt.js")), r = v(() => import("./chunks/TableEditDialog-BXHl_kMQ.js")), i = v(() => import("./chunks/FormulaEditorDialog-luI7Wkxl.js")), a = v(() => import("./chunks/TemplateDialog-wZLC_pTV.js")), o = v(() => import("./chunks/ConfirmDialog-C5N-abdb.js")), s = K(), c = M(null), l = M(null), { handlePreviewContentClick: u } = Da(() => c.value?.codeMirrorView ?? null);
+		let t = v(() => import("./chunks/CssEditor-rDOOcLd1.js")), n = v(() => import("./chunks/RightSlider-BEywkWYm.js")), r = v(() => import("./chunks/TableEditDialog-0WQyHr22.js")), i = v(() => import("./chunks/FormulaEditorDialog-DUTywkQa.js")), a = v(() => import("./chunks/TemplateDialog-B64hzoVj.js")), o = v(() => import("./chunks/ConfirmDialog-C5N-abdb.js")), s = K(), c = M(null), l = M(null), { handlePreviewContentClick: u } = Da(() => c.value?.codeMirrorView ?? null);
 		Ma(() => c.value?.codeMirrorView ?? null, () => l.value?.previewRef ?? null, z(() => s.enableScrollSync));
 		let d = H();
 		return (e, f) => (x(), h("div", { class: ge(["creatoros-doocs-native", { dark: B(s).isDark }]) }, [

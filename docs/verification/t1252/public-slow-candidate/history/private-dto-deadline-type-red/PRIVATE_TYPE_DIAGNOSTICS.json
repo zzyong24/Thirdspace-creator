@@ -1,0 +1,35 @@
+{
+  "scope": "read-only in-memory candidate at original source path; not standard whole frontend types, no tests/PG/native/HTTP",
+  "diagnostics": [
+    {
+      "code": 2339,
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts",
+      "line": 498,
+      "message": "Property 'deadlineAt' does not exist on type '{ id: string; userId: string; accountId: string | null; kind: \"ai_task\" | \"source_sync\" | \"share_import\" | \"transcribe\" | \"topic_preview\" | \"radar_project_upgrade\" | \"script_candidate\" | \"automation_sync\" | \"migration\" | \"account_binding\"; ... 20 more ...; retryAt?: string | ... 1 more ... | undefined; }'."
+    },
+    {
+      "code": 2339,
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts",
+      "line": 551,
+      "message": "Property 'deadlineAt' does not exist on type '{ id: string; userId: string; accountId: string | null; kind: \"ai_task\" | \"source_sync\" | \"share_import\" | \"transcribe\" | \"topic_preview\" | \"radar_project_upgrade\" | \"script_candidate\" | \"automation_sync\" | \"migration\" | \"account_binding\"; ... 20 more ...; retryAt?: string | ... 1 more ... | undefined; }'."
+    },
+    {
+      "code": 2339,
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts",
+      "line": 551,
+      "message": "Property 'deadlineAt' does not exist on type '{ id: string; userId: string; accountId: string | null; kind: \"ai_task\" | \"source_sync\" | \"share_import\" | \"transcribe\" | \"topic_preview\" | \"radar_project_upgrade\" | \"script_candidate\" | \"automation_sync\" | \"migration\" | \"account_binding\"; ... 20 more ...; retryAt?: string | ... 1 more ... | undefined; }'."
+    },
+    {
+      "code": 2339,
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts",
+      "line": 571,
+      "message": "Property 'deadlineAt' does not exist on type '{ id: string; userId: string; accountId: string | null; kind: \"ai_task\" | \"source_sync\" | \"share_import\" | \"transcribe\" | \"topic_preview\" | \"radar_project_upgrade\" | \"script_candidate\" | \"automation_sync\" | \"migration\" | \"account_binding\"; ... 20 more ...; retryAt?: string | ... 1 more ... | undefined; }'."
+    },
+    {
+      "code": 2339,
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts",
+      "line": 578,
+      "message": "Property 'deadlineAt' does not exist on type '{ id: string; userId: string; accountId: string | null; kind: \"ai_task\" | \"source_sync\" | \"share_import\" | \"transcribe\" | \"topic_preview\" | \"radar_project_upgrade\" | \"script_candidate\" | \"automation_sync\" | \"migration\" | \"account_binding\"; ... 20 more ...; retryAt?: string | ... 1 more ... | undefined; }'."
+    }
+  ]
+}

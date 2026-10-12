@@ -1,0 +1,14 @@
+{
+  "status": "reviewable_only_no_pg_started",
+  "toolManifestSha256": "cadf3ca77b0d409b01945f76e99ae355fe9bb5426dd2e5a7c034e3ebc59cd3e2",
+  "sourceSnapshotDigest": "e7ef01915ab9373fc68ccdced2fee0c65e711c7c2914758d78a449d01f6eb475",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "reviewContract": {
+    "approved": true,
+    "scope": "owned-pg-unit",
+    "toolManifestSha256": "cadf3ca77b0d409b01945f76e99ae355fe9bb5426dd2e5a7c034e3ebc59cd3e2",
+    "sourceSnapshotDigest": "e7ef01915ab9373fc68ccdced2fee0c65e711c7c2914758d78a449d01f6eb475",
+    "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "runtimeDistExclusive": true
+  }
+}

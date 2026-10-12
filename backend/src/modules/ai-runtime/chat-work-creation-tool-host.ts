@@ -32,11 +32,11 @@ export function createChatWorkCreationToolHost(reader:Pick<ReturnType<typeof cre
    readWorkCreation:async(input?:{targetDigest?:string})=>{
     const result=await ports.read(frozen.context,target);
     if(input?.targetDigest&&input.targetDigest!==result.targetDigest)throw new Error('联合创作目标摘要不符。');
-    return result;
+    return {...result,...(frozen.hostContext.resolvedWritingContext?{resolvedWritingContext:structuredClone(frozen.hostContext.resolvedWritingContext)}:{})};
    },
    proposeWorkCreation:(input:WorkCreationProposalInput)=>ports.propose(frozen.context,target,input),
   } as unknown as ChatToolDeps);
-  const current=(await prepareChatToolDefinitions(tools)).definitions;
+  const current=(await prepareChatToolDefinitions(tools,{workWritingContext:Boolean(frozen.hostContext.resolvedWritingContext)})).definitions;
   if(canonicalJson(current)!==canonicalJson(definitions))throw new Error('联合创作工具定义已变化，不能沿用旧任务执行。');
   signal?.throwIfAborted();return {tools,toolFailureReceiptVersion:frozen.toolFailureReceiptVersion};
  }

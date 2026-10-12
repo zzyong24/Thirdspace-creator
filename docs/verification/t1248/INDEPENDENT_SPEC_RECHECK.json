@@ -1,0 +1,59 @@
+{
+  "task": "T-1248",
+  "reviewer": "/root/engine_coverage_audit",
+  "reviewedAt": "2026-10-11T19:51:51.770444+00:00",
+  "verdict": "PASS_SPEC_ONLY",
+  "initialFinding": "SR001 / REV-001",
+  "initialSpec": {
+    "path": "docs/verification/t1248/SPEC_INITIAL.a060877.md",
+    "sha256": "a060877011480ca5a5922c3cf59a5c91d124eeef51465f43d4e6114526980772",
+    "provenance": "当时生成前保存模板/tmp/t1248-spec-prep.py的原字面量实际提取，精确原SHA；未由新SPEC反向改造"
+  },
+  "templateSource": {
+    "path": "docs/verification/t1248/spec-initial-template-source.py",
+    "sha256": "fba51a1213228cb17529b125868110aa4c2abf1f56f1d6fe7e3f9310dfc2dfd7"
+  },
+  "revisedSpec": {
+    "path": "docs/features/t1248-frozen-system-action-compatibility.md",
+    "sha256": "46e35cb87e7de24066cff1b805bd38f74ff6053fac93bfa9a0136896f40d6a88",
+    "canonicalSameBytes": true
+  },
+  "findings": [],
+  "resolved": [
+    "SR001"
+  ],
+  "sourceBindings": [
+    {
+      "file": "backend/src/application/chat/assistant-system-root.ts",
+      "sha256": "7fc71a6c6a86805760a663d60aac7b3fd04443f389b6f2de23199f0b860b5fa3"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-proposal-source.service.ts",
+      "sha256": "cbf2961a08a2cf228b70574fa45d69e62166bfff0cce7936581821108da6b0e7"
+    },
+    {
+      "file": "backend/src/modules/execution/agentic-tool-binding.ts",
+      "sha256": "4314d1a8304ea5607ae1fa2d36c2817104cf955e9e3bfc09bfc8dac9d5d30ee4"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+      "sha256": "310586b85ec56efca0434ec165eac0d316fd4eaef12701d8bcd06d17ea416286"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "sha256": "9b3750b92a9a07ec077883752767535ec4b3faa4b0953b539eb902bc6a05eede"
+    },
+    {
+      "file": "contract/src/resources/assistant-system.ts",
+      "sha256": "190f828977a7f69fd5823942ad5dd1908f21afa7b2fe9096fa8d035a25fab715"
+    }
+  ],
+  "readOnlyProductReview": true,
+  "productChanged": false,
+  "testsExecuted": false,
+  "limitations": [
+    "仅SPEC准入，formal reviewctl由root执行",
+    "旧/当前实际host→seal→ledger→rootadopt仍待实现与完整原body",
+    "不签官方模型、历史用户库升级、App或全系统验收"
+  ]
+}

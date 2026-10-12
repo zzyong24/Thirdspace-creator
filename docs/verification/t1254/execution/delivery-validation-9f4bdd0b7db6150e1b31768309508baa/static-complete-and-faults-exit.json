@@ -1,0 +1,39 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/child.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/tmp/t1254-readonly/validate-delivery-static-candidate-v1.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/mirror",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/reports/static-validation.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/mirror",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/logs/static-complete-and-faults.log",
+  "pid": 75184,
+  "identity": {
+    "pid": 75184,
+    "pgid": 75184,
+    "uid": 501,
+    "birth": "Mon Oct 12 15:51:51 2026",
+    "startedAt": 1791791511442
+  },
+  "startedAt": "2026-10-12T07:51:51.442Z",
+  "endedAt": "2026-10-12T07:52:08.010Z",
+  "elapsedMs": 16568,
+  "budgetMs": 540000,
+  "deadlineAt": "2026-10-12T08:00:51.442Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

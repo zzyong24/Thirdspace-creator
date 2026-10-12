@@ -8,7 +8,7 @@ vi.mock("next/navigation",()=>({useRouter:()=>router,usePathname:()=>route.path}
 import {AccountSwitcher,WORKSPACE_INITIALIZATION_TIMEOUT_MS} from "./account-switcher";
 import {WorkspaceInitializationProvider,WorkspaceInitializationBoundary} from "./workspace-initialization";
 import {CURRENT_ACCOUNT_KEY,CURRENT_GROUP_KEY,CURRENT_GROUP_COOKIE,CURRENT_ACCOUNT_COOKIE} from "@/lib/http-transport";
-import {useCreationClient,type CreationScope} from "@/lib/creation-workspace-scope";
+import {useCreationClient,readCreationScope,type CreationScope} from "@/lib/creation-workspace-scope";
 import {notifyAccountsChanged} from "@/lib/account-events";
 const fetcher=vi.fn();
 const group=(id:string,accountId?:string)=>({id,userId:"u",name:`组${id}`,status:"active",version:1,createdAt:"2026-10-05T00:00:00Z",updatedAt:"2026-10-05T00:00:00Z",members:accountId?[{id:`m-${id}`,accountId,groupId:id,platform:"douyin",accountHandle:"legacy",status:"active",version:1,joinedAt:"2026-10-05T00:00:00Z",leftAt:null}]:[]});
@@ -17,8 +17,23 @@ const envelope=(rows:unknown[],total=rows.length,page=1)=>new Response(JSON.stri
 function watchReload(){const originalWindow=window,reloadPage=vi.fn();vi.stubGlobal("window",new Proxy(originalWindow,{get(target,key){return key==="location"?{...originalWindow.location,pathname:route.path,reload:reloadPage}:Reflect.get(target,key,target);}}));return {reloadPage,restore:()=>vi.stubGlobal("window",originalWindow)};}
 let mounts=0,unmounts=0;
 function Creator(){const client=useCreationClient();const [dirty,setDirty]=React.useState(false);React.useEffect(()=>{mounts++;return()=>{unmounts++;};},[]);return <div data-testid="native-instance"><input aria-label="脏稿" onChange={()=>setDirty(true)}/><span>{dirty?"dirty":"clean"}</span><button onClick={()=>void client.createOutput({params:{projectId:"p"},query:undefined,body:{title:"新文章",contentType:"article",clientRequestId:"same-request-123"}})}>创建调用</button></div>;}
-function mount(scope:CreationScope={groupId:null,accountId:null},strict=false){const tree=<WorkspaceInitializationProvider initialScope={scope}><AccountSwitcher collapsed={false}/><WorkspaceInitializationBoundary allowRecovery><Creator/></WorkspaceInitializationBoundary><WorkspaceInitializationBoundary surface="overlay"><button>Copilot创建</button></WorkspaceInitializationBoundary><WorkspaceInitializationBoundary surface="overlay"><button>modal创建</button></WorkspaceInitializationBoundary></WorkspaceInitializationProvider>;return render(strict?<React.StrictMode>{tree}</React.StrictMode>:tree);}
-beforeEach(()=>{vi.clearAllMocks();vi.stubGlobal("fetch",async(...args:Parameters<typeof fetch>)=>{const response=await fetcher(...args);return response.clone();});localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;document.cookie=`${CURRENT_ACCOUNT_COOKIE}=; Path=/; Max-Age=0`;route.path="/projects/p/article";mounts=0;unmounts=0;fetcher.mockReset();});
+function mount(scope:CreationScope={groupId:null,accountId:null},strict=false,autoCommit=true){
+ let commitServer!:(scope:CreationScope)=>void;let latestRefresh=0;
+ const previousRefresh=router.refresh;
+ const actualRefresh=vi.fn(async()=>{
+  const serial=++latestRefresh,frozen={...readCreationScope()};
+  await previousRefresh();
+  if(autoCommit&&serial===latestRefresh)commitServer(frozen);
+ });
+ router.refresh=actualRefresh;
+ function ServerFixture(){
+  const [serverScope,setServerScope]=React.useState(scope);commitServer=setServerScope;
+  return <WorkspaceInitializationProvider initialScope={serverScope}><AccountSwitcher collapsed={false}/><WorkspaceInitializationBoundary allowRecovery><Creator/></WorkspaceInitializationBoundary><WorkspaceInitializationBoundary surface="overlay"><button>Copilot创建</button></WorkspaceInitializationBoundary><WorkspaceInitializationBoundary surface="overlay"><button>modal创建</button></WorkspaceInitializationBoundary></WorkspaceInitializationProvider>;
+ }
+ const tree=<ServerFixture/>,mounted=render(strict?<React.StrictMode>{tree}</React.StrictMode>:tree);
+ return {...mounted,commitServer:(next:CreationScope)=>commitServer(next),unmount:()=>{mounted.unmount();if(router.refresh===actualRefresh)router.refresh=previousRefresh;}};
+}
+beforeEach(()=>{router.refresh.mockReset();vi.clearAllMocks();vi.stubGlobal("fetch",async(...args:Parameters<typeof fetch>)=>{const response=await fetcher(...args);return response.clone();});localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;document.cookie=`${CURRENT_ACCOUNT_COOKIE}=; Path=/; Max-Age=0`;route.path="/projects/p/article";mounts=0;unmounts=0;fetcher.mockReset();});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.useRealTimers();});
 describe("真实Shell首载范围就绪",()=>{
  it.each(["forbidden: request must originate from the local application",{code:"FORBIDDEN",message:"forbidden: request must originate from the local application"}])("公共403恢复态给中文反馈，原重试读取成功才开放 %j",async error=>{
@@ -77,4 +92,18 @@ describe("真实Shell首载范围就绪",()=>{
  it("刷新timeout同根fail-open后重试只list，保实例脏稿且不整页reload",async()=>{vi.useFakeTimers();localStorage.setItem(CURRENT_GROUP_KEY,"removed");let old!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;}));fetcher.mockResolvedValue(envelope([group("a")]));mount({groupId:"a",accountId:null});await act(async()=>{await vi.advanceTimersByTimeAsync(1);});await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});const node=screen.getByTestId("native-instance");fireEvent.change(screen.getByLabelText("脏稿"),{target:{value:"保存原任务"}});const {reloadPage}=watchReload();fireEvent.click(screen.getByRole("button",{name:"重试"}));await act(async()=>{await vi.advanceTimersByTimeAsync(1);});expect(fetcher).toHaveBeenCalledTimes(2);expect(router.refresh).toHaveBeenCalledTimes(1);expect(reloadPage).not.toHaveBeenCalled();expect(screen.getByTestId("native-instance")).toBe(node);expect(screen.getByText("dirty")).toBeVisible();expect(unmounts).toBe(0);await act(async()=>old());});
  it.each(["/accounts","/settings/models"])("恢复页%s已挂载任务在刷新timeout后重试不重载或卸载",async pathname=>{vi.useFakeTimers();route.path=pathname;let old!:()=>void,next!:()=>void;router.refresh.mockImplementationOnce(()=>new Promise<void>(r=>{old=r;})).mockImplementationOnce(()=>new Promise<void>(r=>{next=r;}));fetcher.mockResolvedValue(envelope([group("a")]));mount();const node=screen.getByTestId("native-instance");fireEvent.change(screen.getByLabelText("脏稿"),{target:{value:"配置未保存"}});await act(async()=>{await vi.advanceTimersByTimeAsync(1);});await act(async()=>{await vi.advanceTimersByTimeAsync(WORKSPACE_INITIALIZATION_TIMEOUT_MS+1);});const {reloadPage}=watchReload();fireEvent.click(screen.getByRole("button",{name:"重试"}));await act(async()=>{await vi.advanceTimersByTimeAsync(1);});expect(reloadPage).not.toHaveBeenCalled();expect(fetcher).toHaveBeenCalledTimes(2);expect(screen.getByTestId("native-instance")).toBe(node);expect(screen.getByText("dirty")).toBeVisible();expect(unmounts).toBe(0);await act(async()=>{old();next();});});
 
+});
+
+it("T1246 首载合法本地组B与SSR组A不一致时，refresh返回也不能替代真实SSR提交",async()=>{
+ localStorage.setItem(CURRENT_GROUP_KEY,"b");fetcher.mockResolvedValue(envelope([group("a"),group("b")]));
+ const mounted=mount({groupId:"a",accountId:null},false,false);
+ await screen.findByRole("button",{name:"当前账号组：组b"},{timeout:120000});
+ await act(async()=>{await Promise.resolve();await Promise.resolve();});
+ expect(router.refresh).toHaveBeenCalledTimes(1);
+ expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();
+ await act(async()=>mounted.commitServer({groupId:"a",accountId:null}));
+ expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();
+ await act(async()=>mounted.commitServer({groupId:"b",accountId:null}));
+ expect(screen.getByRole("button",{name:"创建调用"})).toBeVisible();
+ expect(fetcher).toHaveBeenCalledTimes(1);expect(mounts).toBe(1);expect(unmounts).toBe(0);
 });

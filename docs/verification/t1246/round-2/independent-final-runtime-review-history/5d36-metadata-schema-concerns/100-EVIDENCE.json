@@ -1,0 +1,68 @@
+{
+  "at": "2026-10-12T06:06:00.999894+00:00",
+  "kind": "actual-source-parser-failure-not-runtime",
+  "sixCjsParserCodes": 0,
+  "sixCjsRawLogs": [
+    {
+      "path": "/private/tmp/t1246-final-guard-static-msqzfk3e/common.cjs.check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/t1246-final-guard-static-msqzfk3e/owned-dyld.cjs.check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/t1246-final-guard-static-msqzfk3e/prepare-metadata-input.cjs.check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/t1246-final-guard-static-msqzfk3e/reseal.cjs.check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/t1246-final-guard-static-msqzfk3e/run.cjs.check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/t1246-final-guard-static-msqzfk3e/supervise.cjs.check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "discoveryPythonAstCode": 0,
+  "preparePythonAstError": "IndentationError: unexpected indent line9 rawdir=P/actual-joint-otool-raw;rawdir.mkdir(mode=0o700)",
+  "candidateBodiesNeverExecuted": true,
+  "sourceWriteSnapshot": [
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/common.cjs",
+      "sha256": "48719fd983307e1672041de6088cf62cef865ce0c6df745c8a0cc601df7a972f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/discover-joint-pairs.py",
+      "sha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/owned-dyld.cjs",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/prepare-joint-dyld.py",
+      "sha256": "bc8f0e75fb11e919702f81782ab6c8e92901585efa9865d7d6f3fc62e77dd2aa"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/prepare-metadata-input.cjs",
+      "sha256": "d1e1b55ba3edc7c4d6ba1a1531d5b7790e17545346efbfcfb90a27689a3da119"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/reseal.cjs",
+      "sha256": "cc85f6a35d08b67c2774d3a8fae9bc9c38c05963c608753b0923882c444d3480"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/run.cjs",
+      "sha256": "fb2465842df087b259453809e87d64b7b6e89afe94e3c51cab7f0ba03b915d58"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/supervise.cjs",
+      "sha256": "53185fcf4525b1f253bbb2d61ea38605cc7a05266b5b31ff45b910bb1dc2623e"
+    }
+  ]
+}

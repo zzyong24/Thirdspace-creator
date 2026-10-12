@@ -1,0 +1,26 @@
+[
+  {
+    "gate": "contract-types-final",
+    "exitCode": 0,
+    "durationMs": 5190,
+    "commandMs": 180000
+  },
+  {
+    "gate": "backend-types-final",
+    "exitCode": 0,
+    "durationMs": 42381,
+    "commandMs": 180000
+  },
+  {
+    "gate": "boundary",
+    "exitCode": 0,
+    "durationMs": 374,
+    "commandMs": 180000
+  },
+  {
+    "gate": "orphan",
+    "exitCode": 0,
+    "durationMs": 140,
+    "commandMs": 180000
+  }
+]

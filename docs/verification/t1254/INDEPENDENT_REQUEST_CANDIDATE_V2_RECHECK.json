@@ -1,0 +1,58 @@
+{
+  "schema": "independent-source-candidate-review/v1",
+  "at": "2026-10-12T00:27:29.730708+00:00",
+  "result": "PASS_PRIVATE_SOURCE_CANDIDATE_ONLY",
+  "candidatePacket": {
+    "path": "/tmp/t1254-readonly/REQUEST_BUDGET_V2_SERIALIZATION_CANDIDATE.json",
+    "sha256": "0f95b03472d70f7b289531a039264d866584fbf65618514b51c72c8e6ab5affb"
+  },
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "actualCandidateDiffChecks": [
+    {
+      "path": "/tmp/t1254-readonly/fetch-budget-candidate.ts",
+      "sha256": "38e7b302b2fcfe404d363a40a9bced2003d59957a08b61820dc5bdb7319ec387"
+    },
+    {
+      "path": "/tmp/t1254-readonly/fetch-budget-candidate-v2.ts",
+      "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375"
+    },
+    {
+      "path": "/tmp/t1254-readonly/fetch-budget-v1-to-v2.diff",
+      "sha256": "0314e1f7eb94333f92229e6203d05beb87c00da45b184891ae4a8925628a3d03"
+    },
+    {
+      "path": "/tmp/t1254-readonly/fetch-budget-candidate.test.ts",
+      "sha256": "32a4dac647a9bcd4709b9737576c99ebb222b81a13faa19c242e71bcdccb5909"
+    },
+    {
+      "path": "/tmp/t1254-readonly/fetch-budget-candidate-v2.test.ts",
+      "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e"
+    },
+    {
+      "path": "/tmp/t1254-readonly/fetch-budget-test-v1-to-v2.diff",
+      "sha256": "26a38ba520a2d93fb5316f3cc14643c5ca83d63d48eed76d0963f5a32d5981ca"
+    }
+  ],
+  "findings": [],
+  "closedFinding": {
+    "id": "CC001",
+    "resolution": "fe2393bb唯一body构造/JSON.stringify移进原try/finally，timer创建后所有该请求构造/发送/完整body失败均清最后timer。fed3d3b0新增循环输入/toJSON原Error两分支，fetch0/timer0及same-error断言，180s。原8全文和v1全部15case不减，出生/分段预算与HTTP/FormData/错误逻辑不改。"
+  },
+  "evidenceLevel": "只读实际bytes与完整diff；未执行新case，原a46/38e7缺口只是静态发现不能补拍历史RED",
+  "producerBoundary": {
+    "originalNativeArchive": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583",
+    "originalStaticArchive": "9335e7d501df0271a861b787fbc3bd155da45c29bd3af5a328e421c19f655822",
+    "originalSharedFetch": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+    "originalCompleteTest": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+    "sameCandidateTwoRoots": true,
+    "v1AndOriginalSourceBytesPreserved": true
+  },
+  "constraints": [
+    "工具/source套件须绑定新的fe239/fed3精确bytes与两实际根/原锁/installed实现；不得复用v1 fbfc runtime封印",
+    "原生产归档和文件不由本审应用；每root工具/候选生成清单继续ROOT+独评",
+    "正式运行先按已准工具拿原producer真实RED，再新完整case与loopback/body120s/更长request实际GREEN，fakeclock只数值",
+    "新helper绿不代current host.importMedia公共链/两真实build/交付/source graph或App验收"
+  ],
+  "runtimePermission": false,
+  "buildOrCopyPermission": false
+}

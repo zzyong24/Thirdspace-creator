@@ -31,9 +31,12 @@ it.each(["账号","定义","伪造项目","无项目"])("%s不触发剪辑候选
  const result=await f.tool!.execute!(f.context,{instruction:"删卡",...(mode==="伪造项目"?{projectId:"other"}:{})},f.scope);
  expect(result.status).not.toBe("ok");expect(f.prepareVideoEdit).not.toHaveBeenCalled();
 });
-it("删除目标或读取失败保留真实错误卡，不产生成功候选",async()=>{
+it("普通读取异常保脱敏错误卡，不产生成功候选",async()=>{
  const f=await fixture();expect(f.tool).toBeDefined();f.prepareVideoEdit.mockRejectedValue(new Error("当前项目还没有已确认的分镜方案"));
- expect(await f.tool!.execute!(f.context,{instruction:"删卡"},f.scope)).toMatchObject({status:"error",sideEffect:"none",data:{kind:"video.edit",projectId:"project",error:"当前项目还没有已确认的分镜方案"}});
+ const result=await f.tool!.execute!(f.context,{instruction:"删卡"},f.scope);
+ expect(result).toMatchObject({status:"error",sideEffect:"none",data:{kind:"video.edit",projectId:"project",outputId:null,expectedRevision:null,sourceRenderTaskId:null,summary:[],decisions:null,renderProps:null,error:"这一步未能完成，原因尚未确认。请先确认是否已有结果，再决定是否重试。"},error:{code:"no_evidence",retryable:false}});
+ expect(JSON.stringify(result)).not.toContain("当前项目还没有已确认的分镜方案");
+ expect(f.prepareVideoEdit).toHaveBeenCalledTimes(1);
 });
 it("候选准备期间取消后不能返回可采纳成功",async()=>{
  const f=await fixture();expect(f.tool).toBeDefined();f.prepareVideoEdit.mockImplementation(async()=>{f.controller.abort();return structuredClone(f.current);});

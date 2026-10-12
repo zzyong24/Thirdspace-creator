@@ -85,6 +85,7 @@ describe("G1 — module-structure acceptance", () => {
     // also used by Production for export artifacts. Any OTHER module importing it
     // is the violation this guard catches.
     const STORAGE_ALLOWED = new Set(["assets", "production"]);
+    const isUnexpectedStorageCaller=(moduleName:string,fileName:string,source:string)=>!STORAGE_ALLOWED.has(moduleName)&&!fileName.endsWith('.test.ts')&&/object-storage|ObjectStoragePort|MockObjectStorage/.test(source);
     const modulesRoot = join(HERE, "..");
     const offenders: string[] = [];
     for (const mod of readdirSync(modulesRoot, { withFileTypes: true })) {
@@ -93,7 +94,7 @@ describe("G1 — module-structure acceptance", () => {
       for (const f of readdirSync(dir)) {
         if (!f.endsWith(".ts") && !f.endsWith(".tsx")) continue;
         const src = readFileSync(join(dir, f), "utf8");
-        if (/object-storage|ObjectStoragePort|MockObjectStorage/.test(src)) {
+        if (isUnexpectedStorageCaller(mod.name,f,src)) {
           offenders.push(`${mod.name}/${f}`);
         }
       }
@@ -101,6 +102,10 @@ describe("G1 — module-structure acceptance", () => {
     expect(offenders, `unexpected object-storage callers: ${offenders.join(", ")}`).toEqual(
       [],
     );
+    // 同一实际扫描谓词仍阻止生产越界；只物理测试文件免于产品依赖扫描。
+    expect(isUnexpectedStorageCaller('articles','articles.service.ts','import type {ObjectStoragePort} from "../assets/object-storage";')).toBe(true);
+    expect(isUnexpectedStorageCaller('articles','articles.test.ts','import type {ObjectStoragePort} from "../assets/object-storage";')).toBe(false);
+    expect(isUnexpectedStorageCaller('articles','articles.service.ts','export const name="ordinary";')).toBe(false);
   });
 });
 

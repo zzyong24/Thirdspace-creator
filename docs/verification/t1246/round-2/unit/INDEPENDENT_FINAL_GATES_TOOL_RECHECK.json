@@ -1,0 +1,115 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-11T23:29:27.354813+00:00",
+  "result": "PASS_TOOL_FINITE_GATE_OBSERVATION_ONLY",
+  "scope": "timeout/boundary/orphan工具静态通过，不准以观察预算声称原无上限消费者有最坏执行界；实际运行须root另准入",
+  "toolSha256": "b5a32eadc6aa2bf429c058e4bc95ea4b287296c159f4e797e95abff3e7006bcc",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "parserSha256": "ccdd5db1edbca67b691bf24736bc17a8c957b18f783612147ce6d67cd28c9d3d",
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "actualReadonlyPrepareFile": "/tmp/t1246-final-gate-b5a32-independent-prepare.json",
+  "actualReadonlyPrepareSha256": "10ca65566c1bf2bc82aa4cd3dcd5b52daacc02ad6d80c62217df10f3b51c4ef5",
+  "actualReadonlyPrepareExit": 0,
+  "gateOrApplicationChildrenLaunched": 0,
+  "sourceDigestAtReview": "bcac9d58475da2a8dc5926def47f4bf827e8b3b9703e88ba4910ad7469690f43",
+  "inputCount": 8270,
+  "cachedPathCount": 17741,
+  "cachedInventorySha256": "11671562c2633a22c4d56754a18d6261f7d44bd941d30f83e1cd393205e10975",
+  "executableResolution": {
+    "pnpmPath": "/opt/homebrew/bin/pnpm",
+    "pnpmRealpath": "/opt/homebrew/lib/node_modules/pnpm/bin/pnpm.cjs",
+    "pnpmSha256": "b276da51dc8ca5b0d3ee3371695b50fc8b3244b281b091c63a3f082a88dadeb9",
+    "implementationRoots": [
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk",
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript",
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/undici@7.27.2/node_modules/undici",
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest",
+      "/opt/homebrew/lib/node_modules/pnpm"
+    ]
+  },
+  "inputDrift": [],
+  "finiteGroupDeclarationInventory": [
+    {
+      "package": "contract",
+      "staticDeclaredCases": 5,
+      "staticChildMs": 45720000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "shortExplicitDeclarations": []
+    },
+    {
+      "package": "ai-worker",
+      "staticDeclaredCases": 20,
+      "staticChildMs": 168720000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "shortExplicitDeclarations": []
+    },
+    {
+      "package": "backend",
+      "staticDeclaredCases": 37,
+      "staticChildMs": 337320000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "shortExplicitDeclarations": [
+        {
+          "file": "backend/src/modules/execution/run-execution-task.test.ts",
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": false,
+          "title": "times out a hung executor via Promise.race + abort signal",
+          "titleRegex": "times out a hung executor via Promise\\.race \\+ abort signal$",
+          "multiplicity": 1,
+          "explicitBodyMs": 10000,
+          "effectiveBodyMs": 1800000,
+          "line": 162
+        }
+      ]
+    },
+    {
+      "package": "frontend",
+      "staticDeclaredCases": 68,
+      "staticChildMs": 708120000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "shortExplicitDeclarations": []
+    },
+    {
+      "package": "mcp-server",
+      "staticDeclaredCases": 28,
+      "staticChildMs": 309120000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "shortExplicitDeclarations": []
+    }
+  ],
+  "observerBodyMs": 1574760000,
+  "timeoutOuterMs": 1581240000,
+  "slots": {
+    "prepare": 600000,
+    "environmentProof": 180000,
+    "body": 1574760000,
+    "childLifecycle": 4320000,
+    "afterSource": 600000,
+    "cleanup": 600000,
+    "margin": 180000
+  },
+  "findings": [],
+  "closedFindings": [
+    "FG001原cached清单、全部非excluded实际读取字节/缺失、Rust/script/vendor、boundary真实untracked walk、当前orphan控制文档/配置缺失、hyperframes安装字节/patch和实际TS/Vitest/MCPUndici/SDK/PNPM根已绑定",
+    "FG002原8组及Node无限/undefined spawnSync断言保；有限Vitest按原声明保更长完整串行派生，Node仅有限观察分配，绝不冒无限消费者最坏界",
+    "旧预算helper每child2.16M与入口一次absolute outer保；观察耗尽/未知close/源漂移/非零保未完成",
+    "取消proof后同步拒开新Gate，最终cancelled真实保非零；PASS另要求outerAbortfalse、signals空，自然结束不能靠kill泄漏洗绿"
+  ],
+  "constraints": [
+    "158只是AST静态声明，不是actual listing/run统计；原8真实退出码与每组完整结果待实际执行",
+    "任何UNBOUNDED_ORIGINAL_CONSUMER只受工具有限等待/取消观察，不改变持久deadline/无上限政策",
+    "只有原8全部自然EOF/原exit0、source同SHA/无额外signals/ownedgroup0、未cancel/expired才报本次Gate通过",
+    "不签全局理论最坏界、模型或App；旧两次22失败、标准frontend4历史类型错保持",
+    "T1252/T1253 source/lock/dist及控制面变后必须freshprepare与root精确runtime准入，不复用此prepare sourceDigest",
+    "当前orphan optionalconfig缺失/default控制路径真实绑定；若配置变更则freshreview须核实际自定义manifest目录"
+  ],
+  "runtimeApproved": false,
+  "actualGateExecuted": false
+}

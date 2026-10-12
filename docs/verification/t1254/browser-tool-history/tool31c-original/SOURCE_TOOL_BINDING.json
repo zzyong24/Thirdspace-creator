@@ -1,0 +1,174 @@
+{
+  "at": "2026-10-12T03:46:20.973089+00:00",
+  "task": "T-1254",
+  "scope": "complete-doocs-two-body-tool-source-candidate-only",
+  "files": [
+    {
+      "path": "docs/verification/t1254/browser-tool/INHERITED_PROVENANCE.json",
+      "sha256": "1ce36489006ee2149738587686502cf939e45f2f38bcc0789849161e914f2e58",
+      "size": 2120
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/LAUNCH_FROM_V3.diff",
+      "sha256": "f6834a0933175eaf94f7fc3d56d421abbcc1738154889eed7050eb4888fd00ac",
+      "size": 34150
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/PENDING_INPUTS.json",
+      "sha256": "80299a9e6abb4a4a69dfb7f1f1fe18d1d0fad829a659c1935f9f5a8cbdb9cbba",
+      "size": 1502
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/PREPARE_FROM_V3.diff",
+      "sha256": "29d30b720ddfcb14de7c6a1d02cac49804d738b48674a0ef7d9bcf1b6a302367",
+      "size": 18217
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/README.md",
+      "sha256": "c1df144cd31877d979c6c3c6ca09cdfd2a35e9df21f48d5d46a9ed547aa30083",
+      "size": 5173
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/FINAL_STATIC_PARSE_RESULT.json",
+      "sha256": "0b8a08dec55c24cb665e503b66e7dd21ee938e0d98469673d390e6efafb6923b",
+      "size": 3674
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/STATIC_RESULT.json",
+      "sha256": "80f5b21575f7565036dbfc4973febe1d3c1fb07b95dd0e38dda84ffae7a5d67b",
+      "size": 4686
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/budget-result.json",
+      "sha256": "3ba874e99925c9da6d86a7e9f2db4a6d56076b3aaae93f55a6f67b9cef29cff1",
+      "size": 960
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/budget.cjs",
+      "sha256": "8092ed140ed90f0493eceaf2dd9f190e3c0ac03f5a67eb9926c07b6c52a77616",
+      "size": 1479
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/dynamic-priority-result.json",
+      "sha256": "15b89671c0dbcce459cb2c576abcc03a9d79ef307c2ca9e5e93dea3c474a280e",
+      "size": 367
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/dynamic-priority.cjs",
+      "sha256": "d9b52a82f71859e1cc7907a3ffba9a6c62fbdaeb54326449e3d2af94c675a0b8",
+      "size": 2618
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/STATIC_RESULT.json",
+      "sha256": "fa306bee1187cebe1c12c530d789fb36dc727bb066bf250979de99b69a762d1f",
+      "size": 4192
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/budget-result.json",
+      "sha256": "6360d922eb3c306b8e183c52e75a764b813acd5b74aedc561039289b65985f97",
+      "size": 960
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/pg-preconnect-result.json",
+      "sha256": "ec3bae6bbcb228c7c8b986f54865003e24ebfca1c3727faca7f24c0f1ad16af4",
+      "size": 4661
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/pg-preconnect-result.json",
+      "sha256": "9cc23214e9c86dab2ec5a85748f4b5eb0a81f31e46bc0c6c73bfd7309bd9556d",
+      "size": 4661
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/pg-preconnect.cjs",
+      "sha256": "b6886ff18555a85489d1b1be38511b384e5a333170b08c5cfd645b8e038d3711",
+      "size": 3504
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/source-types-result.json",
+      "sha256": "632b316392180ebc2c33d32c371f3e900b743d8ddbf096735e7bea5482a5d9fa",
+      "size": 1028
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/source-types.cjs",
+      "sha256": "0dc275174a45bf34e64337501d5d6ee66d88e5a97ddaf2b02322561324d9d433",
+      "size": 1644
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+      "sha256": "616e3a24977145b652d96be699f39caa8d3806e575864cd80a2157950b6f79cc",
+      "size": 5670
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/driver-types.cjs",
+      "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "size": 1166
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/launch.cjs",
+      "sha256": "f9670d3a841a41a134c03b5c10340ea0185f7d187d40862311a0656403274a6d",
+      "size": 31837
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/playwright.config.ts",
+      "sha256": "7077666eaae6cbf1ffc01017b0f64b0aa71832d5e1d9fcd7f0bd04b44b9e8b69",
+      "size": 902
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+      "sha256": "23c5bfe8636ce2d03282430737e2b5101946b0b4bd6276a1d5eaf1f92f031193",
+      "size": 11029
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/seal.cjs",
+      "sha256": "06f6b8a6792c789db6eca43613c943e2e71952df6581f6d2be238a00ab0b9775",
+      "size": 7145
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "sha256": "5a78a7b3f4fada4421bc544d2fd1f04673dfd45a06f09b6e07b476fb9be4fb51",
+      "size": 10303
+    }
+  ],
+  "externalInputs": [
+    {
+      "path": "docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "sha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+      "size": 9921
+    },
+    {
+      "path": "docs/verification/t1254/browser-candidate/SOURCE_V2_BINDING.json",
+      "sha256": "74e21edf5b2803b2dbd5f885233c40363a3a8d5dc0d339d12f5293e9895acbcc",
+      "size": 887
+    },
+    {
+      "path": "docs/verification/t1254/INDEPENDENT_BROWSER_SOURCE_V2_REVIEW.json",
+      "sha256": "44f627a6ed04215c104fb83c47c4c79880116db0c9eb4921a8e0d126347f7683",
+      "size": 4923
+    },
+    {
+      "path": "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+      "sha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+      "size": 9823
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+      "size": 15668
+    }
+  ],
+  "driverFileCount": 7,
+  "runnerBudgetMs": 374580000,
+  "completeEntryBudgetMs": 384900000,
+  "runtimeStarted": false,
+  "sealManifestExists": false,
+  "missingActualInputsRecordedIn": "PENDING_INPUTS.json",
+  "pending": [
+    "final delivery/newHEAD/11Worker/DMG",
+    "complete actual Node/Chrome/PG/installed MachO dyld roots",
+    "exact final seal fresh peer+ROOT",
+    "ownedCopy types/list2/body2/screenshots/trace/readonly/cleanup/sourceafter"
+  ],
+  "historicalPublicFirstFailPreserved": true,
+  "AppUnverified": true,
+  "original170New111First100Unchanged": true
+}

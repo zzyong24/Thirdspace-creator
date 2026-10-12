@@ -1,0 +1,483 @@
+{
+  "at": "2026-10-11T21:06:46.512Z",
+  "budgetMs": 1800000,
+  "elapsedMs": 1030.1582909999997,
+  "owned": [
+    {
+      "pid": 74836,
+      "ppid": 74821,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo test --manifest-path /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/source/workbench/Cargo.toml --locked --offline --no-default-features --lib --no-run --message-format=json"
+    },
+    {
+      "pid": 74889,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "(rustc)"
+    },
+    {
+      "pid": 74955,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name build_script_build --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-1.0.107/build.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --cfg feature=\"proc-macro\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"nightly\", \"proc-macro\", \"span-locations\")) -C metadata=4254063db613a13a -C extra-filename=-f6573390390f0fc6 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/proc-macro2-f6573390390f0fc6 -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74956,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name build_script_build --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libc-0.2.189/build.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --allow=unused_qualifications --warn=clippy::unnecessary_semicolon --allow=clippy::unnecessary_cast --warn=clippy::ptr_as_ptr --allow=clippy::non_minimal_cfg --allow=clippy::missing_safety_doc --warn=clippy::map_unwrap_or --warn=clippy::manual_assert --allow=clippy::identity_op --warn=clippy::explicit_iter_loop --cfg feature=\"default\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"align\", \"const-extern-fn\", \"default\", \"extra_traits\", \"rustc-dep-of-std\", \"rustc-std-workspace-core\", \"std\", \"use_std\")) -C metadata=7457588572f93928 -C extra-filename=-da699a7c684b32f6 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/libc-da699a7c684b32f6 -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74957,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name version_check --edition=2015 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/version_check-0.9.5/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values()) -C metadata=1289159b0a80226c -C extra-filename=-27447526a5891999 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74959,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name build_script_build --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quote-1.0.47/build.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --cfg feature=\"proc-macro\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"proc-macro\")) -C metadata=f45b24d710e490ec -C extra-filename=-f87ae062768e4c85 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/quote-f87ae062768e4c85 -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74962,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name build_script_build --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/build.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --cfg feature=\"default\" --cfg feature=\"derive\" --cfg feature=\"serde_derive\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"default\", \"derive\", \"rc\", \"serde_derive\", \"std\", \"unstable\")) -C metadata=d6b0ec2bc58c7229 -C extra-filename=-b7a6eb3f33dd115e --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde-b7a6eb3f33dd115e -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74964,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name cfg_if --edition=2018 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cfg-if-1.0.4/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"core\", \"rustc-dep-of-std\")) -C metadata=3c508e3481b54ecf -C extra-filename=-7e76abba0d4e7174 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74966,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:53 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name typenum --edition=2018 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/typenum-1.20.1/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"const-generics\", \"i128\", \"scale-info\", \"scale_info\", \"strict\")) -C metadata=1678d10a25afafd2 -C extra-filename=-badbe8f99efaa426 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74967,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name unicode_ident --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-ident-1.0.24/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values()) -C metadata=97e71a979ea9b0cb -C extra-filename=-fec03648d3ee7fd4 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74968,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name build_script_build --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.23/build.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"no-panic\")) -C metadata=41542f204de2571e -C extra-filename=-4f51e818dc1b3dc5 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zmij-4f51e818dc1b3dc5 -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74969,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name build_script_build --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zerocopy-0.8.56/build.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --cfg feature=\"simd\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"__internal_use_only_features_that_work_on_stable\", \"alloc\", \"derive\", \"float-nightly\", \"simd\", \"simd-nightly\", \"std\", \"zerocopy-derive\")) -C metadata=ef5b6be93b71dcd2 -C extra-filename=-fe81d15718bf7fca --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zerocopy-fe81d15718bf7fca -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74971,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name build_script_build --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.229/build.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --cfg feature=\"result\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"default\", \"rc\", \"result\", \"std\", \"unstable\")) -C metadata=1852a4468d5e8d9b -C extra-filename=-145e1b7ad71cc600 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_core-145e1b7ad71cc600 -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 74972,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name build_script_build --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151/build.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --cfg feature=\"default\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"arbitrary_precision\", \"default\", \"float_roundtrip\", \"indexmap\", \"preserve_order\", \"raw_value\", \"std\", \"unbounded_depth\")) -C metadata=c2ad8dbc2e0c1c8d -C extra-filename=-515eccc9f7e72488 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_json-515eccc9f7e72488 -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 75012,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name tinyvec --edition=2018 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.12.0/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"alloc\" --cfg feature=\"default\" --cfg feature=\"tinyvec_macros\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"arbitrary\", \"bin-proto\", \"borsh\", \"debugger_visualizer\", \"default\", \"defmt\", \"experimental_write_impl\", \"generic-array\", \"grab_spare_slice\", \"latest_stable_rust\", \"nightly_slice_partition_dedup\", \"real_blackbox\", \"rustc_1_40\", \"rustc_1_55\", \"rustc_1_57\", \"rustc_1_61\", \"schemars\", \"serde\", \"std\", \"tinyvec_macros\")) -C metadata=96e44c156c3f452e -C extra-filename=-70e750e10be612b3 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern tinyvec_macros=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libtinyvec_macros-ad254d547ee64734.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 75018,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(rustc)"
+    },
+    {
+      "pid": 75029,
+      "ppid": 74972,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_json-515eccc9f7e72488/rustcs1Mjh0/symbols.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_json-515eccc9f7e72488/build_script_build-515eccc9f7e72488.build_script_build.15ef52ead879e543-cgu.0.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_json-515eccc9f7e72488/build_script_build-515eccc9f7e72488.6armjn7tx6oh9bvuu1n021e32.rcgu.o /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd-61f27fb94867ea3a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libpanic_unwind-e7c7bceb8384c338.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libobject-97f18bb96da9239d.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libmemchr-cda693362d5c8152.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libaddr2line-e7495c686e7a4546.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libgimli-f60a0fae83edf44f.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcfg_if-a2da65a3839b459b.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_demangle-073cd48729866f52.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd_detect-d8bccb6c13974054.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libhashbrown-ba2a7d3561a02dc4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_alloc-3a94b708dde9b9b0.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libminiz_oxide-093d7e1c0e3b7c58.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libadler2-c16b74314635754a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libunwind-185719a933724848.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liblibc-e47c8f2666a97726.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_core-a059234acb3877f4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liballoc-4804d8e0d239d123.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcore-a4b78f7f6a62a375.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcompiler_builtins-a607adebecc190eb.rlib -lSystem -lc -lm -arch arm64 -mmacosx-version-min=11.0.0 -o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_json-515eccc9f7e72488/build_script_build-515eccc9f7e72488 -Wl,-dead_strip -nodefaultlibs"
+    },
+    {
+      "pid": 75035,
+      "ppid": 74959,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/quote-f87ae062768e4c85/rustcq4KNFA/symbols.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/quote-f87ae062768e4c85/build_script_build-f87ae062768e4c85.build_script_build.2c9417c1d9b41629-cgu.0.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/quote-f87ae062768e4c85/build_script_build-f87ae062768e4c85.cd54c3xzeusm4u0yzjggdbrx1.rcgu.o /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd-61f27fb94867ea3a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libpanic_unwind-e7c7bceb8384c338.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libobject-97f18bb96da9239d.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libmemchr-cda693362d5c8152.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libaddr2line-e7495c686e7a4546.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libgimli-f60a0fae83edf44f.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcfg_if-a2da65a3839b459b.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_demangle-073cd48729866f52.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd_detect-d8bccb6c13974054.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libhashbrown-ba2a7d3561a02dc4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_alloc-3a94b708dde9b9b0.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libminiz_oxide-093d7e1c0e3b7c58.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libadler2-c16b74314635754a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libunwind-185719a933724848.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liblibc-e47c8f2666a97726.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_core-a059234acb3877f4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liballoc-4804d8e0d239d123.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcore-a4b78f7f6a62a375.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcompiler_builtins-a607adebecc190eb.rlib -lSystem -lc -lm -arch arm64 -mmacosx-version-min=11.0.0 -o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/quote-f87ae062768e4c85/build_script_build-f87ae062768e4c85 -Wl,-dead_strip -nodefaultlibs"
+    },
+    {
+      "pid": 75036,
+      "ppid": 74955,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/proc-macro2-f6573390390f0fc6/rustcU4SccV/symbols.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/proc-macro2-f6573390390f0fc6/build_script_build-f6573390390f0fc6.build_script_build.83eaa8c85d139cd9-cgu.0.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/proc-macro2-f6573390390f0fc6/build_script_build-f6573390390f0fc6.cu6629z1984059j2kk80ilvs6.rcgu.o /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd-61f27fb94867ea3a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libpanic_unwind-e7c7bceb8384c338.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libobject-97f18bb96da9239d.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libmemchr-cda693362d5c8152.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libaddr2line-e7495c686e7a4546.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libgimli-f60a0fae83edf44f.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcfg_if-a2da65a3839b459b.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_demangle-073cd48729866f52.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd_detect-d8bccb6c13974054.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libhashbrown-ba2a7d3561a02dc4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_alloc-3a94b708dde9b9b0.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libminiz_oxide-093d7e1c0e3b7c58.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libadler2-c16b74314635754a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libunwind-185719a933724848.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liblibc-e47c8f2666a97726.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_core-a059234acb3877f4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liballoc-4804d8e0d239d123.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcore-a4b78f7f6a62a375.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcompiler_builtins-a607adebecc190eb.rlib -lSystem -lc -lm -arch arm64 -mmacosx-version-min=11.0.0 -o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/proc-macro2-f6573390390f0fc6/build_script_build-f6573390390f0fc6 -Wl,-dead_strip -nodefaultlibs"
+    },
+    {
+      "pid": 75037,
+      "ppid": 74968,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zmij-4f51e818dc1b3dc5/rustcnWKErV/symbols.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zmij-4f51e818dc1b3dc5/build_script_build-4f51e818dc1b3dc5.build_script_build.b5db0fdce4f6313b-cgu.0.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zmij-4f51e818dc1b3dc5/build_script_build-4f51e818dc1b3dc5.2rz1cujk7z8k47scm1ytm6ehg.rcgu.o /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd-61f27fb94867ea3a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libpanic_unwind-e7c7bceb8384c338.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libobject-97f18bb96da9239d.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libmemchr-cda693362d5c8152.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libaddr2line-e7495c686e7a4546.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libgimli-f60a0fae83edf44f.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcfg_if-a2da65a3839b459b.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_demangle-073cd48729866f52.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd_detect-d8bccb6c13974054.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libhashbrown-ba2a7d3561a02dc4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_alloc-3a94b708dde9b9b0.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libminiz_oxide-093d7e1c0e3b7c58.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libadler2-c16b74314635754a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libunwind-185719a933724848.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liblibc-e47c8f2666a97726.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_core-a059234acb3877f4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liballoc-4804d8e0d239d123.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcore-a4b78f7f6a62a375.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcompiler_builtins-a607adebecc190eb.rlib -lSystem -lc -lm -arch arm64 -mmacosx-version-min=11.0.0 -o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zmij-4f51e818dc1b3dc5/build_script_build-4f51e818dc1b3dc5 -Wl,-dead_strip -nodefaultlibs"
+    },
+    {
+      "pid": 75047,
+      "ppid": 74971,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_core-145e1b7ad71cc600/rustc9yUyyM/symbols.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_core-145e1b7ad71cc600/build_script_build-145e1b7ad71cc600.build_script_build.86eaa5765228cb14-cgu.0.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_core-145e1b7ad71cc600/build_script_build-145e1b7ad71cc600.3dnba6vqsvkrg5saculvzmsod.rcgu.o /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd-61f27fb94867ea3a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libpanic_unwind-e7c7bceb8384c338.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libobject-97f18bb96da9239d.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libmemchr-cda693362d5c8152.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libaddr2line-e7495c686e7a4546.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libgimli-f60a0fae83edf44f.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcfg_if-a2da65a3839b459b.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_demangle-073cd48729866f52.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd_detect-d8bccb6c13974054.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libhashbrown-ba2a7d3561a02dc4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_alloc-3a94b708dde9b9b0.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libminiz_oxide-093d7e1c0e3b7c58.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libadler2-c16b74314635754a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libunwind-185719a933724848.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liblibc-e47c8f2666a97726.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_core-a059234acb3877f4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liballoc-4804d8e0d239d123.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcore-a4b78f7f6a62a375.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcompiler_builtins-a607adebecc190eb.rlib -lSystem -lc -lm -arch arm64 -mmacosx-version-min=11.0.0 -o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_core-145e1b7ad71cc600/build_script_build-145e1b7ad71cc600 -Wl,-dead_strip -nodefaultlibs"
+    },
+    {
+      "pid": 75049,
+      "ppid": 74962,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde-b7a6eb3f33dd115e/rustcI2XQbg/symbols.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde-b7a6eb3f33dd115e/build_script_build-b7a6eb3f33dd115e.build_script_build.1145ffdd4541da44-cgu.0.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde-b7a6eb3f33dd115e/build_script_build-b7a6eb3f33dd115e.6zothq3ja6cp7ilap0kfykaj3.rcgu.o /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd-61f27fb94867ea3a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libpanic_unwind-e7c7bceb8384c338.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libobject-97f18bb96da9239d.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libmemchr-cda693362d5c8152.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libaddr2line-e7495c686e7a4546.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libgimli-f60a0fae83edf44f.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcfg_if-a2da65a3839b459b.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_demangle-073cd48729866f52.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd_detect-d8bccb6c13974054.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libhashbrown-ba2a7d3561a02dc4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_alloc-3a94b708dde9b9b0.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libminiz_oxide-093d7e1c0e3b7c58.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libadler2-c16b74314635754a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libunwind-185719a933724848.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liblibc-e47c8f2666a97726.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_core-a059234acb3877f4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liballoc-4804d8e0d239d123.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcore-a4b78f7f6a62a375.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcompiler_builtins-a607adebecc190eb.rlib -lSystem -lc -lm -arch arm64 -mmacosx-version-min=11.0.0 -o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde-b7a6eb3f33dd115e/build_script_build-b7a6eb3f33dd115e -Wl,-dead_strip -nodefaultlibs"
+    },
+    {
+      "pid": 75073,
+      "ppid": 74969,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zerocopy-fe81d15718bf7fca/rustc9hWVWx/symbols.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zerocopy-fe81d15718bf7fca/build_script_build-fe81d15718bf7fca.build_script_build.5c43d02fb885af09-cgu.0.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zerocopy-fe81d15718bf7fca/build_script_build-fe81d15718bf7fca.build_script_build.5c43d02fb885af09-cgu.1.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zerocopy-fe81d15718bf7fca/build_script_build-fe81d15718bf7fca.4nov169s64zgyxh56y3wjxhcu.rcgu.o /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd-61f27fb94867ea3a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libpanic_unwind-e7c7bceb8384c338.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libobject-97f18bb96da9239d.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libmemchr-cda693362d5c8152.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libaddr2line-e7495c686e7a4546.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libgimli-f60a0fae83edf44f.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcfg_if-a2da65a3839b459b.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_demangle-073cd48729866f52.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd_detect-d8bccb6c13974054.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libhashbrown-ba2a7d3561a02dc4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_alloc-3a94b708dde9b9b0.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libminiz_oxide-093d7e1c0e3b7c58.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libadler2-c16b74314635754a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libunwind-185719a933724848.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liblibc-e47c8f2666a97726.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_core-a059234acb3877f4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liballoc-4804d8e0d239d123.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcore-a4b78f7f6a62a375.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcompiler_builtins-a607adebecc190eb.rlib -lSystem -lc -lm -arch arm64 -mmacosx-version-min=11.0.0 -o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zerocopy-fe81d15718bf7fca/build_script_build-fe81d15718bf7fca -Wl,-dead_strip -nodefaultlibs"
+    },
+    {
+      "pid": 75074,
+      "ppid": 74956,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/libc-da699a7c684b32f6/rustcFCiTKS/symbols.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/libc-da699a7c684b32f6/build_script_build-da699a7c684b32f6.build_script_build.7c33d6991293a5bf-cgu.0.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/libc-da699a7c684b32f6/build_script_build-da699a7c684b32f6.build_script_build.7c33d6991293a5bf-cgu.1.rcgu.o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/libc-da699a7c684b32f6/build_script_build-da699a7c684b32f6.7menuso4v4w5s1zxu0ukp4793.rcgu.o /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd-61f27fb94867ea3a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libpanic_unwind-e7c7bceb8384c338.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libobject-97f18bb96da9239d.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libmemchr-cda693362d5c8152.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libaddr2line-e7495c686e7a4546.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libgimli-f60a0fae83edf44f.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcfg_if-a2da65a3839b459b.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_demangle-073cd48729866f52.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libstd_detect-d8bccb6c13974054.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libhashbrown-ba2a7d3561a02dc4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_alloc-3a94b708dde9b9b0.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libminiz_oxide-093d7e1c0e3b7c58.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libadler2-c16b74314635754a.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libunwind-185719a933724848.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liblibc-e47c8f2666a97726.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/librustc_std_workspace_core-a059234acb3877f4.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/liballoc-4804d8e0d239d123.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcore-a4b78f7f6a62a375.rlib /Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/lib/libcompiler_builtins-a607adebecc190eb.rlib -lSystem -lc -lm -arch arm64 -mmacosx-version-min=11.0.0 -o /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/libc-da699a7c684b32f6/build_script_build-da699a7c684b32f6 -Wl,-dead_strip -nodefaultlibs"
+    },
+    {
+      "pid": 75079,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name memchr --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/memchr-2.8.3/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"alloc\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"core\", \"default\", \"libc\", \"logging\", \"rustc-dep-of-std\", \"std\", \"use_std\")) -C metadata=9749506a932ee57f -C extra-filename=-913b64bde2108e6c --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 75080,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(rustc)"
+    },
+    {
+      "pid": 75081,
+      "ppid": 75074,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75082,
+      "ppid": 75073,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75083,
+      "ppid": 75035,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75084,
+      "ppid": 75047,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75085,
+      "ppid": 75037,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75086,
+      "ppid": 75029,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75087,
+      "ppid": 75036,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75088,
+      "ppid": 75049,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:54 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75094,
+      "ppid": 75080,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "(clang)"
+    },
+    {
+      "pid": 75095,
+      "ppid": 75094,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "(ld)"
+    },
+    {
+      "pid": 75097,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name unicode_normalization --edition=2018 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unicode-normalization-0.1.25/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"default\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"std\")) -C metadata=3e37ca3f213a9158 -C extra-filename=-aef361c20ebcba47 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern tinyvec=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libtinyvec-70e750e10be612b3.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 75132,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name base64 --edition=2018 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.22.1/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"alloc\" --cfg feature=\"default\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"default\", \"std\")) -C metadata=e2e1b586d42c6b52 -C extra-filename=-b543fed2f0293468 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow"
+    },
+    {
+      "pid": 75133,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/proc-macro2-f6573390390f0fc6/build-script-build"
+    },
+    {
+      "pid": 75134,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_core-145e1b7ad71cc600/build-script-build"
+    },
+    {
+      "pid": 75135,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde_json-515eccc9f7e72488/build-script-build"
+    },
+    {
+      "pid": 75136,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/generic-array-be7d0a38638d306f/build-script-build"
+    },
+    {
+      "pid": 75137,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zerocopy-fe81d15718bf7fca/build-script-build"
+    },
+    {
+      "pid": 75138,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/serde-b7a6eb3f33dd115e/build-script-build"
+    },
+    {
+      "pid": 75139,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/quote-f87ae062768e4c85/build-script-build"
+    },
+    {
+      "pid": 75140,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/zmij-4f51e818dc1b3dc5/build-script-build"
+    },
+    {
+      "pid": 75141,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:55 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/build/libc-da699a7c684b32f6/build-script-build"
+    },
+    {
+      "pid": 75172,
+      "ppid": 75133,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:56 2026",
+      "command": "(rustc)"
+    },
+    {
+      "pid": 75177,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:56 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name proc_macro2 --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-1.0.107/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --cfg feature=\"proc-macro\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"nightly\", \"proc-macro\", \"span-locations\")) -C metadata=b723a98ca0b135f6 -C extra-filename=-18b2857b6f1a726f --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern unicode_ident=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libunicode_ident-fec03648d3ee7fd4.rmeta --cap-lints allow --cfg wrap_proc_macro --cfg proc_macro_span_location --cfg proc_macro_span_file --check-cfg cfg(fuzzing) --check-cfg cfg(no_is_available) --check-cfg cfg(no_literal_byte_character) --check-cfg cfg(no_literal_c_string) --check-cfg cfg(no_source_text) --check-cfg cfg(proc_macro_span) --check-cfg cfg(proc_macro_span_file) --check-cfg cfg(proc_macro_span_location) --check-cfg cfg(procmacro2_backtrace) --check-cfg cfg(procmacro2_build_probe) --check-cfg cfg(procmacro2_nightly_testing) --check-cfg cfg(procmacro2_semver_exempt) --check-cfg cfg(randomize_layout) --check-cfg cfg(span_locations) --check-cfg cfg(super_unstable) --check-cfg cfg(wrap_proc_macro)"
+    },
+    {
+      "pid": 75180,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:56 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name serde_core --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.229/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"result\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"default\", \"rc\", \"result\", \"std\", \"unstable\")) -C metadata=2b75b4f116cf857a -C extra-filename=-32b5861d68088a5e --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow --check-cfg cfg(if_docsrs_then_no_serde_core) --check-cfg cfg(no_core_cstr) --check-cfg cfg(no_core_error) --check-cfg cfg(no_core_net) --check-cfg cfg(no_core_num_saturating) --check-cfg cfg(no_diagnostic_namespace) --check-cfg cfg(no_serde_derive) --check-cfg cfg(no_std_atomic) --check-cfg cfg(no_std_atomic64) --check-cfg cfg(no_target_has_atomic)"
+    },
+    {
+      "pid": 75297,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:57 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name generic_array --edition=2015 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"more_lengths\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"more_lengths\", \"serde\", \"zeroize\")) -C metadata=342a4df8a3bd3a15 -C extra-filename=-d3f0bcb72e2c9b19 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern typenum=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libtypenum-badbe8f99efaa426.rmeta --cap-lints allow --cfg relaxed_coherence"
+    },
+    {
+      "pid": 75328,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:58 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name zerocopy --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zerocopy-0.8.56/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"simd\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"__internal_use_only_features_that_work_on_stable\", \"alloc\", \"derive\", \"float-nightly\", \"simd\", \"simd-nightly\", \"std\", \"zerocopy-derive\")) -C metadata=702ab1ba10fadeee -C extra-filename=-1d2bd5c8b8977d2b --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow --check-cfg cfg(no_zerocopy_simd_x86_avx12_1_89_0) --check-cfg cfg(rust, values(\"1.89.0\")) --check-cfg cfg(no_zerocopy_core_error_1_81_0) --check-cfg cfg(rust, values(\"1.81.0\")) --check-cfg cfg(no_zerocopy_diagnostic_on_unimplemented_1_78_0) --check-cfg cfg(rust, values(\"1.78.0\")) --check-cfg cfg(no_zerocopy_generic_bounds_in_const_fn_1_61_0) --check-cfg cfg(rust, values(\"1.61.0\")) --check-cfg cfg(no_zerocopy_target_has_atomics_1_60_0) --check-cfg cfg(rust, values(\"1.60.0\")) --check-cfg cfg(no_zerocopy_aarch64_simd_1_59_0) --check-cfg cfg(rust, values(\"1.59.0\")) --check-cfg cfg(no_zerocopy_aarch64_simd_be_1_87_0) --check-cfg cfg(rust, values(\"1.87.0\")) --check-cfg cfg(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0) --check-cfg cfg(rust, values(\"1.57.0\")) --check-cfg cfg(doc_cfg) --check-cfg cfg(kani) --check-cfg cfg(__ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS) --check-cfg cfg(__ZEROCOPY_INTERNAL_USE_ONLY_DEV_MODE) --check-cfg cfg(coverage_nightly) --check-cfg cfg(zerocopy_inline_always) --check-cfg cfg(zerocopy_unstable_ptr) --check-cfg cfg(zerocopy_unstable_linux) --check-cfg cfg(no_fp_fmt_parse)"
+    },
+    {
+      "pid": 75336,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:58 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name zmij --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zmij-1.0.23/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"no-panic\")) -C metadata=43d6847933bce925 -C extra-filename=-9e60319a8c05d239 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow --check-cfg cfg(exhaustive) --check-cfg cfg(opt_level, values(\"s\")) --check-cfg cfg(zmij_no_select_unpredictable)"
+    },
+    {
+      "pid": 75339,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:59 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name serde_json --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"default\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"arbitrary_precision\", \"default\", \"float_roundtrip\", \"indexmap\", \"preserve_order\", \"raw_value\", \"std\", \"unbounded_depth\")) -C metadata=794a1d26c5a11e7d -C extra-filename=-86e149e43221e071 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern itoa=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libitoa-b44586fc39d2b7cf.rmeta --extern memchr=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libmemchr-913b64bde2108e6c.rmeta --extern serde_core=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libserde_core-32b5861d68088a5e.rmeta --extern zmij=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libzmij-9e60319a8c05d239.rmeta --cap-lints allow --cfg fast_arithmetic=\"64\" --check-cfg cfg(fast_arithmetic, values(\"32\", \"64\"))"
+    },
+    {
+      "pid": 75344,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:59 2026",
+      "command": "(rustc)"
+    },
+    {
+      "pid": 75345,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:59 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name syn --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-3.0.6/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --cfg feature=\"clone-impls\" --cfg feature=\"derive\" --cfg feature=\"parsing\" --cfg feature=\"printing\" --cfg feature=\"proc-macro\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"clone-impls\", \"default\", \"derive\", \"extra-traits\", \"fold\", \"full\", \"parsing\", \"printing\", \"proc-macro\", \"test\", \"visit\", \"visit-mut\")) -C metadata=7954824dcce07564 -C extra-filename=-a8035ae1b87f531a --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern proc_macro2=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libproc_macro2-18b2857b6f1a726f.rmeta --extern quote=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libquote-bd53fcd335667b9a.rmeta --extern unicode_ident=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libunicode_ident-fec03648d3ee7fd4.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 75378,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:59 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name libc --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libc-0.2.189/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --allow=unused_qualifications --warn=clippy::unnecessary_semicolon --allow=clippy::unnecessary_cast --warn=clippy::ptr_as_ptr --allow=clippy::non_minimal_cfg --allow=clippy::missing_safety_doc --warn=clippy::map_unwrap_or --warn=clippy::manual_assert --allow=clippy::identity_op --warn=clippy::explicit_iter_loop --cfg feature=\"default\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"align\", \"const-extern-fn\", \"default\", \"extra_traits\", \"rustc-dep-of-std\", \"rustc-std-workspace-core\", \"std\", \"use_std\")) -C metadata=f1df5277634b2efb -C extra-filename=-daad9fe4d12f6b51 --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --cap-lints allow --cfg freebsd12 --check-cfg cfg(emscripten_old_stat_abi) --check-cfg cfg(espidf_picolibc) --check-cfg cfg(espidf_time32) --check-cfg cfg(freebsd10) --check-cfg cfg(freebsd11) --check-cfg cfg(freebsd12) --check-cfg cfg(freebsd13) --check-cfg cfg(freebsd14) --check-cfg cfg(freebsd15) --check-cfg cfg(gnu_file_offset_bits64) --check-cfg cfg(gnu_time_bits64) --check-cfg cfg(libc_deny_warnings) --check-cfg cfg(linux_time_bits64) --check-cfg cfg(musl_v1_2_3) --check-cfg cfg(musl32_time64) --check-cfg cfg(musl_redir_time64) --check-cfg cfg(vxworks_lt_25_09) --check-cfg cfg(libc_pauthtest) --check-cfg cfg(target_os,values(\"switch\",\"aix\",\"ohos\",\"hurd\",\"rtems\",\"visionos\",\"nuttx\",\"cygwin\",\"qurt\",\"qnx\")) --check-cfg cfg(target_env,values(\"illumos\",\"wasi\",\"aix\",\"ohos\",\"nto71_iosock\")) --check-cfg cfg(target_arch,values(\"loongarch64\",\"mips32r6\",\"mips64r6\",\"csky\"))"
+    },
+    {
+      "pid": 75388,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:59 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name ppv_lite86 --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"simd\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"no_simd\", \"simd\", \"std\")) -C metadata=902b80dbaad770a8 -C extra-filename=-ad0636344145cf4d --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern zerocopy=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libzerocopy-1d2bd5c8b8977d2b.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 75468,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:00 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name getrandom --edition=2018 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.17/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"compiler_builtins\", \"core\", \"custom\", \"js\", \"js-sys\", \"linux_disable_fallback\", \"rdrand\", \"rustc-dep-of-std\", \"std\", \"test-in-browser\", \"wasm-bindgen\")) -C metadata=e25046009d38c8a3 -C extra-filename=-e035019e5d3b2a4a --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern cfg_if=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libcfg_if-7e76abba0d4e7174.rmeta --extern libc=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/liblibc-daad9fe4d12f6b51.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 75469,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:00 2026",
+      "command": "(rustc)"
+    },
+    {
+      "pid": 75492,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:00 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name rand_chacha --edition=2018 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_chacha-0.3.1/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"serde\", \"serde1\", \"simd\", \"std\")) -C metadata=a9c4ee8aba1a4d98 -C extra-filename=-919334de27ff649f --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern ppv_lite86=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libppv_lite86-ad0636344145cf4d.rmeta --extern rand_core=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/librand_core-7bacc80be4410bdc.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 75510,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:00 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name rand --edition=2018 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand-0.8.7/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"alloc\" --cfg feature=\"default\" --cfg feature=\"getrandom\" --cfg feature=\"libc\" --cfg feature=\"rand_chacha\" --cfg feature=\"std\" --cfg feature=\"std_rng\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"default\", \"getrandom\", \"libc\", \"log\", \"min_const_gen\", \"nightly\", \"rand_chacha\", \"serde\", \"serde1\", \"small_rng\", \"std\", \"std_rng\")) -C metadata=06c4a144fc13674a -C extra-filename=-a0e1aa3e4fb4bb7d --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern libc=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/liblibc-daad9fe4d12f6b51.rmeta --extern rand_chacha=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/librand_chacha-919334de27ff649f.rmeta --extern rand_core=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/librand_core-7bacc80be4410bdc.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 75518,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:00 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name serde_derive --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_derive-1.0.229/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type proc-macro --emit=dep-info,link -C prefer-dynamic -C embed-bitcode=no --cfg feature=\"default\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"deserialize_in_place\")) -C metadata=bf03b1cfdb8c6e5f -C extra-filename=-49d67eca7c2c406e --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern proc_macro2=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libproc_macro2-18b2857b6f1a726f.rlib --extern quote=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libquote-bd53fcd335667b9a.rlib --extern syn=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libsyn-a8035ae1b87f531a.rlib --extern proc_macro --cap-lints allow"
+    },
+    {
+      "pid": 75574,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:01 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name serde --edition=2021 /Users/zyongzhu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"default\" --cfg feature=\"derive\" --cfg feature=\"serde_derive\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"default\", \"derive\", \"rc\", \"serde_derive\", \"std\", \"unstable\")) -C metadata=dd14edb81d698e92 -C extra-filename=-0717dcf7b6f7f0bb --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern serde_core=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libserde_core-32b5861d68088a5e.rmeta --extern serde_derive=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libserde_derive-49d67eca7c2c406e.dylib --cap-lints allow --cfg if_docsrs_then_no_serde_core --check-cfg cfg(feature, values(\"result\")) --check-cfg cfg(if_docsrs_then_no_serde_core) --check-cfg cfg(no_core_cstr) --check-cfg cfg(no_core_error) --check-cfg cfg(no_core_net) --check-cfg cfg(no_core_num_saturating) --check-cfg cfg(no_diagnostic_namespace) --check-cfg cfg(no_serde_derive) --check-cfg cfg(no_std_atomic) --check-cfg cfg(no_std_atomic64) --check-cfg cfg(no_target_has_atomic)"
+    },
+    {
+      "pid": 75624,
+      "ppid": 74836,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:02 2026",
+      "command": "/Users/zyongzhu/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name creatoros_workbench_test --edition=2021 mod.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --test --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"workbench-browser\")) -C metadata=73f500322f09dd70 -C extra-filename=-eff919631907b84d --out-dir /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps -C incremental=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/incremental -L dependency=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps --extern base64=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libbase64-b543fed2f0293468.rlib --extern libc=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/liblibc-daad9fe4d12f6b51.rlib --extern rand=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/librand-a0e1aa3e4fb4bb7d.rlib --extern serde=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libserde-0717dcf7b6f7f0bb.rlib --extern serde_json=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libserde_json-86e149e43221e071.rlib --extern sha2=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libsha2-d085d145be19940e.rlib --extern unicode_normalization=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/libunicode_normalization-aef361c20ebcba47.rlib"
+    },
+    {
+      "pid": 75796,
+      "ppid": 74821,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:04 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/creatoros_workbench_test-eff919631907b84d ipc::tests::t1250_ --list"
+    },
+    {
+      "pid": 75801,
+      "ppid": 74821,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:06:04 2026",
+      "command": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/creatoros_workbench_test-eff919631907b84d ipc::tests::t1250_ --test-threads=1 --nocapture"
+    }
+  ],
+  "signals": [],
+  "survivors": [],
+  "unknown": [],
+  "proofErrors": [],
+  "tempRootPreserved": true,
+  "targetRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target",
+  "allPass": true
+}

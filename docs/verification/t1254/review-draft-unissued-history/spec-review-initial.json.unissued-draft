@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立读取冻结宪法、T1254完整合同、两原归档21个精确成员、原shared fetch与完整测试、两构建适配差异、当前两压缩块及真实Gate失败。两根shared fetch确实同字节且原30秒timer覆盖完整body；native宿主上传先走host.importMedia，static CSP connect-src none，不能用旧模块loopback替代宿主上传证明。合同已约束两原根分别锁安装/真实构建、完整对应源和图、原CSP/bridge保留、生成后exact新增删除清单双审再复制，未发现规格阻断。保symlink首次提取失败、原22/2红与四历史类型错误；未安装、构建、测试、浏览器或App执行，亦未签任何候选/发布通过。",
+  "findings": []
+}

@@ -1,0 +1,9 @@
+{
+  "scope": "纯静态private tool补真正child-start时剩余门；不运行任何body/服务",
+  "oldToolSha256": "17916593a3dde3a115359c5cf6e47ff57c6da9ec0010e1eb00ac31a287cf2ff8",
+  "newToolSha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9",
+  "uniqueChange": "remaining(budgetMs+B.LIFECYCLE+B.lastSourceMs+B.marginMs,label);assertAll();remaining(budgetMs+B.LIFECYCLE+B.lastSourceMs+B.marginMs,label+'-after-full-input-verification');const r=",
+  "inverseEqualsOld": true,
+  "sourceBudgetBodyUnchanged": true,
+  "noActualStartupFailureClaim": true
+}

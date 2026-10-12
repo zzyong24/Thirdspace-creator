@@ -1,0 +1,42 @@
+{
+  "task": "T-1254",
+  "evidenceLevel": "只读真实文件/包元数据，不运行pnpm/npm，不install/network",
+  "tools": [
+    {
+      "requestedPath": "/opt/homebrew/bin/node",
+      "exists": true,
+      "realPath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+    },
+    {
+      "requestedPath": "/opt/homebrew/bin/pnpm",
+      "exists": true,
+      "realPath": "/opt/homebrew/lib/node_modules/pnpm/bin/pnpm.cjs",
+      "sha256": "b276da51dc8ca5b0d3ee3371695b50fc8b3244b281b091c63a3f082a88dadeb9",
+      "package": {
+        "path": "/opt/homebrew/lib/node_modules/pnpm/package.json",
+        "name": "pnpm",
+        "version": "10.32.1",
+        "sha256": "fe5e4f09a61c20fdcdb926e301e9f4c97d3a70ca4ac11233851a7e6ed9d6d3b7"
+      }
+    },
+    {
+      "requestedPath": "/opt/homebrew/bin/npm",
+      "exists": true,
+      "realPath": "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+      "sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+      "package": {
+        "path": "/opt/homebrew/lib/node_modules/npm/package.json",
+        "name": "npm",
+        "version": "11.12.1",
+        "sha256": "48a06e6aeede3499e391710db82fe948afa7e74ecbf3e819b66121f3cd54666b"
+      }
+    },
+    {
+      "requestedPath": "/opt/homebrew/bin/corepack",
+      "exists": false
+    }
+  ],
+  "requiredArchivePackageManager": "pnpm@12.6.0",
+  "installedDoocsBuildImplementationClosure": "未安装，不存在新PASS；需真实安装后独立封印再准build"
+}

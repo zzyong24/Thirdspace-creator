@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-12T02:29:21.194719+00:00",
+  "scope": "V6已安装两原源真实data闭包只读复核；不执行依赖/test/build",
+  "firstHarnessFailure": "exit1 KeyError mode：安装manifest link行无mode；读取真实link/resolved/targetKind后校验，不改来源manifest",
+  "roles": [
+    {
+      "role": "native",
+      "manifestSha256": "950d820dbdaecc8c3397b4394e777886e55213d639cbcf496a430f70a4c5f712",
+      "implementationDigest": "0d86715814db1cdaa7d52954343b23dc9c1ddde58a07de2f3237684884e29f1a",
+      "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native",
+      "regularChecks": 66542,
+      "linksChecked": 3722,
+      "actualHashedBytes": 837777598,
+      "drift": []
+    },
+    {
+      "role": "static",
+      "manifestSha256": "0d66a037620173f96b27ce936f29ce644509662f20020b97d62645012d7579fa",
+      "implementationDigest": "02173eefd2314ce6f98fe1436f5094ff4d56941c44e4e8756e09b08558e68503",
+      "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+      "regularChecks": 66523,
+      "linksChecked": 3725,
+      "actualHashedBytes": 837675655,
+      "drift": []
+    }
+  ],
+  "elapsedMs": 19127.860583015718
+}

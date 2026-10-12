@@ -1,0 +1,14 @@
+{
+  "task": "T-1254",
+  "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/scripts/creatoros-request-budget-static-delivery.mjs",
+  "beforeSha256": "017ac911172822e211411fa1a24241f2cdfcf96795559b822252cf079594f564",
+  "afterSha256": "95326b4c711e96f95761ce1fe362d52ce421d5a1143c07866fbb4d15ef0e91b4",
+  "inode": 351787453,
+  "uid": 501,
+  "preservedMode": 420,
+  "actualOriginal9AndRealOldGraphMainFailureBeforeCandidateGreen": true,
+  "PanelAlreadyV14GreenAndUnchanged": true,
+  "fetchTestOriginalArchivesAndBridgeUnchanged": true,
+  "priorV12V13V14FailuresUnchanged": true,
+  "noProductCopy": true
+}

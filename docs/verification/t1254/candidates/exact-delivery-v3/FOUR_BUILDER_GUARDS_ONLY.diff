@@ -1,0 +1,100 @@
+--- a/frontend/scripts/build-doocs-request-budget.mjs
++++ b/frontend/scripts/build-doocs-request-budget.mjs
+@@ -8,6 +8,7 @@
+ const born = performance.now(), wallBorn = Date.now()
+ const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
+ const read = file => JSON.parse(fs.readFileSync(file, 'utf8'))
++const machOMagic = new Set(['feedface','cefaedfe','feedfacf','cffaedfe','cafebabe','bebafeca','cafebabf','bfbafeca'])
+ function arg(name) { const i = process.argv.indexOf(name); assert.ok(i >= 0 && process.argv[i + 1], name + '必需'); return process.argv[i + 1] }
+ const repo = fs.realpathSync(process.argv.includes('--root') ? arg('--root') : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'))
+ const helper = path.join(repo, 'docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs')
+@@ -19,12 +20,13 @@
+ function deadline() { const now = Date.now(); assert.ok(now >= lastWall, '系统时钟回退'); lastWall = now; control.signal.throwIfAborted(); assert.ok(now < inherited && performance.now() - born < limit, '原期限／单出生期限耗尽') }
+ function fileRow(file) {
+   deadline(); const stat = fs.lstatSync(file), row = { file, mode: stat.mode & 0o777, uid: stat.uid }
++  function bytesAt(target) { const bytes = fs.readFileSync(target); row.size = bytes.length; row.sha256 = sha(bytes); const magic = bytes.subarray(0,4).toString('hex'); if (machOMagic.has(magic)) row.machOMagic = magic }
+   if (stat.isSymbolicLink()) {
+     row.link = fs.readlinkSync(file); row.resolved = fs.realpathSync(file)
+     const target = fs.statSync(row.resolved); row.targetKind = target.isDirectory() ? 'directory' : 'file'
+     assert.ok(target.isDirectory() || target.isFile())
+-    if (target.isFile()) { row.size = target.size; row.sha256 = sha(fs.readFileSync(row.resolved)) }
+-  } else { assert.ok(stat.isFile()); row.size = stat.size; row.sha256 = sha(fs.readFileSync(file)); assert.equal(fs.realpathSync(file), file) }
++    if (target.isFile()) bytesAt(row.resolved)
++  } else { assert.ok(stat.isFile()); bytesAt(file); assert.equal(fs.realpathSync(file), file) }
+   return row
+ }
+ function tree(root) {
+@@ -34,6 +36,33 @@
+ }
+ function owner(identity) { const stat = fs.lstatSync(identity.root), marker = read(path.join(identity.root, '.t1254-owned.json')); assert.ok(stat.isDirectory() && !stat.isSymbolicLink() && stat.uid === identity.uid && stat.uid === process.getuid() && stat.ino === identity.inode && (stat.mode & 0o077) === 0); assert.equal(fs.realpathSync(identity.root), identity.root); assert.equal(marker.nonce, identity.nonce); assert.equal(marker.inode, identity.inode) }
+ function guardedPath(root, relative) { assert.ok(relative && !path.isAbsolute(relative)); const file = path.resolve(root, relative); assert.ok(file.startsWith(root + path.sep)); return file }
++function sourceFileSet(root) {
++  const rows = [], generated = new Set(['apps/web/.wxt','apps/web/dist','apps/web/dist-native'])
++  function walk(directory, relative = '') {
++    deadline()
++    for (const item of fs.readdirSync(directory,{withFileTypes:true})) {
++      const name = path.posix.join(relative,item.name)
++      if (item.isDirectory()) { if (item.name !== 'node_modules' && !generated.has(name)) walk(path.join(directory,item.name),name) }
++      else { assert.ok(item.isFile() || item.isSymbolicLink()); rows.push(name) }
++    }
++  }
++  walk(root); return rows.sort()
++}
++function scopeGuard(scope, binding) {
++  assert.ok(scope.kind === 'source' || scope.kind === 'manager')
++  assert.equal(scope.boundary,scope.kind === 'source' ? binding.owner.root : binding.managerToolsRoot)
++  assert.ok(scope.root === scope.boundary || scope.root.startsWith(scope.boundary + path.sep))
++  assert.equal(fs.realpathSync(scope.root),scope.root)
++  const actual = tree(scope.root)
++  assert.deepEqual(actual,scope.rows,'完整依赖文件集漂移：' + scope.root)
++  for (const row of actual) if (row.link) assert.ok(row.resolved.startsWith(scope.boundary + path.sep),'依赖链接不得越出同归属根：' + row.file)
++  return actual
++}
++function rootCoverage(binding) {
++  const roots = new Set(binding.dynamic.rootMachOFiles)
++  for (const file of [binding.node,binding.manager]) assert.ok(roots.has(fs.realpathSync(file)),'实际主执行入口须在递归dyld根中：' + file)
++  for (const scope of binding.scopes) for (const row of scope.rows) if (row.machOMagic) assert.ok(roots.has(row.resolved ?? row.file),'实际Mach-O依赖须在递归dyld根中：' + row.file)
++}
+ function dynamicGuard(dynamic) {
+   for (const expected of [...dynamic.nonSystemFiles, ...dynamic.symlinkChain]) {
+     const actual = fileRow(expected.file)
+@@ -45,10 +74,11 @@
+   deadline(); owner(binding.owner)
+   assert.equal(fs.realpathSync(process.execPath), binding.node)
+   for (const expected of binding.rows) assert.deepEqual(fileRow(expected.file), expected, '完整输入字节／模式／链接漂移：' + expected.file)
+-  for (const scope of binding.scopes) assert.deepEqual(tree(scope.root), scope.rows, '完整依赖文件集漂移：' + scope.root)
++  for (const scope of binding.scopes) scopeGuard(scope,binding)
+   for (const scope of generatedScopes) assert.deepEqual(tree(scope.root), scope.rows, '前一真实prepare生成输入漂移：' + scope.root)
+   dynamicGuard(binding.dynamic)
+-  for (const role of ['native','static']) { const source = binding.sources[role]; assert.ok(source.root.startsWith(binding.owner.root + path.sep)); for (const expected of source.files) { const actual = fileRow(guardedPath(source.root, expected.file)); if (expected.link) assert.equal(actual.link, expected.link); else { assert.equal(actual.sha256, expected.sha256); assert.equal(actual.size, expected.size); assert.equal(actual.mode, expected.mode) } } }
++  rootCoverage(binding)
++  for (const role of ['native','static']) { const source = binding.sources[role]; assert.ok(source.root.startsWith(binding.owner.root + path.sep)); assert.deepEqual(sourceFileSet(source.root),source.files.map(row => row.file).sort(),'归档之外新增／缺失源码不得进入构建：' + role); for (const expected of source.files) { const actual = fileRow(guardedPath(source.root, expected.file)); if (expected.link) assert.equal(actual.link, expected.link); else { assert.equal(actual.sha256, expected.sha256); assert.equal(actual.size, expected.size); assert.equal(actual.mode, expected.mode) } } }
+ }
+ const stop = () => control.abort(Error('构建已取消，保留原nonce，不重发'))
+ process.once('SIGINT', stop); process.once('SIGTERM', stop)
+@@ -56,7 +86,7 @@
+ try {
+   const mode = process.argv.includes('--execute') ? 'execute' : 'prepare'
+   if (mode === 'prepare') {
+-    inherited = Date.parse(arg('--inherited-deadline')); assert.ok(Number.isFinite(inherited) && inherited > wallBorn)
++    inherited = Date.parse(arg('--inherited-deadline')); assert.ok(Number.isFinite(inherited) && inherited - Date.now() >= 3600000,'原剩余期限须覆盖完整只读prepare槽')
+     const sourceOwner = fs.realpathSync(arg('--owned-sources-root')), identity = read(path.join(sourceOwner, '.t1254-owned.json')); assert.equal(identity.root, sourceOwner); owner(identity)
+     const native = fs.realpathSync(arg('--native-source-root')), statik = fs.realpathSync(arg('--static-source-root')), manager = fs.realpathSync(arg('--pnpm-executable'))
+     assert.notEqual(native, statik)
+@@ -84,7 +114,7 @@
+     for (const role of ['native','static']) for (const key of ['sourceArchive','patch']) { const file = guardedPath(publicRoot,descriptor[role][key]); const row = fileRow(file); assert.equal(row.sha256, descriptor[role][key + 'Sha256']); rows.push(row) }
+     const fixed = fileRow(guardedPath(publicRoot,descriptor.static.fixedBaseArchive)); assert.equal(fixed.sha256, descriptor.static.fixedBaseSha256); rows.push(fixed)
+     for (const file of [process.execPath, manager, '/usr/bin/sandbox-exec']) rows.push(fileRow(fs.realpathSync(file)))
+-    binding = { task:'T-1254', schema:1, owner:identity, node:fs.realpathSync(process.execPath), manager, sources, entry, manifestFile, inheritedDeadline:new Date(inherited).toISOString(), createdAt:new Date(wallBorn).toISOString(), dynamic, rows:[...new Map(rows.map(row => [row.file,row])).values()], scopes:[...scopeRoots].sort().map(root => ({root,rows:tree(root)})), noInstall:true, noProductCopy:true, noApp:true }
++    binding = { task:'T-1254', schema:1, owner:identity, node:fs.realpathSync(process.execPath), manager, managerToolsRoot:toolRoot, sources, entry, manifestFile, inheritedDeadline:new Date(inherited).toISOString(), createdAt:new Date(wallBorn).toISOString(), dynamic, rows:[...new Map(rows.map(row => [row.file,row])).values()], scopes:[...scopeRoots].sort().map(root => ({root,kind:root === toolRoot ? 'manager' : 'source',boundary:root === toolRoot ? toolRoot : sourceOwner,rows:tree(root)})), noInstall:true, noProductCopy:true, noApp:true }
+     bindingGuard(binding)
+     output = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'t1254-rebuild-prepare-'))); fs.chmodSync(output,0o700)
+     write('binding.json',binding); write('prepare.json',{ passed:true, prepareOnly:true, noDownloadedCodeExecuted:true, bindingSHA:sha(fs.readFileSync(path.join(output,'binding.json'))), fullRows:binding.rows.length + binding.scopes.reduce((sum,scope) => sum + scope.rows.length,0), inheritedDeadline:binding.inheritedDeadline }); passed = true
+@@ -97,6 +127,7 @@
+     const graph = path.join(s,'scripts/creatoros-request-budget-static-delivery.mjs')
+     const stages = [['manager-version',manager,['--version'],binding.owner.root,120000],['native-wxt-prepare',manager,['--filter','@md/web','exec','wxt','prepare'],n,900000],['static-wxt-prepare',manager,['--filter','@md/web','exec','wxt','prepare'],s,900000],['native-shared-types',manager,['--filter','@md/shared','run','type-check'],n,900000],['static-shared-types',manager,['--filter','@md/shared','run','type-check'],s,900000],['native-build',binding.node,['scripts/build-native.mjs'],n,3600000],['native-verify',binding.node,['scripts/verify-native-build.mjs'],n,900000],['static-build',manager,['--filter','@md/web','run','build'],s,3600000]]
+     limit = Math.min(prepareMs + afterMs + stages.reduce((sum,stage) => sum + stage[4] + lifecycle,0) + 900000 + lifecycle, inherited - wallBorn)
++    assert.ok(limit >= 120000,'原剩余期限不足最短正执行槽，禁止启动timer和输入执行')
+     timer = setTimeout(() => control.abort(Error('构建绝对期限耗尽')),limit); watch = setInterval(() => { try { deadline() } catch(error) { control.abort(error) } },1000)
+     bindingGuard(binding); assert.ok(performance.now() - born < prepareMs)
+     output = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'t1254-rebuild-' + crypto.randomBytes(16).toString('hex') + '-'))); fs.chmodSync(output,0o700)

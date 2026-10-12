@@ -1,0 +1,32 @@
+{
+  "schema": "t1251-independent-clarification-review/v1",
+  "status": "PASS_CLARIFICATION_ONLY",
+  "sourceBinding": [
+    {
+      "path": "docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+      "sha256": "254310755165eff65156a919176345124d00424bb809d2ab8bc7f8f92db1c810"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-generation.service.ts",
+      "sha256": "43d1fc7d75859c628fd66bcb3372cc3d95cf6fb8d44eb7b906d655f74968b06c"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-receipt-projection.test.ts",
+      "sha256": "36955411c5d51fceb11ae68c2f40e0d1abb83dfef185516a7031c9f061004eb4"
+    }
+  ],
+  "proposedClause": "可信后台completionReceipt与完整工具失败回执；badOutput/diagnosisEmpty严格绑定实际transient/retryable/sideEffect:none、完整零候选与真实projection partial，其他族no_evidence原断言保留",
+  "findings": [],
+  "constraints": [
+    "不改生产completion/projection或公开协议",
+    "后续完整tool receipt、父子settled结果与projection版本1实际核验后才评候选断言，不从terminal独断",
+    "旧21mode与其余no_evidence安全断言不删弱",
+    "不代签实际运行/计数/finite业务成功链"
+  ],
+  "testsExecuted": false,
+  "model": "unknown/inherited"
+}

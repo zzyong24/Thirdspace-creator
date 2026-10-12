@@ -1,0 +1,23 @@
+{
+  "approved": true,
+  "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "phase": "regression",
+  "group": "hosts",
+  "toolSha256": "ca24b82b9ce6cc65833db8f9e6cd22592e61e219903e4e170bf230b6e5cd610c",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "selectedInputDigest": "c3da62f8228f41596b4bf17a5524a7ce6afe54e3155a8675626e7369382535d2",
+  "budgetInventoryDigest": "a7c8ffe15faa21d7b72f5698c8a1684c909d503a4ec2a78b3b4561d0f88a8ddb",
+  "entryAbsoluteOuterMs": 306480000,
+  "preparationBudgetMs": 120000,
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "reviewer": "/root",
+  "reviewedAt": "2026-10-12T00:09:47.233628+00:00",
+  "independentReview": "docs/verification/t1250/public-host-cdp-v9-isolation-independent-review.json",
+  "allSelectedInputsActualSHARead": true,
+  "nativeApp": false,
+  "knownSixOriginalSkipNeverPassed": true,
+  "runtimePermission": "original full hosts only; no Worker build or App"
+}

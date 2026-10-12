@@ -1,0 +1,439 @@
+{
+  "recordedAt": "2026-10-11T18:20:23.701666+00:00",
+  "priorFormalSpecSHA256": "b295cb6fc92b22433ee7415c12861a1c8b94fc3e842125d7bc99615d1256c875",
+  "firstEvidenceImmutable": true,
+  "actualAppDecision": "暂不授权，保留App验收未完成",
+  "additionalWriteSet": [
+    {
+      "path": "ai-worker/src/execution/chat-text-node-worker.ts",
+      "currentSHA256": "224d6a3d353039f226dec3ba556685763f7010a7334d3c5ee83aa6e02a726806",
+      "frozenSHA256": "224d6a3d353039f226dec3ba556685763f7010a7334d3c5ee83aa6e02a726806",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "currentSHA256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35",
+      "frozenSHA256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/chat-generation-worker.test.ts",
+      "currentSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "frozenSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/chat-hooks-worker.test.ts",
+      "currentSHA256": "141cb1f32bde1c24b46eedb8a34731bdd07fb8af4d0194c6a0e6ec3855cdf4a4",
+      "frozenSHA256": "141cb1f32bde1c24b46eedb8a34731bdd07fb8af4d0194c6a0e6ec3855cdf4a4",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/chat-redfox-worker.test.ts",
+      "currentSHA256": "369d58133d3160a7f987e532d14f772535cf3459435721ad09187ea75bd11ab5",
+      "frozenSHA256": "369d58133d3160a7f987e532d14f772535cf3459435721ad09187ea75bd11ab5",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/chat-research-worker.test.ts",
+      "currentSHA256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+      "frozenSHA256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "currentSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "frozenSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/chat-script-patch-worker.test.ts",
+      "currentSHA256": "aa0b2fb423ff1807551c1580fb61d8cc903e766ee801f2770899ef3ef2c5d0fa",
+      "frozenSHA256": "aa0b2fb423ff1807551c1580fb61d8cc903e766ee801f2770899ef3ef2c5d0fa",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/chat-video-edit-worker.test.ts",
+      "currentSHA256": "383fc9df5829a126a4ad1001112116f3a7c741c17cde81c54e59af6e74061f97",
+      "frozenSHA256": "383fc9df5829a126a4ad1001112116f3a7c741c17cde81c54e59af6e74061f97",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/chat-work-editor-worker.test.ts",
+      "currentSHA256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+      "frozenSHA256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/copilot-worker.fork.test.ts",
+      "currentSHA256": "2290d5a213670844c2bc5e661ed5f6dc3748bd420472411acfdc6cf823559850",
+      "frozenSHA256": "2290d5a213670844c2bc5e661ed5f6dc3748bd420472411acfdc6cf823559850",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "currentSHA256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+      "frozenSHA256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/group-platform-facts.integration.test.ts",
+      "currentSHA256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+      "frozenSHA256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/research-material-adoption.test.ts",
+      "currentSHA256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+      "frozenSHA256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/structured-target-adoption.test.ts",
+      "currentSHA256": "3073b9ba8e447a315434d22e0e430caa4e201154883aac0fae7129d9f5bd9afd",
+      "frozenSHA256": "3073b9ba8e447a315434d22e0e430caa4e201154883aac0fae7129d9f5bd9afd",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "currentSHA256": "b53f2fbf0fe94481a99ce9a4181c457bf057063e09d7c573168db352944ddd48",
+      "frozenSHA256": "b53f2fbf0fe94481a99ce9a4181c457bf057063e09d7c573168db352944ddd48",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "currentSHA256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "frozenSHA256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/legacy-source-migration.test.ts",
+      "currentSHA256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "frozenSHA256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-browser-worker.integration.test.ts",
+      "currentSHA256": "371cb953b41e470152ff27142c6ca44b9e7e67ed72f6948a80e7d7c96b369b08",
+      "frozenSHA256": "371cb953b41e470152ff27142c6ca44b9e7e67ed72f6948a80e7d7c96b369b08",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-business-execution.service.test.ts",
+      "currentSHA256": "7c079a240a876f8bbf3c0b553256f1af21d469f588614da4422b1cf4055793b7",
+      "frozenSHA256": "7c079a240a876f8bbf3c0b553256f1af21d469f588614da4422b1cf4055793b7",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+      "currentSHA256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+      "frozenSHA256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/browser-task-authorization.service.test.ts",
+      "currentSHA256": "abcfdbae1a6c30b6c9636fb8fedd82b9e44fe0379e60269dc60c1139f9dfd278",
+      "frozenSHA256": "abcfdbae1a6c30b6c9636fb8fedd82b9e44fe0379e60269dc60c1139f9dfd278",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "currentSHA256": "1829fe2e89c1373db0e09a43f39b913e65d5c82be19916dcdd778dcc8d6d4470",
+      "frozenSHA256": "1829fe2e89c1373db0e09a43f39b913e65d5c82be19916dcdd778dcc8d6d4470",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-host-tool-adapter.ts",
+      "currentSHA256": "4441e5677c4d6bb8fe7c3ce89b2737836f8f3026f334530b2f6283ebebf35a5a",
+      "frozenSHA256": "4441e5677c4d6bb8fe7c3ce89b2737836f8f3026f334530b2f6283ebebf35a5a",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-script-draft-preparation.test.ts",
+      "currentSHA256": "3d914b47629716d3e18a674c933aed2ff3cc5f1784a65e555bec176da784c13f",
+      "frozenSHA256": "3d914b47629716d3e18a674c933aed2ff3cc5f1784a65e555bec176da784c13f",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "currentSHA256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+      "frozenSHA256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-video-edit-tool-host.test.ts",
+      "currentSHA256": "f9bffb38e5be09ead3c7183e12404ca9eeb3c140ce78624c0caa6b63f733ec16",
+      "frozenSHA256": "f9bffb38e5be09ead3c7183e12404ca9eeb3c140ce78624c0caa6b63f733ec16",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/review-facets.test.ts",
+      "currentSHA256": "a848907363c161d898d9cab811f36200e481b171aaf2ea032d715adfda37713a",
+      "frozenSHA256": "a848907363c161d898d9cab811f36200e481b171aaf2ea032d715adfda37713a",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/review-insights-injection.test.ts",
+      "currentSHA256": "0e1315f495dca87c7895a8e80b49b4f056296505186db42b4e5d1a19e4aecef7",
+      "frozenSHA256": "0e1315f495dca87c7895a8e80b49b4f056296505186db42b4e5d1a19e4aecef7",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/agentic-proposal-adoption.integration.test.ts",
+      "currentSHA256": "48b0219eb6e72048608ba49d387798c8f58e6b141cd89c6f1ff9a740fc202a00",
+      "frozenSHA256": "48b0219eb6e72048608ba49d387798c8f58e6b141cd89c6f1ff9a740fc202a00",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/ai-task-commit.integration.test.ts",
+      "currentSHA256": "072f831be45324e4bc408c45bbbd8aca349bccf11836a7637da9d5b938ed5cbe",
+      "frozenSHA256": "072f831be45324e4bc408c45bbbd8aca349bccf11836a7637da9d5b938ed5cbe",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/ai-task-submission.service.test.ts",
+      "currentSHA256": "7bd107e9de2937bf6042faae112005d9f954adad0133d9dfb7468b5887e9b5d2",
+      "frozenSHA256": "7bd107e9de2937bf6042faae112005d9f954adad0133d9dfb7468b5887e9b5d2",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/ai.contract.test.ts",
+      "currentSHA256": "564dc6733e231415562b17b9d7b9139355d8a5aaf28dba43291ebb5db5c9c637",
+      "frozenSHA256": "564dc6733e231415562b17b9d7b9139355d8a5aaf28dba43291ebb5db5c9c637",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/ai.learnings-project-scope.integration.test.ts",
+      "currentSHA256": "4fa897fb7b22286dea1e997110a4bddd468c82c51dda40f05c0b62b75408741c",
+      "frozenSHA256": "4fa897fb7b22286dea1e997110a4bddd468c82c51dda40f05c0b62b75408741c",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/ai.task-execution.integration.test.ts",
+      "currentSHA256": "d45a33b753d504ef195fd2e50d492f0c6c5285cbac5bdcf85db61d8e56d95f5a",
+      "frozenSHA256": "d45a33b753d504ef195fd2e50d492f0c6c5285cbac5bdcf85db61d8e56d95f5a",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/group-task-scope.integration.test.ts",
+      "currentSHA256": "177da560287eef8a007d9efdbd2ecaf47a86de738de7901fc6ab718cf3e0ee6a",
+      "frozenSHA256": "177da560287eef8a007d9efdbd2ecaf47a86de738de7901fc6ab718cf3e0ee6a",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/platform-adapt-execution.integration.test.ts",
+      "currentSHA256": "914c909614d3c12093e7334023a0c348cd6530551d30acb1ac7d637eb45e54af",
+      "frozenSHA256": "914c909614d3c12093e7334023a0c348cd6530551d30acb1ac7d637eb45e54af",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/script-draft-task-submission.integration.test.ts",
+      "currentSHA256": "18014d0a6efccdbf47fcb118267e200e497b6d2f93e3a832e3888a49c98c3e00",
+      "frozenSHA256": "18014d0a6efccdbf47fcb118267e200e497b6d2f93e3a832e3888a49c98c3e00",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/ai/work-creation-chat.integration.test.ts",
+      "currentSHA256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e",
+      "frozenSHA256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/analytics/analytics.acceptance.test.ts",
+      "currentSHA256": "7f3944e6667358cb550d59693befd145e9b74594dc2d5886d1b7b0842c819893",
+      "frozenSHA256": "7f3944e6667358cb550d59693befd145e9b74594dc2d5886d1b7b0842c819893",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/assets/assets.acceptance.test.ts",
+      "currentSHA256": "d20d23a958bbf98c15b6890d9aa59985bc89eafea108535b80843c516b28a976",
+      "frozenSHA256": "d20d23a958bbf98c15b6890d9aa59985bc89eafea108535b80843c516b28a976",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/assets/assets.legacy-media-backfill.test.ts",
+      "currentSHA256": "597de28bf4690403a4ba06a89058907a49e9b44bef932d173ff2c6e2d82b713c",
+      "frozenSHA256": "597de28bf4690403a4ba06a89058907a49e9b44bef932d173ff2c6e2d82b713c",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/creative-canvas/creative-canvas-series-reference.test.ts",
+      "currentSHA256": "9db7c2a5f05fbcb5f8f506a84ca55190dbf95812bfc9b4639514ddf4b4e7f3ae",
+      "frozenSHA256": "9db7c2a5f05fbcb5f8f506a84ca55190dbf95812bfc9b4639514ddf4b4e7f3ae",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/execution/chat-web-profile-wait.test.ts",
+      "currentSHA256": "7bbe75f93a8d4005e6fe9862bcebea331fcf931c308b60512ef2a677ca3d7f7a",
+      "frozenSHA256": "7bbe75f93a8d4005e6fe9862bcebea331fcf931c308b60512ef2a677ca3d7f7a",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/execution/execution-provider-job.service.test.ts",
+      "currentSHA256": "ac6b8d56807976c5ce4ca954503fd0b29c0055c86076ce985c558740cd72fd27",
+      "frozenSHA256": "ac6b8d56807976c5ce4ca954503fd0b29c0055c86076ce985c558740cd72fd27",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "currentSHA256": "faca92020432da7084b2f3bb6500451759bcfa18324dd1c94c14af480eda9a36",
+      "frozenSHA256": "faca92020432da7084b2f3bb6500451759bcfa18324dd1c94c14af480eda9a36",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+      "currentSHA256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8",
+      "frozenSHA256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge-proposal-adoption.service.test.ts",
+      "currentSHA256": "eadf4486eeb4fdfce5ecd09b80f7f9a47a26db8c11c4ed2fb5f50e73e4247790",
+      "frozenSHA256": "eadf4486eeb4fdfce5ecd09b80f7f9a47a26db8c11c4ed2fb5f50e73e4247790",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.db-schema.test.ts",
+      "currentSHA256": "499bb0e5f0156b26a743c1b6229ad539d07b359e8b4943baa1293b19f2bc467b",
+      "frozenSHA256": "499bb0e5f0156b26a743c1b6229ad539d07b359e8b4943baa1293b19f2bc467b",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.repository.integration.test.ts",
+      "currentSHA256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+      "frozenSHA256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/learnings/learning-adoption-key.integration.test.ts",
+      "currentSHA256": "39a1475a3a256835bd4f48ede70b45a738a648b351280583faa780aac9c014cc",
+      "frozenSHA256": "39a1475a3a256835bd4f48ede70b45a738a648b351280583faa780aac9c014cc",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/learnings/learnings-calibration-reflow.integration.test.ts",
+      "currentSHA256": "b6fe7627562442ff34fd148efb00fc7fb90f5a5246f0aa2499cf7a7f782f2706",
+      "frozenSHA256": "b6fe7627562442ff34fd148efb00fc7fb90f5a5246f0aa2499cf7a7f782f2706",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/learnings/learnings.acceptance.test.ts",
+      "currentSHA256": "204cfa0634888f080f4c275f9525a96e18b8875dde51870e5bcdc1f4ed700468",
+      "frozenSHA256": "204cfa0634888f080f4c275f9525a96e18b8875dde51870e5bcdc1f4ed700468",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/learnings/learnings.contract.test.ts",
+      "currentSHA256": "0f651494f746d9931fcf9f7031f0da31612331325a7d356687f08682ca2d4301",
+      "frozenSHA256": "0f651494f746d9931fcf9f7031f0da31612331325a7d356687f08682ca2d4301",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/learnings/review-adoption-scope.integration.test.ts",
+      "currentSHA256": "6309534ac4da87b5812054560a5aeb86dc5bb061c9bc1dc4e271db9135760579",
+      "frozenSHA256": "6309534ac4da87b5812054560a5aeb86dc5bb061c9bc1dc4e271db9135760579",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "currentSHA256": "f010077fdc6d08790417f53a64333aeb0f1e5da4f25d342696beebca23db040f",
+      "frozenSHA256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "alreadyApprovedMutation": true
+    },
+    {
+      "path": "backend/src/modules/platform-account/platform-account.service.test.ts",
+      "currentSHA256": "1c408630d69c0592a049f893aa6c1e9bac03dc6f0b8e37b8d9536bddb3e96b22",
+      "frozenSHA256": "1c408630d69c0592a049f893aa6c1e9bac03dc6f0b8e37b8d9536bddb3e96b22",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/projects/data-foundation-prefer-real.integration.test.ts",
+      "currentSHA256": "25e9227870bdc256711f667d936063d7628334d293993e258d242ebc90cc0a0d",
+      "frozenSHA256": "25e9227870bdc256711f667d936063d7628334d293993e258d242ebc90cc0a0d",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-cover.service.ts",
+      "currentSHA256": "6e939583b6061fe1951a47081489d26746a667952c107cea4bdb58dd36d06a48",
+      "frozenSHA256": "51060870eeaa19ddace925c1b82889deffc91da9df160aee22b52d13ffc99f33",
+      "alreadyApprovedMutation": true
+    },
+    {
+      "path": "backend/src/modules/reviews/reviews.acceptance.test.ts",
+      "currentSHA256": "2c33fd88e1073b80b9bcc5eb18b78ec1c5925005e2bbc21a682fb81cd46e9c35",
+      "frozenSHA256": "2c33fd88e1073b80b9bcc5eb18b78ec1c5925005e2bbc21a682fb81cd46e9c35",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/reviews/reviews.contract.test.ts",
+      "currentSHA256": "f22f3b624f1ae91ae39ff5ab743971d0be405d95f431388f256fc4ee342d902f",
+      "frozenSHA256": "f22f3b624f1ae91ae39ff5ab743971d0be405d95f431388f256fc4ee342d902f",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "backend/src/modules/settings/settings.service.test.ts",
+      "currentSHA256": "9a4eb4fce360a6e191100435389f8dea17a5442fcadcd42349f6d5f2f58300e5",
+      "frozenSHA256": "9a4eb4fce360a6e191100435389f8dea17a5442fcadcd42349f6d5f2f58300e5",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/src/components/shell/shell.test.tsx",
+      "currentSHA256": "85232cb1b33f9874ff1133c388d20e017c6df1bee85cd6899c6e51ca168ab8a9",
+      "frozenSHA256": "85232cb1b33f9874ff1133c388d20e017c6df1bee85cd6899c6e51ca168ab8a9",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/src/features/assets/assets-page.test.tsx",
+      "currentSHA256": "1a652be1f338a570c91e821d2878fad4122cf972b893e36534fdfc739539d445",
+      "frozenSHA256": "1a652be1f338a570c91e821d2878fad4122cf972b893e36534fdfc739539d445",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/src/features/dashboard/dashboard-page.test.tsx",
+      "currentSHA256": "ea37a9d9fb18d7cff4d8495ac0eb0df1278bd3dcea79d27614f7d39f371a42c6",
+      "frozenSHA256": "ea37a9d9fb18d7cff4d8495ac0eb0df1278bd3dcea79d27614f7d39f371a42c6",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-page.test.tsx",
+      "currentSHA256": "658423c60b735154920c47bd9111bca0e4bd98501bcfa7abef106be92c4236bc",
+      "frozenSHA256": "658423c60b735154920c47bd9111bca0e4bd98501bcfa7abef106be92c4236bc",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/src/features/projects/projects-page.test.tsx",
+      "currentSHA256": "e062f7af00df43ea4351792f4329088e30ec6fa0e5e82eddbdaa9b91db21a881",
+      "frozenSHA256": "e062f7af00df43ea4351792f4329088e30ec6fa0e5e82eddbdaa9b91db21a881",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/src/features/publishing-center/publishing-center-page.test.tsx",
+      "currentSHA256": "c36f7462bfa4709453ded7faf5066a81311b9c67747e00387e339381ddb5cdc5",
+      "frozenSHA256": "c36f7462bfa4709453ded7faf5066a81311b9c67747e00387e339381ddb5cdc5",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/src/features/review/analytics-review-page.test.tsx",
+      "currentSHA256": "0c709578712adb6d7fd02f3bf877f4a0872ac1435749337a566a68280d679b70",
+      "frozenSHA256": "0c709578712adb6d7fd02f3bf877f4a0872ac1435749337a566a68280d679b70",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/src/features/settings/settings-page.test.tsx",
+      "currentSHA256": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "frozenSHA256": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "alreadyApprovedMutation": false
+    },
+    {
+      "path": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "currentSHA256": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609",
+      "frozenSHA256": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609",
+      "alreadyApprovedMutation": false
+    }
+  ],
+  "pending": [
+    "B044未知授权候选policy不改期待或生产policy",
+    "B045/B046因果保持UNKNOWN，只允许原完整fixture正预算清理及真实后续trace"
+  ],
+  "knownBodyMapSHA256": "802fc9eb6152026970c473c72095f6a0d02b5e87a3f56881fa15d998a84be70e"
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立读取宪法、当前SPEC、三原测试、八个真实消费者及原9文件46例收据。当前三测试写集已把429可信superseded、continuous/null、partial正式回执与缺usage的Pi未知恢复分开；两未知族必须先保持旧res.destroy及原期望采证，发现原unknown重发即生产阻断，后续每份候选还须独立因果审查。未发现规格阻断；未执行测试、未签任何候选、模型或App通过。",
+  "findings": []
+}

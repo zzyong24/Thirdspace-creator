@@ -1,0 +1,8 @@
+import {expect,it} from 'vitest';
+import {projectWorkCandidate,workAdoptionDigest} from './work-candidate-projection';
+const ref={kind:'project' as const,id:'p',versionId:'v'};
+const base={schemaVersion:1 as const,title:'原题',titleSourceRefs:[ref],summary:'原摘要',summarySourceRefs:[ref],tags:['原'],sections:[],factItems:[{id:'f',text:'原事实',sourceRefs:[ref],reviewState:'confirmed' as const}],visualBriefs:[],imageUses:[]};
+const candidate={...base,title:'AI题',summary:'AI摘要',tags:['AI'],sections:[{sectionId:'s',order:0,heading:'',headingLevel:2,body:'真实候选正文',sourceRefs:[ref]}],factItems:[{...base.factItems[0]!,text:'改事实',reviewState:'confirmed' as const}]};
+it('正文可采用，未选择元信息和事实按原字节保留',()=>{const result=projectWorkCandidate('article',base,candidate,[],{mode:'keep'},'joint');expect(result).toEqual({...candidate,title:base.title,summary:base.summary,tags:base.tags,factItems:base.factItems});});
+it('替换事实仅精确未变化项继承用户确认，修改项须确认',()=>{const result=projectWorkCandidate('article',base,candidate,['title'],{mode:'replace',expectedBeforeDigest:workAdoptionDigest(base.factItems),proposedFactsDigest:workAdoptionDigest(candidate.factItems)},'joint');expect(result.factItems[0]!.reviewState).toBe('needs_confirmation');expect(()=>projectWorkCandidate('article',base,candidate,[],{mode:'replace',expectedBeforeDigest:workAdoptionDigest(base.factItems),proposedFactsDigest:workAdoptionDigest(candidate.factItems)},'editor')).toThrow();});
+it('不同选择同文档也有不同意图摘要，非法不存在字段不可选择',()=>{expect(workAdoptionDigest({fieldSelection:[]})).not.toEqual(workAdoptionDigest({fieldSelection:['title']}));const {tags:_,...withoutTags}=candidate;expect(()=>projectWorkCandidate('article',base,withoutTags,['tags'],{mode:'keep'},'joint')).toThrow();});

@@ -1,0 +1,111 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T03:45:59.273136+00:00",
+  "status": "PASS_STATIC_EXACT_RUNTIME_TOOL_REVIEW_NOT_EXECUTED",
+  "approvedForRootExactAdmission": true,
+  "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "9135874a042fb63479043f596d311e0812719ea4d3eb2e1abb4adbbe309b12be",
+  "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+  "runnerSha256": "79543080e481584c6a92e58d92a22fffd86c9273c80e55a5ec4bed4edde57e74",
+  "fullSealSha256": "a73dea901ebc2b03d177ea6db62c1a64234d29ae92e6005cd115c74396229a59",
+  "prepareSha256": "14832062217cf38ba794d0b94f84f5dbafc01495ff8791a2188f76f4146b01be",
+  "readEvidence": [
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V10_FULL_SEAL.json",
+      "sha256": "a73dea901ebc2b03d177ea6db62c1a64234d29ae92e6005cd115c74396229a59"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V10_PREPARE.json",
+      "sha256": "14832062217cf38ba794d0b94f84f5dbafc01495ff8791a2188f76f4146b01be"
+    },
+    {
+      "file": "/tmp/t1254-readonly/run-owned-doocs-request-and-build-v10.cjs",
+      "sha256": "79543080e481584c6a92e58d92a22fffd86c9273c80e55a5ec4bed4edde57e74"
+    },
+    {
+      "file": "/tmp/t1254-readonly/prepare-node-dyld-closure-v10.py",
+      "sha256": "8bacdb4a28b20e97c816e8f19b9e574d52646328b042e23e0d4cd5a5bdc3ba33"
+    },
+    {
+      "file": "/tmp/t1254-readonly/NODE_DYLD_CLOSURE_V10.json",
+      "sha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V10_DELTA.json",
+      "sha256": "c99312d7d280aa9211b838d6c8342a9897ac357d6d8e90911c7522866ad6bb92"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V10_FROM_V9.diff",
+      "sha256": "a5f520bbfda3852c1a5dca560c75b6d835e80cceec082477b4215121f55ace0d"
+    },
+    {
+      "file": "/tmp/t1254-readonly/seal-request-build-v10.py",
+      "sha256": "0e01fcf3ef68436663d770057d0b0d1587931bad7cb67a9d8bb8edf429727e40"
+    },
+    {
+      "file": "/tmp/t1254-readonly/REQUEST_BUILD_V10_HANDOFF.md",
+      "sha256": "1b4983352de050b6c6c33314304dcf5f3985ef376fe1490e7ccae23b568ffbc9"
+    }
+  ],
+  "independentActualFullRecheck": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_V10_FULL_INPUT_AND_DYLD_RECHECK.json",
+    "sha256": "4def72edc2a16f6d6cd28a779271b55dd289a7589c6d7615f27e5a61a3edddae",
+    "inputCount": 1693,
+    "toolRows": 141220,
+    "fullByteChecks": 135459,
+    "linkChecksIncludingOldRealPathSchema": 7488,
+    "bytesReadIncludingSealArtifactsAndFourMutableOriginals": 2668035576,
+    "elapsedMs": 21763.442,
+    "zeroDrift": true,
+    "sourceAndToolArrayDigestsActuallyRecomputed": true
+  },
+  "review": {
+    "logMigration": {
+      "scope": "仅子日志从HOME docs改至本次owned private/child-logs；helper393f887全文和原FD关闭消费者已读，未改共享helper。",
+      "allReturnedReceiptBranches": "processClosed且ownedGroup=[]后才读regular/uid/realpath受控private原日志，父归档wx/0600；SHA与size严格相同并写归档receipt，再判断code、budget、closure；非零、SIGABRT、spawn error、清理后的超时均走同一顺序。",
+      "unclosedOrThrownHelperBranches": "helper throw缺closure receipt、processClosed false或group非空，保private原件和明确notArchived/noClosureReceipt，不签EOF，不进下步；外层finally仍原后验/失败汇总。",
+      "ownerAndNoOverwrite": "根nonce/uid/inode/0700 guard；childlog原helper wx，父archive wx；归档前检查regular、uid、realpath。"
+    },
+    "dynamicMachOClosure": {
+      "actualRoots": 58,
+      "actualNodeAddons": 16,
+      "regularFiles": 82,
+      "symlinkChain": 37,
+      "nonSystemLoadEdges": 51,
+      "systemBoundaryEdges": 234,
+      "actualMetadataContextsRecomputedWithOtool": 84,
+      "tokens": "277 absolute load edges、5 @rpath、3 @loader_path；全部实际load/rpath metadata的@executable_path=0，独立PNPM/Git根没有该token。本审核只签当前真实图，不签任意主程序通用解析能力。",
+      "recursiveProducer": "全文读取magic root选择/otool LC_LOAD_DYLIB、WEAK、REEXPORT、UPWARD、LC_RPATH、loader相对路径、runpath stack、递归context与完整link chain；所有真实metadata bytes再核匹配。",
+      "perBindingConsumer": "每child前及finally调用guardDynamicRuntime，实际regular SHA/size/mode/uid/realpath，symlink target/mode/uid/realpath，再核edge target；5个@rpath每次从封存attempts重新选首个exists必须严格等原target，拒新前缀shadow。",
+      "systemBoundary": "macOS /usr/lib 与 /System/Library dyld shared cache作为host OS边界，未声称封系统字节。",
+      "noStaticRowOnlyBinding": "82+37进入tools且guard实际读磁盘，旧141101 tools逐项完全相同suffix，manifest/producer在sourceinputs，所有新SHA实际全核。"
+    },
+    "unchangedExecutionContract": {
+      "positiveChildCount": 25,
+      "totalBudgetMs": 109260000,
+      "exactStepsBudgetProfileEnvAndAllBodies": "原步骤/预算/childEnv/profile与Vitest定义至全文结尾的实际调用、断言、source apply、图、scanner、patch和finally机械相同。",
+      "candidateAndSources": "原V2 fe239/fed3和4个private original consumers当场核old a46/026114，未apply；两实际RED必须先真实exit1再同V2，原8/whole24/lease4严格保留。",
+      "timerOwnership": "独立出生TOTAL不续期；每次remaining覆盖完整future slots+helper生命周期+APPLY/AFTER；取消/归属漂移/未关闭不下个child。",
+      "scopeBoundary": "无生产复制、无App/TCC、更无模型或公网调用；TESTNET仅先前已审OS拒绝连接probe，真实网络结果待运行。"
+    }
+  },
+  "preservedFindingsAndFailures": {
+    "v8ActualSyntaxFail": "nonce55d29f首code65/closed/group0，未进checker/RED；5原raw入绑定。",
+    "v9ActualNodeBootstrapFail": "nonceb559d首SIGABRT/274ms/closed/group0，wrapperEOF1、0/25；本PIDfstat分支确认、具体errno没观察；HOME日志权限机制仍推断待V10实际证实。",
+    "v9ToolClosureOmission": "原entry-only审核历史不能追写成封有全部动态库，旧报告/FAIL保留。",
+    "v10StaticRpathConcern": "已窄修firstexisting；旧guard和首次prepare原字节没有副本，history/STATIC_CONCERNS.md诚实记缺失，临时seal不准运行、不冒充actualFAIL。",
+    "reviewHarnessIssues": "独立fullhash前两次只读harness误用旧realPath/mutable数组schema，完整错误类型和阶段保在4def proof；第三次全核完成，不改工具/封印/源。"
+  },
+  "notProvenByThisReview": [
+    "V10网络probe真实通过",
+    "原8/两实际RED/whole24及慢请求实际通过",
+    "两实际构建/交付图/source archive/combined patch当场通过",
+    "生产交付manifest复制准入",
+    "最终开发DMG及浏览器截图验收",
+    "App原生自动化验收"
+  ],
+  "executionAuthority": "仅ROOT读本exact报告及其独立0漂移证明后，可对同runner/seal/source/tool准入一次运行。任何运行FAIL按原日志保，不借本静态PASS代替真实结果。",
+  "noCandidateRuntimeExecutedByReviewer": true,
+  "noProductSourceChangedByReviewer": true
+}

@@ -14,13 +14,7 @@ const REFERENCE_BASELINES_DIR = resolve(
   "__screenshots__",
   "reference-images",
 );
-const FINGERPRINT_PATH = resolve(
-  HERE,
-  "tests",
-  "visual",
-  "__artifacts__",
-  "baseline-fingerprint.json",
-);
+const FINGERPRINT_PATH = resolve(process.env.CREATOROS_T1246_RUN_DIR!, "visual-baseline", "baseline-fingerprint.json");
 
 export default async function globalTeardown() {
   const before = JSON.parse(

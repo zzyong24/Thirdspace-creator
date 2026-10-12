@@ -1,0 +1,11 @@
+{
+  "scope": "pure Node predicate only; no ps/signal/HTTP",
+  "passed": 12,
+  "failed": 0,
+  "at": "2026-10-11T22:29:43.206902+00:00",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "predicateSourceSha256": "29a6b68a15117dbdbbf2f50cbb9df51ba94c862e738fcd14bf3497d8bf110e75",
+  "testSourceSha256": "266f308c38e2675f26c156e1ff9aefd56e7fc6b6fa66706eaae3bbd15653d5aa",
+  "actualExit": 0,
+  "noServer": true
+}

@@ -1,0 +1,2180 @@
+
+> creatoros-frontend@1.2.0 desktop:package-local /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend
+> node scripts/desktop/package-local.mjs
+
+[desktop:package-local] ✓ 已加载 CreatorOS 本机安全密钥与 Growth 公共验签配置。
+[desktop:package] ✓ [T-679] Growth 渠道配置拉取已启用，keyId=growth-client-config-20260805-01
+[desktop:package] CreatorOS 桌面端打包开始。
+[desktop:package] ✓ [T-545] 产品级 projectKey=creatoros；渠道身份继续由激活码的签名 channelRef 决定。
+[desktop:package] ✓ [T-535] verdict 双密钥存在、格式合法且属于同一 Ed25519 密钥对。
+
+[desktop:package] ▶ sidecar 二进制化
+[desktop:package]   $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node scripts/desktop/build-sidecar.mjs
+[macos-runtime-compat] ✓ Node v25.9.0 Mach-O minos=13.5；安装包最低 macOS 13.5。
+[build-sidecar] target triple = aarch64-apple-darwin
+[build-sidecar] 1/3 next standalone build (CREATOROS_DESKTOP=1)…
+[build-sidecar] $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/next/dist/bin/next build
+▲ Next.js 16.2.9 (Turbopack)
+- Experiments (use with caution):
+  ⨯ isrFlushToDisk
+
+  Creating an optimized production build ...
+Turbopack build encountered 54 warnings:
+./ai-worker/src/runtime/browser/browser-launch.ts:28:19
+The file pattern (<dynamic> '/' <dynamic> '/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers/' <dynamic> '/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers' <dynamic> '/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/' <dynamic> 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers/' <dynamic> 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers' <dynamic> 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/' <dynamic> '/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers/' <dynamic> '/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers' <dynamic> '/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/' <dynamic> 'chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers/' <dynamic> 'chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> 'chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers' <dynamic> 'chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/' <dynamic> '/chrome-linux/chrome' | '/ROOT/frontend/browsers/' <dynamic> '/chrome-linux/chrome' | <dynamic> '/chrome-linux/chrome' | '/ROOT/frontend/browsers' <dynamic> '/chrome-linux/chrome' | <dynamic> '/' <dynamic> 'chrome-linux/chrome' | '/ROOT/frontend/browsers/' <dynamic> 'chrome-linux/chrome' | <dynamic> 'chrome-linux/chrome' | '/ROOT/frontend/browsers' <dynamic> 'chrome-linux/chrome' | <dynamic> '/' <dynamic> '/chrome-win/chrome.exe' | '/ROOT/frontend/browsers/' <dynamic> '/chrome-win/chrome.exe' | <dynamic> '/chrome-win/chrome.exe' | '/ROOT/frontend/browsers' <dynamic> '/chrome-win/chrome.exe' | <dynamic> '/' <dynamic> 'chrome-win/chrome.exe' | '/ROOT/frontend/browsers/' <dynamic> 'chrome-win/chrome.exe' | <dynamic> 'chrome-win/chrome.exe' | '/ROOT/frontend/browsers' <dynamic> 'chrome-win/chrome.exe' | <dynamic> '/' <dynamic> '/' <dynamic> | '/ROOT/frontend/browsers/' <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> | '/ROOT/frontend/browsers' <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> | '/ROOT/frontend/browsers/' <dynamic> | <dynamic> | '/ROOT/frontend/browsers' <dynamic>) matches 11817 files in [project]/frontend
+  [90m26 |[0m       ];
+  [90m27 |[0m       [36mfor[0m ([36mconst[0m rel [36mof[0m rels) {
+[31m[1m>[0m [90m28 |[0m         [36mconst[0m p = join(browsersDir, dir, rel);
+  [90m   |[0m                   [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m29 |[0m         [36mconst[0m st = [36mawait[0m stat(p).[36mcatch[0m(() => [36mnull[0m);
+  [90m30 |[0m         [36mif[0m (st?.isFile()) [36mreturn[0m p;
+  [90m31 |[0m       }
+
+Overly broad patterns can lead to build performance issues and over bundling.
+
+Import traces:
+  App Route:
+    ./ai-worker/src/runtime/browser/browser-launch.ts
+    ./ai-worker/src/runtime/platform/kuaishou-browser-source.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/v1/local/reveal/route.ts
+
+  Server Component:
+    ./ai-worker/src/runtime/browser/browser-launch.ts
+    ./ai-worker/src/runtime/platform/kuaishou-browser-source.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/lib/session.server.ts
+    ./frontend/src/app/(creator)/layout.tsx
+
+
+./backend/src/modules/execution/video-render/executor.ts:173:17
+The file pattern (<dynamic> '/' <dynamic> '/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers/' <dynamic> '/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers' <dynamic> '/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/' <dynamic> 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers/' <dynamic> 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers' <dynamic> 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/' <dynamic> '/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers/' <dynamic> '/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers' <dynamic> '/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/' <dynamic> 'chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers/' <dynamic> 'chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> 'chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | '/ROOT/frontend/browsers' <dynamic> 'chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' | <dynamic> '/' <dynamic> '/chrome-linux/chrome' | '/ROOT/frontend/browsers/' <dynamic> '/chrome-linux/chrome' | <dynamic> '/chrome-linux/chrome' | '/ROOT/frontend/browsers' <dynamic> '/chrome-linux/chrome' | <dynamic> '/' <dynamic> 'chrome-linux/chrome' | '/ROOT/frontend/browsers/' <dynamic> 'chrome-linux/chrome' | <dynamic> 'chrome-linux/chrome' | '/ROOT/frontend/browsers' <dynamic> 'chrome-linux/chrome' | <dynamic> '/' <dynamic> '/chrome-win/chrome.exe' | '/ROOT/frontend/browsers/' <dynamic> '/chrome-win/chrome.exe' | <dynamic> '/chrome-win/chrome.exe' | '/ROOT/frontend/browsers' <dynamic> '/chrome-win/chrome.exe' | <dynamic> '/' <dynamic> 'chrome-win/chrome.exe' | '/ROOT/frontend/browsers/' <dynamic> 'chrome-win/chrome.exe' | <dynamic> 'chrome-win/chrome.exe' | '/ROOT/frontend/browsers' <dynamic> 'chrome-win/chrome.exe' | <dynamic> '/' <dynamic> '/' <dynamic> | '/ROOT/frontend/browsers/' <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> | '/ROOT/frontend/browsers' <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> | '/ROOT/frontend/browsers/' <dynamic> | <dynamic> | '/ROOT/frontend/browsers' <dynamic>) matches 11817 files in [project]/frontend
+  [90m171 |[0m     ];
+  [90m172 |[0m     [36mfor[0m ([36mconst[0m rel [36mof[0m rels) {
+[31m[1m>[0m [90m173 |[0m       [36mconst[0m p = path.join(browsersDir, dir, rel);
+  [90m    |[0m                 [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m174 |[0m       [36mconst[0m st = [36mawait[0m fs.stat(p).[36mcatch[0m(() => [36mnull[0m);
+  [90m175 |[0m       [36mif[0m (st?.isFile()) [36mreturn[0m p;
+  [90m176 |[0m     }
+
+Overly broad patterns can lead to build performance issues and over bundling.
+
+Import traces:
+  App Route:
+    ./backend/src/modules/execution/video-render/executor.ts
+    ./backend/src/modules/execution/executor-registry.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/v1/auth/logout/route.ts
+
+  Server Component:
+    ./backend/src/modules/execution/video-render/executor.ts
+    ./backend/src/modules/execution/executor-registry.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/lib/session.server.ts
+    ./frontend/src/app/(creator)/layout.tsx
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/@modal/(.)projects/new/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/accounts/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/accounts/works/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/assets/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/calendar/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/canvases/[canvasId]/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/canvases/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/daily-report/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/experience/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/overview/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/positioning/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/article/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/image/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/moments/[momentsId]/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/outputs/[outputId]/image/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/outputs/[outputId]/video/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/production/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/publishing/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/research/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/review/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/script/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1onlzd3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/create/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/new/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/publishing/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/search/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0nu1-2x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/topics/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__16bd-9f._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/activate/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__1g_739u._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__025b8bj._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/chat/engines/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1a2c1kz._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0k880wh._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/chat/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0pocdex._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/knowledge/distill/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1oexsgu._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/knowledge/relate/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1iov-k0._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/knowledge/search/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1a6qo5-._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0ctcpcd._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/activate/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__017hx93._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/auth/login/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0ztbvgo._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/auth/logout/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1no86_8._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/auth/me/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1hbm-um._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1_raypo._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/auth/register/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0wufg_x._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/blob/[...key]/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1r4dz12._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1a5uyi6._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/browser-task-authorization/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__144524j._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/channel-model-selection/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0-aii_o._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0e_dyy3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/license-sync/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0z-eidq._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/path/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1cdutbt._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1-rzypi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/read-grant/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0imngo9._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1-v13ow._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/reveal/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0-mo-v8._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__116ltym._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/settings-transfer/models/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1y0ha67._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/workbench-artifacts/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0ditlkh._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1ffy3c6._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/workbench-preview/[taskId]/[artifactId]/[version]/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1q3tyte._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1pl6pna._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/knowledge/classify/route.ts
+
+
+✓ Compiled successfully in 19.0s
+  Skipping validation of types
+  Finished TypeScript config validation in 31ms ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/31) ...
+  Generating static pages using 11 workers (7/31) 
+  Generating static pages using 11 workers (15/31) 
+  Generating static pages using 11 workers (23/31) 
+✓ Generating static pages using 11 workers (31/31) in 343ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /(.)projects/new
+├ ƒ /accounts
+├ ƒ /accounts/works
+├ ƒ /activate
+├ ƒ /api/chat
+├ ƒ /api/chat/engines
+├ ƒ /api/knowledge/classify
+├ ƒ /api/knowledge/comment-sift
+├ ƒ /api/knowledge/distill
+├ ƒ /api/knowledge/relate
+├ ƒ /api/knowledge/search
+├ ƒ /api/v1/activate
+├ ƒ /api/v1/auth/login
+├ ƒ /api/v1/auth/logout
+├ ƒ /api/v1/auth/me
+├ ƒ /api/v1/auth/register
+├ ƒ /api/v1/blob/[...key]
+├ ƒ /api/v1/dispatch
+├ ƒ /api/v1/local/ai-credits/connect
+├ ƒ /api/v1/local/browser-task-authorization
+├ ƒ /api/v1/local/channel-model-selection
+├ ƒ /api/v1/local/channel-runtime
+├ ƒ /api/v1/local/client-config
+├ ƒ /api/v1/local/execution-preview/[taskId]/[...artifact]
+├ ƒ /api/v1/local/license-sync
+├ ƒ /api/v1/local/open-url
+├ ƒ /api/v1/local/path
+├ ƒ /api/v1/local/product-feedback
+├ ƒ /api/v1/local/read-grant
+├ ƒ /api/v1/local/reset-workspace
+├ ƒ /api/v1/local/reveal
+├ ƒ /api/v1/local/reveal-data-dir
+├ ƒ /api/v1/local/reveal-logs
+├ ƒ /api/v1/settings-transfer/models
+├ ƒ /api/v1/workbench-artifacts
+├ ƒ /api/v1/workbench-preview/[taskId]/[artifactId]/[version]
+├ ƒ /api/web-session
+├ ƒ /assets
+├ ƒ /automations
+├ ƒ /calendar
+├ ƒ /canvases
+├ ƒ /canvases/[canvasId]
+├ ƒ /daily-report
+├ ƒ /experience
+├ ƒ /intelligence
+├ ƒ /knowledge
+├ ○ /login
+├ ƒ /overview
+├ ƒ /positioning
+├ ƒ /projects
+├ ƒ /projects/[projectId]
+├ ƒ /projects/[projectId]/article
+├ ƒ /projects/[projectId]/image
+├ ƒ /projects/[projectId]/moments/[momentsId]
+├ ƒ /projects/[projectId]/outputs/[outputId]/image
+├ ƒ /projects/[projectId]/outputs/[outputId]/video
+├ ƒ /projects/[projectId]/planning
+├ ƒ /projects/[projectId]/production
+├ ƒ /projects/[projectId]/publishing
+├ ƒ /projects/[projectId]/research
+├ ƒ /projects/[projectId]/review
+├ ƒ /projects/[projectId]/script
+├ ƒ /projects/[projectId]/work
+├ ƒ /projects/create
+├ ƒ /projects/new
+├ ƒ /publishing
+├ ○ /register
+├ ƒ /search
+├ ƒ /settings
+└ ƒ /topics
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+[build-sidecar] 2/3 组装 standalone 运行目录(保留 frontend/+backend/ 布局)…
+[build-sidecar] ✂ 复制前剥离 standalone 工作区泄露 9 项(T-487)
+[build-sidecar] 剪除 pnpm hoist 冗余层 node_modules/.pnpm/node_modules/
+[build-sidecar] 补齐 PDF/Word 附件解析运行时(pdf-parse → canvas 原生闭包)…
+[build-sidecar] 资源已组装；额外运行时探针未运行。
+[build-sidecar] ✂ 剥离源码/文档泄露 0 项(T-392;冒烟兜底)
+[build-sidecar] 保留 236 个 pnpm 相对 symlink(node 解析所需,dev/直跑完好)
+[build-sidecar] 3/3 产出 sidecar(= 随包 node runtime)…
+[build-sidecar]   [T-172] 产出 sidecar/server.app（LSUIElement，Dock 隐身）→ /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libnode.141.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libllhttp.9.3.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libuv.1.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libada.3.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libsimdjson.33.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libbrotlidec.1.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libbrotlienc.1.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libcares.2.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libhdr_histogram.6.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libmerve.1.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libnbytes.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libnghttp2.14.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libnghttp3.9.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libngtcp2.16.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libsqlite3.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libuvwasi.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libzstd.1.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libcrypto.3.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libssl.3.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libicui18n.78.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libicuuc.78.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libbrotlicommon.1.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libsimdutf.34.dylib
+[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/libicudata.78.dylib
+[build-sidecar]   [T-437] ✓ 自检：co-ship 24 个 dylib + 全 @rpath 自包含 + 全库 adhoc 重签，二进制零 /opt 依赖
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/cli/creatoros.cjs
+[build-sidecar]   ✓ CreatorOS CLI 已进入 runtime: frontend/cli/creatoros.cjs
+[build-sidecar] 实拷 Playwright 包(修 Next tracing 漏 @playwright/test → 打包扫码崩)…
+[build-sidecar]   链接 @playwright/test → .pnpm 真身(不再双份实拷)
+[build-sidecar]   链接 playwright → .pnpm 真身(不再双份实拷)
+[build-sidecar]   链接 playwright-core → .pnpm 真身(不再双份实拷)
+[build-sidecar]   覆盖 .pnpm 残缺版 3 处
+[build-sidecar] 打包 Chromium 浏览器 chromium-1223(~341MB)→ sidecar/frontend/browsers/…
+[build-sidecar]   ✓ Chromium 已打进 bundle(运行时 instrumentation 设 PLAYWRIGHT_BROWSERS_PATH → frontend/browsers)
+[build-sidecar] 资源已组装；额外运行时探针未运行。
+[build-sidecar] ✓ 工作台 CfT 149.0.7827.155 已随包放入 layers/browser/workbench-cft/149.0.7827.155/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+[build-sidecar] 实拷 gsap/hyperframes 去重生产闭包(T-289/T-487)…
+[build-sidecar]   [darwin] 线性实拷 205 个闭包 entry(共享依赖只存一份,保留相对链)
+[build-sidecar] gsap 与 HyperFrames 资源已组装；CLI 启动自检未运行。
+[build-sidecar] 实拷 Pi 引擎依赖闭包(修 Next tracing 漏整棵 pi 树 → 打包版 Pi 引擎失活,T-313)…
+[build-sidecar]   实拷 61 个 pi 闭包 entry(剪 bedrock/google/mistral;含 openai+@anthropic-ai/sdk)
+[build-sidecar]   ✓ photon-node photon_rs_bg.wasm 到位
+[build-sidecar] 资源已组装；额外运行时探针未运行。
+[build-sidecar] 实拷 @xenova/transformers 闭包(修 T-356 worker 化后打包版 whisper-local 崩,T-383)…
+[build-sidecar]   实拷 81 个 transformers 闭包 entry(覆盖 Next-traced 残缺版)
+[build-sidecar]   ✂ onnxruntime 异平台 bin 剪枝 3 个目录(只留 darwin/arm64)
+[build-sidecar]   ✂ Node sidecar 剪除 onnxruntime-web 重复 WASM 4 个(@xenova dist 浏览器资产仍保留)
+[build-sidecar] 资源已组装；额外运行时探针未运行。
+[build-sidecar]   ✂ [T-225] 剪除异平台 onnx binding 目录 4 个(只留 darwin/arm64)
+[build-sidecar]   [T-225] binding: /node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64 have=true
+[build-sidecar]   [T-225] binding: /node_modules/.pnpm/onnxruntime-node@1.27.0/node_modules/onnxruntime-node/bin/napi-v6/darwin/arm64 have=true
+[build-sidecar]   ✓ [T-225] onnxruntime 原生库补拷 0 个(修 whisper-local 逐字稿转录 dlopen 崩)
+[build-sidecar]   ✓ [T-225b] sharp 0.32.x 原生补拷 0 处(修 @xenova/transformers 连坐崩)
+[build-sidecar]   ✓ ONNX 动态库 ABI 别名去重 1 处
+[fetch-ffmpeg] 缓存命中:/Users/zyongzhu/.cache/creatoros/ffmpeg-static/b6.0/ffmpeg-darwin-arm64(-version 冒烟未运行)
+[build-sidecar]   [T-485] 静态 ffmpeg 已实拷(target aarch64-apple-darwin,-version 冒烟未运行，待独立验证)
+[fetch-ffmpeg] 缓存命中:/Users/zyongzhu/.cache/creatoros/ffmpeg-static/b6.0/ffprobe-darwin-arm64(-version 冒烟未运行)
+[build-sidecar]   [T-485] 静态 ffprobe 已实拷(target aarch64-apple-darwin,-version 冒烟未运行，待独立验证)
+[build-sidecar] 🕶 脱敏构建绝对路径 31 文件(/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator → /creatoros;消 server.js/manifest/.bin shim 的用户名+布局泄露)
+[build-sidecar]   ✓ [T-451] verdict 公钥已烘焙 → /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/.next/server/verdict-verify-key.json
+[build-sidecar]   [T-441] 包外 symlink 修复:改相对链 0 + 嵌套物化 0 + 实拷 0 + 删断链 2 + 跳过重依赖 0(物化 0MB),自检零包外链
+[build-sidecar] ⏭ CREATOROS_SKIP_TARBALL=1 → 只产 clean runtime，tar 留到最终变换后压一次。
+[build-sidecar] ✅ 完成。
+    sidecar bin (=node runtime): /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/binaries/creatoros-server-aarch64-apple-darwin
+    [T-172] mac Dock 隐身 wrapper: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server
+    standalone 运行目录         : /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar
+    server.js                  : /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/server.js
+    Windows direct resource    : /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar
+    Tauri/NSIS 安装时展开到安装目录；首启不再调用 tar、不再写 C 盘 runtime 缓存。
+
+[desktop:package] ▶ sidecar JS 混淆(§3.1)
+[desktop:package]   $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node scripts/desktop/obfuscate.mjs
+[obfuscate] ▶ sidecar bundle 混淆开始(server + client)。
+[obfuscate]   靶目录[server]: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/.next/server
+[obfuscate] worker pool: 8 个 worker × 753 任务
+[obfuscate] ✅ [server] 混淆 753 个 .js(full=449 / rename-only=304)
+[obfuscate]   - 2 × Turbopack server runtime chunk 加载器(碰坏 chunk 加载,SPEC §4 排除)
+[obfuscate]   靶目录[client]: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/.next/static
+[obfuscate] worker pool: 8 个 worker × 99 任务
+[obfuscate] ✅ [client] 混淆 99 个 .js(full=3 / rename-only=96)
+[obfuscate]   - 1 × Turbopack client runtime chunk 加载器(otherChunks/loadChunk,碰坏 chunk 加载)
+
+[desktop:package] ▶ sidecar V8 字节码化(§5,L1→L3)
+[desktop:package]   $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node scripts/desktop/bytecode.mjs
+[bytecode] ▶ L3 V8 字节码化开始(L1 混淆后的业务 chunk)。
+[bytecode]   靶目录: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/.next/server
+[bytecode]   编译 node: /opt/homebrew/Cellar/node/25.9.0_2/bin/node(v25.9.0, modules=141)
+[bytecode] [T-459/T-462] 保留 127 个 chunk 不字节码化(含 Playwright evaluate 等可序列化 callback):
+[bytecode]   · chunks/[root-of-the-server]__0-aii_o._.js (14710 B)
+[bytecode]   · chunks/[root-of-the-server]__000bx4m._.js (16309 B)
+[bytecode]   · chunks/[root-of-the-server]__00a1b5e._.js (26680 B)
+[bytecode]   · chunks/[root-of-the-server]__00r9wjk._.js (14721 B)
+[bytecode]   · chunks/[root-of-the-server]__00tnhpr._.js (14724 B)
+[bytecode]   · chunks/[root-of-the-server]__02j78-5._.js (28963 B)
+[bytecode]   · chunks/[root-of-the-server]__09itgw1._.js (28977 B)
+[bytecode]   · chunks/[root-of-the-server]__09udtle._.js (14714 B)
+[bytecode]   · chunks/[root-of-the-server]__0_6epm5._.js (28957 B)
+[bytecode]   · chunks/[root-of-the-server]__0_hju6o._.js (28950 B)
+[bytecode]   · chunks/[root-of-the-server]__0b7vs8b._.js (26681 B)
+[bytecode]   · chunks/[root-of-the-server]__0bku3u_._.js (16307 B)
+[bytecode]   · chunks/[root-of-the-server]__0cav1-f._.js (28942 B)
+[bytecode]   · chunks/[root-of-the-server]__0ctcpcd._.js (14718 B)
+[bytecode]   · chunks/[root-of-the-server]__0da2vse._.js (28969 B)
+[bytecode]   · chunks/[root-of-the-server]__0e_dyy3._.js (14714 B)
+[bytecode]   · chunks/[root-of-the-server]__0eknf-w._.js (14724 B)
+[bytecode]   · chunks/[root-of-the-server]__0ey2ftd._.js (26672 B)
+[bytecode]   · chunks/[root-of-the-server]__0gdo_12._.js (14714 B)
+[bytecode]   · chunks/[root-of-the-server]__0gl0x9x._.js (16304 B)
+[bytecode]   · chunks/[root-of-the-server]__0gotc9k._.js (26685 B)
+[bytecode]   · chunks/[root-of-the-server]__0hgx6m4._.js (26685 B)
+[bytecode]   · chunks/[root-of-the-server]__0hvx_-w._.js (26678 B)
+[bytecode]   · chunks/[root-of-the-server]__0hxzxo9._.js (16309 B)
+[bytecode]   · chunks/[root-of-the-server]__0jt6vxq._.js (16300 B)
+[bytecode]   · chunks/[root-of-the-server]__0klrheh._.js (16301 B)
+[bytecode]   · chunks/[root-of-the-server]__0kvsw1-._.js (14722 B)
+[bytecode]   · chunks/[root-of-the-server]__0l8vq96._.js (26680 B)
+[bytecode]   · chunks/[root-of-the-server]__0lath9q._.js (16307 B)
+[bytecode]   · chunks/[root-of-the-server]__0n-fp-k._.js (16312 B)
+[bytecode]   · chunks/[root-of-the-server]__0o4el9s._.js (28945 B)
+[bytecode]   · chunks/[root-of-the-server]__0p_y_a1._.js (28969 B)
+[bytecode]   · chunks/[root-of-the-server]__0ptrfpm._.js (14715 B)
+[bytecode]   · chunks/[root-of-the-server]__0qzda-e._.js (14724 B)
+[bytecode]   · chunks/[root-of-the-server]__0rmkyab._.js (14724 B)
+[bytecode]   · chunks/[root-of-the-server]__0s5z-_k._.js (14722 B)
+[bytecode]   · chunks/[root-of-the-server]__0slwy2i._.js (16308 B)
+[bytecode]   · chunks/[root-of-the-server]__0t-krsq._.js (16312 B)
+[bytecode]   · chunks/[root-of-the-server]__0v5-kjr._.js (26679 B)
+[bytecode]   · chunks/[root-of-the-server]__0v534g0._.js (16307 B)
+[bytecode]   · chunks/[root-of-the-server]__0vbm0kc._.js (28969 B)
+[bytecode]   · chunks/[root-of-the-server]__0vbnmyz._.js (26690 B)
+[bytecode]   · chunks/[root-of-the-server]__0vnev1a._.js (14720 B)
+[bytecode]   · chunks/[root-of-the-server]__0w_9sjr._.js (28972 B)
+[bytecode]   · chunks/[root-of-the-server]__0wjzh2c._.js (28978 B)
+[bytecode]   · chunks/[root-of-the-server]__0wufg_x._.js (14718 B)
+[bytecode]   · chunks/[root-of-the-server]__0z--b-m._.js (16303 B)
+[bytecode]   · chunks/[root-of-the-server]__0zsxx0b._.js (26667 B)
+[bytecode]   · chunks/[root-of-the-server]__0zsye98._.js (28977 B)
+[bytecode]   · chunks/[root-of-the-server]__1-rzypi._.js (14710 B)
+[bytecode]   · chunks/[root-of-the-server]__1-wr6_n._.js (16305 B)
+[bytecode]   · chunks/[root-of-the-server]__1-wtnl4._.js (16309 B)
+[bytecode]   · chunks/[root-of-the-server]__106id0l._.js (14719 B)
+[bytecode]   · chunks/[root-of-the-server]__10c3ugy._.js (28980 B)
+[bytecode]   · chunks/[root-of-the-server]__10voe61._.js (26685 B)
+[bytecode]   · chunks/[root-of-the-server]__116ltym._.js (14718 B)
+[bytecode]   · chunks/[root-of-the-server]__11dy6xo._.js (26687 B)
+[bytecode]   · chunks/[root-of-the-server]__11w5e2s._.js (14721 B)
+[bytecode]   · chunks/[root-of-the-server]__12zipd_._.js (28962 B)
+[bytecode]   · chunks/[root-of-the-server]__13-j4le._.js (26683 B)
+[bytecode]   · chunks/[root-of-the-server]__132pr98._.js (16305 B)
+[bytecode]   · chunks/[root-of-the-server]__14z39ra._.js (26691 B)
+[bytecode]   · chunks/[root-of-the-server]__187kf8e._.js (16298 B)
+[bytecode]   · chunks/[root-of-the-server]__18eog70._.js (28967 B)
+[bytecode]   · chunks/[root-of-the-server]__18u_itg._.js (26687 B)
+[bytecode]   · chunks/[root-of-the-server]__1_f_bf8._.js (16312 B)
+[bytecode]   · chunks/[root-of-the-server]__1_tazb0._.js (28959 B)
+[bytecode]   · chunks/[root-of-the-server]__1a5uyi6._.js (14724 B)
+[bytecode]   · chunks/[root-of-the-server]__1aj7o3d._.js (26688 B)
+[bytecode]   · chunks/[root-of-the-server]__1bswcfa._.js (14720 B)
+[bytecode]   · chunks/[root-of-the-server]__1cqt6kk._.js (16306 B)
+[bytecode]   · chunks/[root-of-the-server]__1dhjedo._.js (14720 B)
+[bytecode]   · chunks/[root-of-the-server]__1ec9fz-._.js (16307 B)
+[bytecode]   · chunks/[root-of-the-server]__1f-46sn._.js (14706 B)
+[bytecode]   · chunks/[root-of-the-server]__1f2zhgm._.js (28967 B)
+[bytecode]   · chunks/[root-of-the-server]__1fhvebn._.js (16309 B)
+[bytecode]   · chunks/[root-of-the-server]__1gsm0tu._.js (26677 B)
+[bytecode]   · chunks/[root-of-the-server]__1hmppab._.js (14724 B)
+[bytecode]   · chunks/[root-of-the-server]__1lb2xut._.js (16291 B)
+[bytecode]   · chunks/[root-of-the-server]__1lfyc2y._.js (16310 B)
+[bytecode]   · chunks/[root-of-the-server]__1majnk9._.js (16290 B)
+[bytecode]   · chunks/[root-of-the-server]__1n3gvh0._.js (26680 B)
+[bytecode]   · chunks/[root-of-the-server]__1o761b0._.js (26682 B)
+[bytecode]   · chunks/[root-of-the-server]__1oexsgu._.js (14716 B)
+[bytecode]   · chunks/[root-of-the-server]__1p76qrx._.js (26666 B)
+[bytecode]   · chunks/[root-of-the-server]__1pnnx0u._.js (16309 B)
+[bytecode]   · chunks/[root-of-the-server]__1q30ww7._.js (14691 B)
+[bytecode]   · chunks/[root-of-the-server]__1qe9ksk._.js (28967 B)
+[bytecode]   · chunks/[root-of-the-server]__1rla2ef._.js (26692 B)
+[bytecode]   · chunks/[root-of-the-server]__1rss9km._.js (26688 B)
+[bytecode]   · chunks/[root-of-the-server]__1s5ka5-._.js (28974 B)
+[bytecode]   · chunks/[root-of-the-server]__1ttzaae._.js (26689 B)
+[bytecode]   · chunks/[root-of-the-server]__1v-ndfw._.js (28954 B)
+[bytecode]   · chunks/[root-of-the-server]__1vq5ydx._.js (28959 B)
+[bytecode]   · chunks/[root-of-the-server]__1w6-wwt._.js (26666 B)
+[bytecode]   · chunks/[root-of-the-server]__1wdg-kx._.js (28974 B)
+[bytecode]   · chunks/[root-of-the-server]__1wmab7s._.js (28957 B)
+[bytecode]   · chunks/[root-of-the-server]__1wo0jkk._.js (16299 B)
+[bytecode]   · chunks/[root-of-the-server]__1x0gk0t._.js (28974 B)
+[bytecode]   · chunks/[root-of-the-server]__1y534hv._.js (28964 B)
+[bytecode]   · chunks/[root-of-the-server]__1yb3k75._.js (26676 B)
+[bytecode]   · chunks/[root-of-the-server]__20b_24s._.js (16312 B)
+[bytecode]   · chunks/[root-of-the-server]__20l9sxy._.js (28968 B)
+[bytecode]   · chunks/[root-of-the-server]__217ylyg._.js (26673 B)
+[bytecode]   · chunks/_0ebpqmj._.js (6147577 B)
+[bytecode]   · chunks/_0imk-t5._.js (106568 B)
+[bytecode]   · chunks/_0j0412-._.js (6147586 B)
+[bytecode]   · chunks/_0toce54._.js (6147550 B)
+[bytecode]   · chunks/_0ttymb0._.js (6147828 B)
+[bytecode]   · chunks/_0ygh7xu._.js (6147865 B)
+[bytecode]   · chunks/_0z-axf2._.js (6147446 B)
+[bytecode]   · chunks/_12vgs07._.js (6147757 B)
+[bytecode]   · chunks/_1edxmif._.js (106584 B)
+[bytecode]   · chunks/frontend_src_server_ingestion_douyin-traffic_ts_1ofjzv2._.js (3617 B)
+[bytecode]   · chunks/ssr/[root-of-the-server]__035dqjm._.js (14736 B)
+[bytecode]   · chunks/ssr/[root-of-the-server]__0nu1-2x._.js (14709 B)
+[bytecode]   · chunks/ssr/[root-of-the-server]__17_796i._.js (28957 B)
+[bytecode]   · chunks/ssr/[root-of-the-server]__18ud33d._.js (16303 B)
+[bytecode]   · chunks/ssr/[root-of-the-server]__1_olbzw._.js (26694 B)
+[bytecode]   · chunks/ssr/[root-of-the-server]__1gxkkxt._.js (28971 B)
+[bytecode]   · chunks/ssr/[root-of-the-server]__1qpb-bo._.js (16299 B)
+[bytecode]   · chunks/ssr/[root-of-the-server]__1zzuzam._.js (26680 B)
+[bytecode]   · chunks/ssr/_00r-cxn._.js (6172992 B)
+[bytecode]   · chunks/ssr/_0f9piq3._.js (106588 B)
+[bytecode]   · chunks/ssr/_0kn8pce._.js (6173176 B)
+[bytecode]   · chunks/ssr/_0tbf47h._.js (106581 B)
+[bytecode]   · chunks/ssr/frontend_src_server_ingestion_douyin-traffic_ts_1l_n3cp._.js (3615 B)
+[bytecode] worker pool: 6 个 worker × 373 任务
+[bytecode]   ✂ bytenode 实拷 → /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/node_modules/bytenode
+[bytecode] ✅ 字节码化 373 个 chunk → .jsc + stub
+
+[desktop:package] ▶ sidecar 反 AI 诱饵注入(T-399a)
+[desktop:package]   $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node scripts/desktop/decoy.mjs
+[decoy] ⚠ 未设 CREATOROS_DECOY_SEED(CI secret),用本地 fallback seed —— 正式发布必须走 CI secret(SA-3)
+[decoy] 🕳 注入 5 矛盾诱饵到 static/chunks(零引用·永不加载·矛盾指向诱 AI 兜圈)
+[decoy]   命名 seed 派生 · 内容无共享标记 · seed=local-fallback · 可复现 · purge 靠 seed 重算
+
+[desktop:package] ▶ sidecar 版权/专有声明盖章
+[desktop:package]   $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node scripts/desktop/legal-stamp.mjs
+[legal-stamp] 🔖 版权/专有声明盖章 706 个可读 chunk(顶部 /*! 注释,零运行时影响) · 主体=朱志勇(月明水清深) · 刑法217/218 & DMCA §1201
+[desktop:package] macOS 本地 ad-hoc (-) 将由 Tauri 在 DMG 封盘前签入。
+[desktop:package] ⏭ 未配 TAURI_SIGNING_PRIVATE_KEY，本次不生成 updater 制品；安装包继续构建。
+[desktop:package] [T-452] cargo profile = release-fast(lto=thin;内测/日常快打)。发正式包设 CREATOROS_RELEASE=1 走 fat lto。
+
+[desktop:package] ▶ tauri build(含 updater 签名/占位)
+[desktop:package]   $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node node_modules/@tauri-apps/cli/tauri.js build --config {"bundle":{"macOS":{"signingIdentity":"-"}}} --config {"bundle":{"createUpdaterArtifacts":false}} -- --profile release-fast
+        Info Looking up installed tauri packages to check mismatched versions...
+     Running beforeBuildCommand `node scripts/desktop/build-sidecar.mjs`
+[macos-runtime-compat] ✓ Node v25.9.0 Mach-O minos=13.5；安装包最低 macOS 13.5。
+[build-sidecar] ✓ [T-535] 缓存 runtime verdict 公钥与本轮密钥对一致。
+[build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。
+[build-sidecar]   [T-441] 包外 symlink 修复:改相对链 0 + 嵌套物化 0 + 实拷 0 + 删断链 0 + 跳过重依赖 0(物化 0MB),自检零包外链
+[build-sidecar] 打 sidecar.tar.gz(供 bundle resource)…
+[build-sidecar]   → /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar.tar.gz
+   Compiling quote v1.0.46
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling libc v0.2.186
+   Compiling serde_core v1.0.228
+   Compiling cfg-if v1.0.4
+   Compiling shlex v2.0.1
+   Compiling serde v1.0.228
+   Compiling find-msvc-tools v0.1.9
+   Compiling zmij v1.0.21
+   Compiling version_check v0.9.5
+   Compiling parking_lot_core v0.9.12
+   Compiling memchr v2.8.2
+   Compiling autocfg v1.5.1
+   Compiling thiserror v2.0.18
+   Compiling icu_properties_data v2.2.0
+   Compiling icu_normalizer_data v2.2.0
+   Compiling itoa v1.0.18
+   Compiling generic-array v0.14.7
+   Compiling getrandom v0.4.3
+   Compiling siphasher v1.0.3
+   Compiling smallvec v1.15.2
+   Compiling fastrand v2.4.1
+   Compiling log v0.4.33
+   Compiling once_cell v1.21.4
+   Compiling phf_shared v0.13.1
+   Compiling stable_deref_trait v1.2.1
+   Compiling num-conv v0.2.2
+   Compiling time-core v0.1.9
+   Compiling thiserror v1.0.69
+   Compiling phf_generator v0.13.1
+   Compiling anyhow v1.0.103
+   Compiling pin-project-lite v0.2.17
+   Compiling typeid v1.0.3
+   Compiling serde_json v1.0.150
+   Compiling phf_codegen v0.13.1
+   Compiling writeable v0.6.3
+   Compiling erased-serde v0.4.10
+   Compiling ident_case v1.0.1
+   Compiling litemap v0.8.2
+   Compiling strsim v0.11.1
+   Compiling syn v2.0.118
+   Compiling utf8_iter v1.0.4
+   Compiling scopeguard v1.2.0
+   Compiling lock_api v0.4.14
+   Compiling getrandom v0.2.17
+   Compiling errno v0.3.14
+   Compiling signal-hook-registry v1.4.8
+   Compiling jobserver v0.1.35
+   Compiling synstructure v0.13.2
+   Compiling cc v1.2.66
+   Compiling bitflags v2.13.0
+   Compiling serde_derive_internals v0.29.1
+   Compiling serde_derive v1.0.228
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling zerovec-derive v0.11.3
+   Compiling displaydoc v0.2.6
+   Compiling thiserror-impl v2.0.18
+   Compiling thiserror-impl v1.0.69
+   Compiling phf_macros v0.13.1
+   Compiling zerofrom v0.1.8
+   Compiling darling_core v0.23.0
+   Compiling semver v1.0.28
+   Compiling new_debug_unreachable v1.0.6
+   Compiling core-foundation-sys v0.8.7
+   Compiling phf v0.13.1
+   Compiling parking_lot v0.12.5
+   Compiling string_cache_codegen v0.6.1
+   Compiling precomputed-hash v0.1.1
+   Compiling winnow v1.0.3
+   Compiling web_atoms v0.2.5
+   Compiling serde_spanned v1.1.1
+   Compiling toml_parser v1.1.2+spec-1.1.0
+   Compiling syn v3.0.6
+   Compiling yoke v0.8.3
+   Compiling darling_macro v0.23.0
+   Compiling darling v0.23.0
+   Compiling toml_writer v1.1.1+spec-1.1.0
+   Compiling ctor-proc-macro v0.0.7
+   Compiling typenum v1.20.1
+   Compiling subtle v2.6.1
+   Compiling string_cache v0.9.0
+   Compiling rand_core v0.6.4
+   Compiling mio v1.2.1
+   Compiling socket2 v0.6.4
+   Compiling bytes v1.12.0
+   Compiling tokio-macros v2.7.2
+   Compiling percent-encoding v2.3.2
+   Compiling dtoa v1.0.11
+   Compiling form_urlencoded v1.2.2
+   Compiling tendril v0.5.1
+   Compiling uuid v1.23.4
+   Compiling dtoa-short v0.3.5
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling http v1.4.2
+   Compiling tokio v1.52.3
+   Compiling cssparser-macros v0.6.1
+   Compiling derive_more-impl v2.1.1
+   Compiling selectors v0.36.1
+   Compiling aho-corasick v1.1.4
+   Compiling indexmap v1.9.3
+   Compiling regex-syntax v0.8.11
+   Compiling unic-char-range v0.9.0
+   Compiling unic-common v0.9.0
+   Compiling byteorder v1.5.0
+   Compiling crc32fast v1.5.0
+   Compiling camino v1.2.4
+   Compiling alloc-no-stdlib v2.0.4
+   Compiling alloc-stdlib v0.2.4
+   Compiling unic-ucd-version v0.9.0
+   Compiling derive_more v2.1.1
+   Compiling unic-char-property v0.9.0
+   Compiling zerovec v0.11.6
+   Compiling zerotrie v0.2.4
+   Compiling serde_with_macros v3.21.0
+   Compiling regex-automata v0.4.14
+   Compiling cssparser v0.36.0
+   Compiling markup5ever v0.38.0
+   Compiling toml v1.1.2+spec-1.1.0
+   Compiling swift-rs v1.0.7
+   Compiling objc2-exception-helper v0.1.1
+   Compiling servo_arc v0.4.3
+   Compiling equivalent v1.0.2
+   Compiling schemars v0.8.22
+   Compiling hashbrown v0.17.1
+   Compiling fnv v1.0.7
+   Compiling bit-vec v0.8.0
+   Compiling deranged v0.5.8
+   Compiling powerfmt v0.2.0
+   Compiling hashbrown v0.12.3
+   Compiling rustc-hash v2.1.3
+   Compiling indexmap v2.14.0
+   Compiling bit-set v0.8.0
+   Compiling cfb v0.7.3
+   Compiling time v0.3.53
+   Compiling regex v1.12.4
+   Compiling html5ever v0.38.0
+   Compiling tinystr v0.8.3
+   Compiling potential_utf v0.1.5
+   Compiling unic-ucd-ident v0.9.0
+   Compiling icu_collections v2.2.0
+   Compiling icu_locale_core v2.2.0
+   Compiling brotli-decompressor v5.0.3
+   Compiling crypto-common v0.1.7
+   Compiling jsonptr v0.6.3
+   Compiling cargo-platform v0.1.9
+   Compiling schemars_derive v0.8.22
+   Compiling quick-xml v0.41.0
+   Compiling icu_provider v2.2.0
+   Compiling icu_normalizer v2.2.0
+   Compiling icu_properties v2.2.0
+   Compiling futures-core v0.3.32
+   Compiling dyn-clone v1.0.20
+   Compiling same-file v1.0.6
+   Compiling base64 v0.21.7
+   Compiling base64 v0.22.1
+   Compiling foldhash v0.2.0
+   Compiling dunce v1.0.5
+   Compiling idna_adapter v1.2.2
+   Compiling plist v1.10.0
+   Compiling idna v1.1.0
+   Compiling dom_query v0.27.0
+   Compiling serde-untagged v0.1.9
+   Compiling url v2.5.8
+   Compiling walkdir v2.5.0
+   Compiling brotli v8.0.4
+   Compiling cargo_metadata v0.19.2
+   Compiling urlpattern v0.3.0
+   Compiling infer v0.19.0
+   Compiling serde_with v3.21.0
+   Compiling ctor v0.8.0
+   Compiling objc2 v0.6.4
+   Compiling getrandom v0.3.4
+   Compiling glob v0.3.3
+   Compiling zerocopy v0.8.53
+   Compiling json-patch v3.0.1
+   Compiling objc2-encode v4.1.0
+   Compiling futures-sink v0.3.32
+   Compiling rustc_version v0.4.1
+   Compiling tracing-core v0.1.36
+   Compiling simd-adler32 v0.3.9
+   Compiling tracing-attributes v0.1.31
+   Compiling zeroize_derive v1.5.0
+   Compiling allocator-api2 v0.2.21
+   Compiling adler2 v2.0.1
+   Compiling tauri-utils v2.9.3
+   Compiling miniz_oxide v0.8.9
+   Compiling zeroize v1.9.0
+   Compiling tracing v0.1.44
+   Compiling futures-channel v0.3.32
+   Compiling objc2-core-foundation v0.3.2
+   Compiling block-buffer v0.10.4
+   Compiling flate2 v1.1.9
+   Compiling digest v0.10.7
+   Compiling block2 v0.6.2
+   Compiling toml_datetime v0.7.5+spec-1.1.0
+   Compiling futures-macro v0.3.32
+   Compiling time-macros v0.2.31
+   Compiling option-ext v0.2.0
+   Compiling futures-io v0.3.32
+   Compiling slab v0.4.12
+   Compiling winnow v0.7.15
+   Compiling futures-task v0.3.32
+   Compiling httparse v1.10.1
+   Compiling dirs-sys v0.5.0
+   Compiling futures-util v0.3.32
+   Compiling embed-resource v3.0.11
+   Compiling core-foundation v0.10.1
+   Compiling cpufeatures v0.2.17
+   Compiling heck v0.5.0
+   Compiling tauri-winres v0.3.6
+   Compiling dirs v6.0.0
+   Compiling objc2-foundation v0.3.2
+   Compiling num-traits v0.2.19
+   Compiling toml v0.9.12+spec-1.1.0
+   Compiling crossbeam-utils v0.8.22
+   Compiling ring v0.17.14
+   Compiling pkg-config v0.3.33
+   Compiling cargo_toml v0.22.3
+   Compiling mime v0.3.17
+   Compiling rustls-pki-types v1.15.0
+   Compiling crossbeam-channel v0.5.16
+   Compiling ppv-lite86 v0.2.21
+   Compiling http-body v1.0.1
+   Compiling untrusted v0.9.0
+   Compiling foreign-types-macros v0.2.3
+   Compiling tower-service v0.3.3
+   Compiling rustls v0.23.41
+   Compiling system-configuration-sys v0.6.0
+   Compiling foreign-types-shared v0.3.1
+   Compiling raw-window-handle v0.6.2
+   Compiling foreign-types v0.5.0
+   Compiling tauri-plugin v2.6.3
+   Compiling tauri-build v2.6.3
+   Compiling core-graphics-types v0.2.0
+   Compiling rand_core v0.9.5
+   Compiling dpi v0.1.2
+   Compiling cookie v0.18.1
+   Compiling data-encoding v2.11.1
+   Compiling atomic-waker v1.1.2
+   Compiling rustix v1.1.4
+   Compiling try-lock v0.2.5
+   Compiling want v0.3.1
+   Compiling core-graphics v0.25.0
+   Compiling rand_chacha v0.9.0
+   Compiling sha2 v0.10.9
+   Compiling fdeflate v0.3.7
+   Compiling sha1 v0.10.7
+   Compiling tokio-util v0.7.18
+   Compiling sync_wrapper v1.0.2
+   Compiling core-foundation v0.9.4
+   Compiling httpdate v1.0.3
+   Compiling tower-layer v0.3.3
+   Compiling ref-cast v1.0.25
+   Compiling bitflags v1.3.2
+   Compiling png v0.17.16
+   Compiling system-configuration v0.7.0
+   Compiling hyper v1.10.1
+   Compiling png v0.18.1
+   Compiling rand v0.9.5
+   Compiling http-body-util v0.1.3
+   Compiling rustls-webpki v0.103.13
+   Compiling dispatch2 v0.3.1
+   Compiling tauri v2.11.5
+   Compiling ref-cast-impl v1.0.25
+   Compiling ipnet v2.12.0
+   Compiling wry v0.55.1
+   Compiling tauri-runtime v2.11.3
+   Compiling hyper-util v0.1.20
+   Compiling ico v0.5.0
+   Compiling tower v0.5.3
+   Compiling unicode-segmentation v1.13.3
+   Compiling compression-core v0.4.33
+   Compiling tauri-runtime-wry v2.11.4
+   Compiling keyboard-types v0.7.0
+   Compiling tauri-codegen v2.6.3
+   Compiling compression-codecs v0.4.43
+   Compiling security-framework-sys v2.17.0
+   Compiling serialize-to-javascript-impl v0.1.2
+   Compiling memoffset v0.6.5
+   Compiling either v1.18.0
+   Compiling async-compression v0.4.48
+   Compiling security-framework v3.7.0
+   Compiling serialize-to-javascript v0.1.2
+   Compiling webpki-roots v1.0.8
+   Compiling num-integer v0.1.47
+   Compiling objc2-app-kit v0.3.2
+   Compiling zstd-sys v2.1.0+zstd.1.5.7
+   Compiling tokio-rustls v0.26.4
+   Compiling inout v0.1.4
+   Compiling serde_repr v0.1.20
+   Compiling async-trait v0.1.89
+   Compiling termios v0.2.2
+   Compiling ioctl-rs v0.1.6
+   Compiling tauri-macros v2.6.3
+   Compiling serial-core v0.4.0
+   Compiling embed_plist v1.2.2
+   Compiling lazy_static v1.5.0
+   Compiling serial-unix v0.4.0
+   Compiling cipher v0.4.4
+   Compiling hyper-rustls v0.27.9
+   Compiling tower-http v0.6.11
+   Compiling iana-time-zone v0.1.65
+   Compiling schemars_derive v1.2.1
+   Compiling utf-8 v0.7.6
+   Compiling ryu v1.0.23
+   Compiling pin-utils v0.1.0
+   Compiling unicase v2.9.0
+   Compiling mime_guess v2.0.5
+   Compiling serde_urlencoded v0.7.1
+   Compiling nix v0.25.1
+   Compiling chrono v0.4.45
+   Compiling serial v0.4.0
+   Compiling num-bigint v0.4.8
+   Compiling lzma-sys v0.1.20
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling filedescriptor v0.8.3
+   Compiling hmac v0.12.1
+   Compiling schemars v1.2.1
+   Compiling universal-hash v0.5.1
+   Compiling multer v3.1.0
+   Compiling ahash v0.8.12
+   Compiling encoding_rs v0.8.35
+   Compiling env_home v0.1.0
+   Compiling downcast-rs v1.2.1
+   Compiling zstd-safe v7.3.0
+   Compiling opaque-debug v0.3.1
+   Compiling shell-words v1.1.1
+   Compiling polyval v0.6.2
+   Compiling portable-pty v0.8.1
+   Compiling nomi-types v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/agent/nomi-types)
+   Compiling which v7.0.3
+   Compiling num-rational v0.4.2
+   Compiling objc2-web-kit v0.3.2
+   Compiling tao v0.35.3
+   Compiling muda v0.19.3
+   Compiling window-vibrancy v0.6.0
+   Compiling aes v0.8.4
+   Compiling sharded-slab v0.1.7
+   Compiling rustls-platform-verifier v0.7.0
+   Compiling num-iter v0.1.46
+   Compiling tauri-plugin-fs v2.5.2
+   Compiling tungstenite v0.29.0
+   Compiling num-complex v0.4.6
+   Compiling matchers v0.2.0
+   Compiling tracing-serde v0.2.0
+   Compiling tracing-log v0.2.0
+   Compiling chromiumoxide_types v0.9.1
+   Compiling thread_local v1.1.10
+   Compiling signal-hook v0.3.18
+   Compiling tinyvec_macros v0.1.1
+   Compiling crc-catalog v2.5.0
+   Compiling termcolor v1.4.1
+   Compiling spin v0.9.9
+   Compiling nu-ansi-term v0.50.3
+   Compiling borrow-or-share v0.2.4
+   Compiling unicode-general-category v1.1.0
+   Compiling fluent-uri v0.4.1
+   Compiling tracing-subscriber v0.3.23
+   Compiling ts-rs-macros v12.0.1
+   Compiling crc v3.4.0
+   Compiling tinyvec v1.11.0
+   Compiling tempfile v3.27.0
+   Compiling chromiumoxide_pdl v0.9.1
+   Compiling num v0.4.3
+   Compiling tokio-tungstenite v0.29.0
+   Compiling reqwest v0.13.4
+   Compiling nomi-process-runtime v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/shared/nomi-process-runtime)
+   Compiling ghash v0.5.1
+   Compiling tungstenite v0.28.0
+   Compiling ctr v0.9.2
+   Compiling axum-core v0.5.6
+   Compiling futures-executor v0.3.32
+   Compiling curve25519-dalek v4.1.3
+   Compiling aead v0.5.2
+   Compiling serde_path_to_error v0.1.20
+   Compiling micromap v0.3.0
+   Compiling zip v2.4.2
+   Compiling symlink v0.1.0
+   Compiling outref v0.5.2
+   Compiling bumpalo v3.20.3
+   Compiling matchit v0.8.4
+   Compiling vsimd v0.8.0
+   Compiling zopfli v0.8.3
+   Compiling uuid-simd v0.8.0
+   Compiling tracing-appender v0.2.5
+   Compiling axum v0.8.9
+   Compiling async-tungstenite v0.32.1
+   Compiling referencing v0.47.0
+   Compiling aes-gcm v0.10.3
+   Compiling futures v0.3.32
+   Compiling chromiumoxide_cdp v0.9.1
+   Compiling bzip2 v0.5.2
+   Compiling xz2 v0.1.7
+   Compiling rand_chacha v0.3.1
+   Compiling ts-rs v12.0.1
+   Compiling fraction v0.15.4
+   Compiling fancy-regex v0.18.0
+   Compiling unicode-normalization v0.1.25
+   Compiling lzma-rs v0.3.0
+   Compiling reqwest v0.12.28
+   Compiling pbkdf2 v0.12.2
+   Compiling tungstenite v0.26.2
+   Compiling rustls-native-certs v0.8.4
+   Compiling tauri-plugin-process v2.3.1
+   Compiling tauri-plugin-shell v2.3.5
+   Compiling tauri-plugin-updater v2.10.1
+   Compiling tauri-plugin-dialog v2.7.3
+   Compiling zstd v0.13.3
+   Compiling tauri-plugin-opener v2.5.4
+   Compiling toml_edit v0.25.12+spec-1.1.0
+   Compiling objc2-io-kit v0.3.2
+   Compiling nomi-compact v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/agent/nomi-compact)
+   Compiling jsonschema-regex v0.47.0
+   Compiling email_address v0.2.9
+   Compiling os_pipe v1.2.3
+   Compiling which v8.0.6
+   Compiling bstr v1.13.1
+   Compiling constant_time_eq v0.3.1
+   Compiling psl-types v2.0.11
+   Compiling pxfm v0.1.30
+   Compiling deflate64 v0.1.12
+   Compiling bytecount v0.6.9
+   Compiling num-cmp v0.1.0
+   Compiling futures-timer v3.0.4
+   Compiling rfd v0.16.0
+   Compiling globset v0.4.19
+   Compiling jsonschema v0.47.0
+   Compiling psl v2.1.234
+   Compiling nomi-config v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/agent/nomi-config)
+   Compiling sigchld v0.2.4
+   Compiling moxcms v0.8.1
+   Compiling sysinfo v0.39.6
+   Compiling nomifun-net v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/shared/nomifun-net)
+   Compiling tokio-tungstenite v0.26.2
+   Compiling nomifun-common v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/backend/nomifun-common)
+   Compiling rand v0.8.6
+   Compiling objc2-osa-kit v0.3.2
+   Compiling xattr v1.6.1
+   Compiling nomi-protocol v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/agent/nomi-protocol)
+   Compiling lru v0.18.4
+   Compiling nomi-redact v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact)
+   Compiling open v5.3.6
+   Compiling fs2 v0.4.3
+   Compiling filetime v0.2.29
+   Compiling byteorder-lite v0.1.0
+   Compiling bytemuck v1.25.0
+   Compiling signature v2.2.0
+   Compiling hex v0.4.3
+   Compiling creatoros-desktop v1.2.0 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri)
+   Compiling ed25519 v2.2.3
+   Compiling image v0.25.10
+   Compiling tar v0.4.46
+   Compiling nomi-tools v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/agent/nomi-tools)
+   Compiling osakit v0.3.1
+   Compiling shared_child v1.1.1
+   Compiling nomifun-browser-platform v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/backend/nomifun-browser-platform)
+   Compiling minisign-verify v0.2.5
+   Compiling ryu-js v1.0.3
+   Compiling serde_json_canonicalizer v0.3.2
+   Compiling ed25519-dalek v2.2.0
+   Compiling x25519-dalek v2.0.1
+   Compiling tauri-plugin-single-instance v2.4.3
+   Compiling hkdf v0.12.4
+   Compiling secmem-proc v0.3.8
+   Compiling secrecy v0.8.0
+   Compiling keyring v3.6.3
+   Compiling machine-uid v0.5.4
+   Compiling obfstr v0.4.6
+   Compiling chromiumoxide v0.9.1
+   Compiling nomi-browser-engine v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine)
+warning: variable does not need to be mutable
+    --> vendor/nomifun/crates/agent/nomi-browser-engine/src/launch.rs:2478:9
+     |
+2478 |     let mut args = build_chrome_args(&config.user_data_dir, force_headless);
+     |         ----^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `filtered_extra_chrome_args` is never used
+    --> vendor/nomifun/crates/agent/nomi-browser-engine/src/launch.rs:2353:4
+     |
+2353 | fn filtered_extra_chrome_args(extra: &str) -> Vec<String> {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling nomi-browser v0.7.2 (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser)
+warning: `nomi-browser-engine` (lib) generated 2 warnings (run `cargo fix --lib -p nomi-browser-engine` to apply 1 suggestion)
+warning: fields `valid`, `status`, `expires_at_ms`, and `grace_seconds` are never read
+  --> src/decoy_gate.rs:30:9
+   |
+29 | pub struct EntitlementVerdict {
+   |            ------------------ fields in this struct
+30 |     pub valid: bool,
+   |         ^^^^^
+31 |     pub status: &'static str, // "active" | "grace" | "expired" | "revoked" | "inactive"
+   |         ^^^^^^
+32 |     pub expires_at_ms: i64,
+   |         ^^^^^^^^^^^^^
+33 |     pub grace_seconds: i64,
+   |         ^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `0` is never read
+  --> src/workbench/command.rs:66:17
+   |
+66 |     Unavailable(String),
+   |     ----------- ^^^^^^
+   |     |
+   |     field in this variant
+   |
+   = note: `CommandError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+   |
+66 -     Unavailable(String),
+66 +     Unavailable(()),
+   |
+
+warning: field `0` is never read
+  --> src/workbench/command.rs:67:8
+   |
+67 |     Io(io::Error),
+   |     -- ^^^^^^^^^
+   |     |
+   |     field in this variant
+   |
+   = note: `CommandError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+   |
+67 -     Io(io::Error),
+67 +     Io(()),
+   |
+
+warning: variant `UnsupportedPlatform` is never constructed
+  --> src/workbench/files.rs:56:5
+   |
+51 | pub enum FileError {
+   |          --------- variant in this enum
+...
+56 |     UnsupportedPlatform,
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `FileError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: method `write` is never used
+   --> src/workbench/files.rs:464:12
+    |
+139 | impl TaskFiles {
+    | -------------- method in this implementation
+...
+464 |     pub fn write(
+    |            ^^^^^
+
+warning: `creatoros-desktop` (lib) generated 5 warnings
+    Finished `release-fast` profile [optimized] target(s) in 2m 49s
+       Built application at: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/CreatorOS
+    Bundling CreatorOS.app (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app)
+     Signing with identity "-"
+Signing with identity "-"
+Signing /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/creatoros-server
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/creatoros-server: replacing existing signature
+Signing with identity "-"
+Signing /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/CreatorOS
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/CreatorOS: replacing existing signature
+Signing with identity "-"
+Signing /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app: replacing existing signature
+        Warn skipping app notarization, no APPLE_ID & APPLE_PASSWORD & APPLE_TEAM_ID or APPLE_API_KEY & APPLE_API_ISSUER & APPLE_API_KEY_PATH environment variables found
+    Bundling CreatorOS_1.2.0_aarch64.dmg (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg)
+     Running bundle_dmg.sh
+    Finished 2 bundles at:
+        /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app
+        /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg
+
+[desktop:package] 额外冒烟、TLS 与产物扫描未运行；安装包继续构建，不声明已验收。
+
+[desktop:package] ▶ 代码签名
+[desktop:package]   $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node scripts/desktop/codesign.mjs
+[codesign] ⏭ 未配代码签名证书,跳过(退 0)。
+[codesign]   拿到 Apple Developer ID 证书后,零改码启用:
+[codesign]     export APPLE_SIGNING_IDENTITY="Developer ID Application: <你的名字> (<TEAMID>)"
+[codesign]   已在 release manifest 标 signed:false(防未签被下游/自动更新链误当已签)。
+
+[desktop:package] ▶ 公证
+[desktop:package]   $ /opt/homebrew/Cellar/node/25.9.0_2/bin/node scripts/desktop/notarize.mjs
+[notarize] ⏭ 未配公证凭据,跳过(退 0)。
+[notarize]   推荐先用 notarytool store-credentials 把凭据存进 macOS 钥匙串:
+[notarize]     export APPLE_NOTARY_KEYCHAIN_PROFILE=<profile-name>
+[notarize]   也兼容 Apple ID + app-specific password:
+[notarize]     export APPLE_ID=<你的 apple id>
+[notarize]     export APPLE_TEAM_ID=<TEAMID>
+[notarize]     export APPLE_APP_PASSWORD=<app-specific-password>
+[notarize]   已在 release manifest 标 notarized:false。
+
+[desktop:package] ✅ 完成。产物在 src-tauri/target/release-fast/bundle/(macos/*.app + dmg/*.dmg)。
+[desktop:package] 签名/公证状态见 bundle/creatoros-release-manifest.json(未配证书则 signed:false)。
+[desktop:package] T-635 产品身份清单：/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/creatoros-product-manifest.json
+[desktop:package] T-635 release attestation：/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/creatoros-release-attestation.json
+[desktop:package] 阶段耗时报告:/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/runtime-reports/build-timings.package.json
+[desktop:package-local] ✓ 唯一验收包：/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg
+[desktop:package-local] 已显式跳过本机安装（CREATOROS_LOCAL_SKIP_INSTALL=1）。

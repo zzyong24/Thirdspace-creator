@@ -1,0 +1,14 @@
+{
+  "task": "T-1254",
+  "name": "pnpm",
+  "version": "12.6.0",
+  "engines": {
+    "node": ">=18.*"
+  },
+  "integrity": "sha512-PvaPlRyxEawgS0paFvCy3fDaVqluBBPoHYVdnwtV75JnFHCQKOHNAMQFwsX7e56OxNxGd3yAXQNzwvL/AP0g7A==",
+  "tarball": "https://registry.npmjs.org/pnpm/-/pnpm-12.6.0.tgz",
+  "rawReceiptSha256": "3c1ffee02f26d9d7150225e23f6626c0587a90dde41da0e9f0a7c72a1d5cf37a",
+  "noInstall": true,
+  "noDownloadedImplementation": true,
+  "noNewPnpmExecuted": true
+}

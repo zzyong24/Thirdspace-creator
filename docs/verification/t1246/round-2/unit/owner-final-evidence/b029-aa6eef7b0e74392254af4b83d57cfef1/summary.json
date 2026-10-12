@@ -1,0 +1,18 @@
+{
+  "phase": "b029",
+  "startedAt": "2026-10-11T21:56:47.819Z",
+  "deadlineAt": "2026-10-11T23:24:47.819Z",
+  "elapsedMs": 22591.45425,
+  "totalBudgetMs": 5280000,
+  "outerBudgetExhausted": false,
+  "cleanupElapsedMs": 718.0592080000024,
+  "cleanupBudgetMs": 1200000,
+  "exitCode": 0,
+  "ownedDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owner-final-aa6eef7b0e74392254af4b83d57cfef1-KZt1cx",
+  "cleaned": true,
+  "ownedRootRetained": false,
+  "noPG": true,
+  "noApp": true,
+  "retry": 0,
+  "firstEvidencePreserved": true
+}

@@ -1,0 +1,447 @@
+{
+  "kind": "read-only-single-proposal-not-approved-not-implemented",
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "confirmedDefect": "root prior short diagnostic actual direct /settings close→about:blank; same source history.length>1 admits outside app history",
+  "originalFullSuiteFailure": "UNKNOWN; separate actual two full original cases passed in isolated fresh run with no source/assertion edits",
+  "proposedProductWriteSet": [
+    {
+      "path": "frontend/src/components/shell/app-shell.tsx",
+      "role": "proposed-product-change",
+      "exists": true,
+      "sha256": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "frozen533SHA256": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/use-primary-navigation.ts",
+      "role": "proposed-product-change",
+      "exists": true,
+      "sha256": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206",
+      "frozen533SHA256": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "role": "proposed-product-change",
+      "exists": true,
+      "sha256": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "frozen533SHA256": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/settings-return-context.tsx",
+      "role": "proposed-new-product",
+      "exists": false,
+      "sha256": null,
+      "frozen533SHA256": null
+    }
+  ],
+  "proposedTestWriteSet": [
+    {
+      "path": "frontend/src/components/shell/app-shell.test.tsx",
+      "role": "proposed-existing-test-change",
+      "exists": true,
+      "sha256": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873",
+      "frozen533SHA256": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/use-primary-navigation.test.tsx",
+      "role": "proposed-existing-test-change",
+      "exists": true,
+      "sha256": "6d3f1623676d894bf04209d842e2889ecff7382ff60c57920548eda96433971e",
+      "frozen533SHA256": "6d3f1623676d894bf04209d842e2889ecff7382ff60c57920548eda96433971e",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/settings-return-context.test.tsx",
+      "role": "proposed-new-test",
+      "exists": false,
+      "sha256": null,
+      "frozen533SHA256": null
+    },
+    {
+      "path": "frontend/src/features/settings/settings-dialog-return.test.tsx",
+      "role": "proposed-new-test",
+      "exists": false,
+      "sha256": null,
+      "frozen533SHA256": null
+    },
+    {
+      "path": "frontend/tests/e2e/settings-return.spec.ts",
+      "role": "proposed-new-test",
+      "exists": false,
+      "sha256": null,
+      "frozen533SHA256": null
+    }
+  ],
+  "supportReadRunOnly": [
+    {
+      "path": "frontend/src/app/(creator)/shell-router.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "a57e9da3d474ff111a9fc400452521d34d544f302c337e5642470b221bf1f3fa",
+      "frozen533SHA256": "a57e9da3d474ff111a9fc400452521d34d544f302c337e5642470b221bf1f3fa",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/app/(creator)/layout.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "ffc7a4d064740cb10979d0f750f164dc5ebd8bc9b73cb0d73f8fd9a840e13b93",
+      "frozen533SHA256": "ffc7a4d064740cb10979d0f750f164dc5ebd8bc9b73cb0d73f8fd9a840e13b93",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/sidebar.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9",
+      "frozen533SHA256": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/overlays/overlay-controller.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "c671d1aafae649dbc043c729de32366a793e84ac1c3e235ad41a183883345d2f",
+      "frozen533SHA256": "c671d1aafae649dbc043c729de32366a793e84ac1c3e235ad41a183883345d2f",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/overlays/new-project-dialog.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "frozen533SHA256": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/lib/copilot-navigation.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "a57e558e27c706a9edeceaf9ab8d0dc1c7be80294bfc4b09b3f931983611efcd",
+      "frozen533SHA256": "a57e558e27c706a9edeceaf9ab8d0dc1c7be80294bfc4b09b3f931983611efcd",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/lib/copilot-navigation.test.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "2b73e57eef244cc07c807e55e926de0a1f88fb6a8dc079357308ff43f0130000",
+      "frozen533SHA256": "2b73e57eef244cc07c807e55e926de0a1f88fb6a8dc079357308ff43f0130000",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/lib/creation-workspace-scope.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "frozen533SHA256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-host.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18",
+      "frozen533SHA256": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-host.test.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "4b4c7472124acb183b4f15d2ed41beee794125646ce79b31d77b19ce0a97f706",
+      "frozen533SHA256": "4b4c7472124acb183b4f15d2ed41beee794125646ce79b31d77b19ce0a97f706",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-registry.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "dd6d47a2ce4b38d3b26a4231d88408884b76d1188f472660b0b3c89427425010",
+      "frozen533SHA256": "dd6d47a2ce4b38d3b26a4231d88408884b76d1188f472660b0b3c89427425010",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/ui/dialog.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "frozen533SHA256": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "frozen533SHA256": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-page.test.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "frozen533SHA256": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/tests/e2e/settings.spec.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "frozen533SHA256": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/tests/e2e/settings-responsive-layout.spec.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "frozen533SHA256": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/tests/e2e/overlay-routing.spec.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "frozen533SHA256": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/overlays/overlay-routing.test.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "41a2ae0e40669c537a52223c61dd74add756f99691ea241c6062cb6ea2458c54",
+      "frozen533SHA256": "41a2ae0e40669c537a52223c61dd74add756f99691ea241c6062cb6ea2458c54",
+      "frozenByteSame": true
+    }
+  ],
+  "excluded": [
+    "frontend/src/app/(creator)/shell-router.tsx product change",
+    "ProjectVideoSessionHost / registry product change",
+    "OverlayController / copilot-navigation product change",
+    "backend / contract schema or operation change",
+    "NewProjectDialog behavior change",
+    "original old suite expectations or first-round receipts change"
+  ],
+  "sourceEntries": [
+    {
+      "path": "frontend/src/components/shell/app-shell.tsx",
+      "role": "proposed-product-change",
+      "exists": true,
+      "sha256": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "frozen533SHA256": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/use-primary-navigation.ts",
+      "role": "proposed-product-change",
+      "exists": true,
+      "sha256": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206",
+      "frozen533SHA256": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "role": "proposed-product-change",
+      "exists": true,
+      "sha256": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "frozen533SHA256": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/app-shell.test.tsx",
+      "role": "proposed-existing-test-change",
+      "exists": true,
+      "sha256": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873",
+      "frozen533SHA256": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/use-primary-navigation.test.tsx",
+      "role": "proposed-existing-test-change",
+      "exists": true,
+      "sha256": "6d3f1623676d894bf04209d842e2889ecff7382ff60c57920548eda96433971e",
+      "frozen533SHA256": "6d3f1623676d894bf04209d842e2889ecff7382ff60c57920548eda96433971e",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/app/(creator)/shell-router.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "a57e9da3d474ff111a9fc400452521d34d544f302c337e5642470b221bf1f3fa",
+      "frozen533SHA256": "a57e9da3d474ff111a9fc400452521d34d544f302c337e5642470b221bf1f3fa",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/app/(creator)/layout.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "ffc7a4d064740cb10979d0f750f164dc5ebd8bc9b73cb0d73f8fd9a840e13b93",
+      "frozen533SHA256": "ffc7a4d064740cb10979d0f750f164dc5ebd8bc9b73cb0d73f8fd9a840e13b93",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/sidebar.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9",
+      "frozen533SHA256": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/overlays/overlay-controller.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "c671d1aafae649dbc043c729de32366a793e84ac1c3e235ad41a183883345d2f",
+      "frozen533SHA256": "c671d1aafae649dbc043c729de32366a793e84ac1c3e235ad41a183883345d2f",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/overlays/new-project-dialog.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "frozen533SHA256": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/lib/copilot-navigation.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "a57e558e27c706a9edeceaf9ab8d0dc1c7be80294bfc4b09b3f931983611efcd",
+      "frozen533SHA256": "a57e558e27c706a9edeceaf9ab8d0dc1c7be80294bfc4b09b3f931983611efcd",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/lib/copilot-navigation.test.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "2b73e57eef244cc07c807e55e926de0a1f88fb6a8dc079357308ff43f0130000",
+      "frozen533SHA256": "2b73e57eef244cc07c807e55e926de0a1f88fb6a8dc079357308ff43f0130000",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/lib/creation-workspace-scope.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "frozen533SHA256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-host.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18",
+      "frozen533SHA256": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-host.test.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "4b4c7472124acb183b4f15d2ed41beee794125646ce79b31d77b19ce0a97f706",
+      "frozen533SHA256": "4b4c7472124acb183b4f15d2ed41beee794125646ce79b31d77b19ce0a97f706",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-registry.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "dd6d47a2ce4b38d3b26a4231d88408884b76d1188f472660b0b3c89427425010",
+      "frozen533SHA256": "dd6d47a2ce4b38d3b26a4231d88408884b76d1188f472660b0b3c89427425010",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/ui/dialog.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "frozen533SHA256": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "frozen533SHA256": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-page.test.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "frozen533SHA256": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/tests/e2e/settings.spec.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "frozen533SHA256": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/tests/e2e/settings-responsive-layout.spec.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "frozen533SHA256": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/tests/e2e/overlay-routing.spec.ts",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "frozen533SHA256": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/overlays/overlay-routing.test.tsx",
+      "role": "read-run-only",
+      "exists": true,
+      "sha256": "41a2ae0e40669c537a52223c61dd74add756f99691ea241c6062cb6ea2458c54",
+      "frozen533SHA256": "41a2ae0e40669c537a52223c61dd74add756f99691ea241c6062cb6ea2458c54",
+      "frozenByteSame": true
+    },
+    {
+      "path": "frontend/src/components/shell/settings-return-context.tsx",
+      "role": "proposed-new-product",
+      "exists": false,
+      "sha256": null,
+      "frozen533SHA256": null
+    },
+    {
+      "path": "frontend/src/components/shell/settings-return-context.test.tsx",
+      "role": "proposed-new-test",
+      "exists": false,
+      "sha256": null,
+      "frozen533SHA256": null
+    },
+    {
+      "path": "frontend/src/features/settings/settings-dialog-return.test.tsx",
+      "role": "proposed-new-test",
+      "exists": false,
+      "sha256": null,
+      "frozen533SHA256": null
+    },
+    {
+      "path": "frontend/tests/e2e/settings-return.spec.ts",
+      "role": "proposed-new-test",
+      "exists": false,
+      "sha256": null,
+      "frozen533SHA256": null
+    }
+  ],
+  "generatedAt": "2026-10-11T17:37:28.943Z"
+}

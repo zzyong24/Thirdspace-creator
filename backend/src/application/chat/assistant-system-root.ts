@@ -23,7 +23,7 @@ import {createChatProposalSourceService,createAssistantActionAdoptionService,cre
 import {createCreativeCanvasService} from '../../modules/creative-canvas';
 import {buildChatTools,type ChatToolDeps} from '../../modules/ai-runtime/chat-tools';
 import {prepareChatToolDefinitions} from '../../modules/ai-runtime/chat-tool-definitions';
-import {matchFrozenAssistantReadCatalog,type ChatSystemToolPorts} from '../../modules/ai-runtime/chat-system-tool-host';
+import {matchFrozenAssistantReadCatalog,matchFrozenAssistantSystemCatalog,type ChatSystemToolPorts} from '../../modules/ai-runtime/chat-system-tool-host';
 import {ConflictError} from '../../modules/execution/execution.errors';
 
 type Host=Parameters<ChatSystemToolPorts['propose']>[2];
@@ -225,7 +225,13 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
  const candidateNames=['system.action.propose','canvas.create.propose',...(ports.generation?['canvas.generate.propose']:[])];
  const prepared=await prepareChatToolDefinitions(buildChatTools(candidateNames,{humanizeError:()=>null} as unknown as ChatToolDeps));
  const tools=Object.fromEntries(prepared.definitions.map(definition=>[definition.name,{version:definition.version,effect:definition.effect,parameters:prepared.parameters[definition.name]!.parameters,parameterSchema:prepared.parameters[definition.name]!.schema}]));
- const source=createChatProposalSourceService(db,{tools,parseCandidate(name,value){
+ const source=createChatProposalSourceService(db,{tools,async resolveTools(frozen){
+  const catalog=await matchFrozenAssistantSystemCatalog(frozen.tools);
+  const required=frozen.tools.filter(tool=>['system.action.propose','canvas.create.propose','canvas.generate.propose'].includes(tool.name));
+  if(required.some(tool=>!candidateNames.includes(tool.name)))throw new ConflictError('候选能力未装配');
+  const known=await prepareChatToolDefinitions(buildChatTools(required.map(tool=>tool.name),{humanizeError:()=>null,assistantReadCatalogVersion:catalog.assistantReadCatalogVersion??2,assistantActionCatalogVersion:catalog.assistantActionCatalogVersion} as unknown as ChatToolDeps));
+  return Object.fromEntries(known.definitions.map(definition=>[definition.name,{version:definition.version,effect:definition.effect,parameters:known.parameters[definition.name]!.parameters,parameterSchema:known.parameters[definition.name]!.schema}]));
+ },parseCandidate(name,value){
   const candidate=name==='system.action.propose'?assistantActionCandidateSchema.omit({source:true}).parse(value):name==='canvas.create.propose'?canvasCreateCandidateSchema.omit({source:true}).parse(value):name==='canvas.generate.propose'?canvasGenerateUnsignedCandidateSchema.parse(value):null;
   if(!candidate)throw new ConflictError('该来源不是当前已装配的完整候选');
   return {...candidate,request:z.json().parse(candidate.request)};

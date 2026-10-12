@@ -1,0 +1,15 @@
+{
+  "program": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/tmp/t1254-readonly/doocs-static-pathname-red-green-probe-v15.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/reports/graph-consumer-red-green-results.json",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/frozen-entry/index.html",
+    "/tmp/t1254-readonly/V14_ACTUAL_COMPLETE_STATIC_BUILT_GRAPH.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static"
+}

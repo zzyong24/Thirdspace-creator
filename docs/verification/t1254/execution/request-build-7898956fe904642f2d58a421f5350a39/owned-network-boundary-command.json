@@ -1,0 +1,11 @@
+{
+  "program": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-7898956fe904642f2d58a421f5350a39-9xSjBT/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/tmp/t1254-readonly/doocs-owned-network-boundary.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-7898956fe904642f2d58a421f5350a39-9xSjBT/reports/owned-network-boundary-results.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static"
+}

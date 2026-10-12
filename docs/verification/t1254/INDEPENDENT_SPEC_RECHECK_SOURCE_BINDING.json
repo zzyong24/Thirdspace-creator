@@ -1,0 +1,37 @@
+{
+  "schema": "independent-spec-source-binding/v1",
+  "at": "2026-10-12T00:22:44.444173+00:00",
+  "task": "T-1254",
+  "packetSha256": "259474ae5b39509bcf3dd7ab59596fb68a2f5fafa95452e75e058409cdc1cbc7",
+  "constitutionSha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "currentSpecSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "previousSpecSha256": "20df0b3e01055e1ad64eab3af1f408b1cfb244549e0a227982538efd9de3d2a2",
+  "contextFile": "docs/verification/t1254/recheck-context.json",
+  "contextSha256": "98a704cdb4421a51ecd25b2b6f43aeca24a6cdb063f4deb8916cad80583db048",
+  "previousRound": 1,
+  "previousVerdict": "CONCERNS",
+  "previousPacketSha256": "87fafae7a22a2d4e00470f4b062b2f459bc6943a55b175fc49c0a1bc05c8eb8c",
+  "changedLineRefs": [
+    {
+      "origin_ref": "SPEC-LINE:42:abe103b62248f721",
+      "text": "4. `frontend/public/reference-editors/doocs-md/native/` 和 `static/` 两套构建的完整生成文件族，及唯一现有静态入口 `frontend/public/reference-editors/doocs-md/index.html`。该root HTML仅机械更新真实构建资源引用并保原CSP全部值和本地base；必要inline脚本外置只允许在static/内，新增精确路径先列清单双审，不新增其它root产物。原root favicon.png、assets/、THIRD_PARTY_NOTICE.md与既有creatoros消息bridge字节冻结；若实际构建要求改变这些未准文件，先补精确SPEC复评，不直接复制。原文件清单/原SHA及拟新增/删除精确路径在私有build后形成 `DELIVERY_EXACT_FILE_MANIFEST.json` 并独复；未有该精确清单不准复制生产目录。静态图核验从该实际root HTML开始覆盖完整真实引用；不得扩大到其它编辑器、CSP策略或未知source。构建失败不能拿机械替换compressed块代签。"
+    }
+  ],
+  "actualRootSources": [
+    {
+      "path": "frontend/public/reference-editors/doocs-md/index.html",
+      "sha256": "ebf9222ba890986091b90f6dd72affe9d9e04ddb8deb1ba0d922ab1e1fdd9b73"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/favicon.png",
+      "sha256": "b611e578a233595003ac6cc6691bccce3c2cd643ef379a1541d9feb4465f8f68"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/THIRD_PARTY_NOTICE.md",
+      "sha256": "a78e016422d210b5582b8c55331d042d17652859d8b70017f0b034031df89b24"
+    }
+  ],
+  "reviewerModel": "unknown/inherited",
+  "noProductionChangedOrExecuted": true,
+  "buildAndCandidatePermission": false
+}

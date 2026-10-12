@@ -13,6 +13,7 @@ const requiredCreatorIconKeys = [
   "projects",
   "knowledge",
   "assets",
+  "canvas",
   "publishing",
   "radar",
   "operations",
@@ -59,6 +60,8 @@ const expectedPlatforms = {
     background: "#fe860b",
     foreground: "#ffffff",
   },
+  wechatOfficial: {label: "公众号", background: "#07c160", foreground: "#ffffff"},
+  kuaishou: {label: "快手", background: "#ff6900", foreground: "#ffffff"},
   x: {
     label: "X",
     background: "#000000",

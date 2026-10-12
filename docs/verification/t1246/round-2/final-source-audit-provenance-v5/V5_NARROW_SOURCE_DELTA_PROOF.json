@@ -1,0 +1,19 @@
+{
+  "finding": "FA-001-v4-static-terminal-budget-literal-prefix-off-by-one",
+  "literal": "60000);",
+  "actualLiteralLength": 7,
+  "oldCut": 8,
+  "newCutExpression": "-'60000);'.length",
+  "onlyOneLiteralConsumerReplacement": true,
+  "originalHelperSha256": "e0001be43fd03ac478fa3220ee347ae7df5bc33969749cd4f208c7cb882e0c1b",
+  "newHelperSha256": "8f8d3399137bee36e5116fe2caeeb9d13aba4cf430e1b4cdc643cbebaf4cc504",
+  "originalV4BindingSha256": "718ac0d0fbe3b79a082431be9bf5afa5cab23f4b1066c4abad9a37b162f86f5f",
+  "supplement31Sha256": "95a8648f2805a96a87f564ec0fff389f92cd56562ac4ba8674b5136f516c05e2",
+  "original31ProofBytesUnchanged": true,
+  "originalAuditBytesUnchanged": true,
+  "fullForwardSha256": "4fcfe0ed023cffcdc61c44c9dd0c14fac3041455f36fa1c74776dc5326f9cebe",
+  "fullInverseSha256": "e820da0f773e7f3c34bc29c406cb641f1e589e5f3061d809c3bcfb665c615d9d",
+  "inverseLiteralReconstructsOriginal": true,
+  "historicalStaticConcernNotRuntimeFail": true,
+  "helperAuditGitBodyExecuted": false
+}

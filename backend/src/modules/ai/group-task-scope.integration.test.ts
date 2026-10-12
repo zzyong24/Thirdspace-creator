@@ -67,7 +67,14 @@ describe('T1022 冻结账号组任务范围（隔离数据库）',()=>{
   const ca=await radar.createCollection(a,{name:'资料',idempotencyKey:'collection-a'});
   const cb=await radar.createCollection(b,{name:'资料',idempotencyKey:'collection-b'});
   expect(ca.id).not.toBe(cb.id);
-  const view=await radar.getWorkspace({...a,accountId:'filter-only-platform'});
+  const emptyView=await radar.getWorkspace({...a,accountId:null});
+  expect(emptyView.collections.some(row=>row.id===ca.id)).toBe(true);
+  expect(emptyView.collections.some(row=>row.id===cb.id)).toBe(false);
+  const account=await createPlatformAccountService({db:store.db,now:()=>clock,nextId}).createAccount(a,{platform:'douyin',accountHandle:'真实平台筛选'});
+  expect((await groups.forAccount(a,account.id)).groupId).toBe(a.groupId);
+  const view=await radar.getWorkspace({...a,accountId:account.id});
+  expect(view.collections).toEqual(emptyView.collections);
+  await expect(radar.getWorkspace({...b,accountId:account.id})).rejects.toMatchObject({code:'ConflictError'});
   expect(view.collections.some(row=>row.id===ca.id)).toBe(true);
   expect(view.collections.some(row=>row.id===cb.id)).toBe(false);
  });

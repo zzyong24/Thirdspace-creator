@@ -1,0 +1,22 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_TWO_ORIGINAL_SOURCE_FROZEN_LOCK_IGNORE_SCRIPTS_INSTALL_ONLY",
+  "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "84920eda80fb1befc1aec8968484117e2dc17994ec493c799f0efe6a7c61a802",
+  "toolDigest": "07f421a8ef8dbabd0d860056fb31869b499dc76efc40fdc6a529aeb2763e6265",
+  "approved": true,
+  "at": "2026-10-12T02:14:37.845625+00:00",
+  "rootReview": "完整工具、原两source/pkg/workspace/lock、真实native install help、完整future槽及owned清理已全文读取；本次重新1656+461全SHA无漂移",
+  "actualHashCheckedSourceFiles": 1656,
+  "actualHashCheckedImplementationFiles": 461,
+  "shaDrift": [],
+  "independentReview": "docs/verification/t1254/INDEPENDENT_TWO_SOURCE_INSTALL_V6_TOOL_REVIEW.json",
+  "independentReviewSha256": "ab48c249aed9bce0a9797210fd23d8c3cec95b10c69f8fc2f11c59aee03c90c3",
+  "authorizedScope": "仅一次新owned两source原static patch及frozenignore-scripts依赖安装，官方registry运行层override；无test/build/请求候选apply/产品复制/App",
+  "notAuthorizedByThisReceipt": [
+    "执行下载后依赖测试/build",
+    "复制生产生成物",
+    "App自动化"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "task": "T-1246",
+  "scope": "已批准exact原source B029全文件实际3例；无private fixture替代",
+  "evidence": "docs/verification/t1246/round-2/unit/owner-final-evidence/b029-aa6eef7b0e74392254af4b83d57cfef1",
+  "sourceFile": "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+  "actualSourceSha256": "0a6bbc9d52f059426d832da2459db44b4c77ff56ffaadd71484758f68c11e191",
+  "counts": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "skip": 0
+  },
+  "childElapsedMs": 21358,
+  "wrapperElapsedMs": 22591.45425,
+  "childExitCode": 0,
+  "sourceDigest": "ddbd5024891648e40612b8304194890d8ff17537c2e371051b0155c1d757a651",
+  "sourceUnchanged": true,
+  "closed": true,
+  "remainingOwnedGroupMembers": [],
+  "ownedRootCleaned": true,
+  "originalBodyLimits": [
+    20,
+    10,
+    8
+  ],
+  "originalRequestCounts": [
+    6,
+    5,
+    4
+  ],
+  "actualSourceMode": "continuous+public explicit spec.params maxSteps/maxTokens;原deadline180s冻结",
+  "publicBoundedSelectorInvented": false,
+  "oldFailuresPreserved": true,
+  "privateGreenNotSubstituted": true,
+  "scopeLimit": "隔离真实Pi SDK/独立Worker/HTTP模型fixture+PGlite+公共知识采用；不是官方模型或原生AppE2E。",
+  "rawProjectionEvidence": [
+    {
+      "file": "trace-10-projection.json",
+      "sha256": "5f49cfbae4fbaa705bd39f22b361d80897204868e88cdb9a457678fe408a8751"
+    },
+    {
+      "file": "trace-20-projection.json",
+      "sha256": "d7546eecfabc84bb001f7ca274a42fe99d9c75a97da17cc857912c1f07c72a23"
+    },
+    {
+      "file": "trace-8-projection.json",
+      "sha256": "1ae5bb56334fa4fa5addd1d25da9cbff62585029389e215fbd9291faa24ee689"
+    }
+  ],
+  "httpShapeEvidence": [
+    {
+      "file": "http-shape-10.json",
+      "sha256": "8f5f3b8d32f1bc63cc2c5bffbb629a3cd1542b53308f5c7fa80cfcb8b080f7c6"
+    },
+    {
+      "file": "http-shape-20.json",
+      "sha256": "4cef8f67434211eb7ec24756af3f8eb366d3bbeabea55116176bcd31866465f7"
+    },
+    {
+      "file": "http-shape-8.json",
+      "sha256": "b349725164ed4bb3b1ce2ba0d7b73737de45f1cbffca19aeb877a0544e20e890"
+    }
+  ]
+}

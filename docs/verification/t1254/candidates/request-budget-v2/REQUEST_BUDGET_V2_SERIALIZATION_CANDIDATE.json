@@ -1,0 +1,42 @@
+{
+  "task": "T-1254",
+  "status": "私有 CC001 候选，不应用/执行",
+  "finding": "CC001 原 timer 创建后 body JSON 序列化在 try 外；循环对象或 toJSON 抛错跳过 finally",
+  "originalProducerFact": "原 a46fe6 在相同 body/try 顺序存在该缺口；只读源码，不冒称已运行红测",
+  "sourceOriginalSha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+  "testOriginalSha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+  "candidateChanges": [
+    {
+      "before": "/tmp/t1254-readonly/fetch-budget-candidate.ts",
+      "beforeSha256": "38e7b302b2fcfe404d363a40a9bced2003d59957a08b61820dc5bdb7319ec387",
+      "candidate": "/tmp/t1254-readonly/fetch-budget-candidate-v2.ts",
+      "candidateSha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+      "diff": "/tmp/t1254-readonly/fetch-budget-v1-to-v2.diff",
+      "diffSha256": "0314e1f7eb94333f92229e6203d05beb87c00da45b184891ae4a8925628a3d03"
+    },
+    {
+      "before": "/tmp/t1254-readonly/fetch-budget-candidate.test.ts",
+      "beforeSha256": "32a4dac647a9bcd4709b9737576c99ebb222b81a13faa19c242e71bcdccb5909",
+      "candidate": "/tmp/t1254-readonly/fetch-budget-candidate-v2.test.ts",
+      "candidateSha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+      "diff": "/tmp/t1254-readonly/fetch-budget-test-v1-to-v2.diff",
+      "diffSha256": "26a38ba520a2d93fb5316f3cc14643c5ca83d63d48eed76d0963f5a32d5981ca"
+    }
+  ],
+  "originalTestPrefixExact": true,
+  "v1AllAssertionsKept": true,
+  "newCases": 16,
+  "serializationChecks": [
+    "循环对象 TypeError",
+    "toJSON 原 Error 同实例",
+    "两次fetch0",
+    "两次timer0"
+  ],
+  "unchanged": [
+    "预算出生/数值/分段",
+    "body格式与headers",
+    "所有原response/error/单请求语义",
+    "生产源码/归档/产物/SPEC"
+  ],
+  "notYetExecuted": true
+}

@@ -1,0 +1,10 @@
+{
+  "path": "frontend/scripts/build-doocs-request-budget.mjs",
+  "after": {
+    "sha256": "08c9d827e85df4296de24f319834da707b245f47819aed12306f97c3c1e6b134",
+    "size": 19264,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

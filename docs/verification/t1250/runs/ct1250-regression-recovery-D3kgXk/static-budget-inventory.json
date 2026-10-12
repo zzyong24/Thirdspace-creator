@@ -1,0 +1,278 @@
+{
+  "records": [
+    {
+      "file": "frontend/src/server/workbench-file-recovery.test.ts",
+      "cases": [
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "公开对账原调用幂等结算、暂停不唤醒、费用和claim不变；新lease仅回放原工具",
+          "titleRegex": "公开对账原调用幂等结算、暂停不唤醒、费用和claim不变；新lease仅回放原工具$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 107
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "身份诊断 %s只返回固定reason，原拒绝/Native零调用/账本不变",
+          "titleRegex": "身份诊断 .*只返回固定reason，原拒绝\\/Native零调用\\/账本不变$",
+          "multiplicity": 16,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 125
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "真实start→pause→缺claim unknown：公开CLI重新准入原call，永久审计且paused不wake",
+          "titleRegex": "真实start→pause→缺claim unknown：公开CLI重新准入原call，永久审计且paused不wake$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 160
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "%s不产生回执、不写文件、不解除unknown",
+          "titleRegex": ".*不产生回执、不写文件、不解除unknown$",
+          "multiplicity": 3,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 187
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "拒绝伪原生 %s",
+          "titleRegex": "拒绝伪原生 .*$",
+          "multiplicity": 9,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 198
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "锁外Native期间查询及时完成，%s变动则CAS拒绝",
+          "titleRegex": "锁外Native期间查询及时完成，.*变动则CAS拒绝$",
+          "multiplicity": 5,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 206
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "账号错误不发Native请求；其他unknown外部动作原样保留",
+          "titleRegex": "账号错误不发Native请求；其他unknown外部动作原样保留$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 226
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "Rust/TS UTF8/null请求摘要向量一致",
+          "titleRegex": "Rust\\/TS UTF8\\/null请求摘要向量一致$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 237
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "恢复lane单在途，stop等待Native退出且拒绝迟到结算及wake",
+          "titleRegex": "恢复lane单在途，stop等待Native退出且拒绝迟到结算及wake$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 242
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "轮转有界扫描跳过absent/prepared，不能解开另一未知动作；CAS后中断仍按已存receipt定点恢复",
+          "titleRegex": "轮转有界扫描跳过absent\\/prepared，不能解开另一未知动作；CAS后中断仍按已存receipt定点恢复$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 259
+        },
+        {
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform!==\"darwin\"||!process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE",
+          "qualificationKnown": true,
+          "title": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+          "titleRegex": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写$",
+          "multiplicity": 1,
+          "explicitBodyMs": 60000,
+          "effectiveBodyMs": 1800000,
+          "line": 283
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "普通enqueue不能注入filePredispatchRecoveries审计，即便值为空",
+          "titleRegex": "普通enqueue不能注入filePredispatchRecoveries审计，即便值为空$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 387
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "缺claim恢复拒绝%s且账本/审计不部分推进",
+          "titleRegex": "缺claim恢复拒绝.*且账本\\/审计不部分推进$",
+          "multiplicity": 9,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 392
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "真实host/ledger同参旧success存在时不得readmit或冒用旧operation回执",
+          "titleRegex": "真实host\\/ledger同参旧success存在时不得readmit或冒用旧operation回执$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 406
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "准入audit写失败或停止时原call重置同事务回滚，不留下半笔事实",
+          "titleRegex": "准入audit写失败或停止时原call重置同事务回滚，不留下半笔事实$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 414
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "并发重新准入只append一次；幂等enqueue和后续payload更新保留audit；损坏audit拒绝覆盖",
+          "titleRegex": "并发重新准入只append一次；幂等enqueue和后续payload更新保留audit；损坏audit拒绝覆盖$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 429
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "只有严格null claim可准入；已有claim走原Native核对，后台source不能准入paused",
+          "titleRegex": "只有严格null claim可准入；已有claim走原Native核对，后台source不能准入paused$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 447
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "T1250 私有只读对账传原signal；预先取消零读取，在途取消账本与原task不变",
+          "titleRegex": "T1250 私有只读对账传原signal；预先取消零读取，在途取消账本与原task不变$",
+          "multiplicity": 1,
+          "explicitBodyMs": 1800000,
+          "effectiveBodyMs": 1800000,
+          "line": 461
+        }
+      ],
+      "hooks": [
+        {
+          "name": "beforeAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 34
+        },
+        {
+          "name": "afterAll",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 35
+        }
+      ],
+      "declaredCaseCount": 55,
+      "runnableCaseCount": 54,
+      "originalQualifiedSkipCount": 1,
+      "perCaseHookMs": 6000000,
+      "allHooksMs": 6000000,
+      "serialCasesMs": 429000000,
+      "shortExplicitDeclarations": [
+        {
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform!==\"darwin\"||!process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE",
+          "qualificationKnown": true,
+          "title": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+          "titleRegex": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写$",
+          "multiplicity": 1,
+          "explicitBodyMs": 60000,
+          "effectiveBodyMs": 1800000,
+          "line": 283
+        }
+      ]
+    }
+  ],
+  "staticCaseCount": 55,
+  "runnableCaseCount": 54,
+  "originalQualifiedSkipCount": 1,
+  "staticChildMs": 435720000,
+  "collectMs": 1800000,
+  "prepareMs": 120000,
+  "eachProcessTerminationReserveMs": 2160000,
+  "afterSourceReceiptMs": 720000,
+  "outerMs": 442680000,
+  "defaultBodyMs": 1800000,
+  "defaultHookMs": 3000000,
+  "poolStartTeardownMs": 240000,
+  "childCleanupReportMs": 480000,
+  "helperLifecycleSourceFacts": {
+    "identityPsCount": 3,
+    "eachPsMs": 180000,
+    "normalInitialAndFinalSnapshots": 2,
+    "maxSignalSnapshots": 2,
+    "termKillEachGraceMs": 180000,
+    "lastPollingSnapshotOvershootEachMs": 180000,
+    "pollIntervalEachMs": 100,
+    "worstNormalLifecycleMs": 1980200,
+    "allocatedLifecycleMs": 2160000
+  },
+  "shortExplicitDeclarations": [
+    {
+      "file": "frontend/src/server/workbench-file-recovery.test.ts",
+      "disabledByKnownQualification": true,
+      "qualificationSource": "process.platform!==\"darwin\"||!process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE",
+      "qualificationKnown": true,
+      "title": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+      "titleRegex": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写$",
+      "multiplicity": 1,
+      "explicitBodyMs": 60000,
+      "effectiveBodyMs": 1800000,
+      "line": 283
+    }
+  ]
+}

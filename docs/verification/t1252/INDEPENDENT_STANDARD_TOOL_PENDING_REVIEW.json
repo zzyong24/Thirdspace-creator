@@ -1,0 +1,44 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-11T23:09:21.736980+00:00",
+  "result": "DRAFT_PENDING_AUTHOR_RESEAL_NOT_ADMISSION",
+  "scope": "只读标准安装/检查工具；未安装、list、test、build、server、PG、App或模型",
+  "toolSha256": "af2b3fa8fd366e66e88f20d3b22552574e3437dad16ccc9d5b07d443672dc5db",
+  "bindingSha256": "c166b89d64370eb0e42852df34bc8d62a985a8f4d230b0e79a80ebd6cf7d962a",
+  "actualInputCount": 207,
+  "inputDrift": [],
+  "findings": [
+    {
+      "id": "ST001",
+      "status": "closed_in_author_unsealed_af2b_candidate",
+      "consumer": "mcp-server/tests/group-mcp-context.test.ts:27-28",
+      "evidence": "两个串行vi.waitFor各120000；标准工具给case统一180000。每case外层1.8M不能覆盖内层case180k被提前杀。",
+      "minimum": "按真实串行/连接/取消/清理保更长case；正文/原scope/取消/POST1断言不动；工具预算读取实际更长声明。"
+    },
+    {
+      "id": "ST002",
+      "status": "checks_deferred_install_first_new_binding_pending",
+      "consumer": "input-binding.json executables; installed typescript/lib/tsc.js and vitest/vitest.mjs",
+      "evidence": "tsc.js实际require ./_tsc.js；vitest.mjs实际import ./dist/cli.js；目前hash只固定两个shim，没有绑定实际compiler/runner实现。",
+      "minimum": "分开install与checks准入；checks在实际安装后绑定真实compiler/runner/esbuild/undici实现与版本/路径闭包并freshprepare，不能用shimSHA自报实际实现冻结。"
+    },
+    {
+      "id": "ST003",
+      "status": "author_replacing_with_393f_pending_reseal",
+      "consumer": "launch.cjs phase c.closed; stop two grace waits; finally clearTimeout(timer)/exitCode only",
+      "evidence": "phase root在采样前创建继承pipe子进程后退出，孙进程可reparent未登记；拒signal正确，但stdio读取端仍ref，c.closed未EOF。stop记录未知后仅exitCode，未有有界关闭本工具读取端/日志的退出路径。现负例仅pure identity，不是TERM-ignore/pipe真实运行。",
+      "minimum": "真实owned no-network负路验证TERM-ignore→KILL/close/logclose及快速reparent未确认；未知不杀foreign/不伪closed，关闭本工具拥有读取/日志端、保未确认非零退出，或复用已审实证bounded helper。"
+    }
+  ],
+  "closedInCurrentCandidate": [
+    "原3c36/be6a第一入口时间与scanner整组预算缺口由作者更新67213/d4b10；当前逐源码已读取，不回写旧候选通过"
+  ],
+  "positive": [
+    "原锁exact三行逆构当前成立",
+    "207源初次全0漂移",
+    "no secret inherited allowlist及HOME/CODEX_HOME保留",
+    "完整8原MCP文件集合及实际listing分母门、retry0、禁止skip方向成立"
+  ],
+  "runtimePermission": false,
+  "versionNotice": "报告整理期间作者准备期并发替换候选；本文件不是精确可准入评审。ST001在af2b新工具case420k已关闭；checks实施绑定已改拆分，待安装后fresh工具复核；ST003作者改复用393f进行中，未签新候选。原3c36/be6a静态发现与消息保留。"
+}

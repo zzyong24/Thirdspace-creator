@@ -1,0 +1,12 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+ ✓ src/integration/t1026-tool-result-read.integration.test.ts (2 tests) 5193ms
+   ✓ 长回执经真实 Worker/Pi notice 调用 backend reader；截图=false 仍使用 execution ID  472ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  03:19:32
+   Duration  9.30s (transform 2.41s, setup 0ms, import 3.87s, tests 5.19s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b020-second.json

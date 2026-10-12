@@ -1,0 +1,37 @@
+{
+  "approved": true,
+  "verdict": "PASS_TOOL_ONLY",
+  "scope": "owned-t1074-full-file",
+  "sourceSnapshotDigest": "207d02c16d1c072255e0d471e6fe09a9010d0f83040a89917a55a31eb50f5351",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "runtimeDistExclusive": true,
+  "reviewedAt": "2026-10-11T20:49:23.401368+00:00",
+  "manifestCandidateSha256": "0032db6ce6f6466cec452ed91a2dab325fb10045cf59bb5610d9c3cf1f4214f2",
+  "caseSha256": "44c031cac341b9b1c0e8986d3bd363fd7eec9c69d806a7d91affa39eeb853c59",
+  "toolManifestSha256": "5a1f25de7893f0cf0263e2d48a065dc7d6b0eb75e2d2b0305625c0dc78b14f13",
+  "tools": [
+    {
+      "file": "run-t1074-owned.cjs",
+      "sha256": "86af242f3f76dd10fc97927c892e554fe2481938de23b370d71f5d44fc6da67a"
+    },
+    {
+      "file": "owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea"
+    },
+    {
+      "file": "verify-source.cjs",
+      "sha256": "57f7702636cf438414cc8c96e1b99e14572b4880a359adea848ce5e0a665906d"
+    }
+  ],
+  "findings": [],
+  "facts": [
+    "root实际读完整runner，manifest及2221source逐SHA当前相等；真实whole78原文件75+T1248新3，不用旧75或3PG skip代签。",
+    "28800000ms case槽覆盖78*180000+beforeAll/afterAll两180000与teardown180000、原PG安全查询/本body自然case budget；无beforeEach/afterEach扩倍。35220000ms独立outer含build1800000/start1380000/cleanup1440000及5完整owned关闭余量，保原更长。",
+    "源只backend/worker/contract、freshnonce registered PG、deny foreignPG/preconnect实际owner证明。只准前27真实EOF/stop证明后一次新PG78，禁止并行shared dist写。",
+    "原identity/frozen/CAS/反例完整与readonly stored-order失败持原call/domain不写断言已读。"
+  ],
+  "limits": [
+    "当前静态工具准入；78完整body实际numTests/EOF/日志source前后/PGstop与ownedgroup0才是本轮结果。",
+    "不签Windows/App/真实用户PG/任何未跑官方模型；若inputs/tool漂移重新绑定独评。"
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "at": "2026-10-12T02:15:19.267749+00:00",
+  "runRoot": "/private/tmp/t1252p-QTwUuo",
+  "raw": [
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/actual-list-proof.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/actual-list-proof.json",
+      "size": 1538,
+      "sha256": "3379a58c2d63ab5ccae757f0c3952abb411c1e017a61e2c92f2abc8aa77bffd5"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/actual-list.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/actual-list.json",
+      "size": 614,
+      "sha256": "ba2994d4102c84d2d30533684719496689335e07e4dc12159b01d7261b5fcf27"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-0-child.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-0-child.json",
+      "size": 1611,
+      "sha256": "c4d8e562a9638403672ab811d439c5e75d6080c144755daa2fe5c9e78fbbb341"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-0-proof.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-0-proof.json",
+      "size": 586,
+      "sha256": "e5d2d1fc0a88a209be044b16bdbfabf80e3fca9da0a5c9905e8616bee0ef0bc0"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-0-tests.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-0-tests.json",
+      "size": 14891,
+      "sha256": "a57dc61f3f9ecdfe8e445576deb9a9d9a5be84b34e49f35dcc911fca3509624b"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-0.log",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-0.log",
+      "size": 591,
+      "sha256": "4063532669459e7fb611be3d237b5298f1461c49d929099d0b4dc71a7f93cec5"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-1-child.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-1-child.json",
+      "size": 1602,
+      "sha256": "2d6244eb386158351596628561e1dccd4b991e5496ff7018520c731dc220a910"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-1-proof.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-1-proof.json",
+      "size": 569,
+      "sha256": "7c55d0f1d9b17cee229fe718edd1d39ddcbfad64535cc84c354d7f11213ce355"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-1-tests.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-1-tests.json",
+      "size": 14893,
+      "sha256": "d5cfabcd961d03f87a4e9c4bc67b1df048488a9bac313a7c8dd5d7c79557335e"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-1.log",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-1.log",
+      "size": 903,
+      "sha256": "cf4cb676c86292a81545d2afa15a37dae852e6961326dfa6b45c353d7d998e1f"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-2-tests.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-2-tests.json",
+      "size": 15235,
+      "sha256": "87dad0051c2fbd2814b5eba8154fa9bfdc713b33408111a82b05ccd0d79df760"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/case-2.log",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/case-2.log",
+      "size": 6026,
+      "sha256": "9261afee47ff9e090e2c56eed276f0466f346bfd17ff038cbf8d076d9a6d6bdd"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/list-child.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/list-child.json",
+      "size": 1769,
+      "sha256": "964ea4a4fded74b046a89652ae0aa7e21c60e742bfcd19232880bed8ea7fca8f"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/list.log",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/list.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/public-native-render.test.ts",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/public-native-render.test.ts",
+      "size": 61111,
+      "sha256": "5c4133785470cf5b838858f8745e4ad5edaf9614995b65542301b8e45e908e45"
+    },
+    {
+      "path": "/private/tmp/t1252p-QTwUuo/start.json",
+      "preservedPath": "docs/verification/t1252/actual-public-second-render-failed-interrupted/start.json",
+      "size": 2132,
+      "sha256": "d2fefbae1bc1dfbf3a42a395852371f531d5c54619e63c2ef9546903e2dfa510"
+    }
+  ],
+  "rawPassedCases": [
+    0,
+    1
+  ],
+  "case2": {
+    "numPassedTests": 0,
+    "numFailedTests": 1,
+    "ran": [
+      {
+        "ancestorTitles": [],
+        "fullName": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+        "status": "failed",
+        "title": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+        "duration": 661486.826334,
+        "failureMessages": [
+          "AssertionError: expected 109999.8515 to be greater than or equal to 110000\n    at /private/tmp/t1252p-QTwUuo/public-native-render.test.ts:580:152\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        ],
+        "meta": {},
+        "tags": []
+      }
+    ]
+  },
+  "missing": [
+    "case-2-child.json",
+    "case-2-proof.json",
+    "final.json"
+  ],
+  "historicalCloseAndGroupZero": "缺失：用户中断后不得补拍",
+  "currentProcessObservation": "CURRENT_OWNED_PROCESS_OBSERVATION.json",
+  "currentInputCheck": "CURRENT_FULL_INPUT_DRIFT_CHECK.json",
+  "App": false,
+  "officialModel": false,
+  "wholePublicAcceptancePassed": false
+}

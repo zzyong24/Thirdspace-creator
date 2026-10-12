@@ -1,0 +1,9 @@
+{
+  "actualCommand": "fixed Node32e run-once.cjs under private root; one approved helper child c6a959",
+  "actualExitCode": 1,
+  "actualWallTimeSeconds": 0.870492125,
+  "actualStdout": "{\"status\":\"failed\",\"failure\":\"Error: PURE_CHILD_NOT_CLOSED_OR_POSITIVE_OR_LIFECYCLE_EXHAUSTED\",\"out\":\"/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e\"}\n",
+  "actualToolReturnedCompletedEOF": true,
+  "candidateExecutions": 1,
+  "rootMaximumExecutions": 1
+}

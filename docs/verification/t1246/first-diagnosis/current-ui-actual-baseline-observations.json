@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "reviewer": "root",
+  "actualViewed": true,
+  "purpose": "首轮既有实图基线；不是设计方向探索/新视觉PASS/App",
+  "images": [
+    {
+      "label": "T1159原当前组不在管理第一页",
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-t1159-wechat-native-re-aa4d4--两微信账号从组成员进入真实0报告，刷新返回与身份拒绝-e2e/test-failed-1.png",
+      "sha256": "90e2d78cf6a70788b820652d09a46d27be7593f38c9918ab9f86bc648dbf1001",
+      "observation": "root本轮实际看图：侧栏当前组为微信报表入口验收，管理正文却显示@t1022-1及历史成员；与page2源/owned只读组数据证据一致。未出现原微信报告后置，不能签报告可用。"
+    },
+    {
+      "label": "公众号原退役入口失败位置",
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-wechat-article-workben-492aa-立模型-Worker-生成候选，用户审读采纳后刷新回读-e2e/test-failed-1.png",
+      "sha256": "3709dd567b4bf86a77bbe91f8b37639d6da868c7799511291ecbb8a42e804345",
+      "observation": "root本轮实际看图：当前保留稿面/编导对话/AI辅助折叠区和元件；模型工具未运行，旧候选/采纳后置未到。仅作为原布局基线，不表示新的字段/事实选择已渲染或功能可用。"
+    }
+  ]
+}

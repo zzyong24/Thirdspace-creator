@@ -1,0 +1,13 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+ ✓ src/modules/ai-runtime/agentic-browser-worker.integration.test.ts (2 tests) 17570ms
+   ✓ 真实Pi跨进程浏览器：旧观察自修复、填写点击、证据与公共采纳 normal  10920ms
+   ✓ 真实Pi跨进程浏览器：旧观察自修复、填写点击、证据与公共采纳 unknown  6650ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  03:28:28
+   Duration  21.87s (transform 2.84s, setup 0ms, import 4.14s, tests 17.57s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b006-browser-first.json

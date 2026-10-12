@@ -1,0 +1,472 @@
+{
+  "task": "T-1246",
+  "retry": 0,
+  "testTimeout": 180000,
+  "hookTimeout": 180000,
+  "changes": [
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "line": 51,
+      "before": " }finally{await f.opened.client.close();}},30000);",
+      "after": " }finally{await f.opened.client.close();}},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "line": 129,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/group-upgrade-postgres.integration.test.ts",
+      "line": 18,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "line": 91,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "line": 71,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "line": 79,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "line": 85,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "line": 52,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "line": 65,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "line": 74,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "line": 83,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "line": 91,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "line": 105,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "line": 126,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "line": 56,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "line": 64,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "line": 74,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "line": 80,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "line": 87,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "line": 65,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "line": 73,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "line": 83,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "line": 78,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "line": 114,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "line": 124,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "line": 135,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "line": 91,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "line": 101,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "line": 119,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "line": 130,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "line": 156,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "line": 165,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "line": 174,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "line": 182,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/migration-convergence.test.ts",
+      "line": 10,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "line": 126,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "line": 143,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "line": 770,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "line": 787,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "line": 817,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "line": 829,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "line": 847,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "line": 862,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "line": 39,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "line": 42,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "line": 225,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "line": 264,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "line": 304,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "line": 320,
+      "before": " },30000);",
+      "after": " },180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "line": 350,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "line": 46,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "line": 49,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "line": 66,
+      "before": "it('T1062 空组Moments模型生成冻结NULL账号，切平台过滤共享候选，原lease结算不重签',async()=>{const group:RequestContext={userId:'moments-model-user',accountId:null,groupId:'moments-model-empty',groupVersion:1,source:'user',requestId:'group-model'};const f=await fixture(group);try{const a=await settled(f);expect(await f.service.getCandidate({...group,accountId:'page-filter'},a.candidate.candidateId)).toMatchObject({taskId:a.task.id});const [row]=await f.db.select().from(momentsCandidates);expect(row).toMatchObject({groupId:group.groupId,accountId:null});const [task]=await f.db.select().from(executionTasks);expect(task).toMatchObject({groupId:group.groupId,accountId:null});await a.executor.commitResult(a.ref,a.input);expect((await f.service.getCandidate(group,a.candidate.candidateId)).status).toBe('succeeded');await expect(f.service.getCandidate({...group,groupId:'other-group'},a.candidate.candidateId)).rejects.toThrow();}finally{await f.opened.client.close();}},30000);",
+      "after": "it('T1062 空组Moments模型生成冻结NULL账号，切平台过滤共享候选，原lease结算不重签',async()=>{const group:RequestContext={userId:'moments-model-user',accountId:null,groupId:'moments-model-empty',groupVersion:1,source:'user',requestId:'group-model'};const f=await fixture(group);try{const a=await settled(f);expect(await f.service.getCandidate({...group,accountId:'page-filter'},a.candidate.candidateId)).toMatchObject({taskId:a.task.id});const [row]=await f.db.select().from(momentsCandidates);expect(row).toMatchObject({groupId:group.groupId,accountId:null});const [task]=await f.db.select().from(executionTasks);expect(task).toMatchObject({groupId:group.groupId,accountId:null});await a.executor.commitResult(a.ref,a.input);expect((await f.service.getCandidate(group,a.candidate.candidateId)).status).toBe('succeeded');await expect(f.service.getCandidate({...group,groupId:'other-group'},a.candidate.candidateId)).rejects.toThrow();}finally{await f.opened.client.close();}},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "line": 77,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "line": 117,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "line": 143,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "line": 134,
+      "before": "},60000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "line": 174,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "line": 118,
+      "before": "},60000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "line": 175,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "line": 39,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    },
+    {
+      "file": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "line": 42,
+      "before": "},30000);",
+      "after": "},180000);",
+      "kind": "test execution"
+    }
+  ],
+  "limit": "只改显式test/hook预算；原更长预算保留，模型deadline/媒体长度/业务assert未变",
+  "toolExecution": {
+    "groupTermGraceMs": 180000,
+    "groupKillGraceMs": 180000,
+    "pgInitdbMs": 300000,
+    "pgStartupMs": 360000,
+    "pgStopMs": 360000,
+    "nativeBindingMs": 180000,
+    "workerBuildMs": 1800000,
+    "perPackageVitestMs": 43200000,
+    "perTypecheckOrTypegenMs": 1800000,
+    "startReserveMs": 1380000,
+    "stopReserveMs": 720000,
+    "finalCleanupReserveMs": 720000,
+    "full": {
+      "packages": 4,
+      "typesIncludingTypegen": 5,
+      "processPhasesIncludingInitStartStop": 13,
+      "totalOuterMs": 191100000
+    },
+    "targetedPg27": {
+      "packages": 1,
+      "typesIncludingTypegen": 0,
+      "processPhasesIncludingInitStartStop": 5,
+      "totalOuterMs": 49620000,
+      "sourceScope": "backend/contract/ai-worker生产源码、backend/drizzle、worker vendor及build+pi-runtime-bundle、3包配置+lock/workspace/root package、27原test/helper/2历史fixture/已批准工具；排其他tests与frontend",
+      "fullTypesDeferredUntilFinalFreeze": true
+    },
+    "explanation": "总外层显式加总内层串行、初始化、构建、类型、每phase TERM/KILL余量及独立末尾清理。只watchdog上限，执行完成立即返回，不等待到上限。test/hook保180秒、旧300/600秒不降。"
+  }
+}

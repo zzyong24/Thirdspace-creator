@@ -1,0 +1,148 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_POST_V12_TWO_REAL_RED_PRIVATE_V2_MODE_REPAIR_REMAINING19_TYPES_BUILD_GRAPH_ONLY",
+  "at": "2026-10-12T04:40:21.615146+00:00",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "26b028843e335f4234f29603baa2ed50aaa1d663710c0b2917cd537ff6088823",
+  "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+  "prepare": {
+    "path": "/tmp/t1254-readonly/POST_V12_CONTINUATION_V13_PREPARE.json",
+    "sha256": "3becc6b2137316f014e76b0413b5c62203be1798026a632c460db03a28f3b0cc",
+    "size": 56383214
+  },
+  "artifacts": [
+    {
+      "path": "/tmp/t1254-readonly/run-owned-doocs-post-v12-continuation-v13.cjs",
+      "sha256": "0c4a7d06e7c6c02babfea41e42e236144693d54c980e97b31cec76e9db7e8641",
+      "size": 37249
+    },
+    {
+      "path": "/tmp/t1254-readonly/prepare-node-dyld-closure-v10.py",
+      "sha256": "8bacdb4a28b20e97c816e8f19b9e574d52646328b042e23e0d4cd5a5bdc3ba33",
+      "size": 5529
+    },
+    {
+      "path": "/tmp/t1254-readonly/snapshot-v12-actual-post-application.py",
+      "sha256": "67b71af2c7d5281be8c5c3835f1a1c8d3c6937ae1d2e4b2249f182b88e4c6f52",
+      "size": 2836
+    },
+    {
+      "path": "/tmp/t1254-readonly/V12_ACTUAL_POST_APPLICATION_NATIVE.json",
+      "sha256": "39bf01c10bea59ad84ff52dc0f7f64445a81c1eb9ded299358c2cc0f1b4cc95e",
+      "size": 18290285
+    },
+    {
+      "path": "/tmp/t1254-readonly/V12_ACTUAL_POST_APPLICATION_STATIC.json",
+      "sha256": "2c3aded56b9764480b9c7157d5d41524a2eac412557202e2a43c0b0d694b9973",
+      "size": 18287727
+    },
+    {
+      "path": "/tmp/t1254-readonly/V12_ACTUAL_POST_APPLICATION_FULL_SNAPSHOT.json",
+      "sha256": "5a277a4f4093d23919805958aafea937a35fbddeb2b32580280883ba09613546",
+      "size": 3003
+    },
+    {
+      "path": "/tmp/t1254-readonly/V12_ACTUAL_APPLICATION_BEFORE_COPY_CHRONOLOGY.json",
+      "sha256": "dc232baad84846604f26cb11e565230ecdca6dec0a83ab82c3bfb6e7a5bd8065",
+      "size": 2135
+    },
+    {
+      "path": "/tmp/t1254-readonly/NODE_DYLD_CLOSURE_V10.json",
+      "sha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+      "size": 253472
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-owned-network-boundary.mjs",
+      "sha256": "61d861c7648804e1ee977d9b1d32922a0d0491bad36b3d12820fa9551d760b34",
+      "size": 3936
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-real-request-lifecycle.mjs",
+      "sha256": "c383e974e470eb8285685d6ca3a06a0686b5daa93470da02a23fe2737aa35963",
+      "size": 6645
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-static-delivery-graph.mjs",
+      "sha256": "017ac911172822e211411fa1a24241f2cdfcf96795559b822252cf079594f564",
+      "size": 10201
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-static-resource-checker-tests.mjs",
+      "sha256": "b9e5f051a81d4d306aca67249aee616eb8591cc4f367ef3433f92f75d9a6fcd2",
+      "size": 4383
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-source-provenance.cjs",
+      "sha256": "0a3723582519915ed1cdb0d4f4cb6872321f96dab8052247ff32d7fe881674df",
+      "size": 4665
+    },
+    {
+      "path": "/tmp/t1254-readonly/POST_V12_CONTINUATION_V13_PREPARE.json",
+      "sha256": "3becc6b2137316f014e76b0413b5c62203be1798026a632c460db03a28f3b0cc",
+      "size": 56383214
+    },
+    {
+      "path": "/tmp/t1254-readonly/POST_V12_CONTINUATION_V13_DELTA.json",
+      "sha256": "837d26e49777b06a112d30f0ec5e233182f20be0e0dfadc02b2c603355bdf5c2",
+      "size": 12410
+    },
+    {
+      "path": "/tmp/t1254-readonly/POST_V12_CONTINUATION_V13_FROM_V12.diff",
+      "sha256": "56f2df96f74b9d523efd6427e4564b6f43c51cfba4915f5818b11340a7a662d2",
+      "size": 49729
+    },
+    {
+      "path": "/tmp/t1254-readonly/seal-post-v12-continuation-v13.py",
+      "sha256": "783a0694043dd9f61ac73eef1f9d2ad5f556dd17095882a3f715838b01ca1faf",
+      "size": 4115
+    }
+  ],
+  "sourceInputCount": 1752,
+  "installedAndOriginalToolRows": 141220,
+  "totalBudgetMs": 88020000,
+  "positiveChildCount": 19,
+  "continuedFromV12": {
+    "run": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-14bcbffb7152bdb2b58cd5a252c2d27e",
+    "originalStartedAt": "2026-10-12T04:17:47.959Z",
+    "originalTotalBudgetMs": 109980000,
+    "originalWallDeadline": "2026-10-13T10:50:47.959Z",
+    "latestActualExitUTC": "2026-10-12T04:24:18.301Z",
+    "completedOriginalStages": 6,
+    "oldExitCode": 1,
+    "oldApplicationAndAfterReceiptsMissing": true,
+    "noOldResultRewritten": true,
+    "localSingleBirthBudgetMs": 88020000,
+    "clockRegressionRejected": true
+  },
+  "actualFullByteChecks": [
+    {
+      "group": "inputs",
+      "count": 1752
+    },
+    {
+      "group": "tools",
+      "count": 141220
+    }
+  ],
+  "fullByteModeSizeLinkZeroDrift": true,
+  "actualExecutablePathTokenConsumers": [],
+  "tokenConsumerMethod": "all actual LC_LOAD / LC_RPATH metadata, zero @executable_path in sealed 58 Mach-O root recursive graph",
+  "dynamicRuntimeClosure": {
+    "manifest": "/tmp/t1254-readonly/NODE_DYLD_CLOSURE_V10.json",
+    "manifestSha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+    "nonSystemFiles": 82,
+    "symlinkChain": 37,
+    "rootMachOFiles": 58,
+    "systemHostBoundary": "macOS system libraries/frameworks may reside in dyld shared cache; host OS boundary, not claimed byte-sealed"
+  },
+  "noNewDependencyExecution": true,
+  "privateV2BytesAlreadyAppliedByV12": true,
+  "staticOriginalModeRepairPending": true,
+  "executed": false,
+  "oldV8ActualFailurePreserved": true,
+  "oldV9ActualFailurePreserved": true,
+  "oldV10ActualCheckerFailurePreserved": true,
+  "oldV11ActualLegal31sRedAndCleanupFailurePreserved": true,
+  "noProductCopy": true,
+  "noApp": true
+}

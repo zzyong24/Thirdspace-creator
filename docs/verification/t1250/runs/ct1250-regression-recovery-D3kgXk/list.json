@@ -1,0 +1,218 @@
+[
+  {
+    "name": "公开对账原调用幂等结算、暂停不唤醒、费用和claim不变；新lease仅回放原工具",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 frozen只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 modelUsage只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 modelReceipt只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 parentCallId只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 toolExecutionClaimId只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 startedMissing只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 startedAhead只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 providerJob只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 providerResult只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 resultRef只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 retryOfCallId只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 rejectionCode只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 reservedTokens只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 accountingBasis只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 children只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "身份诊断 duplicate只返回固定reason，原拒绝/Native零调用/账本不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "真实start→pause→缺claim unknown：公开CLI重新准入原call，永久审计且paused不wake",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "absent不产生回执、不写文件、不解除unknown",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "prepared不产生回执、不写文件、不解除unknown",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "native-failed不产生回执、不写文件、不解除unknown",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 scopeKey",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 operationId",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 requestDigest",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 contentSha256",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 path",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 expectedVersion",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 admittedAttempt",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 fenceToken",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "拒绝伪原生 resultVersion",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "锁外Native期间查询及时完成，claim变动则CAS拒绝",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "锁外Native期间查询及时完成，task变动则CAS拒绝",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "锁外Native期间查询及时完成，digest变动则CAS拒绝",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "锁外Native期间查询及时完成，lease变动则CAS拒绝",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "锁外Native期间查询及时完成，frozen变动则CAS拒绝",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "账号错误不发Native请求；其他unknown外部动作原样保留",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "Rust/TS UTF8/null请求摘要向量一致",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "恢复lane单在途，stop等待Native退出且拒绝迟到结算及wake",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "轮转有界扫描跳过absent/prepared，不能解开另一未知动作；CAS后中断仍按已存receipt定点恢复",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "普通enqueue不能注入filePredispatchRecoveries审计，即便值为空",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝audit-malformed且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝audit-conflict且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝other-unknown且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝other-reserved且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝progress且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝later-model且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝lease且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝frozen-platform且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "缺claim恢复拒绝business且账本/审计不部分推进",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "真实host/ledger同参旧success存在时不得readmit或冒用旧operation回执",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "准入audit写失败或停止时原call重置同事务回滚，不留下半笔事实",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "并发重新准入只append一次；幂等enqueue和后续payload更新保留audit；损坏audit拒绝覆盖",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "只有严格null claim可准入；已有claim走原Native核对，后台source不能准入paused",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  },
+  {
+    "name": "T1250 私有只读对账传原signal；预先取消零读取，在途取消账本与原task不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-file-recovery.test.ts"
+  }
+]

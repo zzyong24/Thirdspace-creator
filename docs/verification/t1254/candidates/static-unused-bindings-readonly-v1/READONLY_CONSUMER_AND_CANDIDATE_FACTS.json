@@ -1,0 +1,14 @@
+{
+  "status": "READ_ONLY_SOURCE_CANDIDATE_NOT_APPLIED_NOT_EXECUTED_REQUIRES_ROOT_CAUSE_SPEC_AND_REVIEW",
+  "taskOrigin": "T-1254 V13 actual original-static-build type-check failure",
+  "originalA7SHA": "57ad53767cb3bbb8131d23f50f55e79830a35e1429face83f0345e642a1524ab",
+  "currentStaticAdaptationSHA": "a076d986b80fc88a7416e305d125690d0c626c11cf43c4ba6cda1ccfc133046c",
+  "candidateSHA": "30b96bf3798976dc6b6038574ea5cf745ca41f2808207af83306705b4a5c745d",
+  "oldPatchSHA": "55ab4bb69a49a08d64fdd2737549fa78edf90830b3d62a2fd592b119d00a3426",
+  "actualOldPatchRemovesOnlySidebarAsyncDeclarationAndTemplateConsumer": true,
+  "computedOldBindingsRemainAfterOriginalPatch": true,
+  "exactOldTemplateAndStylesPreserved": true,
+  "candidateChangesOnly3UnusedBindings": true,
+  "noIgnoreUnusedFlagOrTypeCheckSkip": true,
+  "noRuntimeOrProductWrite": true
+}

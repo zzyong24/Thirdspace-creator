@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-12T02:47:48.158083+00:00",
+  "evidenceSha256": "14a5f46c4d345b620064e47cc3e2540f9f73b8a6da31424f7d54e7c0597a6845",
+  "rawFilesSHAAndSizeChecked": 39,
+  "rawBytesChecked": 27566019,
+  "caseChecks": [
+    {
+      "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+      "actualPass": 1,
+      "bodyDuration": 4197.652125,
+      "childClosedGroupZero": true,
+      "originalTaskD": 60000
+    },
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "actualPass": 1,
+      "bodyDuration": 310633.11937499995,
+      "childClosedGroupZero": true,
+      "originalTaskD": 36000000
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "actualPass": 1,
+      "bodyDuration": 661655.820791,
+      "childClosedGroupZero": true,
+      "originalTaskD": 36000000
+    }
+  ],
+  "actualSelectedBodies": 3,
+  "actualPASS": 3,
+  "actualFAIL": 0,
+  "filtered56NotPASS": true,
+  "finalSHA": "d75710093ad4fa70284495f230debf428661dcb77fee87ff7172bb78cb8b976d",
+  "actualFinalSourceSame": true,
+  "actualFinalOwnedSurvivors": [],
+  "earlierQTFailMissingFinalNotBackfilled": true,
+  "AppPassed": false,
+  "official49Passed": false,
+  "savedScreenshotsClaimed": false
+}

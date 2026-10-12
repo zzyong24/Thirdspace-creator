@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-10-11T16:15:37.504103+00:00",
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "sourceFactsChecked": 253,
+  "workerBundlesChecked": 11,
+  "deepWorkspaceLinksChecked": 10,
+  "testFilesChecked": 4,
+  "driverFilesChecked": 4,
+  "errors": [],
+  "runtimeGitStatus": " M docs/verification/t1246/driver/README.md\n M docs/verification/t1246/driver/changes.diff\n M docs/verification/t1246/driver/manifest.json\n M docs/verification/t1246/driver/path-consumer-audit.json\n M docs/verification/t1246/driver/playwright.config.ts\n M docs/verification/t1246/driver/prepare-browser-driver.cjs\n M frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts\n M frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts\n M frontend/tests-t1246-generated/visual/__setup__.ts\n M frontend/tests-t1246-generated/visual/__teardown__.ts\n?? docs/verification/t1246/driver/list-dr005.txt\n?? docs/verification/t1246/driver/runtime-output-consumers.json\n?? docs/verification/t1246/new-driver/\n?? docs/verification/t1246/new-first-console-v2.txt\n?? docs/verification/t1246/round-1-new-v1/\n?? frontend/tests-t1246-new/\n",
+  "boundary": "实际批次结束后只读SHA核对；此证据不代签功能PASS"
+}

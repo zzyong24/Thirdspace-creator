@@ -1,0 +1,336 @@
+{
+  "task": "T-1246",
+  "candidateCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "testId": "05d77e355062c9acafd9-d6f57ee72c9b5996b112",
+  "titlePath": [
+    "e2e/integrated-dependent.spec.ts",
+    "INT-TEXT-VIDEO / reconstruct.project：真实前置检查、原公开入口和任务读回"
+  ],
+  "caseId": "INT-TEXT-VIDEO",
+  "generationKey": "reconstruct.project",
+  "boundary": "real-app＋official Codex；缺真实外部来源/ASR明确BLOCKED",
+  "status": "blocked",
+  "browserStepStatus": "blocked",
+  "acceptanceRequiresOriginalLedger": true,
+  "startedAt": "2026-10-11T15:50:22.412Z",
+  "endedAt": "2026-10-11T15:50:35.591Z",
+  "groupId": "grp-3812e00f-859",
+  "projectId": "project-3812e00f-863",
+  "taskIds": [],
+  "tasks": [],
+  "receipts": [
+    {
+      "time": "2026-10-11T15:50:22.448Z",
+      "id": "accountGroups.create",
+      "input": {
+        "body": {
+          "name": "整合验收-INT-TEXT-VIDEO-t1246-f7be96cc-4606-47d1-abd6-81a85a8bd03a",
+          "idempotencyKey": "t1246-a7590fac-8a05-4181-8ea1-30e80cca31ab"
+        }
+      },
+      "groupId": "",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "grp-3812e00f-859",
+          "userId": "user-3812e00f-1",
+          "name": "整合验收-INT-TEXT-VIDEO-t1246-f7be96cc-4606-47d1-abd6-81a85a8bd03a",
+          "status": "active",
+          "version": 1,
+          "createdAt": "2026-10-11T15:50:22.438Z",
+          "updatedAt": "2026-10-11T15:50:22.438Z",
+          "members": []
+        },
+        "meta": {
+          "requestId": "req-3812e00f-858"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:50:23.545Z",
+      "id": "settings.preferences.patch",
+      "input": {
+        "body": {
+          "assistantExecutionEngine": "codex"
+        }
+      },
+      "groupId": "grp-3812e00f-859",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-3812e00f-1",
+          "userId": "user-3812e00f-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-861"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:50:23.675Z",
+      "id": "projects.create",
+      "input": {
+        "body": {
+          "title": "整合真实项目-INT-TEXT-VIDEO",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+        }
+      },
+      "groupId": "grp-3812e00f-859",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "project-3812e00f-863",
+          "userId": "user-3812e00f-1",
+          "title": "整合真实项目-INT-TEXT-VIDEO",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "briefDetail": {
+            "targetPlatforms": []
+          },
+          "contentCategory": "",
+          "source": "manual",
+          "platformRef": {
+            "platform": "",
+            "externalId": ""
+          },
+          "creationMode": "guided",
+          "status": "active",
+          "currentStage": "brief",
+          "progressPct": 0,
+          "starred": false,
+          "startedAt": "2026-10-11T15:50:23.575Z",
+          "targetCompletedAt": null,
+          "completedAt": null,
+          "archivedAt": null,
+          "createdAt": "2026-10-11T15:50:23.575Z",
+          "updatedAt": "2026-10-11T15:50:23.575Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-862"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:50:24.085Z",
+      "id": "projects.outputs.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-863"
+        },
+        "body": {
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "clientRequestId": "t1246-69758b0e-9f3f-4695-8bde-cbab23fd4133"
+        }
+      },
+      "groupId": "grp-3812e00f-859",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "output-3812e00f-876",
+          "projectId": "project-3812e00f-863",
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "targetPlatform": null,
+          "format": "",
+          "aspectRatio": "",
+          "targetDurationSeconds": 0,
+          "status": "drafting",
+          "contentRole": null,
+          "primaryAssetId": null,
+          "createdAt": "2026-10-11T15:50:24.061Z",
+          "updatedAt": "2026-10-11T15:50:24.061Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-875"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:50:24.253Z",
+      "id": "artifacts.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-863"
+        },
+        "body": {
+          "title": "原始测试文稿",
+          "artifactType": "output_script",
+          "stage": "script",
+          "contentOutputId": "output-3812e00f-876"
+        }
+      },
+      "groupId": "grp-3812e00f-859",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifact-3812e00f-889",
+          "projectId": "project-3812e00f-863",
+          "contentOutputId": "output-3812e00f-876",
+          "currentVersionId": "artifactversion-3812e00f-890",
+          "stage": "script",
+          "artifactType": "output_script",
+          "title": "原始测试文稿",
+          "status": "drafting",
+          "archivedAt": null,
+          "origin": null,
+          "createdAt": "2026-10-11T15:50:24.246Z",
+          "updatedAt": "2026-10-11T15:50:24.246Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-888"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:50:24.315Z",
+      "id": "artifacts.versions.create",
+      "input": {
+        "params": {
+          "artifactId": "artifact-3812e00f-889"
+        },
+        "body": {
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "heading": "桌面整理",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+              }
+            ]
+          }
+        }
+      },
+      "groupId": "grp-3812e00f-859",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifactversion-3812e00f-893",
+          "artifactId": "artifact-3812e00f-889",
+          "versionNumber": 2,
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+                "heading": "桌面整理"
+              }
+            ]
+          },
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "createdByType": "user",
+          "aiTaskId": null,
+          "createdAt": "2026-10-11T15:50:24.302Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-892"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:50:35.571Z",
+      "id": "projects.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 100
+        }
+      },
+      "groupId": "grp-3812e00f-859",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "project-3812e00f-863",
+            "userId": "user-3812e00f-1",
+            "title": "整合真实项目-INT-TEXT-VIDEO",
+            "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+            "briefDetail": {
+              "targetPlatforms": []
+            },
+            "contentCategory": "",
+            "source": "manual",
+            "platformRef": {
+              "platform": "",
+              "externalId": ""
+            },
+            "creationMode": "guided",
+            "status": "active",
+            "currentStage": "brief",
+            "progressPct": 0,
+            "starred": false,
+            "startedAt": "2026-10-11T15:50:23.575Z",
+            "targetCompletedAt": null,
+            "completedAt": null,
+            "archivedAt": null,
+            "createdAt": "2026-10-11T15:50:23.575Z",
+            "updatedAt": "2026-10-11T15:50:23.575Z"
+          }
+        ],
+        "meta": {
+          "requestId": "req-3812e00f-904",
+          "page": 1,
+          "pageSize": 50,
+          "total": 1
+        }
+      }
+    }
+  ],
+  "captures": [
+    {
+      "label": "original-source-prerequisite-1366",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-dependent-I-6a063-t-project：真实前置检查、原公开入口和任务读回-e2e/original-source-prerequisite-1366.png",
+      "url": "http://127.0.0.1:61347/accounts/works",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "at": "2026-10-11T15:50:34.401Z"
+    },
+    {
+      "label": "original-source-prerequisite-390",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-dependent-I-6a063-t-project：真实前置检查、原公开入口和任务读回-e2e/original-source-prerequisite-390.png",
+      "url": "http://127.0.0.1:61347/accounts/works",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-10-11T15:50:35.470Z"
+    },
+    {
+      "label": "final-state",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-dependent-I-6a063-t-project：真实前置检查、原公开入口和任务读回-e2e/final-state.png",
+      "url": "http://127.0.0.1:61347/accounts/works",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-10-11T15:50:35.590Z"
+    }
+  ],
+  "events": [],
+  "independentBrowserModelProbes": 0,
+  "workerApiZero": "须独立对账原持久 ledger；此回执不代签",
+  "error": {
+    "name": "Error",
+    "message": "T1246_BLOCKED: 本轮私有组没有真实采集导入作品；不把测试手工新项目伪称真实imported作品",
+    "detail": {
+      "projects": [
+        {
+          "id": "project-3812e00f-863",
+          "source": "manual"
+        }
+      ],
+      "thirdPartyLoginNotAuthorized": true
+    }
+  }
+}

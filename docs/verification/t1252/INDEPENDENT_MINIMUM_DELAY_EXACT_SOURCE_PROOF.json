@@ -1,0 +1,18 @@
+{
+  "originalSha": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+  "candidateSha": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+  "diffSha": "95446335f5b74f2bc66ca0fb8057c69781e17862bb48d0da16068e602cc85c55",
+  "oneLineDeltaOnly": true,
+  "allOtherBodyAndAssertionsBytesUnchanged": true,
+  "actualEvidenceSha": "c1cb71c940e2161b7f41fb684c4a023b6b54955f044d85683de3ac9cc5e5da86",
+  "preservedRawVerified": 16,
+  "case2Duration": 661486.826334,
+  "case2ActualFailure": [
+    "AssertionError: expected 109999.8515 to be greater than or equal to 110000\n    at /private/tmp/t1252p-QTwUuo/public-native-render.test.ts:580:152\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+  ],
+  "missingHistoricalReceipts": [
+    "case-2-child.json",
+    "case-2-proof.json",
+    "final.json"
+  ]
+}

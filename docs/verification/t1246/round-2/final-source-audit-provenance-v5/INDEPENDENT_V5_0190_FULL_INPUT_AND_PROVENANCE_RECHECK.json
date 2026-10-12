@@ -1,0 +1,280 @@
+{
+  "task": "T-1246",
+  "at": "2026-10-12T09:40:49.194398+00:00",
+  "status": "V5_0190_FA001_SOURCE_FULL_BINDING_AND_ALL_31_REAL_PROVENANCE_RECHECK_PASS_NOT_AUDIT_RUN",
+  "bindingSha256": "0190d05186bb71138e543526cf7ec77dfcae83148f622b3611b3df087fc0f3b7",
+  "scriptSha256": "6564c1f87e26e779fcffa63380424165f78b0a4a421c93da58deb0f20c6c5b0d",
+  "helperSha256": "8f8d3399137bee36e5116fe2caeeb9d13aba4cf430e1b4cdc643cbebaf4cc504",
+  "supplementSha256": "95a8648f2805a96a87f564ec0fff389f92cd56562ac4ba8674b5136f516c05e2",
+  "fullBindings": 531,
+  "sourceRows": 31,
+  "mapRows": 27,
+  "shortNameRows": 4,
+  "legacySameRows": 3,
+  "nonLegacyRows": 28,
+  "formal198Rows": 29,
+  "asrBudgetOnlyRows": 2,
+  "twoHopReferenceChains": 25,
+  "exactJSONPathHits": 484,
+  "exactHistoricalJSONRows": 243,
+  "rows": [
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "sourceSHA": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/group-upgrade-postgres.integration.test.ts",
+      "sourceSHA": "6a5634b52e33c8c5cd11b90e849f10f9e3f9a3341921bb10c7207f82fc64b67e",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "sourceSHA": "2d753d3c618e755c46f2e3c6412b739c34e2fbd5d92a40e0e6cf261559d76bf3",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "sourceSHA": "57225946617f8be00e92da307e124dfb5b7c05af091e9c900512c45822754e20",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "sourceSHA": "e84b238e9bd0a2443eedfa063137a173509eac82b383c02b0504edd5665aabbf",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "sourceSHA": "20a2346544e12720bfde861ea1a8d0289deffc41f5d371b877fb83fad102a285",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/intelligence-source-workspace.test.ts",
+      "sourceSHA": "03fbc52fcf1b539dec4bcc106486ef3f9993df8f54cd04db23e05300cbac908a",
+      "mapReferences": 3,
+      "legacyUnchanged": true,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "sourceSHA": "51eca6a190f6efc5b878cdc631b068d5a5750d987c947cb2d213e3067a297961",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "sourceSHA": "52b67c629623c290c0c56ab68aef164ba99ae093df602e2cb47ea406507cf406",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/scheduled-export-progress.test.ts",
+      "sourceSHA": "4e77a9b2a4a7a6344dd3c635391e3501a2b954b9acc36a7977b8b056dcc78ec8",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "sourceSHA": "ef9e1c06ba12cf72742a4841b757594a227503b05549952bfec7fdd97d584a07",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "sourceSHA": "439dfef2377fa388cab31004df783a981f98c06c3a7551b481d080f73f6a397b",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "sourceSHA": "4b9f70a77d7e95794fbeb12cf6c6b90fb372f690e8af04c0cf20e79a2eebe1c0",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "sourceSHA": "b97f1c572f8c6d19c10e50f9b571df862c0ca79e62ae27322328bb05b223e907",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/migration-convergence.test.ts",
+      "sourceSHA": "45c599da1b93d8d29eeea786facbc097a32c274a2be3930a9cc72dddc62ec892",
+      "mapReferences": 3,
+      "legacyUnchanged": true,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "sourceSHA": "65141a81311cb6abeaf552946c91e8a4ecac3c4bcc69dec97a7bd0db38a0520e",
+      "mapReferences": 3,
+      "legacyUnchanged": true,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "sourceSHA": "2d88d7f9a5df207857df5ccbb4f8ad3b9dfa6570a8211c8486e8fc5561439836",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "sourceSHA": "fffd326d4e3354f9ebf40e5362f360975347bb988fb3c5d40d290d43ba83649a",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "sourceSHA": "b948930b951f589fdc2db12e58ef3b3984a4820bd41d0e7948b67d24ea791f54",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "sourceSHA": "162f8e98671af1181e95113b666fcb2fa0ccd64689d5c3c631475b8fc82cba68",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "sourceSHA": "146e102747dde9e431776466be029f8a8938b7e073ddf6aa3c2521950ad099b4",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "sourceSHA": "7be0e3a2a1b3a4a153eec40ece44d3bdde5714c83539470b6d4377d1e9f114ae",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "sourceSHA": "539c0723b9c15408e62a6ca399e3c4902ccf5fa138d8cd62149486507528ac78",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "sourceSHA": "8d9f73d88f922ee6b6f4a4607dc08c535eb38e36c1b3ea50d2fdf9f8d67b2d6b",
+      "mapReferences": 2,
+      "legacyUnchanged": false,
+      "formalWriteSet": false,
+      "budgetOnlyASR": true
+    },
+    {
+      "file": "backend/src/modules/production/production-precise-asr.integration.test.ts",
+      "sourceSHA": "895d6c9076c8b7dd3d488a1eda0e42b7410e861d9295b91cefc5bf8470b6feed",
+      "mapReferences": 2,
+      "legacyUnchanged": false,
+      "formalWriteSet": false,
+      "budgetOnlyASR": true
+    },
+    {
+      "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "sourceSHA": "7dbd2bf4cb5d494bad9d38054828011925b74e4336cbdbc4c6e7d09eb9173a7e",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "sourceSHA": "823785749f614ba085ea262354b2c25f89e45cf43d733f109b1d7da97b64e922",
+      "mapReferences": 3,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "backend/src/test-fixtures/owned-postgres.test.ts",
+      "sourceSHA": "fb34705959fbf9c6760bdcd853ddc28a0f05b25b907b6ac8b76b9fe9aecf6aff",
+      "mapReferences": 0,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "frontend/src/components/shell/workspace-initialization.test.tsx",
+      "sourceSHA": "ef4c16f2f924e2652c46fc995d5864994da450c5da91baba3da07c6bd73e11a2",
+      "mapReferences": 0,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "frontend/src/components/shell/workspace-initialization.tsx",
+      "sourceSHA": "346ebdb2f4273467763610eda17575bfbf67a6392d58de0ca8335e219b671ebf",
+      "mapReferences": 0,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    },
+    {
+      "file": "frontend/src/features/platform-account/platform-work-catalog.test.tsx",
+      "sourceSHA": "233d9b04114642b72cab8a5cc5c201c06c704a3c200b9a7b5030e0e750531f25",
+      "mapReferences": 0,
+      "legacyUnchanged": false,
+      "formalWriteSet": true,
+      "budgetOnlyASR": false
+    }
+  ],
+  "fullForwardInverseMechanicallyReconstructAuditHelperAndTwoASR": true,
+  "v4OnlyOneLengthFixOther18BytesSame": true,
+  "allCurrentSHAAndSizeZeroDrift": true,
+  "twoOriginalParserRawExitZeroNoModuleEval": true,
+  "readBytes": 45287052,
+  "elapsedMs": 207.44058303534985,
+  "findings": [],
+  "auditAdapterOrGitNotExecutedByReviewer": true,
+  "FA001Original73A3StaticFindingAndV4OffByOnePreserved": true,
+  "B004HistoricalOffsetMissingFAILNotFixedOrClaimedPASS": true
+}

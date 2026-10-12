@@ -187,7 +187,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
   await expect(page.locator('[data-slot="copy-decision-error"]')).toBeVisible();
   await expect(button).toHaveText("继续上次分场");
   await page.locator('[data-slot="production-decisions"]').screenshot({
-    path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-regular.png"),
+    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/.codex-tmp/t806-direct-error-regular.png")),
   timeout: 120000});
   expect(createBodies[0]?.retryOfTaskId).toBeUndefined();
 
@@ -208,7 +208,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
   await page.setViewportSize({ width: 1024, height: 768 });
   await expect(button).toBeVisible();
   await page.locator('[data-slot="production-decisions"]').screenshot({
-    path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-compact.png"),
+    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/.codex-tmp/t806-direct-error-compact.png")),
   timeout: 120000});
   await button.click();
   await expect.poll(() => createBodies.length).toBe(2);

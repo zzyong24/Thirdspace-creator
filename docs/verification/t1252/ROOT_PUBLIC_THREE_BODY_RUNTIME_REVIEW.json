@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-12T00:49:42.380354+00:00",
+  "approved": true,
+  "scope": "T1252 exact actual list plus three original/new public bodies only",
+  "toolSha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9",
+  "bindingSha256": "5d62c13de340a088e612d657b422298c0026a4ad37d813d4c459c2ab884e0714",
+  "independentToolReviewSha256": "9496bbd85de9dea85b0a34ad3b1cf399f1ac4f3de8143d4f236075dbff278b69",
+  "independentLiveRecheckSha256": "01ace0969f84ec2286b87ccbc248d4c3eb7f52c0c091fde7617638f65d55fd6e",
+  "rootPriorFullActualInputHashReceipt": "docs/verification/t1252/ROOT_PUBLIC_TOOL_FULL_INPUT_HASH_RECHECK.json",
+  "freshActualPrepareElapsedMs": 15720.744917,
+  "fullInputCounts": [
+    2207,
+    111831,
+    337
+  ],
+  "sourceAppliedSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+  "failFastPreserveOriginalFailures": true,
+  "AppAuthorized": false,
+  "officialModelGenerationAuthorizedByThisReceipt": false,
+  "mutationsDuringRunApproved": false,
+  "entryOuterMs": 170400000,
+  "head": "533224f334c43cdb81a344424e420cad93784dd1"
+}

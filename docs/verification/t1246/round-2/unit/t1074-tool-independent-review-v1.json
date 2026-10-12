@@ -1,0 +1,25 @@
+{
+  "approved": true,
+  "scope": "owned-t1074-full-file",
+  "sourceSnapshotDigest": "33e853528124cb781f3192784f2933d3ffcd76fe9f603df5ee8d30e13cfb7f1d",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "runtimeDistExclusive": true,
+  "reviewer": "/root",
+  "reviewedAt": "2026-10-11T19:25:40.932136+00:00",
+  "verdict": "PASS_TOOL_ONLY",
+  "inputCount": 2221,
+  "originalFullBodies": 75,
+  "positiveHookMs": 180000,
+  "originalLongBodies": 4,
+  "originalLongBodyMs": 1200000,
+  "fileBudgetMs": 28800000,
+  "outerBudgetMs": 35220000,
+  "requiresPrevious27EofAndOwnedCleanupBeforeRun": true,
+  "constraints": [
+    "新nonce/实际postmaster/dataDir/role/出生证明与已独评ownedPool",
+    "原75完整body、0retry、4长body原1200000不缩",
+    "原writer PID真实block且原account_groups行锁观察",
+    "原owner拒绝/0孤儿/0回执全保",
+    "不代签测试/真实模型/全局Gate/App"
+  ]
+}

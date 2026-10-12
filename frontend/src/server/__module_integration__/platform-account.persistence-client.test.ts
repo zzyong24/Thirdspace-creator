@@ -56,7 +56,7 @@ describe("platform-account ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(PLATFORM_ACCOUNT_OP_IDS).toEqual(["accounts.list","accounts.bindingCapabilities","accounts.create","accounts.get","accounts.update","accounts.archive"]);
+    expect(PLATFORM_ACCOUNT_OP_IDS).toEqual(["accounts.list","accounts.collectionPlanReadiness","accounts.bindingCapabilities","accounts.create","accounts.get","accounts.update","accounts.archive"]);
   });
 
   it("[T-135] 开箱空:owner 的 accounts.list 初始为空,建一条后可列出(全部本人)", async () => {

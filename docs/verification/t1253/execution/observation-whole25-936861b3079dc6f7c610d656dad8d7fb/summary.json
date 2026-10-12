@@ -1,0 +1,18 @@
+{
+  "phase": "observation-whole25",
+  "startedAt": "2026-10-11T22:25:43.826Z",
+  "deadlineAt": "2026-10-12T03:26:43.826Z",
+  "elapsedMs": 63795.446041999996,
+  "totalBudgetMs": 18060000,
+  "outerBudgetExhausted": false,
+  "cleanupElapsedMs": 290.9895000000033,
+  "cleanupBudgetMs": 1200000,
+  "exitCode": 1,
+  "ownedDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1253-observation-936861b3079dc6f7c610d656dad8d7fb-wFgbdR",
+  "cleaned": true,
+  "ownedRootRetained": false,
+  "noPG": true,
+  "noApp": true,
+  "retry": 0,
+  "firstEvidencePreserved": true
+}

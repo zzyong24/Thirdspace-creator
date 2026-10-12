@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-12T09:33:38.478611+00:00",
+  "node": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "privateLogRoot": "/private/tmp/t1246-fa001-v5-source-parse-oqrdnh_x",
+  "results": [
+    {
+      "file": "audit-source.cjs",
+      "sha256": "6564c1f87e26e779fcffa63380424165f78b0a4a421c93da58deb0f20c6c5b0d",
+      "exit": 0,
+      "positiveMs": 120000,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "parserOnlyNotModuleExecuted": true
+    },
+    {
+      "file": "spec-provenance-adapter.cjs",
+      "sha256": "8f8d3399137bee36e5116fe2caeeb9d13aba4cf430e1b4cdc643cbebaf4cc504",
+      "exit": 0,
+      "positiveMs": 120000,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "parserOnlyNotModuleExecuted": true
+    }
+  ],
+  "auditHelperOrGitExecuted": false
+}

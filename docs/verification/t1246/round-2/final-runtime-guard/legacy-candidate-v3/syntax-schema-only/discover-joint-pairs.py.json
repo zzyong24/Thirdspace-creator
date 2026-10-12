@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-12T07:13:26.384486+00:00",
+  "parser": "Python ast.parse",
+  "code": 0,
+  "error": null,
+  "input": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/discover-joint-pairs.py",
+  "inputSha256": "3324eb3f4bf006349e56f85ba17248b3b04c5f1b1a91423ea9ef782d17937845",
+  "scope": "single-line old builder consumer path→file",
+  "candidateModuleBodyExecuted": false
+}

@@ -1,0 +1,20 @@
+{
+  "names": [
+    "browser_ipc::tests::browser_socket_is_separate_and_rejects_unadmitted_requests",
+    "browser_ipc::tests::browser_socket_waits_for_delayed_authorized_request_bytes",
+    "browser_ipc::tests::different_process_cannot_call_browser_socket",
+    "browser_ipc::tests::external_node_host_fixture",
+    "browser_ipc::tests::oversized_screenshot_result_becomes_bounded_error",
+    "browser_ipc::tests::pid_bound_location_resolves_the_physical_directory_before_backend_lease",
+    "browser_ipc::tests::t1250_backpressured_reply_uses_one_deadline",
+    "browser_ipc::tests::t1250_browser_authorized_frame_after_thirty_seconds_keeps_original_id",
+    "browser_ipc::tests::t1250_browser_stop_wakes_incomplete_frame_without_profile_creation",
+    "browser_ipc::tests::t1250_cancel_wakes_owned_reply_without_claiming_write_rollback",
+    "browser_ipc::tests::t1250_partial_frame_activity_does_not_renew_frozen_deadline",
+    "browser_ipc::tests::unauthorized_child_probe"
+  ],
+  "binary": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/target/debug/deps/creatoros_workbench_test-4492fe5165c214f3",
+  "binarySha256": "b88eec4446f78c6bc3b2e94b936b1a91651b28dae4352eece12aaa135b06295d",
+  "filter": "browser_ipc::tests",
+  "ignoredRemainOriginal": true
+}

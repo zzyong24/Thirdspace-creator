@@ -1,0 +1,46 @@
+[
+  {
+    "file": "ai-worker/dist/agentic-worker.cjs",
+    "sha256": "cc6f15cf5fa8a9392084f356e7aa09bad106b1c328054fa7aaf27c2e7a3124f3"
+  },
+  {
+    "file": "ai-worker/dist/browser-runtime.cjs",
+    "sha256": "8f1d142e90ae22940ad96deab3b409c9e6a229f0c67180e477c31aea43130828"
+  },
+  {
+    "file": "ai-worker/dist/codex-acp.cjs",
+    "sha256": "2200680338bc6a960cfe776687c72c2e8cf977b1656e079e8e32f53690066425"
+  },
+  {
+    "file": "ai-worker/dist/codex-status-worker.cjs",
+    "sha256": "1a11a9b3ac5f2f4fc16593a0d55cc02ed30a9415814226741fec455ab6ceac45"
+  },
+  {
+    "file": "ai-worker/dist/embedding-worker.cjs",
+    "sha256": "69c742f6dec5f50e436934ee362680a2e8edccf2d5379363b82800db50b4a3e4"
+  },
+  {
+    "file": "ai-worker/dist/execution-worker.cjs",
+    "sha256": "3bf7f7f449236b731ff51bfd4274bcbfcd2a2439175e55e363d55e4901b3eb80"
+  },
+  {
+    "file": "ai-worker/dist/flywheel-generation-worker.cjs",
+    "sha256": "305f8295c3af6e832ba41904b0cc70b63a9a1b3b7b3b446f1729bb70775c7dcf"
+  },
+  {
+    "file": "ai-worker/dist/intelligence-generation-worker.cjs",
+    "sha256": "f7a6a6d6b2f01aadd075e0e586289692b63b2552fe797a65c0692ed3fd5b821c"
+  },
+  {
+    "file": "ai-worker/dist/intelligence-transcript-worker.cjs",
+    "sha256": "a3bf65f91cf385c6d2e2a2ca3c55762d5fe1e82ea6fd381430c36cd361df7b6e"
+  },
+  {
+    "file": "ai-worker/dist/model-probe-worker.cjs",
+    "sha256": "ca3d53902dc78897654dd9b3c613b7040de1685073c5bba83bbdd19abb24aa26"
+  },
+  {
+    "file": "ai-worker/dist/video-visual-review-worker.cjs",
+    "sha256": "664eb91279b56ea91d05efc43bd368f7c2a19e8cf85db57c7d9011f6be4f3d86"
+  }
+]

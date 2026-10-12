@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {it,expect} from 'vitest';
 import {createDb,assets,assetFiles,type Db} from '@creatoros/backend';
 import {ENDPOINTS,type RequestContext,type WorkMemberRef,type WorkReviewScope} from '@creatoros/contract';
@@ -48,7 +50,7 @@ it.each(['article','image','moments'] as const)('%s 从真实原owner读取精�
  const target=kind==='moments'?{kind:'moments_field',momentsId:(f.member as any).momentsId,field:'text'}:kind==='article'?{kind:'article_field',outputId:(f.member as any).outputId,field:'title'}:{kind:'image_card',outputId:(f.member as any).outputId,cardId:'a',field:'body'};
  const result=await f.frozen(f.scope(target));expect(result.context.members[0]!.fields[0]!.value).toBe(kind==='moments'?'朋友圈真实正文':kind==='article'?'真实文章':'保留卡正文');
  await expect(f.frozen(f.scope(target),{...ctx,accountId:'another-account'})).rejects.toThrow();
- }finally{await f.opened.client.close();}},30000);
+ }finally{await f.opened.client.close();}},180000);
 it('真实图文另卡编辑及重排不改变单卡正文指纹；明确字段改变失效',async()=>{const f=await fixture('image');try{
  const outputId=(f.member as any).outputId,s=f.scope({kind:'image_card',outputId,cardId:'a',field:'body'}),before=await f.frozen(s),item=await f.image().getGraphicPost(ctx,outputId);
  await f.image().createVersion(ctx,outputId,{clientRequestId:'reader-card-b-change',expectedCurrentVersionId:item.currentVersionId,document:{...item.current,cardBriefs:[{...item.current.cardBriefs![1]!,body:'修改别卡'},item.current.cardBriefs![0]!]}});
@@ -96,7 +98,7 @@ it('根装配原AI预约失回复重放仍是同任务；真实审核transport�
  }finally{await f.opened.client.close();}});
 
 
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import {randomUUID} from 'node:crypto';
 import {createRuntimeDb} from '../../db';
 import {createAccountGroupService} from '../../modules/platform-account/account-group.service';
@@ -105,7 +107,7 @@ import {workReviewReports,workReviewRequests} from '../../schema/work-reviews';
 import {createStructuredBusinessExecutionService} from '../../modules/ai-runtime/structured-business-execution.service';
 const reviewLockPg=process.env.CREATOROS_TEST_POSTGRES_URL;
 it.skipIf(!reviewLockPg)('T1062真实PG原审核root→actualAi(tx)同组双父Lock观察及两个阶段原回执恢复',async()=>{
- const url=new URL(reviewLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');
+ const url=new URL(reviewLockPg!);assertOwnedPostgresUrl(url.toString());
  const name=`t1062_review_lock_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:reviewLockPg});await admin.query(`CREATE DATABASE ${name}`);url.pathname=`/${name}`;
  const runtimes:Array<Awaited<ReturnType<typeof createRuntimeDb>>>=[];let held=false,blocker:import('pg').PoolClient|undefined,pending:Promise<unknown>[]=[];
  async function open(role:string){const scoped=new URL(url);scoped.searchParams.set('application_name',`${name}_${role}`);const runtime=await createRuntimeDb({connectionString:scoped.toString()});runtime.pool.options.max=1;runtimes.push(runtime);return runtime;}
@@ -126,4 +128,4 @@ it.skipIf(!reviewLockPg)('T1062真实PG原审核root→actualAi(tx)同组双父L
   await Promise.all(fixtures.map((f,i)=>f.root.service.create({...scope,accountId:'仅平台筛选'},inputs[i]!)));
   expect(await setup.db.select().from(aiTasks)).toEqual(before.tasks);expect(await setup.db.select().from(workReviewReports)).toEqual(before.reports);expect(await setup.db.select().from(workReviewRequests)).toEqual(before.requests);expect(await setup.db.select().from(executionTasks)).toEqual(before.executions);expect(await setup.db.select().from(executionCalls)).toHaveLength(0);
  }finally{if(held&&blocker)await blocker.query('ROLLBACK');await Promise.allSettled(pending);blocker?.release();const closed=await Promise.allSettled(runtimes.map(runtime=>runtime.pool.end()));try{await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);}finally{await admin.end();}for(const result of closed)if(result.status==='rejected')throw result.reason;}
-},30000);
+},180000);

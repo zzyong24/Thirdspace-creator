@@ -1,0 +1,11 @@
+version = 4
+
+[[package]]
+name = "creatoros-workbench-test"
+version = "0.0.0"
+
+[[package]]
+name = "same-name"
+version = "1.0.0"
+source = "registry+https://foreign.invalid/test"
+checksum = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

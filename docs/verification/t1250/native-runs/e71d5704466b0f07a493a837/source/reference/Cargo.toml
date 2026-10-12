@@ -1,0 +1,181 @@
+[package]
+name = "creatoros-desktop"
+version = "1.2.0"
+description = "CreatorOS 桌面壳(Tauri v2)—— T-147 P1 底座"
+authors = ["CreatorOS"]
+edition = "2021"
+# Tauri 2 需要 Rust 1.77+;本机 1.94.1 满足。
+rust-version = "1.77"
+# T-391 H-log 加了 src/bin/ 下的 dev 二进制(logkeygen/logdec)后,包内有多个 bin,
+# `tauri build` 不指定 --bin 时无从判定主程序 → 必须显式声明主 bin(否则 CI 报
+# "failed to find main binary, ... default-run")。dev 二进制仍可 `cargo run --bin` 单独跑。
+default-run = "creatoros-desktop"
+
+# main.rs 编译成同名可执行体;lib.rs 承载可复用的 run() 入口(Tauri 官方脚手架惯例,
+# 便于将来接 mobile / 单测)。
+[lib]
+name = "creatoros_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+# [T-372/T-446] mac/Linux 构建期算 sidecar.tar.gz SHA-256；Windows 直接资源算
+# sidecar/frontend/server.js SHA-256，经 cargo:rustc-env 注入壳层做入口完整性校验。
+sha2 = "0.10"
+# [T-635] 读取并校验 frontend/product-identity.json，Rust builtin 与 ProductManifest
+# 必须从同一个 canonical build input 生成。
+serde_json = "1"
+# [T-656] build.rs 严格解码 canonical Ed25519 seed，并把它拆成随机 mask + XOR
+# 材料写入 OUT_DIR；避免 release 壳保留可直接 strings/grep 的 base64 私钥文本。
+base64 = "0.22"
+rand = "0.8"
+zeroize = "1"
+
+[dependencies]
+# [T-365] macOS 进程组树杀(killpg):app 退出必须带走 sidecar 全家(node+Chrome+ffmpeg)。
+libc = "0.2"
+# [T-535] macOS sidecar 句柄需要被退出 watcher 与 App 退出树杀同时持有。
+# shared_child 允许并发 wait/try_wait/kill，避免 Arc<Mutex<Child>> 在 wait 时锁死 kill。
+shared_child = "1.1.1"
+# tauri 核心:壳/窗口/生命周期。features 保持最小(默认已含 wry webview)。
+tauri = { version = "2", features = [] }
+# shell 插件:唯一用途 = spawn/kill Next standalone sidecar 二进制(externalBin)。
+tauri-plugin-shell = "2"
+# [T-241] opener 插件:外链(target=_blank / 素材 sourceUrl / 购买链接)转系统浏览器打开。
+# webview 默认拒绝新窗口请求 → 无此插件所有外链点击被吞(用户真机实锤)。
+tauri-plugin-opener = "2"
+# T-147 P6 桌面加固 —— updater 插件(minisign/Ed25519 签名更新包,不需 Apple 证书)。
+# 配 tauri.conf.json plugins.updater.{pubkey,endpoints} + bundle.createUpdaterArtifacts。
+tauri-plugin-updater = "2"
+# [T-180] process 插件:更新装好后 relaunch() 重启 app(前端 @tauri-apps/plugin-process 的 Rust 侧)。
+tauri-plugin-process = "2"
+# [T-446] 必须作为 Builder 第一个插件注册：重复点击安装包图标时，第二实例立即退出并
+# 聚焦已有窗口，杜绝多个 CreatorOS/tar 同时写一个 runtime 目录。
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# [T-534] Growth/AM sourceDigest 使用 RFC 8785 JCS；url 仅用于已签名 runtime 的
+# HTTPS/host/userinfo/port/IP/路径净化，query/fragment 原样保留。
+serde_json_canonicalizer = "0.3"
+url = "2"
+unicode-normalization = "0.1"
+# T-147 P2 本地加密 —— master key 存 OS keychain(macOS Keychain / Windows Credential
+# Manager / Linux Secret Service),首启随机生成 32B、后续取出,base64 后经 env
+# `CREATOROS_MASTER_KEY` 注入 sidecar(node 侧 AES-256-GCM 加解密 model key)。
+# keyring v3 默认 features 已带各平台原生后端(apple-native / windows-native /
+# linux-native-sync-persistent),无需额外 native 编译链。
+keyring = "3"
+base64 = "0.22"
+rand = "0.8"
+# T-147 P5 桌面激活授权 —— 机器指纹(machineId)多因子组合。
+# machine-uid:取平台稳定机器标识(macOS IOPlatformUUID / Windows MachineGuid / Linux
+#   /etc/machine-id);sha2:与本机持久 UUID 组合哈希成稳定短指纹,注入 sidecar env。
+machine-uid = "0.5"
+sha2 = "0.10"
+# [T-372 L2] Rust 校验门纵切 —— 校验决策链迁壳层:
+#   ed25519-dalek:服务端响应 Ed25519 验签(raw 32B 公钥内嵌;测试用固定 seed 生成签名密钥);
+#   aes-gcm:`.license` 放行快照的 AES-256-GCM 加密(与 sidecar secret-crypto 同 enc:v1: 封包格式);
+#   httpdate:X-License-Date(RFC1123)解析,做 >300s 偏移防重放判定;
+#   reqwest:activate/status 在线校验 + 向 sidecar loopback 同步展示副本(rustls,与 updater 依赖树一致)。
+ed25519-dalek = "2"
+aes-gcm = "0.10"
+httpdate = "1"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+
+# [T-391 H-log] 加密日志(framed hybrid X25519 信封 + 每帧 AES-256-GCM;aes-gcm 已由 T-372 引入,复用)。
+#   x25519-dalek:临时/长期 X25519 密钥对 + ECDH(与 ed25519-dalek 共享 curve25519-dalek 4)。
+#   hkdf:HKDF-SHA256 从 ECDH 共享秘密派生 K_wrap(包裹 session_key)。
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+hkdf = "0.12"
+# [T-391 H-key] master key 传递加固:secrecy 包 SecretString(不进 Debug/log,Drop 时 zeroize);
+#   zeroize 注入 sidecar 后立即抹临时明文 buffer。
+secrecy = "0.8"
+zeroize = "1"
+# [T-485] sidecar.tar.gz 用 Rust 库直接解压，不再依赖用户电脑 PATH 上是否存在 `tar`。
+# 两个 crate 已在 Tauri 依赖树/Cargo.lock 中，改为直接依赖只为运行时调用。
+flate2 = "1"
+tar = "0.4"
+# [T-391 H-native] native 校验硬化:secmem-proc 反调试(harden_process 返回 Result 不 abort,静默降级);
+#   obfstr 编译期字符串/字节常量混淆(灭静态 grep 靶点)。
+secmem-proc = "0.3.8"
+obfstr = "0.4.6"
+tauri-plugin-dialog = "2.0.0-rc.8"
+
+# [T-427] dev 工具门控 feature —— 默认关闭。正式 `tauri build`(不带 --features logtools)时,
+#   下面两个 [[bin]] 的 required-features 不满足 → cargo **根本不编译**它们 → target/release 无
+#   logdec/logkeygen.exe → Tauri 打包收不到。修此前的真机泄露:%LOCALAPPDATA%\CreatorOS 里混进了
+#   creatoros-logdec.exe/creatoros-logkeygen.exe(解密工具+密钥生成工具暴露给用户)。原因=line 80
+#   老注释只写「不进分发包」的意图、无机制,cargo 照编照打包。
+[features]
+default = ["workbench-browser"]
+logtools = []
+workbench-browser = []
+
+# [T-391 H-log] 开发者本地工具(**默认不编译、不进分发包**;解密 .enc 日志 + 生成 X25519 日志密钥对)。
+#   开发/测试解密日志:`cargo run --features logtools --bin creatoros-logdec …` /
+#   `cargo test --features logtools`(集成测试 tests/logdec_cli.rs 同门控)。
+[[bin]]
+name = "creatoros-logdec"
+path = "src/bin/creatoros-logdec.rs"
+required-features = ["logtools"]
+
+[[bin]]
+name = "creatoros-logkeygen"
+path = "src/bin/creatoros-logkeygen.rs"
+required-features = ["logtools"]
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# T-1008: locked NomiFun source closure for the PID-bound macOS browser host.
+nomi-browser = { path = "vendor/nomifun/crates/agent/nomi-browser" }
+nomi-browser-engine = { path = "vendor/nomifun/crates/agent/nomi-browser-engine" }
+nomifun-browser-platform = { path = "vendor/nomifun/crates/backend/nomifun-browser-platform" }
+tokio = { version = "1", features = ["rt-multi-thread", "time"] }
+
+# [T-372 W-core W3] Windows 进程树杀 —— Job Object(KILL_ON_JOB_CLOSE):壳退出/句柄
+# 关闭 → sidecar 整棵进程树(node + Playwright Chrome + ffmpeg)内核级必死,是 T-365
+# 「防孤儿进程并发写库致 WAL 半写损坏」防线的 Windows 等价(Win 无 POSIX 进程组/killpg)。
+# windows-sys 选型:锁 0.61(Cargo.lock 里 tauri 依赖树已有 0.61.2,dedupe 不引新版本);
+# target 限定 cfg(windows) → macOS/Linux 构建完全不编译、不下载。
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+  "Wdk_Foundation",
+  "Wdk_Storage_FileSystem",
+  "Win32_Foundation",
+  "Win32_Storage_FileSystem",
+  "Win32_System_IO",
+  "Win32_System_Com",
+  "Win32_System_JobObjects",
+  "Win32_System_Registry",
+  "Win32_System_Threading",
+  "Win32_UI_WindowsAndMessaging",
+  # CreateJobObjectW 的签名引用 SECURITY_ATTRIBUTES → windows-sys 把它门在 Win32_Security 后。
+  "Win32_Security",
+  "Win32_Security_Authorization",
+  "Win32_Security_Isolation",
+  "Win32_System_Pipes",
+  "Win32_System_SystemInformation",
+] }
+
+# 发布体积:release 用 opt-level=s + LTO + strip(桌面壳求小)。
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+
+# [T-452] release-fast:日常开发/内测打包用,把 LTO 从 fat 降到 thin + 恢复 codegen 并行。
+#   收益(实测预估):cargo build 从单核 15-30 分钟(fat LTO 串行合并 300+ crate)降到 5-8 分钟。
+#   代价:①二进制略大(几百 KB 到 1MB;桌面壳可接受)②冷启动 startup 差 < 30ms(用户不可感)。
+#   正式对外 release 仍走上面的 [profile.release] fat LTO,只用于 gh release 分发那一次。
+#   用法:`tauri build --profile release-fast`(package.mjs 已注入)。
+[profile.release-fast]
+inherits = "release"
+lto = "thin"
+codegen-units = 16
+# opt-level=s / panic=abort / strip 从 release 继承,不动。
+
+# T-1007 standalone workbench tests: lib.rs integration is owned by the parent task.
+[[test]]
+name = "workbench"
+path = "src/workbench/mod.rs"

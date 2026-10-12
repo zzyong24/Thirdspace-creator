@@ -1,0 +1,29 @@
+{
+  "schema": "independent-tool-narrow-review/v1",
+  "task": "T-1254",
+  "at": "2026-10-12T03:09:17.218623+00:00",
+  "result": "CONCERNS_STATIC_TCP_STREAM_FRAMING_ONLY",
+  "runnerSha256": "2ce5215e244e9ca00e71ca8b31b15f18754819952ea5df760da0edc8598da41a",
+  "networkProbeSha256": "61d861c7648804e1ee977d9b1d32922a0d0491bad36b3d12820fa9551d760b34",
+  "fullClosureHashProof": {
+    "path": "docs/verification/t1254/INDEPENDENT_V9_FULL_INPUT_HASH_RECHECK.json",
+    "sha256": "71e330b9efcaf74e67bb30a563d738923ca2331c55cb3f51b3df832670dd6f61",
+    "regularHashChecked": 135338,
+    "linksChecked": 7447,
+    "bytesRead": 1857257891,
+    "drift": []
+  },
+  "directionRulesSourceReviewed": true,
+  "directionScope": "network-bind/inbound单local ip localhost:*、outbound单remote ip localhost:*，deny network*和HOME读写不变；不依赖混合filter双端AND，IPv6未单独签",
+  "finding": {
+    "id": "T1254-NET001",
+    "kind": "静态候选问题，未执行V9/不是当场FAIL",
+    "trigger": "server.socket.once(data)要求首data callback是全部32nonce字节；TCP仅字节流，write不保证单data帧",
+    "requiredFix": "累计真实bytes至nonce byteLength再完整严格比较；超长拒绝。保原loopback120k绝对观察、全部timer/socket/listener清理/TESTNET only EPERM/EACCES、direction/profile/原24child未变"
+  },
+  "V8ActualFailureBoundary": "原55d code65/118ms/closed/group0及sourceafter/raw5完整纳封；是OS profile语法拒绝，checker/原8/真正RED/所有body未跑，fetcha46未改。旧静态审未抓语法，保原审与FAIL，不补造RED或历史PASS。",
+  "producerAndRootNotified": true,
+  "reviewerExecutedToolOrNetwork": false,
+  "runtimePermissionByReviewer": false,
+  "AppPassed": false
+}

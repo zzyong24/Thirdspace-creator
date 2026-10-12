@@ -1,0 +1,23 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T08:36:04.595731+00:00",
+  "indexSha256": "3cf6a0fc449c8f1db56745ff36b91c43bb631a8b5ec157f3a5860fb9c76a9c89",
+  "inputSha256": "9b8ba2a32370272ed0897aa98a40ef177e47eb8dcacb8142025aba818681c68e",
+  "runnerSha256": "98633fa2a3fae3df14db5b5c72014904e4a9492382921258a67b5a2410abee55",
+  "fullActualRows": 144537,
+  "allIndexFileSHAAndSizeActualSame": true,
+  "drift": [],
+  "readBytes": 2600895472,
+  "elapsedMs": 35549.565040972084,
+  "preparedDirectoryOwnerAndInodeModeSame": true,
+  "actualChildTMPDIRParentMatches": true,
+  "exactFourPreparedFiles": true,
+  "actualPreparedFullRows": 141014,
+  "preparedDependencyScopesFileSetAndLinkBoundarySame": true,
+  "dynamicFirstExistsAndRealpathSame": true,
+  "originalWrapperExit1AndMissingReceiptUnchanged": true,
+  "corePrepareReceiptSha256": "3264c1b0d615c3c89d963be7b176119f5b3c01ee9430a2cf7962676589bb49f3",
+  "corePrepareReceiptExactBinding": true,
+  "projectionOrCopyExecutedByReviewer": false,
+  "actualThreeChildrenNotReexecuted": true
+}

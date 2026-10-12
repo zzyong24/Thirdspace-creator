@@ -1,0 +1,14 @@
+[
+  {
+    "name": "T1250 真实离线document超过30秒仍生成原PNG/PDF，完整请求允许串行尾轮",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "T1250 launch观察超时后迟到浏览器仅关闭，不产生输出或遗留目录",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "T1250 两个browser停止未确认仍占原并发槽，第三请求不得启动",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  }
+]

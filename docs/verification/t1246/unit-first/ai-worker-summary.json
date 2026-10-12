@@ -1,0 +1,76 @@
+{
+  "passedFiles": 151,
+  "failedFiles": 8,
+  "skippedFiles": 0,
+  "otherFiles": 0,
+  "rawFileStatusCounts": {
+    "passed": 151,
+    "failed": 8
+  },
+  "skippedWholeFiles": [],
+  "unhandledErrorsFromOriginalLog": 0,
+  "package": "ai-worker",
+  "actualExitCode": 1,
+  "files": 159,
+  "totalTests": 1462,
+  "passedTests": 1437,
+  "failedTests": 25,
+  "pendingTests": 0,
+  "todoTests": 0,
+  "success": false,
+  "firstStartedAt": "2026-10-11T14:47:30.428Z",
+  "endedAt": "2026-10-11T14:53:01.496Z",
+  "elapsedMs": 331068,
+  "failedSuites": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/acpx-notification-drain.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-research-browser.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+      "message": "",
+      "failedAssertions": 15,
+      "totalAssertions": 19
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/generation-replay.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 10
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/intelligence-worker-bundle.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/research-worker-tools.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 18
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/prompt/director-methods.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 9
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 18
+    }
+  ],
+  "rawLog": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/ai-worker.log",
+  "rawJson": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/ai-worker.json"
+}

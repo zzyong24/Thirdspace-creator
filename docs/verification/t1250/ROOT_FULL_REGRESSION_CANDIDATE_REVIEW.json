@@ -1,0 +1,39 @@
+{
+  "schema": "t1250-root-full-regression-candidate-review/v1",
+  "reviewedAt": "2026-10-11T22:47:06.801660+00:00",
+  "scope": "PASS_STATIC_CANDIDATE_AND_ONLY_TWO_BODY_BUDGET_APPLICATION",
+  "author": "codex_contract_review",
+  "reviewer": "root",
+  "bindingSha256": "34ce0173ddd92e1c26c4f2a516bdf9511a0135bf435d669f3511a999bbef64af",
+  "toolHashes": [
+    {
+      "path": "docs/verification/t1250/tools-candidate/run-focused-v7-candidate.cjs",
+      "sha256": "4341a0999b55a1b8e2521132879e8ee7ff18b0b021ef39779de8b246527739c7"
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/runner-budget-inventory-v7.cjs",
+      "sha256": "ccdd5db1edbca67b691bf24736bc17a8c957b18f783612147ce6d67cd28c9d3d"
+    }
+  ],
+  "test": {
+    "original": "frontend/src/server/workbench-artifact-representation.test.ts",
+    "originalSha256": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+    "candidate": "docs/verification/t1250/tools-candidate/representation-test-candidate.ts",
+    "candidateSha256": "fe65915e0d07b2a14a310c9d763936bab3debfff5ecf1fd368e1941a57e53cda",
+    "inverseExactlyOriginal": true,
+    "onlyTwoBodyTimeouts": 3600000
+  },
+  "candidateFullRead": true,
+  "diffFullRead": true,
+  "actualBindingsChecked": true,
+  "entryClockBeforeInputsAndOneAbsoluteDeadline": true,
+  "noCollectExecutionRenewal": true,
+  "staticInventoryMustMatchActualVitestList": true,
+  "perChildLifecycleMs": 2160000,
+  "originalQualifyingRustSkipNotPass": true,
+  "noModelNoPGNoApp": true,
+  "findings": [],
+  "allowedAction": "仅归档原representation并应用两预算60k到3.6M；保留9ed原工具，使用4341私有新工具需final源/lock/dist fresh prepare后root逐组精确runtime准入。",
+  "runtimeAuthorized": false,
+  "historicalActualAndBudgetGapPreserved": true
+}

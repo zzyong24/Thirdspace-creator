@@ -1,0 +1,44 @@
+{
+  "task": "T-1254",
+  "kind": "真实首child sandbox消费者解析失败，非shared请求TDD RED",
+  "at": "2026-10-12T02:58:20.191382+00:00",
+  "run": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-55d29f3ee1faeb10e9f588d1baf25707",
+  "summary": {
+    "sha256": "b143cd8bed9dd50482a2998bc96dd2ceed6440397e10a86116c8f68f3f5e3a9b",
+    "exitCode": 1,
+    "elapsedMs": 55735.437333999995,
+    "stepComplete": 0
+  },
+  "raw": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-55d29f3ee1faeb10e9f588d1baf25707/static-resource-checker-tests-exit.json",
+      "sha256": "7d799e64e00808b2bf7755af0d8234cfaf34e40df7e99ec7fe9f53fe87a22722"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-55d29f3ee1faeb10e9f588d1baf25707/static-resource-checker-tests.log",
+      "sha256": "db47c151ef01a3d6598ed67b68cedcbba39ca80b5312e2e97f47980c8ae3ceb0"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-55d29f3ee1faeb10e9f588d1baf25707/runner-error.json",
+      "sha256": "db31e2d3985807fd1dbbba8115d7b0c5e393c36c91aa3b32c92f84e3ab6c8157"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-55d29f3ee1faeb10e9f588d1baf25707/source-after.json",
+      "sha256": "015e76973d91866ed60edfd85a1bf6ed6b150ca2c2bb1cd009b67421b4dae5ae"
+    }
+  ],
+  "actualConsumerReason": "sandbox-exec host must be * or localhost in network address; local ip 127.0.0.1:* rejected",
+  "childCode": 65,
+  "childElapsedMs": 118,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "boundInputsUnchanged": true,
+  "approvedPrivateConsumerChange": false,
+  "firstCheckerNotEntered": true,
+  "old8RealRedBodyBuildAllUnrun": true,
+  "fetchStillOriginalA46": true,
+  "narrowCandidate": "V9只将子profile两处地址改localhost:*，保deny network/HOME，不选*公网；纳5原FAIL raw作为绑定输入，需fresh双审/ROOT准入才运行",
+  "noAutomaticRuntimeRetry": true,
+  "noProductCopy": true,
+  "noApp": true
+}

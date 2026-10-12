@@ -1,0 +1,61 @@
+{
+  "nonce": "f714c82e461b5de56ab39e9d14f90b96",
+  "recordedAt": "2026-10-11T18:45:00.732Z",
+  "actualNodeGroupAndGrandchild": true,
+  "unownedSelfSignalRefused": true,
+  "actualSignals": [
+    {
+      "signal": "SIGTERM",
+      "at": "2026-10-11T18:42:00.297Z",
+      "alreadyExited": false,
+      "members": [
+        {
+          "pid": 99737,
+          "pgid": 99737,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:41:59 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>console.log('TERM_IGNORED'));const cp=require('node:child_process');const child=cp.spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)\"],{stdio:'ignore'});console.log(JSON.stringify({parent:process.pid,grandchild:child.pid}));setInterval(()=>{},1000);"
+        },
+        {
+          "pid": 99741,
+          "pgid": 99737,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:41:59 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>{});setInterval(()=>{},1000)"
+        }
+      ]
+    },
+    {
+      "signal": "SIGKILL",
+      "at": "2026-10-11T18:45:00.444Z",
+      "alreadyExited": false,
+      "members": [
+        {
+          "pid": 99737,
+          "pgid": 99737,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:41:59 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>console.log('TERM_IGNORED'));const cp=require('node:child_process');const child=cp.spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)\"],{stdio:'ignore'});console.log(JSON.stringify({parent:process.pid,grandchild:child.pid}));setInterval(()=>{},1000);"
+        },
+        {
+          "pid": 99741,
+          "pgid": 99737,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:41:59 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>{});setInterval(()=>{},1000)"
+        }
+      ]
+    }
+  ],
+  "processClosed": true,
+  "remainingMembers": [],
+  "innerBudgetMs": 180000,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "elapsedMs": 181007,
+  "pgModuleLoaded": false,
+  "sqlCalls": 0,
+  "pgCliCalls": 0,
+  "scope": "真实隔离Node父+孙进程忽略TERM→本次组KILL并退出；未启动PG/业务Worker/App",
+  "pass": true
+}

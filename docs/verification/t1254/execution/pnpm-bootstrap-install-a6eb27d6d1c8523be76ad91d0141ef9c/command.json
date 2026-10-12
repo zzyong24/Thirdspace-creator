@@ -1,0 +1,21 @@
+{
+  "program": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+    "install",
+    "--prefix",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools",
+    "--ignore-scripts",
+    "--save-exact",
+    "--no-audit",
+    "--no-fund",
+    "--fetch-timeout=300000",
+    "--fetch-retries=0",
+    "--registry=https://registry.npmjs.org/",
+    "--userconfig=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/empty-user.npmrc",
+    "--globalconfig=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/empty-global.npmrc",
+    "pnpm@12.6.0"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools",
+  "environmentProof": "environment-proof.json"
+}

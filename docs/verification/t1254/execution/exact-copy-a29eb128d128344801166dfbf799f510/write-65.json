@@ -1,0 +1,10 @@
+{
+  "path": "frontend/scripts/verify-doocs-static.mjs",
+  "after": {
+    "sha256": "57875f61e4ab8356abe0a803d21ee93807ae355128ac4ea50e17166ba5151c49",
+    "size": 9599,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

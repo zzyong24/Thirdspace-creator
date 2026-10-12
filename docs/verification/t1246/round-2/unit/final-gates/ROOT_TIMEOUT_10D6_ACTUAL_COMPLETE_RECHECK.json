@@ -1,0 +1,53 @@
+{
+  "passed": true,
+  "phase": "timeout",
+  "actualWrapperEOF": 0,
+  "originalGateActualCode": 0,
+  "actualEightCommands": 8,
+  "sourceBeforeAfterUnchanged": true,
+  "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+  "allRawFiles": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/environment-proof.json",
+      "size": 1485,
+      "sha256": "c8a9579a615bb47d9d2c2a92a59e7b38112537a939bd87d5dca934568f350933"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/environment-proof.log",
+      "size": 51,
+      "sha256": "6bb18c7be870097f42bac3af3a7ab69bb2771622d011605fb4caf4c363d880ae"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/exit.json",
+      "size": 1027,
+      "sha256": "d7ebe6bddf5f234753610f7a755512e910c1541c1e2bc60b7c18430a79886da1"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/gate.log",
+      "size": 5872,
+      "sha256": "453458c4d44996aaae44b53a1b4e4b91790009f19a9e25a03f2e27177409564b"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/review.json",
+      "size": 968,
+      "sha256": "a5af2c0c0dfe8c7b4fa8f7e42a8daa652d85f369099e67e06bd147ce1c991762"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/source-after.json",
+      "size": 1756259,
+      "sha256": "397b89cce52886d104d3859779204156445ef1bb5a7231e801752c7681bf1a48"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/source-before.json",
+      "size": 1756238,
+      "sha256": "cd67a790b481f7c1e6f9dfa933eef4cdbab7022fedd69733630b09551e2af7c0"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/summary.json",
+      "size": 488,
+      "sha256": "99146c6cc17b541f7aa4edda1929a313ef90e574efe45b00126dc370330b2279"
+    }
+  ],
+  "allProcessesClosedAndOwnedRootRemoved": true,
+  "noAppOrRealWindowsAppClaim": true
+}

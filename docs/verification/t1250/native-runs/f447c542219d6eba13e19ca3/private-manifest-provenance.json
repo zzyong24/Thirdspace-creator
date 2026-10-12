@@ -1,0 +1,8 @@
+{
+  "manifestPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/source/browser-test/Cargo.toml",
+  "manifestSha256": "f9b731572b93711db8d30cf8776c909aa9f63359e656c7109c45b8e16162eb0f",
+  "sourceCargoSha256": "48b53dc32c591b2ff41f40f38605c542ec34b844e45b624147a2d9b7f5f5f688",
+  "sourceMainCargoSha256": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f",
+  "transform": "lib path changes only to copied actual mod.rs; append existing main Cargo url/nomi3/tokio deps only; actual offline lockfile generated separately",
+  "noProductionManifestModified": true
+}

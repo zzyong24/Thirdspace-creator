@@ -1,0 +1,93 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-12T01:10:02.621751+00:00",
+  "task": "T-1254",
+  "result": "PASS_TOOL_DIRECT_NATIVE_INFORMATION_ONLY",
+  "scope": "T1254_OWNED_NATIVE_VERSION_INSTALL_HELP_ONLY",
+  "tool": {
+    "path": "/tmp/t1254-readonly/run-owned-pnpm-native-info-v5.cjs",
+    "sha256": "5b8e54d54ef786a9d1a5957efff3c3e5b7a9e4f5421b203b69b456398e5189f7"
+  },
+  "seal": {
+    "path": "/tmp/t1254-readonly/PNPM_NATIVE_INFO_V5_FULL_SEAL.json",
+    "sha256": "189bc1c52b436c1d692d9d290283e39a7eab3f044e6632cb27ccf53d416e403c"
+  },
+  "prepare": {
+    "path": "/tmp/t1254-readonly/PNPM_NATIVE_INFO_V5_PREPARE.json",
+    "sha256": "7b28caca0a289c0d7d5bc96c707ef0f63d68861953970dc0a205422a37119ca4"
+  },
+  "sourceSnapshotDigest": "711e5986db17222f31a81fa963c5c3da27da6461219312388e7e2b04fafdc68e",
+  "toolDigest": "374a23fd5c93c32427db0871940ebb7273d6c0b81986b4abed273748ad5f36e9",
+  "checked": {
+    "sourceInputs": 31,
+    "implementationFiles": 460,
+    "actualPnpmImplementationFiles": 458,
+    "independentHashReadBytes": 50918518,
+    "hashDrift": [],
+    "sourceAndToolDigestRecomputedSame": true,
+    "ownedRootSymlink": false,
+    "ownedRootUid": 501,
+    "ownedRootInode": 351191037,
+    "ownedRootMode": "0700"
+  },
+  "nativeEntry": {
+    "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/@pnpm/exe.darwin-arm64/pnpm",
+    "sha256": "3a4b2674fc12ff655113b32ea58ef25d83fff48fc9bb217789a50de316a822d4",
+    "size": 42650992,
+    "platform": "darwin",
+    "arch": "arm64",
+    "packageVersion": "12.6.0",
+    "optionalPackageLock": {
+      "version": "12.6.0",
+      "resolved": "https://registry.npmjs.org/@pnpm/exe.darwin-arm64/-/exe.darwin-arm64-12.6.0.tgz",
+      "integrity": "sha512-rafpVkjzugKBMxSvGQd5wK1x5eOTkD/+lcJIFHeQhvd+BJ8kDisOOvwhQDrpGd4vd2Fx+hhW0P2Ptt638OlhFg==",
+      "cpu": [
+        "arm64"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ]
+    }
+  },
+  "oldIncorrectReceipt": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c/installed-pnpm-implementation.json",
+    "entry": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/bin/pnpm.cjs",
+    "exists": false,
+    "notUsed": true
+  },
+  "commands": [
+    [
+      "--version"
+    ],
+    [
+      "install",
+      "--help"
+    ]
+  ],
+  "slots": {
+    "prepare": 900000,
+    "version": 180000,
+    "installHelp": 180000,
+    "childLifecycle": 4320000,
+    "reportCleanup": 900000
+  },
+  "outerMs": 6480000,
+  "findings": [],
+  "staticProof": [
+    "只固定已下载darwin-arm64原生pnpm 3a4b2674执行--version与install --help；不用pnpm shell/mjs wrapper，不触其原fallback下载。",
+    "31真实来源与460当前实现（458安装文件+Node+sandbox-exec）全部SHA0漂移，actual optional lock/os/cpu/version与自有UID/inode/0700根及此前exit0/closed/group0/source同相符；摘要重新计算一致。",
+    "首行monotonic入口6.48M完整覆盖900k准备、2×180k正执行、2×393f完整2160k生命周期、900k后验；每次重hash后核当前和未来所有完整槽，取消或第一命令异常不启动help。",
+    "env白名单保HOME/CODEX_HOME原值；只有自有空user/global npmrc、XDG config/data/cache和tmp。profile仅施于本sandbox-exec子进程，deny全部network及原HOME下read/write，不改系统/TCC配置。",
+    "完整hash/owner/close/group/非零/预算门保留，后验同实际实现；自有根明确保留，不冒已删除或已运行第二阶段。"
+  ],
+  "limitations": [
+    "sandbox实际启动/命令输出尚未发生：如native读取未知配置受拒，应保真实失败，不fallback放宽HOME或network。",
+    "两条命令仅信息探针；真实install flags消费者仍等actual help，不能签两source root依赖安装、build或产物复制。",
+    "原安装收据entry bin/pnpm.cjs不存在且保留纠正工件，本工具明确notUsed；原安装0事实不被改写。",
+    "公共Rust/Chromium三正文仍由ROOT独立运行，本工具审查不签App、模型或公共body。"
+  ],
+  "runtimePermissionByReviewer": false,
+  "reviewerExecutedNativeOrNetwork": false
+}

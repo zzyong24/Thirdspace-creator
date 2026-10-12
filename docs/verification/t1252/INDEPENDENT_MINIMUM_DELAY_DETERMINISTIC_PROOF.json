@@ -1,0 +1,56 @@
+{
+  "at": "2026-10-12T02:16:56.065Z",
+  "scope": "抽取真实候选delay表达式的确定性数值检查，不是慢请求/浏览器或运行准入",
+  "cases": [
+    {
+      "name": "早0.1485ms不能提前交付，补等1ms",
+      "times": [
+        109999.8515,
+        110000.8515
+      ],
+      "delays": [
+        110000,
+        1
+      ],
+      "activeTimers": 0,
+      "resolved": true
+    },
+    {
+      "name": "恰好最小值完成",
+      "times": [
+        110000
+      ],
+      "delays": [
+        110000
+      ],
+      "activeTimers": 0,
+      "resolved": true
+    },
+    {
+      "name": "活动或超时调度不续出生期限",
+      "times": [
+        70000,
+        90000,
+        110000
+      ],
+      "delays": [
+        110000,
+        40000,
+        20000
+      ],
+      "activeTimers": 0,
+      "resolved": true
+    },
+    {
+      "name": "迟到回调立即完成不续期",
+      "times": [
+        120001
+      ],
+      "delays": [
+        110000
+      ],
+      "activeTimers": 0,
+      "resolved": true
+    }
+  ]
+}

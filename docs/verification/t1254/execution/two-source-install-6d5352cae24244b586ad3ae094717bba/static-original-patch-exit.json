@@ -1,0 +1,43 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/child-restriction.sb",
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/git",
+    "-c",
+    "core.hooksPath=/dev/null",
+    "-c",
+    "core.fsmonitor=false",
+    "apply",
+    "--whitespace=nowarn",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/original-creatoros.patch"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/two-source-install-6d5352cae24244b586ad3ae094717bba/static-original-patch.log",
+  "pid": 74686,
+  "identity": {
+    "pid": 74686,
+    "pgid": 74686,
+    "uid": 501,
+    "birth": "Mon Oct 12 10:14:55 2026",
+    "startedAt": 1791771295657
+  },
+  "startedAt": "2026-10-12T02:14:55.657Z",
+  "endedAt": "2026-10-12T02:14:55.785Z",
+  "elapsedMs": 128,
+  "budgetMs": 180000,
+  "deadlineAt": "2026-10-12T02:17:55.657Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

@@ -1,0 +1,82 @@
+{
+  "at": "2026-10-11T23:21:28.196750+00:00",
+  "status": "PASS_FR_USAGE_SPEC_ONLY",
+  "candidateSha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484",
+  "sourceBindingSha256": "0c96cdf8fd898ea3ababa87928d1db772ddcd6f5447469e1b270581322e1bf5a",
+  "inputs": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+      "sha256": "b132114ba0b561dc362b9f10d2cb5471a12206a35ef6377bfa3324859661059c"
+    },
+    {
+      "path": "/tmp/t1253-candidate/usage-spec-clarification-candidate.md",
+      "sha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484"
+    },
+    {
+      "path": "/tmp/t1253-candidate/usage-spec-clarification.diff",
+      "sha256": "b5d89bcb2cd1cecd2f347e7fe8b6ae588708008210d4c278664ca092904a90e6"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d"
+    },
+    {
+      "path": "backend/src/modules/execution/model-call-recovery.ts",
+      "sha256": "a96b971c39046008560bbb3d3ad5d6a1bf07645454b4afe3d2b570042659041b"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-generation-recovery.ts",
+      "sha256": "5dc872fa71297d23c85c767983cae1e60ce4d89fb1b9d1fce41f18112d13f69c"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-text-node.service.ts",
+      "sha256": "9c566881592905c537635a7ec09a8c8d8da84f44d15ad5706844ca80ea761ef7"
+    },
+    {
+      "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "sha256": "843405d9faed7880be042171995ae64f1415f25fb4e659c161d8adec7d7dbd08"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-completion.service.ts",
+      "sha256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4"
+    },
+    {
+      "path": "backend/src/modules/ai/execution-candidate.service.ts",
+      "sha256": "bb669b03cd66ea582e57a60c387dc73a91d97e28189885a488c38b361c918784"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-checkpoint.service.ts",
+      "sha256": "fccafb9872cae58a293d6883d20b649eb33914860a5c5a349666593200cf29ae"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.ts",
+      "sha256": "7057344bc467ae84521c610450f40c2f24e30cf607a2226663f1e118eaae350f"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "path": "backend/src/schema/intelligence.ts",
+      "sha256": "2ac7b3d136452ce7759847175a62f5a303e9e92b03af4b001eb0945cfe587fcc"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-outcome.service.ts",
+      "sha256": "ee5239f11abbe91267592c43b979b4e0874fbbd4b2a1b8b6ef02d24d2f70f790"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "sha256": "0d758bfa7ce0bbae6b16aeb9db39e3e3c5bd4c1decdd3c1dc8a9ea8fc061752e"
+    }
+  ],
+  "runtimeExecuted": false,
+  "implementationSigned": false
+}

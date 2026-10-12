@@ -1,0 +1,125 @@
+{
+  "at": "2026-10-12T02:23:14.283424+00:00",
+  "bindingSha256": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3",
+  "actualArraysDelta": {
+    "inputs": {
+      "added": [
+        {
+          "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_SOURCE_REVIEW.json",
+          "sha256": "55e04e7ee339c0ecd37b5c472b998e1c69661bcfb0015772cc8db31951a35f0d"
+        },
+        {
+          "path": "docs/verification/t1252/ROOT_MINIMUM_DELAY_SOURCE_APPROVED_APPLICATION.json",
+          "sha256": "6019e72e0049b2b491fdd7a44ab50d5f7b5873012ff8c5d4141819592f6ff5ad"
+        },
+        {
+          "path": "docs/verification/t1252/public-minimum-delay-candidate/CANDIDATE_BINDING.json",
+          "sha256": "946d98fb88c8f769d860d61e2715c53923c2a8ec6c458a6309cab9433b8438d8"
+        },
+        {
+          "path": "docs/verification/t1252/public-minimum-delay-candidate/workbench-file-recovery.test.ts",
+          "sha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884"
+        }
+      ],
+      "removed": [],
+      "changed": [
+        {
+          "old": {
+            "path": "docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+            "sha256": "4c2533d3c07e7603bfdf94bc517d930ac0d8b8d11e9742f9fb95d0e8d172d3a4"
+          },
+          "new": {
+            "path": "docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+            "sha256": "3997609ee28cc64e144f4a8d03f491ba471ad6a1a755d18308017136a7aa73e2"
+          }
+        },
+        {
+          "old": {
+            "path": "docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+            "sha256": "5c4133785470cf5b838858f8745e4ad5edaf9614995b65542301b8e45e908e45"
+          },
+          "new": {
+            "path": "docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+            "sha256": "b52122ae46cfb91e3bf8af4cbf1e7149900674ac4169f9191536f30439a3ebea"
+          }
+        },
+        {
+          "old": {
+            "path": "docs/verification/t1252/public-runtime-tool/prepare.cjs",
+            "sha256": "c95cf85e40ca4993cde3d74b8baa9151c9c90d50b62ce51a3b614fbaad088b10"
+          },
+          "new": {
+            "path": "docs/verification/t1252/public-runtime-tool/prepare.cjs",
+            "sha256": "963e08cd5ea8e52dd482490ea8bb34c420e381da94ccd9a20e6abf60cb5cba9f"
+          }
+        },
+        {
+          "old": {
+            "path": "frontend/src/server/workbench-file-recovery.test.ts",
+            "sha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d"
+          },
+          "new": {
+            "path": "frontend/src/server/workbench-file-recovery.test.ts",
+            "sha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884"
+          }
+        }
+      ]
+    },
+    "installedInputs": {
+      "added": [],
+      "removed": [],
+      "changed": []
+    },
+    "browserInputs": {
+      "added": [],
+      "removed": [],
+      "changed": []
+    }
+  },
+  "sourceAndInstalledAndBrowserAllChecked": true,
+  "fileChecks": 109405,
+  "linkChecks": 4974,
+  "bytesHashed": 2466809942,
+  "elapsedMs": 21285.749874950852,
+  "drift": [],
+  "UTF16ActualInverseEqualsCandidate": true,
+  "handoffChecks": [
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "actual": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/prepare.cjs",
+      "actual": "963e08cd5ea8e52dd482490ea8bb34c420e381da94ccd9a20e6abf60cb5cba9f"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/budget.cjs",
+      "actual": "6d69a3f2799c3a00730f72bcbe5a59d91eb94c9fad6a2313c6cd916a57a5c8e1"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/copy-source.cjs",
+      "actual": "2274e942f735e2c517e7dc635004a0694956a9ea69b85d611f4e07c221e05b18"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/input-binding.json",
+      "actual": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+      "actual": "b52122ae46cfb91e3bf8af4cbf1e7149900674ac4169f9191536f30439a3ebea"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+      "actual": "3997609ee28cc64e144f4a8d03f491ba471ad6a1a755d18308017136a7aa73e2"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/MINIMUM_PREPARE_ONLY.diff",
+      "actual": "9f7f4990eb454c718fda681b926fe3af8aa1859ccca0c5a97ac1bca23fb6d9b9"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/MINIMUM_FRESH_SEAL_DELTA.json",
+      "actual": "2a0c6013f34bb17fce45d2d5860b8a92552e4d3103fc895abfbc0e56f6c33b10"
+    }
+  ],
+  "oldBudgetAndSelectedCasesAndNodeBinaryBrowserToolExactlySame": true
+}

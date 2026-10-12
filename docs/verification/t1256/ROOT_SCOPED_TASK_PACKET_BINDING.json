@@ -1,0 +1,24 @@
+{
+  "task": "T-1256",
+  "at": "2026-10-12T05:31:40.625042+00:00",
+  "globalGenerateActualExit": 2,
+  "globalGenerateActualError": "T-1026: write_set must contain only safe repo-relative files or terminal /** prefixes",
+  "globalFailurePreserved": true,
+  "scope": "只添加与已注册T1256 module逐字语义一致的新pending步骤绑定；没有变更任何旧task或BACKLOG状态。BACKLOG start已有taskctl真实事件。",
+  "proof": [
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+      "beforeSha256": "6ea3f52d5119510ecda068227fe889c3619704543e73d0d36a6aaa073cd5f876",
+      "afterSha256": "a0f6dafe5601e8c25971080e3a2ea44d8e1c5591f27a4b123fce92045280a6d4",
+      "onlyAddedOwnedPendingBinding": true,
+      "existingBindingsByteSemanticsUnchanged": true
+    },
+    {
+      "root": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+      "beforeSha256": "6ea3f52d5119510ecda068227fe889c3619704543e73d0d36a6aaa073cd5f876",
+      "afterSha256": "a0f6dafe5601e8c25971080e3a2ea44d8e1c5591f27a4b123fce92045280a6d4",
+      "onlyAddedOwnedPendingBinding": true,
+      "existingBindingsByteSemanticsUnchanged": true
+    }
+  ]
+}

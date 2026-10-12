@@ -1,0 +1,23 @@
+{
+  "pid": 5400,
+  "label": "build",
+  "file": "/Users/zyongzhu/.cargo/bin/cargo",
+  "args": [
+    "test",
+    "--manifest-path",
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/source/browser-test/Cargo.toml",
+    "--locked",
+    "--offline",
+    "--features",
+    "workbench-browser",
+    "--lib",
+    "--no-run",
+    "--message-format=json"
+  ],
+  "code": 0,
+  "signal": null,
+  "error": null,
+  "closeAt": "2026-10-11T21:58:30.019Z",
+  "stdioClosed": true,
+  "logClosedAt": "2026-10-11T21:58:30.019Z"
+}

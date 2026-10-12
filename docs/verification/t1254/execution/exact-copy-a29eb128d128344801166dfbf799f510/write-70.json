@@ -1,0 +1,10 @@
+{
+  "path": "reference-editors/doocs-md/native/VERIFY.md",
+  "after": {
+    "sha256": "b5dc4172e5193579594e6adbf38a06bc95beb9a4ac73e6f05dd163e7f08f56dc",
+    "size": 9667,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

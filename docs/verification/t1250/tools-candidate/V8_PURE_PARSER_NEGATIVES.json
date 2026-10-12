@@ -1,0 +1,71 @@
+{
+  "scope": "only parsing text/reading original source; no Vitest/list/body/App/PG/network/build",
+  "rows": [
+    {
+      "id": "native-qualification",
+      "total": 1,
+      "active": 0,
+      "skip": 1,
+      "status": "PASS_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "browser-qualification",
+      "total": 2,
+      "active": 1,
+      "skip": 1,
+      "status": "PASS_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "explicit-skip",
+      "total": 2,
+      "active": 1,
+      "skip": 1,
+      "status": "PASS_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "known-positive",
+      "total": 1,
+      "active": 1,
+      "skip": 0,
+      "status": "PASS_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "known-negative",
+      "total": 1,
+      "active": 0,
+      "skip": 1,
+      "status": "PASS_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "short-circuit",
+      "total": 1,
+      "active": 0,
+      "skip": 1,
+      "status": "PASS_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "each-qualified",
+      "total": 2,
+      "active": 0,
+      "skip": 2,
+      "status": "PASS_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "unknown-alias",
+      "status": "EXPECTED_REJECTION_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "unknown-skipIf",
+      "status": "EXPECTED_REJECTION_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "injected-root-not-missing",
+      "status": "EXPECTED_REJECTION_TOOL_PARSER_ONLY"
+    },
+    {
+      "id": "shadowed-qualification",
+      "status": "EXPECTED_REJECTION_TOOL_PARSER_ONLY"
+    }
+  ],
+  "actualParserAssertions": 11
+}

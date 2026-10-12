@@ -11,9 +11,11 @@ import {chatWorkbenchPlanCapability} from "./chat-workbench-plan-tool";
 import type { WorkbenchCapability } from "@creatoros/contract/agent-workbench";
 /** 新执行入口共用既有上下文、白名单、可信来源和历史转换；此步骤不取主模型凭据。 */
 export async function prepareChatTurn(ctx:RequestContext,input:ChatTurnInput,deps:AssembleChatDeps,options:NonNullable<Parameters<typeof prepareChatToolDefinitions>[1]>={}){
- const frozenOptions={...options};
+ const writingSelection=input.chatContext.editorTarget?.owner==='wechat_article'?input.chatContext.editorTarget.writingContext:input.chatContext.creationTarget?.writingContext;
+ const frozenOptions={...options,workWritingContext:Boolean(writingSelection)};
  const context=structuredClone(ctx),frozenInput={...input,messages:structuredClone(input.messages),chatContext:structuredClone(input.chatContext),trustedScriptSources:structuredClone(input.trustedScriptSources??[])};
  const assembly=await prepareChatAssembly(context,frozenInput.chatContext,deps,detectCopilotMediaRoute(frozenInput.messages),{
+  resolvedWritingContext:structuredClone((input as ChatTurnInput&{resolvedWritingContext?:ChatHostContext["resolvedWritingContext"]}).resolvedWritingContext),
   positioningScratch:isScratchPositioningConversation(frozenInput.messages),
   verbatimSources:frozenInput.trustedScriptSources,
   latestUserInstruction:latestUserText(frozenInput.messages),
@@ -42,7 +44,7 @@ export async function prepareDurableChatTurn(
  options: {atomicCoverGenerate?:boolean;atomicAgenticResearch?:boolean;workerScriptDraft?:boolean;workerWebRead?:boolean;workerResearch?:boolean;atomicMaterialGenerate?:boolean;atomicScriptReview?:boolean;atomicPublishPackage?:boolean;workbenchPlans?:boolean;workbenchCapabilities?:readonly WorkbenchCapability[];workbenchPlatform?:WorkbenchCapability["platforms"][number];scriptHooksGeneration?:ChatHostContext["scriptHooksGeneration"];structuredGeneration?:ChatHostContext["structuredGeneration"]} = {},
 ) {
  // 必须在首个 await 前复制，工具闭包也不能持有调用方可变的账号/选区对象。
- const context=structuredClone(ctx), messages=structuredClone(input.messages), abortSignal=input.abortSignal, executionEngine=input.executionEngine??"pi";
+ const context=structuredClone(ctx), messages=structuredClone(input.messages),chatContext=structuredClone(input.chatContext),trustedScriptSources=structuredClone(input.trustedScriptSources??[]),abortSignal=input.abortSignal, executionEngine=input.executionEngine??"pi";
  const atomicCoverGenerate=options.atomicCoverGenerate===true;
  const atomicAgenticResearch=options.atomicAgenticResearch===true;
  const workerScriptDraft=options.workerScriptDraft===true;
@@ -56,16 +58,19 @@ export async function prepareDurableChatTurn(
  const workbenchCapabilities=structuredClone([...(options.workbenchCapabilities??[])]);
  requireWorkspace(context);
 
+ const selection=chatContext.editorTarget?.owner==='wechat_article'?chatContext.editorTarget.writingContext:chatContext.creationTarget?.writingContext;
+ const resolved=selection?await deps.resolveWritingContext?.(context,chatContext.projectId!,structuredClone(selection)):undefined;
+ if(selection&&!resolved)throw new Error('写作资料解析端口尚未装配');
  const hostContext=validateChatHostContext({
-  schemaVersion:1,chatContext:structuredClone(input.chatContext),
+  schemaVersion:1,chatContext:structuredClone(chatContext),...(resolved?{resolvedWritingContext:resolved}:{}),
   mediaRoute:detectCopilotMediaRoute(messages),
   positioningScratch:isScratchPositioningConversation(messages),
-  trustedScriptSources:input.trustedScriptSources??[],skillSnapshot,
+  trustedScriptSources:trustedScriptSources,skillSnapshot,
   ...(workerScriptDraft?{scriptDraftContext:{latestUserInstruction:latestUserText(messages)}}:{}),
- },{userId:context.userId,accountId:context.accountId??null,groupId:context.groupId,projectId:input.chatContext.projectId??null});
+ },{userId:context.userId,accountId:context.accountId??null,groupId:context.groupId,projectId:chatContext.projectId??null});
  const {runWithEffectiveSkillSnapshot}=await import("@creatoros/ai-worker");
  const prepared=await runWithEffectiveSkillSnapshot(hostContext.skillSnapshot,()=>prepareChatTurn(context,{
-  messages,chatContext:hostContext.chatContext,trustedScriptSources:hostContext.trustedScriptSources,executionEngine,
+  messages,...(hostContext.resolvedWritingContext?{resolvedWritingContext:hostContext.resolvedWritingContext}:{}),chatContext:hostContext.chatContext,trustedScriptSources:hostContext.trustedScriptSources,executionEngine,
   abortSignal,
  },deps,{atomicCoverGenerate,atomicAgenticResearch,workerScriptDraft,workerWebRead,workerResearch,atomicMaterialGenerate,atomicScriptReview,atomicPublishPackage,workerScriptHooks:Boolean(scriptHooksGeneration),atomicPlanningThesis:true,workerStructuredNodes:Boolean(structuredGeneration),workbenchCapabilities:[...(options.workbenchPlans?[chatWorkbenchPlanCapability]:[]),...workbenchCapabilities]}));
  if(structuredGeneration && prepared.toolDefinitions.some(tool=>tool.execution==="worker.structured-node" && !hostContext.skillSnapshot.skills.some(skill=>skill.skillId===(tool.name==="review.analyze"?"review.insights":tool.name))))throw new Error("原任务缺少生成节点 Skill");

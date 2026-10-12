@@ -1,0 +1,42 @@
+{
+  "specSha256": "093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19",
+  "phase": "observation-whole25",
+  "scope": "original-three-file-unknown-observation",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "sourceSnapshotDigest": "287720898315cd16e818bdce5548c1749f4eb1dc7c271682de3bdf41b3906e57",
+  "toolDigest": "9d958143c6328459167f955343a30152a9e57122d26a43c75a5f75851d108e78",
+  "sharedDistExclusive": true,
+  "approved": true,
+  "at": "2026-10-11T22:24:31.399699+00:00",
+  "fullToolAndBothDiffsActuallyRead": true,
+  "inputsActuallyChecked": 3035,
+  "toolsActuallyChecked": 10,
+  "actualDrift": 0,
+  "onlyTwoObservationTestsApplyAuthorized": true,
+  "full25OriginalAssertionsAndResDestroyRetained": true,
+  "peerReviewSha256": "0607375ac0a184ea84fe181be5a7702d475e1dcca22db6ae31e475f8d2dfee15",
+  "sourceChecks": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "kind": "original",
+      "sha256": "007547ed8ae028996af31b4c873af19f74e323b19d194a3214c2871f50889415"
+    },
+    {
+      "file": "/tmp/t1253-candidate/hooks-observation-only.test.ts",
+      "kind": "candidate",
+      "sha256": "fb2dfb542eccb91c45747dd5c0320d0823d78e8f93e3daf2d2045df8e0c4db0f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+      "kind": "original",
+      "sha256": "98ae5f6c0a071832a2309be7b13f6621f93831e4bea2d51acd62087320a2dca4"
+    },
+    {
+      "file": "/tmp/t1253-candidate/draft-observation-only.test.ts",
+      "kind": "candidate",
+      "sha256": "ba8f2a344a8c5f042f0fd45e89047772663e364830d8435e04af11cde7904d75"
+    }
+  ],
+  "executionMustWaitStandardFrontendTypesEOF": true,
+  "runtimePassNotClaimed": true
+}

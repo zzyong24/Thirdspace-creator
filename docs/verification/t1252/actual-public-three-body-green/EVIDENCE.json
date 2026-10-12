@@ -1,0 +1,300 @@
+{
+  "schema": "t1252-real-public-three-body-result/v1",
+  "at": "2026-10-12T02:45:40.388079+00:00",
+  "runRoot": "/private/tmp/t1252p-E5iiqj",
+  "sourceSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+  "bindingSha256": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3",
+  "toolSha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+  "finalSha256": "d75710093ad4fa70284495f230debf428661dcb77fee87ff7172bb78cb8b976d",
+  "parentSession": 50113,
+  "sessionEOFCode": 0,
+  "actualSelectedBodies": 3,
+  "actualPassed": 3,
+  "actualFailed": 0,
+  "actualEachDeclarationCount": 57,
+  "notSumThreeFilteredFilesOrCount56AsPass": true,
+  "cases": [
+    {
+      "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+      "actualPassed": 1,
+      "actualFailed": 0,
+      "resultSha256": "bb803eb4f11930c97a90055d97a68c8856ddf27c0dcf72d98bd58767ddbc7d25",
+      "childSha256": "650ebe54203893ef54843a3a392c008427f666ae0d4a4ceed0cf3cea1e907d41",
+      "proofSha256": "4f7d08373ce3e6133cf5612ed608d6469fd2ffacf0707c5365103f9dee45d91e",
+      "bodyElapsedMs": 4197.652125,
+      "originalTaskDeadlineMs": 60000,
+      "filteredOtherBodiesNotPass": true
+    },
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "actualPassed": 1,
+      "actualFailed": 0,
+      "resultSha256": "74bff726279a9c2a207cf75ca8cc687d46d7fc216fc6186ee14981c39aec9e31",
+      "childSha256": "47075da3aaf05fd375fcb498a8025912666ec18e936ab287494d35256a56fdb7",
+      "proofSha256": "0546eadc68991d31ad1b2d705e1547f357cffd97fe58c1ba056edebbc3c1cbf0",
+      "bodyElapsedMs": 310633.11937499995,
+      "originalTaskDeadlineMs": 36000000,
+      "filteredOtherBodiesNotPass": true
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "actualPassed": 1,
+      "actualFailed": 0,
+      "resultSha256": "49a33e34a01265f96ed23944442ffe56c1fff24199a6c9a1770ba16da3c3c2a1",
+      "childSha256": "2a3b1a8d1efa3378a56d6818d9b7f01370e8851b62d3bf02b890d8466722e6c9",
+      "proofSha256": "4c94e79581a7bebf0c77cb81d36097dec18d93bd8808a2c2fe845c0249a1637e",
+      "bodyElapsedMs": 661655.820791,
+      "originalTaskDeadlineMs": 36000000,
+      "filteredOtherBodiesNotPass": true
+    }
+  ],
+  "wrapperElapsedMs": 1102779.864083,
+  "sourceAfter": {
+    "allBoundSourceInstalledBrowserNodeBinaryToolSame": true
+  },
+  "ownedSurvivors": [],
+  "allFourChildrenClosedGroupZeroSignalsNone": true,
+  "raw": [
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/actual-list-proof.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/actual-list-proof.json",
+      "sha256": "e0100d4db0c3179e544813d46e1e7f257a074c02250643983445d887f186068d",
+      "size": 1538
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/actual-list.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/actual-list.json",
+      "sha256": "d24f22991432e6352183c7005e839887c7f0402f043176af498c2407a07dc07e",
+      "size": 614
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-0-child.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-0-child.json",
+      "sha256": "650ebe54203893ef54843a3a392c008427f666ae0d4a4ceed0cf3cea1e907d41",
+      "size": 1611
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-0-proof.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-0-proof.json",
+      "sha256": "4f7d08373ce3e6133cf5612ed608d6469fd2ffacf0707c5365103f9dee45d91e",
+      "size": 586
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-0-tests.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-0-tests.json",
+      "sha256": "bb803eb4f11930c97a90055d97a68c8856ddf27c0dcf72d98bd58767ddbc7d25",
+      "size": 14891
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-0.log",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-0.log",
+      "sha256": "cb044c96c266de221b272b2194a808e4b66ed0afb29ba960e5a60fac3905324c",
+      "size": 591
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-1-child.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-1-child.json",
+      "sha256": "47075da3aaf05fd375fcb498a8025912666ec18e936ab287494d35256a56fdb7",
+      "size": 1602
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-1-proof.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-1-proof.json",
+      "sha256": "0546eadc68991d31ad1b2d705e1547f357cffd97fe58c1ba056edebbc3c1cbf0",
+      "size": 569
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-1-tests.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-1-tests.json",
+      "sha256": "74bff726279a9c2a207cf75ca8cc687d46d7fc216fc6186ee14981c39aec9e31",
+      "size": 14899
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-1.log",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-1.log",
+      "sha256": "adfd52cac7e9af44dedc4880ae6c5ad8825bce1613ca891703a83719eda0c98f",
+      "size": 903
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-2-child.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-2-child.json",
+      "sha256": "2a3b1a8d1efa3378a56d6818d9b7f01370e8851b62d3bf02b890d8466722e6c9",
+      "size": 1625
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-2-proof.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-2-proof.json",
+      "sha256": "4c94e79581a7bebf0c77cb81d36097dec18d93bd8808a2c2fe845c0249a1637e",
+      "size": 611
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-2-tests.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-2-tests.json",
+      "sha256": "49a33e34a01265f96ed23944442ffe56c1fff24199a6c9a1770ba16da3c3c2a1",
+      "size": 14894
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-2.log",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-2.log",
+      "sha256": "0103ed8da317c0b59d51fb4a7576807fdf3f2ba77fe556fe8a915af247371f10",
+      "size": 1289
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/final.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/final.json",
+      "sha256": "d75710093ad4fa70284495f230debf428661dcb77fee87ff7172bb78cb8b976d",
+      "size": 7903
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/list-child.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/list-child.json",
+      "sha256": "c0f4705a8828bf4f7cf07edd342608831325d56ec8e13e40e1606c5366c17d8f",
+      "size": 1769
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/list.log",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/list.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/public-native-render.test.ts",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/public-native-render.test.ts",
+      "sha256": "b52122ae46cfb91e3bf8af4cbf1e7149900674ac4169f9191536f30439a3ebea",
+      "size": 61321
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/start.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/start.json",
+      "sha256": "f4eeefc25226865066bab3281cec42f40b75345c12a64674b0d75d28e4f6d3b2",
+      "size": 2132
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/list/vitest.config.mts",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/list/vitest.config.mts",
+      "sha256": "c2a5999cb840aa606a39edf5ae4b93d6ce40bcbec64918c37a4f7711b92ba1c3",
+      "size": 1140
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-0/vitest.config.mts",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-0/vitest.config.mts",
+      "sha256": "80aaf13634c44500d8830ef6f07670a22fddd41e2c9fd6bf25902d5aded2119e",
+      "size": 1144
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-1/vitest.config.mts",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-1/vitest.config.mts",
+      "sha256": "752e1e25d9186217cb8b6ec90a5ee0b249ddaddc69b8bf136fb06ed34d6271d9",
+      "size": 1144
+    },
+    {
+      "originalPath": "/private/tmp/t1252p-E5iiqj/case-2/vitest.config.mts",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/raw/case-2/vitest.config.mts",
+      "sha256": "d9c346e5a3e95da9745471a0ecb1d66d8c558ff9263db9f61400d5dcf89f0a15",
+      "size": 1144
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/launch.cjs",
+      "sha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+      "size": 10875
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/prepare.cjs",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/prepare.cjs",
+      "sha256": "963e08cd5ea8e52dd482490ea8bb34c420e381da94ccd9a20e6abf60cb5cba9f",
+      "size": 6880
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/budget.cjs",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/budget.cjs",
+      "sha256": "6d69a3f2799c3a00730f72bcbe5a59d91eb94c9fad6a2313c6cd916a57a5c8e1",
+      "size": 1431
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/copy-source.cjs",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/copy-source.cjs",
+      "sha256": "2274e942f735e2c517e7dc635004a0694956a9ea69b85d611f4e07c221e05b18",
+      "size": 3488
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/input-binding.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/input-binding.json",
+      "sha256": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3",
+      "size": 27300514
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/HANDOFF.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/HANDOFF.json",
+      "sha256": "5367f6c5b03466fdb0b49f69aac24f6cc59af1eb46f863b3f89dbb367861bb26",
+      "size": 3243
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/generated/public-native-render.test.ts",
+      "sha256": "b52122ae46cfb91e3bf8af4cbf1e7149900674ac4169f9191536f30439a3ebea",
+      "size": 61321
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/generated/copy-proof.json",
+      "sha256": "3997609ee28cc64e144f4a8d03f491ba471ad6a1a755d18308017136a7aa73e2",
+      "size": 9243
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/MINIMUM_PREPARE_ONLY.diff",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/MINIMUM_PREPARE_ONLY.diff",
+      "sha256": "9f7f4990eb454c718fda681b926fe3af8aa1859ccca0c5a97ac1bca23fb6d9b9",
+      "size": 4237
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/MINIMUM_FRESH_SEAL_DELTA.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/runtime-tool/MINIMUM_FRESH_SEAL_DELTA.json",
+      "sha256": "2a0c6013f34bb17fce45d2d5860b8a92552e4d3103fc895abfbc0e56f6c33b10",
+      "size": 13117
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_SOURCE_REVIEW.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/reviews/INDEPENDENT_MINIMUM_DELAY_SOURCE_REVIEW.json",
+      "sha256": "55e04e7ee339c0ecd37b5c472b998e1c69661bcfb0015772cc8db31951a35f0d",
+      "size": 5831
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/ROOT_MINIMUM_DELAY_SOURCE_APPROVED_APPLICATION.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/reviews/ROOT_MINIMUM_DELAY_SOURCE_APPROVED_APPLICATION.json",
+      "sha256": "6019e72e0049b2b491fdd7a44ab50d5f7b5873012ff8c5d4141819592f6ff5ad",
+      "size": 749
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/INDEPENDENT_MINIMUM_PUBLIC_RUNTIME_TOOL_REVIEW.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/reviews/INDEPENDENT_MINIMUM_PUBLIC_RUNTIME_TOOL_REVIEW.json",
+      "sha256": "b61317388deba05425d587f4cfc11f04ab4fe61fbf940c0a84651e57ed4defa0",
+      "size": 4050
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/INDEPENDENT_MINIMUM_PUBLIC_FULL_INPUT_RECHECK.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/reviews/INDEPENDENT_MINIMUM_PUBLIC_FULL_INPUT_RECHECK.json",
+      "sha256": "45cca187c9ef27d8e361a35b752a96a5fd4bf14d2a5265cda2f80d91e923a7ae",
+      "size": 4940
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/ROOT_MINIMUM_PUBLIC_FRESH_RUNTIME_REVIEW.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/reviews/ROOT_MINIMUM_PUBLIC_FRESH_RUNTIME_REVIEW.json",
+      "sha256": "07c3be8899a6e8a425f616f4e157efdbc50385b5ed4b3047123962092c859ffa",
+      "size": 1421
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/ROOT_MINIMUM_PUBLIC_FRESH_FULL_INPUT_RECHECK.json",
+      "preservedPath": "docs/verification/t1252/actual-public-three-body-green/reviews/ROOT_MINIMUM_PUBLIC_FRESH_FULL_INPUT_RECHECK.json",
+      "sha256": "0a3e2207bae2f0c2410b96de963fa6c26863c517b53f4717f1ade2ee14865ef0",
+      "size": 759
+    }
+  ],
+  "earlierCollectionFailAndInterruptedRenderFailPreserved": true,
+  "nativeBoundary": "b88 headless真实Rust fixture；非App GUI/Windows",
+  "renderBoundary": "真实离线Chromium PNG/PDF各330s以上合法stage累计，真实输出MIME/hash/像素/正文断言；本协议test未把返回bytes保存成截图，后续人看浏览器截图仍pending",
+  "officialModel": false,
+  "App": false,
+  "Windows": false,
+  "wholeT1246Passed": false
+}

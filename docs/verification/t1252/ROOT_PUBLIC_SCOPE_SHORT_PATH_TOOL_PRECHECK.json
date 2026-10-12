@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-12T01:03:05.788722+00:00",
+  "toolSha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+  "bindingSha256": "978bd84566b88c8512cf5e75ceed60fc034775207dc99f3cbd4774a5822d3360",
+  "handoffSha256": "3b74aedce407291d6181f5a76c63462909e3f499beb2d2974103e1797da806df",
+  "diffFullRead": true,
+  "actualOnlyInputDelta": [
+    {
+      "kind": "inputs",
+      "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "before": {
+        "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+        "sha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9"
+      },
+      "after": {
+        "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+        "sha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af"
+      }
+    }
+  ],
+  "allOtherArraysAndBudgetAndGeneratorUnchanged": true,
+  "handoffFileHashesChecked": 12,
+  "actualHashDrift": [],
+  "actualStaticFinalIncludeAndSocketProof": "d5a9e4da24902bbf5c6c4e005fc30548359c7b40c632b26b652ee80f8e60cc63",
+  "actualOriginalRustSocketConsumerRead": "frontend/src-tauri/src/workbench/ipc.rs:406-424",
+  "runtimePermission": false,
+  "oldFirstCollectionFailedActualBodyCount": 0,
+  "staticSocketRiskNotActualNativeFailure": true
+}

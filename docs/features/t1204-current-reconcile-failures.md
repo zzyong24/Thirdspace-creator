@@ -30,3 +30,7 @@ LED052当前总命令没带原T1198所需隔离PG变量，另原归档入口显�
 
 
 最终完整reconcile-stable-final.txt实际exit1、25ERROR/0WARN：backlog-health1、旧review19、LED052/018/057/053四项，以及阶段记录日期陈旧1项。日期是本轮控制面问题，已更新为真实2026-10-11；manifest-date-recheck.txt重新执行原日期护栏exit0。没有再签完整24ERROR回执；其余24项按本次完整错误清单保留给T1204。完整执行中LED014/042/047/054/058/059/061均当场OK，相关产品回归不再报错。记录更新与测试器清理之后未改产品源码。
+
+2026-10-12 T1246稳定集成树当场完整非concise对账：session94775实际EOF1；pmem exit0/7838ms，reconcile exit1/1412051ms，两child真实closed/group0/signals[]。完整原档案与23项列表见docs/verification/t1246/round-2/control-close-94775/；RESULT_AND_PRIOR_COMPARISON.json SHAd6709a075f064878c1a65dd6a79461bdcf08f22e0b11cfbfd626308c2cb2ac71。23条原文均逐字存在于T1238原reconcile-stable-final25条中；本轮不再报告旧阶段日期和LED053两项，不改旧25回执。当前保留backlog-health RUNAWAY1、19项旧reviewreceipt与LED052/018/057三项；底层命令被原reconcile stdio ignore隐藏，三项真实前置/当前源进一步独核，不能据同错误标签断言业务全绿。T1171保留看板容量责任，T1204继续上述历史对账责任，T1246实际8组超时/边界/孤儿/精确来源审计通过不抵销该全局失败；本地冻结打包仍只走原基本预检，不把本记录当公开发布批准。
+
+2026-10-12当前前置独核：LED052实际control cleanEnv删除原两PG URL，原wrapper在spawn前拒绝。393f及owned-postgres.ts明确拒55422，不能借外来55422或拼分散startup30/lease4/ledger25同SHA绿为原同runPASS，独评25c9ccdf保留。LED018/057 observer原PATH缺Cargo，当前二进制/tar/lib资源与首轮成功同SHA；补全PATH后唯一原两完整检查78569当场155Vitest/17Rust/15no-default Rust全部PASS，源码/资源beforeafter一致、两child0闭合，详细原档案docs/verification/t1246/round-2/two-led-leaf-78569。原94775原23及旧25不改、全局仍失败，Windows/App原生未验。

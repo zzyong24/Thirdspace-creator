@@ -1,0 +1,129 @@
+{
+  "scope": "原三body真实HTTP观察，非fixture修复/产品绿/E2E",
+  "nonce": "b18407e4e57b91e513a7060243da69d5",
+  "tests": {
+    "pass": 0,
+    "fail": 3,
+    "total": 3
+  },
+  "originalFailure": "三例均Unexpected token 本，原JSON.parse仍拒真实clip notice；没有改原maxCalls/6,5,4请求期望/采纳断言",
+  "sourceUnchanged": true,
+  "code": 1,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "budgetExhausted": false,
+  "elapsedMs": 22067,
+  "shapes": {
+    "20": [
+      {
+        "request": 3,
+        "toolPosition": 1,
+        "headChars": 16000,
+        "tailChars": 8000,
+        "visibleArrayClosed": true,
+        "visibleArrayCount": 1,
+        "arrayBytes": 36215,
+        "arraySha256": "09e20f5231b75e8b6c5859b0a7343ddcdd9079e1dc61b13eb738a880ee9f37aa",
+        "identityCount": 1,
+        "identityConsistent": true,
+        "pagingCount": 1,
+        "paging": {
+          "offset": 0,
+          "nextOffset": 12000,
+          "totalLength": 14745,
+          "truncated": true
+        },
+        "body": [
+          {
+            "textChars": 12000,
+            "textSha256": "620097dc184df740c175d3fad4a9e4c8965f08ad27a7097ef31cccc57fa4b275",
+            "hasFirstFact": true,
+            "hasLastFact": false,
+            "sourceIsOriginal": true,
+            "entityPrefix": true,
+            "snapshotHash64": true
+          }
+        ],
+        "wholeJsonParseable": false
+      }
+    ],
+    "10": [
+      {
+        "request": 3,
+        "toolPosition": 1,
+        "headChars": 16000,
+        "tailChars": 8000,
+        "visibleArrayClosed": true,
+        "visibleArrayCount": 1,
+        "arrayBytes": 36215,
+        "arraySha256": "25ea51ec62e72b70aea7466c7a0025c900e7dae26d075d2f4f9b0635f8b94e01",
+        "identityCount": 1,
+        "identityConsistent": true,
+        "pagingCount": 1,
+        "paging": {
+          "offset": 0,
+          "nextOffset": 12000,
+          "totalLength": 14745,
+          "truncated": true
+        },
+        "body": [
+          {
+            "textChars": 12000,
+            "textSha256": "620097dc184df740c175d3fad4a9e4c8965f08ad27a7097ef31cccc57fa4b275",
+            "hasFirstFact": true,
+            "hasLastFact": false,
+            "sourceIsOriginal": true,
+            "entityPrefix": true,
+            "snapshotHash64": true
+          }
+        ],
+        "wholeJsonParseable": false
+      }
+    ],
+    "8": [
+      {
+        "request": 3,
+        "toolPosition": 1,
+        "headChars": 16000,
+        "tailChars": 8000,
+        "visibleArrayClosed": true,
+        "visibleArrayCount": 1,
+        "arrayBytes": 36215,
+        "arraySha256": "46fc81519982622b63ab3d738519d63f567b7d617d068983dc0ac53305fed796",
+        "identityCount": 1,
+        "identityConsistent": true,
+        "pagingCount": 1,
+        "paging": {
+          "offset": 0,
+          "nextOffset": 12000,
+          "totalLength": 14745,
+          "truncated": true
+        },
+        "body": [
+          {
+            "textChars": 12000,
+            "textSha256": "620097dc184df740c175d3fad4a9e4c8965f08ad27a7097ef31cccc57fa4b275",
+            "hasFirstFact": true,
+            "hasLastFact": false,
+            "sourceIsOriginal": true,
+            "entityPrefix": true,
+            "snapshotHash64": true
+          }
+        ],
+        "wholeJsonParseable": false
+      }
+    ]
+  },
+  "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b029-http-shape-evidence/evidence-b18407e4e57b91e513a7060243da69d5",
+  "actualRawTraceHashes": {
+    "20": "ce39695b4b9f9b92405cacc36919c3524e4127c499b0d60db03e47a0e3ec36f9",
+    "10": "2dca498b298c75f48640aeb002571e1803efce325c016e66890116e7fc4ce7b1",
+    "8": "7f10d0cd32bb6f72e5d881e96010b94895c5acb11b65dbce201de118d37165af"
+  },
+  "limits": [
+    "只观察第三request的首窗，尚未证明第二窗/完整fullText/采纳结果",
+    "实际evidence[]首窗12000字符闭合，唯一head evidenceRef/snapshotId相等、tail nextOffset12000/totalLength14745可见；第二份data.text被clip",
+    "第三方依赖链接仅packageSHA固定，未声称完全私有dependency闭包",
+    "本轮temporary原失败保留，原源未修改"
+  ]
+}

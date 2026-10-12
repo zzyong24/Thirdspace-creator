@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-11T21:03:23.646Z",
+  "toolSha256": "09c4f18a93f8fba44b7bdfcb8e40403dbcdc97cba97f45d299b046900496c59c",
+  "cases": [
+    {
+      "id": "missing-independent-review",
+      "exitCode": 1,
+      "expectedError": "EXACT_TOOL_INDEPENDENT_REVIEW_REQUIRED",
+      "actualError": "Error: EXACT_TOOL_INDEPENDENT_REVIEW_REQUIRED",
+      "status": "passed",
+      "stdout": ""
+    },
+    {
+      "id": "wrong-tool-sha",
+      "exitCode": 1,
+      "expectedError": "EXACT_TOOL_INDEPENDENT_REVIEW_REQUIRED",
+      "actualError": "Error: EXACT_TOOL_INDEPENDENT_REVIEW_REQUIRED",
+      "status": "passed",
+      "stdout": ""
+    },
+    {
+      "id": "wrong-input-binding-sha",
+      "exitCode": 1,
+      "expectedError": "EXACT_REVIEWED_INPUT_BINDING_REQUIRED",
+      "actualError": "Error: EXACT_REVIEWED_INPUT_BINDING_REQUIRED",
+      "status": "passed",
+      "stdout": ""
+    }
+  ],
+  "total": 3,
+  "passed": 3,
+  "nodeWrapperSubprocesses": 3,
+  "rustExecuted": false,
+  "noApp": true,
+  "noModel": true,
+  "noPG": true
+}

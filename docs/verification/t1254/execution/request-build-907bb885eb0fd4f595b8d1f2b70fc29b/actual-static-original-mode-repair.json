@@ -1,0 +1,26 @@
+{
+  "repairs": [
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+      "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+      "inode": 351268570,
+      "uid": 501,
+      "oldMode": 420,
+      "restoredOriginalMode": 436
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+      "inode": 351268569,
+      "uid": 501,
+      "oldMode": 420,
+      "restoredOriginalMode": 436
+    }
+  ],
+  "continuedFrom": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-14bcbffb7152bdb2b58cd5a252c2d27e",
+  "afterOriginalTwoRealRed": true,
+  "previousFourV2BytesUnchanged": true,
+  "graphScriptAlreadyAppliedAndUnchanged": true,
+  "noOldMissingReceiptsCreated": true,
+  "noProductSourceChanged": true
+}

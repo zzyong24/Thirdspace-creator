@@ -1,0 +1,18 @@
+{
+  "program": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web/node_modules/vitest/vitest.mjs",
+    "run",
+    "src/native-lease.test.ts",
+    "--retry=0",
+    "--testTimeout=180000",
+    "--hookTimeout=180000",
+    "--teardownTimeout=120000",
+    "--reporter=json",
+    "--outputFile=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/reports/native-original-lease4-results.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web"
+}

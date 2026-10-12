@@ -1,0 +1,29 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T04:54:04.804853+00:00",
+  "scope": "仅当前只读元数据及原字节复核，不代最终manifest或actualownedcollector",
+  "currentBindingSha256": "25e3bade794bb3e5da1a5d4ea6f9a642628604e6c9c4b8f8820fc008ca57f15d",
+  "manifestSha256": "074af906fd38110e7c2e1dd9d8caf151a6e3e18d50f76ad6961ed0ccc5cc7110",
+  "checkedRows": 1580,
+  "readBytes": 1233026557,
+  "elapsedMs": 1164.572292007506,
+  "drift": [],
+  "roots": 94,
+  "rootRoleContexts": 97,
+  "nonSystemFiles": 128,
+  "links": 50,
+  "nonSystemEdges": 253,
+  "OSCacheBoundaryEdges": 851,
+  "metadataContexts": 194,
+  "actualUniqueOtoolCommands": 131,
+  "rawCommandsCode0ClosedAndParsedToAll194Contexts": true,
+  "firstExistingRpathAllSame": true,
+  "actualCallerObserved": false,
+  "actualDyldLoadClaimed": false,
+  "ownedCopyCollectorExecuted": false,
+  "rootCandidateExecutionByReviewer": false,
+  "notes": [
+    "原readonly producer总900s未覆盖131×120s串行完整槽；当场只读元数据EOF0事实保留，不把其快完成等同LED053预算充分。",
+    "当前browser6816 staticcollector900k/prepare3.6M亦未覆盖131串行命令，BT004待窄修。"
+  ]
+}

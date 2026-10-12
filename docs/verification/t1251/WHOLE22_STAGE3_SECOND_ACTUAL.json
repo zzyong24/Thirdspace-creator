@@ -1,0 +1,55 @@
+{
+  "task": "T-1251",
+  "scope": "真实隔离Worker/HTTP/PGlite原22文件二轮；不是官方模型/安装App验收",
+  "evidence": "docs/verification/t1251/execution/whole-stage1-597f1579e486a98f44818cae45047d46",
+  "actualCounts": {
+    "numTotalTests": 22,
+    "numPassedTests": 19,
+    "numFailedTests": 3,
+    "numPendingTests": 0
+  },
+  "childExitCode": 1,
+  "elapsedMs": 63660.343958000005,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "signals": [],
+  "sourceUnchanged": true,
+  "sourceDigest": "c6d6a2f14eb7272a81556fcf65763fa63168a77f40fbfa6e8aa2b25f6f8f6fb0",
+  "ownedRootCleaned": true,
+  "failures": [
+    {
+      "name": "同一真实 Worker 内部结构化生成：badOutput",
+      "status": "failed",
+      "failureMessages": [
+        "ReferenceError: requests is not defined\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:197:1006\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "name": "同一真实 Worker 内部结构化生成：crashMixed",
+      "status": "failed",
+      "failureMessages": [
+        "ReferenceError: requests is not defined\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:197:1006\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "name": "同一真实 Worker 内部结构化生成：diagnosisEmpty",
+      "status": "failed",
+      "failureMessages": [
+        "ReferenceError: requests is not defined\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:197:1006\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    }
+  ],
+  "finiteCase": {
+    "name": "真实enqueue从出生冻结有限结构化生成期限，原Worker到期不续期/重发/写正式候选",
+    "actualStatus": "passed",
+    "verified": "公共真实ai owner+enqueue冻结180s期限；实际HTTP1开始后注入clock越原期限，原Worker返回failed/EXECUTION_DEADLINE，原call unknown，原ID/budget/deadline不改，无重发/正式候选，业务owner状态不伪改。",
+    "limitation": "受控generic model.structured生成；不称不存在的finite chat.submit功能或AI业务正式成功链。"
+  },
+  "lastHttpMessages": {
+    "captured": false,
+    "reason": "finally references requests outside try lexical scope; actual ReferenceError preserved"
+  },
+  "allAssertionsChanged": false,
+  "previous18Pass4FailPreserved": "docs/verification/t1251/WHOLE22_FIRST_ACTUAL.json",
+  "nextCandidateNotApplied": "/tmp/t1251-candidate/chat-generation-worker.integration-observation-scope.test.ts"
+}

@@ -1,0 +1,4 @@
+{
+  "message": "T1254_INSTALLED_IMPLEMENTATION_OR_FROZEN_SOURCE_DRIFT:/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts",
+  "stack": "Error: T1254_INSTALLED_IMPLEMENTATION_OR_FROZEN_SOURCE_DRIFT:/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts\n    at guardInstalled (/private/tmp/t1254-readonly/run-owned-doocs-request-and-build-v12.cjs:24:675)\n    at binding (/private/tmp/t1254-readonly/run-owned-doocs-request-and-build-v12.cjs:27:48)\n    at main (/private/tmp/t1254-readonly/run-owned-doocs-request-and-build-v12.cjs:52:211)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+}

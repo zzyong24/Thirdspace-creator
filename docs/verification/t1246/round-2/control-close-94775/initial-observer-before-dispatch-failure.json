@@ -1,0 +1,11 @@
+{
+  "classification": "finite-result-observation-of-original-control-commands-not-original-unbounded-consumer-timeout",
+  "startedOnceMonotonic": 45.63525,
+  "totalMs": 8520000,
+  "elapsedMs": 5.656083000000002,
+  "records": [],
+  "error": "Error: COMPLETE_CONTROL_FUTURE_UNAVAILABLE",
+  "noApp": true,
+  "noPublish": true,
+  "originalControlBodiesUnchanged": true
+}

@@ -1,0 +1,26 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "review": "静态producer/strict consumer因果确认，逐例首次stack和复测仍待；不称App验收。",
+  "sources": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/platform-account/account-binding.service.ts",
+      "sha256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/contract/src/operations/platform-accounts.ts",
+      "sha256": "9850f85ea46942297d31223d4fdd3180434b0a75aa3668a0bab8b01ca258825f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/contract/src/resources/platform-accounts.ts",
+      "sha256": "dc9510c917245cc0f71d9e91783fb166d9a68444de05c9baf80ee576dead2dab"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+      "sha256": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8"
+    }
+  ]
+}

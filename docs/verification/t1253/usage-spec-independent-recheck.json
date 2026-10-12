@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "独立核3cb9dd0b仅FR-USAGE窄澄清与15个真实消费者/原fixture。Pi requires_reconciliation在reserve/start/provider前停止，Worker未committing且未取消时原catch共用commitResult发送unknown_result失败通报；严格outcome联合与实际dispatcher区分成功候选owner和failure状态端口。保原成功分支全断言，缺usage的原null token/检查点/0新增模型动作/0formal保护不变，raw失败IPC不能被过滤或推undefined正文。findings=[]，仅合同recheck，不签后续test或运行。",
+  "findings": []
+}

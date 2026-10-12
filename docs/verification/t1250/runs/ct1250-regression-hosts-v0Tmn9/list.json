@@ -1,0 +1,122 @@
+[
+  {
+    "name": "only a desktop Mac with private socket advertises browser tools",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "浏览器原生调用等待期间任务读取仍可完成，不占用 PGlite 事务通道",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "截图只写可信媒体引用，回执和 Pi 工具目录不含原始 base64",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "拒绝错 MIME截图",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "拒绝损坏截图",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "拒绝过大截图",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "native open failure releases the claimed profile only after stop proof",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "a new host only reconciles a stopped old owner before reusing the same physical profile",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "reconciles a cancelled task without waiting for another task to claim its profile",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "waits for in-flight profile reconciliation before disposing the database owner",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "open obtains the Rust physical profile and binds it to the current DB task before native dispatch",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "close waits for a transient native stop proof before releasing its physical profile",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "close reports unknown and keeps the lease when native stop cannot be proven",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "browser.act 的实际参数缺失在原生派发前明确拒绝并给出修复说明",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "七类合法 action 及 timeout_ms 经任务租约完整传至原生宿主",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "darwin 私有宿主把真实任务文件登记为可回读的 HTML 版本，不向模型泄露存储键",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-host.test.ts"
+  },
+  {
+    "name": "win32 私有宿主把真实任务文件登记为可回读的 HTML 版本，不向模型泄露存储键",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-host.test.ts"
+  },
+  {
+    "name": "并发任务同路径、重放与下一版本诊断均绑定原 hash；诊断回读失败仍保留登记成功",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-host.test.ts"
+  },
+  {
+    "name": "T1250 同宿主两dispatch取消隔离：原signal贯穿文件页，取消任务不登记Blob",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-host.test.ts"
+  },
+  {
+    "name": "桌面任务文件宿主 > 没有私有桌面通道时目录不向模型开放，读写副作用分别冻结",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "桌面任务文件宿主 > Windows 私有通道只开放文件能力，命令继续拒绝",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "桌面任务文件宿主 > 只把宿主上下文中的 task/fence 与经过验证的相对路径交给原生端口",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "桌面任务文件宿主 > darwin 列举任务根目录接受点路径，但不开放绝对路径或父目录",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "桌面任务文件宿主 > win32 列举任务根目录接受点路径，但不开放绝对路径或父目录",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "桌面任务文件宿主 > 回读文本与冲突版本有确定结果，未知写入保留原 operationId 等待对账",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "Mac 受控命令能力 > 目录分别声明启动、查询、取消；只把原任务中的目标 operation ID 交给原生端口",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "Mac 受控命令能力 > 启动使用 argv 与已批准 runtime，输出分页保留游标，取消只引用本任务原操作",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "Mac 受控命令能力 > 缺失的随包运行时明确失败；已分发但断联的启动保持待对账",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  },
+  {
+    "name": "T1250 私有文件和命令端口传原dispatch signal，原operation/action不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  }
+]

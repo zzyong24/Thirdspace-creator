@@ -1,0 +1,30 @@
+{
+  "exitCode": 1,
+  "durationMs": 49893,
+  "outerMs": 9000000,
+  "cleanupMs": 180000,
+  "before": {
+    "contract/src/resources/assistant-system.ts": "81e4606d8de01a300df955e7f344c4f36838db278a8fd8aaa5e7328cad3ac178",
+    "backend/src/modules/ai-runtime/chat-tools.ts": "8b691e3e3a1732bd7af8147658c35f5d96b2e9be20d3c4e56cc605ace8157f8d",
+    "backend/src/modules/ai-runtime/chat-system-tool-host.ts": "599d8ca89232ef7214afc3d2dc2fa939d14de9cc3beac4dbdff34520b2e7061f",
+    "backend/src/application/chat/assistant-system-root.ts": "831d4f007d6b11249ab1154e9b6dbd942927d1f6c87214cf4f5408fbe65305b9",
+    "backend/src/modules/ai/chat-proposal-source.service.ts": "b710ae2442eb8532a33d7cdb4bf12b1cb68b9f5ba42a718b93c7de8b9adbc1f4",
+    "contract/src/assistant-system.test.ts": "0352791d5e31e9e3e62228458f2c28a782507a421f8f42cceb27dc3eb71cd4bf",
+    "backend/src/modules/ai-runtime/chat-tools.test.ts": "501761fd45d032f461af6ecbee3d06a1abd1f7dc2f929924dc5e5f2589e9e185",
+    "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts": "39b3fb3feafe24f75b7cef05ac19c99ba5608fe0ab91ed3d2bb27684275c7747",
+    "backend/src/application/chat/assistant-system-root.integration.test.ts": "0fc7124faff9c026b38c69e9abd2795f5690a6ccc4a8659eeb14a406d0833727",
+    "backend/src/modules/ai/chat-proposal-source.service.test.ts": "fde056441c4ab3f3c357d37419c402bd33e1227993fdd6091bdfb40c00b8b9e5"
+  },
+  "after": {
+    "contract/src/resources/assistant-system.ts": "81e4606d8de01a300df955e7f344c4f36838db278a8fd8aaa5e7328cad3ac178",
+    "backend/src/modules/ai-runtime/chat-tools.ts": "8b691e3e3a1732bd7af8147658c35f5d96b2e9be20d3c4e56cc605ace8157f8d",
+    "backend/src/modules/ai-runtime/chat-system-tool-host.ts": "599d8ca89232ef7214afc3d2dc2fa939d14de9cc3beac4dbdff34520b2e7061f",
+    "backend/src/application/chat/assistant-system-root.ts": "831d4f007d6b11249ab1154e9b6dbd942927d1f6c87214cf4f5408fbe65305b9",
+    "backend/src/modules/ai/chat-proposal-source.service.ts": "b710ae2442eb8532a33d7cdb4bf12b1cb68b9f5ba42a718b93c7de8b9adbc1f4",
+    "contract/src/assistant-system.test.ts": "0352791d5e31e9e3e62228458f2c28a782507a421f8f42cceb27dc3eb71cd4bf",
+    "backend/src/modules/ai-runtime/chat-tools.test.ts": "501761fd45d032f461af6ecbee3d06a1abd1f7dc2f929924dc5e5f2589e9e185",
+    "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts": "39b3fb3feafe24f75b7cef05ac19c99ba5608fe0ab91ed3d2bb27684275c7747",
+    "backend/src/application/chat/assistant-system-root.integration.test.ts": "0fc7124faff9c026b38c69e9abd2795f5690a6ccc4a8659eeb14a406d0833727",
+    "backend/src/modules/ai/chat-proposal-source.service.test.ts": "fde056441c4ab3f3c357d37419c402bd33e1227993fdd6091bdfb40c00b8b9e5"
+  }
+}

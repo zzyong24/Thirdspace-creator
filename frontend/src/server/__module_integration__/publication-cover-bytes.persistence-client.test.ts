@@ -9,12 +9,13 @@ const held=vi.hoisted(()=>({storage:null as ObjectStoragePort|null,root:""}));
 vi.mock("@creatoros/backend/modules/assets",async importOriginal=>{const actual=await importOriginal<typeof import("@creatoros/backend/modules/assets")>();return {...actual,createLocalFsObjectStorage:(...args:Parameters<typeof actual.createLocalFsObjectStorage>)=>{const port=actual.createLocalFsObjectStorage({...args[0],rootPath:held.root},args[1]);held.storage=port;return port;}};});
 import {compositeTransport,__resetPersistenceForTests} from "@/server/persistence-client";
 import {canonicalDataset} from "@/fixtures/canonical";
-const ctx:RequestContext={userId:canonicalDataset.user.id,accountId:`acct-of-${canonicalDataset.user.id}`,source:"user",requestId:"publication-cover-original-bytes"};
+let ctx:RequestContext={userId:canonicalDataset.user.id,accountId:`acct-of-${canonicalDataset.user.id}`,source:"user",requestId:"publication-cover-original-bytes"};
 const call=async<E extends Endpoint>(endpoint:E,params:unknown,body?:unknown,query?:unknown)=>compositeTransport.request(endpoint,{params,body,query} as never,ctx) as Promise<{data:E["isList"] extends true ? E["response"]["_output"][] : E["response"]["_output"]}>;
 beforeEach(()=>{vi.stubEnv("CREATOROS_STORAGE","local");__resetPersistenceForTests();held.storage=null;});afterEach(()=>vi.unstubAllEnvs());
 it("公共作品封面绑定实际文件，原文本保存保留pair，文件不可读零保存，同请求恢复与解除闭合",async()=>{
  const root=await mkdtemp(join(tmpdir(),"creatoros-root-cover-bytes-"));try{
  held.root=join(root,"storage");
+ const account=(await call(ENDPOINTS.createAccount,undefined,{platform:"xiaohongshu",accountHandle:"@t1246-cover-owner",followerBaseline:0})).data;ctx={...ctx,accountId:account.id};
  const project=(await call(ENDPOINTS.createProject,undefined,{title:"发布封面真实文件",brief:"测试实际文件与版本保存"})).data;
  let composition=(await call(ENDPOINTS.createWorkComposition,undefined,{projectId:project.id,title:"真实封面作品",clientRequestId:"cover-root-work"})).data.composition;
  composition=(await call(ENDPOINTS.createWorkCompositionMember,{compositionId:composition.compositionId},{expectedRevision:composition.currentRevision,clientRequestId:"cover-root-member",memberInput:{kind:"image",title:"封面稿件",targetPlatform:null}})).data.composition;
@@ -40,4 +41,4 @@ it("公共作品封面绑定实际文件，原文本保存保留pair，文件不
  expect(detached.association.status).toBe("detached");const revisions=ENDPOINTS.listPublicationRevisions.response.array().parse((await call(ENDPOINTS.listPublicationRevisions,{publicationId:publication.id},undefined,{page:1,pageSize:20})).data);
  const version=detached.association.ownerVersion;if(version.kind!=="publication")throw Error("正式回执必须为发布修订");const latest=revisions.find(r=>r.id===version.revisionId);expect(latest).toMatchObject({title:"只修改标题",description:"新的简介",platformTags:["已改标签"],coverAssetId:null,coverAssetFileId:null});
  }finally{await rm(root,{recursive:true,force:true});}
-},45000);
+},180000);

@@ -1,0 +1,5127 @@
+{
+  "task": "T-1246",
+  "observedAt": "2026-10-11T18:42:52.855Z",
+  "note": "追加更正：先前诊断中的405/406为错误推算，实际冻结候选424、获批T1097新增readWorkCandidateSource后425。首轮43FAIL/错误修订复测的42FAIL均保留，不以本库存更改原运行结果。",
+  "records": [
+    {
+      "workspace": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+      "exitCode": 0,
+      "keyCount": 424,
+      "uniqueOperationCount": 424,
+      "keys": [
+        "acceptProjectScriptCandidate",
+        "addAssetFile",
+        "adoptArticleCandidate",
+        "adoptAssistantAction",
+        "adoptCanvasCreate",
+        "adoptCanvasMaterial",
+        "adoptGraphicPostTextCandidate",
+        "adoptMomentsCandidate",
+        "adoptProductionEditorConversion",
+        "adoptProductionEditorSource",
+        "adoptProductionEditorTranscript",
+        "adoptProductionRoughCut",
+        "adoptResult",
+        "adoptRuleSuggestion",
+        "applyAccountGroupMigration",
+        "applyCanvasProposal",
+        "applyProductionEditor",
+        "applyScriptPatch",
+        "archiveAccount",
+        "archiveAccountGroup",
+        "archiveCanvas",
+        "archiveKnowledge",
+        "archiveProject",
+        "assignTags",
+        "attachProjectIntelligence",
+        "attachWorkCompositionMaterial",
+        "beginBind",
+        "bindWorkCompositionMember",
+        "bumpRubricVersion",
+        "cancelAccountBinding",
+        "cancelBind",
+        "cancelCollection",
+        "cancelTask",
+        "cancelWorkCompositionMemberReservation",
+        "clearBrowserSession",
+        "clearReportingPending",
+        "commandExecutionTasks",
+        "commandTranscribeExecutionTaskV1",
+        "commitPendingAsset",
+        "completeExport",
+        "completeReview",
+        "completeRun",
+        "completeUpload",
+        "confirmBind",
+        "confirmCanvasGeneration",
+        "confirmDiscovery",
+        "confirmExecutionTask",
+        "confirmIntelligenceTopic",
+        "confirmProductionEditingPlan",
+        "confirmTask",
+        "confirmWorkReview",
+        "convertOutput",
+        "createAITask",
+        "createAccount",
+        "createAccountGroup",
+        "createArticleVersion",
+        "createArtifact",
+        "createArtifactRelation",
+        "createArtifactVersion",
+        "createBenchmarkSource",
+        "createBundle",
+        "createCandidate",
+        "createCanvas",
+        "createConversation",
+        "createEntry",
+        "createExecutionTask",
+        "createFavoritesFolder",
+        "createGraphicPost",
+        "createGraphicPostVersion",
+        "createGroupEntry",
+        "createIntelligenceCollection",
+        "createIntelligenceSource",
+        "createKnowledge",
+        "createKnowledgeFolder",
+        "createKnowledgeRelation",
+        "createKnowledgeRevision",
+        "createLearning",
+        "createLearningApplication",
+        "createMaterialLink",
+        "createMessage",
+        "createMoments",
+        "createMomentsVersion",
+        "createOutput",
+        "createPrediction",
+        "createProductionEditorTranscript",
+        "createProductionExport",
+        "createProductionRoughCut",
+        "createProductionSegment",
+        "createProject",
+        "createPublication",
+        "createPublicationRevision",
+        "createResult",
+        "createReview",
+        "createReviewInsight",
+        "createReviewRule",
+        "createRubric",
+        "createRun",
+        "createScheduledJob",
+        "createStatement",
+        "createTag",
+        "createTask",
+        "createTrendSource",
+        "createUpload",
+        "createWorkComposition",
+        "createWorkCompositionMember",
+        "createWorkReview",
+        "deleteEntry",
+        "deleteIntelligenceCollection",
+        "deleteIntelligenceSource",
+        "deleteMaterialLink",
+        "deleteProject",
+        "deleteRedfox",
+        "deleteReviewRule",
+        "deleteTag",
+        "detachWorkCompositionMaterial",
+        "diagnoseComments",
+        "discardExecutionTask",
+        "dismissRuleSuggestion",
+        "enqueueIntelligenceProjectUpgrades",
+        "enqueueIntelligenceTranscripts",
+        "evaluateGate",
+        "evaluateLearning",
+        "exportProductionMaterials",
+        "exportPublicationVisualNote",
+        "generateArticleCandidate",
+        "generateCanvasNode",
+        "generateGraphicPostTextCandidate",
+        "generateMomentsCandidate",
+        "generateProjectScriptCandidate",
+        "generateResult",
+        "getAccount",
+        "getAccountBinding",
+        "getAccountCollectionPlanReadiness",
+        "getAccountGroup",
+        "getAccountGroupMigration",
+        "getArticle",
+        "getArticleCandidate",
+        "getArticleVersion",
+        "getArtifact",
+        "getAsset",
+        "getAssetFileDownloadUrl",
+        "getAssistantActionReceipt",
+        "getBundle",
+        "getCadence",
+        "getCadenceAttainment",
+        "getCandidate",
+        "getCanvas",
+        "getCanvasGenerationCapabilities",
+        "getCanvasGenerationMaterial",
+        "getCanvasNodePreview",
+        "getCollection",
+        "getDailyReport",
+        "getDashboard",
+        "getDownloadUrl",
+        "getExecutionTask",
+        "getGlobalSearch",
+        "getGraphicPost",
+        "getGraphicPostTextCandidate",
+        "getGraphicPostVersion",
+        "getGroupCadence",
+        "getGroupCadenceAttainment",
+        "getGroupOnboarding",
+        "getGroupOverview",
+        "getIntelligenceItem",
+        "getIntelligenceMigrationReport",
+        "getIntelligenceRun",
+        "getIntelligenceWorkspace",
+        "getJobRun",
+        "getKnowledge",
+        "getLatestScriptReview",
+        "getLearning",
+        "getMoments",
+        "getMomentsCandidate",
+        "getMomentsRequest",
+        "getMomentsVersion",
+        "getOnboarding",
+        "getOutput",
+        "getOutputConversion",
+        "getOutputProduction",
+        "getPlatformAccountCapabilities",
+        "getPositioningCenter",
+        "getPrediction",
+        "getPreferences",
+        "getProductionEditor",
+        "getProductionEditorConversion",
+        "getProductionEditorReceipt",
+        "getProductionEditorSource",
+        "getProductionEditorTranscript",
+        "getProductionEditorVersion",
+        "getProductionRoughCut",
+        "getProfile",
+        "getProject",
+        "getProjectAnalytics",
+        "getProjectIntelligence",
+        "getProjectOverview",
+        "getProjectTrafficSources",
+        "getPrompt",
+        "getPublication",
+        "getPublicationAnalytics",
+        "getRedfox",
+        "getReportingStatus",
+        "getResult",
+        "getReview",
+        "getRubric",
+        "getRun",
+        "getScheduledJob",
+        "getSearchFacets",
+        "getSettings",
+        "getStatement",
+        "getStorage",
+        "getTask",
+        "getTopicWorkspace",
+        "getWorkComposition",
+        "getWorkCompositionBasisVersion",
+        "getWorkCompositionCanvasContext",
+        "getWorkCompositionDependencies",
+        "getWorkCompositionMemberReservation",
+        "getWorkCompositionRequest",
+        "getWorkCompositionVersion",
+        "getWorkReview",
+        "getWorkReviewRequest",
+        "getWorkReviewStatus",
+        "importDouyinShareItem",
+        "inspectWorkbenchTask",
+        "inventoryIntelligenceMigration",
+        "linkSignalToCandidate",
+        "listAITasks",
+        "listAccountGroups",
+        "listAccounts",
+        "listActivity",
+        "listAllKnowledgeRelations",
+        "listArtifactVersions",
+        "listArtifacts",
+        "listAssetUsage",
+        "listAssets",
+        "listAudienceSignals",
+        "listBenchmarkSources",
+        "listBenchmarkWorks",
+        "listBundles",
+        "listCalendar",
+        "listCandidates",
+        "listCanvasNodeTasks",
+        "listCanvasProposals",
+        "listCanvases",
+        "listCapabilities",
+        "listChannelModelCredentials",
+        "listCommentFailures",
+        "listConversations",
+        "listCreativeCapabilities",
+        "listEntitiesForTag",
+        "listExecutionTasks",
+        "listFavoritesFolders",
+        "listGroupCalendar",
+        "listGroupResourceGrants",
+        "listIntelligenceCollectors",
+        "listIntelligenceFavoriteFolders",
+        "listIntelligenceItems",
+        "listIntelligenceRuns",
+        "listIntelligenceSources",
+        "listJobRunsByJob",
+        "listKnowledge",
+        "listKnowledgeFolders",
+        "listKnowledgeRelations",
+        "listKnowledgeRevisions",
+        "listLearnings",
+        "listMaterialLinks",
+        "listMessages",
+        "listModels",
+        "listMoments",
+        "listMomentsVersions",
+        "listNativeReports",
+        "listNotifications",
+        "listOutputs",
+        "listPredictions",
+        "listProductionEditorRenders",
+        "listProductionEditorVersions",
+        "listProjects",
+        "listPromptVersions",
+        "listPrompts",
+        "listPublicationComments",
+        "listPublicationRevisions",
+        "listPublications",
+        "listResults",
+        "listReviewInsights",
+        "listReviewRules",
+        "listReviews",
+        "listRuleSuggestions",
+        "listScheduledJobs",
+        "listSegments",
+        "listStages",
+        "listStatements",
+        "listTags",
+        "listTagsForEntity",
+        "listTaskResults",
+        "listTaskSteps",
+        "listTasks",
+        "listTopicAttributions",
+        "listTrendSources",
+        "listVisualTemplates",
+        "listWorkCompositionMaterials",
+        "listWorkCompositionVersions",
+        "listWorkCompositions",
+        "listWorkReviews",
+        "listWorkbenchArtifacts",
+        "listWorkbenchCapabilities",
+        "listWorks",
+        "lockPrediction",
+        "loginDouyin",
+        "markNotificationRead",
+        "moveKnowledge",
+        "openBrowserSessionLogin",
+        "overview",
+        "overviewTopics",
+        "patchCandidate",
+        "patchGroupOnboarding",
+        "patchLearning",
+        "patchOnboarding",
+        "patchOutput",
+        "patchPreferences",
+        "patchProfile",
+        "patchProject",
+        "patchReviewRule",
+        "patchTag",
+        "patchTask",
+        "patchTaskResultItems",
+        "prepareProductionEditorConversion",
+        "prepareProductionEditorSource",
+        "previewAccountGroupMigration",
+        "previewAccountGroupTransfer",
+        "previewAssetDelete",
+        "previewGroupResourceGrantRevoke",
+        "previewIntelligenceProfile",
+        "previewIntelligenceTopic",
+        "previewIntelligenceWeb",
+        "previewProductionEditor",
+        "promoteCandidate",
+        "putChannelModelCredential",
+        "putModel",
+        "putOutputProduction",
+        "putPrompt",
+        "putRedfox",
+        "putStorage",
+        "readMetrics",
+        "readWorkbenchArtifact",
+        "readWorkbenchEvents",
+        "readWorkbenchModelCallSummary",
+        "reconcileWorkbenchArtifact",
+        "reconcileWorkbenchFile",
+        "refreshDouyin",
+        "refreshProjectTrafficSources",
+        "register",
+        "registerPublishedPublication",
+        "removeAssignment",
+        "removeBenchmarkSource",
+        "removeFavoritesFolder",
+        "removeKnowledgeRelation",
+        "removeProductionEditingPlanBroll",
+        "removeTrendSource",
+        "removeVisualTemplate",
+        "renderProductionEditor",
+        "renderWorkbenchArtifact",
+        "replaceWorkCompositionMaterial",
+        "researchDiscovery",
+        "resetPositioningMaster",
+        "restoreAccountGroup",
+        "restoreArtifact",
+        "restoreAsset",
+        "restorePositioningMaster",
+        "restoreProductionEditor",
+        "retryComments",
+        "retryMomentsCandidate",
+        "retryProductionEditorSource",
+        "retryResult",
+        "revokeGroupResourceGrant",
+        "rollbackIntelligenceMigration",
+        "rollbackPrompt",
+        "runScheduledJobNow",
+        "saveCanvas",
+        "saveProductionEditor",
+        "saveTopicProposalFeedback",
+        "saveTopicWorkspace",
+        "saveVisualTemplate",
+        "saveWorkCompositionBasis",
+        "saveWorkCompositionSelection",
+        "searchAssets",
+        "selectWorkSource",
+        "setCalendarEntryTarget",
+        "setDiscoveryEvidence",
+        "setReportingConsent",
+        "setScheduledJobEnabled",
+        "startAccountBinding",
+        "startCollection",
+        "startDiscovery",
+        "startIntelligenceMigration",
+        "startIntelligenceRun",
+        "statusDouyin",
+        "suggestCalibrationRule",
+        "testModelConnection",
+        "throttleStatusDouyin",
+        "toggleBenchmarkSource",
+        "toggleFavorite",
+        "toggleFavoritesFolder",
+        "toggleTrendSource",
+        "transcribeBenchmarkWork",
+        "transcribeProjectWork",
+        "transferAccountGroupMember",
+        "transitionEntry",
+        "transitionOutputStage",
+        "transitionProjectStage",
+        "transitionPublication",
+        "trashAsset",
+        "triggerScriptReview",
+        "undoAccountGroupMigration",
+        "updateAccount",
+        "updateAccountGroup",
+        "updateDiscoveryAnswer",
+        "updateEntry",
+        "updateIntelligenceCollection",
+        "updateIntelligenceSource",
+        "updateScheduledJob",
+        "uploadManualIntelligenceTranscript",
+        "upsertCadence",
+        "upsertGroupCadence",
+        "upsertProfile"
+      ],
+      "entries": [
+        {
+          "id": "accountGroups.archive",
+          "method": "POST",
+          "path": "/account-groups/:groupId/archive"
+        },
+        {
+          "id": "accountGroups.create",
+          "method": "POST",
+          "path": "/account-groups"
+        },
+        {
+          "id": "accountGroups.get",
+          "method": "GET",
+          "path": "/account-groups/:groupId"
+        },
+        {
+          "id": "accountGroups.list",
+          "method": "GET",
+          "path": "/account-groups"
+        },
+        {
+          "id": "accountGroups.members.previewTransfer",
+          "method": "POST",
+          "path": "/account-groups/transfer-preview"
+        },
+        {
+          "id": "accountGroups.members.transfer",
+          "method": "POST",
+          "path": "/account-groups/transfer"
+        },
+        {
+          "id": "accountGroups.migration.apply",
+          "method": "POST",
+          "path": "/account-groups/migrations"
+        },
+        {
+          "id": "accountGroups.migration.preview",
+          "method": "POST",
+          "path": "/account-groups/migration-preview"
+        },
+        {
+          "id": "accountGroups.migration.status",
+          "method": "GET",
+          "path": "/account-groups/migrations/:migrationId"
+        },
+        {
+          "id": "accountGroups.migration.undo",
+          "method": "POST",
+          "path": "/account-groups/migrations/:migrationId/undo"
+        },
+        {
+          "id": "accountGroups.restore",
+          "method": "POST",
+          "path": "/account-groups/:groupId/restore"
+        },
+        {
+          "id": "accountGroups.update",
+          "method": "PATCH",
+          "path": "/account-groups/:groupId"
+        },
+        {
+          "id": "accounts.archive",
+          "method": "POST",
+          "path": "/accounts/:accountId/archive"
+        },
+        {
+          "id": "accounts.bind.cancel",
+          "method": "POST",
+          "path": "/accounts/bindings/:runId/cancel"
+        },
+        {
+          "id": "accounts.bind.start",
+          "method": "POST",
+          "path": "/accounts/bindings"
+        },
+        {
+          "id": "accounts.bind.status",
+          "method": "GET",
+          "path": "/accounts/bindings/:runId"
+        },
+        {
+          "id": "accounts.bindingCapabilities",
+          "method": "GET",
+          "path": "/accounts/binding-capabilities"
+        },
+        {
+          "id": "accounts.cadence.attainment",
+          "method": "GET",
+          "path": "/accounts/:accountId/cadence/attainment"
+        },
+        {
+          "id": "accounts.cadence.get",
+          "method": "GET",
+          "path": "/accounts/:accountId/cadence"
+        },
+        {
+          "id": "accounts.cadence.upsert",
+          "method": "PUT",
+          "path": "/accounts/:accountId/cadence"
+        },
+        {
+          "id": "accounts.calendar.entries.create",
+          "method": "POST",
+          "path": "/accounts/:accountId/calendar/entries"
+        },
+        {
+          "id": "accounts.calendar.list",
+          "method": "GET",
+          "path": "/accounts/:accountId/calendar"
+        },
+        {
+          "id": "accounts.collectionPlanReadiness",
+          "method": "GET",
+          "path": "/accounts/:accountId/collection-plan-readiness"
+        },
+        {
+          "id": "accounts.create",
+          "method": "POST",
+          "path": "/accounts"
+        },
+        {
+          "id": "accounts.get",
+          "method": "GET",
+          "path": "/accounts/:accountId"
+        },
+        {
+          "id": "accounts.list",
+          "method": "GET",
+          "path": "/accounts"
+        },
+        {
+          "id": "accounts.update",
+          "method": "PATCH",
+          "path": "/accounts/:accountId"
+        },
+        {
+          "id": "ai.assistantActions.adopt",
+          "method": "POST",
+          "path": "/ai/assistant-actions/adopt"
+        },
+        {
+          "id": "ai.assistantActions.receipt",
+          "method": "GET",
+          "path": "/ai/assistant-actions/receipt"
+        },
+        {
+          "id": "ai.conversations.create",
+          "method": "POST",
+          "path": "/ai/conversations"
+        },
+        {
+          "id": "ai.conversations.list",
+          "method": "GET",
+          "path": "/ai/conversations"
+        },
+        {
+          "id": "ai.conversations.messages.create",
+          "method": "POST",
+          "path": "/ai/conversations/:conversationId/messages"
+        },
+        {
+          "id": "ai.conversations.messages.list",
+          "method": "GET",
+          "path": "/ai/conversations/:conversationId/messages"
+        },
+        {
+          "id": "ai.tasks.cancel",
+          "method": "POST",
+          "path": "/ai/tasks/:taskId/cancel"
+        },
+        {
+          "id": "ai.tasks.confirm",
+          "method": "POST",
+          "path": "/ai/tasks/:taskId/confirm"
+        },
+        {
+          "id": "ai.tasks.create",
+          "method": "POST",
+          "path": "/ai/tasks"
+        },
+        {
+          "id": "ai.tasks.get",
+          "method": "GET",
+          "path": "/ai/tasks/:taskId"
+        },
+        {
+          "id": "ai.tasks.list",
+          "method": "GET",
+          "path": "/ai/tasks"
+        },
+        {
+          "id": "ai.tasks.results.list",
+          "method": "GET",
+          "path": "/ai/tasks/:taskId/results"
+        },
+        {
+          "id": "ai.tasks.results.patch",
+          "method": "POST",
+          "path": "/ai/tasks/:taskId/results/patch"
+        },
+        {
+          "id": "ai.tasks.steps.list",
+          "method": "GET",
+          "path": "/ai/tasks/:taskId/steps"
+        },
+        {
+          "id": "analytics.comments.diagnose",
+          "method": "POST",
+          "path": "/analytics/comments/diagnose"
+        },
+        {
+          "id": "analytics.comments.failures.list",
+          "method": "GET",
+          "path": "/analytics/comments/failures"
+        },
+        {
+          "id": "analytics.comments.retry",
+          "method": "POST",
+          "path": "/analytics/comments/retry"
+        },
+        {
+          "id": "analytics.projects.get",
+          "method": "GET",
+          "path": "/analytics/projects/:projectId"
+        },
+        {
+          "id": "analytics.publications.get",
+          "method": "GET",
+          "path": "/analytics/publications/:publicationId"
+        },
+        {
+          "id": "analytics.traffic.get",
+          "method": "GET",
+          "path": "/analytics/projects/:projectId/traffic"
+        },
+        {
+          "id": "analytics.traffic.refresh",
+          "method": "POST",
+          "path": "/analytics/projects/:projectId/traffic/refresh"
+        },
+        {
+          "id": "articles.candidates.adopt",
+          "method": "POST",
+          "path": "/articles/candidates/:candidateId/adopt"
+        },
+        {
+          "id": "articles.candidates.generate",
+          "method": "POST",
+          "path": "/outputs/:outputId/article/candidates/generate"
+        },
+        {
+          "id": "articles.candidates.get",
+          "method": "GET",
+          "path": "/articles/candidates/:candidateId"
+        },
+        {
+          "id": "articles.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/article"
+        },
+        {
+          "id": "articles.versions.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/article/versions"
+        },
+        {
+          "id": "articles.versions.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/article/versions/:versionId"
+        },
+        {
+          "id": "artifacts.create",
+          "method": "POST",
+          "path": "/projects/:projectId/artifacts"
+        },
+        {
+          "id": "artifacts.get",
+          "method": "GET",
+          "path": "/artifacts/:artifactId"
+        },
+        {
+          "id": "artifacts.list",
+          "method": "GET",
+          "path": "/projects/:projectId/artifacts"
+        },
+        {
+          "id": "artifacts.relations.create",
+          "method": "POST",
+          "path": "/artifacts/:artifactId/relations"
+        },
+        {
+          "id": "artifacts.restore",
+          "method": "POST",
+          "path": "/artifacts/:artifactId/restore"
+        },
+        {
+          "id": "artifacts.scriptPatches.apply",
+          "method": "POST",
+          "path": "/artifacts/:artifactId/script-patches/apply"
+        },
+        {
+          "id": "artifacts.versions.create",
+          "method": "POST",
+          "path": "/artifacts/:artifactId/versions"
+        },
+        {
+          "id": "artifacts.versions.list",
+          "method": "GET",
+          "path": "/artifacts/:artifactId/versions"
+        },
+        {
+          "id": "assets.commit",
+          "method": "POST",
+          "path": "/assets/:assetId/commit"
+        },
+        {
+          "id": "assets.downloadUrl",
+          "method": "GET",
+          "path": "/assets/:assetId/download-url"
+        },
+        {
+          "id": "assets.favorite.toggle",
+          "method": "POST",
+          "path": "/assets/:assetId/favorite"
+        },
+        {
+          "id": "assets.fileDownloadUrl",
+          "method": "GET",
+          "path": "/assets/:assetId/files/:assetFileId/download-url"
+        },
+        {
+          "id": "assets.files.create",
+          "method": "POST",
+          "path": "/assets/:assetId/files"
+        },
+        {
+          "id": "assets.get",
+          "method": "GET",
+          "path": "/assets/:assetId"
+        },
+        {
+          "id": "assets.list",
+          "method": "GET",
+          "path": "/assets"
+        },
+        {
+          "id": "assets.previewDelete",
+          "method": "POST",
+          "path": "/assets/:assetId/delete-preview"
+        },
+        {
+          "id": "assets.restore",
+          "method": "POST",
+          "path": "/assets/:assetId/restore"
+        },
+        {
+          "id": "assets.search",
+          "method": "GET",
+          "path": "/assets/search"
+        },
+        {
+          "id": "assets.trash",
+          "method": "POST",
+          "path": "/assets/:assetId/trash"
+        },
+        {
+          "id": "assets.uploads.complete",
+          "method": "POST",
+          "path": "/assets/uploads/:uploadId/complete"
+        },
+        {
+          "id": "assets.uploads.create",
+          "method": "POST",
+          "path": "/assets/uploads"
+        },
+        {
+          "id": "assets.usage.list",
+          "method": "GET",
+          "path": "/assets/:assetId/usage"
+        },
+        {
+          "id": "assets.visualTemplates.list",
+          "method": "GET",
+          "path": "/assets/visual-templates"
+        },
+        {
+          "id": "assets.visualTemplates.remove",
+          "method": "POST",
+          "path": "/assets/visual-templates/:templateId/remove"
+        },
+        {
+          "id": "assets.visualTemplates.save",
+          "method": "POST",
+          "path": "/assets/visual-templates/save"
+        },
+        {
+          "id": "audienceSignals.linkToCandidate",
+          "method": "POST",
+          "path": "/audience-signals/:signalId/link"
+        },
+        {
+          "id": "audienceSignals.list",
+          "method": "GET",
+          "path": "/audience-signals"
+        },
+        {
+          "id": "benchmark.sources.create",
+          "method": "POST",
+          "path": "/benchmark/sources"
+        },
+        {
+          "id": "benchmark.sources.list",
+          "method": "GET",
+          "path": "/benchmark/sources"
+        },
+        {
+          "id": "benchmark.sources.remove",
+          "method": "POST",
+          "path": "/benchmark/sources/:sourceId/remove"
+        },
+        {
+          "id": "benchmark.sources.toggle",
+          "method": "POST",
+          "path": "/benchmark/sources/:sourceId/toggle"
+        },
+        {
+          "id": "benchmark.works.list",
+          "method": "GET",
+          "path": "/benchmark/works"
+        },
+        {
+          "id": "benchmark.works.transcribe",
+          "method": "POST",
+          "path": "/benchmark/works/:workId/transcribe"
+        },
+        {
+          "id": "browserSessions.clear",
+          "method": "POST",
+          "path": "/browser-sessions/clear"
+        },
+        {
+          "id": "browserSessions.openLogin",
+          "method": "POST",
+          "path": "/browser-sessions/open-login"
+        },
+        {
+          "id": "calendar.entries.delete",
+          "method": "DELETE",
+          "path": "/calendar/entries/:entryId"
+        },
+        {
+          "id": "calendar.entries.target",
+          "method": "PUT",
+          "path": "/calendar/entries/:entryId/target"
+        },
+        {
+          "id": "calendar.entries.transition",
+          "method": "POST",
+          "path": "/calendar/entries/:entryId/transition"
+        },
+        {
+          "id": "calendar.entries.update",
+          "method": "PATCH",
+          "path": "/calendar/entries/:entryId"
+        },
+        {
+          "id": "calibration.overview",
+          "method": "GET",
+          "path": "/calibration/overview"
+        },
+        {
+          "id": "calibration.predictions.create",
+          "method": "POST",
+          "path": "/calibration/predictions"
+        },
+        {
+          "id": "calibration.predictions.get",
+          "method": "GET",
+          "path": "/calibration/predictions/:predictionId"
+        },
+        {
+          "id": "calibration.predictions.list",
+          "method": "GET",
+          "path": "/calibration/predictions"
+        },
+        {
+          "id": "calibration.predictions.lock",
+          "method": "POST",
+          "path": "/calibration/predictions/:predictionId/lock"
+        },
+        {
+          "id": "calibration.results.create",
+          "method": "POST",
+          "path": "/calibration/predictions/:predictionId/result"
+        },
+        {
+          "id": "calibration.rubrics.bumpVersion",
+          "method": "POST",
+          "path": "/calibration/rubrics/:rubricId/versions"
+        },
+        {
+          "id": "calibration.rubrics.create",
+          "method": "POST",
+          "path": "/calibration/rubrics"
+        },
+        {
+          "id": "calibration.rubrics.get",
+          "method": "GET",
+          "path": "/calibration/rubrics/:rubricId"
+        },
+        {
+          "id": "calibration.suggestions.adopt",
+          "method": "POST",
+          "path": "/calibration/suggestions/:suggestionId/adopt"
+        },
+        {
+          "id": "calibration.suggestions.dismiss",
+          "method": "POST",
+          "path": "/calibration/suggestions/:suggestionId/dismiss"
+        },
+        {
+          "id": "calibration.suggestions.list",
+          "method": "GET",
+          "path": "/calibration/suggestions"
+        },
+        {
+          "id": "candidates.create",
+          "method": "POST",
+          "path": "/candidates"
+        },
+        {
+          "id": "candidates.get",
+          "method": "GET",
+          "path": "/candidates/:candidateId"
+        },
+        {
+          "id": "candidates.list",
+          "method": "GET",
+          "path": "/candidates"
+        },
+        {
+          "id": "candidates.patch",
+          "method": "PATCH",
+          "path": "/candidates/:candidateId"
+        },
+        {
+          "id": "candidates.promote",
+          "method": "POST",
+          "path": "/candidates/:candidateId/promote"
+        },
+        {
+          "id": "canvas.agent.apply",
+          "method": "POST",
+          "path": "/canvases/:canvasId/proposals/:proposalId/apply"
+        },
+        {
+          "id": "canvas.agent.proposals",
+          "method": "GET",
+          "path": "/canvases/:canvasId/proposals"
+        },
+        {
+          "id": "canvas.archive",
+          "method": "POST",
+          "path": "/canvases/:canvasId/archive"
+        },
+        {
+          "id": "canvas.capabilities",
+          "method": "GET",
+          "path": "/canvases/capabilities"
+        },
+        {
+          "id": "canvas.create",
+          "method": "POST",
+          "path": "/canvases"
+        },
+        {
+          "id": "canvas.create.adopt",
+          "method": "POST",
+          "path": "/canvases/create/adopt"
+        },
+        {
+          "id": "canvas.generation.confirm",
+          "method": "POST",
+          "path": "/canvases/:canvasId/nodes/:nodeId/confirm"
+        },
+        {
+          "id": "canvas.generations.material.get",
+          "method": "GET",
+          "path": "/canvases/:canvasId/generations/:generationLinkId/material"
+        },
+        {
+          "id": "canvas.get",
+          "method": "GET",
+          "path": "/canvases/:canvasId"
+        },
+        {
+          "id": "canvas.list",
+          "method": "GET",
+          "path": "/canvases"
+        },
+        {
+          "id": "canvas.material.adopt",
+          "method": "POST",
+          "path": "/canvases/:canvasId/material/adopt"
+        },
+        {
+          "id": "canvas.node.generate",
+          "method": "POST",
+          "path": "/canvases/:canvasId/nodes/:nodeId/generate"
+        },
+        {
+          "id": "canvas.node.preview",
+          "method": "GET",
+          "path": "/canvases/:canvasId/nodes/:nodeId/preview"
+        },
+        {
+          "id": "canvas.node.tasks",
+          "method": "GET",
+          "path": "/canvases/:canvasId/tasks"
+        },
+        {
+          "id": "canvas.save",
+          "method": "POST",
+          "path": "/canvases/:canvasId/save"
+        },
+        {
+          "id": "creativeCapabilities.list",
+          "method": "GET",
+          "path": "/creative-capabilities"
+        },
+        {
+          "id": "creativeResults.adopt",
+          "method": "POST",
+          "path": "/creative-results/:resultId/adopt"
+        },
+        {
+          "id": "creativeResults.bundles.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/creative-result-bundles"
+        },
+        {
+          "id": "creativeResults.bundles.get",
+          "method": "GET",
+          "path": "/creative-result-bundles/:bundleId"
+        },
+        {
+          "id": "creativeResults.bundles.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/creative-result-bundles"
+        },
+        {
+          "id": "creativeResults.generate",
+          "method": "POST",
+          "path": "/outputs/:outputId/creative-results/generate"
+        },
+        {
+          "id": "creativeResults.get",
+          "method": "GET",
+          "path": "/creative-results/:resultId"
+        },
+        {
+          "id": "creativeResults.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/creative-results"
+        },
+        {
+          "id": "creativeResults.retry",
+          "method": "POST",
+          "path": "/creative-results/:resultId/retry"
+        },
+        {
+          "id": "execution.tasks.command",
+          "method": "POST",
+          "path": "/execution/tasks/command"
+        },
+        {
+          "id": "execution.tasks.confirm",
+          "method": "POST",
+          "path": "/execution/tasks/:taskId/confirm"
+        },
+        {
+          "id": "execution.tasks.create",
+          "method": "POST",
+          "path": "/execution/tasks"
+        },
+        {
+          "id": "execution.tasks.discard",
+          "method": "POST",
+          "path": "/execution/tasks/:taskId/discard"
+        },
+        {
+          "id": "execution.tasks.get",
+          "method": "GET",
+          "path": "/execution/tasks/:taskId"
+        },
+        {
+          "id": "execution.tasks.list",
+          "method": "GET",
+          "path": "/execution/tasks"
+        },
+        {
+          "id": "execution.tasks.transcribeCommand.v1",
+          "method": "POST",
+          "path": "/execution/tasks/transcribe-commands/v1"
+        },
+        {
+          "id": "exports.complete",
+          "method": "POST",
+          "path": "/exports/:exportId/complete"
+        },
+        {
+          "id": "favorites.folders.create",
+          "method": "POST",
+          "path": "/favorites/folders"
+        },
+        {
+          "id": "favorites.folders.list",
+          "method": "GET",
+          "path": "/favorites/folders"
+        },
+        {
+          "id": "favorites.folders.remove",
+          "method": "POST",
+          "path": "/favorites/folders/:folderId/remove"
+        },
+        {
+          "id": "favorites.folders.toggle",
+          "method": "POST",
+          "path": "/favorites/folders/:folderId/toggle"
+        },
+        {
+          "id": "graphicPosts.candidates.adopt",
+          "method": "POST",
+          "path": "/graphic-posts/candidates/:candidateId/adopt"
+        },
+        {
+          "id": "graphicPosts.candidates.generate",
+          "method": "POST",
+          "path": "/outputs/:outputId/graphic-post/candidates/generate"
+        },
+        {
+          "id": "graphicPosts.candidates.get",
+          "method": "GET",
+          "path": "/graphic-posts/candidates/:candidateId"
+        },
+        {
+          "id": "graphicPosts.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/graphic-post"
+        },
+        {
+          "id": "graphicPosts.outputs.create",
+          "method": "POST",
+          "path": "/projects/:projectId/graphic-posts"
+        },
+        {
+          "id": "graphicPosts.versions.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/graphic-post/versions"
+        },
+        {
+          "id": "graphicPosts.versions.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/graphic-post/versions/:versionId"
+        },
+        {
+          "id": "group.cadence.attainment",
+          "method": "GET",
+          "path": "/account-groups/:groupId/cadence/attainment"
+        },
+        {
+          "id": "group.cadence.get",
+          "method": "GET",
+          "path": "/account-groups/:groupId/cadence"
+        },
+        {
+          "id": "group.cadence.upsert",
+          "method": "PUT",
+          "path": "/account-groups/:groupId/cadence"
+        },
+        {
+          "id": "group.calendar.entries.create",
+          "method": "POST",
+          "path": "/account-groups/:groupId/calendar/entries"
+        },
+        {
+          "id": "group.calendar.list",
+          "method": "GET",
+          "path": "/account-groups/:groupId/calendar"
+        },
+        {
+          "id": "groupResourceGrants.list",
+          "method": "GET",
+          "path": "/group-resource-grants"
+        },
+        {
+          "id": "groupResourceGrants.previewRevoke",
+          "method": "POST",
+          "path": "/group-resource-grants/:grantId/revoke-preview"
+        },
+        {
+          "id": "groupResourceGrants.revoke",
+          "method": "POST",
+          "path": "/group-resource-grants/:grantId/revoke"
+        },
+        {
+          "id": "identity.profile.patch",
+          "method": "PATCH",
+          "path": "/me"
+        },
+        {
+          "id": "identity.register",
+          "method": "POST",
+          "path": "/auth/register"
+        },
+        {
+          "id": "ingestion.douyin.login",
+          "method": "POST",
+          "path": "/ingestion/douyin/login"
+        },
+        {
+          "id": "ingestion.douyin.refresh",
+          "method": "POST",
+          "path": "/ingestion/douyin/refresh"
+        },
+        {
+          "id": "ingestion.douyin.status",
+          "method": "GET",
+          "path": "/ingestion/douyin/status"
+        },
+        {
+          "id": "ingestion.douyin.throttleStatus",
+          "method": "GET",
+          "path": "/ingestion/douyin/throttle-status"
+        },
+        {
+          "id": "ingestion.runs.complete",
+          "method": "POST",
+          "path": "/ingestion/runs/:runId/complete"
+        },
+        {
+          "id": "ingestion.runs.create",
+          "method": "POST",
+          "path": "/ingestion/runs"
+        },
+        {
+          "id": "ingestion.runs.get",
+          "method": "GET",
+          "path": "/ingestion/runs/:runId"
+        },
+        {
+          "id": "intelligence.collections.create",
+          "method": "POST",
+          "path": "/intelligence/collections"
+        },
+        {
+          "id": "intelligence.collections.delete",
+          "method": "DELETE",
+          "path": "/intelligence/collections/:collectionId"
+        },
+        {
+          "id": "intelligence.collections.update",
+          "method": "PATCH",
+          "path": "/intelligence/collections/:collectionId"
+        },
+        {
+          "id": "intelligence.collectors.list",
+          "method": "GET",
+          "path": "/intelligence/collectors"
+        },
+        {
+          "id": "intelligence.items.get",
+          "method": "GET",
+          "path": "/intelligence/items/:itemId"
+        },
+        {
+          "id": "intelligence.items.importDouyinShare",
+          "method": "POST",
+          "path": "/intelligence/items/import-douyin-share"
+        },
+        {
+          "id": "intelligence.items.list",
+          "method": "GET",
+          "path": "/intelligence/items"
+        },
+        {
+          "id": "intelligence.migrations.inventory",
+          "method": "GET",
+          "path": "/intelligence/migrations/inventory"
+        },
+        {
+          "id": "intelligence.migrations.report",
+          "method": "GET",
+          "path": "/intelligence/migrations/:migrationId"
+        },
+        {
+          "id": "intelligence.migrations.rollback",
+          "method": "POST",
+          "path": "/intelligence/migrations/:migrationId/rollback"
+        },
+        {
+          "id": "intelligence.migrations.start",
+          "method": "POST",
+          "path": "/intelligence/migrations"
+        },
+        {
+          "id": "intelligence.projects.enqueue",
+          "method": "POST",
+          "path": "/intelligence/projects/enqueue"
+        },
+        {
+          "id": "intelligence.runs.get",
+          "method": "GET",
+          "path": "/intelligence/runs/:runId"
+        },
+        {
+          "id": "intelligence.runs.list",
+          "method": "GET",
+          "path": "/intelligence/sources/:sourceId/runs"
+        },
+        {
+          "id": "intelligence.runs.start",
+          "method": "POST",
+          "path": "/intelligence/sources/:sourceId/runs"
+        },
+        {
+          "id": "intelligence.sources.create",
+          "method": "POST",
+          "path": "/intelligence/sources"
+        },
+        {
+          "id": "intelligence.sources.delete",
+          "method": "DELETE",
+          "path": "/intelligence/sources/:sourceId"
+        },
+        {
+          "id": "intelligence.sources.list",
+          "method": "GET",
+          "path": "/intelligence/sources"
+        },
+        {
+          "id": "intelligence.sources.listFavoriteFolders",
+          "method": "GET",
+          "path": "/intelligence/sources/favorite-folders"
+        },
+        {
+          "id": "intelligence.sources.previewProfile",
+          "method": "POST",
+          "path": "/intelligence/sources/preview-profile"
+        },
+        {
+          "id": "intelligence.sources.previewWeb",
+          "method": "POST",
+          "path": "/intelligence/sources/preview-web"
+        },
+        {
+          "id": "intelligence.sources.update",
+          "method": "PATCH",
+          "path": "/intelligence/sources/:sourceId"
+        },
+        {
+          "id": "intelligence.transcripts.enqueue",
+          "method": "POST",
+          "path": "/intelligence/transcripts/enqueue"
+        },
+        {
+          "id": "intelligence.transcripts.uploadManual",
+          "method": "POST",
+          "path": "/intelligence/transcripts/upload-manual"
+        },
+        {
+          "id": "intelligence.transforms.confirmTopic",
+          "method": "POST",
+          "path": "/intelligence/transforms/:transformId/confirm-topic"
+        },
+        {
+          "id": "intelligence.transforms.previewTopic",
+          "method": "POST",
+          "path": "/intelligence/transforms/topic-preview"
+        },
+        {
+          "id": "intelligence.workspace.get",
+          "method": "GET",
+          "path": "/intelligence/workspace"
+        },
+        {
+          "id": "jobRuns.get",
+          "method": "GET",
+          "path": "/job-runs/:runId"
+        },
+        {
+          "id": "jobRuns.listByJob",
+          "method": "GET",
+          "path": "/scheduled-jobs/:jobId/runs"
+        },
+        {
+          "id": "knowledge.archive",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/archive"
+        },
+        {
+          "id": "knowledge.create",
+          "method": "POST",
+          "path": "/knowledge"
+        },
+        {
+          "id": "knowledge.folders.create",
+          "method": "POST",
+          "path": "/knowledge-folders"
+        },
+        {
+          "id": "knowledge.folders.list",
+          "method": "GET",
+          "path": "/knowledge-folders"
+        },
+        {
+          "id": "knowledge.get",
+          "method": "GET",
+          "path": "/knowledge/:knowledgeId"
+        },
+        {
+          "id": "knowledge.list",
+          "method": "GET",
+          "path": "/knowledge"
+        },
+        {
+          "id": "knowledge.move",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/move"
+        },
+        {
+          "id": "knowledge.relations.create",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/relations"
+        },
+        {
+          "id": "knowledge.relations.delete",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/relations/remove"
+        },
+        {
+          "id": "knowledge.relations.list",
+          "method": "GET",
+          "path": "/knowledge/:knowledgeId/relations"
+        },
+        {
+          "id": "knowledge.relations.listAll",
+          "method": "GET",
+          "path": "/knowledge-relations"
+        },
+        {
+          "id": "knowledge.revisions.create",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/revisions"
+        },
+        {
+          "id": "knowledge.revisions.list",
+          "method": "GET",
+          "path": "/knowledge/:knowledgeId/revisions"
+        },
+        {
+          "id": "learnings.applications.create",
+          "method": "POST",
+          "path": "/learnings/:learningId/applications"
+        },
+        {
+          "id": "learnings.calibrationSuggestions.create",
+          "method": "POST",
+          "path": "/learnings/:learningId/calibration-suggestions"
+        },
+        {
+          "id": "learnings.create",
+          "method": "POST",
+          "path": "/learnings"
+        },
+        {
+          "id": "learnings.evaluate",
+          "method": "POST",
+          "path": "/learnings/:learningId/evaluate"
+        },
+        {
+          "id": "learnings.get",
+          "method": "GET",
+          "path": "/learnings/:learningId"
+        },
+        {
+          "id": "learnings.list",
+          "method": "GET",
+          "path": "/learnings"
+        },
+        {
+          "id": "learnings.patch",
+          "method": "PATCH",
+          "path": "/learnings/:learningId"
+        },
+        {
+          "id": "materialLinks.create",
+          "method": "POST",
+          "path": "/material-links"
+        },
+        {
+          "id": "materialLinks.delete",
+          "method": "POST",
+          "path": "/material-links/:linkId/delete"
+        },
+        {
+          "id": "materialLinks.list",
+          "method": "GET",
+          "path": "/material-links"
+        },
+        {
+          "id": "moments.candidates.adopt",
+          "method": "POST",
+          "path": "/moments/candidates/:candidateId/adopt"
+        },
+        {
+          "id": "moments.candidates.generate",
+          "method": "POST",
+          "path": "/moments/:momentsId/candidates/generate"
+        },
+        {
+          "id": "moments.candidates.get",
+          "method": "GET",
+          "path": "/moments/candidates/:candidateId"
+        },
+        {
+          "id": "moments.candidates.retry",
+          "method": "POST",
+          "path": "/moments/candidates/:candidateId/retry"
+        },
+        {
+          "id": "moments.create",
+          "method": "POST",
+          "path": "/moments"
+        },
+        {
+          "id": "moments.get",
+          "method": "GET",
+          "path": "/moments/:momentsId"
+        },
+        {
+          "id": "moments.list",
+          "method": "GET",
+          "path": "/moments"
+        },
+        {
+          "id": "moments.requests.get",
+          "method": "GET",
+          "path": "/moments/requests/:clientRequestId"
+        },
+        {
+          "id": "moments.versions.create",
+          "method": "POST",
+          "path": "/moments/:momentsId/versions"
+        },
+        {
+          "id": "moments.versions.get",
+          "method": "GET",
+          "path": "/moments/:momentsId/versions/:versionId"
+        },
+        {
+          "id": "moments.versions.list",
+          "method": "GET",
+          "path": "/moments/:momentsId/versions"
+        },
+        {
+          "id": "notifications.list",
+          "method": "GET",
+          "path": "/notifications"
+        },
+        {
+          "id": "notifications.read",
+          "method": "POST",
+          "path": "/notifications/:notificationId/read"
+        },
+        {
+          "id": "outputs.conversions.create",
+          "method": "POST",
+          "path": "/output-conversions"
+        },
+        {
+          "id": "outputs.conversions.get",
+          "method": "GET",
+          "path": "/output-conversions/:clientRequestId"
+        },
+        {
+          "id": "outputs.get",
+          "method": "GET",
+          "path": "/outputs/:outputId"
+        },
+        {
+          "id": "outputs.patch",
+          "method": "PATCH",
+          "path": "/outputs/:outputId"
+        },
+        {
+          "id": "outputs.production.editingPlan.broll.remove",
+          "method": "PUT",
+          "path": "/outputs/:outputId/production/editing-plan/broll/remove"
+        },
+        {
+          "id": "outputs.production.editingPlan.confirm",
+          "method": "PUT",
+          "path": "/outputs/:outputId/production/editing-plan"
+        },
+        {
+          "id": "outputs.production.editor.apply",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/apply"
+        },
+        {
+          "id": "outputs.production.editor.convert.adopt",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/convert/adopt"
+        },
+        {
+          "id": "outputs.production.editor.convert.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/convert/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.convert.prepare",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/convert"
+        },
+        {
+          "id": "outputs.production.editor.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor"
+        },
+        {
+          "id": "outputs.production.editor.preview",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/preview"
+        },
+        {
+          "id": "outputs.production.editor.receipt.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/receipts/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.render",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/render"
+        },
+        {
+          "id": "outputs.production.editor.renders.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/renders"
+        },
+        {
+          "id": "outputs.production.editor.restore",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/restore"
+        },
+        {
+          "id": "outputs.production.editor.rough-cut.adopt",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/rough-cut/adopt"
+        },
+        {
+          "id": "outputs.production.editor.rough-cut.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/rough-cut"
+        },
+        {
+          "id": "outputs.production.editor.rough-cut.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/rough-cut/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.save",
+          "method": "PUT",
+          "path": "/outputs/:outputId/production/editor"
+        },
+        {
+          "id": "outputs.production.editor.sources.adopt",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/sources/adopt"
+        },
+        {
+          "id": "outputs.production.editor.sources.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/sources/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.sources.prepare",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/sources"
+        },
+        {
+          "id": "outputs.production.editor.sources.retry",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/sources/retry"
+        },
+        {
+          "id": "outputs.production.editor.transcripts.adopt",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/transcripts/adopt"
+        },
+        {
+          "id": "outputs.production.editor.transcripts.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/transcripts"
+        },
+        {
+          "id": "outputs.production.editor.transcripts.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/transcripts/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.versions.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/versions/:revision"
+        },
+        {
+          "id": "outputs.production.editor.versions.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/versions"
+        },
+        {
+          "id": "outputs.production.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production"
+        },
+        {
+          "id": "outputs.production.put",
+          "method": "PUT",
+          "path": "/outputs/:outputId/production"
+        },
+        {
+          "id": "outputs.publications.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/publications"
+        },
+        {
+          "id": "outputs.publications.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/publications"
+        },
+        {
+          "id": "outputs.publications.register",
+          "method": "POST",
+          "path": "/outputs/:outputId/publications/register"
+        },
+        {
+          "id": "outputs.stage.transition",
+          "method": "POST",
+          "path": "/outputs/:outputId/stages/:stage/transition"
+        },
+        {
+          "id": "pages.dailyReport.get",
+          "method": "GET",
+          "path": "/analytics/daily-report"
+        },
+        {
+          "id": "pages.dashboard.get",
+          "method": "GET",
+          "path": "/analytics/dashboard"
+        },
+        {
+          "id": "pages.groupOverview.get",
+          "method": "GET",
+          "path": "/groups/:groupId/overview"
+        },
+        {
+          "id": "pages.positioning.get",
+          "method": "GET",
+          "path": "/positioning/center"
+        },
+        {
+          "id": "pages.projectOverview.get",
+          "method": "GET",
+          "path": "/projects/:projectId/overview"
+        },
+        {
+          "id": "pages.search.get",
+          "method": "GET",
+          "path": "/search"
+        },
+        {
+          "id": "platforms.bind.begin",
+          "method": "POST",
+          "path": "/platforms/bind-attempts"
+        },
+        {
+          "id": "platforms.bind.cancel",
+          "method": "POST",
+          "path": "/platforms/bind-attempts/:bindAttemptId/cancel"
+        },
+        {
+          "id": "platforms.bind.confirm",
+          "method": "POST",
+          "path": "/platforms/bind-attempts/:bindAttemptId/confirm"
+        },
+        {
+          "id": "platforms.capabilities.list",
+          "method": "GET",
+          "path": "/platforms/capabilities"
+        },
+        {
+          "id": "platforms.collections.cancel",
+          "method": "POST",
+          "path": "/accounts/:accountId/collections/:attemptId/cancel"
+        },
+        {
+          "id": "platforms.collections.get",
+          "method": "GET",
+          "path": "/accounts/:accountId/collections/:attemptId"
+        },
+        {
+          "id": "platforms.collections.start",
+          "method": "POST",
+          "path": "/accounts/:accountId/collections"
+        },
+        {
+          "id": "platforms.metrics.read",
+          "method": "GET",
+          "path": "/accounts/:accountId/platform-metrics"
+        },
+        {
+          "id": "platforms.reports.list",
+          "method": "GET",
+          "path": "/accounts/:accountId/platform-reports"
+        },
+        {
+          "id": "platforms.works.list",
+          "method": "GET",
+          "path": "/accounts/:accountId/platform-works"
+        },
+        {
+          "id": "positioning.discovery.answer.update",
+          "method": "PATCH",
+          "path": "/positioning/discovery/:sessionId/answers"
+        },
+        {
+          "id": "positioning.discovery.confirm",
+          "method": "POST",
+          "path": "/positioning/discovery/:sessionId/confirm"
+        },
+        {
+          "id": "positioning.discovery.evidence.set",
+          "method": "PATCH",
+          "path": "/positioning/discovery/:sessionId/evidence/:evidenceId"
+        },
+        {
+          "id": "positioning.discovery.research",
+          "method": "POST",
+          "path": "/positioning/discovery/:sessionId/research"
+        },
+        {
+          "id": "positioning.discovery.start",
+          "method": "POST",
+          "path": "/positioning/discovery"
+        },
+        {
+          "id": "positioning.gate.evaluate",
+          "method": "POST",
+          "path": "/positioning/gate/evaluate"
+        },
+        {
+          "id": "positioning.master.reset",
+          "method": "POST",
+          "path": "/positioning/master/reset"
+        },
+        {
+          "id": "positioning.master.restore",
+          "method": "POST",
+          "path": "/positioning/master/restore"
+        },
+        {
+          "id": "positioning.profile.get",
+          "method": "GET",
+          "path": "/positioning/profile"
+        },
+        {
+          "id": "positioning.profile.upsert",
+          "method": "POST",
+          "path": "/positioning/profile"
+        },
+        {
+          "id": "positioning.statements.create",
+          "method": "POST",
+          "path": "/positioning/statements"
+        },
+        {
+          "id": "positioning.statements.get",
+          "method": "GET",
+          "path": "/positioning/statements/:statementId"
+        },
+        {
+          "id": "positioning.statements.list",
+          "method": "GET",
+          "path": "/positioning/statements"
+        },
+        {
+          "id": "productions.exports.create",
+          "method": "POST",
+          "path": "/productions/:productionId/exports"
+        },
+        {
+          "id": "productions.exports.materials",
+          "method": "POST",
+          "path": "/productions/:productionId/exports/materials"
+        },
+        {
+          "id": "productions.segments.create",
+          "method": "POST",
+          "path": "/productions/:productionId/segments"
+        },
+        {
+          "id": "productions.segments.list",
+          "method": "GET",
+          "path": "/productions/:productionId/segments"
+        },
+        {
+          "id": "projects.activity.list",
+          "method": "GET",
+          "path": "/projects/:projectId/activity"
+        },
+        {
+          "id": "projects.archive",
+          "method": "POST",
+          "path": "/projects/:projectId/archive"
+        },
+        {
+          "id": "projects.create",
+          "method": "POST",
+          "path": "/projects"
+        },
+        {
+          "id": "projects.delete",
+          "method": "DELETE",
+          "path": "/projects/:projectId"
+        },
+        {
+          "id": "projects.get",
+          "method": "GET",
+          "path": "/projects/:projectId"
+        },
+        {
+          "id": "projects.intelligence.attach",
+          "method": "POST",
+          "path": "/projects/:projectId/intelligence"
+        },
+        {
+          "id": "projects.intelligence.list",
+          "method": "GET",
+          "path": "/projects/:projectId/intelligence"
+        },
+        {
+          "id": "projects.list",
+          "method": "GET",
+          "path": "/projects"
+        },
+        {
+          "id": "projects.outputs.create",
+          "method": "POST",
+          "path": "/projects/:projectId/outputs"
+        },
+        {
+          "id": "projects.outputs.list",
+          "method": "GET",
+          "path": "/projects/:projectId/outputs"
+        },
+        {
+          "id": "projects.patch",
+          "method": "PATCH",
+          "path": "/projects/:projectId"
+        },
+        {
+          "id": "projects.scripts.acceptCandidate",
+          "method": "POST",
+          "path": "/projects/:projectId/scripts/candidates/:taskId/accept"
+        },
+        {
+          "id": "projects.scripts.generateCandidate",
+          "method": "POST",
+          "path": "/projects/:projectId/scripts/candidates"
+        },
+        {
+          "id": "projects.stage.transition",
+          "method": "POST",
+          "path": "/projects/:projectId/stages/:stage/transition"
+        },
+        {
+          "id": "projects.stages.list",
+          "method": "GET",
+          "path": "/projects/:projectId/stages"
+        },
+        {
+          "id": "projects.tasks.create",
+          "method": "POST",
+          "path": "/projects/:projectId/tasks"
+        },
+        {
+          "id": "projects.tasks.list",
+          "method": "GET",
+          "path": "/projects/:projectId/tasks"
+        },
+        {
+          "id": "projects.transcribe",
+          "method": "POST",
+          "path": "/projects/:projectId/transcribe"
+        },
+        {
+          "id": "publications.comments.list",
+          "method": "GET",
+          "path": "/publications/:publicationId/comments"
+        },
+        {
+          "id": "publications.get",
+          "method": "GET",
+          "path": "/publications/:publicationId"
+        },
+        {
+          "id": "publications.revisions.create",
+          "method": "POST",
+          "path": "/publications/:publicationId/revisions"
+        },
+        {
+          "id": "publications.revisions.list",
+          "method": "GET",
+          "path": "/publications/:publicationId/revisions"
+        },
+        {
+          "id": "publications.transition",
+          "method": "POST",
+          "path": "/publications/:publicationId/transition"
+        },
+        {
+          "id": "publications.visualNotes.export",
+          "method": "POST",
+          "path": "/publications/:publicationId/visual-note/export"
+        },
+        {
+          "id": "reviewRules.create",
+          "method": "POST",
+          "path": "/review-rules"
+        },
+        {
+          "id": "reviewRules.delete",
+          "method": "DELETE",
+          "path": "/review-rules/:ruleId"
+        },
+        {
+          "id": "reviewRules.list",
+          "method": "GET",
+          "path": "/review-rules"
+        },
+        {
+          "id": "reviewRules.patch",
+          "method": "PATCH",
+          "path": "/review-rules/:ruleId"
+        },
+        {
+          "id": "reviews.complete",
+          "method": "POST",
+          "path": "/reviews/:reviewId/complete"
+        },
+        {
+          "id": "reviews.create",
+          "method": "POST",
+          "path": "/projects/:projectId/reviews"
+        },
+        {
+          "id": "reviews.get",
+          "method": "GET",
+          "path": "/reviews/:reviewId"
+        },
+        {
+          "id": "reviews.insights.create",
+          "method": "POST",
+          "path": "/reviews/:reviewId/insights"
+        },
+        {
+          "id": "reviews.insights.list",
+          "method": "GET",
+          "path": "/reviews/:reviewId/insights"
+        },
+        {
+          "id": "reviews.list",
+          "method": "GET",
+          "path": "/projects/:projectId/reviews"
+        },
+        {
+          "id": "scheduledJobs.create",
+          "method": "POST",
+          "path": "/scheduled-jobs"
+        },
+        {
+          "id": "scheduledJobs.get",
+          "method": "GET",
+          "path": "/scheduled-jobs/:jobId"
+        },
+        {
+          "id": "scheduledJobs.list",
+          "method": "GET",
+          "path": "/scheduled-jobs"
+        },
+        {
+          "id": "scheduledJobs.runNow",
+          "method": "POST",
+          "path": "/scheduled-jobs/:jobId/run-now"
+        },
+        {
+          "id": "scheduledJobs.setEnabled",
+          "method": "POST",
+          "path": "/scheduled-jobs/:jobId/enabled"
+        },
+        {
+          "id": "scheduledJobs.update",
+          "method": "PATCH",
+          "path": "/scheduled-jobs/:jobId"
+        },
+        {
+          "id": "scriptReviews.getLatest",
+          "method": "GET",
+          "path": "/projects/:projectId/script-review/latest"
+        },
+        {
+          "id": "scriptReviews.trigger",
+          "method": "POST",
+          "path": "/projects/:projectId/script-review"
+        },
+        {
+          "id": "search.facets",
+          "method": "GET",
+          "path": "/search/facets"
+        },
+        {
+          "id": "settings.channelModelCredentials.list",
+          "method": "GET",
+          "path": "/settings/channel-model-credentials"
+        },
+        {
+          "id": "settings.channelModelCredentials.put",
+          "method": "PUT",
+          "path": "/settings/channel-model-credentials/:serviceId"
+        },
+        {
+          "id": "settings.get",
+          "method": "GET",
+          "path": "/settings"
+        },
+        {
+          "id": "settings.models.list",
+          "method": "GET",
+          "path": "/settings/models"
+        },
+        {
+          "id": "settings.models.put",
+          "method": "PUT",
+          "path": "/settings/models/:capability"
+        },
+        {
+          "id": "settings.models.test",
+          "method": "POST",
+          "path": "/settings/models/:capability/test"
+        },
+        {
+          "id": "settings.onboarding.get",
+          "method": "GET",
+          "path": "/settings/onboarding/:accountId"
+        },
+        {
+          "id": "settings.onboarding.group.get",
+          "method": "GET",
+          "path": "/settings/group-onboarding/:groupId"
+        },
+        {
+          "id": "settings.onboarding.group.patch",
+          "method": "PATCH",
+          "path": "/settings/group-onboarding/:groupId"
+        },
+        {
+          "id": "settings.onboarding.patch",
+          "method": "PATCH",
+          "path": "/settings/onboarding/:accountId"
+        },
+        {
+          "id": "settings.preferences.get",
+          "method": "GET",
+          "path": "/settings/preferences"
+        },
+        {
+          "id": "settings.preferences.patch",
+          "method": "PATCH",
+          "path": "/settings/preferences"
+        },
+        {
+          "id": "settings.prompts.get",
+          "method": "GET",
+          "path": "/settings/prompts/:id"
+        },
+        {
+          "id": "settings.prompts.list",
+          "method": "GET",
+          "path": "/settings/prompts"
+        },
+        {
+          "id": "settings.prompts.put",
+          "method": "PUT",
+          "path": "/settings/prompts/:id"
+        },
+        {
+          "id": "settings.prompts.rollback",
+          "method": "POST",
+          "path": "/settings/prompts/:id/rollback"
+        },
+        {
+          "id": "settings.prompts.versions.list",
+          "method": "GET",
+          "path": "/settings/prompts/:id/versions"
+        },
+        {
+          "id": "settings.redfox.delete",
+          "method": "DELETE",
+          "path": "/settings/redfox"
+        },
+        {
+          "id": "settings.redfox.get",
+          "method": "GET",
+          "path": "/settings/redfox"
+        },
+        {
+          "id": "settings.redfox.put",
+          "method": "PUT",
+          "path": "/settings/redfox"
+        },
+        {
+          "id": "settings.reporting.consent.set",
+          "method": "PUT",
+          "path": "/settings/reporting/consent"
+        },
+        {
+          "id": "settings.reporting.get",
+          "method": "GET",
+          "path": "/settings/reporting"
+        },
+        {
+          "id": "settings.reporting.pending.clear",
+          "method": "POST",
+          "path": "/settings/reporting/pending/clear"
+        },
+        {
+          "id": "settings.storage.get",
+          "method": "GET",
+          "path": "/settings/storage"
+        },
+        {
+          "id": "settings.storage.put",
+          "method": "PUT",
+          "path": "/settings/storage"
+        },
+        {
+          "id": "tasks.patch",
+          "method": "PATCH",
+          "path": "/tasks/:taskId"
+        },
+        {
+          "id": "taxonomy.entityTags.assign",
+          "method": "POST",
+          "path": "/tags/assignments"
+        },
+        {
+          "id": "taxonomy.entityTags.listEntitiesForTag",
+          "method": "GET",
+          "path": "/tags/:tagId/entities"
+        },
+        {
+          "id": "taxonomy.entityTags.listForEntity",
+          "method": "GET",
+          "path": "/tags/for-entity"
+        },
+        {
+          "id": "taxonomy.entityTags.remove",
+          "method": "POST",
+          "path": "/tags/assignments/remove"
+        },
+        {
+          "id": "taxonomy.tags.create",
+          "method": "POST",
+          "path": "/tags"
+        },
+        {
+          "id": "taxonomy.tags.delete",
+          "method": "POST",
+          "path": "/tags/:tagId/delete"
+        },
+        {
+          "id": "taxonomy.tags.list",
+          "method": "GET",
+          "path": "/tags"
+        },
+        {
+          "id": "taxonomy.tags.patch",
+          "method": "PATCH",
+          "path": "/tags/:tagId"
+        },
+        {
+          "id": "topics.attributions.list",
+          "method": "GET",
+          "path": "/topics/attributions"
+        },
+        {
+          "id": "topics.overview",
+          "method": "GET",
+          "path": "/topics/overview"
+        },
+        {
+          "id": "topics.proposals.feedback",
+          "method": "POST",
+          "path": "/topics/proposals/feedback"
+        },
+        {
+          "id": "topics.workspace.get",
+          "method": "GET",
+          "path": "/topics/workspace"
+        },
+        {
+          "id": "topics.workspace.save",
+          "method": "POST",
+          "path": "/topics/workspace"
+        },
+        {
+          "id": "trend.sources.create",
+          "method": "POST",
+          "path": "/trend/sources"
+        },
+        {
+          "id": "trend.sources.list",
+          "method": "GET",
+          "path": "/trend/sources"
+        },
+        {
+          "id": "trend.sources.remove",
+          "method": "POST",
+          "path": "/trend/sources/:sourceId/remove"
+        },
+        {
+          "id": "trend.sources.toggle",
+          "method": "POST",
+          "path": "/trend/sources/:sourceId/toggle"
+        },
+        {
+          "id": "work.sources.select",
+          "method": "POST",
+          "path": "/work-sources/select"
+        },
+        {
+          "id": "workbench.artifacts.list",
+          "method": "GET",
+          "path": "/workbench/conversations/:conversationId/artifacts"
+        },
+        {
+          "id": "workbench.artifacts.read",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId/artifacts/:artifactId/:version"
+        },
+        {
+          "id": "workbench.artifacts.reconcile",
+          "method": "POST",
+          "path": "/workbench/conversations/:conversationId/artifacts/reconcile"
+        },
+        {
+          "id": "workbench.artifacts.render",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId/artifacts/:artifactId/:version/render"
+        },
+        {
+          "id": "workbench.capabilities.list",
+          "method": "GET",
+          "path": "/workbench/capabilities"
+        },
+        {
+          "id": "workbench.files.reconcile",
+          "method": "POST",
+          "path": "/workbench/tasks/:taskId/files/reconcile"
+        },
+        {
+          "id": "workbench.modelCalls.summary",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId/model-calls/summary"
+        },
+        {
+          "id": "workbench.tasks.events",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId/events"
+        },
+        {
+          "id": "workbench.tasks.inspect",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId"
+        },
+        {
+          "id": "workCompositions.basis.save",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/basis/versions"
+        },
+        {
+          "id": "workCompositions.basis.versions.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/basis/versions/:versionId"
+        },
+        {
+          "id": "workCompositions.canvasContext.get",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/canvas-context/read"
+        },
+        {
+          "id": "workCompositions.create",
+          "method": "POST",
+          "path": "/work-compositions"
+        },
+        {
+          "id": "workCompositions.dependencies.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/dependencies"
+        },
+        {
+          "id": "workCompositions.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId"
+        },
+        {
+          "id": "workCompositions.list",
+          "method": "GET",
+          "path": "/work-compositions"
+        },
+        {
+          "id": "workCompositions.materials.attach",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/materials/attach"
+        },
+        {
+          "id": "workCompositions.materials.detach",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/materials/detach"
+        },
+        {
+          "id": "workCompositions.materials.list",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/materials"
+        },
+        {
+          "id": "workCompositions.materials.replace",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/materials/replace"
+        },
+        {
+          "id": "workCompositions.members.bind",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/members/bind"
+        },
+        {
+          "id": "workCompositions.members.cancel",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/members/cancel"
+        },
+        {
+          "id": "workCompositions.members.create",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/members/create"
+        },
+        {
+          "id": "workCompositions.members.requests.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/members/requests/:clientRequestId"
+        },
+        {
+          "id": "workCompositions.requests.get",
+          "method": "GET",
+          "path": "/work-compositions/requests/:clientRequestId"
+        },
+        {
+          "id": "workCompositions.selection.save",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/selection"
+        },
+        {
+          "id": "workCompositions.versions.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/versions/:revision"
+        },
+        {
+          "id": "workCompositions.versions.list",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/versions"
+        },
+        {
+          "id": "workReviews.confirm",
+          "method": "POST",
+          "path": "/work-reviews/confirm"
+        },
+        {
+          "id": "workReviews.create",
+          "method": "POST",
+          "path": "/work-reviews"
+        },
+        {
+          "id": "workReviews.get",
+          "method": "GET",
+          "path": "/work-reviews/:reportId"
+        },
+        {
+          "id": "workReviews.list",
+          "method": "GET",
+          "path": "/work-reviews"
+        },
+        {
+          "id": "workReviews.requests.get",
+          "method": "GET",
+          "path": "/work-reviews/requests/:clientRequestId"
+        },
+        {
+          "id": "workReviews.status",
+          "method": "POST",
+          "path": "/work-reviews/status/read"
+        }
+      ]
+    },
+    {
+      "workspace": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+      "exitCode": 0,
+      "keyCount": 425,
+      "uniqueOperationCount": 425,
+      "keys": [
+        "acceptProjectScriptCandidate",
+        "addAssetFile",
+        "adoptArticleCandidate",
+        "adoptAssistantAction",
+        "adoptCanvasCreate",
+        "adoptCanvasMaterial",
+        "adoptGraphicPostTextCandidate",
+        "adoptMomentsCandidate",
+        "adoptProductionEditorConversion",
+        "adoptProductionEditorSource",
+        "adoptProductionEditorTranscript",
+        "adoptProductionRoughCut",
+        "adoptResult",
+        "adoptRuleSuggestion",
+        "applyAccountGroupMigration",
+        "applyCanvasProposal",
+        "applyProductionEditor",
+        "applyScriptPatch",
+        "archiveAccount",
+        "archiveAccountGroup",
+        "archiveCanvas",
+        "archiveKnowledge",
+        "archiveProject",
+        "assignTags",
+        "attachProjectIntelligence",
+        "attachWorkCompositionMaterial",
+        "beginBind",
+        "bindWorkCompositionMember",
+        "bumpRubricVersion",
+        "cancelAccountBinding",
+        "cancelBind",
+        "cancelCollection",
+        "cancelTask",
+        "cancelWorkCompositionMemberReservation",
+        "clearBrowserSession",
+        "clearReportingPending",
+        "commandExecutionTasks",
+        "commandTranscribeExecutionTaskV1",
+        "commitPendingAsset",
+        "completeExport",
+        "completeReview",
+        "completeRun",
+        "completeUpload",
+        "confirmBind",
+        "confirmCanvasGeneration",
+        "confirmDiscovery",
+        "confirmExecutionTask",
+        "confirmIntelligenceTopic",
+        "confirmProductionEditingPlan",
+        "confirmTask",
+        "confirmWorkReview",
+        "convertOutput",
+        "createAITask",
+        "createAccount",
+        "createAccountGroup",
+        "createArticleVersion",
+        "createArtifact",
+        "createArtifactRelation",
+        "createArtifactVersion",
+        "createBenchmarkSource",
+        "createBundle",
+        "createCandidate",
+        "createCanvas",
+        "createConversation",
+        "createEntry",
+        "createExecutionTask",
+        "createFavoritesFolder",
+        "createGraphicPost",
+        "createGraphicPostVersion",
+        "createGroupEntry",
+        "createIntelligenceCollection",
+        "createIntelligenceSource",
+        "createKnowledge",
+        "createKnowledgeFolder",
+        "createKnowledgeRelation",
+        "createKnowledgeRevision",
+        "createLearning",
+        "createLearningApplication",
+        "createMaterialLink",
+        "createMessage",
+        "createMoments",
+        "createMomentsVersion",
+        "createOutput",
+        "createPrediction",
+        "createProductionEditorTranscript",
+        "createProductionExport",
+        "createProductionRoughCut",
+        "createProductionSegment",
+        "createProject",
+        "createPublication",
+        "createPublicationRevision",
+        "createResult",
+        "createReview",
+        "createReviewInsight",
+        "createReviewRule",
+        "createRubric",
+        "createRun",
+        "createScheduledJob",
+        "createStatement",
+        "createTag",
+        "createTask",
+        "createTrendSource",
+        "createUpload",
+        "createWorkComposition",
+        "createWorkCompositionMember",
+        "createWorkReview",
+        "deleteEntry",
+        "deleteIntelligenceCollection",
+        "deleteIntelligenceSource",
+        "deleteMaterialLink",
+        "deleteProject",
+        "deleteRedfox",
+        "deleteReviewRule",
+        "deleteTag",
+        "detachWorkCompositionMaterial",
+        "diagnoseComments",
+        "discardExecutionTask",
+        "dismissRuleSuggestion",
+        "enqueueIntelligenceProjectUpgrades",
+        "enqueueIntelligenceTranscripts",
+        "evaluateGate",
+        "evaluateLearning",
+        "exportProductionMaterials",
+        "exportPublicationVisualNote",
+        "generateArticleCandidate",
+        "generateCanvasNode",
+        "generateGraphicPostTextCandidate",
+        "generateMomentsCandidate",
+        "generateProjectScriptCandidate",
+        "generateResult",
+        "getAccount",
+        "getAccountBinding",
+        "getAccountCollectionPlanReadiness",
+        "getAccountGroup",
+        "getAccountGroupMigration",
+        "getArticle",
+        "getArticleCandidate",
+        "getArticleVersion",
+        "getArtifact",
+        "getAsset",
+        "getAssetFileDownloadUrl",
+        "getAssistantActionReceipt",
+        "getBundle",
+        "getCadence",
+        "getCadenceAttainment",
+        "getCandidate",
+        "getCanvas",
+        "getCanvasGenerationCapabilities",
+        "getCanvasGenerationMaterial",
+        "getCanvasNodePreview",
+        "getCollection",
+        "getDailyReport",
+        "getDashboard",
+        "getDownloadUrl",
+        "getExecutionTask",
+        "getGlobalSearch",
+        "getGraphicPost",
+        "getGraphicPostTextCandidate",
+        "getGraphicPostVersion",
+        "getGroupCadence",
+        "getGroupCadenceAttainment",
+        "getGroupOnboarding",
+        "getGroupOverview",
+        "getIntelligenceItem",
+        "getIntelligenceMigrationReport",
+        "getIntelligenceRun",
+        "getIntelligenceWorkspace",
+        "getJobRun",
+        "getKnowledge",
+        "getLatestScriptReview",
+        "getLearning",
+        "getMoments",
+        "getMomentsCandidate",
+        "getMomentsRequest",
+        "getMomentsVersion",
+        "getOnboarding",
+        "getOutput",
+        "getOutputConversion",
+        "getOutputProduction",
+        "getPlatformAccountCapabilities",
+        "getPositioningCenter",
+        "getPrediction",
+        "getPreferences",
+        "getProductionEditor",
+        "getProductionEditorConversion",
+        "getProductionEditorReceipt",
+        "getProductionEditorSource",
+        "getProductionEditorTranscript",
+        "getProductionEditorVersion",
+        "getProductionRoughCut",
+        "getProfile",
+        "getProject",
+        "getProjectAnalytics",
+        "getProjectIntelligence",
+        "getProjectOverview",
+        "getProjectTrafficSources",
+        "getPrompt",
+        "getPublication",
+        "getPublicationAnalytics",
+        "getRedfox",
+        "getReportingStatus",
+        "getResult",
+        "getReview",
+        "getRubric",
+        "getRun",
+        "getScheduledJob",
+        "getSearchFacets",
+        "getSettings",
+        "getStatement",
+        "getStorage",
+        "getTask",
+        "getTopicWorkspace",
+        "getWorkComposition",
+        "getWorkCompositionBasisVersion",
+        "getWorkCompositionCanvasContext",
+        "getWorkCompositionDependencies",
+        "getWorkCompositionMemberReservation",
+        "getWorkCompositionRequest",
+        "getWorkCompositionVersion",
+        "getWorkReview",
+        "getWorkReviewRequest",
+        "getWorkReviewStatus",
+        "importDouyinShareItem",
+        "inspectWorkbenchTask",
+        "inventoryIntelligenceMigration",
+        "linkSignalToCandidate",
+        "listAITasks",
+        "listAccountGroups",
+        "listAccounts",
+        "listActivity",
+        "listAllKnowledgeRelations",
+        "listArtifactVersions",
+        "listArtifacts",
+        "listAssetUsage",
+        "listAssets",
+        "listAudienceSignals",
+        "listBenchmarkSources",
+        "listBenchmarkWorks",
+        "listBundles",
+        "listCalendar",
+        "listCandidates",
+        "listCanvasNodeTasks",
+        "listCanvasProposals",
+        "listCanvases",
+        "listCapabilities",
+        "listChannelModelCredentials",
+        "listCommentFailures",
+        "listConversations",
+        "listCreativeCapabilities",
+        "listEntitiesForTag",
+        "listExecutionTasks",
+        "listFavoritesFolders",
+        "listGroupCalendar",
+        "listGroupResourceGrants",
+        "listIntelligenceCollectors",
+        "listIntelligenceFavoriteFolders",
+        "listIntelligenceItems",
+        "listIntelligenceRuns",
+        "listIntelligenceSources",
+        "listJobRunsByJob",
+        "listKnowledge",
+        "listKnowledgeFolders",
+        "listKnowledgeRelations",
+        "listKnowledgeRevisions",
+        "listLearnings",
+        "listMaterialLinks",
+        "listMessages",
+        "listModels",
+        "listMoments",
+        "listMomentsVersions",
+        "listNativeReports",
+        "listNotifications",
+        "listOutputs",
+        "listPredictions",
+        "listProductionEditorRenders",
+        "listProductionEditorVersions",
+        "listProjects",
+        "listPromptVersions",
+        "listPrompts",
+        "listPublicationComments",
+        "listPublicationRevisions",
+        "listPublications",
+        "listResults",
+        "listReviewInsights",
+        "listReviewRules",
+        "listReviews",
+        "listRuleSuggestions",
+        "listScheduledJobs",
+        "listSegments",
+        "listStages",
+        "listStatements",
+        "listTags",
+        "listTagsForEntity",
+        "listTaskResults",
+        "listTaskSteps",
+        "listTasks",
+        "listTopicAttributions",
+        "listTrendSources",
+        "listVisualTemplates",
+        "listWorkCompositionMaterials",
+        "listWorkCompositionVersions",
+        "listWorkCompositions",
+        "listWorkReviews",
+        "listWorkbenchArtifacts",
+        "listWorkbenchCapabilities",
+        "listWorks",
+        "lockPrediction",
+        "loginDouyin",
+        "markNotificationRead",
+        "moveKnowledge",
+        "openBrowserSessionLogin",
+        "overview",
+        "overviewTopics",
+        "patchCandidate",
+        "patchGroupOnboarding",
+        "patchLearning",
+        "patchOnboarding",
+        "patchOutput",
+        "patchPreferences",
+        "patchProfile",
+        "patchProject",
+        "patchReviewRule",
+        "patchTag",
+        "patchTask",
+        "patchTaskResultItems",
+        "prepareProductionEditorConversion",
+        "prepareProductionEditorSource",
+        "previewAccountGroupMigration",
+        "previewAccountGroupTransfer",
+        "previewAssetDelete",
+        "previewGroupResourceGrantRevoke",
+        "previewIntelligenceProfile",
+        "previewIntelligenceTopic",
+        "previewIntelligenceWeb",
+        "previewProductionEditor",
+        "promoteCandidate",
+        "putChannelModelCredential",
+        "putModel",
+        "putOutputProduction",
+        "putPrompt",
+        "putRedfox",
+        "putStorage",
+        "readMetrics",
+        "readWorkCandidateSource",
+        "readWorkbenchArtifact",
+        "readWorkbenchEvents",
+        "readWorkbenchModelCallSummary",
+        "reconcileWorkbenchArtifact",
+        "reconcileWorkbenchFile",
+        "refreshDouyin",
+        "refreshProjectTrafficSources",
+        "register",
+        "registerPublishedPublication",
+        "removeAssignment",
+        "removeBenchmarkSource",
+        "removeFavoritesFolder",
+        "removeKnowledgeRelation",
+        "removeProductionEditingPlanBroll",
+        "removeTrendSource",
+        "removeVisualTemplate",
+        "renderProductionEditor",
+        "renderWorkbenchArtifact",
+        "replaceWorkCompositionMaterial",
+        "researchDiscovery",
+        "resetPositioningMaster",
+        "restoreAccountGroup",
+        "restoreArtifact",
+        "restoreAsset",
+        "restorePositioningMaster",
+        "restoreProductionEditor",
+        "retryComments",
+        "retryMomentsCandidate",
+        "retryProductionEditorSource",
+        "retryResult",
+        "revokeGroupResourceGrant",
+        "rollbackIntelligenceMigration",
+        "rollbackPrompt",
+        "runScheduledJobNow",
+        "saveCanvas",
+        "saveProductionEditor",
+        "saveTopicProposalFeedback",
+        "saveTopicWorkspace",
+        "saveVisualTemplate",
+        "saveWorkCompositionBasis",
+        "saveWorkCompositionSelection",
+        "searchAssets",
+        "selectWorkSource",
+        "setCalendarEntryTarget",
+        "setDiscoveryEvidence",
+        "setReportingConsent",
+        "setScheduledJobEnabled",
+        "startAccountBinding",
+        "startCollection",
+        "startDiscovery",
+        "startIntelligenceMigration",
+        "startIntelligenceRun",
+        "statusDouyin",
+        "suggestCalibrationRule",
+        "testModelConnection",
+        "throttleStatusDouyin",
+        "toggleBenchmarkSource",
+        "toggleFavorite",
+        "toggleFavoritesFolder",
+        "toggleTrendSource",
+        "transcribeBenchmarkWork",
+        "transcribeProjectWork",
+        "transferAccountGroupMember",
+        "transitionEntry",
+        "transitionOutputStage",
+        "transitionProjectStage",
+        "transitionPublication",
+        "trashAsset",
+        "triggerScriptReview",
+        "undoAccountGroupMigration",
+        "updateAccount",
+        "updateAccountGroup",
+        "updateDiscoveryAnswer",
+        "updateEntry",
+        "updateIntelligenceCollection",
+        "updateIntelligenceSource",
+        "updateScheduledJob",
+        "uploadManualIntelligenceTranscript",
+        "upsertCadence",
+        "upsertGroupCadence",
+        "upsertProfile"
+      ],
+      "entries": [
+        {
+          "id": "accountGroups.archive",
+          "method": "POST",
+          "path": "/account-groups/:groupId/archive"
+        },
+        {
+          "id": "accountGroups.create",
+          "method": "POST",
+          "path": "/account-groups"
+        },
+        {
+          "id": "accountGroups.get",
+          "method": "GET",
+          "path": "/account-groups/:groupId"
+        },
+        {
+          "id": "accountGroups.list",
+          "method": "GET",
+          "path": "/account-groups"
+        },
+        {
+          "id": "accountGroups.members.previewTransfer",
+          "method": "POST",
+          "path": "/account-groups/transfer-preview"
+        },
+        {
+          "id": "accountGroups.members.transfer",
+          "method": "POST",
+          "path": "/account-groups/transfer"
+        },
+        {
+          "id": "accountGroups.migration.apply",
+          "method": "POST",
+          "path": "/account-groups/migrations"
+        },
+        {
+          "id": "accountGroups.migration.preview",
+          "method": "POST",
+          "path": "/account-groups/migration-preview"
+        },
+        {
+          "id": "accountGroups.migration.status",
+          "method": "GET",
+          "path": "/account-groups/migrations/:migrationId"
+        },
+        {
+          "id": "accountGroups.migration.undo",
+          "method": "POST",
+          "path": "/account-groups/migrations/:migrationId/undo"
+        },
+        {
+          "id": "accountGroups.restore",
+          "method": "POST",
+          "path": "/account-groups/:groupId/restore"
+        },
+        {
+          "id": "accountGroups.update",
+          "method": "PATCH",
+          "path": "/account-groups/:groupId"
+        },
+        {
+          "id": "accounts.archive",
+          "method": "POST",
+          "path": "/accounts/:accountId/archive"
+        },
+        {
+          "id": "accounts.bind.cancel",
+          "method": "POST",
+          "path": "/accounts/bindings/:runId/cancel"
+        },
+        {
+          "id": "accounts.bind.start",
+          "method": "POST",
+          "path": "/accounts/bindings"
+        },
+        {
+          "id": "accounts.bind.status",
+          "method": "GET",
+          "path": "/accounts/bindings/:runId"
+        },
+        {
+          "id": "accounts.bindingCapabilities",
+          "method": "GET",
+          "path": "/accounts/binding-capabilities"
+        },
+        {
+          "id": "accounts.cadence.attainment",
+          "method": "GET",
+          "path": "/accounts/:accountId/cadence/attainment"
+        },
+        {
+          "id": "accounts.cadence.get",
+          "method": "GET",
+          "path": "/accounts/:accountId/cadence"
+        },
+        {
+          "id": "accounts.cadence.upsert",
+          "method": "PUT",
+          "path": "/accounts/:accountId/cadence"
+        },
+        {
+          "id": "accounts.calendar.entries.create",
+          "method": "POST",
+          "path": "/accounts/:accountId/calendar/entries"
+        },
+        {
+          "id": "accounts.calendar.list",
+          "method": "GET",
+          "path": "/accounts/:accountId/calendar"
+        },
+        {
+          "id": "accounts.collectionPlanReadiness",
+          "method": "GET",
+          "path": "/accounts/:accountId/collection-plan-readiness"
+        },
+        {
+          "id": "accounts.create",
+          "method": "POST",
+          "path": "/accounts"
+        },
+        {
+          "id": "accounts.get",
+          "method": "GET",
+          "path": "/accounts/:accountId"
+        },
+        {
+          "id": "accounts.list",
+          "method": "GET",
+          "path": "/accounts"
+        },
+        {
+          "id": "accounts.update",
+          "method": "PATCH",
+          "path": "/accounts/:accountId"
+        },
+        {
+          "id": "ai.assistantActions.adopt",
+          "method": "POST",
+          "path": "/ai/assistant-actions/adopt"
+        },
+        {
+          "id": "ai.assistantActions.receipt",
+          "method": "GET",
+          "path": "/ai/assistant-actions/receipt"
+        },
+        {
+          "id": "ai.conversations.create",
+          "method": "POST",
+          "path": "/ai/conversations"
+        },
+        {
+          "id": "ai.conversations.list",
+          "method": "GET",
+          "path": "/ai/conversations"
+        },
+        {
+          "id": "ai.conversations.messages.create",
+          "method": "POST",
+          "path": "/ai/conversations/:conversationId/messages"
+        },
+        {
+          "id": "ai.conversations.messages.list",
+          "method": "GET",
+          "path": "/ai/conversations/:conversationId/messages"
+        },
+        {
+          "id": "ai.tasks.cancel",
+          "method": "POST",
+          "path": "/ai/tasks/:taskId/cancel"
+        },
+        {
+          "id": "ai.tasks.confirm",
+          "method": "POST",
+          "path": "/ai/tasks/:taskId/confirm"
+        },
+        {
+          "id": "ai.tasks.create",
+          "method": "POST",
+          "path": "/ai/tasks"
+        },
+        {
+          "id": "ai.tasks.get",
+          "method": "GET",
+          "path": "/ai/tasks/:taskId"
+        },
+        {
+          "id": "ai.tasks.list",
+          "method": "GET",
+          "path": "/ai/tasks"
+        },
+        {
+          "id": "ai.tasks.results.list",
+          "method": "GET",
+          "path": "/ai/tasks/:taskId/results"
+        },
+        {
+          "id": "ai.tasks.results.patch",
+          "method": "POST",
+          "path": "/ai/tasks/:taskId/results/patch"
+        },
+        {
+          "id": "ai.tasks.steps.list",
+          "method": "GET",
+          "path": "/ai/tasks/:taskId/steps"
+        },
+        {
+          "id": "ai.workCandidates.source",
+          "method": "GET",
+          "path": "/ai/conversations/:conversationId/work-candidates/source"
+        },
+        {
+          "id": "analytics.comments.diagnose",
+          "method": "POST",
+          "path": "/analytics/comments/diagnose"
+        },
+        {
+          "id": "analytics.comments.failures.list",
+          "method": "GET",
+          "path": "/analytics/comments/failures"
+        },
+        {
+          "id": "analytics.comments.retry",
+          "method": "POST",
+          "path": "/analytics/comments/retry"
+        },
+        {
+          "id": "analytics.projects.get",
+          "method": "GET",
+          "path": "/analytics/projects/:projectId"
+        },
+        {
+          "id": "analytics.publications.get",
+          "method": "GET",
+          "path": "/analytics/publications/:publicationId"
+        },
+        {
+          "id": "analytics.traffic.get",
+          "method": "GET",
+          "path": "/analytics/projects/:projectId/traffic"
+        },
+        {
+          "id": "analytics.traffic.refresh",
+          "method": "POST",
+          "path": "/analytics/projects/:projectId/traffic/refresh"
+        },
+        {
+          "id": "articles.candidates.adopt",
+          "method": "POST",
+          "path": "/articles/candidates/:candidateId/adopt"
+        },
+        {
+          "id": "articles.candidates.generate",
+          "method": "POST",
+          "path": "/outputs/:outputId/article/candidates/generate"
+        },
+        {
+          "id": "articles.candidates.get",
+          "method": "GET",
+          "path": "/articles/candidates/:candidateId"
+        },
+        {
+          "id": "articles.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/article"
+        },
+        {
+          "id": "articles.versions.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/article/versions"
+        },
+        {
+          "id": "articles.versions.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/article/versions/:versionId"
+        },
+        {
+          "id": "artifacts.create",
+          "method": "POST",
+          "path": "/projects/:projectId/artifacts"
+        },
+        {
+          "id": "artifacts.get",
+          "method": "GET",
+          "path": "/artifacts/:artifactId"
+        },
+        {
+          "id": "artifacts.list",
+          "method": "GET",
+          "path": "/projects/:projectId/artifacts"
+        },
+        {
+          "id": "artifacts.relations.create",
+          "method": "POST",
+          "path": "/artifacts/:artifactId/relations"
+        },
+        {
+          "id": "artifacts.restore",
+          "method": "POST",
+          "path": "/artifacts/:artifactId/restore"
+        },
+        {
+          "id": "artifacts.scriptPatches.apply",
+          "method": "POST",
+          "path": "/artifacts/:artifactId/script-patches/apply"
+        },
+        {
+          "id": "artifacts.versions.create",
+          "method": "POST",
+          "path": "/artifacts/:artifactId/versions"
+        },
+        {
+          "id": "artifacts.versions.list",
+          "method": "GET",
+          "path": "/artifacts/:artifactId/versions"
+        },
+        {
+          "id": "assets.commit",
+          "method": "POST",
+          "path": "/assets/:assetId/commit"
+        },
+        {
+          "id": "assets.downloadUrl",
+          "method": "GET",
+          "path": "/assets/:assetId/download-url"
+        },
+        {
+          "id": "assets.favorite.toggle",
+          "method": "POST",
+          "path": "/assets/:assetId/favorite"
+        },
+        {
+          "id": "assets.fileDownloadUrl",
+          "method": "GET",
+          "path": "/assets/:assetId/files/:assetFileId/download-url"
+        },
+        {
+          "id": "assets.files.create",
+          "method": "POST",
+          "path": "/assets/:assetId/files"
+        },
+        {
+          "id": "assets.get",
+          "method": "GET",
+          "path": "/assets/:assetId"
+        },
+        {
+          "id": "assets.list",
+          "method": "GET",
+          "path": "/assets"
+        },
+        {
+          "id": "assets.previewDelete",
+          "method": "POST",
+          "path": "/assets/:assetId/delete-preview"
+        },
+        {
+          "id": "assets.restore",
+          "method": "POST",
+          "path": "/assets/:assetId/restore"
+        },
+        {
+          "id": "assets.search",
+          "method": "GET",
+          "path": "/assets/search"
+        },
+        {
+          "id": "assets.trash",
+          "method": "POST",
+          "path": "/assets/:assetId/trash"
+        },
+        {
+          "id": "assets.uploads.complete",
+          "method": "POST",
+          "path": "/assets/uploads/:uploadId/complete"
+        },
+        {
+          "id": "assets.uploads.create",
+          "method": "POST",
+          "path": "/assets/uploads"
+        },
+        {
+          "id": "assets.usage.list",
+          "method": "GET",
+          "path": "/assets/:assetId/usage"
+        },
+        {
+          "id": "assets.visualTemplates.list",
+          "method": "GET",
+          "path": "/assets/visual-templates"
+        },
+        {
+          "id": "assets.visualTemplates.remove",
+          "method": "POST",
+          "path": "/assets/visual-templates/:templateId/remove"
+        },
+        {
+          "id": "assets.visualTemplates.save",
+          "method": "POST",
+          "path": "/assets/visual-templates/save"
+        },
+        {
+          "id": "audienceSignals.linkToCandidate",
+          "method": "POST",
+          "path": "/audience-signals/:signalId/link"
+        },
+        {
+          "id": "audienceSignals.list",
+          "method": "GET",
+          "path": "/audience-signals"
+        },
+        {
+          "id": "benchmark.sources.create",
+          "method": "POST",
+          "path": "/benchmark/sources"
+        },
+        {
+          "id": "benchmark.sources.list",
+          "method": "GET",
+          "path": "/benchmark/sources"
+        },
+        {
+          "id": "benchmark.sources.remove",
+          "method": "POST",
+          "path": "/benchmark/sources/:sourceId/remove"
+        },
+        {
+          "id": "benchmark.sources.toggle",
+          "method": "POST",
+          "path": "/benchmark/sources/:sourceId/toggle"
+        },
+        {
+          "id": "benchmark.works.list",
+          "method": "GET",
+          "path": "/benchmark/works"
+        },
+        {
+          "id": "benchmark.works.transcribe",
+          "method": "POST",
+          "path": "/benchmark/works/:workId/transcribe"
+        },
+        {
+          "id": "browserSessions.clear",
+          "method": "POST",
+          "path": "/browser-sessions/clear"
+        },
+        {
+          "id": "browserSessions.openLogin",
+          "method": "POST",
+          "path": "/browser-sessions/open-login"
+        },
+        {
+          "id": "calendar.entries.delete",
+          "method": "DELETE",
+          "path": "/calendar/entries/:entryId"
+        },
+        {
+          "id": "calendar.entries.target",
+          "method": "PUT",
+          "path": "/calendar/entries/:entryId/target"
+        },
+        {
+          "id": "calendar.entries.transition",
+          "method": "POST",
+          "path": "/calendar/entries/:entryId/transition"
+        },
+        {
+          "id": "calendar.entries.update",
+          "method": "PATCH",
+          "path": "/calendar/entries/:entryId"
+        },
+        {
+          "id": "calibration.overview",
+          "method": "GET",
+          "path": "/calibration/overview"
+        },
+        {
+          "id": "calibration.predictions.create",
+          "method": "POST",
+          "path": "/calibration/predictions"
+        },
+        {
+          "id": "calibration.predictions.get",
+          "method": "GET",
+          "path": "/calibration/predictions/:predictionId"
+        },
+        {
+          "id": "calibration.predictions.list",
+          "method": "GET",
+          "path": "/calibration/predictions"
+        },
+        {
+          "id": "calibration.predictions.lock",
+          "method": "POST",
+          "path": "/calibration/predictions/:predictionId/lock"
+        },
+        {
+          "id": "calibration.results.create",
+          "method": "POST",
+          "path": "/calibration/predictions/:predictionId/result"
+        },
+        {
+          "id": "calibration.rubrics.bumpVersion",
+          "method": "POST",
+          "path": "/calibration/rubrics/:rubricId/versions"
+        },
+        {
+          "id": "calibration.rubrics.create",
+          "method": "POST",
+          "path": "/calibration/rubrics"
+        },
+        {
+          "id": "calibration.rubrics.get",
+          "method": "GET",
+          "path": "/calibration/rubrics/:rubricId"
+        },
+        {
+          "id": "calibration.suggestions.adopt",
+          "method": "POST",
+          "path": "/calibration/suggestions/:suggestionId/adopt"
+        },
+        {
+          "id": "calibration.suggestions.dismiss",
+          "method": "POST",
+          "path": "/calibration/suggestions/:suggestionId/dismiss"
+        },
+        {
+          "id": "calibration.suggestions.list",
+          "method": "GET",
+          "path": "/calibration/suggestions"
+        },
+        {
+          "id": "candidates.create",
+          "method": "POST",
+          "path": "/candidates"
+        },
+        {
+          "id": "candidates.get",
+          "method": "GET",
+          "path": "/candidates/:candidateId"
+        },
+        {
+          "id": "candidates.list",
+          "method": "GET",
+          "path": "/candidates"
+        },
+        {
+          "id": "candidates.patch",
+          "method": "PATCH",
+          "path": "/candidates/:candidateId"
+        },
+        {
+          "id": "candidates.promote",
+          "method": "POST",
+          "path": "/candidates/:candidateId/promote"
+        },
+        {
+          "id": "canvas.agent.apply",
+          "method": "POST",
+          "path": "/canvases/:canvasId/proposals/:proposalId/apply"
+        },
+        {
+          "id": "canvas.agent.proposals",
+          "method": "GET",
+          "path": "/canvases/:canvasId/proposals"
+        },
+        {
+          "id": "canvas.archive",
+          "method": "POST",
+          "path": "/canvases/:canvasId/archive"
+        },
+        {
+          "id": "canvas.capabilities",
+          "method": "GET",
+          "path": "/canvases/capabilities"
+        },
+        {
+          "id": "canvas.create",
+          "method": "POST",
+          "path": "/canvases"
+        },
+        {
+          "id": "canvas.create.adopt",
+          "method": "POST",
+          "path": "/canvases/create/adopt"
+        },
+        {
+          "id": "canvas.generation.confirm",
+          "method": "POST",
+          "path": "/canvases/:canvasId/nodes/:nodeId/confirm"
+        },
+        {
+          "id": "canvas.generations.material.get",
+          "method": "GET",
+          "path": "/canvases/:canvasId/generations/:generationLinkId/material"
+        },
+        {
+          "id": "canvas.get",
+          "method": "GET",
+          "path": "/canvases/:canvasId"
+        },
+        {
+          "id": "canvas.list",
+          "method": "GET",
+          "path": "/canvases"
+        },
+        {
+          "id": "canvas.material.adopt",
+          "method": "POST",
+          "path": "/canvases/:canvasId/material/adopt"
+        },
+        {
+          "id": "canvas.node.generate",
+          "method": "POST",
+          "path": "/canvases/:canvasId/nodes/:nodeId/generate"
+        },
+        {
+          "id": "canvas.node.preview",
+          "method": "GET",
+          "path": "/canvases/:canvasId/nodes/:nodeId/preview"
+        },
+        {
+          "id": "canvas.node.tasks",
+          "method": "GET",
+          "path": "/canvases/:canvasId/tasks"
+        },
+        {
+          "id": "canvas.save",
+          "method": "POST",
+          "path": "/canvases/:canvasId/save"
+        },
+        {
+          "id": "creativeCapabilities.list",
+          "method": "GET",
+          "path": "/creative-capabilities"
+        },
+        {
+          "id": "creativeResults.adopt",
+          "method": "POST",
+          "path": "/creative-results/:resultId/adopt"
+        },
+        {
+          "id": "creativeResults.bundles.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/creative-result-bundles"
+        },
+        {
+          "id": "creativeResults.bundles.get",
+          "method": "GET",
+          "path": "/creative-result-bundles/:bundleId"
+        },
+        {
+          "id": "creativeResults.bundles.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/creative-result-bundles"
+        },
+        {
+          "id": "creativeResults.generate",
+          "method": "POST",
+          "path": "/outputs/:outputId/creative-results/generate"
+        },
+        {
+          "id": "creativeResults.get",
+          "method": "GET",
+          "path": "/creative-results/:resultId"
+        },
+        {
+          "id": "creativeResults.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/creative-results"
+        },
+        {
+          "id": "creativeResults.retry",
+          "method": "POST",
+          "path": "/creative-results/:resultId/retry"
+        },
+        {
+          "id": "execution.tasks.command",
+          "method": "POST",
+          "path": "/execution/tasks/command"
+        },
+        {
+          "id": "execution.tasks.confirm",
+          "method": "POST",
+          "path": "/execution/tasks/:taskId/confirm"
+        },
+        {
+          "id": "execution.tasks.create",
+          "method": "POST",
+          "path": "/execution/tasks"
+        },
+        {
+          "id": "execution.tasks.discard",
+          "method": "POST",
+          "path": "/execution/tasks/:taskId/discard"
+        },
+        {
+          "id": "execution.tasks.get",
+          "method": "GET",
+          "path": "/execution/tasks/:taskId"
+        },
+        {
+          "id": "execution.tasks.list",
+          "method": "GET",
+          "path": "/execution/tasks"
+        },
+        {
+          "id": "execution.tasks.transcribeCommand.v1",
+          "method": "POST",
+          "path": "/execution/tasks/transcribe-commands/v1"
+        },
+        {
+          "id": "exports.complete",
+          "method": "POST",
+          "path": "/exports/:exportId/complete"
+        },
+        {
+          "id": "favorites.folders.create",
+          "method": "POST",
+          "path": "/favorites/folders"
+        },
+        {
+          "id": "favorites.folders.list",
+          "method": "GET",
+          "path": "/favorites/folders"
+        },
+        {
+          "id": "favorites.folders.remove",
+          "method": "POST",
+          "path": "/favorites/folders/:folderId/remove"
+        },
+        {
+          "id": "favorites.folders.toggle",
+          "method": "POST",
+          "path": "/favorites/folders/:folderId/toggle"
+        },
+        {
+          "id": "graphicPosts.candidates.adopt",
+          "method": "POST",
+          "path": "/graphic-posts/candidates/:candidateId/adopt"
+        },
+        {
+          "id": "graphicPosts.candidates.generate",
+          "method": "POST",
+          "path": "/outputs/:outputId/graphic-post/candidates/generate"
+        },
+        {
+          "id": "graphicPosts.candidates.get",
+          "method": "GET",
+          "path": "/graphic-posts/candidates/:candidateId"
+        },
+        {
+          "id": "graphicPosts.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/graphic-post"
+        },
+        {
+          "id": "graphicPosts.outputs.create",
+          "method": "POST",
+          "path": "/projects/:projectId/graphic-posts"
+        },
+        {
+          "id": "graphicPosts.versions.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/graphic-post/versions"
+        },
+        {
+          "id": "graphicPosts.versions.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/graphic-post/versions/:versionId"
+        },
+        {
+          "id": "group.cadence.attainment",
+          "method": "GET",
+          "path": "/account-groups/:groupId/cadence/attainment"
+        },
+        {
+          "id": "group.cadence.get",
+          "method": "GET",
+          "path": "/account-groups/:groupId/cadence"
+        },
+        {
+          "id": "group.cadence.upsert",
+          "method": "PUT",
+          "path": "/account-groups/:groupId/cadence"
+        },
+        {
+          "id": "group.calendar.entries.create",
+          "method": "POST",
+          "path": "/account-groups/:groupId/calendar/entries"
+        },
+        {
+          "id": "group.calendar.list",
+          "method": "GET",
+          "path": "/account-groups/:groupId/calendar"
+        },
+        {
+          "id": "groupResourceGrants.list",
+          "method": "GET",
+          "path": "/group-resource-grants"
+        },
+        {
+          "id": "groupResourceGrants.previewRevoke",
+          "method": "POST",
+          "path": "/group-resource-grants/:grantId/revoke-preview"
+        },
+        {
+          "id": "groupResourceGrants.revoke",
+          "method": "POST",
+          "path": "/group-resource-grants/:grantId/revoke"
+        },
+        {
+          "id": "identity.profile.patch",
+          "method": "PATCH",
+          "path": "/me"
+        },
+        {
+          "id": "identity.register",
+          "method": "POST",
+          "path": "/auth/register"
+        },
+        {
+          "id": "ingestion.douyin.login",
+          "method": "POST",
+          "path": "/ingestion/douyin/login"
+        },
+        {
+          "id": "ingestion.douyin.refresh",
+          "method": "POST",
+          "path": "/ingestion/douyin/refresh"
+        },
+        {
+          "id": "ingestion.douyin.status",
+          "method": "GET",
+          "path": "/ingestion/douyin/status"
+        },
+        {
+          "id": "ingestion.douyin.throttleStatus",
+          "method": "GET",
+          "path": "/ingestion/douyin/throttle-status"
+        },
+        {
+          "id": "ingestion.runs.complete",
+          "method": "POST",
+          "path": "/ingestion/runs/:runId/complete"
+        },
+        {
+          "id": "ingestion.runs.create",
+          "method": "POST",
+          "path": "/ingestion/runs"
+        },
+        {
+          "id": "ingestion.runs.get",
+          "method": "GET",
+          "path": "/ingestion/runs/:runId"
+        },
+        {
+          "id": "intelligence.collections.create",
+          "method": "POST",
+          "path": "/intelligence/collections"
+        },
+        {
+          "id": "intelligence.collections.delete",
+          "method": "DELETE",
+          "path": "/intelligence/collections/:collectionId"
+        },
+        {
+          "id": "intelligence.collections.update",
+          "method": "PATCH",
+          "path": "/intelligence/collections/:collectionId"
+        },
+        {
+          "id": "intelligence.collectors.list",
+          "method": "GET",
+          "path": "/intelligence/collectors"
+        },
+        {
+          "id": "intelligence.items.get",
+          "method": "GET",
+          "path": "/intelligence/items/:itemId"
+        },
+        {
+          "id": "intelligence.items.importDouyinShare",
+          "method": "POST",
+          "path": "/intelligence/items/import-douyin-share"
+        },
+        {
+          "id": "intelligence.items.list",
+          "method": "GET",
+          "path": "/intelligence/items"
+        },
+        {
+          "id": "intelligence.migrations.inventory",
+          "method": "GET",
+          "path": "/intelligence/migrations/inventory"
+        },
+        {
+          "id": "intelligence.migrations.report",
+          "method": "GET",
+          "path": "/intelligence/migrations/:migrationId"
+        },
+        {
+          "id": "intelligence.migrations.rollback",
+          "method": "POST",
+          "path": "/intelligence/migrations/:migrationId/rollback"
+        },
+        {
+          "id": "intelligence.migrations.start",
+          "method": "POST",
+          "path": "/intelligence/migrations"
+        },
+        {
+          "id": "intelligence.projects.enqueue",
+          "method": "POST",
+          "path": "/intelligence/projects/enqueue"
+        },
+        {
+          "id": "intelligence.runs.get",
+          "method": "GET",
+          "path": "/intelligence/runs/:runId"
+        },
+        {
+          "id": "intelligence.runs.list",
+          "method": "GET",
+          "path": "/intelligence/sources/:sourceId/runs"
+        },
+        {
+          "id": "intelligence.runs.start",
+          "method": "POST",
+          "path": "/intelligence/sources/:sourceId/runs"
+        },
+        {
+          "id": "intelligence.sources.create",
+          "method": "POST",
+          "path": "/intelligence/sources"
+        },
+        {
+          "id": "intelligence.sources.delete",
+          "method": "DELETE",
+          "path": "/intelligence/sources/:sourceId"
+        },
+        {
+          "id": "intelligence.sources.list",
+          "method": "GET",
+          "path": "/intelligence/sources"
+        },
+        {
+          "id": "intelligence.sources.listFavoriteFolders",
+          "method": "GET",
+          "path": "/intelligence/sources/favorite-folders"
+        },
+        {
+          "id": "intelligence.sources.previewProfile",
+          "method": "POST",
+          "path": "/intelligence/sources/preview-profile"
+        },
+        {
+          "id": "intelligence.sources.previewWeb",
+          "method": "POST",
+          "path": "/intelligence/sources/preview-web"
+        },
+        {
+          "id": "intelligence.sources.update",
+          "method": "PATCH",
+          "path": "/intelligence/sources/:sourceId"
+        },
+        {
+          "id": "intelligence.transcripts.enqueue",
+          "method": "POST",
+          "path": "/intelligence/transcripts/enqueue"
+        },
+        {
+          "id": "intelligence.transcripts.uploadManual",
+          "method": "POST",
+          "path": "/intelligence/transcripts/upload-manual"
+        },
+        {
+          "id": "intelligence.transforms.confirmTopic",
+          "method": "POST",
+          "path": "/intelligence/transforms/:transformId/confirm-topic"
+        },
+        {
+          "id": "intelligence.transforms.previewTopic",
+          "method": "POST",
+          "path": "/intelligence/transforms/topic-preview"
+        },
+        {
+          "id": "intelligence.workspace.get",
+          "method": "GET",
+          "path": "/intelligence/workspace"
+        },
+        {
+          "id": "jobRuns.get",
+          "method": "GET",
+          "path": "/job-runs/:runId"
+        },
+        {
+          "id": "jobRuns.listByJob",
+          "method": "GET",
+          "path": "/scheduled-jobs/:jobId/runs"
+        },
+        {
+          "id": "knowledge.archive",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/archive"
+        },
+        {
+          "id": "knowledge.create",
+          "method": "POST",
+          "path": "/knowledge"
+        },
+        {
+          "id": "knowledge.folders.create",
+          "method": "POST",
+          "path": "/knowledge-folders"
+        },
+        {
+          "id": "knowledge.folders.list",
+          "method": "GET",
+          "path": "/knowledge-folders"
+        },
+        {
+          "id": "knowledge.get",
+          "method": "GET",
+          "path": "/knowledge/:knowledgeId"
+        },
+        {
+          "id": "knowledge.list",
+          "method": "GET",
+          "path": "/knowledge"
+        },
+        {
+          "id": "knowledge.move",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/move"
+        },
+        {
+          "id": "knowledge.relations.create",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/relations"
+        },
+        {
+          "id": "knowledge.relations.delete",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/relations/remove"
+        },
+        {
+          "id": "knowledge.relations.list",
+          "method": "GET",
+          "path": "/knowledge/:knowledgeId/relations"
+        },
+        {
+          "id": "knowledge.relations.listAll",
+          "method": "GET",
+          "path": "/knowledge-relations"
+        },
+        {
+          "id": "knowledge.revisions.create",
+          "method": "POST",
+          "path": "/knowledge/:knowledgeId/revisions"
+        },
+        {
+          "id": "knowledge.revisions.list",
+          "method": "GET",
+          "path": "/knowledge/:knowledgeId/revisions"
+        },
+        {
+          "id": "learnings.applications.create",
+          "method": "POST",
+          "path": "/learnings/:learningId/applications"
+        },
+        {
+          "id": "learnings.calibrationSuggestions.create",
+          "method": "POST",
+          "path": "/learnings/:learningId/calibration-suggestions"
+        },
+        {
+          "id": "learnings.create",
+          "method": "POST",
+          "path": "/learnings"
+        },
+        {
+          "id": "learnings.evaluate",
+          "method": "POST",
+          "path": "/learnings/:learningId/evaluate"
+        },
+        {
+          "id": "learnings.get",
+          "method": "GET",
+          "path": "/learnings/:learningId"
+        },
+        {
+          "id": "learnings.list",
+          "method": "GET",
+          "path": "/learnings"
+        },
+        {
+          "id": "learnings.patch",
+          "method": "PATCH",
+          "path": "/learnings/:learningId"
+        },
+        {
+          "id": "materialLinks.create",
+          "method": "POST",
+          "path": "/material-links"
+        },
+        {
+          "id": "materialLinks.delete",
+          "method": "POST",
+          "path": "/material-links/:linkId/delete"
+        },
+        {
+          "id": "materialLinks.list",
+          "method": "GET",
+          "path": "/material-links"
+        },
+        {
+          "id": "moments.candidates.adopt",
+          "method": "POST",
+          "path": "/moments/candidates/:candidateId/adopt"
+        },
+        {
+          "id": "moments.candidates.generate",
+          "method": "POST",
+          "path": "/moments/:momentsId/candidates/generate"
+        },
+        {
+          "id": "moments.candidates.get",
+          "method": "GET",
+          "path": "/moments/candidates/:candidateId"
+        },
+        {
+          "id": "moments.candidates.retry",
+          "method": "POST",
+          "path": "/moments/candidates/:candidateId/retry"
+        },
+        {
+          "id": "moments.create",
+          "method": "POST",
+          "path": "/moments"
+        },
+        {
+          "id": "moments.get",
+          "method": "GET",
+          "path": "/moments/:momentsId"
+        },
+        {
+          "id": "moments.list",
+          "method": "GET",
+          "path": "/moments"
+        },
+        {
+          "id": "moments.requests.get",
+          "method": "GET",
+          "path": "/moments/requests/:clientRequestId"
+        },
+        {
+          "id": "moments.versions.create",
+          "method": "POST",
+          "path": "/moments/:momentsId/versions"
+        },
+        {
+          "id": "moments.versions.get",
+          "method": "GET",
+          "path": "/moments/:momentsId/versions/:versionId"
+        },
+        {
+          "id": "moments.versions.list",
+          "method": "GET",
+          "path": "/moments/:momentsId/versions"
+        },
+        {
+          "id": "notifications.list",
+          "method": "GET",
+          "path": "/notifications"
+        },
+        {
+          "id": "notifications.read",
+          "method": "POST",
+          "path": "/notifications/:notificationId/read"
+        },
+        {
+          "id": "outputs.conversions.create",
+          "method": "POST",
+          "path": "/output-conversions"
+        },
+        {
+          "id": "outputs.conversions.get",
+          "method": "GET",
+          "path": "/output-conversions/:clientRequestId"
+        },
+        {
+          "id": "outputs.get",
+          "method": "GET",
+          "path": "/outputs/:outputId"
+        },
+        {
+          "id": "outputs.patch",
+          "method": "PATCH",
+          "path": "/outputs/:outputId"
+        },
+        {
+          "id": "outputs.production.editingPlan.broll.remove",
+          "method": "PUT",
+          "path": "/outputs/:outputId/production/editing-plan/broll/remove"
+        },
+        {
+          "id": "outputs.production.editingPlan.confirm",
+          "method": "PUT",
+          "path": "/outputs/:outputId/production/editing-plan"
+        },
+        {
+          "id": "outputs.production.editor.apply",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/apply"
+        },
+        {
+          "id": "outputs.production.editor.convert.adopt",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/convert/adopt"
+        },
+        {
+          "id": "outputs.production.editor.convert.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/convert/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.convert.prepare",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/convert"
+        },
+        {
+          "id": "outputs.production.editor.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor"
+        },
+        {
+          "id": "outputs.production.editor.preview",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/preview"
+        },
+        {
+          "id": "outputs.production.editor.receipt.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/receipts/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.render",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/render"
+        },
+        {
+          "id": "outputs.production.editor.renders.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/renders"
+        },
+        {
+          "id": "outputs.production.editor.restore",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/restore"
+        },
+        {
+          "id": "outputs.production.editor.rough-cut.adopt",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/rough-cut/adopt"
+        },
+        {
+          "id": "outputs.production.editor.rough-cut.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/rough-cut"
+        },
+        {
+          "id": "outputs.production.editor.rough-cut.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/rough-cut/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.save",
+          "method": "PUT",
+          "path": "/outputs/:outputId/production/editor"
+        },
+        {
+          "id": "outputs.production.editor.sources.adopt",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/sources/adopt"
+        },
+        {
+          "id": "outputs.production.editor.sources.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/sources/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.sources.prepare",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/sources"
+        },
+        {
+          "id": "outputs.production.editor.sources.retry",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/sources/retry"
+        },
+        {
+          "id": "outputs.production.editor.transcripts.adopt",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/transcripts/adopt"
+        },
+        {
+          "id": "outputs.production.editor.transcripts.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/production/editor/transcripts"
+        },
+        {
+          "id": "outputs.production.editor.transcripts.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/transcripts/:requestId"
+        },
+        {
+          "id": "outputs.production.editor.versions.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/versions/:revision"
+        },
+        {
+          "id": "outputs.production.editor.versions.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/production/editor/versions"
+        },
+        {
+          "id": "outputs.production.get",
+          "method": "GET",
+          "path": "/outputs/:outputId/production"
+        },
+        {
+          "id": "outputs.production.put",
+          "method": "PUT",
+          "path": "/outputs/:outputId/production"
+        },
+        {
+          "id": "outputs.publications.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/publications"
+        },
+        {
+          "id": "outputs.publications.list",
+          "method": "GET",
+          "path": "/outputs/:outputId/publications"
+        },
+        {
+          "id": "outputs.publications.register",
+          "method": "POST",
+          "path": "/outputs/:outputId/publications/register"
+        },
+        {
+          "id": "outputs.stage.transition",
+          "method": "POST",
+          "path": "/outputs/:outputId/stages/:stage/transition"
+        },
+        {
+          "id": "pages.dailyReport.get",
+          "method": "GET",
+          "path": "/analytics/daily-report"
+        },
+        {
+          "id": "pages.dashboard.get",
+          "method": "GET",
+          "path": "/analytics/dashboard"
+        },
+        {
+          "id": "pages.groupOverview.get",
+          "method": "GET",
+          "path": "/groups/:groupId/overview"
+        },
+        {
+          "id": "pages.positioning.get",
+          "method": "GET",
+          "path": "/positioning/center"
+        },
+        {
+          "id": "pages.projectOverview.get",
+          "method": "GET",
+          "path": "/projects/:projectId/overview"
+        },
+        {
+          "id": "pages.search.get",
+          "method": "GET",
+          "path": "/search"
+        },
+        {
+          "id": "platforms.bind.begin",
+          "method": "POST",
+          "path": "/platforms/bind-attempts"
+        },
+        {
+          "id": "platforms.bind.cancel",
+          "method": "POST",
+          "path": "/platforms/bind-attempts/:bindAttemptId/cancel"
+        },
+        {
+          "id": "platforms.bind.confirm",
+          "method": "POST",
+          "path": "/platforms/bind-attempts/:bindAttemptId/confirm"
+        },
+        {
+          "id": "platforms.capabilities.list",
+          "method": "GET",
+          "path": "/platforms/capabilities"
+        },
+        {
+          "id": "platforms.collections.cancel",
+          "method": "POST",
+          "path": "/accounts/:accountId/collections/:attemptId/cancel"
+        },
+        {
+          "id": "platforms.collections.get",
+          "method": "GET",
+          "path": "/accounts/:accountId/collections/:attemptId"
+        },
+        {
+          "id": "platforms.collections.start",
+          "method": "POST",
+          "path": "/accounts/:accountId/collections"
+        },
+        {
+          "id": "platforms.metrics.read",
+          "method": "GET",
+          "path": "/accounts/:accountId/platform-metrics"
+        },
+        {
+          "id": "platforms.reports.list",
+          "method": "GET",
+          "path": "/accounts/:accountId/platform-reports"
+        },
+        {
+          "id": "platforms.works.list",
+          "method": "GET",
+          "path": "/accounts/:accountId/platform-works"
+        },
+        {
+          "id": "positioning.discovery.answer.update",
+          "method": "PATCH",
+          "path": "/positioning/discovery/:sessionId/answers"
+        },
+        {
+          "id": "positioning.discovery.confirm",
+          "method": "POST",
+          "path": "/positioning/discovery/:sessionId/confirm"
+        },
+        {
+          "id": "positioning.discovery.evidence.set",
+          "method": "PATCH",
+          "path": "/positioning/discovery/:sessionId/evidence/:evidenceId"
+        },
+        {
+          "id": "positioning.discovery.research",
+          "method": "POST",
+          "path": "/positioning/discovery/:sessionId/research"
+        },
+        {
+          "id": "positioning.discovery.start",
+          "method": "POST",
+          "path": "/positioning/discovery"
+        },
+        {
+          "id": "positioning.gate.evaluate",
+          "method": "POST",
+          "path": "/positioning/gate/evaluate"
+        },
+        {
+          "id": "positioning.master.reset",
+          "method": "POST",
+          "path": "/positioning/master/reset"
+        },
+        {
+          "id": "positioning.master.restore",
+          "method": "POST",
+          "path": "/positioning/master/restore"
+        },
+        {
+          "id": "positioning.profile.get",
+          "method": "GET",
+          "path": "/positioning/profile"
+        },
+        {
+          "id": "positioning.profile.upsert",
+          "method": "POST",
+          "path": "/positioning/profile"
+        },
+        {
+          "id": "positioning.statements.create",
+          "method": "POST",
+          "path": "/positioning/statements"
+        },
+        {
+          "id": "positioning.statements.get",
+          "method": "GET",
+          "path": "/positioning/statements/:statementId"
+        },
+        {
+          "id": "positioning.statements.list",
+          "method": "GET",
+          "path": "/positioning/statements"
+        },
+        {
+          "id": "productions.exports.create",
+          "method": "POST",
+          "path": "/productions/:productionId/exports"
+        },
+        {
+          "id": "productions.exports.materials",
+          "method": "POST",
+          "path": "/productions/:productionId/exports/materials"
+        },
+        {
+          "id": "productions.segments.create",
+          "method": "POST",
+          "path": "/productions/:productionId/segments"
+        },
+        {
+          "id": "productions.segments.list",
+          "method": "GET",
+          "path": "/productions/:productionId/segments"
+        },
+        {
+          "id": "projects.activity.list",
+          "method": "GET",
+          "path": "/projects/:projectId/activity"
+        },
+        {
+          "id": "projects.archive",
+          "method": "POST",
+          "path": "/projects/:projectId/archive"
+        },
+        {
+          "id": "projects.create",
+          "method": "POST",
+          "path": "/projects"
+        },
+        {
+          "id": "projects.delete",
+          "method": "DELETE",
+          "path": "/projects/:projectId"
+        },
+        {
+          "id": "projects.get",
+          "method": "GET",
+          "path": "/projects/:projectId"
+        },
+        {
+          "id": "projects.intelligence.attach",
+          "method": "POST",
+          "path": "/projects/:projectId/intelligence"
+        },
+        {
+          "id": "projects.intelligence.list",
+          "method": "GET",
+          "path": "/projects/:projectId/intelligence"
+        },
+        {
+          "id": "projects.list",
+          "method": "GET",
+          "path": "/projects"
+        },
+        {
+          "id": "projects.outputs.create",
+          "method": "POST",
+          "path": "/projects/:projectId/outputs"
+        },
+        {
+          "id": "projects.outputs.list",
+          "method": "GET",
+          "path": "/projects/:projectId/outputs"
+        },
+        {
+          "id": "projects.patch",
+          "method": "PATCH",
+          "path": "/projects/:projectId"
+        },
+        {
+          "id": "projects.scripts.acceptCandidate",
+          "method": "POST",
+          "path": "/projects/:projectId/scripts/candidates/:taskId/accept"
+        },
+        {
+          "id": "projects.scripts.generateCandidate",
+          "method": "POST",
+          "path": "/projects/:projectId/scripts/candidates"
+        },
+        {
+          "id": "projects.stage.transition",
+          "method": "POST",
+          "path": "/projects/:projectId/stages/:stage/transition"
+        },
+        {
+          "id": "projects.stages.list",
+          "method": "GET",
+          "path": "/projects/:projectId/stages"
+        },
+        {
+          "id": "projects.tasks.create",
+          "method": "POST",
+          "path": "/projects/:projectId/tasks"
+        },
+        {
+          "id": "projects.tasks.list",
+          "method": "GET",
+          "path": "/projects/:projectId/tasks"
+        },
+        {
+          "id": "projects.transcribe",
+          "method": "POST",
+          "path": "/projects/:projectId/transcribe"
+        },
+        {
+          "id": "publications.comments.list",
+          "method": "GET",
+          "path": "/publications/:publicationId/comments"
+        },
+        {
+          "id": "publications.get",
+          "method": "GET",
+          "path": "/publications/:publicationId"
+        },
+        {
+          "id": "publications.revisions.create",
+          "method": "POST",
+          "path": "/publications/:publicationId/revisions"
+        },
+        {
+          "id": "publications.revisions.list",
+          "method": "GET",
+          "path": "/publications/:publicationId/revisions"
+        },
+        {
+          "id": "publications.transition",
+          "method": "POST",
+          "path": "/publications/:publicationId/transition"
+        },
+        {
+          "id": "publications.visualNotes.export",
+          "method": "POST",
+          "path": "/publications/:publicationId/visual-note/export"
+        },
+        {
+          "id": "reviewRules.create",
+          "method": "POST",
+          "path": "/review-rules"
+        },
+        {
+          "id": "reviewRules.delete",
+          "method": "DELETE",
+          "path": "/review-rules/:ruleId"
+        },
+        {
+          "id": "reviewRules.list",
+          "method": "GET",
+          "path": "/review-rules"
+        },
+        {
+          "id": "reviewRules.patch",
+          "method": "PATCH",
+          "path": "/review-rules/:ruleId"
+        },
+        {
+          "id": "reviews.complete",
+          "method": "POST",
+          "path": "/reviews/:reviewId/complete"
+        },
+        {
+          "id": "reviews.create",
+          "method": "POST",
+          "path": "/projects/:projectId/reviews"
+        },
+        {
+          "id": "reviews.get",
+          "method": "GET",
+          "path": "/reviews/:reviewId"
+        },
+        {
+          "id": "reviews.insights.create",
+          "method": "POST",
+          "path": "/reviews/:reviewId/insights"
+        },
+        {
+          "id": "reviews.insights.list",
+          "method": "GET",
+          "path": "/reviews/:reviewId/insights"
+        },
+        {
+          "id": "reviews.list",
+          "method": "GET",
+          "path": "/projects/:projectId/reviews"
+        },
+        {
+          "id": "scheduledJobs.create",
+          "method": "POST",
+          "path": "/scheduled-jobs"
+        },
+        {
+          "id": "scheduledJobs.get",
+          "method": "GET",
+          "path": "/scheduled-jobs/:jobId"
+        },
+        {
+          "id": "scheduledJobs.list",
+          "method": "GET",
+          "path": "/scheduled-jobs"
+        },
+        {
+          "id": "scheduledJobs.runNow",
+          "method": "POST",
+          "path": "/scheduled-jobs/:jobId/run-now"
+        },
+        {
+          "id": "scheduledJobs.setEnabled",
+          "method": "POST",
+          "path": "/scheduled-jobs/:jobId/enabled"
+        },
+        {
+          "id": "scheduledJobs.update",
+          "method": "PATCH",
+          "path": "/scheduled-jobs/:jobId"
+        },
+        {
+          "id": "scriptReviews.getLatest",
+          "method": "GET",
+          "path": "/projects/:projectId/script-review/latest"
+        },
+        {
+          "id": "scriptReviews.trigger",
+          "method": "POST",
+          "path": "/projects/:projectId/script-review"
+        },
+        {
+          "id": "search.facets",
+          "method": "GET",
+          "path": "/search/facets"
+        },
+        {
+          "id": "settings.channelModelCredentials.list",
+          "method": "GET",
+          "path": "/settings/channel-model-credentials"
+        },
+        {
+          "id": "settings.channelModelCredentials.put",
+          "method": "PUT",
+          "path": "/settings/channel-model-credentials/:serviceId"
+        },
+        {
+          "id": "settings.get",
+          "method": "GET",
+          "path": "/settings"
+        },
+        {
+          "id": "settings.models.list",
+          "method": "GET",
+          "path": "/settings/models"
+        },
+        {
+          "id": "settings.models.put",
+          "method": "PUT",
+          "path": "/settings/models/:capability"
+        },
+        {
+          "id": "settings.models.test",
+          "method": "POST",
+          "path": "/settings/models/:capability/test"
+        },
+        {
+          "id": "settings.onboarding.get",
+          "method": "GET",
+          "path": "/settings/onboarding/:accountId"
+        },
+        {
+          "id": "settings.onboarding.group.get",
+          "method": "GET",
+          "path": "/settings/group-onboarding/:groupId"
+        },
+        {
+          "id": "settings.onboarding.group.patch",
+          "method": "PATCH",
+          "path": "/settings/group-onboarding/:groupId"
+        },
+        {
+          "id": "settings.onboarding.patch",
+          "method": "PATCH",
+          "path": "/settings/onboarding/:accountId"
+        },
+        {
+          "id": "settings.preferences.get",
+          "method": "GET",
+          "path": "/settings/preferences"
+        },
+        {
+          "id": "settings.preferences.patch",
+          "method": "PATCH",
+          "path": "/settings/preferences"
+        },
+        {
+          "id": "settings.prompts.get",
+          "method": "GET",
+          "path": "/settings/prompts/:id"
+        },
+        {
+          "id": "settings.prompts.list",
+          "method": "GET",
+          "path": "/settings/prompts"
+        },
+        {
+          "id": "settings.prompts.put",
+          "method": "PUT",
+          "path": "/settings/prompts/:id"
+        },
+        {
+          "id": "settings.prompts.rollback",
+          "method": "POST",
+          "path": "/settings/prompts/:id/rollback"
+        },
+        {
+          "id": "settings.prompts.versions.list",
+          "method": "GET",
+          "path": "/settings/prompts/:id/versions"
+        },
+        {
+          "id": "settings.redfox.delete",
+          "method": "DELETE",
+          "path": "/settings/redfox"
+        },
+        {
+          "id": "settings.redfox.get",
+          "method": "GET",
+          "path": "/settings/redfox"
+        },
+        {
+          "id": "settings.redfox.put",
+          "method": "PUT",
+          "path": "/settings/redfox"
+        },
+        {
+          "id": "settings.reporting.consent.set",
+          "method": "PUT",
+          "path": "/settings/reporting/consent"
+        },
+        {
+          "id": "settings.reporting.get",
+          "method": "GET",
+          "path": "/settings/reporting"
+        },
+        {
+          "id": "settings.reporting.pending.clear",
+          "method": "POST",
+          "path": "/settings/reporting/pending/clear"
+        },
+        {
+          "id": "settings.storage.get",
+          "method": "GET",
+          "path": "/settings/storage"
+        },
+        {
+          "id": "settings.storage.put",
+          "method": "PUT",
+          "path": "/settings/storage"
+        },
+        {
+          "id": "tasks.patch",
+          "method": "PATCH",
+          "path": "/tasks/:taskId"
+        },
+        {
+          "id": "taxonomy.entityTags.assign",
+          "method": "POST",
+          "path": "/tags/assignments"
+        },
+        {
+          "id": "taxonomy.entityTags.listEntitiesForTag",
+          "method": "GET",
+          "path": "/tags/:tagId/entities"
+        },
+        {
+          "id": "taxonomy.entityTags.listForEntity",
+          "method": "GET",
+          "path": "/tags/for-entity"
+        },
+        {
+          "id": "taxonomy.entityTags.remove",
+          "method": "POST",
+          "path": "/tags/assignments/remove"
+        },
+        {
+          "id": "taxonomy.tags.create",
+          "method": "POST",
+          "path": "/tags"
+        },
+        {
+          "id": "taxonomy.tags.delete",
+          "method": "POST",
+          "path": "/tags/:tagId/delete"
+        },
+        {
+          "id": "taxonomy.tags.list",
+          "method": "GET",
+          "path": "/tags"
+        },
+        {
+          "id": "taxonomy.tags.patch",
+          "method": "PATCH",
+          "path": "/tags/:tagId"
+        },
+        {
+          "id": "topics.attributions.list",
+          "method": "GET",
+          "path": "/topics/attributions"
+        },
+        {
+          "id": "topics.overview",
+          "method": "GET",
+          "path": "/topics/overview"
+        },
+        {
+          "id": "topics.proposals.feedback",
+          "method": "POST",
+          "path": "/topics/proposals/feedback"
+        },
+        {
+          "id": "topics.workspace.get",
+          "method": "GET",
+          "path": "/topics/workspace"
+        },
+        {
+          "id": "topics.workspace.save",
+          "method": "POST",
+          "path": "/topics/workspace"
+        },
+        {
+          "id": "trend.sources.create",
+          "method": "POST",
+          "path": "/trend/sources"
+        },
+        {
+          "id": "trend.sources.list",
+          "method": "GET",
+          "path": "/trend/sources"
+        },
+        {
+          "id": "trend.sources.remove",
+          "method": "POST",
+          "path": "/trend/sources/:sourceId/remove"
+        },
+        {
+          "id": "trend.sources.toggle",
+          "method": "POST",
+          "path": "/trend/sources/:sourceId/toggle"
+        },
+        {
+          "id": "work.sources.select",
+          "method": "POST",
+          "path": "/work-sources/select"
+        },
+        {
+          "id": "workbench.artifacts.list",
+          "method": "GET",
+          "path": "/workbench/conversations/:conversationId/artifacts"
+        },
+        {
+          "id": "workbench.artifacts.read",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId/artifacts/:artifactId/:version"
+        },
+        {
+          "id": "workbench.artifacts.reconcile",
+          "method": "POST",
+          "path": "/workbench/conversations/:conversationId/artifacts/reconcile"
+        },
+        {
+          "id": "workbench.artifacts.render",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId/artifacts/:artifactId/:version/render"
+        },
+        {
+          "id": "workbench.capabilities.list",
+          "method": "GET",
+          "path": "/workbench/capabilities"
+        },
+        {
+          "id": "workbench.files.reconcile",
+          "method": "POST",
+          "path": "/workbench/tasks/:taskId/files/reconcile"
+        },
+        {
+          "id": "workbench.modelCalls.summary",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId/model-calls/summary"
+        },
+        {
+          "id": "workbench.tasks.events",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId/events"
+        },
+        {
+          "id": "workbench.tasks.inspect",
+          "method": "GET",
+          "path": "/workbench/tasks/:taskId"
+        },
+        {
+          "id": "workCompositions.basis.save",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/basis/versions"
+        },
+        {
+          "id": "workCompositions.basis.versions.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/basis/versions/:versionId"
+        },
+        {
+          "id": "workCompositions.canvasContext.get",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/canvas-context/read"
+        },
+        {
+          "id": "workCompositions.create",
+          "method": "POST",
+          "path": "/work-compositions"
+        },
+        {
+          "id": "workCompositions.dependencies.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/dependencies"
+        },
+        {
+          "id": "workCompositions.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId"
+        },
+        {
+          "id": "workCompositions.list",
+          "method": "GET",
+          "path": "/work-compositions"
+        },
+        {
+          "id": "workCompositions.materials.attach",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/materials/attach"
+        },
+        {
+          "id": "workCompositions.materials.detach",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/materials/detach"
+        },
+        {
+          "id": "workCompositions.materials.list",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/materials"
+        },
+        {
+          "id": "workCompositions.materials.replace",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/materials/replace"
+        },
+        {
+          "id": "workCompositions.members.bind",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/members/bind"
+        },
+        {
+          "id": "workCompositions.members.cancel",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/members/cancel"
+        },
+        {
+          "id": "workCompositions.members.create",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/members/create"
+        },
+        {
+          "id": "workCompositions.members.requests.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/members/requests/:clientRequestId"
+        },
+        {
+          "id": "workCompositions.requests.get",
+          "method": "GET",
+          "path": "/work-compositions/requests/:clientRequestId"
+        },
+        {
+          "id": "workCompositions.selection.save",
+          "method": "POST",
+          "path": "/work-compositions/:compositionId/selection"
+        },
+        {
+          "id": "workCompositions.versions.get",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/versions/:revision"
+        },
+        {
+          "id": "workCompositions.versions.list",
+          "method": "GET",
+          "path": "/work-compositions/:compositionId/versions"
+        },
+        {
+          "id": "workReviews.confirm",
+          "method": "POST",
+          "path": "/work-reviews/confirm"
+        },
+        {
+          "id": "workReviews.create",
+          "method": "POST",
+          "path": "/work-reviews"
+        },
+        {
+          "id": "workReviews.get",
+          "method": "GET",
+          "path": "/work-reviews/:reportId"
+        },
+        {
+          "id": "workReviews.list",
+          "method": "GET",
+          "path": "/work-reviews"
+        },
+        {
+          "id": "workReviews.requests.get",
+          "method": "GET",
+          "path": "/work-reviews/requests/:clientRequestId"
+        },
+        {
+          "id": "workReviews.status",
+          "method": "POST",
+          "path": "/work-reviews/status/read"
+        }
+      ]
+    }
+  ],
+  "addedKeys": [
+    "readWorkCandidateSource"
+  ],
+  "removedKeys": [],
+  "publicBrowserTest": false,
+  "nativeAppAcceptance": false
+}

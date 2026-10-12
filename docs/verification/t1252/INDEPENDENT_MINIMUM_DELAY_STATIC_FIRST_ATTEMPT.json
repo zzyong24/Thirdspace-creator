@@ -1,0 +1,7 @@
+{
+  "result": "FAIL_STATIC_REVIEW_HARNESS_PARSE",
+  "exit": 1,
+  "cause": "抽取TypeScript表达式包含new Promise<void>，直接Node VM不能parse",
+  "candidateExecuted": false,
+  "fix": "仅静态harness删去类型泛型<void>，候选源码不变"
+}

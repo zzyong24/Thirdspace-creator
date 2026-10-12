@@ -1,0 +1,88 @@
+{
+  "schema": "private-public-tool-handoff/v1",
+  "at": "2026-10-12T01:01:11.111726+00:00",
+  "scope": "静态工具正式交审；无Vitest/list/body/HTTP/PGlite/Native正文/Chromium启动",
+  "files": [
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "sha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/prepare.cjs",
+      "sha256": "c95cf85e40ca4993cde3d74b8baa9151c9c90d50b62ce51a3b614fbaad088b10"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/budget.cjs",
+      "sha256": "6d69a3f2799c3a00730f72bcbe5a59d91eb94c9fad6a2313c6cd916a57a5c8e1"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/copy-source.cjs",
+      "sha256": "2274e942f735e2c517e7dc635004a0694956a9ea69b85d611f4e07c221e05b18"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/README.md",
+      "sha256": "9d95def49d2fea10484a09bd4efed21a91f551e3d0a849487aba82298a0ba716"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/STATIC_COPY_BUDGET_PROOF.json",
+      "sha256": "772f944e8f69f9b351e61322578bbf75b3d554c366057c5547c2afcb45486b91"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+      "sha256": "5c4133785470cf5b838858f8745e4ad5edaf9614995b65542301b8e45e908e45"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+      "sha256": "4c2533d3c07e7603bfdf94bc517d930ac0d8b8d11e9742f9fb95d0e8d172d3a4"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/input-binding.json",
+      "sha256": "978bd84566b88c8512cf5e75ceed60fc034775207dc99f3cbd4774a5822d3360"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/check-private-config.cjs",
+      "sha256": "d2bac82ae30d337568f693c631fcfffd2e9becaa4d10c2ea8a058373981232d4"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/STATIC_GENERATED_CONFIG.mts",
+      "sha256": "f72adf2b43d0a79d546a980b9980cc25fc4bb022c77b7181e77575c9c1796b00"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/STATIC_CONFIG_AND_SHORT_SOCKET_PROOF.json",
+      "sha256": "d5a9e4da24902bbf5c6c4e005fc30548359c7b40c632b26b652ee80f8e60cc63"
+    }
+  ],
+  "sourceCandidatePacketSha256": "82bc117fbb7f07a57747eaa8b1424d92b3d9ea84042c7de264f9191fb65e784a",
+  "sourceCandidateSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+  "sourceReviewedReceipt": "docs/verification/t1252/INDEPENDENT_PUBLIC_SLOW_CANDIDATE_RECHECK.json",
+  "rootOriginalSourceNotApplied": false,
+  "sourceInputs": 2207,
+  "installedInputs": 111831,
+  "browserInputs": 337,
+  "entryOuterMs": 170400000,
+  "selectedCases": [
+    {
+      "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+      "bodyMs": 80040000
+    },
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "bodyMs": 36000000
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "bodyMs": 42000000
+    }
+  ],
+  "copyInverse": true,
+  "originalNative19BeforeDone18OutsideHttpBudget": "17 setup/resume/conflict fileRPC + automatic read1；首public receipt1在CLI HTTP槽，19 beforeDone仅18作为独立Native槽",
+  "failFastBoundary": "任何child非零即停止后续；原结果保留，后续未运行明确未验，不代签三例。取消、预算耗尽、源漂移、unclosed同样停止。当前没有实际失败。",
+  "pendingBeforeRuntime": [
+    "peer+ROOT精确新工具准入；本候选不得自行执行"
+  ],
+  "runtimePermission": false,
+  "previousUnexecutedHandoffSha256": "bbb68945763566aff3b37bada9f1bbf9f1723dd84f6209afaff661f0e90f3474",
+  "delta": "PT002实际collect0body失败后仅newtool final include覆盖+list/run exactfile双门及fresh real短TMP/未来Rust socket<104 guard；原source/预算/body/generator不改。",
+  "actualFirstFailureEvidence": "docs/verification/t1252/actual-public-first-collection-failed/EVIDENCE.json",
+  "actualSourceApplication": "docs/verification/t1252/PUBLIC_SOURCE_APPROVED_APPLICATION.json"
+}

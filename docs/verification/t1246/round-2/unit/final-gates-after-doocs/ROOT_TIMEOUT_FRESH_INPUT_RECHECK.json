@@ -1,0 +1,11 @@
+{
+  "phase": "timeout",
+  "passed": true,
+  "prepareSha256": "ab83a91dd2e9d8de2ae632a5be92a275cbbdb99dee57d99056209d3b6701979b",
+  "inputs": 8303,
+  "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+  "toolSHA": "b5a32eadc6aa2bf429c058e4bc95ea4b287296c159f4e797e95abff3e7006bcc",
+  "originalEightGroupsUnchanged": true,
+  "noGateExecutedYet": true,
+  "noIndexMutation": true
+}

@@ -1,0 +1,46 @@
+{
+  "nonce": "b76860261e08f6c832bbff6f45fe25ca",
+  "uid": 501,
+  "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH",
+  "rootInode": 352746191,
+  "startedAt": "2026-10-12T11:03:19.759Z",
+  "budgets": {
+    "prepare": 3600000,
+    "led018": 22800000,
+    "led057": 3600000,
+    "lifecycle018": 2160000,
+    "lifecycle057": 2160000,
+    "after": 3600000,
+    "total": 37920000
+  },
+  "commands": [
+    [
+      "LED-018",
+      "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs && cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_",
+      22800000,
+      2160000
+    ],
+    [
+      "LED-057",
+      "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features",
+      3600000,
+      2160000
+    ]
+  ],
+  "reviewPath": "/private/tmp/t1246-package-final-source/ROOT_LED018_LED057_EXACT_ONCE_ADMISSION.json",
+  "reviewSha256": "b28fc9f1d5f1246f7828c708fffcac6e0c08fa945a957870fdd024fe43a02f6a",
+  "toolSha256": "1faf0b55e297a7b2f48263a342ec2145905c300b90028e28dd46758bddabf136",
+  "envSelection": {
+    "PATH": "/opt/homebrew/Cellar/node/25.9.0_2/bin:/Users/zyongzhu/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "HOME": "/Users/zyongzhu",
+    "TMPDIR": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/tmp",
+    "CARGO_TARGET_DIR": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/cargo-target",
+    "CARGO_NET_OFFLINE": true,
+    "RUSTUP_TOOLCHAIN": "stable-aarch64-apple-darwin",
+    "pgKeys": []
+  },
+  "noApp": true,
+  "noInstall": true,
+  "noPublish": true,
+  "oldIgnoreLeafMissingPreserved": true
+}

@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-11T23:01:16.057644+00:00",
+  "rootAuthorization": "ROOT_IMPLEMENTATION_CANDIDATE_CF927_REVIEW.json da4a6f5129f446310014b51fdf94198ac11b9c220e6025c276094c9bcb5c490d",
+  "exactChangedCount": 10,
+  "unchangedThreeUntouched": true,
+  "rows": [
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "beforeSha256": "4e679f48074de96a2c1badd3ef5a3950ca32fb8c3bd9de3dca12c39768ccf532",
+      "afterSha256": "3bbbfa9f115eba36d1ba40de3a243d60b65534b383e425b2a1cb113d1f9ccb98"
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "beforeSha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4",
+      "afterSha256": "7b3b056f7873a9b5e4df35da6d14d6d3a10730ecd22529529f541fcea082c677"
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "beforeSha256": "360e4531b26e7fe540bcca5efbfe08f12ba38a2b48bfb1d660a2527e1085f957",
+      "afterSha256": "bec80c632e5eb4101545196b4e7af1dabcb683a5ef62e51505e363e68c730717"
+    },
+    {
+      "path": "mcp-server/package.json",
+      "beforeSha256": "2ab421c76f3977b43e052699fefec3000816475eb78c26c80cd110dc38df0c3b",
+      "afterSha256": "a74529f5ad9326a6299f81b15b1d7f3bb25656ffbf421f3770ffd4b613a39890"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "beforeSha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6",
+      "afterSha256": "62f3a953ae6c1746e5227bf54ff39234d62e2e3d38fea4b5b08393cb2f5dcb28"
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "beforeSha256": "6ef4e5c873fcd5ac2719a220454ba3ed33be78394b63d3fd7cba5140aaddff13",
+      "afterSha256": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+    },
+    {
+      "path": "mcp-server/tests/dispatch.test.ts",
+      "beforeSha256": "7f884b3feae4258ccdf22d1423d999c7381b4eb1c8b7216cb540b5e156d22bba",
+      "afterSha256": "c4d414a7cd6239d9537228130b2c1a3669aafe1d48e58ac0d4c727570bd613ba"
+    },
+    {
+      "path": "mcp-server/tests/cli.test.ts",
+      "beforeSha256": "acbffcdb6297c0aa55cad79ca3740371fc94795d8aeb7aaaac273daeee5dbd68",
+      "afterSha256": "bca0e966ff43d61907af7a137cc05a2aaa65d6c8444bd1335566c735ba1ca715"
+    },
+    {
+      "path": "mcp-server/tests/group-mcp-context.test.ts",
+      "beforeSha256": "f227e9466adb8b9d56acecd63cad16ca0aeb4506fb7a3e30978385f733db02e7",
+      "afterSha256": "08fd68d8a7f7a2c6a9ca8f0c4ec3c7a16e3420f9cb37473057a89a985a7689cb"
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "beforeSha256": "806420ed506a56b28c43641ddc5ce7d70dd362f4ec10be8841b8207211173843",
+      "afterSha256": "b034aa7082b41cad411b65e69884d13785dd72182ab0190f5bbe88d576c2a863"
+    }
+  ],
+  "installed": false,
+  "built": false,
+  "tested": false
+}

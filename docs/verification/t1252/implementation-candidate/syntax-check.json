@@ -1,0 +1,22 @@
+{
+  "scope": "pure TypeScript transpile only; no execution/server/install/sharedbuild",
+  "typescript": "5.9.3",
+  "results": [
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "syntacticDiagnostics": []
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "syntacticDiagnostics": []
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "syntacticDiagnostics": []
+    },
+    {
+      "path": "mcp-server/tests/dispatch.test.ts",
+      "syntacticDiagnostics": []
+    }
+  ]
+}

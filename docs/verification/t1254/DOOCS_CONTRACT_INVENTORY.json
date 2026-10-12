@@ -1,0 +1,408 @@
+{
+  "task": "T-1254",
+  "status": "READ_ONLY_CONTRACT_INVENTORY_NOT_IMPLEMENTED_NOT_RUNTIME",
+  "archives": {
+    "native": {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "sha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583",
+      "members": 819,
+      "files": 819,
+      "fetchEntry": "doocs-md-native/packages/shared/src/utils/fetch.ts",
+      "fetchSHA": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "fetchLines": [
+        {
+          "line": 6,
+          "text": "  timeout?: number"
+        },
+        {
+          "line": 29,
+          "text": "  const timeout = config.timeout ?? 30_000"
+        },
+        {
+          "line": 30,
+          "text": "  const timer = setTimeout(() => controller.abort(), timeout)"
+        },
+        {
+          "line": 62,
+          "text": "      ? await res.json()"
+        },
+        {
+          "line": 63,
+          "text": "      : tryParseJson(await res.text())"
+        },
+        {
+          "line": 81,
+          "text": "    clearTimeout(timer)"
+        }
+      ],
+      "explicitDirectModuleImporters": [
+        {
+          "entry": "doocs-md-native/apps/web/src/services/upload/providers.ts",
+          "sha256": "80b8a4c592a3a28d2c3dd1026cfcdbc5498397bd899a31c9f62373b36531c124",
+          "importLines": [
+            {
+              "line": 3,
+              "text": "import fetch from '@md/shared/utils/fetch'"
+            }
+          ]
+        }
+      ],
+      "entryBindings": [
+        {
+          "entry": "doocs-md-native/packages/shared/src/utils/fetch.ts",
+          "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+          "bytes": 4397
+        },
+        {
+          "entry": "doocs-md-native/packages/shared/src/utils/fetch.test.ts",
+          "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+          "bytes": 3603
+        },
+        {
+          "entry": "doocs-md-native/apps/web/src/services/upload/providers.ts",
+          "sha256": "80b8a4c592a3a28d2c3dd1026cfcdbc5498397bd899a31c9f62373b36531c124",
+          "bytes": 24919
+        },
+        {
+          "entry": "doocs-md-native/apps/web/src/composables/useImageUploader.ts",
+          "sha256": "9b7262bad9137e46e1adc7dc900a7051b1f1858ad6ca303992fa7d76e6b33a17",
+          "bytes": 4474
+        },
+        {
+          "entry": "doocs-md-native/apps/web/src/services/upload/index.ts",
+          "sha256": "e30a3261168726e041b409a8b7230b67c1399068c305b73167501263cf4524df",
+          "bytes": 175
+        },
+        {
+          "entry": "doocs-md-native/apps/web/src/native-entry.ts",
+          "sha256": "7c00495934d9ca6bc114552a50ccc5287a52f3a9e7eee9ca997fd856d55df36b",
+          "bytes": 13111
+        },
+        {
+          "entry": "doocs-md-native/apps/web/vite.config.ts",
+          "sha256": "fdd144a48488d55dcca0ba77c2256805ed2177ffb06a29736f7d0bc7ef677ae5",
+          "bytes": 6156
+        },
+        {
+          "entry": "doocs-md-native/apps/web/vite.native.config.ts",
+          "sha256": "7418e2cca6db6def4aeadcc4ff0dab0cc8d79458b8ef686e5d019d2735582fca",
+          "bytes": 4153
+        },
+        {
+          "entry": "doocs-md-native/apps/web/package.json",
+          "sha256": "2bd2c2cd11a5bc5b6c3588e126e7e3caba17ce038003f1e44f77ca22fc8d4122",
+          "bytes": 3012
+        },
+        {
+          "entry": "doocs-md-native/scripts/build-native.mjs",
+          "sha256": "e2311c02592dfa03954a6b41d821e698a645e851e52c80c4ebf48475e7dde57b",
+          "bytes": 1599
+        },
+        {
+          "entry": "doocs-md-native/scripts/verify-native-build.mjs",
+          "sha256": "ac58319b710f1e567c70c72bbb6970f693046492f36d9bce59f31aff9f251542",
+          "bytes": 3278
+        },
+        {
+          "entry": "doocs-md-native/NATIVE_SOURCE.json",
+          "sha256": "f487bcb0d3388229f908416771b08d781c9a7aa47d25a6001be3261287529efd",
+          "bytes": 789
+        },
+        {
+          "entry": "doocs-md-native/pnpm-lock.yaml",
+          "sha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+          "bytes": 452784
+        }
+      ]
+    },
+    "staticFixedBase": {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "sha256": "9335e7d501df0271a861b787fbc3bd155da45c29bd3af5a328e421c19f655822",
+      "members": 957,
+      "files": 798,
+      "fetchEntry": "packages/shared/src/utils/fetch.ts",
+      "fetchSHA": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "fetchLines": [
+        {
+          "line": 6,
+          "text": "  timeout?: number"
+        },
+        {
+          "line": 29,
+          "text": "  const timeout = config.timeout ?? 30_000"
+        },
+        {
+          "line": 30,
+          "text": "  const timer = setTimeout(() => controller.abort(), timeout)"
+        },
+        {
+          "line": 62,
+          "text": "      ? await res.json()"
+        },
+        {
+          "line": 63,
+          "text": "      : tryParseJson(await res.text())"
+        },
+        {
+          "line": 81,
+          "text": "    clearTimeout(timer)"
+        }
+      ],
+      "explicitDirectModuleImporters": [
+        {
+          "entry": "apps/web/src/services/upload/providers.ts",
+          "sha256": "80b8a4c592a3a28d2c3dd1026cfcdbc5498397bd899a31c9f62373b36531c124",
+          "importLines": [
+            {
+              "line": 3,
+              "text": "import fetch from '@md/shared/utils/fetch'"
+            }
+          ]
+        }
+      ],
+      "entryBindings": [
+        {
+          "entry": "packages/shared/src/utils/fetch.ts",
+          "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+          "bytes": 4397
+        },
+        {
+          "entry": "packages/shared/src/utils/fetch.test.ts",
+          "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+          "bytes": 3603
+        },
+        {
+          "entry": "apps/web/src/services/upload/providers.ts",
+          "sha256": "80b8a4c592a3a28d2c3dd1026cfcdbc5498397bd899a31c9f62373b36531c124",
+          "bytes": 24919
+        },
+        {
+          "entry": "apps/web/src/composables/useImageUploader.ts",
+          "sha256": "35d2e01ea127a1430b00b23a24e0a70997d6952fe26826defe4b86fa8b70194b",
+          "bytes": 3605
+        },
+        {
+          "entry": "apps/web/src/services/upload/index.ts",
+          "sha256": "e30a3261168726e041b409a8b7230b67c1399068c305b73167501263cf4524df",
+          "bytes": 175
+        },
+        {
+          "entry": "apps/web/vite.config.ts",
+          "sha256": "31fe094de0c8cf480373ae65252641e8fd26177520d1516b8a6255e3f789d5cd",
+          "bytes": 6185
+        },
+        {
+          "entry": "apps/web/package.json",
+          "sha256": "2bd2c2cd11a5bc5b6c3588e126e7e3caba17ce038003f1e44f77ca22fc8d4122",
+          "bytes": 3012
+        },
+        {
+          "entry": "pnpm-lock.yaml",
+          "sha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+          "bytes": 452784
+        }
+      ]
+    }
+  },
+  "twoCompiledDefaults": [
+    {
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "sha256": "be6f97ab7e84116fbd22a0328f245dbd45a0b209f1e4a85d5815ffd21845614f",
+      "defaultMs": 30000
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-config-BhBc-hVt.js",
+      "sha256": "34fce8be0bf22d9603bec258ea6e0cc34c79d334381a29f8d233c8a74f06e587",
+      "defaultMs": 30000
+    }
+  ],
+  "directSharedFetchCallSites": [
+    {
+      "line": 75,
+      "text": "const res = await fetch<{ content: {"
+    },
+    {
+      "line": 438,
+      "text": "const res = await fetch<any, MpResponse>(url, requestOptions)"
+    },
+    {
+      "line": 486,
+      "text": "const res = await fetch<any, { url?: string, errcode?: number, errmsg?: string }>(url, requestOptions)"
+    },
+    {
+      "line": 577,
+      "text": "const sendRes = await fetch<any, {"
+    },
+    {
+      "line": 594,
+      "text": "const fileRes = await fetch<any, {"
+    },
+    {
+      "line": 670,
+      "text": "const res = await fetch<any, { secure_url?: string, url?: string }>(uploadUrl, {"
+    }
+  ],
+  "callsiteRoles": {
+    "75": "GitHub PUT upload",
+    "438": "WeChat token POST",
+    "486": "WeChat upload POST",
+    "577": "Telegram sendPhoto POST",
+    "594": "Telegram getFile GET",
+    "670": "Cloudinary image POST",
+    "709": "formCustom dynamic util.axios exposes same fetch; config values cannot be enumerated without reading private user settings, which was not done"
+  },
+  "explicitTimeoutValuesInDirectProviders": [],
+  "existingFetchTestsExplicitTimeoutValues": [],
+  "zeroAndUnitMeaning": "RequestConfig.timeout?:number is passed directly to setTimeout milliseconds. undefined/null use30_000; explicit0 is passed as0 immediate abort scheduling, not unlimited. No finite/nonnegative/minimum/callerSignal validation. Source observation only, no new timeout experiment performed. Dynamic formCustom may supply explicit values; no finite list of user values can be claimed.",
+  "scope": "ownAbortController covers request and full response body read; no persistent task ID/budget or callerAbortSignal exists in this helper, so cannot claim inherited Worker deadline or nativeHost cancel.",
+  "nativeCurrentReachability": {
+    "uploaderLines": [
+      {
+        "line": 1,
+        "text": "import {getNativeHost} from '@md/core/native-host'"
+      },
+      {
+        "line": 74,
+        "text": "const host=getNativeHost()"
+      },
+      {
+        "line": 76,
+        "text": "if(!host.live||host.signal.aborted)throw new Error('稿件已关闭')"
+      },
+      {
+        "line": 77,
+        "text": "if(typeof resource==='string')throw new Error('请从 CreatorOS 素材库选择图片')"
+      },
+      {
+        "line": 78,
+        "text": "const imported=await host.importMedia(resource)"
+      },
+      {
+        "line": 79,
+        "text": "if(!host.live||host.signal.aborted)throw new Error('稿件已改变，导入回执未应用')"
+      },
+      {
+        "line": 90,
+        "text": "if (typeof resource === 'string') {"
+      },
+      {
+        "line": 107,
+        "text": "const url = await fileUpload(base64Content, file)"
+      }
+    ],
+    "hostPresentBranch": "getNativeHost true: reject string external URL, guard live/signal, host.importMedia(File), return ownedmediaID before fileUpload/providers.",
+    "hostLoader": "frontend native-editor-loader loads /reference-editors/doocs-md/native/native.js; article editor points downloads to native-source.",
+    "legacyStaticCspConnectNone": true,
+    "nativeModuleGraphContains": [
+      "apps/web/src/composables/useImageUploader.ts",
+      "apps/web/src/services/upload/providers.ts",
+      "node_modules/@antv/infographic/esm/utils/fetch.js",
+      "packages/shared/src/utils/fetch.ts"
+    ],
+    "notExempt": "Bundled legacy cloud branch still real network abort code and policy gap, despite current native upload bypass. No vendor exemption, external uploads or newCSP/permissions authorized."
+  },
+  "currentHashConsistency": {
+    "nativeArchiveAndServedCopyEqual": true,
+    "nativePatchAndServedCopyEqual": true,
+    "nativeBundleManifestFiles": 395,
+    "nativeConfigBundleHashEqual": true,
+    "staticFilesNotCoveredByCurrentNativeBundleManifest": true,
+    "staticFixedBaseMustRemainImmutable": true
+  },
+  "existingBuildInputsAndEntry": "Native-source archive contains complete shared fetch+tests, both Vite configs, web package build:only vite build, pnpm-lock, scripts/build-native and verify-native-build. frontend/scripts/build-reference-editors takes an explicitly supplied NATIVE_SOURCE root, performs native build/verify and replaces public native directory. The script no longer builds static page. Static can use same complete extracted source via web vite.config.ts with original CREATOROS_EMBED base, but no new static reconstruction performed here.",
+  "minimalConsistencyWriteFamiliesForFutureSpec": [
+    "Owned extracted corresponding source packages/shared/src/utils/fetch.ts and new/old fetch tests; keep fixed a7 archive immutable and bind actual fork patch.",
+    "Updated complete native corresponding source archive at reference-editors/doocs-md/native/native-source.tar.gz + identical served sources/doocs-md/native-source.tar.gz.",
+    "Corresponding source patch NATIVE_PATCHES_FROM_T1049.diff + identical served native-patches.diff; new static corresponding-source/patch provenance if static source changes, do not overwrite fixed original a7 archive or reuse itssha.",
+    "Complete native rebuilt output/import graph/file catalog, including config content-hash names+their actualimporters, native.js, native-build-graph and SHA256.json; cannot hand-edit one compressed chunk and keep falsebuildclaims.",
+    "Static rebuilt or separately reviewed reproducible mechanical output family under public doocs-md/static and dependent entry/imports; current manifest only tracks native395 files, so static source/output consistency needs explicit approved receipt/manifest consumer scope.",
+    "reference-editors/manifest.json native bundleFiles/sourceArchiveSha/patchSha, corresponding native/SHA256.json and native-delivery.json currentsource/dist summaries. Preserve all T1062/T1053 oldbuildlogs as history, no new rebuild PASS without new actual run.",
+    "Only if new provenance/verification fields chosen: exact consumers frontend/scripts/verify-native-editors and build wrapper metadata must be explicitly reviewed, not silently extended in currentCONTRACT. README/VERIFY/THIRD_PARTY_NOTICE source links only if source pathchanges; license unchanged."
+  ],
+  "unchangedLicenseOrPermission": "WTFPL/originalupstreamCommit/hostowner/mediaownership/CSP and serviceaddresses/OAuth/credentials untouched.",
+  "newBuildsOrTestsOrNetwork": 0,
+  "appStarted": false,
+  "sourceOrSpecChanged": false,
+  "readOnlyCurrentBindings": [
+    {
+      "file": "reference-editors/manifest.json",
+      "sha256": "d021479434cef9d4e928ff42371766ba85fa3faae82801ac1ffcd171bf41f4e6"
+    },
+    {
+      "file": "reference-editors/doocs-md/native/native-delivery.json",
+      "sha256": "82fb9cbb156b0d84a88144c3c663bc8bf34da321655f3e89c34866a093e3a0d9"
+    },
+    {
+      "file": "reference-editors/doocs-md/native/SHA256.json",
+      "sha256": "4bae1b6b39f6767a32da44b15200ab5265b798cb8b519d329250957b77edd639"
+    },
+    {
+      "file": "reference-editors/doocs-md/native/NATIVE_PATCHES_FROM_T1049.diff",
+      "sha256": "d91dec8b68d8a2c7564f45df4ba828dd1a8b139d2c58c583336a489ac1a3555a"
+    },
+    {
+      "file": "reference-editors/doocs-md/native/build-native.mjs",
+      "sha256": "e2311c02592dfa03954a6b41d821e698a645e851e52c80c4ebf48475e7dde57b"
+    },
+    {
+      "file": "reference-editors/doocs-md/native/README.md",
+      "sha256": "c6116368591fc7dd1d1bdea15b6be5bc47b0f9b007a15e30abe3740338c6c9c3"
+    },
+    {
+      "file": "reference-editors/doocs-md/native/VERIFY.md",
+      "sha256": "e389949c95d771debaf888ad30dd392957e1b24f21183775661e49748d690949"
+    },
+    {
+      "file": "frontend/scripts/build-reference-editors.mjs",
+      "sha256": "38defbf4812c89da7d2186aa8da17872f00b73473a90865e659de5493c31ecaa"
+    },
+    {
+      "file": "frontend/scripts/verify-native-editors.mjs",
+      "sha256": "a4dbbac4d5d386eed8b8a239c77b4576092819e7a22366ea35701bac16ce2153"
+    },
+    {
+      "file": "frontend/public/reference-editors/sources/doocs-md/native-source.tar.gz",
+      "sha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583"
+    },
+    {
+      "file": "frontend/public/reference-editors/sources/doocs-md/native-patches.diff",
+      "sha256": "d91dec8b68d8a2c7564f45df4ba828dd1a8b139d2c58c583336a489ac1a3555a"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/native/SHA256.json",
+      "sha256": "08a9f50f251f44fbac4694cadd5b38e0246e70da1d312c6b730e09c7487a50ea"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/native/native-build-graph.json",
+      "sha256": "73d35916f387081221bb73aba6c7c7c2045a652bf7aed72bcbd38fc18667bf92"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "sha256": "be6f97ab7e84116fbd22a0328f245dbd45a0b209f1e4a85d5815ffd21845614f"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-config-BhBc-hVt.js",
+      "sha256": "34fce8be0bf22d9603bec258ea6e0cc34c79d334381a29f8d233c8a74f06e587"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/index.html",
+      "sha256": "ebf9222ba890986091b90f6dd72affe9d9e04ddb8deb1ba0d922ab1e1fdd9b73"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/THIRD_PARTY_NOTICE.md",
+      "sha256": "a78e016422d210b5582b8c55331d042d17652859d8b70017f0b034031df89b24"
+    },
+    {
+      "file": "frontend/public/reference-editors/sources/doocs-md-creatoros.patch",
+      "sha256": "55ab4bb69a49a08d64fdd2737549fa78edf90830b3d62a2fd592b119d00a3426"
+    },
+    {
+      "file": "frontend/src/features/reference-editors/native-editor-loader.ts",
+      "sha256": "ab09e9b6eace951ca14559b62c01db0f8496d56a11d6e3562d7d28a2cc7acf29"
+    },
+    {
+      "file": "frontend/src/features/article/doocs-article-editor.tsx",
+      "sha256": "18756ac113c0eff92714d7cef592faa6362a25376059f90c703d7100f0503877"
+    }
+  ]
+}

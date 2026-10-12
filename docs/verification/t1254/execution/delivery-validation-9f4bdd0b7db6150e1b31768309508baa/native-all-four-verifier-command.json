@@ -1,0 +1,10 @@
+{
+  "program": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/child.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/mirror/frontend/scripts/verify-native-editors.mjs"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/mirror"
+}

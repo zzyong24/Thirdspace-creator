@@ -1,0 +1,24 @@
+{
+  "purpose": "真实既有AAC输入只读发现，不是新测试或历史PASS",
+  "historicalEvidence": "docs/research/t1062-local-word-timing/physical-experiment.json/raw-evidence.json",
+  "rows": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/inputs/neutral-original-speed.mp4",
+      "exists": false,
+      "bytes": null,
+      "expectedSHA256": "e6c0f4e72741e8f37b369d9511311569df8ef6c4e07009f3c746c632fb0e2073",
+      "actualSHA256": null,
+      "matchesHistoricalManifest": false
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/attempt13-aac-research-private-preserved/inputs/neutral-clock-offset.mp4",
+      "exists": false,
+      "bytes": null,
+      "expectedSHA256": "0b22998e8238f35c9c3447c01234ce03f0ee03770db229c53f1e3de9f6905914",
+      "actualSHA256": null,
+      "matchesHistoricalManifest": false
+    }
+  ],
+  "copied": false,
+  "testsRun": false
+}

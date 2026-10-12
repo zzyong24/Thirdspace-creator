@@ -1,0 +1,10 @@
+{
+  "task": "T-1251",
+  "verdict": "PASS_OBSERVATION_SCOPE_CANDIDATE_ONLY",
+  "candidateSha256": "02bcd783fdbca849e903b660a81c067855b67df9e4f33798bd20cbdf74879f86",
+  "diffSha256": "4a1fdd86b06cc3bc8bece35218f442ae94be0f06c1246dc45d0888e6f249617e",
+  "findings": [],
+  "summary": "仅将本例requests真实记录数组移至同case try/finally共同作用域，finally能读本例实际HTTP；原push/输入/模式/预算/断言不变。首19/3观察ReferenceError保留；末次HTTP内容仍待下一轮真实采集，不签counts等新增断言已通过。",
+  "actualExecutionByReviewer": false,
+  "runtimePermission": false
+}

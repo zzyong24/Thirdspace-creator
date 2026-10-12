@@ -1,0 +1,18 @@
+[
+  {
+    "path": "frontend/src/server/workbench-file-recovery.test.ts",
+    "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c"
+  },
+  {
+    "path": "frontend/src/server/workbench-native-host.test.ts",
+    "sha256": "3c3aeca161343d9f0ecb7be46b7454681dad5b9bfc52ec9d816f0706cac9bfe5"
+  },
+  {
+    "path": "frontend/src/server/workbench-browser-host.test.ts",
+    "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105"
+  },
+  {
+    "path": "frontend/vitest.config.ts",
+    "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+  }
+]

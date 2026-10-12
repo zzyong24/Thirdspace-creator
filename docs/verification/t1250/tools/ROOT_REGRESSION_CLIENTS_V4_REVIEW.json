@@ -1,0 +1,19 @@
+{
+  "approved": true,
+  "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "phase": "regression",
+  "group": "clients",
+  "toolSha256": "54185731b1e5d75710aea20c6934dd729ab7efa3c8629b7039c204b084f1164c",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "selectedInputDigest": "6a4d401224d0b20a58d4f54f0b9659f98474bc6ae632d9051ab48f0efe0bd465",
+  "reviewer": "root",
+  "reviewedAt": "2026-10-11T21:28:15.057768+00:00",
+  "toolPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools/run-focused-v4-541857.cjs",
+  "constraints": [
+    "原19完整列表和body运行，retry0，不过滤原cases",
+    "原取消观察预算540500覆盖发现+RPC+结算；原ID/刺激/断言保留",
+    "实际源和工具绑定、closed/group0，既有首红全部保留"
+  ]
+}

@@ -1,0 +1,209 @@
+{
+  "task": "T-1254",
+  "scope": "T1256_STATIC_PANEL_CLEANUP_POST_V13_REMAINING9_ORIGINAL_BUILD_GRAPH_PROVENANCE_ONLY",
+  "rootCauseTask": "T-1256",
+  "rootCauseSpecSha256": "b9dc30e952da0239038e8f8c9ce4a33c30d291aede4ba556a553b60d21cc0a3e",
+  "at": "2026-10-12T05:42:32.639023+00:00",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "42ba082e18c46ef3378807edf2a3dc03e678c0d561387017a3978772289929f7",
+  "toolDigest": "1724b9b96eae4f890e189539fecb98231249b407c97630b465d912c6a6c1f0b0",
+  "prepare": {
+    "path": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_PREPARE.json",
+    "sha256": "57ceee241c854b73d7e9da3cf90036b41f574d8c7eb1f834d2c51af0679d85ad",
+    "size": 56572651
+  },
+  "artifacts": [
+    {
+      "path": "/tmp/t1254-readonly/run-owned-doocs-post-v13-static-panel-continuation-v14.cjs",
+      "sha256": "7a5a33c0f67ba70da3d93e337f6e52f87bde260cb0ff8fb64d84c8b6fcb67c7e",
+      "size": 46616
+    },
+    {
+      "path": "/tmp/t1254-readonly/prepare-v14-tool-candidate.py",
+      "sha256": "2da95b44ddbce2b445a3dac4e00f7281d6afde7833d8a21e9a83d98f07edb511",
+      "size": 17120
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-source-provenance-v14.cjs",
+      "sha256": "cb40021bc45985b522abdca9c3b887247aa97abd46b8d802966eb79dbd97071f",
+      "size": 5584
+    },
+    {
+      "path": "/tmp/t1254-readonly/V14_PROVENANCE_EXACT_DIFF.diff",
+      "sha256": "93771843e6b045d7b9a93c4ca43c5d91866989176eed27acb6aa6fd021288bbe",
+      "size": 8251
+    },
+    {
+      "path": "/tmp/t1254-readonly/V14_CONTINUATION_EXACT_DIFF.diff",
+      "sha256": "4aa54248a1f0da7bcc08caed02d6d3da6c6cde0f13e89202b7edfcdec3a1802b",
+      "size": 65310
+    },
+    {
+      "path": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_HANDOFF.md",
+      "sha256": "452d797b54e02c9cb5ce992f91b5d4ef6f591f3bfa813434ecfe541209dc811b",
+      "size": 4473
+    },
+    {
+      "path": "/tmp/t1254-readonly/V13_ACTUAL_NATIVE_GENERATED_GRAPH.json",
+      "sha256": "72333d489389f50828383cdd585bf8bb1632b805f83074d52b6ba8a604ae3c55",
+      "size": 165058
+    },
+    {
+      "path": "/tmp/t1254-readonly/snapshot-v13-actual-native-generated-graph.py",
+      "sha256": "ea2e85fdc02f3a3316f0e5f2655ef4d84a23c34e766779856380b1655461b233",
+      "size": 2472
+    },
+    {
+      "path": "/tmp/t1254-readonly/prepare-node-dyld-closure-v10.py",
+      "sha256": "8bacdb4a28b20e97c816e8f19b9e574d52646328b042e23e0d4cd5a5bdc3ba33",
+      "size": 5529
+    },
+    {
+      "path": "/tmp/t1254-readonly/snapshot-v12-actual-post-application.py",
+      "sha256": "67b71af2c7d5281be8c5c3835f1a1c8d3c6937ae1d2e4b2249f182b88e4c6f52",
+      "size": 2836
+    },
+    {
+      "path": "/tmp/t1254-readonly/V12_ACTUAL_POST_APPLICATION_NATIVE.json",
+      "sha256": "39bf01c10bea59ad84ff52dc0f7f64445a81c1eb9ded299358c2cc0f1b4cc95e",
+      "size": 18290285
+    },
+    {
+      "path": "/tmp/t1254-readonly/V12_ACTUAL_POST_APPLICATION_STATIC.json",
+      "sha256": "2c3aded56b9764480b9c7157d5d41524a2eac412557202e2a43c0b0d694b9973",
+      "size": 18287727
+    },
+    {
+      "path": "/tmp/t1254-readonly/V12_ACTUAL_POST_APPLICATION_FULL_SNAPSHOT.json",
+      "sha256": "5a277a4f4093d23919805958aafea937a35fbddeb2b32580280883ba09613546",
+      "size": 3003
+    },
+    {
+      "path": "/tmp/t1254-readonly/V12_ACTUAL_APPLICATION_BEFORE_COPY_CHRONOLOGY.json",
+      "sha256": "dc232baad84846604f26cb11e565230ecdca6dec0a83ab82c3bfb6e7a5bd8065",
+      "size": 2135
+    },
+    {
+      "path": "/tmp/t1254-readonly/NODE_DYLD_CLOSURE_V10.json",
+      "sha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+      "size": 253472
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-owned-network-boundary.mjs",
+      "sha256": "61d861c7648804e1ee977d9b1d32922a0d0491bad36b3d12820fa9551d760b34",
+      "size": 3936
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-real-request-lifecycle.mjs",
+      "sha256": "c383e974e470eb8285685d6ca3a06a0686b5daa93470da02a23fe2737aa35963",
+      "size": 6645
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-static-delivery-graph.mjs",
+      "sha256": "017ac911172822e211411fa1a24241f2cdfcf96795559b822252cf079594f564",
+      "size": 10201
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-static-resource-checker-tests.mjs",
+      "sha256": "b9e5f051a81d4d306aca67249aee616eb8591cc4f367ef3433f92f75d9a6fcd2",
+      "size": 4383
+    },
+    {
+      "path": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_PREPARE.json",
+      "sha256": "57ceee241c854b73d7e9da3cf90036b41f574d8c7eb1f834d2c51af0679d85ad",
+      "size": 56572651
+    },
+    {
+      "path": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_DELTA.json",
+      "sha256": "3ace3a9a6f3a5861f979f56f05154d3c51987e9838b33537700f5594f80f7ce2",
+      "size": 190310
+    },
+    {
+      "path": "/tmp/t1254-readonly/seal-post-v13-static-panel-continuation-v14.py",
+      "sha256": "2dea8b6dd583192fecafc76e7dd1044a52c3b80cb28f9bb7aea13c99b7b17d5e",
+      "size": 5190
+    },
+    {
+      "path": "/tmp/t1254-readonly/history/v14-static-native-generated-graph-binding-concerns/STATIC_ONLY_NOT_RUNTIME_FAILURE.json",
+      "sha256": "c48493e8788766755b09d9942a0e03c9f9f9bdcc25358bf07a5dab1afd9fafd9",
+      "size": 3325
+    },
+    {
+      "path": "/tmp/t1254-readonly/history/v14-native-graph-prepare-only-reference-error/ACTUAL_PREPARE_ONLY_FAILURE.json",
+      "sha256": "11f56e5a0873b8058ccdc10637686689004d16aafe176e10c1cb6f9a1073b6a4",
+      "size": 590
+    },
+    {
+      "path": "/tmp/t1254-readonly/history/v14-native-graph-full-seal-array-omission/ACTUAL_READONLY_SEAL_FAILURE.json",
+      "sha256": "4ab7603779d8c3d3194bcb7f52da6dcd8a489341db4fdfd45d2de5680a083c47",
+      "size": 411
+    }
+  ],
+  "sourceInputCount": 1837,
+  "installedAndOriginalToolRows": 141614,
+  "totalBudgetMs": 36720000,
+  "positiveChildCount": 9,
+  "continuedFromV12": {
+    "run": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-14bcbffb7152bdb2b58cd5a252c2d27e",
+    "originalStartedAt": "2026-10-12T04:17:47.959Z",
+    "originalTotalBudgetMs": 109980000,
+    "originalWallDeadline": "2026-10-13T10:50:47.959Z",
+    "inheritedV13WallDeadline": "2026-10-13T05:18:07.699Z",
+    "effectiveInheritedWallDeadline": "2026-10-13T05:18:07.699Z",
+    "latestActualExitUTC": "2026-10-12T05:10:00.035Z",
+    "completedOriginalStages": 6,
+    "oldExitCode": 1,
+    "v13OriginalExitCode": 1,
+    "v13Run": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-907bb885eb0fd4f595b8d1f2b70fc29b",
+    "v13CompletedStages": 10,
+    "v13FailedStage": "static-original-build",
+    "oldApplicationAndAfterReceiptsMissing": true,
+    "noOldResultRewritten": true,
+    "localSingleBirthBudgetMs": 36720000,
+    "clockRegressionRejected": true
+  },
+  "plannedStaticPanelCleanup": {
+    "relative": "apps/web/src/components/editor/EditorPanel.vue",
+    "oldSha256": "a076d986b80fc88a7416e305d125690d0c626c11cf43c4ba6cda1ccfc133046c",
+    "newSha256": "30b96bf3798976dc6b6038574ea5cf745ca41f2808207af83306705b4a5c745d",
+    "originalMode": 420,
+    "exactOriginalInode": 351268609,
+    "exactOriginalUID": 501,
+    "retainInodeAndUID": true,
+    "templateAndStyleUnchanged": true
+  },
+  "generatedNativeConsumerClosure": {
+    "manifest": "/tmp/t1254-readonly/V13_ACTUAL_NATIVE_GENERATED_GRAPH.json",
+    "manifestSha256": "72333d489389f50828383cdd585bf8bb1632b805f83074d52b6ba8a604ae3c55",
+    "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web/dist-native",
+    "files": 395,
+    "previousV13BuildAndVerifyActualClosedExit0": true,
+    "fullFileSetBytesModeUIDEveryBinding": true
+  },
+  "actualFullByteChecks": [
+    {
+      "group": "inputs",
+      "count": 1837
+    },
+    {
+      "group": "tools",
+      "count": 141614
+    }
+  ],
+  "fullByteModeSizeLinkZeroDrift": true,
+  "dynamicRuntimeClosure": {
+    "manifest": "/tmp/t1254-readonly/NODE_DYLD_CLOSURE_V10.json",
+    "manifestSha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+    "nonSystemFiles": 82,
+    "symlinkChain": 37,
+    "rootMachOFiles": 58,
+    "systemHostBoundary": "macOS system libraries/frameworks may reside in dyld shared cache; host OS boundary, not claimed byte-sealed"
+  },
+  "noNewDependencyExecution": true,
+  "privateRequestV2AndStaticOriginalModesAlreadyAppliedByV12V13": true,
+  "staticUnusedBindingsCleanupPending": true,
+  "executed": false,
+  "originalV12AndV13ActualFailuresNotRewritten": true,
+  "noProductCopy": true,
+  "noApp": true
+}

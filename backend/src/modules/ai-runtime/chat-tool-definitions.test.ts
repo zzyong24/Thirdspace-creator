@@ -109,3 +109,10 @@ it("已装配的通用能力与冻结目录一致，未装配的目录项不暴�
   await expect(prepareChatToolDefinitions({}, { workbenchCapabilities: [workbenchCapability] })).rejects.toThrow();
 
 });
+
+it('T1097同定义字节旧任务仍v1，只有显式写作上下文四工具变v2且hash完全不变',async()=>{
+ const prototypes=Object.fromEntries(['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'].map(name=>[name,make(name)]));
+ const old=await prepareChatToolDefinitions(prototypes),explicitOld=await prepareChatToolDefinitions(prototypes,{workWritingContext:false}),next=await prepareChatToolDefinitions(prototypes,{workWritingContext:true});
+ expect(old.definitions).toEqual(explicitOld.definitions);
+ old.definitions.forEach((row,i)=>{expect(row.version).toMatch(/^chat-tools-work-director-v1:/);expect(next.definitions[i]!.version).toBe(row.version.replace('director-v1:','director-v2:'));expect({...next.definitions[i],version:row.version}).toEqual(row);});
+});

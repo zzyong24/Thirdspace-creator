@@ -1,0 +1,50 @@
+{
+  "task": "T-1254",
+  "status": "PASS_ACTUAL_FULL_BYTE_RECHECK_NO_RUNTIME",
+  "sealFile": "/tmp/t1254-readonly/REQUEST_BUILD_V11_FULL_SEAL.json",
+  "sealSha256": "683e8b5703f61d9a5333eee48bf3a3e53435b580a1fdd7726dc12e7bc88c08a7",
+  "prepareSha256": "173c81504bab12881a20c5c94360e95f70c03871ecc1ac59997dda1644cd5b2f",
+  "sourceSnapshotDigest": "092790967ee0b4922083aacf9e5cb365e9e0dc8f6a7c973329084fe48c511eab",
+  "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+  "inputCount": 1703,
+  "toolRows": 141220,
+  "regularOrTargetFullByteChecks": 135469,
+  "linkChecks": 7488,
+  "bytesRead": 2724405148,
+  "elapsedMs": 22846.015,
+  "drift": [],
+  "oldToolsEntireArrayExactlySame": true,
+  "stepsAndFull109260000BudgetIdentical": true,
+  "childEnvAndEntireMainBodiesAndFinallyExactlySame": true,
+  "sameOriginalNineFixtureInvocationLines": true,
+  "oldCheckerHistoryExactFile": "/tmp/t1254-readonly/history/v10-actual-resource-checker-failed/doocs-static-resource-checker-tests.mjs",
+  "mutableConsumersStillOriginal": [
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.ts",
+      "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "state": "exact_original_before_real_red",
+      "actualRecheckSame": true
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+      "state": "exact_original_before_real_red",
+      "actualRecheckSame": true
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+      "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "state": "exact_original_before_real_red",
+      "actualRecheckSame": true
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+      "state": "exact_original_before_real_red",
+      "actualRecheckSame": true
+    }
+  ],
+  "priorV10ActualFailureRawInputsHashed": true,
+  "noDependencyParserOrProbeExecution": true,
+  "noProductChange": true
+}

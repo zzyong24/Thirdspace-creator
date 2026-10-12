@@ -1,0 +1,74 @@
+{
+  "task": "T-1246/T-1204",
+  "at": "2026-10-12T10:50:02.848870+00:00",
+  "status": "READONLY_LED052_CURRENT_CONTROL_ENV_FAILURE_AND_REAL_LEAF_COVERAGE_PROVENANCE_CONFIRMED_NOT_LED_COMMAND_PASS",
+  "currentGlobalReconcile": {
+    "session": 94775,
+    "actualExit": 1,
+    "naturalBothClosedGroupZeroSignalsEmpty": true,
+    "currentErrorCount": 23,
+    "priorErrorCount": 25,
+    "exactNewErrorLines": [],
+    "sameCurrent23SubsetOfPrior25": true,
+    "currentLogSHA": "492ea335bdd58257ac4702e6fbee0130ac406733238489444cd4f80835700967",
+    "priorLogSHA": "c54608652ea2807411701f2ba9f4a16e44b0900640c28bea7ba209c7d1dfe609",
+    "breakdown": {
+      "backlogRunaway": 1,
+      "oldReviewReceipts": 19,
+      "LED052_LED018_LED057": 3
+    }
+  },
+  "LED052RealConsumer": {
+    "check": "node docs/verification/t1022/run-archive-guard.mjs",
+    "checkSHA": "ebd96c358100d3275f32228c9330da5ba0e4fc6e23bc5ef31a5f506dae61aedd",
+    "checkRequiresBothExplicitPGURLs": true,
+    "legacyEntryRequiresPort": 55422,
+    "currentControlEnvClearsPGAndHasNoOverride": true,
+    "classification": "确定性入口ENV拒绝：两个URL均不存在，第一项在spawn前抛错；reconcile丢弃子stderr所以本次没有独立lesson栈，但真实env→原check控制流完全闭合，三文件未由本次LED命令执行。",
+    "noPGAccessOrConnectionByReviewer": true,
+    "existingOwnedHelperAndFixtureReject5432And55422": true,
+    "cannotUseCurrent393fOwnedRandomPortToSatisfyUnchanged55422Entry": true
+  },
+  "priorRealLeafEvidence": {
+    "targetedPG27Whole509": {
+      "directory": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/evidence/b0d7c5f8619f89dd565342c109914593",
+      "backendJSONSHA": "14694c4bb861f391923bbaab39800310405225b9bcdc51f73ed9f422b9104435",
+      "startup30PassedNoSkip": true,
+      "currentTestFileSHA": "4b9f70a77d7e95794fbeb12cf6c6b90fb372f690e8af04c0cf20e79a2eebe1c0",
+      "beforeAfterSourceSHAEqual": true,
+      "doesNotContainLeaseOrLedgerFiles": true
+    },
+    "firstWholeBackend": {
+      "jsonSHA": "e8c752028803cd2dbc85641e9136dd53306dc48fb9372c6a5c938a0d39bc1c99",
+      "wholeRunStillOriginalFailed400": true,
+      "leafSources": [
+        {
+          "file": "backend/src/modules/execution/execution-lease.service.test.ts",
+          "passed": 4,
+          "currentTestFileSHA": "c94ef182e004088280081a54ca2efefeeadab7dd8dac3701b79f95ed2f94ba52",
+          "firstInventorySHAEqual": true
+        },
+        {
+          "file": "backend/src/modules/execution/execution-call-ledger.service.test.ts",
+          "passed": 25,
+          "currentTestFileSHA": "b76cb85c4c35fe24a7e0ecf355bccd97a991ede5004b15f06e54f6ec6269487c",
+          "firstInventorySHAEqual": true
+        }
+      ],
+      "onlyRelevantLeafResultsNotWholeRunPASS": true
+    },
+    "T1074Whole78": {
+      "jsonSHA": "d307169cf41f1293f80c0100dd08d332daebe83b5f1b88d8990efbc970981adf",
+      "doesNotCoverAnyOfTheThreeLED052Files": true
+    }
+  },
+  "history": {
+    "T1238OriginalMissingPGEntryErrorExactMessage": true,
+    "rawPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1238/full-led-052-remaining.txt",
+    "rawSHA": "b830ce6f912f304759b08f12920fa726081871289489f487be2cc0ad746c47b7",
+    "noClaimHistoricalCheckFullSourceHashSame": true
+  },
+  "conclusion": "三处分散同test-sourceSHA leaf绿可证明覆盖事实，不能拼接成当前原三文件同run或原LED命令PASS。本轮LED052是原控制环境缺PG导致入口失败；原固定55422与当前owned规则亦不兼容，禁止借foreign55422或删guard。当前23全局原FAIL与19旧审核缺失保留，属于已登记T1204/T1171原债；本任务QUALITY/audit实绿不改成全局绿。若要执行完整LED原命令，需另有符合真实owned安全合同的入口方案和独评，不在本只读任务自动修或连接。",
+  "reviewerExecutedNoGuardOrPGOrTests": true,
+  "nativeAppAcceptance": "用户暂不授权，未完成。"
+}

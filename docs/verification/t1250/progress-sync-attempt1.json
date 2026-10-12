@@ -1,0 +1,7 @@
+{
+  "attemptedAt": "2026-10-11T20:39:39.510109+00:00",
+  "command": "node orchestrator/process/progress.mjs sync",
+  "exitCode": 2,
+  "output": "T-1026: write_set must contain only safe repo-relative files or terminal /** prefixes",
+  "note": "该命令无sync接口，启动加载时即遇既有T1026不合法write_set；保真实失败。不改旧T1026；仅从已登记modules T1250建立pending绑定，不转换任务状态。"
+}

@@ -1,0 +1,55 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_TWO_ORIGINAL_SOURCE_FROZEN_LOCK_IGNORE_SCRIPTS_INSTALL_ONLY",
+  "startedAt": "2026-10-12T02:14:54.857Z",
+  "deadlineAt": "2026-10-12T07:05:54.857Z",
+  "elapsedMs": 597011.373375,
+  "totalBudgetMs": 17460000,
+  "slots": {
+    "prepare": 1800000,
+    "staticPatch": 180000,
+    "nativeInstall": 3600000,
+    "staticInstall": 3600000,
+    "childLifecycle": 6480000,
+    "reportCleanup": 1800000
+  },
+  "scopeSignals": [],
+  "exitCode": 0,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig",
+  "rootRetained": true,
+  "retainedReason": "本次两个源码、依赖、配置与store保留；安装失败也保原失败/部分实现，下一执行阶段需实际全实现独审",
+  "records": [
+    {
+      "name": "static-original-patch",
+      "code": 0,
+      "elapsedMs": 128,
+      "processClosed": true,
+      "budgetExhausted": false,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-frozen-lock-install",
+      "code": 0,
+      "elapsedMs": 357614,
+      "processClosed": true,
+      "budgetExhausted": false,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-frozen-lock-install",
+      "code": 0,
+      "elapsedMs": 193231,
+      "processClosed": true,
+      "budgetExhausted": false,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "noWrapper": true,
+  "sourceDependencyInstallOnly": true,
+  "ignoreScripts": true,
+  "ignorePnpmfile": true,
+  "noTestsOrBuild": true,
+  "noBudgetSourceApplied": true,
+  "noProductSourceOrArchiveChanges": true,
+  "noApp": true
+}

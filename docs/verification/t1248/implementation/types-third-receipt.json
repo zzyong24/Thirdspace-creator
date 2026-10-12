@@ -1,0 +1,14 @@
+[
+  {
+    "package": "contract",
+    "exitCode": 0,
+    "durationMs": 4761,
+    "commandMs": 180000
+  },
+  {
+    "package": "backend",
+    "exitCode": 2,
+    "durationMs": 42374,
+    "commandMs": 180000
+  }
+]

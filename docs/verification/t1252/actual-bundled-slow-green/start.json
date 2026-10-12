@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-11T23:39:31.189Z",
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-bundled-green-cQhzHK",
+  "nonce": "250186bf-8e46-457a-8769-b0dda9b02cde",
+  "node": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+  },
+  "bundle": {
+    "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/creatoros.cjs",
+    "sha256": "84260be6df120ec18b9b91b17112cbee37fd1bba448205ccfbbd147646218caf",
+    "actualStandardBuildComplete": true,
+    "actualOriginalBuildScriptSha256": "312cf5a13083730702e8e5e92f042c317b8e24737fdd17ecff7e0a7078c13fdb",
+    "archivedSameBytesPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/actual-standard-checks/creatoros.cjs",
+    "actualBuildEvidenceSha256": "8ac5032e277a80970468cd701eaa36cc7d287a70911085c4378ccf5832c0190b"
+  },
+  "toolSha256": "de048571a626864a14b2e590be84b5847bb87664c2ea1931e67d214f8e9d6642",
+  "bindingSha256": "e5d37451ddad1968a624894775c5f701b8f1ae86799b9da2dce0f635b5afb003",
+  "outerMs": 22560000,
+  "caseMs": 10800000,
+  "childMs": 8400000,
+  "helperCleanupReserveMs": 2160000,
+  "fixtureDelayMs": 310000,
+  "notOfficialModelOrPublicBusiness": true
+}

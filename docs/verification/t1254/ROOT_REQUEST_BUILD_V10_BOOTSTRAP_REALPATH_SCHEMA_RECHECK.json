@@ -1,0 +1,35 @@
+{
+  "task": "T-1254",
+  "asOf": "2026-10-12T03:43:14.614222+00:00",
+  "scope": "补核原bootstrap工具旧realPath字段；对应bytes/size已在0766bebd完整当场校验",
+  "prepareSha256": "14832062217cf38ba794d0b94f84f5dbafc01495ff8791a2188f76f4146b01be",
+  "checkedRows": 4,
+  "realPathMismatch": 0,
+  "rows": [
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/.bin/pn",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/pn",
+      "isSymlink": true,
+      "actualLink": "../pnpm/pn"
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/.bin/pnpm",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/pnpm",
+      "isSymlink": true,
+      "actualLink": "../pnpm/pnpm"
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/.bin/pnpx",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/pnpx",
+      "isSymlink": true,
+      "actualLink": "../pnpm/pnpx"
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/.bin/pnx",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/pnx",
+      "isSymlink": true,
+      "actualLink": "../pnpm/pnx"
+    }
+  ],
+  "noRuntime": true
+}

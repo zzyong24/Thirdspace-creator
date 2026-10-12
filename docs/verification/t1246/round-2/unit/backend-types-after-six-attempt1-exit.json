@@ -1,0 +1,36 @@
+{
+  "file": "pnpm",
+  "args": [
+    "exec",
+    "tsc",
+    "--noEmit"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/backend-types-after-six-attempt1.txt",
+  "pid": 53152,
+  "identity": {
+    "pid": 53152,
+    "pgid": 53152,
+    "uid": 501,
+    "birth": "Mon Oct 12 04:19:41 2026",
+    "startedAt": 1791749981838
+  },
+  "startedAt": "2026-10-11T20:19:41.838Z",
+  "endedAt": "2026-10-11T20:20:24.257Z",
+  "elapsedMs": 42419,
+  "budgetMs": 1800000,
+  "deadlineAt": "2026-10-11T20:49:41.838Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

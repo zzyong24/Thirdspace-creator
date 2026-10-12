@@ -1,0 +1,15 @@
+{
+  "approved": true,
+  "scope": "owned-pg-unit",
+  "toolManifestSha256": "5a1f25de7893f0cf0263e2d48a065dc7d6b0eb75e2d2b0305625c0dc78b14f13",
+  "sourceSnapshotDigest": "e6675bf31732d207c33c591c8a67b5578b5e5b9976fa0c8c504e13700f6a32d6",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "runtimeDistExclusive": true,
+  "mode": "targeted-pg-27",
+  "reviewOrigin": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/owned-targeted-tool-independent-review-v4.json",
+  "reviewOriginSha256": "47a85fb375d53ac8625d9306bb3b72fbcba1ec454fe9dad3e15ac3065cbfc7e3",
+  "delegatedExecutionBindingOnly": true,
+  "oldManifestSha256": "0268b8ee71c5b59266b4fe63f59256f560016b0bb23f32017e5b8c416868b931",
+  "archivedOldManifest": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/v3-first-manifest-preserved/manifest.json",
+  "reviewSha256": "6bc29db7666bd01c301576426da3bc4e86ac9d42b416f59ad77d06f1f4032e8d"
+}

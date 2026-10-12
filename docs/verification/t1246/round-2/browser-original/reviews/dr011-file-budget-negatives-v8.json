@@ -1,0 +1,131 @@
+{
+  "at": "2026-10-11T20:10:51.109Z",
+  "checks": [
+    {
+      "key": "serialBudgetMs",
+      "kind": "missing",
+      "refused": true
+    },
+    {
+      "key": "serialBudgetMs",
+      "kind": "NaN",
+      "refused": true
+    },
+    {
+      "key": "serialBudgetMs",
+      "kind": "negative",
+      "refused": true
+    },
+    {
+      "key": "longestOriginalTestMs",
+      "kind": "missing",
+      "refused": true
+    },
+    {
+      "key": "longestOriginalTestMs",
+      "kind": "NaN",
+      "refused": true
+    },
+    {
+      "key": "longestOriginalTestMs",
+      "kind": "negative",
+      "refused": true
+    },
+    {
+      "key": "weightedAwaitSites",
+      "kind": "missing",
+      "refused": true
+    },
+    {
+      "key": "weightedAwaitSites",
+      "kind": "NaN",
+      "refused": true
+    },
+    {
+      "key": "weightedAwaitSites",
+      "kind": "negative",
+      "refused": true
+    },
+    {
+      "key": "observedLongestTimeoutMs",
+      "kind": "missing",
+      "refused": true
+    },
+    {
+      "key": "observedLongestTimeoutMs",
+      "kind": "NaN",
+      "refused": true
+    },
+    {
+      "key": "observedLongestTimeoutMs",
+      "kind": "negative",
+      "refused": true
+    },
+    {
+      "key": "effectiveTestMs",
+      "kind": "missing",
+      "refused": true
+    },
+    {
+      "key": "effectiveTestMs",
+      "kind": "NaN",
+      "refused": true
+    },
+    {
+      "key": "effectiveTestMs",
+      "kind": "negative",
+      "refused": true
+    },
+    {
+      "key": "awaitDeclarations",
+      "kind": "missing",
+      "refused": true
+    },
+    {
+      "key": "awaitDeclarations",
+      "kind": "NaN",
+      "refused": true
+    },
+    {
+      "key": "awaitDeclarations",
+      "kind": "negative",
+      "refused": true
+    },
+    {
+      "key": "maxLiteralLoop",
+      "kind": "missing",
+      "refused": true
+    },
+    {
+      "key": "maxLiteralLoop",
+      "kind": "NaN",
+      "refused": true
+    },
+    {
+      "key": "maxLiteralLoop",
+      "kind": "negative",
+      "refused": true
+    },
+    {
+      "name": "serial-formula",
+      "refused": true
+    },
+    {
+      "name": "effective-formula",
+      "refused": true
+    },
+    {
+      "name": "empty-file",
+      "refused": true
+    },
+    {
+      "name": "duplicate-file",
+      "refused": true
+    }
+  ],
+  "validOriginalZeroLongestPreserved": true,
+  "actual170BudgetAccepted": true,
+  "validatorSha256": "499da034dadfa5c570750984e0a9589773d60d0bd10cc85d7f726b19c44e9a1d",
+  "manifestSha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+  "noRuntime": true
+}

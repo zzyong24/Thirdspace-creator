@@ -1,0 +1,19 @@
+{
+  "task": "T-1247",
+  "scope": "只读独立规格审核；未record/未改工具/未执行完整Gate",
+  "files": {
+    "docs/features/t1247-timeout-git-inventory-buffer.md": "56a28107d562949c983d196a73867c82583ff3633c46eb64cba02cb2fd15c09f",
+    "docs/产品定位.md": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "tools/timeout-policy/check.mjs": "4494050c66783e1a583259366a0adcb6506b441376f3073be45b3c7fff88cd24",
+    "tools/timeout-policy/verify.mjs": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+    "docs/verification/t1246/round-2/worker-calibration/timeout-policy.log": "7f5959e5627fc5084fd251ae39b16d4c50877c291e0235b0535fdf32eb92843c"
+  },
+  "inventory": {
+    "bytes": 1114935,
+    "files": 17741,
+    "sha256": "fc2226c348a81eb6e87266a656f80645a309e5b8ae0c65d7d49510df376c79a2",
+    "defaultError": "ENOBUFS",
+    "errno": -55,
+    "signal": "SIGTERM"
+  }
+}

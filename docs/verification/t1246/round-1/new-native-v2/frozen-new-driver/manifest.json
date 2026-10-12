@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "task": "T-1246",
+  "candidateCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "runtimeRoot": "/private/tmp/t1246-native-runtime-533",
+  "originalReviewedDriverManifestSha256": "b7ac9e7f5d6b6f86f4d07bf2ddba67db3f21d2d0ea0c10d3d6dd695b5d780459",
+  "runtimeCases": 59,
+  "uniqueGenerationKeys": 49,
+  "specBatches": {
+    "integrated-browser.spec.ts": 10,
+    "integrated-native.spec.ts": 33,
+    "integrated-dependent.spec.ts": 16
+  },
+  "boundary": "准备/冻结，尚未执行；generation浏览器通过须原ledger对账，不代签",
+  "testFiles": [
+    {
+      "file": "e2e/acceptance-support.ts",
+      "sha256": "984252a5099e369b6d6e13567d7903bfd2554b5a17d5aaa794e75658650c02b0",
+      "bytes": 13124
+    },
+    {
+      "file": "e2e/integrated-browser.spec.ts",
+      "sha256": "8da0178e47d70b32b7c890db29138a146d47df7edc7ab0fb39fc03aa84ecc487",
+      "bytes": 13898
+    },
+    {
+      "file": "e2e/integrated-dependent.spec.ts",
+      "sha256": "173f8502b9a746b512f217448b37dce19b3a7646d3aebeff642371f899e65962",
+      "bytes": 13975
+    },
+    {
+      "file": "e2e/integrated-native.spec.ts",
+      "sha256": "3d02ec2f1d9fa7a6d6df599c9654fa69042bd03a1a1e0367fe9fbc44894b8aae",
+      "bytes": 22363
+    }
+  ],
+  "driverFiles": [
+    {
+      "file": "playwright.config.ts",
+      "sha256": "9484160f21e28bc44dce74805b81761d2eff7a7e4ac459bb957a16071a5d6e98",
+      "bytes": 2105
+    },
+    {
+      "file": "README.md",
+      "sha256": "df3505f8396302fff7adaf84e439d4bfd66801392b74a6a1e60ef56d45a5c95d",
+      "bytes": 2659
+    },
+    {
+      "file": "runtime-closure.json",
+      "sha256": "3d4066bfbed36b029ffd65cbe42ebccf6ce51a679d191b0806411b4a063696ab",
+      "bytes": 85044
+    },
+    {
+      "file": "budget-consumers.json",
+      "sha256": "b1d910f1e48996ecc18ec895c920243b11efe35fe4c3d255e9d99f73a23481e6",
+      "bytes": 1004
+    }
+  ],
+  "preparedVersion": 2
+}

@@ -1,0 +1,64 @@
+[
+  {
+    "request": 3,
+    "toolPosition": 1,
+    "headChars": 16000,
+    "tailChars": 8000,
+    "visibleArrayClosed": true,
+    "visibleArrayCount": 1,
+    "arrayBytes": 36215,
+    "arraySha256": "6f5654a13b7d04c0a6516beb57837eaaa0cfeae9f7f2fad133401a4e6b01530a",
+    "identityCount": 1,
+    "identityConsistent": true,
+    "pagingCount": 1,
+    "paging": {
+      "offset": 0,
+      "nextOffset": 12000,
+      "totalLength": 14745,
+      "truncated": true
+    },
+    "body": [
+      {
+        "textChars": 12000,
+        "textSha256": "620097dc184df740c175d3fad4a9e4c8965f08ad27a7097ef31cccc57fa4b275",
+        "hasFirstFact": true,
+        "hasLastFact": false,
+        "sourceIsOriginal": true,
+        "entityPrefix": true,
+        "snapshotHash64": true
+      }
+    ],
+    "wholeJsonParseable": false
+  },
+  {
+    "request": 4,
+    "toolPosition": 1,
+    "headChars": 16000,
+    "tailChars": 8000,
+    "visibleArrayClosed": true,
+    "visibleArrayCount": 1,
+    "arrayBytes": 36215,
+    "arraySha256": "6f5654a13b7d04c0a6516beb57837eaaa0cfeae9f7f2fad133401a4e6b01530a",
+    "identityCount": 1,
+    "identityConsistent": true,
+    "pagingCount": 1,
+    "paging": {
+      "offset": 0,
+      "nextOffset": 12000,
+      "totalLength": 14745,
+      "truncated": true
+    },
+    "body": [
+      {
+        "textChars": 12000,
+        "textSha256": "620097dc184df740c175d3fad4a9e4c8965f08ad27a7097ef31cccc57fa4b275",
+        "hasFirstFact": true,
+        "hasLastFact": false,
+        "sourceIsOriginal": true,
+        "entityPrefix": true,
+        "snapshotHash64": true
+      }
+    ],
+    "wholeJsonParseable": false
+  }
+]

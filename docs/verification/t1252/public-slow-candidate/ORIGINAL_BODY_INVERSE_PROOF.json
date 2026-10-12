@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-11T23:59:21.273907+00:00",
+  "scope": "只读私有候选前缀逆构证明；无public/Native/browser/PG实际调用",
+  "originalSourceSha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c",
+  "currentActualSourceSha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c",
+  "originalBodyPrefixSha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c",
+  "sixFixtureEdits": [
+    {
+      "before": "async function fixture(socketPath?:string,stopMode:\"paused\"|\"unknown_result\"=\"paused\",pauseBeforeClaim=false,priorSameParameters=false){",
+      "after": "async function fixture(socketPath?:string,stopMode:\"paused\"|\"unknown_result\"=\"paused\",pauseBeforeClaim=false,priorSameParameters=false,initialBudget?:typeof budget){"
+    },
+    {
+      "before": "idempotencyKey:id,payload:{aiTaskId:id,modelInput:input}",
+      "after": "idempotencyKey:id,...(initialBudget?{executionBudget:initialBudget}:{}),payload:{aiTaskId:id,modelInput:input}"
+    },
+    {
+      "before": " const claim=(await tasks.claimTask({taskId:task.id,workerId:id}))!",
+      "after": " const initialBirth=initialBudget?(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]:undefined;\n const claim=(await tasks.claimTask({taskId:task.id,workerId:id}))!"
+    },
+    {
+      "before": "createExecutionCallLedgerService(db,{budget})",
+      "after": "createExecutionCallLedgerService(db,{budget:initialBudget??budget})"
+    },
+    {
+      "before": "createExecutionChatToolPorts(db,{budget,tools})",
+      "after": "createExecutionChatToolPorts(db,{budget:initialBudget??budget,tools})"
+    },
+    {
+      "before": "return {ctx,task,ref,calls,readTask,callId:call.callId,write,ports,tasks,native};",
+      "after": "return {ctx,task,ref,calls,readTask,callId:call.callId,write,ports,tasks,native,initialBirth};"
+    }
+  ],
+  "inverseEqualsOriginal": true,
+  "originalNativeEightHttpBodySubstringUnchanged": true,
+  "originalDefaultTaskDeadlineMs": 60000,
+  "addedTaskBirthDeadlineMs": 36000000,
+  "nativeCaseMs": 36000000,
+  "renderCaseMs": 42000000,
+  "noOriginalTaskRenewal": true
+}

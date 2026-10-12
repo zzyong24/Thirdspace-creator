@@ -1,0 +1,11 @@
+{
+  "actualInitialToolSession": 78346,
+  "actualFinalToolExitCode": 0,
+  "actualToolReturnedEOF": true,
+  "actualFinalStdout": "{\"status\":\"complete-pure-only\",\"failure\":null,\"out\":\"/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89\"}\n",
+  "actualCandidateExecutions": 1,
+  "actualPositiveBudgetMs": 120000,
+  "independentHelperLifecycleMs": 2160000,
+  "aggregateHelperPositivePlusLifecycleMs": 2280000,
+  "wholeWrapperBornOnceMs": 3840000
+}

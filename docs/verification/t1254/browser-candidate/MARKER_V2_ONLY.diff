@@ -1,0 +1,27 @@
+--- v1/doocs-public.spec.ts
++++ v2/doocs-public.spec.ts
+@@ -70,7 +70,15 @@
+     await expect(editor.getByRole('button',{name:'保存正文与排版',exact:true})).toBeEnabled();
+     await info.attach('实际原生载入',{body:await page.screenshot({timeout:120000}),contentType:'image/png'});
+     const body=editor.locator('.cm-editor .cm-content[contenteditable="true"]');
+-    await body.fill('# 实际原生编辑\n\n本段由浏览器真实CodeMirror输入。');
++    await expect(body).toHaveCount(1);
++    const outputId=new URL(page.url()).searchParams.get('outputId');expect(outputId).toBeTruthy();
++    const before=await op(page,'articles.get',{params:{outputId}},group.id);
++    const originalMarkdown=(await body.locator('.cm-line').allTextContents()).join('\n');
++    const markerIds=originalMarkdown.split('\n').filter(line=>line.startsWith('<!-- creatoros-section:')).map(line=>line.slice('<!-- creatoros-section:'.length,-' -->'.length));
++    expect(markerIds).toEqual([...before.current.sections].sort((a,b)=>a.order-b.order).map(section=>section.sectionId));
++    expect(originalMarkdown.split('本段明确来自用户输入。')).toHaveLength(2);
++    // 只替换用户明确输入的唯一正文；全部现有真实段落marker/ID/标题/顺序原样保留。
++    await body.fill(originalMarkdown.replace('本段明确来自用户输入。','本段由浏览器真实CodeMirror输入。'));
+     await editor.getByRole('button',{name:'插入图片',exact:true}).click();
+     const upload=editor.locator('input[type="file"][accept="image/*"]');await expect(upload).toHaveCount(1);
+     // 与原文章测试相同的真实1px PNG；经宿主完整create/PUT/complete/link，不伪造importMedia回执。
+@@ -79,7 +87,6 @@
+     await expect(editor.locator('.cm-content')).toContainText('creatoros-asset:');
+     await expect(editor.getByRole('button',{name:'保存正文与排版',exact:true})).toBeEnabled();
+     await editor.getByRole('button',{name:'保存正文与排版',exact:true}).click();
+-    const outputId=new URL(page.url()).searchParams.get('outputId');expect(outputId).toBeTruthy();
+     await expect.poll(async()=>await op(page,'articles.get',{params:{outputId}},group.id),{timeout:300000}).toMatchObject({current:{sections:expect.arrayContaining([expect.objectContaining({body:expect.stringContaining('浏览器真实CodeMirror')})]),imageUses:expect.arrayContaining([expect.objectContaining({assetId:expect.any(String),assetFileId:expect.any(String)})]),nativeLayout:{editor:'doocs-md'}}});
+     const saved=await op(page,'articles.get',{params:{outputId}},group.id),image=saved.current.imageUses[0];
+     const download=await op(page,'assets.fileDownloadUrl',{params:{assetId:image.assetId,assetFileId:image.assetFileId}},group.id);

@@ -3,6 +3,7 @@ import {
   createDb,
   type Db,
   materialLinks,
+  aiTasks,
   projects,
   assets,
   eq,
@@ -161,11 +162,18 @@ async function record(
   resultType: "topic_card" | "material_link_list",
   resultData: Record<string, unknown>,
   projectId?: string,
+  historicalForeign = false,
 ) {
-  const task = await ai.createTask(ctx, {
-    taskType,
-    inputData: { ...inputData, ...(projectId ? { projectId } : {}) },
-  });
+  const input={taskType,inputData:{...inputData,...(projectId?{projectId}:{})}};
+  let task;
+  if(historicalForeign){
+    const before=await fixture.db.select().from(aiTasks);
+    await expect(ai.createTask(ctx,input)).rejects.toThrow();
+    expect(await fixture.db.select().from(aiTasks)).toEqual(before);expect(await fixture.db.select().from(materialLinks)).toHaveLength(0);
+    const id=nextId("historical-unadopted-task");
+    await fixture.db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,projectId,taskType,status:"queued",inputData:input.inputData,idempotencyKey:id,requestedAt:now()});
+    task=await ai.getTask(ctx,id);
+  }else task=await ai.createTask(ctx,input);
   await ai.markRunning(ctx, task.id);
   await ai.recordCandidate(ctx, task.id, { resultType, resultData });
   return task;
@@ -292,6 +300,7 @@ it.each(["asset", "project"])(
             : [{ assetId: "asset" }],
       },
       boundary === "project" ? "foreign-project" : "project",
+      boundary === "project",
     );
     await expect(ai.confirmTask(ctx, task.id)).rejects.toThrow();
     expect(writes).toBe(boundary === "asset" ? 1 : 0);

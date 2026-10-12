@@ -1,0 +1,176 @@
+{
+  "schema": "independent-tool-review/v1",
+  "task": "T-1254",
+  "at": "2026-10-12T01:22:56.510295+00:00",
+  "result": "PASS_TOOL_TWO_ORIGINAL_SOURCE_FROZEN_INSTALL_ONLY",
+  "scope": "T1254_TWO_ORIGINAL_SOURCE_FROZEN_LOCK_IGNORE_SCRIPTS_INSTALL_ONLY",
+  "tool": {
+    "path": "/tmp/t1254-readonly/run-owned-two-source-frozen-install-v6.cjs",
+    "sha256": "ea91ed2a64b40795862b53849c72336e2421cd5e80645ae091f3a7422d736017"
+  },
+  "seal": {
+    "path": "/tmp/t1254-readonly/TWO_SOURCE_INSTALL_V6_FULL_SEAL.json",
+    "sha256": "a8b3d4861aca9eb9e6e59baccd3ee8b21d556c73d850f56a9dde14f18ac3091a"
+  },
+  "prepare": {
+    "path": "/tmp/t1254-readonly/TWO_SOURCE_INSTALL_V6_PREPARE.json",
+    "sha256": "5bc0fb1aa9f0b9dde03728bffbe5097f81866c0be27497867efe79317b6a225b"
+  },
+  "sourceSnapshotDigest": "84920eda80fb1befc1aec8968484117e2dc17994ec493c799f0efe6a7c61a802",
+  "toolDigest": "07f421a8ef8dbabd0d860056fb31869b499dc76efc40fdc6a529aeb2763e6265",
+  "checked": {
+    "sourceAndDataFiles": 1656,
+    "implementationFiles": 461,
+    "hashReadBytes": 63262651,
+    "hashDrift": [],
+    "sourceDigestRecomputedSame": true,
+    "toolDigestRecomputedSame": true,
+    "twoOriginalRegularSourceFiles": {
+      "native": 819,
+      "static": 798
+    },
+    "staticDeveloperSymlinks": 3
+  },
+  "originalSourceData": {
+    "manifest": "/tmp/t1254-readonly/ORIGINAL_SOURCE_DATA_PRODUCER.json",
+    "ownerRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-original-source-data-0k8u0a2d",
+    "files": [
+      {
+        "role": "native",
+        "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-original-source-data-0k8u0a2d/native",
+        "files": 819,
+        "symlinks": [],
+        "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/reference-editors/doocs-md/native/native-source.tar.gz",
+        "archiveSha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583"
+      },
+      {
+        "role": "static",
+        "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-original-source-data-0k8u0a2d/static",
+        "files": 798,
+        "symlinks": [
+          {
+            "file": ".claude/skills/create-pr",
+            "target": "../../.agents/skills/create-pr",
+            "materialized": false
+          },
+          {
+            "file": ".claude/skills/git-commit",
+            "target": "../../.agents/skills/git-commit",
+            "materialized": false
+          },
+          {
+            "file": ".claude/skills/wechat-svg",
+            "target": "../../.agents/skills/wechat-svg",
+            "materialized": false
+          }
+        ],
+        "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+        "archiveSha256": "9335e7d501df0271a861b787fbc3bd155da45c29bd3af5a328e421c19f655822"
+      }
+    ]
+  },
+  "nativeEntry": {
+    "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/@pnpm/exe.darwin-arm64/pnpm",
+    "sha256": "3a4b2674fc12ff655113b32ea58ef25d83fff48fc9bb217789a50de316a822d4",
+    "size": 42650992,
+    "platform": "darwin",
+    "arch": "arm64",
+    "packageVersion": "12.6.0",
+    "optionalPackageLock": {
+      "version": "12.6.0",
+      "resolved": "https://registry.npmjs.org/@pnpm/exe.darwin-arm64/-/exe.darwin-arm64-12.6.0.tgz",
+      "integrity": "sha512-rafpVkjzugKBMxSvGQd5wK1x5eOTkD/+lcJIFHeQhvd+BJ8kDisOOvwhQDrpGd4vd2Fx+hhW0P2Ptt638OlhFg==",
+      "cpu": [
+        "arm64"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ]
+    }
+  },
+  "actualInstallHelp": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/pnpm-native-info-b146c566699c4cde147db3f2db4939f4/install-help.log",
+    "sha256": "b4ba2092596369d6d98dd6e85f290f7b6fa6f59e7b9159bbdc4dd79d09fce432",
+    "proven": "frozen-lockfile/ignore-scripts/ignore-pnpmfile/npmrc-auth-file/store-dir/state-dir/fetch-timeout/registry",
+    "notProven": "default fetch/retry/config consumer; no guessed fetch-retries/globalconfig flag"
+  },
+  "commands": [
+    "exact original static git apply",
+    {
+      "role": "native",
+      "args": [
+        "install",
+        "--frozen-lockfile",
+        "--ignore-scripts",
+        "--ignore-pnpmfile",
+        "--npmrc-auth-file",
+        "<OWNED_CONFIG_ROOT>/empty-user.npmrc",
+        "--store-dir",
+        "<OWNED_CONFIG_ROOT>/store",
+        "--state-dir",
+        "<OWNED_CONFIG_ROOT>/state",
+        "--fetch-timeout",
+        "300000",
+        "--network-concurrency",
+        "4",
+        "--registry",
+        "https://registry.npmjs.org",
+        "--reporter",
+        "append-only",
+        "--no-progress"
+      ]
+    },
+    {
+      "role": "static",
+      "args": [
+        "install",
+        "--frozen-lockfile",
+        "--ignore-scripts",
+        "--ignore-pnpmfile",
+        "--npmrc-auth-file",
+        "<OWNED_CONFIG_ROOT>/empty-user.npmrc",
+        "--store-dir",
+        "<OWNED_CONFIG_ROOT>/store",
+        "--state-dir",
+        "<OWNED_CONFIG_ROOT>/state",
+        "--fetch-timeout",
+        "300000",
+        "--network-concurrency",
+        "4",
+        "--registry",
+        "https://registry.npmjs.org",
+        "--reporter",
+        "append-only",
+        "--no-progress"
+      ]
+    }
+  ],
+  "slots": {
+    "prepare": 1800000,
+    "staticPatch": 180000,
+    "nativeInstall": 3600000,
+    "staticInstall": 3600000,
+    "childLifecycle": 6480000,
+    "reportCleanup": 1800000
+  },
+  "outerMs": 17460000,
+  "findings": [],
+  "staticProof": [
+    "固定directnative 3a4b2674及实际12.6平台lock，版本/help原0/closed/group0/source同回执纳封印；所有使用flags都在实际help，包括network-concurrency/report append-only/no-progress，不猜旧JS入口或fetch-retries。",
+    "native从0cabb源、static从9335源分别复制至新0700/nonce/UID/inode根；源data原1617文件全SHA核，旧fetch a46与lock39783不变；仅原55ab补丁用有界Git应用新static，不触native或共享产品。",
+    "入口17.46M完整：准备1.8M、补丁180k、两安装各3.6M、三helper生命周期各2.16M、后验1.8M；每child重hash/核owner/查当前及全部未来完整槽，取消/未关闭/非零禁止下一child。",
+    "本子sandbox仅禁止原HOME读写，白名单环境保HOME/CODEX_HOME原值，自有空auth/npm/gitconfig、独立store/state/cache/tmp/XDG；registry显式官方，未知默认网络重试纳安装绝对总槽不谎称已禁。",
+    "frozen-lockfile/ignore-scripts/ignore-pnpmfile真实参数保；每源安装后原全部文件mode/字节/link与锁严格守门，node_modules全文件/受控内部link封印；未来测试/build执行必须用实际产出完整closure另审。",
+    "失败/部分安装与自有根保留；最终再次原绑定+自有inventory后验，取消/超deadline/error不能签success，不自动重试或继续未来步骤。"
+  ],
+  "limits": [
+    "只安装两原源依赖与应用既有静态适配补丁，尚未实际执行；本报告不替ROOT exact运行准入。",
+    "没有请求预算候选应用、下载依赖代码执行、测试、构建、产物graph/copy、App或共享Worker构建。",
+    "native配置默认消费者未完全明晰：受限原HOME及实际支持的authfile/显式store/state承担隔离；若受限配置或原lock造成失败，保真实失败，不能改锁或放宽访问洗绿。",
+    "原安装收据错误entry明确notUsed且历史保留；实际原生二进制和全文实现才是本阶段执行依据。"
+  ],
+  "runtimePermissionByReviewer": false,
+  "reviewerExecutedInstallOrNetwork": false
+}

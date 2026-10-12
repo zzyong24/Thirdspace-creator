@@ -1,0 +1,53 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "observedAt": "2026-10-11T16:39:39.533Z",
+  "originalAssertions": true,
+  "sourceBindings": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/route.test.ts",
+      "sha256": "070b63c49329af2a48fc6befa3e0bc5778dd329d73bec92ad9888e5449f20875"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/plan.ts",
+      "sha256": "3bc6f395c2d9e6bcbd3ad246bcc1ab44e3dae35ca6f9e93c07807ed4a1277ef4"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/route.ts",
+      "sha256": "97a05464f6ce9ce29ea4f850cb903e65ad154a8b914c9116f5713b4553cf4e06"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/test/function-key-invariant.test.ts",
+      "sha256": "4def088daa3fba0f548a74446b0245df50ba34019c026f139dc54defa9135de0"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/fixtures/selectors/copilot.ts",
+      "sha256": "ea73a54c463b6d22bfedbe100339caebf16c9b5efb197d3a931115339f98be85"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/ai-runtime/chat-assembly.ts",
+      "sha256": "dc35a2c20d031e79e1c2e09dec8a8f9156cac42003a6c41b534981490f693985"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/auth/auth-routes.test.ts",
+      "sha256": "fc7f4e2c415ac345584a04b17a10b36cbf507946593801c519e6a75c512fc42a"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/identity/identity.service.ts",
+      "sha256": "5fb6c3bd458b8437339fec225865e130e0d82f072bb056c0d12a47270110d37d"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/persistence-client.ts",
+      "sha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d"
+    }
+  ],
+  "ownedRuntime": {
+    "app": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-frontend-6BxPhy/app",
+    "db": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-frontend-6BxPhy/db"
+  },
+  "resetMarker": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-unit-frontend-6BxPhy/app/reset-pending.json",
+    "exists": true,
+    "sha256": "bc7ec6e014a8ba576d2946ab3c04130275503bae2ee70cb67dc283fc4c814e13"
+  },
+  "readonlyNoRepairs": true
+}

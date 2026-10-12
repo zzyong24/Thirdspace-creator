@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "--check",
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/owned-dyld.cjs"
+  ],
+  "code": 0,
+  "stdout": "",
+  "stderr": "",
+  "syntaxOnly": true,
+  "candidateModuleBodyExecuted": false
+}

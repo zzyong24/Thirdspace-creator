@@ -1,0 +1,6 @@
+{
+  "readonlyCheckerOnly": true,
+  "actualExitCode": 1,
+  "message": "TypeError: originalProductInventories is a relative-path keyed dictionary; first inline checker treated it as rows. Fixed checker freshly read complete input and product sets; no candidate child/source edit occurred.",
+  "correctedProofSha256": "0067068c79843ad064646cd5a3f00c47153a15330df3aeeee9fbd428c1ea252a"
+}

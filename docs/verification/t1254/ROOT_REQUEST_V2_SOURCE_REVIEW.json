@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-12T00:32:09.376353+00:00",
+  "decision": "PASS_V2_PRIVATE_SOURCE_AND_TEST_CANDIDATE_ONLY",
+  "reviewer": "/root",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "peerReviewSha256": "fa5104fe3ea02459baaacee872122dd0de6b039aea2570acca0c1158a56e2e21",
+  "packetSha256": "0f95b03472d70f7b289531a039264d866584fbf65618514b51c72c8e6ab5affb",
+  "sourceSha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+  "testSha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+  "fullV1AndV2DiffOriginalCompleteTestsRead": true,
+  "newCases": 16,
+  "originalTestPrefixExact": true,
+  "semanticBoundary": "只校验数值/范围/时间/清理；不做创作选择",
+  "privateApplicationCondition": "两owned源根先保真实original字节和获准工具RED后应用相同V2；实际before/after入收据",
+  "bootstrapInstallOrBuildOrRuntimeApproved": false,
+  "productionDeliveryCopyApproved": false,
+  "firstCC001StaticFindingPreservedNotHistoricalRed": true
+}

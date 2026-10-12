@@ -1,0 +1,19 @@
+{
+  "kind": "onlypure-wrapper-source-before-dispatch",
+  "privateRoot": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89",
+  "wrapperPath": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/run-once.cjs",
+  "wrapperSha256": "2aa33d3c34dae41edbf85609c3852ae6ee8a0885bc6a9e84134eb407ad09e036",
+  "previousWrapperPath": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e/run-once.cjs",
+  "previousWrapperSha256": "feda355a3f2c66565eb15dba3253deeee6d9ac15d30b134cc173021a6e8491ce",
+  "preDispatchPath": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/PRE_DISPATCH.json",
+  "preDispatchSha256": "606f2128a2be29cd1a4766534b90ee182b03eaa82a55202329acdd3f3e163074",
+  "forwardPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_FROM_PREVIOUS_FULL_FORWARD.diff",
+  "forwardSha256": "b50f247e0381235a3e20426a174681616f9a3fc61c42c74bda3ce6f449562e80",
+  "inversePath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_TO_PREVIOUS_FULL_INVERSE.diff",
+  "inverseSha256": "2595c0495da980ace0e767c2684cdf154752cae99b2b20b3e5fe684a45457a32",
+  "fullContextForwardAndInverseExact": true,
+  "candidateDispatches": 0,
+  "note": "cp.spawn only observes approved Node child real monotonic close; old393f helper bytes remain; no additional child/service",
+  "outerMs": 3840000,
+  "sourceBeforeAfterRows": 343
+}

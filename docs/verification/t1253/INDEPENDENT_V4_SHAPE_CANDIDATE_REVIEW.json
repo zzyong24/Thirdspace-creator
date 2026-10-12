@@ -1,0 +1,59 @@
+{
+  "schema": "independent-source-candidate-review/v1",
+  "at": "2026-10-12T00:10:18.970459+00:00",
+  "result": "PASS_PRIVATE_V4_SHAPE_CANDIDATE_ONLY",
+  "packet": {
+    "file": "/tmp/t1253-candidate/all-families-combined-v4-shape-source-binding.json",
+    "sha256": "60dbd4ebd00ccd3fec19a772dea2c36fcc2f6a374c21f150c65e5c839f473fed"
+  },
+  "candidates": [
+    {
+      "file": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "beforeSha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60",
+      "candidate": "/tmp/t1253-candidate/draft-all-families-combined-v4.test.ts",
+      "candidateSha256": "6b4ec47460d0eb931b490be41d63e85929b61abe4295b92ff18592fe28468e1d",
+      "diff": "/tmp/t1253-candidate/draft-v3-to-v4-shape.diff",
+      "diffSha256": "b024eb0ced404b564d68662b91dae5b20673c5a9b897753393911572514ff1e6"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "beforeSha256": "17de16b8a1234dcff377a3c4b1c01b3e65af5cf53f59b8131798f0b2b5ab02f6",
+      "candidate": "/tmp/t1253-candidate/ports-all-families-combined-v4.test.ts",
+      "candidateSha256": "308870e9d169ed4d56dfbaefbad04e566b791f4997acb6a43a1760767a551167",
+      "diff": "/tmp/t1253-candidate/ports-v3-to-v4-shape.diff",
+      "diffSha256": "c0667478d409820f11bcefb54c61758ac8554df8a75843882423b20bacfc55c7"
+    }
+  ],
+  "unchangedHooks": {
+    "file": "backend/src/integration/chat-hooks-worker.test.ts",
+    "sha256": "9f9505eca46c1fd6d929e8f22cf21dd4890427e5c58c682a9a8163ec3a02f1f3"
+  },
+  "bindingChecks": {
+    "sourceAndOriginalRuntimeEvidenceItems": 27,
+    "actualHashDrift": []
+  },
+  "findings": [],
+  "actualEvidence": {
+    "whole25": "23PASS/2FAIL，usage.totalTokens不存在及own undefined两严格红",
+    "whole46": "44PASS/2FAIL，同两严格红",
+    "types": "backend/worker实际标准0，仅V3已执行范围"
+  },
+  "causalProof": [
+    {
+      "case": "draft crashUnknownChild",
+      "source": "execution-call-ledger.service.ts131-153：provider usage标准化input/output与细分；只有raw settle usage显式total才加usage.total",
+      "constraint": "独立toStrictEqual完整2/3/details，原row.totalTokens5、call/parent/operationKey/inputDigest/retryOf/startedAttempt/reserved/accounting/job/ref/projection/formal0全保"
+    },
+    {
+      "case": "ports unknownUsage=true",
+      "source": "worker-runtime.ts353构造own retryAfterMs undefined；worker-supervisor.ts75 serialization advanced；138 strict optional parse保已存在undefined",
+      "constraint": "唯一raw toStrictEqual含undefined，仍commitResult1、candidate owner0、0reserve/start/settle/save、call/checkpoint/budget/deadline/业务不变；false分支全原成功断言保"
+    }
+  ],
+  "limits": [
+    "不是运行绿；保V3首两红与全部原红",
+    "仅两test严格形状，不改production/SPEC/刺激/实际HTTP/token/预算",
+    "root确认exact apply后新工具fresh prepare executionReady true；dist由root独占授权"
+  ],
+  "runtimePermission": false
+}

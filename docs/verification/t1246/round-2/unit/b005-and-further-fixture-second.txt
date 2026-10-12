@@ -1,0 +1,191 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/ai.task-execution.integration.test.ts (0 test)
+ ✓ src/modules/platform-account/platform-account.service.test.ts (16 tests) 45534ms
+     ✓ createAccount happy path → active, baseline echoed  4210ms
+     ✓ createAccount defaults followerBaseline to 0  2710ms
+     ✓ 合同支持的每种平台都可建立账号登记，包含抖音、小红书和快手  3041ms
+     ✓ rejects an invalid platform string with ValidationError  2890ms
+     ✓ rejects a negative followerBaseline with ValidationError  2635ms
+     ✓ rejects an empty handle with ValidationError  3191ms
+     ✓ rejects a duplicate external_account_id with ConflictError; allows duplicate handle  2659ms
+     ✓ updateAccount patches only provided fields and rejects unknown status  2656ms
+     ✓ getAccount cross-user → OwnershipError (404)  2990ms
+       ✓ passes for an owned, active, same-platform account  2628ms
+       ✓ throws OwnershipError for another user's account  2672ms
+       ✓ throws ValidationError on platform mismatch  2576ms
+       ✓ throws ValidationError for an archived account  2563ms
+       ✓ 允许隐藏最后一个active号，真0活跃且原组历史仍可读，外人仍拒绝  2607ms
+       ✓ 多active先隐藏其一，再隐藏末号成功，两账号与原组历史都保留  2972ms
+     ✓ listAccounts is platform-filtered and user-scoped  2534ms
+ ✓ src/modules/ai/group-task-scope.integration.test.ts (8 tests) 22934ms
+     ✓ 空组无需平台账号能创建会话和候选任务，子消息按父组授权  3822ms
+     ✓ 执行任务创建冻结组；恢复后仍是原组且相同幂等键跨组独立  2985ms
+     ✓ 空组聊天公共入口原子提交消息、AI任务与冻结执行输入  2649ms
+     ✓ 雷达是共享组域，空组同名集合独立且平台筛选不改变共享内容  2634ms
+     ✓ 空组每日创作任务中断后按原冻结组恢复运行，跨组不能恢复  2613ms
+     ✓ 平台任务先创建时转组锁检测阻止转组，转组先完成时旧freeze不能创建  2613ms
+     ✓ Worker外部副作用前复核member版本，stale冻结不会发送  2608ms
+     ✓ 归档组允许读已有会话任务，拒绝写入  3009ms
+ ✓ src/modules/ai-runtime/agentic-business-execution.service.test.ts (9 tests) 3775ms
+ ✓ src/modules/reviews/reviews.contract.test.ts (7 tests) 19979ms
+     ✓ reviews.create → reviewResource (in_progress, completedAt null)  4193ms
+     ✓ reviews.get → reviewResource  2566ms
+     ✓ [T-356④] reviews.list → 完整 listEnvelope(listMeta page/pageSize/total 必填)可 parse  3053ms
+     ✓ reviews.insights.create → reviewInsightResource (evidence object, priority int)  2547ms
+     ✓ reviews.insights.list → 完整 listEnvelope，可读回复盘里的手动洞察  2556ms
+     ✓ reviews.complete → reviewResource (completed, non-null completedAt)  2536ms
+     ✓ no ctx → AuthenticationError  2527ms
+ ❯ src/modules/learnings/learnings-calibration-reflow.integration.test.ts (0 test)
+ ❯ src/modules/reviews/reviews.acceptance.test.ts (0 test)
+ ❯ src/modules/learnings/learnings.acceptance.test.ts (0 test)
+ ✓ src/modules/learnings/learnings.contract.test.ts (6 tests) 16866ms
+     ✓ learnings.list → learningResource[] (each item validates)  3674ms
+     ✓ learnings.create → 人工采纳后直接返回知识库 validated experience  2897ms
+     ✓ learnings.create 相同内容重复采纳 → 返回同一 Learning，活动列表只有一条  2534ms
+     ✓ learnings.applications.create → learningApplicationResource (evaluatedAt null)  2630ms
+     ✓ learnings.evaluate → 已采纳经验仍可显式 discarded  2581ms
+     ✓ no ctx → AuthenticationError  2549ms
+ ✓ src/modules/ai/ai-task-submission.service.test.ts (5 tests) 14659ms
+   ✓ 创建后响应丢失，修改稿件后恢复仍使用首次快照并走原派发入口  4181ms
+   ✓ 同次并发准备读到不同稿件，只接受第一个已保存任务  2642ms
+   ✓ 相同提交键修改或删除明确输入字段，不借首次快照掩盖另一个意图  2600ms
+   ✓ 未声明快照字段、用快照覆盖意图、准备期间取消均不提交  2592ms
+   ✓ 等待原任务查询期间调用方修改账号或输入，不改变快照归属  2643ms
+ ❯ src/modules/ai/ai.learnings-project-scope.integration.test.ts (0 test)
+ ✓ src/modules/learnings/learning-adoption-key.integration.test.ts (2 tests) 6329ms
+   ✓ 领域提交回执丢失和并发重投只创建同一经验，保留真实来源与状态  3741ms
+   ✓ 稳定项键按用户账号隔离，未提供项键保持原创建语义  2587ms
+ ✓ src/modules/learnings/review-adoption-scope.integration.test.ts (1 test) 3735ms
+   ✓ 相同经验在不同来源项目采纳不会串归属，同项目重试不重复  3735ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/ai.learnings-project-scope.integration.test.ts [ src/modules/ai/ai.learnings-project-scope.integration.test.ts ]
+Error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mIdentifier `RequestContext` has already been declared
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/modules/ai/ai.learnings-project-scope.integration.test.ts:1:14 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m1 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0mRequestContext[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m              ───────┬──────  
+ [38;5;240m  │[0m                     ╰──────── `RequestContext` has already been declared here
+ [38;5;240m  │[0m 
+ [38;5;246m5 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0mRequestContext[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m               ───────┬──────  
+ [38;5;240m  │[0m                      ╰──────── It can not be redeclared here
+[38;5;246m───╯[0m
+
+  Plugin: vite:oxc
+  File: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.learnings-project-scope.integration.test.ts
+ ❯ transformWithOxc ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3344:19
+ ❯ TransformPluginContext.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3415:26
+ ❯ EnvironmentPluginContainer.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30387:51
+ ❯ loadAndTransform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:24646:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/modules/ai/ai.task-execution.integration.test.ts [ src/modules/ai/ai.task-execution.integration.test.ts ]
+Error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mIdentifier `RequestContext` has already been declared
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/modules/ai/ai.task-execution.integration.test.ts:1:14 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m1 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0mRequestContext[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m              ───────┬──────  
+ [38;5;240m  │[0m                     ╰──────── `RequestContext` has already been declared here
+ [38;5;240m  │[0m 
+ [38;5;246m5 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0mRequestContext[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m               ───────┬──────  
+ [38;5;240m  │[0m                      ╰──────── It can not be redeclared here
+[38;5;246m───╯[0m
+
+  Plugin: vite:oxc
+  File: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.task-execution.integration.test.ts
+ ❯ transformWithOxc ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3344:19
+ ❯ TransformPluginContext.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3415:26
+ ❯ EnvironmentPluginContainer.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30387:51
+ ❯ loadAndTransform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:24646:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/modules/learnings/learnings-calibration-reflow.integration.test.ts [ src/modules/learnings/learnings-calibration-reflow.integration.test.ts ]
+Error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mIdentifier `RequestContext` has already been declared
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/modules/learnings/learnings-calibration-reflow.integration.test.ts:2:14 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m2 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0mRequestContext[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m              ───────┬──────  
+ [38;5;240m  │[0m                     ╰──────── `RequestContext` has already been declared here
+ [38;5;240m  │[0m 
+ [38;5;246m6 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0mRequestContext[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m               ───────┬──────  
+ [38;5;240m  │[0m                      ╰──────── It can not be redeclared here
+[38;5;246m───╯[0m
+
+  Plugin: vite:oxc
+  File: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/learnings/learnings-calibration-reflow.integration.test.ts
+ ❯ transformWithOxc ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3344:19
+ ❯ TransformPluginContext.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3415:26
+ ❯ EnvironmentPluginContainer.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30387:51
+ ❯ loadAndTransform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:24646:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/modules/learnings/learnings.acceptance.test.ts [ src/modules/learnings/learnings.acceptance.test.ts ]
+Error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mIdentifier `RequestContext` has already been declared
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/modules/learnings/learnings.acceptance.test.ts:1:14 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m1 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0mRequestContext[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m              ───────┬──────  
+ [38;5;240m  │[0m                     ╰──────── `RequestContext` has already been declared here
+ [38;5;240m  │[0m 
+ [38;5;246m8 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0mRequestContext[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m               ───────┬──────  
+ [38;5;240m  │[0m                      ╰──────── It can not be redeclared here
+[38;5;246m───╯[0m
+
+  Plugin: vite:oxc
+  File: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/learnings/learnings.acceptance.test.ts
+ ❯ transformWithOxc ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3344:19
+ ❯ TransformPluginContext.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3415:26
+ ❯ EnvironmentPluginContainer.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30387:51
+ ❯ loadAndTransform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:24646:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/modules/reviews/reviews.acceptance.test.ts [ src/modules/reviews/reviews.acceptance.test.ts ]
+Error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mIdentifier `RequestContext` has already been declared
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/modules/reviews/reviews.acceptance.test.ts:1:14 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m1 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0mRequestContext[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m              ───────┬──────  
+ [38;5;240m  │[0m                     ╰──────── `RequestContext` has already been declared here
+ [38;5;240m  │[0m 
+ [38;5;246m8 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249mt[0m[38;5;249my[0m[38;5;249mp[0m[38;5;249me[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0mRequestContext[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m"[0m[38;5;249m@[0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249ms[0m[38;5;249m/[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249mt[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mc[0m[38;5;249mt[0m[38;5;249m"[0m[38;5;249m;[0m
+ [38;5;240m  │[0m               ───────┬──────  
+ [38;5;240m  │[0m                      ╰──────── It can not be redeclared here
+[38;5;246m───╯[0m
+
+  Plugin: vite:oxc
+  File: /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/reviews/reviews.acceptance.test.ts
+ ❯ transformWithOxc ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3344:19
+ ❯ TransformPluginContext.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:3415:26
+ ❯ EnvironmentPluginContainer.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30387:51
+ ❯ loadAndTransform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:24646:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  5 failed | 8 passed (13)
+      Tests  54 passed (54)
+   Start at  03:01:59
+   Duration  146.30s (transform 3.43s, setup 0ms, import 10.16s, tests 133.81s, environment 1ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b005-and-further-fixture-second.json

@@ -1,0 +1,838 @@
+{
+  "phase": "preflight-only; not a PASS",
+  "frozenCandidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "preparationProvenanceHead": "4df3424972831acfdd091056b3045b2472120692",
+  "originalConfigSha256": "9b4ea64f81fadc0282a33ae0223c45a75a8649d98ef2c91ee97b2580caa597b6",
+  "originalTestInventory": [
+    {
+      "file": "accessibility/all-pages.spec.ts",
+      "sha256": "414ac84466582e23ca10a212caee92251e52511f2219bc25523772cb9c3cb7e8"
+    },
+    {
+      "file": "e2e/ai-copilot.spec.ts",
+      "sha256": "d48625c8fde48cc8b17a0919eba7a2be98b776e2e1f2cb14c9bb9f87aa7838cf"
+    },
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "sha256": "a2719518f5b0aaf7de7ad0ba6eb9cdc9d640b6699d8d128e2dd86a23659da703"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "sha256": "500b8cd4407df0553c843a7a99dd14e6987fbb63372715271d119363f64fe0e0"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "sha256": "d45f2d894a833baa06fc300f579597dcb8f6f6005c57e283f8e20be7bc93a5b1"
+    },
+    {
+      "file": "e2e/all-routes.spec.ts",
+      "sha256": "f6056f25cd6d1eb29846260b0544c10dcfea83bb8011a59f3729de99d69d4b4a"
+    },
+    {
+      "file": "e2e/app-shell.spec.ts",
+      "sha256": "b4f525af6bf0e90914ba32284356d989f604fe0897d0633e2541339694286d0b"
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "sha256": "06ebc8a2282965c0bcf67274900d72d23a36f54ae0dbb07575177a18c890162b"
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "sha256": "1e6cc00ff998df2fa6a92e53c71164f98a94e802c85b53549c9b1a3d15b67a53"
+    },
+    {
+      "file": "e2e/audience-task-topics.spec.ts",
+      "sha256": "e40b020ab87c15a1e77488712ade293c80ad79a5e0e92e0b7ceeadd72e336571"
+    },
+    {
+      "file": "e2e/automations-group-media-jobs.spec.ts",
+      "sha256": "17c8beeeee88f9583d3c1f59aa2ec389ca5fabd87a07479bb3cad0a8837df0c7"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "sha256": "748976450dc39d1f59991c79a624775cd993ffc6cd5e57b36c27cb635cf0e1a7"
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "sha256": "9b3fbd72b747b53d67add6b5c79e1eceafd004cc03e7e17bd6c4ed57c0836224"
+    },
+    {
+      "file": "e2e/channel-public-links.spec.ts",
+      "sha256": "7cd345588ffed00c11d527e852203d297bbb2341a8f64db4ed21fa3a7581ee2b"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "sha256": "36544f17be3766f5c62752dfd71a0c7aa7c9b87e80f64a778ecfede8f2fe1f31"
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "sha256": "d975762567f50956853d872d5bb09bf9399d9a531788f73bfe3690fc38f659f7"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "sha256": "0b99bc21babdb3859ccf5f39d2ebb12ce63088e8297e8c6f94ba496fc9390edd"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "sha256": "2e789a839eaf4611d9863dfd6aee1ff64579c8310c76862c1f30564c125eb643"
+    },
+    {
+      "file": "e2e/experience.spec.ts",
+      "sha256": "ae77c80bbdadd145848df806a69cad9af65d01062ac51b72f5d39314faa3fc4e"
+    },
+    {
+      "file": "e2e/group-skill-customization.spec.ts",
+      "sha256": "ad9f7f6cd052467698bacda10daa3c421cc0d215a327bda498cca3bc3f1d6b80"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "sha256": "8eed8c2b0d52323d921b2f80da1d3cfa7c948e1c28d45f7ea94158f3b5ddb840"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "sha256": "cb063f9b66416e3d927c9df9ec73b89c60a279ff2b5eac8f57224c908d7bf717"
+    },
+    {
+      "file": "e2e/new-project.spec.ts",
+      "sha256": "3a71276a6e3a07a6bf6d476c10d1ddf6a89e776850c25d7854077bd1fbe86d31"
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "sha256": "96bf68efbb7c2d805f98c08f1562df746a4a228d22f7d33bea19bfb479bb4421"
+    },
+    {
+      "file": "e2e/overlay-routing.spec.ts",
+      "sha256": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297"
+    },
+    {
+      "file": "e2e/platform-work-catalog.spec.ts",
+      "sha256": "4affe819097d810612e0c38bb68b737648f85c085d2367d83d69126092a9fac1"
+    },
+    {
+      "file": "e2e/production-broll-remove.spec.ts",
+      "sha256": "cbc30cfd36b44e68d41986e0ffda4a34c808398788092c11eafe40aacfdeb1cb"
+    },
+    {
+      "file": "e2e/production-empty-workbench.spec.ts",
+      "sha256": "5a5194fd6e32acaa765d8d086b539b4d1cb699849c7f0f21c902a2bc95d45dd4"
+    },
+    {
+      "file": "e2e/projects.spec.ts",
+      "sha256": "11fd30f1ef86d1b61025c904947202c7e364554a88a520ce1722fba7e9893f88"
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "sha256": "34a5f45bc28998f964f0c856045d0005bb78a8aa04cac46ee682ee49f4e287ca"
+    },
+    {
+      "file": "e2e/publishing-center.spec.ts",
+      "sha256": "94e6a7bc49a7a6671ab24539b4d2b8be2576436b80c506e3f9a110ada299782f"
+    },
+    {
+      "file": "e2e/publishing-workspace.spec.ts",
+      "sha256": "17c01a1df224d51c0a9f98e6540980b50e156a54a46916ff5da70fa49d1014c1"
+    },
+    {
+      "file": "e2e/qwen-asr-configuration.spec.ts",
+      "sha256": "469b7eca9607e9c504d95111f443d36494c370782fc00c5cfba514daae9f4f0c"
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "sha256": "15a0a75156f3b43707a61efd407a940c01a5e8063443e2cba46b5810791cc679"
+    },
+    {
+      "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "sha256": "dd62b0b6ae16492d9fbb7d1ea4f592eaba63dcee6a6449ff94e343f905990701"
+    },
+    {
+      "file": "e2e/review-history.spec.ts",
+      "sha256": "f005b82d69cd981e9e1f795fe43a656bd577a6dd4b9801c27f5afe5c2570343d"
+    },
+    {
+      "file": "e2e/search.spec.ts",
+      "sha256": "1ed7b0550aad02e6140f266d36d7a254acc000b1d02e861265bbd4d6ec93acd0"
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "sha256": "068897604ef89a38ae3b88809d86ae84d60be198dac40e7b2e350e9804378d78"
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "sha256": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea"
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "sha256": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "sha256": "2b3e7f7068822a3e0614d168ec5cf4003f584aa9dc2e29ba2e7627f7728f27ea"
+    },
+    {
+      "file": "e2e/smoke.spec.ts",
+      "sha256": "359a0678903ba447af114beedfeebda0d71a552ab1a750481297220cda88eb61"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "sha256": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "sha256": "36391a48eca43e3eded6dd14d590f32a3468a7d4fef1eaa40d2cf31543320245"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "sha256": "a7f75ff9177c465d8c279a700348f67ca9e251956cb71665ad8c8c11d9d5c311"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "sha256": "f05eb72d068cc2768d799fe715441c3a02db329380418dcb60d4f4929f836757"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "sha256": "c528fa43b3787159e773df78ba8a423e11ff4554386ed1049f7863dade87807c"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "sha256": "7e83385dce28ed66077b8632833ab927c2cf03a424d637b434b51f60a855212d"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "sha256": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "sha256": "df40efd73678a1d7d36d251ebe17164a5d57f9affde00d7b9396f0e0c554a200"
+    },
+    {
+      "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+      "sha256": "ffc6608f45171773095d345f84a54f691a44f610310f6a3a561964bb2549a4cf"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "sha256": "c7c45a8124d49101d25c43b95fb0e581ab15e26ea986b5bef1dd109d0e61b7d8"
+    },
+    {
+      "file": "e2e/web-material-read-save.spec.ts",
+      "sha256": "8b7c7ff4813a5b1331548953c03dd844690a3fb2570568b4e3e6904f08d47de4"
+    },
+    {
+      "file": "e2e/wechat-article-workbench.spec.ts",
+      "sha256": "e95cf6934602f5be9f388310a8b553b869d97ee93359b213e68fe5962cb97e94"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "sha256": "d3c1a982870b4bd36c45a8ed2f3fff2b53093862fadb8fc8e173ee2de05b5a18"
+    },
+    {
+      "file": "fixtures/routes.ts",
+      "sha256": "7ae9222d9ccaef5d8c1cd316a2eef05f39780d20b5ea816c8894e75b7ebc2624"
+    },
+    {
+      "file": "helpers/fixed-evidence-clock.cjs",
+      "sha256": "8d594c674802effb72b9b5a0ac45d5e9c704ecfb387bd34daa5d00b4bf7cf2de"
+    },
+    {
+      "file": "helpers/network-policy.ts",
+      "sha256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "sha256": "ca3687d02ab6e42a1acde6024149aa2d5af0b56ab570bdc5ce2a7f2fe899850f"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/INSTALL-MANIFEST.json",
+      "sha256": "4535e67610a61b70150759aaac2f7f0ec7f2c626bf66e5fbf46788b1bdd8af34"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/README.md",
+      "sha256": "7e0cf9d70e734dcc86ecd22a090f6dc8eaf31db9831500e3af5d5e0ea73aa8cc"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-ai-copilot-overlay.png",
+      "sha256": "fda68da9f7a96d8c07f626bee03baeba889149de3e0eabf3e76805b9020cd6fc"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-analytics-review.png",
+      "sha256": "b2636a275b328b96495d2f2a280e709111ecffe45f2f6649f5a8d2dd5fae4c59"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-assets.png",
+      "sha256": "a3336cd1388ba223b4879cf93078c5b78c2f886c791abc17a0b2b153d7ba2402"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-dashboard.png",
+      "sha256": "7a1fb9a5d07050f6744231fb16d49f1c26a0bf953441c214d780bbb0e1247bab"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-experience.png",
+      "sha256": "609023b1435725b22b4e95c9ad3b68844c3562ad74b28575a9225ecfa46ba0bb"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-knowledge.png",
+      "sha256": "85c96a181b9113ff9e638b3d14b6309e0a3ed556887471f99f6dddc7cea6c82b"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-new-project-overlay.png",
+      "sha256": "7c4e2a42c9d26b662bcfd4f47e9034068e38fc95abf7cf240ecbc57316db1bb4"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-planning-workspace.png",
+      "sha256": "079e097e2641f9b805129ab377da08e8266a51c58516793bc22af74e3ae26ca9"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-production-workspace.png",
+      "sha256": "f73dff930936ab4eba1024c3f9dea0a96f6336c7901e39858589255aae9edf21"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-project-overview.png",
+      "sha256": "e599bfe55f3db65bfe5c98489502ebbb818ba67033bcc898bdc8764e11af37fa"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-projects.png",
+      "sha256": "fbabec5271523484fbedce5a8e0b31f4a741fe55708a8064f03a1cc85ccfe083"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-publishing-center.png",
+      "sha256": "5c678851e540b151c9e6c50dc5d956cd99a35b8ffdca5866a2863c796629967a"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-publishing-workspace.png",
+      "sha256": "46385cfd85ac360d83ab0bcd799646f81eb633ffefca2a370dc5f8e5c2638e5f"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-research-workspace.png",
+      "sha256": "5ea16c42268955de0196e5827f3a47a5badfb4b0454ca28a1002ede6f041032b"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-script-workspace.png",
+      "sha256": "5f3ba4c96a1ced43a250b5ed2c5e9611aafb0ad079864d34238d1887173aa5df"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-search.png",
+      "sha256": "e384830beb6b9b1e341e357cab5a27ca2aeb19b7fa91933a17d9a99da4d511ec"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-settings.png",
+      "sha256": "ab32cc156f193da770064434f8b6313a39cede2eb2c656292fe3c5ba7bcef094"
+    },
+    {
+      "file": "visual/__setup__.ts",
+      "sha256": "073be3097ac3173e7dea87548261bab7ce49d7c0acc3763445a8a26d6d3ec779"
+    },
+    {
+      "file": "visual/__teardown__.ts",
+      "sha256": "f66e5693777c979e20d45d571ce825ec74467c393bc4f48efcc7807798c6e95c"
+    },
+    {
+      "file": "visual/all-pages.spec.ts",
+      "sha256": "921cfdb7c1274fbdddf0f30e34be38b101cda1d5b4f8dbbab827875ec395af77"
+    },
+    {
+      "file": "visual/pages/__screenshots__/publishing-center.spec.ts-snapshots/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "visual/pages/ai-copilot.spec.ts",
+      "sha256": "d1a61a2dabfe385cfc736dce7063c8c1f3db82817b5da52b5b7b0e69ed04f278"
+    },
+    {
+      "file": "visual/pages/analytics-review.spec.ts",
+      "sha256": "5f59cd2c4b843345d941f3736b01fa62437dcd2c22fa878cc10fc489bafa95c5"
+    },
+    {
+      "file": "visual/pages/assets.spec.ts",
+      "sha256": "8e226a444170b0b8188faa56f22c973842404fbceed21e16f18f30f2222277a3"
+    },
+    {
+      "file": "visual/pages/dashboard.spec.ts",
+      "sha256": "7634cd6eb83bec44195f93e169414a096bcc00bab88a72ee35afd258d374b922"
+    },
+    {
+      "file": "visual/pages/experience.spec.ts",
+      "sha256": "514992c904b2ed93416fb304fd27a16e96f253737419bbda1f93655c26abb625"
+    },
+    {
+      "file": "visual/pages/intelligence-dark.spec.ts",
+      "sha256": "0dba3d920ca86c55b46a87d07afd8a7f6a84d9d50d50c2c105df7c41627490a5"
+    },
+    {
+      "file": "visual/pages/knowledge.spec.ts",
+      "sha256": "a5f6537fee18ed241746a1d32075650313b3f2d01b946a1f75b424959d3d0a76"
+    },
+    {
+      "file": "visual/pages/new-project-overlay.spec.ts",
+      "sha256": "c1d08b087e18c2ea645fa6b738a7501488d54bd011263eee4a6820172adaa913"
+    },
+    {
+      "file": "visual/pages/planning.spec.ts",
+      "sha256": "ded98e4bd7ffcf9fc9ba0a430c6a06340cf691c7f4476e5d0d11667bba4f1690"
+    },
+    {
+      "file": "visual/pages/project-overview.spec.ts",
+      "sha256": "a3b8b890db10f73a146db8072d735257e51080a8a51bc54d802bd79b2c48660c"
+    },
+    {
+      "file": "visual/pages/projects.spec.ts",
+      "sha256": "992670f3fb75382262ad63a6c343fd708790233a33df7e235c2588d8a66bb369"
+    },
+    {
+      "file": "visual/pages/publishing-center.spec.ts",
+      "sha256": "84dbc1c1cc2d48a672287c2ae6a0506bc28674e04237e1e98d6070ad69036938"
+    },
+    {
+      "file": "visual/pages/publishing-workspace.spec.ts",
+      "sha256": "a4d865c4ceddb6f9091eec8cc83b8375a47af2f73eb26f7bbefddf03744cd715"
+    },
+    {
+      "file": "visual/pages/research.spec.ts",
+      "sha256": "945a3db7b7775c8fb9aeec35e84a5b615a742bab2b7fce19a595f72cac6a9dc3"
+    },
+    {
+      "file": "visual/pages/script.spec.ts",
+      "sha256": "2e171d24413c5f5e0b1fe43d684ba465393891e208c5523cd1d6bad754dffdb2"
+    },
+    {
+      "file": "visual/pages/search.spec.ts",
+      "sha256": "91e34ba69a3f6337d2127c49733d5b752979db921092744c422c17bce6b2aca5"
+    },
+    {
+      "file": "visual/pages/settings.spec.ts",
+      "sha256": "a564c0c6e65677f0004682d950e8f2a526ce989ccd8b0b373f407df934365bd2"
+    },
+    {
+      "file": "visual/visual-lifecycle.ts",
+      "sha256": "7378e72afbf34ace113bfc5f3c6bcd0e30667d394b497cc744cd1067b97b813b"
+    }
+  ],
+  "generatedTestInventory": [
+    {
+      "file": "accessibility/all-pages.spec.ts",
+      "sha256": "414ac84466582e23ca10a212caee92251e52511f2219bc25523772cb9c3cb7e8"
+    },
+    {
+      "file": "e2e/ai-copilot.spec.ts",
+      "sha256": "cdf7f36aae60583dad3321c480d0fb6a1ea22fd5ede4768bb32da6a3958f8878"
+    },
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "sha256": "b4f1efceadd31dd50cc3e35b94b3470ec3690745cb4895d8ff66e57d0ba0d6eb"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "sha256": "e3a3b05b72f5748e711280e06920f8610c7526dca6a1cf117865d47ce360c177"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "sha256": "d68cf5ca26f17f8e6037174c4c8a2f7fe92b84d70657831ca65a9eda187f7136"
+    },
+    {
+      "file": "e2e/all-routes.spec.ts",
+      "sha256": "2cfb9cf5131ff94d6d797e0aa9e86cdbf3147cde4200ced4daa0b541d1632991"
+    },
+    {
+      "file": "e2e/app-shell.spec.ts",
+      "sha256": "88770d8b807360a706ccbe1ee58a2264777129bb6b93d0a83ccba940040ac75a"
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "sha256": "3d3e9a18d9aad56fa21fd12921491468572772b224226e89a16a1bd8eaeae92e"
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "sha256": "3bd059710ac4e676c9569228648359bc8d3b293764459621286306e0239e3acd"
+    },
+    {
+      "file": "e2e/audience-task-topics.spec.ts",
+      "sha256": "f795dc4c1f753594b2dba999bced6f786fdd0a273ceb75b54da3792adcedfb4c"
+    },
+    {
+      "file": "e2e/automations-group-media-jobs.spec.ts",
+      "sha256": "6f15503aecbaf9e2336c84ae912a5d8ea34cd8d80a8c18a953a55c6e97bab236"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "sha256": "faa4568131c19e7e55031e57bdac612826da0631772a341834e13b16a8844451"
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "sha256": "72251f4b8d754753ba2aa839a7a5d4256ccebcd9f9a06aec53f027780a0f8c8a"
+    },
+    {
+      "file": "e2e/channel-public-links.spec.ts",
+      "sha256": "13feccc3084a17c2b650890f315ca17fa429c3a3554a8b16232e00faeca1e2d8"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "sha256": "9280da5bc51cbbb94e3bbece509249cb3a0a77622083bdb970128bd6460d9d5f"
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "sha256": "a705710a594a838204ac78bea71577840ace97205561cb367029e68347b2e685"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "sha256": "8c32d304d02986b026d7fec4569a709bb0e49d375fcd962658f041a7a6b88498"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "sha256": "ac250e792f4623465e8feead33ed932ac68e8320258649e665db8034b10e0426"
+    },
+    {
+      "file": "e2e/experience.spec.ts",
+      "sha256": "fb0cf7dd4e32ad7ae38a7eff9a3ffd95a7e82261d1084c9e4b0b3cf6abc955d8"
+    },
+    {
+      "file": "e2e/group-skill-customization.spec.ts",
+      "sha256": "5c49f484a07679ed3599a3548f16b8c4230b5013b21b2147df66a6fbdcf7d6ba"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "sha256": "9993e464bcfb18900e26925968c88487f1a3bf948b6cab3133b6810978a629e0"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "sha256": "10be1ee6a1e6fa36b63469b7d96543bc4b828f3a34bea560369fccd7781046c4"
+    },
+    {
+      "file": "e2e/new-project.spec.ts",
+      "sha256": "2a4d20ed3d6ea17c99def6f6bc37f354a85913b9b5aade5401ebf8b70ce73c53"
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "sha256": "e41decd923ddccf2439fa0f9845366bc620e8bc048bb8e55c78c0ef1be936e90"
+    },
+    {
+      "file": "e2e/overlay-routing.spec.ts",
+      "sha256": "3d52907927769147e10ae1250bcbc7078b2c57f16a3a0f9e4275164e4af3f05e"
+    },
+    {
+      "file": "e2e/platform-work-catalog.spec.ts",
+      "sha256": "2239e6e4d59ee5959fad2017eb70c7a4b34039f5ba6f3157adddd8adfa7cde0a"
+    },
+    {
+      "file": "e2e/production-broll-remove.spec.ts",
+      "sha256": "ac9c52b65bd794c6049203b93ad01dce7f8d5cf4197362574b63154dec94a8e2"
+    },
+    {
+      "file": "e2e/production-empty-workbench.spec.ts",
+      "sha256": "5f9d5894b00a0d37c5fec1bf8a9732bb99dcb0dbc7681847938ac30c2d970dd3"
+    },
+    {
+      "file": "e2e/projects.spec.ts",
+      "sha256": "5aa32a51f36a9b7bc75f5f6ef9f3842d577b90757671e57deb50520d5bf3bbdc"
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "sha256": "bbe785939af550b2b8e578f286b162ba092d5dd7eb2d0a559e24e9e3df4edf46"
+    },
+    {
+      "file": "e2e/publishing-center.spec.ts",
+      "sha256": "557bc3d5072d1bbb9932520eb6229b148eedd733e83082d61c9a4b2e9a678836"
+    },
+    {
+      "file": "e2e/publishing-workspace.spec.ts",
+      "sha256": "da89fe9bbb463141585a6f6fd8d7e19b245466a2c05f72d30904e336d5478392"
+    },
+    {
+      "file": "e2e/qwen-asr-configuration.spec.ts",
+      "sha256": "8678f6ce823125fbc2d5591c77d5dea759da7b1bea3b8bdcfa032f4f57e059a7"
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "sha256": "e8c844a3641312e9c627dd1d82ddc087720b82dbe513bb9ace7b90316bad44ad"
+    },
+    {
+      "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "sha256": "5f1b39bf8697b214b0a79a2b6c633c3be33722ccd5cd952dccdf722028396407"
+    },
+    {
+      "file": "e2e/review-history.spec.ts",
+      "sha256": "08fb92449e78b23dca61287dd92314b4cca57867143294d761465ee6c57924a0"
+    },
+    {
+      "file": "e2e/search.spec.ts",
+      "sha256": "60994f26286a56f7ef3e2e9409332c0924008a1be98cad46c851d58934aea3d3"
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "sha256": "2e2b263b66769a29316ab284f8a2ba5d61793b912d961437567a9b80738231ce"
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "sha256": "0a309089488bfd25ec0af833c40601bdc252e842e5f2b6d9a3f8e6ee91ba23af"
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "sha256": "6d012f7c3657f43da6030f8014c2b0fb7b9aba52403abf16f77450a428a63969"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "sha256": "f915f3a24bc45e785c05b9130bf16acc7ffd5fc8b9b1480ecfa3ed07bf5b2f5b"
+    },
+    {
+      "file": "e2e/smoke.spec.ts",
+      "sha256": "8d97431bc60753c88cec544525b8f097f12f6bf41b1f64d16b88527db0d7d9cd"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "sha256": "b7b069f9f732e4213368b33242461fbe153bc9799a03a117cdc70ddf4e921397"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "sha256": "9e20b0362dc054e86653253681dbfc376a608e88d9151e1f954d37e18a2baffc"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "sha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "sha256": "c162998fbcda7d51658269ebbf8fc5f8d5bafbb08bfc7c97d10cbd176b92c371"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "sha256": "da2e678a21092d926a0c90886f96261e49cc0049f88685d7cdb7b1e1467918e6"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "sha256": "265f95f0454e6dfd63d9e3c9594112bc840c898fb425336b09de4b1483c364d9"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "sha256": "410417ab030977e819c3eb98a54f57432603f0084b1cf992218a5641b0792312"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "sha256": "ea2d9351ac7d4964c60120f80ba912c0daf5fd6e5cf713f56ddd4bc1c9774dab"
+    },
+    {
+      "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+      "sha256": "c9a7d50700cba8b4e4874114ce282fd90a91e8ec30868b8ef06e1cf8783f985d"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "sha256": "7075997210c7b26101e91f664df2ec3df7acd95b3cace1851c64f5a0446a0b04"
+    },
+    {
+      "file": "e2e/web-material-read-save.spec.ts",
+      "sha256": "4dd54aba99678cc1025d642c9c437c4b47fe152a2838185ab28396004c4b88c9"
+    },
+    {
+      "file": "e2e/wechat-article-workbench.spec.ts",
+      "sha256": "76e27ec4f80c64e9b317d3ba32d5c5ef4c6d48c1e8d9e93454d42e9fa06fca53"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "sha256": "ffaa4ac57cc47a8a590aa85fa9925657b82471be83dfa3860a614bffa95e3ed8"
+    },
+    {
+      "file": "fixtures/routes.ts",
+      "sha256": "7ae9222d9ccaef5d8c1cd316a2eef05f39780d20b5ea816c8894e75b7ebc2624"
+    },
+    {
+      "file": "helpers/fixed-evidence-clock.cjs",
+      "sha256": "8d594c674802effb72b9b5a0ac45d5e9c704ecfb387bd34daa5d00b4bf7cf2de"
+    },
+    {
+      "file": "helpers/network-policy.ts",
+      "sha256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "sha256": "2f663f63396f441c93a947c46a8f5312ae86ac09d1b1bf4fb7e2967f7dff5f82"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/INSTALL-MANIFEST.json",
+      "sha256": "4535e67610a61b70150759aaac2f7f0ec7f2c626bf66e5fbf46788b1bdd8af34"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/README.md",
+      "sha256": "7e0cf9d70e734dcc86ecd22a090f6dc8eaf31db9831500e3af5d5e0ea73aa8cc"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-ai-copilot-overlay.png",
+      "sha256": "fda68da9f7a96d8c07f626bee03baeba889149de3e0eabf3e76805b9020cd6fc"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-analytics-review.png",
+      "sha256": "b2636a275b328b96495d2f2a280e709111ecffe45f2f6649f5a8d2dd5fae4c59"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-assets.png",
+      "sha256": "a3336cd1388ba223b4879cf93078c5b78c2f886c791abc17a0b2b153d7ba2402"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-dashboard.png",
+      "sha256": "7a1fb9a5d07050f6744231fb16d49f1c26a0bf953441c214d780bbb0e1247bab"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-experience.png",
+      "sha256": "609023b1435725b22b4e95c9ad3b68844c3562ad74b28575a9225ecfa46ba0bb"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-knowledge.png",
+      "sha256": "85c96a181b9113ff9e638b3d14b6309e0a3ed556887471f99f6dddc7cea6c82b"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-new-project-overlay.png",
+      "sha256": "7c4e2a42c9d26b662bcfd4f47e9034068e38fc95abf7cf240ecbc57316db1bb4"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-planning-workspace.png",
+      "sha256": "079e097e2641f9b805129ab377da08e8266a51c58516793bc22af74e3ae26ca9"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-production-workspace.png",
+      "sha256": "f73dff930936ab4eba1024c3f9dea0a96f6336c7901e39858589255aae9edf21"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-project-overview.png",
+      "sha256": "e599bfe55f3db65bfe5c98489502ebbb818ba67033bcc898bdc8764e11af37fa"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-projects.png",
+      "sha256": "fbabec5271523484fbedce5a8e0b31f4a741fe55708a8064f03a1cc85ccfe083"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-publishing-center.png",
+      "sha256": "5c678851e540b151c9e6c50dc5d956cd99a35b8ffdca5866a2863c796629967a"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-publishing-workspace.png",
+      "sha256": "46385cfd85ac360d83ab0bcd799646f81eb633ffefca2a370dc5f8e5c2638e5f"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-research-workspace.png",
+      "sha256": "5ea16c42268955de0196e5827f3a47a5badfb4b0454ca28a1002ede6f041032b"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-script-workspace.png",
+      "sha256": "5f3ba4c96a1ced43a250b5ed2c5e9611aafb0ad079864d34238d1887173aa5df"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-search.png",
+      "sha256": "e384830beb6b9b1e341e357cab5a27ca2aeb19b7fa91933a17d9a99da4d511ec"
+    },
+    {
+      "file": "visual/__screenshots__/reference-images/reference-settings.png",
+      "sha256": "ab32cc156f193da770064434f8b6313a39cede2eb2c656292fe3c5ba7bcef094"
+    },
+    {
+      "file": "visual/__setup__.ts",
+      "sha256": "073be3097ac3173e7dea87548261bab7ce49d7c0acc3763445a8a26d6d3ec779"
+    },
+    {
+      "file": "visual/__teardown__.ts",
+      "sha256": "f66e5693777c979e20d45d571ce825ec74467c393bc4f48efcc7807798c6e95c"
+    },
+    {
+      "file": "visual/all-pages.spec.ts",
+      "sha256": "921cfdb7c1274fbdddf0f30e34be38b101cda1d5b4f8dbbab827875ec395af77"
+    },
+    {
+      "file": "visual/pages/__screenshots__/publishing-center.spec.ts-snapshots/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "visual/pages/ai-copilot.spec.ts",
+      "sha256": "d1a61a2dabfe385cfc736dce7063c8c1f3db82817b5da52b5b7b0e69ed04f278"
+    },
+    {
+      "file": "visual/pages/analytics-review.spec.ts",
+      "sha256": "5f59cd2c4b843345d941f3736b01fa62437dcd2c22fa878cc10fc489bafa95c5"
+    },
+    {
+      "file": "visual/pages/assets.spec.ts",
+      "sha256": "8e226a444170b0b8188faa56f22c973842404fbceed21e16f18f30f2222277a3"
+    },
+    {
+      "file": "visual/pages/dashboard.spec.ts",
+      "sha256": "7634cd6eb83bec44195f93e169414a096bcc00bab88a72ee35afd258d374b922"
+    },
+    {
+      "file": "visual/pages/experience.spec.ts",
+      "sha256": "514992c904b2ed93416fb304fd27a16e96f253737419bbda1f93655c26abb625"
+    },
+    {
+      "file": "visual/pages/intelligence-dark.spec.ts",
+      "sha256": "0dba3d920ca86c55b46a87d07afd8a7f6a84d9d50d50c2c105df7c41627490a5"
+    },
+    {
+      "file": "visual/pages/knowledge.spec.ts",
+      "sha256": "a5f6537fee18ed241746a1d32075650313b3f2d01b946a1f75b424959d3d0a76"
+    },
+    {
+      "file": "visual/pages/new-project-overlay.spec.ts",
+      "sha256": "c1d08b087e18c2ea645fa6b738a7501488d54bd011263eee4a6820172adaa913"
+    },
+    {
+      "file": "visual/pages/planning.spec.ts",
+      "sha256": "ded98e4bd7ffcf9fc9ba0a430c6a06340cf691c7f4476e5d0d11667bba4f1690"
+    },
+    {
+      "file": "visual/pages/project-overview.spec.ts",
+      "sha256": "a3b8b890db10f73a146db8072d735257e51080a8a51bc54d802bd79b2c48660c"
+    },
+    {
+      "file": "visual/pages/projects.spec.ts",
+      "sha256": "992670f3fb75382262ad63a6c343fd708790233a33df7e235c2588d8a66bb369"
+    },
+    {
+      "file": "visual/pages/publishing-center.spec.ts",
+      "sha256": "84dbc1c1cc2d48a672287c2ae6a0506bc28674e04237e1e98d6070ad69036938"
+    },
+    {
+      "file": "visual/pages/publishing-workspace.spec.ts",
+      "sha256": "a4d865c4ceddb6f9091eec8cc83b8375a47af2f73eb26f7bbefddf03744cd715"
+    },
+    {
+      "file": "visual/pages/research.spec.ts",
+      "sha256": "945a3db7b7775c8fb9aeec35e84a5b615a742bab2b7fce19a595f72cac6a9dc3"
+    },
+    {
+      "file": "visual/pages/script.spec.ts",
+      "sha256": "2e171d24413c5f5e0b1fe43d684ba465393891e208c5523cd1d6bad754dffdb2"
+    },
+    {
+      "file": "visual/pages/search.spec.ts",
+      "sha256": "91e34ba69a3f6337d2127c49733d5b752979db921092744c422c17bce6b2aca5"
+    },
+    {
+      "file": "visual/pages/settings.spec.ts",
+      "sha256": "a564c0c6e65677f0004682d950e8f2a526ce989ccd8b0b373f407df934365bd2"
+    },
+    {
+      "file": "visual/visual-lifecycle.ts",
+      "sha256": "7378e72afbf34ace113bfc5f3c6bcd0e30667d394b497cc744cd1067b97b813b"
+    }
+  ],
+  "driverInventory": [
+    {
+      "file": "prepare-browser-driver.cjs",
+      "sha256": "559f51df5e35b71ba4686a3a515275bb992efe7852abaa78321aa98f4f8d7c03"
+    },
+    {
+      "file": "playwright.config.ts",
+      "sha256": "2b414f4373e0ca9da5979f6f22752f86fb46036c64fa9269bf924e96a4815064"
+    },
+    {
+      "file": "start-isolated-next.cjs",
+      "sha256": "066c8ca0cf46e88ab2a8eb1e0a28c4b50e1b39479db445adef91dd905bada0e5"
+    },
+    {
+      "file": "README.md",
+      "sha256": "2665b6783fecc56fe3b458c37c02f344b58f399ea6143c6e6304e1753fd3adc3"
+    },
+    {
+      "file": "changes.diff",
+      "sha256": "79aa3b988ceb353b066452a78d3abb418fa7e74f03bf17f306ec09aa208d4963"
+    },
+    {
+      "file": "runtime-list.json",
+      "sha256": "f7906784b29d85a8a49c517cba7b46f8114dfc2ffbc67740d8409bf7615e6d32"
+    }
+  ],
+  "packageSha256": "e63202df379c8c39f6470b4153f8b06100ff8aceed5f46be3c6bab3eb686f402",
+  "createdAt": "2026-10-11T14:54:59.957Z"
+}

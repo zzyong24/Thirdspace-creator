@@ -1,0 +1,8 @@
+{
+  "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/visual/__artifacts__/baseline-fingerprint.json",
+  "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/driver-before-dr005/owned-original-baseline-fingerprint.json",
+  "sha256": "ba1b6cc8ca6c7c0a050e00f135aa761eaa27f3856e7123013d7dfd2508f094d0",
+  "bytes": 766,
+  "reason": "Third startup attempt owned globalSetup output; not a frozen test input",
+  "at": "2026-10-11T15:05:41.432714+00:00"
+}

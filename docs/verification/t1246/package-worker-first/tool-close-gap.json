@@ -1,0 +1,12 @@
+{
+  "parent": 14767,
+  "child": 14770,
+  "observedReady": true,
+  "observedExitCode": null,
+  "noTaskSent": true,
+  "noOwnedChildAlive": true,
+  "parentTerminatedSignal": "SIGTERM",
+  "reason": "Node25 manual parent disconnect IPC close-count gap; first close-only listener did not record exit",
+  "firstStatus": "READY_WITHOUT_EXIT_RECEIPT",
+  "nativeAppAcceptance": false
+}

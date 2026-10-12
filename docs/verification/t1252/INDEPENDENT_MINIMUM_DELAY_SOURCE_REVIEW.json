@@ -1,0 +1,122 @@
+{
+  "schema": "independent-source-narrow-review/v1",
+  "task": "T-1252",
+  "at": "2026-10-12T02:19:04.985580+00:00",
+  "result": "PASS_SOURCE_MONOTONIC_MINIMUM_ONLY",
+  "candidateSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+  "originalSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+  "inputs": [
+    {
+      "path": "docs/features/t1252-cli-http-consumer-budget-closure.md",
+      "sha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+      "size": 16428
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "sha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+      "size": 59638
+    },
+    {
+      "path": "docs/verification/t1252/public-minimum-delay-candidate/workbench-file-recovery.test.ts",
+      "sha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+      "size": 59848
+    },
+    {
+      "path": "docs/verification/t1252/public-minimum-delay-candidate/MINIMUM_DELAY_ONLY.diff",
+      "sha256": "95446335f5b74f2bc66ca0fb8057c69781e17862bb48d0da16068e602cc85c55",
+      "size": 2615
+    },
+    {
+      "path": "docs/verification/t1252/public-minimum-delay-candidate/CANDIDATE_BINDING.json",
+      "sha256": "946d98fb88c8f769d860d61e2715c53923c2a8ec6c458a6309cab9433b8438d8",
+      "size": 1136
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "sha256": "402b5e5554568d839a5d9326230dcd7ce4739d70f110d21c5c5827f9709b6e63",
+      "size": 9983
+    },
+    {
+      "path": "contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "size": 1725
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-second-render-failed-interrupted/EVIDENCE.json",
+      "sha256": "c1cb71c940e2161b7f41fb684c4a023b6b54955f044d85683de3ac9cc5e5da86",
+      "size": 6071
+    },
+    {
+      "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_EXACT_SOURCE_PROOF.json",
+      "sha256": "11487c31225c80b1534f081b8f537ae0854e3b1446aa03b290ee87dcc9f400ac",
+      "size": 970
+    },
+    {
+      "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_DETERMINISTIC_PROOF.json",
+      "sha256": "1676cec50e0a63ab2f48fb54b64e08c2ee050dde6c9b8b7d126cc331e1be035e",
+      "size": 1049
+    },
+    {
+      "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_FULL_STAGE_PROOF.json",
+      "sha256": "84df78c6a95aa101b01dfb9debb24fbc82fe4ae6477450fe4772207a807a3258",
+      "size": 1138
+    },
+    {
+      "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_ACTUAL_NODE_TIMERS.json",
+      "sha256": "6e4dff9da7c7b3ca5b159f4417ee6119de0b7df9af3d2710d0666240bd001781",
+      "size": 4723
+    },
+    {
+      "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_STATIC_FIRST_ATTEMPT.json",
+      "sha256": "33de844b16b4751c3aa002fef79a75244a206c12f74a053d5cd8f9e1db58bef8",
+      "size": 258
+    },
+    {
+      "path": "docs/verification/t1252/INDEPENDENT_MINIMUM_DELAY_FULL_STAGE_FIRST_ATTEMPT.json",
+      "sha256": "9cbed78ad43ffbe45fdd3d117b5722283582d93512e31413579498113b72e425",
+      "size": 229
+    }
+  ],
+  "exactDelta": "唯一新增render用例stage中的受控delay Promise改为一次冻结start+110000，每个callback重新计算minimum剩余，未到则ceil并至少1ms；所有其它源码字节不变",
+  "actualHistory": {
+    "case2": "FAIL 109999.8515>=110000断言，duration661486.826334ms",
+    "actualRawFilesShaChecked": 16,
+    "passedRawCases": [
+      0,
+      1
+    ],
+    "missingHistoricalReceipts": [
+      "case-2-child.json",
+      "case-2-proof.json",
+      "final.json"
+    ],
+    "historicalWholeAcceptancePassed": false,
+    "currentGroupZeroDoesNotBackfillHistory": true
+  },
+  "consumerProof": [
+    "实际Node25.9 timers.setTimeout115-119走new Timeout→insert；internal/timers387-390以getLibuvNow、MathTrunc存timer，不以测试performance.now保证同一微秒起算。文档不保证精准回调；不能把111s凭空改阈值。",
+    "候选minimumAt在stage出生一次固定；每callback仅按该原deadline计算剩余，重复提前不能refresh该deadline；remaining<=0才resolve，原>=110000严格断言保。",
+    "launch真实SDK立即调用并与delay Promise.all并行，随后context/page原串行；未改真实SDK返回值、离线CSP或导出bytes/sourceHash/PNG/PDF校验。",
+    "原renderTrustedWorkbenchHtml step()仍within原MIN_EXECUTION_TIMEOUT_MS=120000与剩余renderer deadline，110000minimum只测试内部delay，不延持久task原D或该120s phase。",
+    "timer Set先删除已触发timer再记录下一timer，完整stage finally仍clear当前timer且移除；SDK async rejection或同步throw保原error identity且timer0。"
+  ],
+  "deterministicChecks": [
+    "delay表达式4族PASS",
+    "完整stage5族PASS：0.1485ms提前/连续提前/SDK异步reject/同步throw/保原pendingwork"
+  ],
+  "harnessHistory": "两静态VM首次漏删Promise<void> parse FAIL已单独保全；仅抽取器删除TS类型后PASS，不改候选源码；这些静态检查不代慢公共链",
+  "frozenFirst100Changed": false,
+  "findings": [],
+  "runtimePermissionByReviewer": false,
+  "reviewerAppliedSource": false,
+  "reviewerExecutedPublicOrBrowser": false,
+  "requiresBeforeNextRuntime": [
+    "ROOT exact源码copy准入",
+    "重新生成私有copy和完整actual source/installed/browser binding及独立runtime工具复核",
+    "新actualchildEOF/stdio close/group0/sourceafter和三正文结果；旧FAIL原样保持"
+  ],
+  "externalPrimaryReference": "https://nodejs.org/download/release/v25.9.0/docs/api/timers.html#timers_settimeout_callback_delay_args",
+  "externalReferenceRead": true,
+  "AppAcceptancePassed": false,
+  "official49AcceptancePassed": false
+}

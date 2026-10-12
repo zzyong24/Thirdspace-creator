@@ -1,0 +1,33 @@
+{
+  "rows": [
+    {
+      "name": "childClosure",
+      "originalSha256": "30ccd79d4d731f4c1d3e584eb4ad5e86a09485e558f4a283d5a1c97b26e5e8d0",
+      "v3Sha256": "30ccd79d4d731f4c1d3e584eb4ad5e86a09485e558f4a283d5a1c97b26e5e8d0",
+      "byteIdentical": true
+    },
+    {
+      "name": "boundedClosure",
+      "originalSha256": "8ac707d08b5ff6e641cb9a751182ea8928e14231a91f30e8a1e6bfdbb5ca7a02",
+      "v3Sha256": "8ac707d08b5ff6e641cb9a751182ea8928e14231a91f30e8a1e6bfdbb5ca7a02",
+      "byteIdentical": true
+    },
+    {
+      "name": "processSnapshot",
+      "originalSha256": "095de275e4bcdc582ebfc7064ff82ea9c8b00bede252964bd2bc81e5a84efa71",
+      "v3Sha256": "095de275e4bcdc582ebfc7064ff82ea9c8b00bede252964bd2bc81e5a84efa71",
+      "byteIdentical": true
+    },
+    {
+      "name": "signalOwned",
+      "originalSha256": "80c3dfbe5948da86bec4559022a9a774d27b57a570fb8d1cfcd8f6c6d2271da5",
+      "v3Sha256": "80c3dfbe5948da86bec4559022a9a774d27b57a570fb8d1cfcd8f6c6d2271da5",
+      "byteIdentical": true
+    }
+  ],
+  "allByteIdentical": true,
+  "realNegativeReceipt": "../browser-original/reviews/owned-node-closure-negatives-result.json",
+  "scope": "实际120秒owned Node负向只签相同helpers；原/V3 run/PG/PGlite/模型仍未执行",
+  "originalLauncherSha256": "7b4d6d60c3dca32761ef50e739902dde59642154879806ad8a59a431dc492c2c",
+  "v3LauncherSha256": "92091e47db4ae758e74ee70f1c8eebb3e32edbbefc4a75b3e8ad3536f8f344a9"
+}

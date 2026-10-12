@@ -1,0 +1,71 @@
+{
+  "records": [
+    {
+      "file": "frontend/src/server/workbench-public.integration.test.ts",
+      "cases": [
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "公开dispatch真实装配可发现宿主能力，并拒绝未授权任务/产物",
+          "titleRegex": "公开dispatch真实装配可发现宿主能力，并拒绝未授权任务\\/产物$",
+          "multiplicity": 1,
+          "explicitBodyMs": null,
+          "effectiveBodyMs": 1800000,
+          "line": 7
+        },
+        {
+          "disabledByKnownQualification": false,
+          "qualificationSource": null,
+          "qualificationKnown": true,
+          "title": "T1250 原任务真实登记HTML版本→公共render transport→慢Chromium PNG/PDF保同来源hash和有效字节",
+          "titleRegex": "T1250 原任务真实登记HTML版本→公共render transport→慢Chromium PNG\\/PDF保同来源hash和有效字节$",
+          "multiplicity": 1,
+          "explicitBodyMs": 1800000,
+          "effectiveBodyMs": 1800000,
+          "line": 21
+        }
+      ],
+      "hooks": [
+        {
+          "name": "afterEach",
+          "explicitMs": null,
+          "effectiveMs": 3000000,
+          "line": 6
+        }
+      ],
+      "declaredCaseCount": 2,
+      "runnableCaseCount": 2,
+      "originalQualifiedSkipCount": 0,
+      "perCaseHookMs": 6000000,
+      "allHooksMs": 6000000,
+      "serialCasesMs": 15600000,
+      "shortExplicitDeclarations": []
+    }
+  ],
+  "staticCaseCount": 2,
+  "runnableCaseCount": 2,
+  "originalQualifiedSkipCount": 0,
+  "staticChildMs": 22320000,
+  "collectMs": 1800000,
+  "prepareMs": 120000,
+  "eachProcessTerminationReserveMs": 2160000,
+  "afterSourceReceiptMs": 720000,
+  "outerMs": 29280000,
+  "defaultBodyMs": 1800000,
+  "defaultHookMs": 3000000,
+  "poolStartTeardownMs": 240000,
+  "childCleanupReportMs": 480000,
+  "helperLifecycleSourceFacts": {
+    "identityPsCount": 3,
+    "eachPsMs": 180000,
+    "normalInitialAndFinalSnapshots": 2,
+    "maxSignalSnapshots": 2,
+    "termKillEachGraceMs": 180000,
+    "lastPollingSnapshotOvershootEachMs": 180000,
+    "pollIntervalEachMs": 100,
+    "worstNormalLifecycleMs": 1980200,
+    "allocatedLifecycleMs": 2160000
+  },
+  "shortExplicitDeclarations": []
+}

@@ -1,0 +1,17 @@
+{
+  "dispatch": {
+    "chunk_id": "4795fb",
+    "wall_time_seconds": 1.00175225,
+    "session_id": 95729,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "EOF": {
+    "chunk_id": "597475",
+    "wall_time_seconds": 2.241341959,
+    "exit_code": 0,
+    "original_token_count": 37,
+    "output": "{\"status\":\"complete-stage-source-audit-not-final-seal\",\"failure\":null,\"out\":\"/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec\"}\n"
+  },
+  "onlyOneExistingSessionObserved": true
+}

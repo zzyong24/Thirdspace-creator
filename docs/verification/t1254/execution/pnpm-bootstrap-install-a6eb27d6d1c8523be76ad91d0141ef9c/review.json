@@ -1,0 +1,18 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_OWNED_PNPM_BOOTSTRAP_INSTALL_ONLY",
+  "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "b1fc133afd30a73f766d2456bda0788df8ce528164a1f2b12a5fc8756960994f",
+  "toolDigest": "27a5bab85b30b0a0a4642858437009de1c875c4f2474a78b149fd980afe25965",
+  "approved": true,
+  "at": "2026-10-12T00:54:22.847661+00:00",
+  "sourceInputsChecked": 24,
+  "installedImplementationFilesChecked": 1803,
+  "actualShaDrift": [],
+  "peerSha256": "9fab3aba6660bd5f87118cc0f9d8b146771f6370ef592f862eee8e2d51b17f83",
+  "pinnedBootstrapInstallOnly": true,
+  "newPnpmExecutionApproved": false,
+  "sourceDependencyInstallApproved": false,
+  "buildApproved": false
+}

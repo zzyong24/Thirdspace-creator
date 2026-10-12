@@ -1,0 +1,33 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-638",
+  "commit_sha": "533224f334c43cdb81a344424e420cad93784dd1",
+  "captures": [
+    {
+      "checkpoint": "normal-sidebar",
+      "check_ids": [
+        "AC-RCN-DEPENDENCY",
+        "AC-RCN-AGGREGATION",
+        "AC-RCN-SHORT-SIDEBAR"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "text": "CreatorOS\n首页\n创作者总览\n定位中心\n内容雷达\n选题\n项目\n知识库\n素材中心\n创作画布\n发布中心\n运营分析\n自动化\n设置\nAI 助手\n\n创作者，今天想先做点什么？\n\n打开 AI 助手\n帮助与反馈\n当前账号组\n载入账号组…\n?\n创作者\n个人版"
+    },
+    {
+      "checkpoint": "short-sidebar",
+      "check_ids": [
+        "AC-RCN-DEPENDENCY",
+        "AC-RCN-AGGREGATION",
+        "AC-RCN-SHORT-SIDEBAR"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 640
+      },
+      "text": "?"
+    }
+  ]
+}

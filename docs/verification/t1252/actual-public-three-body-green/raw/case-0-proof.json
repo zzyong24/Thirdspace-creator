@@ -1,0 +1,15 @@
+{
+  "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+  "budget": {
+    "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+    "bodyMs": 80040000,
+    "minimumDerivedMs": 80040000,
+    "childMs": 80880000,
+    "fixtureDoneMs": 80160000
+  },
+  "actualPassed": 1,
+  "actualFailed": 0,
+  "allOtherFilteredCasesNotPassed": true,
+  "resultSha256": "bb803eb4f11930c97a90055d97a68c8856ddf27c0dcf72d98bd58767ddbc7d25",
+  "originalTaskDeadlineMs": 60000
+}

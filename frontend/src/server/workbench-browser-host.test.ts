@@ -732,3 +732,33 @@ it('七类合法 action 及 timeout_ms 经任务租约完整传至原生宿主',
   }
  }finally{await dispatch('browser.close',{laneId:'native-lane',browserEpoch:1});await host.dispose();await isolated.client.close();}
 });
+
+
+it("T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放",async()=>{
+ const isolated=await createDb(),db=isolated.db;
+ try{
+ const nonce=randomUUID(),tasks=createPersistentTaskService(db),received:Array<Record<string,unknown>>=[];
+ const ctx={userId:`slow-stop-${nonce}`,accountId:`slow-stop-account-${nonce}`,requestId:nonce,source:"user" as const};
+ const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:nonce,idempotencyKey:nonce,payload:{}});
+ const workerId=`slow-stop-worker-${nonce}`,claim=(await tasks.claimTask({taskId:task.id,workerId}))!,ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});let timer:ReturnType<typeof setTimeout>|undefined;
+ const path=await socket(received,false,()=>true,()=>true,gate);
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ try{
+  const context={userId:ctx.userId,accountId:ctx.accountId,taskId:task.id,attempt:ref.attempt,fenceToken:ref.fenceToken,leaseId:workerId,operationId:randomUUID()};
+  expect((await host.dispatch({context,invocation:{name:"browser.open",schemaVersion:1,input:{laneId:"research",mode:"primary",domain:"example.com"}}},{signal:AbortSignal.timeout(120000),onProgress:()=>{}})).status).toBe("succeeded");
+  // 停止周期对账，独立观察本次真实公开service回收，避免另一个重试掩盖短观察失败。
+  await host.dispose();
+  const profiles=createExecutionBrowserProfileLeaseService(db),[lease]=await profiles.listOwned(ref);expect(lease).toBeDefined();
+  await tasks.command(ctx,{taskIds:[task.id],command:"cancel",idempotencyKey:nonce});
+  const before=(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]!;
+  timer=setTimeout(release,35000);
+  await host.reconcileStoppedProfiles();
+  expect(await profiles.listOwned(ref)).toEqual([]);
+  const cleanup=received.filter(request=>(request.action as {kind:string}).kind==="cleanup");expect(cleanup).toHaveLength(1);
+  expect(cleanup[0].admission).toMatchObject({taskId:task.id,attempt:ref.attempt,fenceToken:ref.fenceToken,profileKey:lease!.profileKey,profileLeaseId:lease!.leaseId});
+  const after=(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]!;
+  expect(after.id).toBe(before.id);expect(after.deadlineAt).toBe(before.deadlineAt);expect(after.executionBudget).toEqual(before.executionBudget);
+ }finally{if(timer)clearTimeout(timer);release();await host.dispose();}
+ }finally{await isolated.client.close();}
+},1800000);

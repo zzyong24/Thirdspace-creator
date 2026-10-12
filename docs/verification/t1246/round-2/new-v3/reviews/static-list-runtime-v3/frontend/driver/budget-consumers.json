@@ -1,0 +1,2195 @@
+{
+  "schemaVersion": 3,
+  "positiveRequestActionNavigationExpectMs": 120000,
+  "finiteObserveMs": 1980000,
+  "observerSerialRequestAllowanceMs": 120000,
+  "uiResponseObserverMs": 300000,
+  "uiObserverFormula": "注册在trigger之前：action120000+HTTP120000+读取余量60000；trigger失败消费observer拒绝",
+  "ordinaryBodyMs": 72000000,
+  "preservedLongBodies": {
+    "T1097": 18000000,
+    "settingsOriginalMs": [
+      900000,
+      1200000,
+      1800000
+    ],
+    "settingsRuntimeMs": 72000000,
+    "round1OriginalSettings74M": "不在本新版7原body；原170整轮归root独立driver，不能缩减"
+  },
+  "boundedSerialObservation": "每observer仅1在途；deadline到末次请求可耗最多额外120000；不重发原任务、不续持久deadline",
+  "profiles": {
+    "official": {
+      "bodyCount": 103,
+      "bodySlotMs": 72000000,
+      "workerFixtureTeardownSlotMs": 72000000,
+      "twoHookSlotsMs": 360000,
+      "startupSlotsMs": 840000,
+      "commandSlotMs": 240000,
+      "ownedCleanupSlotMs": 600000,
+      "reportSlotMs": 600000,
+      "outerMs": 14871360000,
+      "watchdog": "performance.now单调钟；每段<=60000，正常立即退出；无int32长setTimeout"
+    },
+    "protocol": {
+      "bodyCount": 7,
+      "bodySlotMs": 72000000,
+      "workerFixtureTeardownSlotMs": 72000000,
+      "twoHookSlotsMs": 360000,
+      "startupSlotsMs": 840000,
+      "commandSlotMs": 240000,
+      "ownedCleanupSlotMs": 600000,
+      "reportSlotMs": 600000,
+      "outerMs": 1012800000,
+      "watchdog": "performance.now单调钟；每段<=60000，正常立即退出；无int32长setTimeout"
+    },
+    "pi": {
+      "bodyCount": 1,
+      "bodySlotMs": 72000000,
+      "workerFixtureTeardownSlotMs": 72000000,
+      "twoHookSlotsMs": 360000,
+      "startupSlotsMs": 840000,
+      "commandSlotMs": 240000,
+      "ownedCleanupSlotMs": 600000,
+      "reportSlotMs": 600000,
+      "outerMs": 146640000,
+      "watchdog": "performance.now单调钟；每段<=60000，正常立即退出；无int32长setTimeout"
+    }
+  },
+  "preparationOuterMs": 3600000,
+  "consumerInventory": [
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 6,
+      "consumer": "export const REQUEST=120_000, OBSERVE=1_980_000;"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 7,
+      "consumer": "export const UI_OPERATION=REQUEST*2+60_000;"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 8,
+      "consumer": "export const CASE_BUDGET=72_000_000; // consumer清单由driver/budget-consumers.json实核；不改变持久期限。"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 9,
+      "consumer": "export const expect=baseExpect.configure({timeout:REQUEST});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 24,
+      "consumer": "const read=async(id:string,input:any)=>{const response=await context.request.post('/api/v1/dispatch',{timeout:REQUEST,headers:{'x-group-id':original.groupId},data:{id,input}});expect(response.ok(),`${id} readonly attachment ${response.status()}`).toBe(true);return (await response.json()).data;};"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 35,
+      "consumer": "export async function observe<T>(read:()=>Promise<T>,done:(v:T)=>boolean,budget=OBSERVE):Promise<T>{"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 37,
+      "consumer": "for(;;){value=await read();if(done(value))return value;if(performance.now()>=end)throw Error('有限结果观察耗尽，保原任务ID，不重发/续期');await new Promise(r=>setTimeout(r,Math.min(1000,Math.max(1,end-performance.now()))));}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 50,
+      "consumer": "for(const p of ['params','query','body'])if(def[p])def[p].parse(input[p]);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 51,
+      "consumer": "const response=await this.page.request.post('/api/v1/dispatch',{timeout:REQUEST,headers:{...(group?{'x-group-id':group}:{}),...(this.accountId?{'x-account-id':this.accountId}:{})},data:{id,input}});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 56,
+      "consumer": "this.page.setDefaultTimeout(REQUEST);this.page.setDefaultNavigationTimeout(REQUEST);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 71,
+      "consumer": "for(const m of models){expect(m.provider).toBe('');expect(m.modelName).toBe('');expect(m.secretReference).toBe('');expect(m.hasSecret).toBe(false);expect(m.baseUrl).toBeNull();}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 75,
+      "consumer": "async nativeAvailable(image=false){const r=await this.page.request.get('/api/chat/engines',{timeout:REQUEST}),body=await r.json();this.receipts.push({id:'/api/chat/engines',status:r.status(),body:redact(body),notGeneration:true});expect(r.ok()).toBe(true);const e=body.engines?.find((x:any)=>x.engine==='codex');if(!e?.available)throw new Blocked('原官方能力读回显示Codex未就绪',e??body);if(image&&e.capabilities?.imageGeneration!==true)throw new Blocked('原官方能力读回显示生图尚未就绪',e);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 78,
+      "consumer": "const pending=this.page.waitForResponse(r=>{try{return new URL(r.url()).pathname==='/api/v1/dispatch'&&r.request().postDataJSON().id===id;}catch{return false;}},{timeout:UI_OPERATION});void pending.catch(()=>{});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 82,
+      "consumer": "async shot(label:string){const path=this.info.outputPath(`${label}.png`);await this.page.screenshot({path,fullPage:true,timeout:REQUEST});await this.info.attach(label,{path,contentType:'image/png'});this.captures.push({label,path,url:this.page.url(),viewport:this.page.viewportSize(),at:new Date().toISOString()});}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 84,
+      "consumer": "async responsive(path:string,label:string){for(const v of widths){await this.page.setViewportSize(v);await this.view(path,`${label}-${v.width}`);expect(await this.page.evaluate(()=>document.body.scrollWidth<=innerWidth+2)).toBe(true);}}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 88,
+      "consumer": "async waitExecution(task:any){const original=this.track(task);const value=await observe(()=>this.inspectExecution(task.id),t=>['succeeded','failed','cancelled','blocked','paused'].includes(t.status));this.tasks.find(t=>t.created.id===original.id).observed=value;if(value.status==='blocked')throw new Blocked('原公共持久任务确实blocked，模型是否调用由原账本另核',value);expect(value.status).toBe('succeeded');return value;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 90,
+      "consumer": "this.track(task);let observed:any;try{observed=await observe(()=>this.op('ai.tasks.get',{params:{taskId:task.id}}),t=>['awaiting_confirmation','succeeded','failed','cancelled'].includes(t.status)||['unknown_result','waiting_user'].includes(t.runtimeStatus));}finally{this.tasks.find(t=>t.created.id===task.id).observed=observed;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 97,
+      "consumer": "async imageBytes(assetId:string,fileId:string,label:string){const a=await this.op('assets.get',{params:{assetId}});expect(a.currentFileId).toBe(fileId);const d=await this.op('assets.fileDownloadUrl',{params:{assetId,assetFileId:fileId}}),u=new URL(d.url,this.page.url());expect(u.origin).toBe(new URL(this.page.url()).origin);const b=await this.page.request.get(u.href,{timeout:REQUEST});expect(b.status()).toBe(200);const bytes=await b.body(),mime=b.headers()['content-type'].split(';')[0];expect(bytes.length).toBe(a.fileSize);expect(mime).toBe(a.mimeType);expect(mime).toMatch(/^image\\//);const proof={id:label,assetId,fileId,status:200,bytes:bytes.length,mimeType:mime,sha256:createHash('sha256').update(bytes).digest('hex')};this.receipts.push(proof);return proof;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 2,
+      "consumer": "import {expect,runJourney,Blocked,Journey,key,TEXT,REQUEST,OBSERVE,widths,observe} from './acceptance-support';"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 3,
+      "consumer": "test.describe.configure({mode:'default',timeout:72000000});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 9,
+      "consumer": "for(const v of widths){await page.setViewportSize(v);await model(j);await expect(choice).toHaveValue('codex');await j.shot(`engine-${v.width}`);const box=await choice.boundingBox();expect(box).not.toBeNull();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(v.width);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 15,
+      "consumer": "try{await page.goto('/settings');await page.getByRole('tab',{name:'模型配置'}).click();await expect.poll(()=>captured,{timeout:OBSERVE}).toBeGreaterThan(0);await expect(page.getByRole('combobox',{name:'编导引擎'})).toBeDisabled();await expect(page.locator('[data-slot=\"model-configuration-card\"]')).toHaveCount(0);await j.shot('real-get-held');}finally{release();await page.unrouteAll({behavior:'wait'});}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 19,
+      "consumer": "for(const [name,engine]of [['not-logged-in',{engine:'codex',installed:true,available:false,loginStatus:'unauthenticated',errorCode:'CODEX_LOGIN_REQUIRED'}],['image-unavailable',{engine:'codex',installed:true,available:true,loginStatus:'authenticated',capabilities:{text:true,imageUnderstanding:true,imageGeneration:false,imageErrorCode:'CODEX_IMAGE_CAPABILITY_UNAVAILABLE'}}]]as const){await page.route('**/api/chat/engines',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({engines:[{engine:'pi',available:true},engine]})}));try{await page.locator('[data-slot=\"assistant-engine-card\"]').getByRole('button',{name:'重新检查'}).click();await expect(page.locator('[data-slot=\"assistant-engine-card\"]').getByRole('status')).toContainText(name==='not-logged-in'?'尚未登录':'生图能力当前不可用');await expect(page.locator('[data-slot=\"codex-model-capabilities\"]')).toBeVisible();await j.shot(name);}finally{await page.unrouteAll({behavior:'wait'});}}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 24,
+      "consumer": "for(const [id,input]of [['projects.get',{params:{projectId:j.project.id}}],['knowledge.get',{params:{knowledgeId:knowledge.id}}]]){const rejected=await j.raw(id as string,input,other.id);expect(rejected.response.status()).toBe(404);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 34,
+      "consumer": "const account=await j.op('accounts.create',{body:{platform:'xiaohongshu',accountHandle:'未绑定的真实登记账号-'+key(),idempotencyKey:key()}});await j.useAccount(account.id);const job=await j.op('scheduledJobs.create',{body:{name:'真实无绑定同步任务-'+key(),sourceKind:'self.metrics',schedule:'17 4 * * *',target:{},prompt:'无绑定资格验收，不访问外部平台',toolGrants:[]}});await j.view('/automations','automation-owned-job');const row=page.locator(`[data-slot=\"automations-list\"] li[data-job-id=\"${job.id}\"]`);await expect(row).toBeVisible();const run=await j.uiOp('scheduledJobs.runNow',()=>row.getByTestId('automation-run-now').click());const original=await j.op('ai.tasks.get',{params:{taskId:run.aiTaskId}});j.track(original);await observe(()=>j.op('jobRuns.get',{params:{runId:run.jobRunId}}),r=>r.status==='needs_reconnect'||['failed','succeeded','cancelled'].includes(r.status));"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 35,
+      "consumer": "for(const v of [narrow,{width:900,height:900},{width:1536,height:1024},{width:1600,height:500}]){await page.setViewportSize(v);const sidebar=page.getByTestId('app-sidebar');let previous:number|undefined;await expect.poll(async()=>{const width=await sidebar.evaluate(e=>e.getBoundingClientRect().width);const stable=previous!==undefined&&Math.abs(previous-width)<.1;previous=width;return stable;},{timeout:OBSERVE,intervals:[100,250,500]}).toBe(true);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 36,
+      "consumer": "for(const name of ['筛选媒体平台','筛选平台账号']){const filter=page.getByRole('combobox',{name,exact:true});await expect(filter).toBeVisible();await expect(filter).toBeEnabled();const b=await filter.boundingBox();expect(b!.x).toBeGreaterThanOrEqual(0);expect(b!.x+b!.width).toBeLessThanOrEqual(v.width+2);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 38,
+      "consumer": "for(const v of [narrow,{width:900,height:900},{width:1536,height:1024},{width:1600,height:500}]){await page.setViewportSize(v);await row.locator('[data-slot=\"automation-open-detail\"]').click();const dialog=page.locator('[data-slot=\"automation-run-detail-dialog\"]');await expect(dialog).toBeVisible();await expect(dialog.locator('[data-slot=\"automation-run-item\"]')).toHaveCount(1);const close=dialog.locator('[data-slot=\"dialog-close\"]');await expect(close).toBeInViewport();const box=await close.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.y).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(v.width+2);expect(box!.y+box!.height).toBeLessThanOrEqual(v.height+2);await j.shot(`original-run-detail-${v.width}x${v.height}`);await close.click();await expect(dialog).toBeHidden();const read=await j.op('jobRuns.get',{params:{runId:run.jobRunId}});expect(read.jobId).toBe(job.id);expect(read.aiTaskId).toBe(original.id);}j.receipts.push({id:'t1245-real-job-detail',jobId:job.id,runId:run.jobRunId,aiTaskId:original.id,modelGenerated:false});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 41,
+      "consumer": "for(const v of widths){await page.setViewportSize(v);await page.goto(`/projects/${j.project.id}/script`);const before=await j.op('artifacts.get',{params:{artifactId:j.script.id}});await page.goto(`/projects/${j.project.id}/script?copilot=open`);await expect(page.getByLabel('我能帮你做什么')).toBeVisible();await j.shot(`copilot-${v.width}`);await page.keyboard.press('Escape');await j.op('artifacts.get',{params:{artifactId:j.script.id}}).then(r=>expect(r.currentVersionId).toBe(before.currentVersionId));await page.reload();await j.shot(`navigation-${v.width}`);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 2,
+      "consumer": "import {Journey,Blocked,expect,runJourney,key,TEXT,REQUEST,OBSERVE,observe} from './acceptance-support';"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 3,
+      "consumer": "test.describe.configure({mode:'default',timeout:72000000});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 13,
+      "consumer": "expect(source.run).not.toBeNull();let run:any;await expect.poll(async()=>{run=await j.op('intelligence.runs.get',{params:{runId:source.run.id}});return ['succeeded_with_items','succeeded_no_change','partial','blocked','failed'].includes(run.run.status);},{timeout:OBSERVE,intervals:[1000,2000,4000]}).toBe(true);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 25,
+      "consumer": "async function finishJob(j:Journey,run:any){expect(run.aiTaskId).toBeTruthy();const t=await j.op('ai.tasks.get',{params:{taskId:run.aiTaskId}});j.track(t);const settled=await observe(()=>j.op('jobRuns.get',{params:{runId:run.jobRunId}}),r=>['succeeded','failed','needs_reconnect','cancelled'].includes(r.status));expect(settled.aiTaskId).toBe(t.id);return settled;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 28,
+      "consumer": "{family:'INT-TEXT-DISCOVERY',key:'topic.preference',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();await j.responsive('/topics','preference-before');const c=await j.op('candidates.create',{body:{title:'重复的整理建议',source:'idea'}});await j.op('candidates.patch',{params:{candidateId:c.id},body:{status:'dropped',dropReason:'我明确希望多给可以在十分钟内操作的整理方法，少泛泛而谈。'}});let tasks:any[]=[];await expect.poll(async()=>{tasks=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,taskType:'topic.preference'}});return tasks.length;},{timeout:OBSERVE,intervals:[500,1000,2000]}).toBeGreaterThan(0);j.tasks.push({created:tasks[0]});await j.waitTask(tasks[0]);await j.page.reload();await j.shot('preference-real-task');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 42,
+      "consumer": "{family:'INT-VISION',key:'video.visual-review',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const fixture=process.env.CREATOROS_T1246_VIDEO_FIXTURE;if(!fixture)throw Error('driver未交付已审确定性短片fixture，不能当外部BLOCKED');const fs=await import('node:fs/promises');const bytes=await fs.readFile(fixture);const upload=await j.op('assets.uploads.create',{body:{assetType:'video',mimeType:'video/mp4',fileSize:bytes.length,projectId:j.project.id,fileName:'t1246-user-test-video.mp4'}});const url=new URL(upload.uploadUrl,j.page.url());expect(url.origin).toBe(new URL(j.page.url()).origin);const put=await j.page.request.put(url.href,{timeout:REQUEST,data:bytes,headers:{'content-type':'video/mp4'}});expect(put.ok()).toBe(true);const asset=await j.op('assets.uploads.complete',{params:{uploadId:upload.uploadId},body:{name:'用户明确测试短片，非平台采集'}});const task=await j.op('execution.tasks.create',{body:{projectId:j.project.id,contentOutputId:j.output.id,attemptId:key(),spec:{taskType:'video.render',goal:'渲染已提供测试片并执行原可选视觉审查',inputs:[{assetId:asset.id,assetFileId:asset.currentFileId,mountAs:'test-video.mp4'}],params:{props:{meta:{title:'真实渲染验收',brandLabel:''},talkingHead:{file:'test-video.mp4',durationSec:4},scenes:[{id:'s1',label:'TEST',title:'桌面整理',startSec:0,endSec:4,role:'body',cards:[]}],captions:[],broll:[],delivery:{width:1280,height:720,fps:30}}},constraints:{timeoutSec:null,network:'deny',maxOutputMB:512}}}});j.track(task);const done=await observe(()=>j.op('execution.tasks.get',{params:{taskId:task.id}}),t=>['awaiting_confirmation','succeeded','failed','cancelled'].includes(t.status));expect(['awaiting_confirmation','succeeded'],JSON.stringify(done)).toContain(done.status);expect(done.manifest.artifacts.some((a:any)=>a.mimeType==='video/mp4'||a.fileName.endsWith('.mp4'))).toBe(true);const executions=await j.op('execution.tasks.list',{query:{page:1,pageSize:100}});const children=executions.filter((t:any)=>t.kind==='ai_task'&&t.ownerId===task.id&&t.id!==done.executionTaskId);j.receipts.push({id:'real-render-visual-review',parentAiTaskId:task.id,parentExecutionTaskId:done.executionTaskId,children,renderManifest:done.manifest,fixtureSha256:(await import('node:crypto')).createHash('sha256').update(bytes).digest('hex'),surface:'public-backend-API'});if(!children.length)throw Error('成片完成但未发现原视觉子execution，需账本核查不能代签visual key');await j.responsive(path(j,'production'),'real-render-and-review');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "consumer": "for(const recipe of r)test(`${recipe.family} / ${recipe.key}：真实前置检查、原公开入口和任务读回`,async({page},info)=>runJourney(page,info,recipe.family,recipe.key,'real-app＋official Codex；缺真实外部来源/ASR明确BLOCKED',recipe.run));"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 2,
+      "consumer": "import {Journey,Blocked,expect,runJourney,key,TEXT,REQUEST,OBSERVE} from './acceptance-support';"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 6,
+      "consumer": "test.describe.configure({mode:'default',timeout:72000000});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 30,
+      "consumer": "for(const use of saved.value){const before=await j.op('assets.get',{params:{assetId:use.assetId}});expect(before.status).toBe('pending');expect(before.currentFileId).toBe(use.assetFileId);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 32,
+      "consumer": "if(j.articleOutput?.id===outputId){const image=j.page.getByRole('img',{name:/待审阅/}).first();await expect(image).toBeVisible();await expect.poll(()=>image.evaluate((e:HTMLImageElement)=>e.complete&&e.naturalWidth>0),{timeout:OBSERVE,intervals:[500,1000]}).toBe(true);await j.shot('same-image-candidate-visible');const button=j.page.getByRole('button',{name:'采纳到这一段',exact:true});await expect(button).toBeEnabled();adoption=await j.uiOp('creativeResults.adopt',()=>button.click());expect(adoption.resultId).toBe(saved.resultId);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 33,
+      "consumer": "else if(preparedResult&&saved.targetSectionId){const target=await j.op('graphicPosts.get',{params:{outputId}});const index=target.current.cardBriefs.findIndex((card:any)=>card.cardId===saved.targetSectionId);expect(index).toBeGreaterThanOrEqual(0);const card=target.current.cardBriefs[index];await j.page.getByRole('button',{name:`查看第 ${index+1} 页：${card.title||'未命名'}`,exact:true}).click();const image=j.page.getByRole('img',{name:'待审阅的生成图卡',exact:true}).first();await expect(image).toBeVisible();const originalFile=await j.op('assets.fileDownloadUrl',{params:{assetId:saved.value[0].assetId,assetFileId:saved.value[0].assetFileId}});expect(new URL(await image.getAttribute('src') as string,j.page.url()).href).toBe(new URL(originalFile.url,j.page.url()).href);await expect.poll(()=>image.evaluate((e:HTMLImageElement)=>e.complete&&e.naturalWidth>0),{timeout:OBSERVE,intervals:[500,1000]}).toBe(true);await j.shot(`same-series-${saved.targetSectionId}-candidate`);const adopt=j.page.getByRole('button',{name:'采用到这一页',exact:true});await expect(adopt).toBeEnabled();adoption=await j.uiOp('creativeResults.adopt',()=>adopt.click());expect(adoption.resultId).toBe(saved.resultId);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 36,
+      "consumer": "for(const use of saved.value){const asset=await j.op('assets.get',{params:{assetId:use.assetId}});expect(asset.status).toBe('active');expect(asset.currentFileId).toBe(use.assetFileId);const download=await j.op('assets.fileDownloadUrl',{params:{assetId:use.assetId,assetFileId:use.assetFileId}});const u=new URL(download.url,j.page.url());expect(u.origin).toBe(new URL(j.page.url()).origin);const blob=await j.page.request.get(u.toString(),{timeout:OBSERVE});expect(blob.status()).toBe(200);const bytes=await blob.body();expect(bytes.length).toBe(asset.fileSize);expect(blob.headers()['content-type'].split(';')[0]).toBe(asset.mimeType);j.receipts.push({id:'creative-original-image-adopted-blob',resultId:saved.resultId,taskId:task.id,assetId:use.assetId,assetFileId:use.assetFileId,bytes:bytes.length,mimeType:asset.mimeType,sha256:createHash('sha256').update(bytes).digest('hex')});}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 45,
+      "consumer": "const put=await j.page.request.put(url.toString(),{data:bytes,headers:{'content-type':mime},timeout:REQUEST});expect(put.ok()).toBe(true);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 52,
+      "consumer": "await expect.poll(async()=>{const tasks=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,projectId:j.project.id,taskType:'copilot.assist'}});return tasks.length;},{timeout:OBSERVE,intervals:[500,1000,2000]}).toBeGreaterThan(0);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 54,
+      "consumer": "await expect.poll(()=>requestIds.length,{timeout:OBSERVE,intervals:[100,250,500]}).toBeGreaterThan(0);expect(requestIds).toContain(task.inputData.sourceMessageId);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 58,
+      "consumer": "const assetId=receipt.output.asset?.id,fileId=receipt.output.fileId;expect(assetId).toBeTruthy();expect(fileId).toBeTruthy();const pending=await j.op('assets.get',{params:{assetId}});expect(pending.status).toBe('pending');expect(pending.currentFileId).toBe(fileId);await j.op('assets.commit',{params:{assetId}});const active=await j.op('assets.get',{params:{assetId}});expect(active.status).toBe('active');const download=await j.op('assets.fileDownloadUrl',{params:{assetId,assetFileId:fileId}});const url=new URL(download.url,j.page.url());expect(url.origin).toBe(new URL(j.page.url()).origin);const blob=await j.page.request.get(url.toString(),{timeout:OBSERVE});expect(blob.status()).toBe(200);const bytes=await blob.body();expect(bytes.length).toBe(active.fileSize);expect(blob.headers()['content-type'].split(';')[0]).toBe(active.mimeType);j.receipts.push({id:'original-native-chat-image-blob',taskId:task.id,sessionId:assistant.modelMetadata.sessionId,turnId:assistant.modelMetadata.providerTurnId,assetId,fileId,status:200,bytes:bytes.length,mimeType:active.mimeType,sha256:createHash('sha256').update(bytes).digest('hex')});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 84,
+      "consumer": "{family:'INT-TEXT-KNOWLEDGE-AI',key:'knowledge.relate',path:()=>'/knowledge',run:async j=>{const rows=[];for(const title of ['整理桌面的方法','每周整理的习惯'])rows.push(await j.op('knowledge.create',{body:{title,content:TEXT,knowledgeType:'note'}}));await j.generate('knowledge.relate',{atoms:rows.map(r=>({id:r.id,knowledgeType:r.knowledgeType,title:r.title,sourceNote:r.sourceNote}))},'/knowledge');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 89,
+      "consumer": "{family:'INT-IMAGE-CARDS',key:'系列图',path:j=>projectPath(j,'image'),run:async j=>{const o=await graphic(j,true);await j.noIndependentModels();await j.nativeAvailable(true);await j.responsive(projectPath(j,'image'),'series-before');const generate=j.page.getByRole('button',{name:'生成所选 2 页',exact:true});await expect(generate).toBeEnabled();const bundle=await j.uiOp('creativeResults.bundles.create',()=>generate.click());expect(bundle.outputId).toBe(o.id);expect(bundle.items.length).toBe(2);for(const item of bundle.items){const original=await j.op('creativeResults.get',{params:{resultId:item.resultId}});expect(['card-one','card-two']).toContain(original.targetSectionId);await creative(j,o.id,'image_card',projectPath(j,'image'),{targetSectionId:original.targetSectionId},original);}}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 98,
+      "consumer": "for(const r of recipes)test(`${r.family} / ${r.key}：真实公共生成、宽窄截图、原ID读回`,async({page},info)=>runJourney(page,info,r.family,r.key,'official-Codex-real-app（公共API触发＋浏览器界面；Worker ledger另对账）',r.run));"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "line": 1,
+      "consumer": "import {test,expect,Journey,observe,key,REQUEST,CASE_BUDGET} from './acceptance-support';"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "line": 4,
+      "consumer": "test.describe.configure({mode:'default',timeout:CASE_BUDGET});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "line": 6,
+      "consumer": "for(const scenario of ['text-null','text-usage','image'] as Scenario[])test(`INT-RECOVERY ${scenario} 原ACP unknown→同ID thread/read`,async({page},info)=>run(page,info,'INT-RECOVERY-'+scenario,async j=>{"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "line": 14,
+      "consumer": "test('INT-RECOVERY 首次read不完整保原unknown不爆重发',async({page},info)=>run(page,info,'INT-RECOVERY-INCOMPLETE',async j=>{const original=await originalUnknown(j,'incomplete');const before=await readProtocolLedger(original.executionId,j.groupId);await resumeOriginal(j,original);await observe(()=>allCalls(j,original.executionId),v=>v.task.runtimeStatus==='unknown_result');const after=await readProtocolLedger(original.executionId,j.groupId);expect(after.task.deadline_at).toBe(before.task.deadline_at);expect(after.calls.map((c:any)=>c.id)).toEqual(before.calls.map((c:any)=>c.id));const state:any=await fixtureState(original.state.threadId);expect(state.startCount).toBe(1);expect(state.readCount).toBe(1);j.receipts.push({id:'incomplete-original-preserved',before,after,state});}));"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-routes.spec.ts",
+      "line": 2,
+      "consumer": "test.describe.configure({mode:'default',timeout:72000000});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "consumer": "for(const route of routeCases)test(`INT-ROUTES / ${route.routeKey} / ${route.pattern}：真实对象、宽窄、刷新`,async({page},info)=>runJourney(page,info,'INT-ROUTES',null,'真实页面公共read＋浏览器；无模型/App/平台登录',async j=>{"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-routes.spec.ts",
+      "line": 298,
+      "consumer": "for(const v of widths){await page.setViewportSize(v);await visibleRoute(j,route,href);await j.shot(`${route.routeKey}-${v.width}-ready`);await page.reload();await expect(page.locator(route.selector).filter({visible:true}).first()).toBeVisible();await j.shot(`${route.routeKey}-${v.width}-reload`);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+      "line": 4,
+      "consumer": "import {expect,REQUEST,Journey} from './acceptance-support';"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+      "line": 16,
+      "consumer": "if(value.stream){res.writeHead(200,{'content-type':'text/event-stream','cache-control':'no-cache'});for(const event of [{...identity,object:'chat.completion.chunk',choices:[{index:0,delta:{role:'assistant',content:text},finish_reason:null}]},{...identity,object:'chat.completion.chunk',choices:[{index:0,delta:{},finish_reason:'stop'}],usage:{prompt_tokens:11,completion_tokens:7,total_tokens:18}}])res.write('data: '+JSON.stringify(event)+'\\n\\n');res.end('data: [DONE]\\n\\n');}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+      "line": 18,
+      "consumer": "});server.requestTimeout=REQUEST;server.headersTimeout=REQUEST;"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 4,
+      "consumer": "import {Journey,expect,observe,REQUEST,UI_OPERATION,key,TEXT} from './acceptance-support';"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 7,
+      "consumer": "do{page=await j.op('workbench.tasks.inspect',{params:{taskId},query:{afterSequence,limit:100}});calls.push(...page.calls);if(page.hasMore&&page.nextSequence<=afterSequence)throw Error('NON_PROGRESSING_PUBLIC_LEDGER');afterSequence=page.nextSequence;}while(page.hasMore);return {...page,calls};"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 13,
+      "consumer": "const task=await observe(async()=>{const ts=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,projectId:j.project.id,taskType:'copilot.assist'}});return ts.find((t:any)=>t.inputData?.sourceMessageId===source.id);},t=>Boolean(t));"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 19,
+      "consumer": "const execution=await observe(()=>j.op('ai.tasks.get',{params:{taskId:task.id}}),t=>Boolean(t.executionTaskId));const executionId=execution.executionTaskId;"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 21,
+      "consumer": "const unknown=await observe(()=>j.op('ai.tasks.get',{params:{taskId:task.id}}),t=>t.runtimeStatus==='unknown_result');expect(unknown.id).toBe(task.id);expect(unknown.attemptId).toBe(task.attemptId);const inspection=await allCalls(j,executionId);expect(inspection.sourceMessageId).toBe(source.id);expect(inspection.conversationId).toBe(source.conversationId);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 23,
+      "consumer": "const reads=inspection.calls.filter((c:any)=>c.kind==='external_tool'&&c.toolName==='context.project.detail');expect(reads.length).toBe(own.mcpReads.length);for(const r of reads){expect(r.status).toBe('settled');expect(r.parentCallId).toBe(root.id);expect(r.resultText).toBeTruthy();const value=JSON.parse(r.resultText);expect(value.status).toBe('ok');expect(value.sideEffect).toBe('none');expect(value.data.project.id).toBe(j.project.id);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 29,
+      "consumer": "const state:any=await observe(async()=>{const xs:any[]=await fixtureState();return xs.find(s=>s.projectId===j.project.id&&s.controlPort&&s.mcpReads.length===1);},Boolean);"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 37,
+      "consumer": "const marker=JSON.parse(await readFile(process.env.CREATOROS_T1246_FIXTURE_MARKER!,'utf8'));const response=await j.page.request.post(`http://127.0.0.1:${state.controlPort}/release`,{timeout:REQUEST,headers:{'x-t1246-control':marker.controlToken},data:{threadId:state.threadId,turnId:state.turnId}});expect(response.status()).toBe(200);expect(await response.json()).toEqual({released:true});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "line": 45,
+      "consumer": "const localRequire=createRequire(resolve(process.env.CREATOROS_T1246_RUNTIME_ROOT!,'backend/package.json'));const {Client}=localRequire('pg');const client=new Client({connectionString:url.toString(),connectionTimeoutMillis:REQUEST,query_timeout:REQUEST,statement_timeout:REQUEST});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+      "line": 22,
+      "consumer": "for(let i=0;i<process.argv.length-1;i++)if(process.argv[i]==='-c'){"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+      "line": 31,
+      "consumer": "const response=await fetch(u,{method:'POST',headers:{...headers,'content-type':'application/json',accept:'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',...(id==null?{}:{id}),method,...(params?{params}:{})}),signal:AbortSignal.timeout(120000)});"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+      "line": 75,
+      "consumer": "});control.requestTimeout=120000;control.headersTimeout=120000;control.once('error',reject);control.listen(0,'127.0.0.1',()=>{s.controlPort=control.address().port;write(s);emit('control-ready',{threadId:s.threadId,turnId:s.turnId,port:s.controlPort});});});"
+    }
+  ],
+  "perBody": [
+    {
+      "testId": "e001182671dd9993fecb-3637099e0f1e4900b7a6",
+      "profile": "official",
+      "file": "e2e/integrated-browser.spec.ts",
+      "declarationLine": 6,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "e001182671dd9993fecb-5e095f596a4961d4342b",
+      "profile": "official",
+      "file": "e2e/integrated-browser.spec.ts",
+      "declarationLine": 12,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "e001182671dd9993fecb-8132acfddef6fbce8959",
+      "profile": "official",
+      "file": "e2e/integrated-browser.spec.ts",
+      "declarationLine": 22,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "e001182671dd9993fecb-6702291df6383def59b6",
+      "profile": "official",
+      "file": "e2e/integrated-browser.spec.ts",
+      "declarationLine": 27,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "e001182671dd9993fecb-9e7a97b827ba913f80da",
+      "profile": "official",
+      "file": "e2e/integrated-browser.spec.ts",
+      "declarationLine": 33,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "e001182671dd9993fecb-e982f6f95caee63160fe",
+      "profile": "official",
+      "file": "e2e/integrated-browser.spec.ts",
+      "declarationLine": 40,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "e001182671dd9993fecb-cb104a57b43b6fccded7",
+      "profile": "official",
+      "file": "e2e/integrated-browser.spec.ts",
+      "declarationLine": 43,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-8045a2729dc0a75e9579",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-9ba4c291fcdc46f3f9ea",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-5c8aef06730f08c381c9",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-6731e8dbaabbfcd64955",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-d58640f10a2f60da70b0",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-f776c2d01b40161ebc6d",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-ef311209e54080db0e81",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-c75bd3b6c3dcb9056878",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-36e8a43081f3a857bccb",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-a00cac03ebb1024a2e50",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-e83613105c8096c04a54",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-6f84eef7412964c69ee3",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-16f222e42884ec70e735",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-3623600aebf91bf1e2c5",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-d2966357d1d5961202eb",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "05d77e355062c9acafd9-c25068cac32173a68f39",
+      "profile": "official",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "declarationLine": 44,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-27d0725f1d93ee299028",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-bdce982856d644c6b56a",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-90dc2379410af338c2e6",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-9c4e533f90181e56064d",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-b93b40c4bc65c228f58c",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-a8fb2956458e662d52dd",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-06f1064fb0e11afa5e08",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-25eb225277262176c64b",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-403d5628e0176cd2f5bf",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-5544f760a4c147acd9f9",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-72c5f3bb60f90089fb38",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-7d464070f95eff64a792",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-22c77d28084058c3a84a",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-75115401c02d3b224193",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-53cc87a6fe13ec10e2fd",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-38b9ae86dc8c8c4d65d6",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-0493ed36b8eeaa984bbf",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-59cc15c9ed27120c90ce",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-bd34accceff8dcba505b",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-8b46572073ae35e0fe03",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-3ea1620500e5ff057dcc",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-349ef2dbb67c6ce37c0b",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-29fc65060b4d8048dac3",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-b229a8b918a82eca3c8e",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-954f942420040b6120b7",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-9bf942eb135a067d442a",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-7d11d5d557a815f75f0e",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-edd45a1de13f3723512b",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-a7df5c2dd48c38048741",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-e7a901f0494e6c053ffd",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-10bbb14ee793c64829ca",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-e16ae0c72044c5c1d54c",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-186a9b832504a83cc176",
+      "profile": "official",
+      "file": "e2e/integrated-native.spec.ts",
+      "declarationLine": 98,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "44a02f4fec204a31d931a69b46566a4cc7eb9ece87d992aab23120aa1904eb33",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-669f1a459a6eaf45de06",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-cb3ac9b857abe8d8bed9",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-894b8fabb30aa7c6b2f2",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-d933b857d2026747eeeb",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-e82709742ccb8c3e3ba5",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-dda261266a27a9ff47a1",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-22d75d60dc9ff807240d",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-c105a231a429bdccaa7a",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-10bd0abbe5e6fe3e4b2d",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-1a2dd7bb840303271a78",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-d39f7dbbb932e3fe7262",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-42b0b06780daf916c523",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-7b8b850e955a09ba0dd3",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-ea0966f520756cb50582",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-647259b5ac4c2e95058b",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-3f5b90d678b5ac42a566",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-6b8e650e46ce72d48c7c",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-4c1ae110953d95756a84",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-0d3249ad3616ee721481",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-fb79599544a76cc34cb6",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-a712f5f6eb29957e2b51",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-5feb7c46b95835a17088",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-59a01d0cd2a58e8ab486",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-48eb8aee1e0c6174b924",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-b9b28871f9e0c9b99ad6",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-d7210b9f2048f940a61b",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-b0e23f2ad476690d106e",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-3ef55514d875886c2c7c",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-25000ec7f4814268510a",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-48b0e0a9590771e40afc",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-7b1ec602dc1a5666667e",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-b2ddcdf44afa299fe67e",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-40b8d87c4ae452a3285a",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-be9e2619ad523df9eb9d",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-907ef06cdcf37bc7bce1",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-e7c7c80d603d7abd7b68",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-5a8881e79a8c00dfb792",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-ac076876d33e95a5526e",
+      "profile": "official",
+      "file": "e2e/integrated-routes.spec.ts",
+      "declarationLine": 296,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-9be58945c4439df4544b",
+      "profile": "official",
+      "file": "e2e/settings-return.spec.ts",
+      "declarationLine": 14,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-00d14e02417e992626bf",
+      "profile": "official",
+      "file": "e2e/settings-return.spec.ts",
+      "declarationLine": 14,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-d40489df911a3249ff04",
+      "profile": "official",
+      "file": "e2e/settings-return.spec.ts",
+      "declarationLine": 14,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-bd5ac27565d4372fb913",
+      "profile": "official",
+      "file": "e2e/settings-return.spec.ts",
+      "declarationLine": 14,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-00ae2e45b02d09b46741",
+      "profile": "official",
+      "file": "e2e/settings-return.spec.ts",
+      "declarationLine": 22,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-24aafdad4a33d691d2d6",
+      "profile": "official",
+      "file": "e2e/settings-return.spec.ts",
+      "declarationLine": 22,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-f01a7075e89b6baee0fa",
+      "profile": "official",
+      "file": "e2e/settings-return.spec.ts",
+      "declarationLine": 29,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "0d4413e600f2f771c0ac-504fde42b2f4ea7d57d1",
+      "profile": "official",
+      "file": "e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "declarationLine": 22,
+      "bodyBudgetMs": 18000000,
+      "fullBodySourceSha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "0d4413e600f2f771c0ac-7e644f7cc94d7e79a1f6",
+      "profile": "official",
+      "file": "e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "declarationLine": 22,
+      "bodyBudgetMs": 18000000,
+      "fullBodySourceSha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-11a062a00ffe564d1497",
+      "profile": "protocol",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "declarationLine": 6,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-4fc11bda4d2def802a41",
+      "profile": "protocol",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "declarationLine": 6,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-5875b0f229f0321617a7",
+      "profile": "protocol",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "declarationLine": 6,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-ed1a9737e393378c75d4",
+      "profile": "protocol",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "declarationLine": 13,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-61bc06a0b878ea3c686d",
+      "profile": "protocol",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "declarationLine": 14,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-9fe9fc4d298150310401",
+      "profile": "protocol",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "declarationLine": 15,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-d9322b2adc318963712a",
+      "profile": "protocol",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "declarationLine": 16,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-03cd49fc58a0c6135931",
+      "profile": "pi",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "declarationLine": 17,
+      "bodyBudgetMs": 72000000,
+      "fullBodySourceSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "sharedConsumers": [
+        "Journey.setup：公共组/项目/output/artifact/version串行，request120s",
+        "UI截图与宽窄/刷新：动作/导航/图片blob原request120s或更长",
+        "observe/poll：1980s+末请求120s，固定任务ID不续期",
+        "图片数组全部原use逐个公共资产/file下载/采用；受本case总槽守门",
+        "afterEach上下文清理、协议HTTP/serverclose/Pi close纳独立teardown同case槽",
+        "test body与fixture teardown各保72000s外层；T1097原18000s不缩"
+      ]
+    }
+  ],
+  "status": "候选消费者声明供独评；实跑actual-budget/cleanup另核"
+}

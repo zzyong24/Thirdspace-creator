@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-12T00:11:25.118726+00:00",
+  "reviewer": "/root",
+  "decision": "PASS_TWO_EXACT_EXPECTATION_SHAPES_ONLY",
+  "bindingSha256": "60dbd4ebd00ccd3fec19a772dea2c36fcc2f6a374c21f150c65e5c839f473fed",
+  "independentSourceReviewSha256": "6301853f492b262119779752d30f9872f1989e75774253896967d5e8bc24f8c7",
+  "independentToolReviewSha256": "9317b1366f3bd4b27c96c65f64b3724db4e3ac5272decbae9e3ebd06fbfd400a",
+  "rows": [
+    {
+      "path": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "beforeSha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60",
+      "candidateSha256": "6b4ec47460d0eb931b490be41d63e85929b61abe4295b92ff18592fe28468e1d",
+      "preserved": "docs/verification/t1253/approved-v4-shape-originals/chat-script-draft-worker.test.ts"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "beforeSha256": "17de16b8a1234dcff377a3c4b1c01b3e65af5cf53f59b8131798f0b2b5ab02f6",
+      "candidateSha256": "308870e9d169ed4d56dfbaefbad04e566b791f4997acb6a43a1760767a551167",
+      "preserved": "docs/verification/t1253/approved-v4-shape-originals/execution-worker-call-ports.integration.test.ts"
+    }
+  ],
+  "consumerProof": [
+    "ledger normalize 2input/3output+details and separate totalTokens5 preserved",
+    "worker catch owns retryAfterMs undefined; advanced IPC preserves optional field"
+  ],
+  "originalStimuliAndBudgetsAndSafetyAssertionsPreserved": true,
+  "productionChanges": 0,
+  "actualRuntime": false,
+  "toolScope": "new41600 V4 tool two hunks bind candidate/tool evidence; entry closure actual after guard unchanged; freshready still required"
+}

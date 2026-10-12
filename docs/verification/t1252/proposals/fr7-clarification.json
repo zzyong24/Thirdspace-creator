@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-11T22:11:13.100079+00:00",
+  "scope": "准备期FR7唯一结果与清理语义澄清；未start/产品/安装/慢server",
+  "previousSpecSha256": "46359a32866170f450a00f8e03c7c51e4c0e90852ebd9a7ecfe207a13b7fca17",
+  "previousBindingSha256": "52a25aa717d9c4a086fd3a4a41a754d83ff50dc9147c88ad9da7a5cfe2ff3e28",
+  "previousCanonicalSpecSha256": "4230212bd0663c2b5a7bd816353011808a6d3e2901f75742a422200ba58f7ce9",
+  "currentSpecSha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+  "currentBindingSha256": "4a635e4d822f023f2cc3d90b4f7ba3d6f07d340df61eb751f203a17421438009",
+  "canonicalSameBytes": true,
+  "onlyParagraphChanged": "FR-1252-7",
+  "budgetAndOtherScopeUnchanged": true,
+  "cliExistingPrivateSignatureCompatibility": "原runCliCommand(args:string[])所有既有调用保持；仅可选第二个私有control参数，不改公开flags"
+}

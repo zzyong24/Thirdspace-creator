@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-12T10:12:40.671126+00:00",
+  "actualCommand": [
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audit-provenance-v6/rename-match-test.cjs"
+  ],
+  "pid": 32932,
+  "positiveBudgetMs": 120000,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "finiteObserverMs": 600000,
+  "elapsedMs": 136.18383288849145,
+  "code": 0,
+  "expired": false,
+  "processCommunicateEOFClosed": true,
+  "group": [],
+  "sourceBefore": {
+    "rename-match-test.cjs": "9acd342deb1642594893fb9dffab6ec99089761d92b6c283ddf4ab451a7f988a",
+    "rename-match.cjs": "45ac79e5cc5525bc0dcf53d4b12ecc8ecaef8a07a249fdce67feb6b8faad2050",
+    "EXACT_52_APPROVED_GIT_RENAME_PROJECTIONS.json": "da5a68a70f0ee2aafd6ae895429da7b848f5cae4d0012d420de44a9dd905b486"
+  },
+  "sourceAfter": {
+    "rename-match-test.cjs": "9acd342deb1642594893fb9dffab6ec99089761d92b6c283ddf4ab451a7f988a",
+    "rename-match.cjs": "45ac79e5cc5525bc0dcf53d4b12ecc8ecaef8a07a249fdce67feb6b8faad2050",
+    "EXACT_52_APPROVED_GIT_RENAME_PROJECTIONS.json": "da5a68a70f0ee2aafd6ae895429da7b848f5cae4d0012d420de44a9dd905b486"
+  },
+  "actualResults": {
+    "pureMatcherOnly": true,
+    "positive": 52,
+    "negative": 421,
+    "all52ActualPinnedPairs": true,
+    "wrongSourceWrongTargetCopyUnknownNonDeletedRejected": true,
+    "noAuditNoGitNoFilesystemVerificationNoServices": true
+  },
+  "passed": true,
+  "noGitNoAuditNoServicesOrApp": true
+}

@@ -1,0 +1,121 @@
+{
+  "task": "T-1246",
+  "reviewer": "root, independent of tool author codex_route_inventory",
+  "at": "2026-10-11T19:47:38.870948+00:00",
+  "verdict": "PASS_TOOL_ONLY_PENDING_FINAL_SOURCE_PACKAGE_SEAL",
+  "manifestSha256": "749b168070bb8179472c58e39f23283b26fda2b91b46bc47760ac486bf11be3d",
+  "toolAndSourceBindings": [
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "sha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "sha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "sha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "sha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-routes.spec.ts",
+      "sha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+      "sha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "sha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+      "sha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/README.md",
+      "sha256": "dd06d6f51e5a228a37e6afeb1dd28a2d2482aba2b4b40abac0c1fafe0592998d"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/budget-consumers.json",
+      "sha256": "ec49c6d35380bc1c346fda8d94c5f18e36ed86505f9b2cbc55e1942427c5d355"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/coverage-mapping.json",
+      "sha256": "1d451091fb4087c86ed90002aad544ea45b92c511a51775ec979655a1ab07eec"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+      "sha256": "1840a7fa8f2ddc50153030b8157565cdc242ec0a714375082d4d571776512773"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/playwright.config.ts",
+      "sha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+      "sha256": "5281b05a494993a96d3e8c6ac5b3e0bdfc4860ecc964cf8b86f9c42fa6fbc56f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/runtime-closure.json",
+      "sha256": "8793ade0225b8f7f24f54cf1a82b3ea62df8eec5d912bbc39adf65c60b4886cc"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/verify-binding.cjs",
+      "sha256": "6cc5005574c2c57972b342d645b7cc24660739715dea68392149e2e303c5e620"
+    }
+  ],
+  "additionalReadonlyTestInputs": [
+    {
+      "path": "frontend/tests/e2e/settings-return.spec.ts",
+      "sha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "kind": "settings-return"
+    },
+    {
+      "path": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "sha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e",
+      "kind": "t1097-assisted"
+    }
+  ],
+  "expectedBodies": {
+    "official": 103,
+    "protocol": 7,
+    "pi": 1
+  },
+  "staticListAndTypes": "作者真实static-list-v3及static-types-v3仅静态；非E2E",
+  "actualNegativeProof": {
+    "path": "docs/verification/t1246/round-2/new-v3/reviews/launcher-negative-validation-result.json",
+    "sha256": "fecacab0b2b6e2b308209ce6cc921b323ac258b7601ee21465d932ced0cfba81",
+    "testedLaunchSha": "2d48c8cdea6c87d9b1fd27bcfc15283c0153abd0634fca0da4e861c6e4d0c394",
+    "cases": 5,
+    "latestStartupTailBinding": "docs/verification/t1246/round-2/new-v3/reviews/startup-tail-revision-binding.json",
+    "latestStartupTailBindingSha256": "9fea78a2c1192e35201b8281092901986826b0243f6643770f83e86c85bfc4be"
+  },
+  "reviewedProperties": [
+    "逐读9工具与9测试消费者的预备/启动/结算/完整清理；最新launch1840a7fa内PG/Next各900s完整尾请求槽，不续期持久任务",
+    "原list前命令240s watch，真实close后logfdclose才settle，独立cleanup2400s，不给无birth/uid证明PID发信号",
+    "正式gitarchive新source与source私有依赖/11Worker闭包；三profile分别freshAPP/DB/media/浏览器/auth/TMP/Next，不重用shared实例",
+    "官方二进制SHA及既有HOME/CODEX_HOME保留；协议私有新inode替换仅fixture不转发官方，真实ACP/MCP/冻结owner/binding原call核",
+    "59journey/49key/38route原映射保；设置7/T1097二新增独立body；原首轮与旧throw不签官方模型",
+    "publishing operation未测计数明确measured:false，不虚构0；PGlite在owned Next/Workerclosed后只读真实ledger，截图/trace真实跑后才报告"
+  ],
+  "runtimeApproval": false,
+  "candidate": null,
+  "packageAcceptance": false,
+  "remainingRequired": [
+    "干净新candidate及实际11source正式build",
+    "新desktop开发包同candidate及SHA/verify/signing receipt",
+    "重新seal9工具9source/fullproduct253 inventory与root复核新精确SHA",
+    "actualprivate clones+server+Playwright所有body及PNG/traces/ledger"
+  ],
+  "noFunctionalityPassClaim": true
+}

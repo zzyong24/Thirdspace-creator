@@ -1,0 +1,9 @@
+{
+  "expectedRed": true,
+  "passed": false,
+  "numTotalTests": 10,
+  "numPassedTests": 3,
+  "numFailedTests": 7,
+  "childExitCode": 1,
+  "neverClaimFullSystem": true
+}

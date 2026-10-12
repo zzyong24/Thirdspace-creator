@@ -1,0 +1,157 @@
+{
+  "task": "T-1251",
+  "scope": "actual controlled leaf protocol cases, not HTTP/public/official model E2E",
+  "sameTenCasesDoNotAddCounts": true,
+  "oldProductSha256": "a534a2bf829b55027f46e9d45f47ddc8ac94545f8666bba47221b6f550300810",
+  "newProductSha256": "de1a62340a7ec38d7b1a51fa00bce27acfcd9af86f679f504c0faf44b2a1b273",
+  "testSha256": "3758fa3b71a58e3a3238467491233f6ae6efa73c3145f449961259dbf88b2fb8",
+  "runs": [
+    {
+      "phase": "red",
+      "evidence": "docs/verification/t1251/execution/leaf-red-eeb49f32bbbf0e4a4955cfdfbc561b78",
+      "cases": 10,
+      "passed": 3,
+      "failed": 7,
+      "skipped": 0,
+      "actualChildExit": 1,
+      "processClosed": true,
+      "ownedGroupRemaining": [],
+      "sourceUnchanged": true,
+      "ownedRootCleaned": true,
+      "assertions": [
+        {
+          "name": "已知retry_wait同实例或可信cause保原code/delay：wrapped=false",
+          "status": "failed",
+          "stack": [
+            "Error: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'retry_wait', …(2) }\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-generation-worker.test.ts:26:95\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)"
+          ]
+        },
+        {
+          "name": "已知retry_wait同实例或可信cause保原code/delay：wrapped=true",
+          "status": "failed",
+          "stack": [
+            "Error: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'retry_wait', …(2) }\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-generation-worker.test.ts:26:95\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)"
+          ]
+        },
+        {
+          "name": "可信cause保原waiting_user，不能变unknown",
+          "status": "failed",
+          "stack": [
+            "Error: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'waiting_user', …(1) }\n(1 matching property omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-generation-worker.test.ts:31:95\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)"
+          ]
+        },
+        {
+          "name": "可信cause保原failed，不能变unknown",
+          "status": "failed",
+          "stack": [
+            "Error: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed', …(1) }\n(1 matching property omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-generation-worker.test.ts:31:95\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)"
+          ]
+        },
+        {
+          "name": "缺模型结算ACK保持unknown且不报可重试：direct",
+          "status": "failed",
+          "stack": [
+            "Error: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to be Error: MODEL_SETTLEMENT_RECEIPT_UNKNOWN { …(3) } // Object.is equality\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-generation-worker.test.ts:36:95\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)"
+          ]
+        },
+        {
+          "name": "缺模型结算ACK保持unknown且不报可重试：cause",
+          "status": "failed",
+          "stack": [
+            "Error: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to be Error: MODEL_SETTLEMENT_RECEIPT_UNKNOWN { …(3) } // Object.is equality\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-generation-worker.test.ts:36:95\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)"
+          ]
+        },
+        {
+          "name": "普通网络错误无可信receipt仍unknown，不能借候选恢复放行",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "宿主已有完整结果优先回读，不因叶异常报告失败或重跑",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "原signal取消后不回读完成或报告可恢复失败",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "宿主failure ACK丢失仅重读同报告，不新增节点或更换parent",
+          "status": "failed",
+          "stack": [
+            "Error: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'retry_wait', …(2) }\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-generation-worker.test.ts:53:95\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)"
+          ]
+        }
+      ],
+      "jsonSha256": "c1d8d8b380491423f7fbba7fed15e2159ebd6a4cfcbc50fa3852b709def477dd"
+    },
+    {
+      "phase": "green",
+      "evidence": "docs/verification/t1251/execution/leaf-green-a71d85a051919175473dfb44896bd736",
+      "cases": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "actualChildExit": 0,
+      "processClosed": true,
+      "ownedGroupRemaining": [],
+      "sourceUnchanged": true,
+      "ownedRootCleaned": true,
+      "assertions": [
+        {
+          "name": "已知retry_wait同实例或可信cause保原code/delay：wrapped=false",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "已知retry_wait同实例或可信cause保原code/delay：wrapped=true",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "可信cause保原waiting_user，不能变unknown",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "可信cause保原failed，不能变unknown",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "缺模型结算ACK保持unknown且不报可重试：direct",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "缺模型结算ACK保持unknown且不报可重试：cause",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "普通网络错误无可信receipt仍unknown，不能借候选恢复放行",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "宿主已有完整结果优先回读，不因叶异常报告失败或重跑",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "原signal取消后不回读完成或报告可恢复失败",
+          "status": "passed",
+          "stack": []
+        },
+        {
+          "name": "宿主failure ACK丢失仅重读同报告，不新增节点或更换parent",
+          "status": "passed",
+          "stack": []
+        }
+      ],
+      "jsonSha256": "0dfae7aa2c984d6ef5cf49e5ab54a651653151fc25dd4b5411aa78ff98672ef2"
+    }
+  ],
+  "originalNineIntegrationFailuresRetained": true
+}

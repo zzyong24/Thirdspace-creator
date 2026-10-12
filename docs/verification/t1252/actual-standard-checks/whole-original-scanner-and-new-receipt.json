@@ -1,0 +1,37 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=600000",
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/tools/timeout-policy/check.test.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/whole-original-scanner-and-new.log",
+  "pid": 33975,
+  "identity": {
+    "pid": 33975,
+    "pgid": 33975,
+    "uid": 501,
+    "birth": "Mon Oct 12 07:22:40 2026",
+    "startedAt": 1791760960268
+  },
+  "startedAt": "2026-10-11T23:22:40.268Z",
+  "endedAt": "2026-10-11T23:22:43.261Z",
+  "elapsedMs": 2993,
+  "budgetMs": 5040000,
+  "deadlineAt": "2026-10-12T00:46:40.268Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

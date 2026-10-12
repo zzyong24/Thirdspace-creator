@@ -1,0 +1,79 @@
+--- a/frontend/src-tauri/src/workbench/ipc.rs
++++ b/frontend/src-tauri/src/workbench/ipc.rs
+@@ -976,6 +976,15 @@
+     #[test]
+     #[ignore = "isolated Node/PGlite public file reconciliation fixture"]
+     fn external_node_file_journal_fixture() {
++        // Test-only milliseconds, frozen once after ready; never extends a task/RPC deadline.
++        let wait_ms = match std::env::var("CREATOROS_TEST_WORKBENCH_FIXTURE_WAIT_MS") {
++            Ok(value) => value.parse::<u64>().expect("fixture wait must be unsigned milliseconds"),
++            Err(std::env::VarError::NotPresent) => 120_000,
++            Err(error) => panic!("fixture wait environment is invalid: {error}"),
++        };
++        assert!(wait_ms >= 120_000, "fixture wait must be at least 120000 milliseconds");
++        let wait_budget = Duration::from_millis(wait_ms);
++        std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
+         let pid = std::env::var("CREATOROS_FILES_E2E_NODE_PID").unwrap().parse().unwrap();
+         let ready = PathBuf::from(std::env::var("CREATOROS_FILES_E2E_READY_FILE").unwrap());
+         let done = PathBuf::from(std::env::var("CREATOROS_FILES_E2E_DONE_FILE").unwrap());
+@@ -984,7 +993,7 @@
+         let socket = bridge.socket_path();
+         let running = bridge.start(pid, base.clone(), test_runtimes(&base));
+         fs::write(ready, socket.to_string_lossy().as_bytes()).unwrap();
+-        let deadline = std::time::Instant::now() + Duration::from_secs(90);
++        let deadline = std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
+         while !done.exists() && std::time::Instant::now() < deadline {
+             std::thread::sleep(Duration::from_millis(25));
+         }
+@@ -995,6 +1004,15 @@
+     #[test]
+     #[ignore = "external Node/database file host fixture; requires the installed Mac runtime"]
+     fn external_node_files_host_fixture() {
++        // Test-only milliseconds, frozen once after ready; never extends a task/RPC deadline.
++        let wait_ms = match std::env::var("CREATOROS_TEST_WORKBENCH_FIXTURE_WAIT_MS") {
++            Ok(value) => value.parse::<u64>().expect("fixture wait must be unsigned milliseconds"),
++            Err(std::env::VarError::NotPresent) => 120_000,
++            Err(error) => panic!("fixture wait environment is invalid: {error}"),
++        };
++        assert!(wait_ms >= 120_000, "fixture wait must be at least 120000 milliseconds");
++        let wait_budget = Duration::from_millis(wait_ms);
++        std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
+         let expected_pid: u32 = std::env::var("CREATOROS_FILES_E2E_NODE_PID")
+             .expect("set CREATOROS_FILES_E2E_NODE_PID")
+             .parse()
+@@ -1023,7 +1041,7 @@
+             RuntimeRegistry::from_sidecar(&runtime_root).unwrap(),
+         );
+         fs::write(&ready, socket.to_string_lossy().as_bytes()).unwrap();
+-        let deadline = std::time::Instant::now() + Duration::from_secs(120);
++        let deadline = std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
+         while !done.exists() && std::time::Instant::now() < deadline {
+             std::thread::sleep(Duration::from_millis(100));
+         }
+--- a/frontend/src-tauri/src/workbench/browser_ipc.rs
++++ b/frontend/src-tauri/src/workbench/browser_ipc.rs
+@@ -568,6 +568,15 @@
+     #[test]
+     #[ignore = "external Node/DB integration fixture; requires fixed CfT and explicit environment"]
+     fn external_node_host_fixture() {
++        // Test-only milliseconds, frozen once after ready; never extends a task/RPC deadline.
++        let wait_ms = match std::env::var("CREATOROS_TEST_WORKBENCH_FIXTURE_WAIT_MS") {
++            Ok(value) => value.parse::<u64>().expect("fixture wait must be unsigned milliseconds"),
++            Err(std::env::VarError::NotPresent) => 180_000,
++            Err(error) => panic!("fixture wait environment is invalid: {error}"),
++        };
++        assert!(wait_ms >= 120_000, "fixture wait must be at least 120000 milliseconds");
++        let wait_budget = Duration::from_millis(wait_ms);
++        std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
+         let abrupt_exit = std::env::var("CREATOROS_BROWSER_E2E_ABRUPT_EXIT").as_deref() == Ok("1");
+         if abrupt_exit {
+             // Give the interrupted fixture its own owner process group so
+@@ -598,7 +607,7 @@
+         let socket = pending.socket_path();
+         let running = pending.start(expected_pid, profile_root, bundled);
+         fs::write(&ready, socket.to_string_lossy().as_bytes()).unwrap();
+-        let deadline = std::time::Instant::now() + Duration::from_secs(180);
++        let deadline = std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
+         while !done.exists() && std::time::Instant::now() < deadline {
+             std::thread::sleep(Duration::from_millis(100));
+         }

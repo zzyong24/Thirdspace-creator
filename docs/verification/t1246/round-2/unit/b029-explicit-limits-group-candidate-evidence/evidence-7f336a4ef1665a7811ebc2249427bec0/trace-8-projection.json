@@ -1,0 +1,292 @@
+{
+  "nonce": "7f336a4ef1665a7811ebc2249427bec0",
+  "rawBytes": 3091,
+  "rawSha256": "442acfc18edc1146f07b1c9e382a3acf02b5e1a46f096051ef4662b0f63797ee",
+  "projection": [
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readTaskContext"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "resolveModelCredential"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "reserveAgenticModel"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "startCall"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleGenerationCall"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "reserveAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "startAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "context",
+      "hasFixtureCookie": false
+    },
+    {
+      "pid": 62432,
+      "type": "navigation",
+      "url": "[脱敏URL]"
+    },
+    {
+      "pid": 62432,
+      "type": "context-close"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "reserveAgenticModel"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "startCall"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleGenerationCall"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "reserveAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "startAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readBrowserSession"
+    },
+    {
+      "pid": 62432,
+      "type": "context",
+      "hasFixtureCookie": true
+    },
+    {
+      "pid": 62432,
+      "type": "navigation",
+      "url": "https://research.example.com/article"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveBrowserSession"
+    },
+    {
+      "pid": 62432,
+      "type": "context-close"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleResearchRead"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "reserveAgenticModel"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "startCall"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleGenerationCall"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "reserveAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "startAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "executeEvidenceRead"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "reserveAgenticModel"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "startCall"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleGenerationCall"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "reserveAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "startAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "executeAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "settleAgenticTool"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "readCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "saveCheckpoint"
+    },
+    {
+      "pid": 62432,
+      "type": "server-close"
+    },
+    {
+      "pid": 62432,
+      "type": "browser-close"
+    },
+    {
+      "pid": 62432,
+      "type": "server-close"
+    },
+    {
+      "pid": 62432,
+      "type": "ipc",
+      "port": "commitAgenticResult"
+    }
+  ]
+}

@@ -1,0 +1,2260 @@
+{
+  "observedAt": "2026-10-11T22:12:22.424728+00:00",
+  "head": "533224f334c43cdb81a344424e420cad93784dd1",
+  "partialSourceSnapshotNotFinalSeal": true,
+  "specBindings": [
+    {
+      "file": "docs/features/t1246-integrated-dev-package-acceptance.md",
+      "sha256": "fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a"
+    },
+    {
+      "file": "docs/features/t1097-article-director-options-diagnosis.md",
+      "sha256": "8221447156d8ae0194ab343cde1413a378e2fa18a552dbf869b576b5eb26b232"
+    },
+    {
+      "file": "docs/features/t1248-frozen-system-action-compatibility.md",
+      "sha256": "a815e5da23ef92579ae722ba9bd4227259d0bb9d14960d6c9dffa626395195de"
+    },
+    {
+      "file": "docs/features/t1249-durable-chat-current-receipts.md",
+      "sha256": "627e62fa21b4a46e672b99ba3ac647437c03294f2b65fa004abdc60c093f7339"
+    },
+    {
+      "file": "docs/features/t1247-timeout-git-inventory-buffer.md",
+      "sha256": "56a28107d562949c983d196a73867c82583ff3633c46eb64cba02cb2fd15c09f"
+    },
+    {
+      "file": "docs/features/t1250-positive-timeout-consumer-closure.md",
+      "sha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4"
+    },
+    {
+      "file": "docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+      "sha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84"
+    }
+  ],
+  "sourceEntries": [
+    {
+      "file": "ai-worker/src/execution/acpx-notification-drain.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "8b7f1dfd3fa31c8ecb2cbe9e663181cd7cca76a27e7361d440cbd80a116960ef"
+    },
+    {
+      "file": "ai-worker/src/execution/chat-generation-worker.ts",
+      "status": " M",
+      "sha256": "de1a62340a7ec38d7b1a51fa00bce27acfcd9af86f679f504c0faf44b2a1b273",
+      "exactSpecPaths": [
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.md"
+      ]
+    },
+    {
+      "file": "ai-worker/src/execution/chat-research-browser.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "2b5d6fe42d5e115eabca12dba59f50a72cea9e57ac4691dbb935ad19d2c60e6f"
+    },
+    {
+      "file": "ai-worker/src/execution/chat-text-node-worker.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "5d42306ef1bf139d70858495ed30b42a81c9ac5d9eb79bade3bfa9bd38117526"
+    },
+    {
+      "file": "ai-worker/src/execution/durable-pi-http.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "bbdc2e2ba9e90f7f231f64df3f341075b2d5a16ae9260386b6d14fcdb26db30b"
+    },
+    {
+      "file": "ai-worker/src/execution/generation-replay.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "63916884a4873b9890244491013cc501a3a7833320ac0583a77a49580bf88aa9"
+    },
+    {
+      "file": "ai-worker/src/execution/intelligence-worker-bundle.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "b2781e0141d287c2de4a0783eab1ee90ab01c0433b965608148cb4acf7c0d1c4"
+    },
+    {
+      "file": "ai-worker/src/execution/research-worker-tools.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "db2cf701cb2e1d34e0590954690891ead515ef41ed48c5aeaab9101f5e0afddc"
+    },
+    {
+      "file": "ai-worker/src/prompt/director-methods.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "e91d58e3b980979e52d5bdf6b73272fa87b0ad072915a0632f932495c8b9eebd"
+    },
+    {
+      "file": "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "5e9a2c35e85eee09f6c6948776ab6102562a18907ed5073fac3ec32b080d9d30"
+    },
+    {
+      "file": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "44c031cac341b9b1c0e8986d3bd363fd7eec9c69d806a7d91affa39eeb853c59"
+    },
+    {
+      "file": "backend/src/application/chat/assistant-system-root.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "831d4f007d6b11249ab1154e9b6dbd942927d1f6c87214cf4f5408fbe65305b9"
+    },
+    {
+      "file": "backend/src/application/generation/work-review-root.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "ab32262d863b4d3a44cdcbc4f9e54f9a670efa10168f588e0043151b84e86942",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/group-upgrade-postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "6a5634b52e33c8c5cd11b90e849f10f9e3f9a3341921bb10c7207f82fc64b67e",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "2d753d3c618e755c46f2e3c6412b739c34e2fbd5d92a40e0e6cf261559d76bf3",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "57225946617f8be00e92da307e124dfb5b7c05af091e9c900512c45822754e20",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/chat-generation-worker.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.md"
+      ],
+      "sha256": "02bcd783fdbca849e903b660a81c067855b67df9e4f33798bd20cbdf74879f86"
+    },
+    {
+      "file": "backend/src/integration/chat-hooks-worker.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md"
+      ],
+      "sha256": "007547ed8ae028996af31b4c873af19f74e323b19d194a3214c2871f50889415"
+    },
+    {
+      "file": "backend/src/integration/chat-redfox-worker.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "7e6ebbd9b5f0fac2f8daf6d29d730fc23f41b6585ea09f13a3d7aa0cb2b5fe46"
+    },
+    {
+      "file": "backend/src/integration/chat-research-worker.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "ac652d65b060fb853e500a59e18dbe0d6f2d811a61aa39610c9fdc13f9caac8f"
+    },
+    {
+      "file": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md"
+      ],
+      "sha256": "98ae5f6c0a071832a2309be7b13f6621f93831e4bea2d51acd62087320a2dca4"
+    },
+    {
+      "file": "backend/src/integration/chat-script-patch-worker.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "365f8eb01230083ddbc5c6eb9af6a8f885b6468a6142d04cba8cd1e5f443f17b"
+    },
+    {
+      "file": "backend/src/integration/chat-video-edit-worker.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "8e2262f6e0555ea2b2d44fa0f637ac808088596bf9260da09fe5689c9a911924"
+    },
+    {
+      "file": "backend/src/integration/chat-work-editor-worker.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "1a5adc8457fa50eea3824be9a3114105427363a538d2faf3b9fd047eaae40dfb"
+    },
+    {
+      "file": "backend/src/integration/copilot-worker.fork.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "949db6516cb23df1c665c56ebd1f99a8cba001b19d2848ef30d871a36ccff439"
+    },
+    {
+      "file": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1249-durable-chat-current-receipts.md"
+      ],
+      "sha256": "1dbb44fde62b22d57ce3deaa2b93ff74b20ccbb3da808fd3e2078c6e8c4b59df"
+    },
+    {
+      "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "e84b238e9bd0a2443eedfa063137a173509eac82b383c02b0504edd5665aabbf",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "20a2346544e12720bfde861ea1a8d0289deffc41f5d371b877fb83fad102a285",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/group-platform-facts.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c8081c50cdb885da58bf027633848c23888b1d9ce624cb0244599a009f85c438"
+    },
+    {
+      "file": "backend/src/integration/intelligence-source-workspace.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "03fbc52fcf1b539dec4bcc106486ef3f9993df8f54cd04db23e05300cbac908a",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "51eca6a190f6efc5b878cdc631b068d5a5750d987c947cb2d213e3067a297961",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "52b67c629623c290c0c56ab68aef164ba99ae093df602e2cb47ea406507cf406",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/research-material-adoption.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "37a6141c7e836154fa467f71cbe693d299b0549c09ac9536c932e2205aae1753"
+    },
+    {
+      "file": "backend/src/integration/scheduled-export-progress.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "4e77a9b2a4a7a6344dd3c635391e3501a2b954b9acc36a7977b8b056dcc78ec8",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "ef9e1c06ba12cf72742a4841b757594a227503b05549952bfec7fdd97d584a07",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "439dfef2377fa388cab31004df783a981f98c06c3a7551b481d080f73f6a397b",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "4b9f70a77d7e95794fbeb12cf6c6b90fb372f690e8af04c0cf20e79a2eebe1c0",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/integration/structured-target-adoption.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "87c04308e5bf7cf8614567376f9ac277e4b63c4c8498e5c769bff24cf77c6ac3"
+    },
+    {
+      "file": "backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "ab04f77e0ce76c846b74eb77dd4493982cdb8dbde06a09131d8a9d74aefe965a"
+    },
+    {
+      "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "b97f1c572f8c6d19c10e50f9b571df862c0ca79e62ae27322328bb05b223e907",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "fbc925c14f717e572b094d5cb356a69f9d5a91965deaf8a639e4e01a315a4278"
+    },
+    {
+      "file": "backend/src/legacy-source-migration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "00a072eb3aa63a7957109cd7342cb51e59b6137942fdc30dbbfbe5e84b3d2b07"
+    },
+    {
+      "file": "backend/src/migration-convergence.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "45c599da1b93d8d29eeea786facbc097a32c274a2be3930a9cc72dddc62ec892",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/agentic-browser-worker.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "90c01621c19fdab72d3b51b3b9651dc768c14eea316baaebff5168d8d0f3a038"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/agentic-business-execution.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "ded378285eb7e15de65d696cfbc9513a4ff14997ca87b681a143f47099614db9"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+      "status": " M",
+      "sha256": "0a6bbc9d52f059426d832da2459db44b4c77ff56ffaadd71484758f68c11e191",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ]
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "65141a81311cb6abeaf552946c91e8a4ecac3c4bcc69dec97a7bd0db38a0520e",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/browser-task-authorization.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "847713e93c8a7afca3acdf6c05d598f48d9441796e3356772667e16a0049c279"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-assembly-types.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "6e450a05f1435aed9e241d7a821887fd383f3396d103519b5cb4424b336318d2"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "aa60be00e2aa25f7b59daaae5f651d878c61b31b55689acf9baf3d0b0a606324"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-assembly.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "cdaf63938a9f0641b223ba429546738ad13feb57843772a7977864aa5c5d3bf1"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-host-tool-adapter.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "df025f7e406ed898b9f954256d85987806034e769dcaa8ec55f6c8a4dd71aeb5"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-script-draft-preparation.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "f8e5ad8be7726604806dd0d385c2f3592efbe7c96c2aa66b945e8ddd8dc2dfda"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "1ec1beb1eaeb8895600f6079e020cdabab4fb86c47af238d9173ab217147c89c"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "512966ceab46ef91bfa39ba8081b9a05af3671c0854fe4136e40b6c4dc144049"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "2c866ae81ab18e297ea4690a0048079ff87a0b9c72e9c35b7adc2201d58fb95b"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "a27a485e646d945b1710211b0ba9704b422adf76f5632cf864c981e0d5ad4917"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-tools.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "501761fd45d032f461af6ecbee3d06a1abd1f7dc2f929924dc5e5f2589e9e185"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "8b691e3e3a1732bd7af8147658c35f5d96b2e9be20d3c4e56cc605ace8157f8d"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "5ed2fbf9e76597ecbed16714dca2dafd657681b47aea30feb542786fe0a510bc"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-video-edit-tool-host.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "9d4cba1675aae5c3e6e6788077e04d905437cd5887f040b48f3acd7dbec943a4"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "c806f16f1e2313bf0d76daaee903c43e6723ad33949e085b4457c61c011056ac"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "b3cbccaceecef0d44e956be3569234f90476c1d004fd7433c72eab24691d4707"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "c04505657c09c1ab3ee43e6ea66606fbe8e8321cb0b24927045ba142bf791174"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/review-facets.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "f955f7f1b1258cb6476edfc64bdb383726cd09b3916cf92635595e3a984e39b2"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/review-insights-injection.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "63270507708677a995cee0b24eaaf3bcbd807e8cda5d79a2f30890dc2f6c6e76"
+    },
+    {
+      "file": "backend/src/modules/ai/agentic-proposal-adoption.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "1a1fa88fae3c715c8aa5ec93783fb98b89940ccc316e110474423b44f6b6e18c"
+    },
+    {
+      "file": "backend/src/modules/ai/ai-task-commit.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "de197636fd7b3fe9beb161256cca5bb1e60628c9354f99f7776ff9d67201a471"
+    },
+    {
+      "file": "backend/src/modules/ai/ai-task-submission.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c566a16ebf21b0ce55c1391373178ccc630a48fabfa7412c1797d234ef528515"
+    },
+    {
+      "file": "backend/src/modules/ai/ai.contract.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "e70bf69fa2b796aa734bf8d094b7a5c0fca557dd8c6487b23e452fbdeb50547f"
+    },
+    {
+      "file": "backend/src/modules/ai/ai.learnings-project-scope.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "427d468335aeeb190aaa5405d7eab189b0abaa1fb6e79a36bdfa23941fdd64cf"
+    },
+    {
+      "file": "backend/src/modules/ai/ai.service.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "a21dcc6cd25167caf7cec732681b84e37a72dd673f859bcc926a48c30a43f560"
+    },
+    {
+      "file": "backend/src/modules/ai/ai.task-execution.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "e1dbfa020e1d09355524cd399ba0f93ea7cca52bd50a02ed0b6296efab6d46df"
+    },
+    {
+      "file": "backend/src/modules/ai/ai.transport.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "eb622fcd2ab39f4cbe810891142ade8cdedccb9005f5feb0ddab0fb601102435"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-host-context.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "5201eed019be3f73b56c6ccb0f0d745dd90e1cb67235fb9bb5dcd172466fcdde"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-proposal-source.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "fde056441c4ab3f3c357d37419c402bd33e1227993fdd6091bdfb40c00b8b9e5"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-proposal-source.service.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md",
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "b710ae2442eb8532a33d7cdb4bf12b1cb68b9f5ba42a718b93c7de8b9adbc1f4"
+    },
+    {
+      "file": "backend/src/modules/ai/external-chat-turn.service.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "8c874bfc4f1939ea6aa3ea37c72ac3ece2c1ef85a7288b02924bdbdc77ed3b5a"
+    },
+    {
+      "file": "backend/src/modules/ai/external-task-tool.service.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "e9ce0e5e8c9b6a4713760f0f6fae4e8e4d5cab1c0e0261d8915914c61d990d3e"
+    },
+    {
+      "file": "backend/src/modules/ai/group-task-scope.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "7d42639c207beb8819f53951f092f21c2b8faf71da5995976b6dee3b1845f463"
+    },
+    {
+      "file": "backend/src/modules/ai/platform-adapt-execution.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "e15ebbf756c85da5d938c232c9cb289a3f7d50c19391a50245bae45f3b7067e0"
+    },
+    {
+      "file": "backend/src/modules/ai/script-draft-task-submission.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "37e7b195d5bfadaadd41d7eb1ebb91621fe8c758eeb3f10231b7bd9e16a2d488"
+    },
+    {
+      "file": "backend/src/modules/ai/work-creation-chat.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "a51663de13419b0179f1638efe762a964651f6b99c09c994b12e8387880193b4"
+    },
+    {
+      "file": "backend/src/modules/analytics/analytics.acceptance.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "5a034f6616a02abefe1bf271d335316babf620b4cebf75d0586b083caa6c7957"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "2d88d7f9a5df207857df5ccbb4f8ad3b9dfa6570a8211c8486e8fc5561439836",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/articles/articles.service.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "494a2087bc7bf255397f656b8c88abb49a2d1b9a5ed9c58a061513c9d8fb33af"
+    },
+    {
+      "file": "backend/src/modules/articles/articles.transport.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "2d657bfec1810408a8cc5fdbb1bc3c9123f2fbc2c080ca487b0bc5399b49b67f"
+    },
+    {
+      "file": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "fffd326d4e3354f9ebf40e5362f360975347bb988fb3c5d40d290d43ba83649a",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/assets/assets.acceptance.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "43cbbe569f70ef3c6e4f27e8c5ded3fac79acef6d6ae8904eee8452385bc6312"
+    },
+    {
+      "file": "backend/src/modules/assets/assets.legacy-media-backfill.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c505ccb7acbd0f8aae460c1e7be7f22557fcaf1ad832be1f606047a735f9eacb"
+    },
+    {
+      "file": "backend/src/modules/creative-canvas/creative-canvas-series-reference.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "20f80400c7177eb6401e8788075b6949d1e4e4466655410f9c005f3449effee8"
+    },
+    {
+      "file": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "b948930b951f589fdc2db12e58ef3b3984a4820bd41d0e7948b67d24ea791f54",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/execution/chat-web-profile-wait.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "a60007877739f873102852fd946f278493a3dc55b424f353945c71e90d0f3476"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-provider-job.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "0612cb878c67c5ea433692b5d80d904f0d8e769fb93f9bf85b6f9fb69bf1c030"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md"
+      ],
+      "sha256": "0d758bfa7ce0bbae6b16aeb9db39e3e3c5bd4c1decdd3c1dc8a9ea8fc061752e"
+    },
+    {
+      "file": "backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "2a8a6eb0bd414c0a8161984fc0cfdba525d60b7847c9b5002916f3ac81c22eb5"
+    },
+    {
+      "file": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "status": " M",
+      "sha256": "1a5613702ab81e92cc4a33d437d9aa78c58c6f318dd5c2ae838e63887bcb892b",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "162f8e98671af1181e95113b666fcb2fa0ccd64689d5c3c631475b8fc82cba68",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "acef744823fc8c268f1ef5c006da43584ae632ea09b12519f70a574bad63255d"
+    },
+    {
+      "file": "backend/src/modules/graphic-posts/graphic-posts.transport.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "f66c489f86a0abb9880da0c5bc32b4f46a525fc4f6cdfa173f71baaab158e692"
+    },
+    {
+      "file": "backend/src/modules/knowledge/knowledge-proposal-adoption.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "40f09fc5e8903268ff726dec909a4bf7eaa0777e0ed6e01732569a65ee433991"
+    },
+    {
+      "file": "backend/src/modules/knowledge/knowledge.db-schema.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "6c1467932b9e6d8dfb29c87d2b0d0b4a4994e9dacffb2ca4872fff83da52e8dc"
+    },
+    {
+      "file": "backend/src/modules/knowledge/knowledge.repository.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "220983d758ebc8f81919171adb39ce585c69fbd2f3f8a93622b1f54ccc0c2efa"
+    },
+    {
+      "file": "backend/src/modules/learnings/learning-adoption-key.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c812b886ccd6f8806508ec2641f7f2fc57e76f3376ca6e56d13370eec01fc1cc"
+    },
+    {
+      "file": "backend/src/modules/learnings/learnings-calibration-reflow.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "313909022238fede87a45967251e991b0cd55328da98b3843f7e1e4e0d9b0363"
+    },
+    {
+      "file": "backend/src/modules/learnings/learnings.acceptance.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "d8ffd34f3bba34994df7cc1985a4d0efddec5ca05ecc326017148ae52b7854bf"
+    },
+    {
+      "file": "backend/src/modules/learnings/learnings.contract.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "988990d2126ba26cc643b920d8b934a3e4aad18e4dcbbc34bddf5769f23fac72"
+    },
+    {
+      "file": "backend/src/modules/learnings/review-adoption-scope.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "de244751ec5b314ff153f002cc8c8d5afa6f2009950258a5acccbfa5ce14d5d7"
+    },
+    {
+      "file": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "146e102747dde9e431776466be029f8a8938b7e073ddf6aa3c2521950ad099b4",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "7be0e3a2a1b3a4a153eec40ece44d3bdde5714c83539470b6d4377d1e9f114ae",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/platform-account/account-binding.service.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "f010077fdc6d08790417f53a64333aeb0f1e5da4f25d342696beebca23db040f"
+    },
+    {
+      "file": "backend/src/modules/platform-account/platform-account.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "00b1c0f2c2b4e8d86d85b3b270510bcfe9391e464f6877f1be27bfb371c8066c"
+    },
+    {
+      "file": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "539c0723b9c15408e62a6ca399e3c4902ccf5fa138d8cd62149486507528ac78",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "8d9f73d88f922ee6b6f4a4607dc08c535eb38e36c1b3ea50d2fdf9f8d67b2d6b",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/production/production-precise-asr.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "895d6c9076c8b7dd3d488a1eda0e42b7410e861d9295b91cefc5bf8470b6feed",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "7dbd2bf4cb5d494bad9d38054828011925b74e4336cbdbc4c6e7d09eb9173a7e",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "823785749f614ba085ea262354b2c25f89e45cf43d733f109b1d7da97b64e922",
+      "specReferencedSourceMaps": [
+        "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+        "docs/verification/t1246/unit-first/pg-hardcoded-consumers-source-map.json",
+        "docs/verification/t1246/unit-first/backend-known-body-source-map.json"
+      ]
+    },
+    {
+      "file": "backend/src/modules/projects/data-foundation-prefer-real.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "729e3160ebf9c8eb819d3ec61bd2ee22e27325f899d9e9bd2b3cb7d9f3074665"
+    },
+    {
+      "file": "backend/src/modules/publishing/publication-cover.service.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "6e939583b6061fe1951a47081489d26746a667952c107cea4bdb58dd36d06a48"
+    },
+    {
+      "file": "backend/src/modules/reviews/reviews.acceptance.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "74b44f65ab4b66af764fbe1fbd52a2bd6b8d1dc4352d6785523b4cbae04bddf6"
+    },
+    {
+      "file": "backend/src/modules/reviews/reviews.contract.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "2df2038f2558178ba9032a443738c79977737e6474d9e585579996e6f7664a7d"
+    },
+    {
+      "file": "backend/src/modules/settings/settings.service.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "54baa4c9b2e574b199211d58414ef8088f007519b40f5e267bf101a1172a1dfa"
+    },
+    {
+      "file": "contract/src/assistant-system.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md",
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "d9a0d2c988ccac3918465ca6dbfbf0525f87c8241f3938f3080d02079a54d1b4"
+    },
+    {
+      "file": "contract/src/cli-policy.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "103f573f6ef5334f0c250ccc4f0ae8a386c69b385744289bca61571042c2a242"
+    },
+    {
+      "file": "contract/src/index.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "72870c78d09ac76f26b4c1d13b3bfe3d6ec1bae61f21cbcb54b9707adf719ab5"
+    },
+    {
+      "file": "contract/src/internal/execution-worker.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "file": "contract/src/operations/ai.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a"
+    },
+    {
+      "file": "contract/src/operations/articles.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "6245ed7357df7f6208ae0bccd1ee7d30b88ba4b1082a8007bf8473f8fa25e836"
+    },
+    {
+      "file": "contract/src/operations/graphic-posts.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "587fee72a3f10c92ca6e11e508050267b41ba7264cf8b0d01324f8a07ad79d56"
+    },
+    {
+      "file": "contract/src/resources/assistant-system.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md",
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "81e4606d8de01a300df955e7f344c4f36838db278a8fd8aaa5e7328cad3ac178"
+    },
+    {
+      "file": "contract/src/resources/work-creation.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "5259a41efc2a050b493181f69e13ba5a15fe58e1988189411757d58b9f1949a7"
+    },
+    {
+      "file": "contract/src/resources/work-editor.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "71cf7de0a5d7ee607cf7e3047d7dc4caf0e2a4428c27a41e4f188be9302fdb20"
+    },
+    {
+      "file": "contract/src/workspace-operation-scope.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "1925bf313c79e1a29f43fb6a06e1087b5cbe870cd91ca21731990d66560d8214"
+    },
+    {
+      "file": "contract/tests/endpoint-bootstrap.test.mjs",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "da4f739a07c44e09feae413686b6d44cd7aef4d691610300b537d91cda732e62"
+    },
+    {
+      "file": "contract/tests/registry.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "713b251c8e1c7d0bfefa7285e7b19a8dd22d3ce57efcd5686e8cbddb38a1924a"
+    },
+    {
+      "file": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "status": " M",
+      "sha256": "5dc28fd769a1f60184f7e17146e1b94553ce2e0b9b644c516010de986eef5b21",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src-tauri/src/workbench/ipc.rs",
+      "status": " M",
+      "sha256": "46ace3fab56c8ed39ebd40e8826f4a00dde09d3d3f76e7b9a15419eaf84568a2",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "status": " M",
+      "sha256": "d0a6b971c28aae27d49134fc091d2eab25edb9fa338ef029a5738aa9b3df508f",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/app/(creator)/layout.guard.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "9ba4cd1797a1253aede19b4f7d2efc3eeba9ff7e87c3775ddd128993eae1078e"
+    },
+    {
+      "file": "frontend/src/app/api/v1/auth/auth-routes.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "05eb4e2c9483a81385e47f161d3828709263bb177a1ad3889682501867ea0c21"
+    },
+    {
+      "file": "frontend/src/app/api/v1/local/reset-workspace/route.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "1e9f9cc24e31ab146815519535c3043228f431d94add1f688d629b3ca75c2980"
+    },
+    {
+      "file": "frontend/src/components/overlays/new-project-dialog.prefill.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "8e7d6182c95d4e8379165ace96e43c30f00b1179ecbf3384ad13c1dced3b01da"
+    },
+    {
+      "file": "frontend/src/components/shell/account-switcher.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "ecfeb680d1b3237cafb2cba8e1383d47dd2e3a51b8a23cf9afc17ea1d4cc35a4",
+      "exactRawSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ]
+    },
+    {
+      "file": "frontend/src/components/shell/app-shell.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "2a97c1963ad7f7bc90d87be3c672730ef6ba8dec43518cfa3d4cd269ef8ece16"
+    },
+    {
+      "file": "frontend/src/components/shell/app-shell.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "959c4f98a12475e1f70af202c6f15169578295f3e2da0f85a20d08f2eb7e59cc"
+    },
+    {
+      "file": "frontend/src/components/shell/shell.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "b7e938042e137fb6f99740b8b676c9edeaa3611302d9ad809d9ada98b1042c33"
+    },
+    {
+      "file": "frontend/src/components/shell/use-primary-navigation.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "883d305ab5a78a676018b1e930de453b187e8a6d937a5236aba3908c6cabea17"
+    },
+    {
+      "file": "frontend/src/components/shell/workspace-initialization.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "ef4c16f2f924e2652c46fc995d5864994da450c5da91baba3da07c6bd73e11a2",
+      "specExplicitSameDirectoryShortName": "T1246第131行同目录短名"
+    },
+    {
+      "file": "frontend/src/components/shell/workspace-initialization.tsx",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "346ebdb2f4273467763610eda17575bfbf67a6392d58de0ca8335e219b671ebf",
+      "specExplicitSameDirectoryShortName": "T1246表BA001同目录短名"
+    },
+    {
+      "file": "frontend/src/components/shell/zero-account-guidance.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "0879ed30ab257446956025be02c67ffab31f1cf0fb7afaf4a713b517d7c4b252"
+    },
+    {
+      "file": "frontend/src/components/ui/creator-date-picker-antd.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "8f27baea5674066f71ed34aa3ae6b60bd386c8d4280eda1ae9fa8a2d054a3f59"
+    },
+    {
+      "file": "frontend/src/features/article/article-workbench.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "5475cba2681f5f7406bbd211c3ef505d6e43064dcdc79ef80e7a943518e03733"
+    },
+    {
+      "file": "frontend/src/features/article/article-workbench.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "51d9d93625b0bc7936e2dab01801ee6750266e09d9408a4027babfe757d1ebf4"
+    },
+    {
+      "file": "frontend/src/features/assets/assets-page.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "569f2190c249f52e75bf3f0b244d87262b42a1a1e3570a3cb713783394f5d64d"
+    },
+    {
+      "file": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "a8b06cf05639e31858ba9190317ec58a20bac9785a4af4a5110d0a63869d3be1"
+    },
+    {
+      "file": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "f53998894f80c65b4313cba62ecfe04a78abe26b15c504f64795ea9d971e94c8"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-diagnosis-card.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c6f648f9f4ad18b3519381292aea7cef4246a94fd307deee6ca911945b58abca"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-work-creation-card.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "5e9af0e99029f2778740d5b8a1d6ce5708a3350500b6b468093798e0902b2586"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-work-creation-card.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "573b4826de6234f25c5799b33803bd7f8509b360845c0563cb076cc25672c700"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-work-editor-card.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "dbf2e0f2ba68f38bcd3759416908b2e3c8419b2a840247eb355eeee0b18b7fd4"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-work-editor-card.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "c9f12ed81a4d5626c88d874db65c21f6f90487cdf32af56d38f985bc60bf0cbe"
+    },
+    {
+      "file": "frontend/src/features/copilot/conversation-persistence.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "0d7d99ecb589b7c88d156f985515ea58cec3b1aa4c3f05fc39734c275f08d7be"
+    },
+    {
+      "file": "frontend/src/features/dashboard/dashboard-page.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "b938b133c97de8bcd50b6aaf4a53c001c10a3b316d216dfd98d9f7fced817ccd"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "f88491449f2210830edc344d74d79f5ac7b7b964cec2b856eb2f8d780c766ce0"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "9e4a1c5c02eda1393b1dccab0c055bbbbe0825608821ab5a12fb231ab86158bc"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "2832781de3c711978cec411fac08798330c7075bbc5852b947ed7b7efd66de57"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/work-creation-request.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "d09627609899b634cc78c17285f83e28b7c38945c5e0281d1a523455449b2d1d"
+    },
+    {
+      "file": "frontend/src/features/knowledge/knowledge-page.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "9aa3ee55d7868f84b144e92ae435340004c750defa16f28093e8524c7c9c033f"
+    },
+    {
+      "file": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "2c8a84e0312e9d8084c775207beff57cc6f09add1298196d1f2c406b76ac159b",
+      "exactRawSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ]
+    },
+    {
+      "file": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "00dc47e07addca37f80ea34470e14639ecd790bbd9b753825d40bf3197a282dc",
+      "exactRawSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ]
+    },
+    {
+      "file": "frontend/src/features/platform-account/platform-work-catalog.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [],
+      "sha256": "233d9b04114642b72cab8a5cc5c201c06c704a3c200b9a7b5030e0e750531f25",
+      "specExplicitSameDirectoryShortName": "T1246第131行同目录短名"
+    },
+    {
+      "file": "frontend/src/features/platform-account/platform-work-catalog.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "233cb258c93210015545762780d5b519832c6d0c6ca4449a4f18c2d997e773b0",
+      "exactRawSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ]
+    },
+    {
+      "file": "frontend/src/features/projects/projects-page.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "ea587b7d90137e4d7d4dc95739c6438903c54177de680432c00fe455739b4cbe"
+    },
+    {
+      "file": "frontend/src/features/projects/publication-result-actions.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c0ff5eaaf657dc80dc788ca6cdbebf9bc8639707dfbc58df392b80a835109d60"
+    },
+    {
+      "file": "frontend/src/features/projects/quick-create-work.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "b645a8721ffe9e33e100912015b62d90e4199d69748851ae496b98f97caed07d"
+    },
+    {
+      "file": "frontend/src/features/projects/work-editing-recovery.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "23e54d578e56d1f7cfed7abb03397d2c9bc2b340573a7272f772c240816de056"
+    },
+    {
+      "file": "frontend/src/features/publishing-center/publishing-center-page.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "4f53dd73665ef3b988f22a9d180ff0220a4f4e72339d274bc70f2b55c856caa8"
+    },
+    {
+      "file": "frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "20f57eda32d3dd007d4d8cecbb9f1a3f9b27c88583f48a9cdd17e8ec56d6e64d"
+    },
+    {
+      "file": "frontend/src/features/review/analytics-review-page.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "429acff16e4928aac161abfd12692a404a85ce72518662145e01b3fc9673e88f"
+    },
+    {
+      "file": "frontend/src/features/settings/check-update-card.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "fad9e27e9976f6a7eb6f57684e6f5f463fcf0f9ae4c30ef43c53f1776371505e"
+    },
+    {
+      "file": "frontend/src/features/settings/identity-section.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c6a720d1c03d92100141a5988f863f2ce448c6a766a4232f9abfe9f303ca4336"
+    },
+    {
+      "file": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "0213ffd91b4b3a294c84a213c08a4dcd029085d727bf7ee76cc6fb7fd253a1d2"
+    },
+    {
+      "file": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "893026157c99c6ac4ce73017166088b6f2eac3bee50c924cceefd632c4bcc32b"
+    },
+    {
+      "file": "frontend/src/features/settings/settings-page.test.tsx",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "03de819707041ca88e318be100c5f22f89e1626d5ab10a4b6dfdc27509d671f2"
+    },
+    {
+      "file": "frontend/src/fixtures/selectors/copilot.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "1af6a9acd9f3c665d35e2fce698754b708f15a45b943c3f21fbc3cf4590f533c",
+      "exactRawSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/assets.persistence-client.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "e6abcff4dd8de6482f236239f3b27ba523a7d2ecc0b717cfa023a918e1ccb27f"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/content-calendar.persistence-client.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "94eacf2385fb6c44383c8651935e23f91e598bddead9a465d31efae2e7cc68fb"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "db85139d56f36dca902706e9b2520afb34a4c340beb27950a039f1b9a5af44fd"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "e56243607b7733029710351756a0d141f3346a436f13141b53b875ffcc699f03"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/platform-account.persistence-client.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "fc25e580e0b8a4465e7c08849baf0e7d89c845bc502b5d6cd642368529d6d171"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/publication-cover-bytes.persistence-client.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "69bef43b49d82f2bedba30fecd2c05c31d74571336887fa469dbc77d555c083d"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/publishing.persistence-client.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "18b131ad97a7a206a82508e54d8bf9bafd9d1efc04ab09c1ce3a15c6292f9d4e"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/query-services.contract.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "56c71f0a6c0ba9d685aa6c7d0c6b774e241df06161d2e77c3bc7c629e6154159"
+    },
+    {
+      "file": "frontend/src/server/__module_integration__/search-indexing.persistence-client.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "78aba24ded9c1524d880d6005accecde7e1bfd282b2534ee9730883a6be0558e"
+    },
+    {
+      "file": "frontend/src/server/chat-task-submission.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "2cfceb5b64791020cf7353163087718e037de3b95d44769a19604c0828ea6b04"
+    },
+    {
+      "file": "frontend/src/server/ingestion/chromium-guard.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "13404c74612389cb91b684c09aedd7d480b1a5597336ec7b4c32cbe5743538b6"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ],
+      "sha256": "bbd3b552830a1410ec3b5424eac14e8c3637d6148718ba3cf3a371c3a908693d"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "status": " M",
+      "sha256": "f4811865627a06643b29b687c2168aac1c374c3f9d15a909619382c296622b1f",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-throttle-integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "3ec16fac4cb8519fd553235752f11607819f287267f23e428b903fbd2639f9ea"
+    },
+    {
+      "file": "frontend/src/server/intelligence/share-import-runner.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "f9d47bb34af1ca89a3066b5fbc6b2b2f90169c3375d2b39291c8d23e7a7c85c3"
+    },
+    {
+      "file": "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1248-frozen-system-action-compatibility.md"
+      ],
+      "sha256": "df8a7f33f5d1a13ee88cdf92daa8f24b7edd6be1ac5939ce719b58a5a92b5d0d"
+    },
+    {
+      "file": "frontend/src/server/persistence-client.favorites-diagnostics.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "bdd39a227849cdae8f7611fa2e27da6e396d2eeaec462232d6f4b0029fdaa9cf"
+    },
+    {
+      "file": "frontend/src/server/persistence-client.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "1a894b9ec1d6a63c9ad0036756e01351f0d05020e2d5d4480035c4e244415e04"
+    },
+    {
+      "file": "frontend/src/server/platform-worker-entry.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "5b9adcfa22eba4a7110f3353718685eb4a323f65c8c1a504b9149a184418bd44"
+    },
+    {
+      "file": "frontend/src/server/prepare-chat-reply.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "a95e38179b1b3a4d273729626e4815c2d790bd246299b8f80c8a1ae061db0acb"
+    },
+    {
+      "file": "frontend/src/server/review-insights-worker-entry.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "19e0daa0dbdc3f1e88d5e37c6b866b7af41824a4ad61ad0aa1ea3aefb2377775"
+    },
+    {
+      "file": "frontend/src/server/script-worker-entry.integration.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "f0e8bf86bb789940382d821f4991ef0dbf7bb7c55a127fe573e043f52c8d4d88"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-host.test.ts",
+      "status": " M",
+      "sha256": "de698c7578e48841d20aa12b2ecf2177bdf84e4e34cb20f33f607c75e16b2b9a",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.test.ts",
+      "status": " M",
+      "sha256": "de75b05152de40645b8aa8fe46e2e94cd3e4c17e66c3412c7c6d2a51abc20d56",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-client.test.ts",
+      "status": " M",
+      "sha256": "767f992d66b9943cf1a533766acec40eb9a6e224634b34ff57292e086d0b605e",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-client.ts",
+      "status": " M",
+      "sha256": "5b39a3848dfd22996e0ca8837a68ece88ffbb00d1dbdd12fa881abd30b6e6b2f",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.test.ts",
+      "status": " M",
+      "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-file-recovery.test.ts",
+      "status": " M",
+      "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-native-client.test.ts",
+      "status": " M",
+      "sha256": "0bc4f442631e7d75d5d50e1a6761775d03ec320d6ba0a6e3869e6d70d657d794",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-native-client.ts",
+      "status": " M",
+      "sha256": "89df7926d81f68b8b6dbca54b8b773fd846dc5ab6f7536545144af4bc0e89f01",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-native-host.test.ts",
+      "status": " M",
+      "sha256": "047ada903a4ac6229517722168202a31f5c982b84fd00a2e824af5255a2f077b",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/test/function-key-invariant.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "7536328b661dd23a3047acb4188b1eb044339adcf72c5a41b73b99b3ebde7114"
+    },
+    {
+      "file": "frontend/src/test/icons.test.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "434ca2759fc4a3554724f4f567f3ec6ec2b6756b5be57d4ea2b00cdff08f3e57"
+    },
+    {
+      "file": "frontend/tests/e2e/ai-copilot.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "ee1081b55fa67d5f5dc96322685b46851cc4f239b8c7bd6cb168baea3c1c8d2a"
+    },
+    {
+      "file": "frontend/tests/e2e/ai-reliability-recovery.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "d4ad01c71994a85a0ef092fb4b35e7c0476d760c4a325884b1cf9985e71632f6"
+    },
+    {
+      "file": "frontend/tests/e2e/all-routes.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "48cdddad1504ab12b38af1c48e3e6ae19de61a2e20478724ef229a01ad6ed9dc"
+    },
+    {
+      "file": "frontend/tests/e2e/app-shell.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c8d2e375c76f633da9c8c3111bd46fa5153e804496c23e0132814a4a755e0bc1"
+    },
+    {
+      "file": "frontend/tests/e2e/automations-group-media-jobs.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "f0ff2387eeda60af3624012f4197e5fc7aab8ea353281ea7dbaae50c4d8835e8"
+    },
+    {
+      "file": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "6da58089fc3ea8f2808a30d06ca3d5d568c87cfa0143178708705b1bc3cb2d28"
+    },
+    {
+      "file": "frontend/tests/e2e/experience.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c6710f3e0f6a9df0c4f07cc4f0e69c8baa2514c532033d7c1d7bc6654e3dc682"
+    },
+    {
+      "file": "frontend/tests/e2e/group-skill-customization.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "adf969630fde3f4ce7c3afb1d163b590e8d36d36e7739b89771b9878e39677ab"
+    },
+    {
+      "file": "frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "7d81d7ee70f6bc3767e2582f8ef6847d8692ad59d27107895d9230072af6d937"
+    },
+    {
+      "file": "frontend/tests/e2e/platform-work-catalog.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "ef877df223ada39d3d28b2177907f6682084064a0cd19bc8725713ac1d1fc4be"
+    },
+    {
+      "file": "frontend/tests/e2e/production-broll-remove.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "049b53cdc4a14ef91d369273bc7ecf187890b3894381acbc57203eb0785ba3ef"
+    },
+    {
+      "file": "frontend/tests/e2e/publishing-center.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "c4acc22f735ae02fbe147c7167f9bc48dc162d1d2af3518003d95af964e3acf3"
+    },
+    {
+      "file": "frontend/tests/e2e/recent-data-safety.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "36006f122115eca95d96139d3bd3801b654b8c614f9001f2cccb4237c91ad5a6"
+    },
+    {
+      "file": "frontend/tests/e2e/search.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "598955baac6d7b3527f83617a79a48c7350135a5242f2bd4cb903f3fb205cf7b"
+    },
+    {
+      "file": "frontend/tests/e2e/semantic-material-generation.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "ffc561f3134437778e5f275c2919102522c7cb2573eba4fcb119f3e032b608da"
+    },
+    {
+      "file": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "68300389f35d5a682daa8195fd4e100c5cc5aa46b99ee711cceb0b4acd5f27e5"
+    },
+    {
+      "file": "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "9cab769242f140bd5c48f6b6487c364b615f9f56f67b027170df103c70b69c2d"
+    },
+    {
+      "file": "tools/timeout-policy/check.mjs",
+      "status": " M",
+      "exactSpecPaths": [
+        "docs/features/t1247-timeout-git-inventory-buffer.md",
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ],
+      "sha256": "6ef4e5c873fcd5ac2719a220454ba3ed33be78394b63d3fd7cba5140aaddff13",
+      "exactRawSpecPaths": [
+        "docs/features/t1247-timeout-git-inventory-buffer.md"
+      ]
+    },
+    {
+      "file": "tools/timeout-policy/check.test.mjs",
+      "status": " M",
+      "sha256": "806420ed506a56b28c43641ddc5ce7d70dd362f4ec10be8841b8207211173843",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "ai-worker/src/execution/chat-generation-worker.test.ts",
+      "status": "??",
+      "sha256": "3758fa3b71a58e3a3238467491233f6ae6efa73c3145f449961259dbf88b2fb8",
+      "exactSpecPaths": [
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.md"
+      ]
+    },
+    {
+      "file": "backend/src/application/generation/work-candidate-adoption.integration.test.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "ca6aedb61f5952f77ca5c173a36661a0f7ab54f135978d9f05a0c903a150250b"
+    },
+    {
+      "file": "backend/src/application/generation/work-candidate-adoption.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "ca043888cabefb197cf23e886199266025693814e2bb9f39e8870612dce4cc4a"
+    },
+    {
+      "file": "backend/src/application/generation/work-candidate-projection.test.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "315136a83a3f5b285fb0b498a6a9b32f959d3162cb5ee358cc6b21f4a8a7d0c2"
+    },
+    {
+      "file": "backend/src/application/generation/work-candidate-projection.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "fa23b06a932966d6efc6126fff8d2b1a33be0686f68fa5fede8a41f3fecac926"
+    },
+    {
+      "file": "backend/src/application/generation/work-writing-context.test.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "3b3bba5e304ab6579997cd758205b8868aab6739511f8cb6bed8f9309399334b"
+    },
+    {
+      "file": "backend/src/application/generation/work-writing-context.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "4f86065394bd5f8a091eb49a3b31f19a37b04145c2b08faa47e727b460d96241"
+    },
+    {
+      "file": "backend/src/modules/ai/work-candidate-source.service.test.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "743f17e6e9046e9ccd20989001db31b79442c30d3bdb133749ea54fee07f2a8f"
+    },
+    {
+      "file": "backend/src/modules/ai/work-candidate-source.service.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "4f9e6e5b7035829b3e1b53a817dc6e7d317905c0ea5e94935b403a0e4f54e052"
+    },
+    {
+      "file": "backend/src/test-fixtures/owned-postgres.test.ts",
+      "status": "??",
+      "exactSpecPaths": [],
+      "sha256": "fb34705959fbf9c6760bdcd853ddc28a0f05b25b907b6ac8b76b9fe9aecf6aff",
+      "specExplicitSameDirectoryShortName": "T1246第202行同目录短名"
+    },
+    {
+      "file": "backend/src/test-fixtures/owned-postgres.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "4eb42679bdaf9cef93957472d91a69471f42ac6de57e32a81901d28e3fe61ad0"
+    },
+    {
+      "file": "contract/src/resources/work-candidate-adoption.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "206460200cfc9d09f33140443f9ef2c13df069ed820455e789e960643ad56cc0"
+    },
+    {
+      "file": "contract/src/resources/work-writing-context.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "899c62412286eb5fa5d9b546c195299c4e89c986b50e06c980c216290481fb37"
+    },
+    {
+      "file": "contract/src/work-candidate-adoption.test.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "5b0877bb69f8846ab7a18aea2d33bcb5a6a406bfcd1a776d50d1808bc062795f"
+    },
+    {
+      "file": "frontend/src/components/shell/settings-return-context.test.tsx",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "672ee22873c3ede6a3bb5327712e2e19ec4839d60c788400bcfb4b9e662cda45"
+    },
+    {
+      "file": "frontend/src/components/shell/settings-return-context.tsx",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "2e460372771ac6ed8777e9843ae5811a313a68cd931457de29c5e7128f3cb30e"
+    },
+    {
+      "file": "frontend/src/features/settings/settings-dialog-return.test.tsx",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "a0b4cce33f6d51f1d4091ce9c1ffaf968fe7be1d627e934b72ab31ae03375919"
+    },
+    {
+      "file": "frontend/tests/e2e/settings-return.spec.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md"
+      ],
+      "sha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64"
+    },
+    {
+      "file": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "status": "??",
+      "exactSpecPaths": [
+        "docs/features/t1097-article-director-options-diagnosis.md"
+      ],
+      "sha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "status": " M",
+      "sha256": "14dfcbd3c60737ceef241c172d16bacf68960b6926efd9cda230a91edf672992",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-host.ts",
+      "status": " M",
+      "sha256": "620a03ac625a1f0e5c407f9d9facf4f89c835a2265cd290497b5930919807b55",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "status": " M",
+      "sha256": "402b5e5554568d839a5d9326230dcd7ce4739d70f110d21c5c5827f9709b6e63",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "status": " M",
+      "sha256": "2f2638540072fc79da7d650bc779fee028c557fbc21f03b7e542a8e89f108571",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-native-host.ts",
+      "status": " M",
+      "sha256": "786eec0418c0a199e2cd55061bf3bac23364799c0a89b8aadb0bf7f4a3f7abaf",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    },
+    {
+      "file": "frontend/src/server/workbench-public.integration.test.ts",
+      "status": " M",
+      "sha256": "fea75a5e809e0797d2aca429da3389aa5d9c02676a66748295fb0a560acf4104",
+      "exactSpecPaths": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md"
+      ]
+    }
+  ],
+  "unknownBindings": [],
+  "note": "本次只更新原已绑定source当前SHA；T1252/T1253待实施，最终candidate封存前还需完整source/control/新增tests和bundle/package独立评审。first100与standard4历史类型错误不排除。",
+  "changedSincePreviousPartial": [
+    "backend/src/integration/chat-generation-worker.test.ts",
+    "frontend/src-tauri/src/workbench/browser_ipc.rs",
+    "frontend/src-tauri/src/workbench/ipc.rs",
+    "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+    "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+    "frontend/src/server/workbench-artifact-host.test.ts",
+    "frontend/src/server/workbench-artifact-render.test.ts",
+    "frontend/src/server/workbench-native-host.test.ts"
+  ],
+  "currentUnexpectedModifiedSourcePaths": []
+}

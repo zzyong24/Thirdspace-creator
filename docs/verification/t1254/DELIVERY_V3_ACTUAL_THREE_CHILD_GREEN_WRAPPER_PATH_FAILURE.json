@@ -1,0 +1,191 @@
+{
+  "task": "T-1254",
+  "actualParentSession": 24992,
+  "actualNaturalExecEOF": true,
+  "actualExitCode": 1,
+  "parentFailure": "PREPARED_OWNER_PATH",
+  "actualRun": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa",
+  "actualSummary": {
+    "task": "T-1254",
+    "exitCode": 1,
+    "startedAt": "2026-10-12T07:50:37.651Z",
+    "elapsedMs": 296998.420667,
+    "totalBudgetMs": 19320000,
+    "localSingleBirthMs": 19320000,
+    "inheritedV15Deadline": "2026-10-12T15:56:11.789Z",
+    "steps": 3,
+    "totalSteps": 3,
+    "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6",
+    "records": [
+      {
+        "name": "static-complete-and-faults",
+        "code": 0,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": []
+      },
+      {
+        "name": "native-all-four-verifier",
+        "code": 0,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": []
+      },
+      {
+        "name": "build-entry-prepare-only",
+        "code": 0,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": []
+      }
+    ],
+    "noProductionCopy": true,
+    "noApp": true
+  },
+  "actualFullRawFiles": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/build-entry-prepare-only-command.json",
+      "size": 2383,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "6be3ab4fe4aa7a77938b7067ee8b4e27771074109a52e4e7fe1e3844235eb847"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/build-entry-prepare-only-exit.json",
+      "size": 3183,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "dab4a6584ae08e2841a86773e2ecc0331d25f06847295ea3759d6f202466ea04"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/build-entry-prepare-only-log-archive.json",
+      "size": 198,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "0756a50dfc651f522dd3ddd0a9549b44e69e8b67565d19b663e432848cbf33b5"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/build-entry-prepare-only.log",
+      "size": 156,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "ddc959870b9df93921fa1d49a7d1009c24b38180b9bc0c2ac8823ee164093d17"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/complete-mirror-copies.json",
+      "size": 364777,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "6d5b9abe5e150775b3ade565b481cbebc503cd1f62316b8ebb894083344c9bbd"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/native-all-four-verifier-command.json",
+      "size": 579,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "88b606446d2feb44277a68e8219e6ff599dbc87bb980a74cb873a51f93ae3f5f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/native-all-four-verifier-exit.json",
+      "size": 1376,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "46e52bf3bdfe204d8d749d6ff07c012394636ce4696aee82c4ac193a307a6c7f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/native-all-four-verifier-log-archive.json",
+      "size": 199,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "1a87539dc6e6e3b3ce761f21105c3711385d8215597f38337a1f5a39a353c7db"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/native-all-four-verifier.log",
+      "size": 1855,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "b53999fc4ff96c49b1494c9506c48ed56cdb525b4b77f6679a8d0e59e2e0ea4e"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/owned-root.json",
+      "size": 222,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "3dbf001098c914bb291e643eb73fca59f86ad55914e5f19dd5f5c163de6f2c68"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/review.json",
+      "size": 1220,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "0f335fbaa9b5c8576a4c77b63344c6d9afa23cfcb98bd4420db405ed827c6477"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/runner-error.json",
+      "size": 261,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "226fc38ab15b5e7482d173f7b28f06f893e599e08b20c05e78eb3e94d3bd3e57"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/source-after.json",
+      "size": 571,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "06a12139efaeae8ca4f1be3121ba9ac6492f8d788bc7cd9817d59995755955ad"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/source-before.json",
+      "size": 539,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "5a943cae65019d38d07db1e07442ff1d2c75113c6bda30323ebf78ab6091e4cd"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/static-complete-and-faults-command.json",
+      "size": 766,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "8d75aeb780c013f1d1843ac6e2b009e3e6b221a4e4852a311cd75131e8b93dfc"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/static-complete-and-faults-exit.json",
+      "size": 1566,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "1e69668e247c5ff1a7974c9b66df4d6710bbfbd21457a07c2850af7a7f388943"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/static-complete-and-faults-log-archive.json",
+      "size": 196,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "9822f0b0c8f3d9826ef0e020fad24a3632af310c02b6f8364d4d70cf1d65e5aa"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/static-complete-and-faults.log",
+      "size": 0,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/static-validation.json",
+      "size": 7098,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "3afb9042862a892c2073ecaba41fe8acc4c31a73cf9bfe78352b316168d72c6d"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-validation-9f4bdd0b7db6150e1b31768309508baa/summary.json",
+      "size": 890,
+      "mode": 384,
+      "uid": 501,
+      "sha256": "2f79e7d37f5fdcb81dc13465477922d8cbb2d77279ac59d00d702d4d64ff7342"
+    }
+  ],
+  "childThreeActualClosedExit0": true,
+  "oldMissingProjectionReceiptNotBackfilled": true,
+  "candidateInputBindingUnchanged": true,
+  "childPrepareActualRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/tmp/t1254-rebuild-prepare-TAqiND",
+  "earliestInheritedDeadline": "2026-10-12T13:12:37.651Z",
+  "sourceCopyNotExecuted": true,
+  "threeChildrenNotRerun": true
+}

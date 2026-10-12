@@ -1,0 +1,18 @@
+{
+  "status": "SOURCE_DRAFT_NOT_REVIEWED_NOT_RUN_NOT_APPLIED",
+  "files": [
+    {
+      "file": "docs/verification/t1254/candidates/delivery-tools-v2/verify-doocs-static.mjs",
+      "sha256": "57875f61e4ab8356abe0a803d21ee93807ae355128ac4ea50e17166ba5151c49"
+    },
+    {
+      "file": "docs/verification/t1254/candidates/delivery-tools-v2/verify-native-editors.mjs",
+      "sha256": "aa452bfe9131f3f1b056f56bda6a286daa96b03ab4428857abbcb0793033edf0"
+    },
+    {
+      "file": "docs/verification/t1254/candidates/delivery-tools-v2/build-doocs-request-budget.mjs",
+      "sha256": "511f6118a7bfc0b791dfc3a9a28b12e4031c60f16753502eef4139d862980c86"
+    }
+  ],
+  "openRequirement": "build full source-dependency-dyld closure and final manifest/source-archive schema binding"
+}

@@ -1,0 +1,268 @@
+{
+  "schema": "t1250-native-readonly/v1",
+  "at": "2026-10-11T20:44:21.286378+00:00",
+  "phase": "CONTRACT只读建议；未正式SPEC独评/未BUILD",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "modelIdentity": "unknown/inherited",
+  "records": [
+    {
+      "path": "docs/features/t1250-positive-timeout-consumer-closure.md",
+      "sha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+      "bytes": 19407
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "sha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "bytes": 34919
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "sha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "bytes": 27414
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "sha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "bytes": 17215
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/mod.rs",
+      "sha256": "c8ecef697def879cb1937510679155ff03add7d3c14b24e9f2790766238b3f5e",
+      "bytes": 988
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.toml",
+      "sha256": "48b53dc32c591b2ff41f40f38605c542ec34b844e45b624147a2d9b7f5f5f688",
+      "bytes": 754
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.lock",
+      "sha256": "a2aea4e2b53e7e9aaad471e7fe8daffb450348f83b27e651e0204de1e0546613",
+      "bytes": 8403
+    },
+    {
+      "path": "frontend/src-tauri/Cargo.toml",
+      "sha256": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f",
+      "bytes": 9320
+    },
+    {
+      "path": "frontend/src-tauri/Cargo.lock",
+      "sha256": "1f28d0b8440de395647f3852516a8a4acb913db7a290645a1fa84e8d8a1dcd6f",
+      "bytes": 184349
+    },
+    {
+      "path": "frontend/src-tauri/build.rs",
+      "sha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "bytes": 29608
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser.rs",
+      "sha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e",
+      "bytes": 98879
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "sha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "bytes": 10689
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "sha256": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866",
+      "bytes": 4624
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "sha256": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2",
+      "bytes": 30709
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "sha256": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a",
+      "bytes": 55562
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "sha256": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008",
+      "bytes": 42671
+    }
+  ],
+  "testsByOriginalCfg": [
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "accepted_socket_waits_for_the_authorized_child_to_finish_writing",
+      "line": 467,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "file_journal_replays_original_operation_after_host_restart",
+      "line": 498,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "file_journal_rejects_same_operation_with_changed_request_before_writing",
+      "line": 523,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "file_journal_replay_does_not_overwrite_a_later_version",
+      "line": 540,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "authenticated_peer_can_write_read_and_cannot_escape_task",
+      "line": 561,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "unauthorized_child_probe",
+      "line": 618,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "authorized_child_probe",
+      "line": 635,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "exact_spawned_child_can_connect",
+      "line": 644,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "different_real_process_is_rejected_even_with_socket_path",
+      "line": 659,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "private_socket_runs_reads_and_cancels_mac_process_for_same_task_only",
+      "line": 674,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "private_socket_runs_a_real_packaged_node_task_script",
+      "line": 749,
+      "ignored": true,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "external_node_file_journal_fixture",
+      "line": 811,
+      "ignored": true,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "name": "external_node_files_host_fixture",
+      "line": 830,
+      "ignored": true,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "name": "actual_client_pid_controls_file_access_and_commands_are_absent",
+      "line": 635,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "name": "real_windows_candidate_pipe_command_roundtrip",
+      "line": 662,
+      "ignored": true,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "name": "oversized_screenshot_result_becomes_bounded_error",
+      "line": 266,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "name": "browser_socket_waits_for_delayed_authorized_request_bytes",
+      "line": 286,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "name": "browser_socket_is_separate_and_rejects_unadmitted_requests",
+      "line": 321,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "name": "pid_bound_location_resolves_the_physical_directory_before_backend_lease",
+      "line": 350,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "name": "unauthorized_child_probe",
+      "line": 376,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "name": "different_process_cannot_call_browser_socket",
+      "line": 385,
+      "ignored": false,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "name": "external_node_host_fixture",
+      "line": 403,
+      "ignored": true,
+      "executed": false
+    }
+  ],
+  "counts": {
+    "frontend/src-tauri/src/workbench/ipc.rs": 13,
+    "frontend/src-tauri/src/workbench/ipc_windows.rs": 2,
+    "frontend/src-tauri/src/workbench/browser_ipc.rs": 7
+  },
+  "environmentObserved": {
+    "platform": "当前Mac（工具配置darwin，未跨平台执行）",
+    "rustcVersion": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+    "standaloneCargoLockExists": true,
+    "standaloneTargetAbsent": true
+  },
+  "executed": {
+    "sourceReads": true,
+    "rustcVersionProbe": true,
+    "cargoBuild": false,
+    "rustTests": false,
+    "App": false,
+    "model": false,
+    "PG": false,
+    "browser": false
+  },
+  "permission": "本次只读，仅写此native-readonly报告；未启动任何共享build或协议fixture"
+}

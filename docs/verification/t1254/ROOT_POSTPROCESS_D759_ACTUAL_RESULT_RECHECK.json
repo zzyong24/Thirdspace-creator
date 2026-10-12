@@ -1,0 +1,50 @@
+{
+  "task": "T-1254",
+  "actualProjectionResult": "PASS",
+  "actualWrapperEOF": 0,
+  "summary": {
+    "task": "T-1254",
+    "exitCode": 0,
+    "startedAt": "2026-10-12T08:39:29.831Z",
+    "elapsedMs": 125390.09270899999,
+    "totalBudgetMs": 16387820,
+    "localSingleBirthMs": 19320000,
+    "inheritedDeadline": "2026-10-12T13:12:37.651Z",
+    "records": [],
+    "projectionOnly": true,
+    "noChildReexecuted": true,
+    "noProductionCopy": true,
+    "oldWrapperExitCodeUnchanged": 1
+  },
+  "allFiveRaw": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-postprocess-d7598cc0b19c22378e2b6c70bf0065a0/prepared-results-projection.json",
+      "size": 1351,
+      "sha256": "bf057d32d700daf3731c72100b973e0b667bafe032143437f9cbef9da0026aeb"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-postprocess-d7598cc0b19c22378e2b6c70bf0065a0/review.json",
+      "size": 1654,
+      "sha256": "b548ce026446deb8902510cfabb0c46106cfc8ebe8fa71f9e5017bcaa0d3d5c7"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-postprocess-d7598cc0b19c22378e2b6c70bf0065a0/source-after.json",
+      "size": 1155,
+      "sha256": "fc914fd88b1381c60da8e4cf87503321d406dc7e22f76b932a4c9dde0be315c6"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-postprocess-d7598cc0b19c22378e2b6c70bf0065a0/source-before.json",
+      "size": 1123,
+      "sha256": "da13ea6123f0548ac16361683963417aa79f6f0c01a79e8e37e81bc936ba7d33"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/delivery-postprocess-d7598cc0b19c22378e2b6c70bf0065a0/summary.json",
+      "size": 368,
+      "sha256": "7715cd64c315b121a191c26d8d0b0635f2722a59a5ef3b1ede6e7b3375159477"
+    }
+  ],
+  "sourceBeforeAfterExact": true,
+  "original3NotRepeated": true,
+  "oldWrapperExit1AndMissingKept": true,
+  "noProductionCopy": true
+}

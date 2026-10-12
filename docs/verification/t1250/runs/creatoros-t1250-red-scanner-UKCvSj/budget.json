@@ -1,0 +1,11 @@
+{
+  "declaredLiteralCases": 4,
+  "actualTAPCountSeparate": true,
+  "caseMs": 120000,
+  "childBudgetMs": 960000,
+  "outerMs": 2040000,
+  "psAndSourceReportReserveMs": 720000,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "monotonicSegmentMs": 60000
+}

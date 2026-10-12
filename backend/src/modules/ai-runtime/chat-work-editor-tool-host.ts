@@ -24,7 +24,7 @@ export function createChatWorkEditorToolHost(reader: Pick<ReturnType<typeof crea
         if (context.surface !== 'project' || context.projectId !== target.projectId)
             throw new Error('编导工具未绑定当前明确保存的作品');
         const tools = buildChatTools(definitions.map(tool => tool.name), { humanizeError: () => null, editorTarget: target, readWorkEditor: async (input: WorkEditorReadInput) => { try {
-                return await service.read(frozen.context, target, input);
+                return {...await service.read(frozen.context, target, input),...(frozen.hostContext.resolvedWritingContext?{resolvedWritingContext:structuredClone(frozen.hostContext.resolvedWritingContext)}:{})};
             }
             catch (error) {
                 if (!(error instanceof ConflictError))
@@ -38,7 +38,7 @@ export function createChatWorkEditorToolHost(reader: Pick<ReturnType<typeof crea
                     throw error;
                 return { kind: 'work.editor.candidate', schemaVersion: 1, target, base: target.savedBase, baseDigest: target.documentDigest, candidateDigest: null, summary: input.summary, candidate: null, changes: [], apply: null, imageRequest: null, failureCode: 'conflict', error: error.message };
             } } } as unknown as ChatToolDeps);
-        if (canonicalJson((await prepareChatToolDefinitions(tools)).definitions) !== canonicalJson(definitions))
+        if (canonicalJson((await prepareChatToolDefinitions(tools,{workWritingContext:Boolean(frozen.hostContext.resolvedWritingContext)})).definitions) !== canonicalJson(definitions))
             throw new Error('编导工具定义与任务快照不符');
         signal?.throwIfAborted();
         return tools;

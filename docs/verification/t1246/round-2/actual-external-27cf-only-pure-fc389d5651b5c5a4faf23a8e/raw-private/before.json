@@ -1,0 +1,10 @@
+{
+  "sourceRows": 215,
+  "sourceDrift": 0,
+  "nodeFiles": 82,
+  "nodeLinks": 37,
+  "nodeEdges": 51,
+  "nodeDrift": 0,
+  "nodeGraphSha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+  "actualNoCandidateVerifyOrCollectorInvoked": true
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "readonly-first-failure-diagnosis/v1",
+  "result": "CANDIDATE_REQUIRES_REVIEW_NO_RUNTIME",
+  "binding": "/tmp/t1250-regression-isolation-candidate/source-binding.json",
+  "bindingSha256": "abceccbb11bfe7d2035abaac64fb5901bda14cad47e9e09513c980db6ffcbd4d",
+  "findings": [
+    {
+      "id": "FI001",
+      "case": "T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放",
+      "actual": "全hosts36=29PASS/1FAIL/6原SKIP；open status failed，24.442ms，未进入35s cleanup",
+      "sourceEvidence": "共享db；旧close unknown负例保profile lease且任务仍running；所有fake socket返回同物理profileKey=a×64；acquireInTransaction全局physical-key互斥/getRecoverableWorkerProfile拒活跃同fence恢复",
+      "classification": "新增fixture共用物理身份/数据库污染，高可信静态因果；未采open实际code，不伪造BROWSER_PROFILE_BUSY现场日志",
+      "minimalCandidate": "只新增slow case新建/关闭独立PGlite，其余所有旧负例/heldlease/native回复和断言不改"
+    },
+    {
+      "id": "FI002",
+      "case": "T1250 公共CLI→HTTP→service→Chromium慢checkout及动作超过30秒仍保原session和同key回执",
+      "actual": "全CDP31=30PASS/1FAIL；start HTTP404 account a，2574ms，35s open/acquire和回执均未到",
+      "sourceEvidence": "beforeAll一次stub BASE_URL；setup afterEach unstubAllEnvs恢复原env；第二case cli缺显式BASE_URL走discoverConnection；cleanEnv删CONNECTION_FILE并保HOME，可落默认已安装描述符",
+      "classification": "受控HTTP前置被原afterEach清除确定；不能签共享库账号被删，原第一case只删publications。实际HTTP目标/描述符未采，不读用户descriptor补证",
+      "minimalCandidate": "只新增slow body重新设置现有自有listener/synthetic token四env；runner另需owned不存在CONNECTION_FILE fail-closed安全候选与独评"
+    }
+  ],
+  "runtime": false,
+  "countsNotRewritten": true,
+  "publicSlowNotPassedByFirstFailure": true
+}

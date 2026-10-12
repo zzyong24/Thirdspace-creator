@@ -1,0 +1,17 @@
+{
+  "admitted": true,
+  "toolSha256": "1faf0b55e297a7b2f48263a342ec2145905c300b90028e28dd46758bddabf136",
+  "sourceReportSha256": "3b27a11be9ea12fd8d5169719d449bf234418a34846f4cb547fb7455e02d81f0",
+  "totalMs": 37920000,
+  "at": "2026-10-12T11:03:00.681548+00:00",
+  "rootWholeSourceRead": true,
+  "originalCommandsAndCaseAssertionsUnchanged": true,
+  "fullIndexedSourceResourceAndOriginalProofRowsChecked": 17,
+  "maximumExecutions": 1,
+  "actualOldIgnoredLeafOutputNeverBackfilled": true,
+  "onlyTwoOriginalLeafChecks": true,
+  "noInstalledAppWriteOrExecution": true,
+  "noAppAutomationOrPGAllowed": true,
+  "correctCargoPathVerified": true,
+  "originalSDKUnit20kNotClaimed120k": true
+}

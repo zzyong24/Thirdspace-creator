@@ -1,0 +1,97 @@
+{
+  "at": "2026-10-12T08:16:05.371748+00:00",
+  "kind": "source-only-final-source-audit-candidate",
+  "status": "pending-source-review-and-actual-copy-stage-receipt-schema",
+  "files": [
+    {
+      "path": "docs/verification/t1246/round-2/final-source-audit-candidate/README.md",
+      "sha256": "3be446d60cd3261d8251bafa33dcefc0276b36c92f4efd67029e9e4f10c48f26",
+      "size": 2257
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-source-audit-candidate/STATIC_PARSE_RESULT.json",
+      "sha256": "f16d2708befc6b4fbe426bdc59939e38def10cc7de74948c219df901c9b52dfe",
+      "size": 468
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-source-audit-candidate/audit-source.cjs",
+      "sha256": "162557019cfc099019e46263753b0375e31c3abdb62587f3f6da5c73c86d3e2b",
+      "size": 12929
+    }
+  ],
+  "externalInputs": [
+    {
+      "path": "docs/verification/t1246/round-2/unit/current-exact-source-write-set-partial-latest.json",
+      "sha256": "f5d0e51c21b32800bdbf41852591a16b6368cdd902bb732f43f36336ba8a4d85",
+      "size": 130574
+    },
+    {
+      "path": "docs/verification/t1254/candidates/exact-delivery-v3/DELIVERY_EXACT_FILE_MANIFEST.json",
+      "sha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd",
+      "size": 1201236
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/lineage/original-b994-manifest.json",
+      "sha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+      "size": 1183546
+    },
+    {
+      "path": "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+      "sha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+      "size": 9823
+    },
+    {
+      "path": "docs/features/t1246-integrated-dev-package-acceptance.md",
+      "sha256": "fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a",
+      "size": 45329
+    },
+    {
+      "path": "docs/features/t1097-article-director-options-diagnosis.md",
+      "sha256": "8221447156d8ae0194ab343cde1413a378e2fa18a552dbf869b576b5eb26b232",
+      "size": 28836
+    },
+    {
+      "path": "docs/features/t1248-frozen-system-action-compatibility.md",
+      "sha256": "a815e5da23ef92579ae722ba9bd4227259d0bb9d14960d6c9dffa626395195de",
+      "size": 10945
+    },
+    {
+      "path": "docs/features/t1249-durable-chat-current-receipts.md",
+      "sha256": "627e62fa21b4a46e672b99ba3ac647437c03294f2b65fa004abdc60c093f7339",
+      "size": 2642
+    },
+    {
+      "path": "docs/features/t1247-timeout-git-inventory-buffer.md",
+      "sha256": "56a28107d562949c983d196a73867c82583ff3633c46eb64cba02cb2fd15c09f",
+      "size": 2450
+    },
+    {
+      "path": "docs/features/t1250-positive-timeout-consumer-closure.md",
+      "sha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+      "size": 19407
+    },
+    {
+      "path": "docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+      "sha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84",
+      "size": 8240
+    },
+    {
+      "path": "docs/features/t1252-cli-http-consumer-budget-closure.md",
+      "sha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+      "size": 16428
+    },
+    {
+      "path": "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+      "sha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484",
+      "size": 14014
+    }
+  ],
+  "auditScriptSha256": "162557019cfc099019e46263753b0375e31c3abdb62587f3f6da5c73c86d3e2b",
+  "candidateModuleOrGitOrAuditExecuted": false,
+  "oldPartialF5d0Preserved": true,
+  "onlyT1254Writes73Deletes53AdditionalScope": true,
+  "finalSourcePassNotClaimed": true,
+  "actualCopyAndStageBeforeExecutionRequired": true,
+  "actualReceiptSchemaAndExactSHAStillPending": true,
+  "newFinalAuditFileOnly": true
+}

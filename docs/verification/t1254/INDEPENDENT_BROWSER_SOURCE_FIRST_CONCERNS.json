@@ -1,0 +1,50 @@
+{
+  "schema": "independent-browser-source-review/v1",
+  "task": "T-1254",
+  "at": "2026-10-12T02:35:07.855977+00:00",
+  "result": "CONCERNS_SOURCE_SUPPORTED_MARKDOWN_ONLY",
+  "sourceSha256": "014a276cb46db9c217516367626d869112aa94162f8b309743a8c46012fce9ba",
+  "fullSourceRead": true,
+  "sourceArchived": "docs/verification/t1254/browser-review-history/014a-first-concerns/doocs-public.spec.ts",
+  "consumers": [
+    {
+      "path": "frontend/src/features/article/doocs-markdown.ts",
+      "sha256": "1e12a602e5b28d5d50c57920a986d14ff5b263d6b09bca6a42045c3c7dcc2aa8"
+    },
+    {
+      "path": "frontend/src/features/article/doocs-article-editor.tsx",
+      "sha256": "18756ac113c0eff92714d7cef592faa6362a25376059f90c703d7100f0503877"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "sha256": "51d9d93625b0bc7936e2dab01801ee6750266e09d9408a4027babfe757d1ebf4"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/reference-editor-media.ts",
+      "sha256": "831f3355d3abb908af63ff49b00bc105c1bbe5ab11b77c1cf9437344f5bf6194"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-surface.tsx",
+      "sha256": "7a8b3b2c37a78a568940b4c5a8ae35ac111ba7cd215da20e835c5fca269ce879"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-loader.ts",
+      "sha256": "ab09e9b6eace951ca14559b62c01db0f8496d56a11d6e3562d7d28a2cc7acf29"
+    }
+  ],
+  "finding": {
+    "id": "T1254-BR001",
+    "kind": "静态源输入不满足当前真实业务合同；未实际执行，不登记runtime FAIL",
+    "trigger": "body.fill('# 实际原生编辑\\n\\n本段由浏览器真实CodeMirror输入。')删除当前全部creatoros-section markers",
+    "consumer": "parseArticleMarkdown 首非空行必须是原marker，seen严格覆盖且仅允许expectedIds；receiveChanged与saveEditorDraft都会documentFromSnapshot调用parser",
+    "result": "无法按正常保存链通过，生产拒绝保持有效",
+    "requiredNarrowFix": "从本owned当前稿件真实sections或实际UI markup保留完整真实section marker/id集合，只编辑用户正文，不改parser/生产/原权限或伪造ID"
+  },
+  "existingProofBoundaries": [
+    "STATIC_PARSE/types0不证明输入合法或selectors已实际通过",
+    "未有新delivery/commit/package/clone/runtime封印，不运行两body",
+    "App/官方模型待验"
+  ],
+  "reviewerChangedProduction": false,
+  "reviewerRanBrowser": false
+}

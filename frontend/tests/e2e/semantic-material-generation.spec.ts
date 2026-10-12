@@ -140,6 +140,8 @@ test("图片按确认稿需要预填多个候选，视频默认预填一个候�
   await page.setViewportSize({ width: 1024, height: 768 });
   // 最小窗口会按既有响应式规则收起右栏；从侧栏真实入口重新打开同一 Copilot。
   if (!(await imageButton.isVisible())) {
+    const expandSidebar = page.getByRole("button", { name: "展开侧栏", exact: true });
+    if (await expandSidebar.isVisible()) await expandSidebar.click();
     await page.getByText("打开 AI 助手", { exact: true }).click();
   }
   await expect(imageButton).toBeVisible();

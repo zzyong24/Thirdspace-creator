@@ -1,0 +1,40 @@
+{
+  "schema": "t1253-independent-http-observation-tool-budget-review/v1",
+  "scope": "PASS_TOOL_BUDGET_ONLY_CURRENT_PRIVATE_CANDIDATE",
+  "tool": {
+    "path": "/tmp/t1253-candidate/run-http-permission-observation-whole25.cjs",
+    "sha256": "748f02c7848ba950ea0d4fb196187609720dd77c4f4a2fc21842a3ab6f34068b"
+  },
+  "candidateHashes": [
+    "f9fe46310f1f18a5185a4bc56c84cf3906bb27e13f8c734ee0e35fd722d72bc0",
+    "44be1b5c2e3834bcc957aa6330a5d3065f8f985a7d480bcc95b65347a525ddd0"
+  ],
+  "specSha256": "093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19",
+  "prepareSourceDigest": "f63f0ae63ee6c1ebccf5833a323d8d4eef8850ac089d4d3a55152db922e003a3",
+  "prepareToolDigest": "ffc6b7ada9a61d85943d3ffae3bd349b53deb3b79e6f52077a655b56f85797ef",
+  "inputCount": 3035,
+  "executionReadyAtPrepare": false,
+  "slots": {
+    "body": 15300000,
+    "prepare": 2400000,
+    "cleanup": 1200000,
+    "processCleanup": 4320000
+  },
+  "perChildLifecycleMs": 2160000,
+  "prepareCompleteBudgetMs": 4560000,
+  "totalBudgetMs": 23220000,
+  "fullBodyNotMinShrunk": true,
+  "outerStartsBeforePositiveBinding": true,
+  "finiteOuterWithinNodeTimerRange": true,
+  "originalModeAssertionsAndStimulusUnchanged": true,
+  "noPGNoAppSharedDistExclusive": true,
+  "reviewerExecutedRuntime": false,
+  "findings": [],
+  "runtimePermissionByReviewer": false,
+  "boundaries": [
+    "必须parent精确准入并apply两candidate后fresh重算executionReady/source/tool",
+    "本次只核已授权whole25正执行与两child完整lifecycle，不签未可达types分支",
+    "旧18.06M当场17/8事实保，旧helper余槽缺口不回签",
+    "第三child权限/代价/原unknown状态仍依新当HTTP实际证据，不从预算推断"
+  ]
+}

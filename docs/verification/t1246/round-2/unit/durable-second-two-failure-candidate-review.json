@@ -1,0 +1,57 @@
+{
+  "task": "T-1249",
+  "preparedAt": "2026-10-11T19:53:06.306461+00:00",
+  "originalCandidateSha": "50cf523285a5bdf5efcd37342f5b7aef61c2a8747dea9c57bef0b6b87ea6158f",
+  "temporaryCandidate": "/tmp/t1246-unit/durable-projection-two-case-candidate.test.ts",
+  "candidateSha": "6c5bb19192fd7bf258896cbe588a1502da2d4cfed44869548cab4c2cd393209e",
+  "productChanged": false,
+  "testFileChanged": false,
+  "testsExecuted": false,
+  "sourceBindings": [
+    {
+      "file": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "sha256": "50cf523285a5bdf5efcd37342f5b7aef61c2a8747dea9c57bef0b6b87ea6158f"
+    },
+    {
+      "file": "ai-worker/src/runtime/chat/chat-pi-loop.ts",
+      "sha256": "4f26ac95534c041bd042d9d43d24feff13d64092f837c4b1435640eb25aba001"
+    },
+    {
+      "file": "ai-worker/src/execution/chat-worker-run.ts",
+      "sha256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434"
+    },
+    {
+      "file": "ai-worker/src/execution/durable-stream-model.ts",
+      "sha256": "deea4d1917c3ebbb296728ac80802570609c1b5113469a63c3005894a4c42f6e"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44"
+    },
+    {
+      "file": "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+      "sha256": "169dce7d1fce78eb198f72a56697515984a6d6a073c8a7d995c9f4f1742ec65f"
+    }
+  ],
+  "actualSecondResult": {
+    "log": "docs/verification/t1246/round-2/unit/durable-current-projection-second.txt",
+    "json": "docs/verification/t1246/round-2/unit/durable-current-projection-second.json",
+    "cases": 8,
+    "passed": 6,
+    "failed": 2,
+    "exit": 1
+  },
+  "findings": [
+    {
+      "case": "completed",
+      "cause": "Pi明确实现chat-pi-loop.ts:158-159遇tool-call立即push工具part；回合消费结束后:163把累积text追加到parts末。durable-stream-model.ts:224-235在text-start首次事件即创建content项，后收到tool-call才追加；backend/chat-receipt-projection.ts:30-52保持provider receipt.content原序。两者文本/工具同完整，不是SDK未知排序。",
+      "proposedChange": "仅completed以独立literal核原provider receipt、Worker五个完整parts和正式消息五个完整parts各自原序，精确数据/工具输入/真实callId/可信__creatorosOutcome；不排序/过滤字段/用生产helper生成expected。原一般其它五正族比较保留。"
+    },
+    {
+      "case": "denied",
+      "cause": "chat-pi-loop.ts:212-213明确decision denied后Worker part为output-denied且approval false；backend applyChatToolOutcome:110-114同output-denied。原candidate approval-responded仍是过时中间态。",
+      "proposedChange": "只Worker终态expect改output-denied，并加强原read-1真实模型call关联approvalID/原参数/assert；原execute0/HTTP2/ledger3/spent10/原permission fence/replay/parentpartial/partialNotice全部保持。"
+    }
+  ],
+  "approvalRequired": "parent actual diff narrow review; not applied or run"
+}

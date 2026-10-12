@@ -1,3 +1,4 @@
+import {writingContext,resolvedWritingContext} from './work-writing-context';
 import {z} from 'zod';
 import {articleDocument} from './articles';
 import {graphicPostDocument} from './graphic-posts';
@@ -21,7 +22,7 @@ const common={schemaVersion:z.literal(1),projectId:id,outputId:id,documentDigest
 const artifactBase=z.object({kind:z.literal('artifact'),artifactId:id,versionId:id}).strict();
 const productionBase=z.object({kind:z.literal('production'),productionId:id,revision:integer}).strict();
 export const workEditorTarget=z.discriminatedUnion('owner',[
- z.object({...common,owner:z.literal('wechat_article'),contentType:z.literal('article'),savedBase:artifactBase,selection:articleSelection}).strict(),
+ z.object({...common,owner:z.literal('wechat_article'),writingContext:writingContext.optional(),contentType:z.literal('article'),savedBase:artifactBase,selection:articleSelection}).strict(),
  z.object({...common,owner:z.literal('graphic_post'),contentType:z.literal('image'),savedBase:artifactBase,selection:graphicSelection}).strict(),
  z.object({...common,owner:z.literal('production'),contentType:z.literal('video'),savedBase:productionBase,selection:nativeSelection}).strict(),
 ]);
@@ -79,7 +80,7 @@ export const workEditorApply=z.discriminatedUnion('operation',[
  z.object({operation:z.literal('applyProductionEditor'),outputId:id,body:z.object({expectedRevision:integer,edits:z.array(z.object({type:z.literal('replaceNativeSceneTracks'),sceneId:id,expectedBeforeDigest:workEditorDigest,tracks:z.record(z.string(),z.json())}).strict()).min(1)}).strict()}).strict(),
 ]);
 export const workEditorCandidate=z.object({kind:z.literal('work.editor.candidate'),schemaVersion:z.literal(1),target:workEditorTarget,base:workEditorBase,baseDigest:workEditorDigest,candidateDigest:workEditorDigest.nullable(),summary:z.string(),candidate:workEditorCompleteCandidate.nullable(),changes:z.array(workEditorChange),apply:workEditorApply.nullable(),imageRequest:workEditorImageRequest.nullable(),failureCode:z.string().nullable(),error:z.string().nullable()}).strict();
-export const workEditorContext=z.object({kind:z.literal('work.editor.context'),schemaVersion:z.literal(1),target:workEditorTarget,base:workEditorBase,baseDigest:workEditorDigest,selection:z.union([articleSelection,graphicSelection,nativeSelection]),readScope:z.record(z.string(),z.json()),selected:z.array(z.record(z.string(),z.json())),documentSummary:z.record(z.string(),z.json()),document:workEditorCompleteCandidate.nullable(),projectEnvelope:z.record(z.string(),z.json()).nullable(),media:z.array(z.record(z.string(),z.json())),sourceTranscripts:z.array(z.record(z.string(),z.json())),capabilities:z.record(z.string(),z.json()),fieldWindow:z.object({offsetUtf16:integer,totalUtf16:integer,fieldDigest:workEditorDigest,text:z.string(),hasMore:z.boolean(),nextOffsetUtf16:integer.nullable()}).strict().nullable(),complete:z.boolean(),failureCode:z.string().nullable(),error:z.string().nullable()}).strict();
+export const workEditorContext=z.object({kind:z.literal('work.editor.context'),schemaVersion:z.literal(1),target:workEditorTarget,resolvedWritingContext:resolvedWritingContext.optional(),base:workEditorBase,baseDigest:workEditorDigest,selection:z.union([articleSelection,graphicSelection,nativeSelection]),readScope:z.record(z.string(),z.json()),selected:z.array(z.record(z.string(),z.json())),documentSummary:z.record(z.string(),z.json()),document:workEditorCompleteCandidate.nullable(),projectEnvelope:z.record(z.string(),z.json()).nullable(),media:z.array(z.record(z.string(),z.json())),sourceTranscripts:z.array(z.record(z.string(),z.json())),capabilities:z.record(z.string(),z.json()),fieldWindow:z.object({offsetUtf16:integer,totalUtf16:integer,fieldDigest:workEditorDigest,text:z.string(),hasMore:z.boolean(),nextOffsetUtf16:integer.nullable()}).strict().nullable(),complete:z.boolean(),failureCode:z.string().nullable(),error:z.string().nullable()}).strict();
 export type WorkEditorReadInput=z.input<typeof workEditorReadInput>;
 export type WorkEditorProposeInput=z.infer<typeof workEditorProposeInput>;
 export type WorkEditorCandidate=z.infer<typeof workEditorCandidate>;

@@ -55,6 +55,7 @@ vi.mock("next/link", () => ({
 // (Settings module Step 5). Stub both so the structural render runs
 // without a Next router context or a real HTTP transport.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
   useRouter: () => ({
     refresh: vi.fn(),
     push: vi.fn(),

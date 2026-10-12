@@ -1,0 +1,50 @@
+{
+  "source9ActualListBytesMatch": true,
+  "rows": [
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "currentSha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1",
+      "actualListedCopySha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "currentSha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "actualListedCopySha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "currentSha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b",
+      "actualListedCopySha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "currentSha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8",
+      "actualListedCopySha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "currentSha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "actualListedCopySha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-routes.spec.ts",
+      "currentSha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "actualListedCopySha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+      "currentSha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c",
+      "actualListedCopySha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "currentSha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865",
+      "actualListedCopySha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+      "currentSha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453",
+      "actualListedCopySha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453"
+    }
+  ]
+}

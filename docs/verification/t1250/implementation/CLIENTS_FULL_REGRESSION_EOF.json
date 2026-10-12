@@ -1,0 +1,20 @@
+{
+  "scope": "T1250客户端原完整19body真实回归",
+  "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/ct1250-regression-clients-guXGbM",
+  "tests": {
+    "numTotalTests": 19,
+    "numPassedTests": 19,
+    "numFailedTests": 0,
+    "numPendingTests": 0
+  },
+  "resultSha256": "5362f84c75668ae6f9c91ace77f8a81bc9c1491494695d1fe666e267423322f6",
+  "exitCode": 0,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "sourceInputUnchanged": true,
+  "outerExhausted": false,
+  "limits": [
+    "不签全公共host/render/CDP/Rust/Gate",
+    "未启动App/模型/PG"
+  ]
+}

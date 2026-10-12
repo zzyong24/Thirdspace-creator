@@ -1,0 +1,16 @@
+{
+  "pid": 8053,
+  "label": "test",
+  "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/target/debug/deps/creatoros_workbench_test-4492fe5165c214f3",
+  "args": [
+    "browser_ipc::tests",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "code": 0,
+  "signal": null,
+  "error": null,
+  "closeAt": "2026-10-11T21:59:04.073Z",
+  "stdioClosed": true,
+  "logClosedAt": "2026-10-11T21:59:04.073Z"
+}

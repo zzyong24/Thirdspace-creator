@@ -1,0 +1,150 @@
+{
+  "schema": "independent-tool-narrow-recheck/v1",
+  "task": "T-1252",
+  "at": "2026-10-12T01:03:07.643849+00:00",
+  "result": "PASS_TOOL_COLLECTION_SCOPE_AND_SHORT_SOCKET_ONLY",
+  "tool": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/launch.cjs",
+    "sha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af"
+  },
+  "binding": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/input-binding.json",
+    "sha256": "978bd84566b88c8512cf5e75ceed60fc034775207dc99f3cbd4774a5822d3360"
+  },
+  "handoff": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/HANDOFF.json",
+    "sha256": "3b74aedce407291d6181f5a76c63462909e3f499beb2d2974103e1797da806df"
+  },
+  "staticProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/STATIC_CONFIG_AND_SHORT_SOCKET_PROOF.json",
+    "sha256": "d5a9e4da24902bbf5c6c4e005fc30548359c7b40c632b26b652ee80f8e60cc63"
+  },
+  "generatedConfig": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/STATIC_GENERATED_CONFIG.mts",
+    "sha256": "f72adf2b43d0a79d546a980b9980cc25fc4bb022c77b7181e77575c9c1796b00"
+  },
+  "previousActualBinding": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/history/32468-5d62-actual-collection0body-failed/input-binding.json",
+    "sha256": "5d62c13de340a088e612d657b422298c0026a4ad37d813d4c459c2ab884e0714"
+  },
+  "findingClosure": {
+    "PT002": "resolved in candidate: actual merged config explicitly assigns test.include to sole private path and both list/run CLI receive exact private testPath. Actual future collection/body still untested.",
+    "socket": "preflight only: native Bind cw-32hex/workbench.sock strict >=104 bytes matches new phase root UTF8 guard; original long TMP never reached Native failure in first run."
+  },
+  "inputArraysDelta": {
+    "inputs": [
+      {
+        "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+        "before": {
+          "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+          "sha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9"
+        },
+        "after": {
+          "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+          "sha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af"
+        }
+      }
+    ],
+    "installedInputs": [],
+    "browserInputs": []
+  },
+  "handoffArtifactChecks": [
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "actual": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+      "expected": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/prepare.cjs",
+      "actual": "c95cf85e40ca4993cde3d74b8baa9151c9c90d50b62ce51a3b614fbaad088b10",
+      "expected": "c95cf85e40ca4993cde3d74b8baa9151c9c90d50b62ce51a3b614fbaad088b10"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/budget.cjs",
+      "actual": "6d69a3f2799c3a00730f72bcbe5a59d91eb94c9fad6a2313c6cd916a57a5c8e1",
+      "expected": "6d69a3f2799c3a00730f72bcbe5a59d91eb94c9fad6a2313c6cd916a57a5c8e1"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/copy-source.cjs",
+      "actual": "2274e942f735e2c517e7dc635004a0694956a9ea69b85d611f4e07c221e05b18",
+      "expected": "2274e942f735e2c517e7dc635004a0694956a9ea69b85d611f4e07c221e05b18"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/README.md",
+      "actual": "9d95def49d2fea10484a09bd4efed21a91f551e3d0a849487aba82298a0ba716",
+      "expected": "9d95def49d2fea10484a09bd4efed21a91f551e3d0a849487aba82298a0ba716"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/STATIC_COPY_BUDGET_PROOF.json",
+      "actual": "772f944e8f69f9b351e61322578bbf75b3d554c366057c5547c2afcb45486b91",
+      "expected": "772f944e8f69f9b351e61322578bbf75b3d554c366057c5547c2afcb45486b91"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/generated/public-native-render.test.ts",
+      "actual": "5c4133785470cf5b838858f8745e4ad5edaf9614995b65542301b8e45e908e45",
+      "expected": "5c4133785470cf5b838858f8745e4ad5edaf9614995b65542301b8e45e908e45"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/generated/copy-proof.json",
+      "actual": "4c2533d3c07e7603bfdf94bc517d930ac0d8b8d11e9742f9fb95d0e8d172d3a4",
+      "expected": "4c2533d3c07e7603bfdf94bc517d930ac0d8b8d11e9742f9fb95d0e8d172d3a4"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/input-binding.json",
+      "actual": "978bd84566b88c8512cf5e75ceed60fc034775207dc99f3cbd4774a5822d3360",
+      "expected": "978bd84566b88c8512cf5e75ceed60fc034775207dc99f3cbd4774a5822d3360"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/check-private-config.cjs",
+      "actual": "d2bac82ae30d337568f693c631fcfffd2e9becaa4d10c2ea8a058373981232d4",
+      "expected": "d2bac82ae30d337568f693c631fcfffd2e9becaa4d10c2ea8a058373981232d4"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/STATIC_GENERATED_CONFIG.mts",
+      "actual": "f72adf2b43d0a79d546a980b9980cc25fc4bb022c77b7181e77575c9c1796b00",
+      "expected": "f72adf2b43d0a79d546a980b9980cc25fc4bb022c77b7181e77575c9c1796b00"
+    },
+    {
+      "path": "docs/verification/t1252/public-runtime-tool/STATIC_CONFIG_AND_SHORT_SOCKET_PROOF.json",
+      "actual": "d5a9e4da24902bbf5c6c4e005fc30548359c7b40c632b26b652ee80f8e60cc63",
+      "expected": "d5a9e4da24902bbf5c6c4e005fc30548359c7b40c632b26b652ee80f8e60cc63"
+    }
+  ],
+  "preserved": {
+    "sourceCandidateSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+    "generatedSha256": "5c4133785470cf5b838858f8745e4ad5edaf9614995b65542301b8e45e908e45",
+    "outerMs": 170400000,
+    "collectMs": 240000,
+    "selectedCases": [
+      {
+        "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+        "bodyMs": 80040000
+      },
+      {
+        "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+        "bodyMs": 36000000
+      },
+      {
+        "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+        "bodyMs": 42000000
+      }
+    ],
+    "oldOriginalTaskD": 60000,
+    "newTaskD": 36000000,
+    "allBodyBudgetGeneratorOtherInputsSame": true
+  },
+  "actualConsumerProof": [
+    "Vitest re-export actual Vite mergeConfig concat remains; final resolved.test.include assignment replaces only that field without mutating original base include.",
+    "CLI file argument flows to parsedFilters→project.globTestFiles filter; config unique include plus file filter is real double file-scope gate before test name filtering.",
+    "realpath(/tmp) fresh mkdtemp t1252p prefix keeps controlled phase dirs short; all phase TMP/TEMP/TMPDIR exactowned. Guard computes future cw+32hex/workbench.sock UTF8 bytes before spawning child, matching actual ipc.rs:405-424.",
+    "原17 setup/resume/conflict + automatic1独立Native、8原HTTP、3正文及body/generator/170.4M完整entry/240k collect原样，未加预算洗首轮红。"
+  ],
+  "findings": [],
+  "fullClosureStatement": "本次逐数组比较旧5d62与新978bd仅唯一launcher SHA变化，installed111831与browser337条目完全相同；核12 handoff字节。此前7201与ROOT完整逐流及83BEIDafterSame历史仍保留。本次未再读取2.46GB全文件，不伪称第二fullstream。",
+  "history": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/INDEPENDENT_PUBLIC_COLLECTION_FIRST_DIAGNOSIS.json",
+    "sha256": "67b06adf86be776fd913e9a2ed19a80f6fe83f807b684ee0e10231353a978b6b"
+  },
+  "runtimePermissionByReviewer": false,
+  "reviewerExecutedLauncherOrChild": false
+}

@@ -1,0 +1,57 @@
+{
+  "mode": "CANDIDATE_ONLY_NOT_APPLIED_OR_EXECUTED",
+  "originalFile": "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+  "originalSha256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+  "priorCandidateSha256": "486d768344e043acec73d31de1475f930cb04e34b8f861c6031eb48672bebbed",
+  "candidate": "/tmp/t1246-unit/b029-explicit-limits-group-candidate.test.ts",
+  "candidateSha256": "0a6bbc9d52f059426d832da2459db44b4c77ff56ffaadd71484758f68c11e191",
+  "narrowDiff": "/tmp/t1246-unit/b029-explicit-limits-group-candidate.diff",
+  "scope": "仅原public accounts.createAccount真实新账号，nextId acct回原字面ID保ctx；该service事务registerAccount建立真实legacygroup/membership，原forAccount/get读回核对；不SQL插账号/改budget。不造bounded selector，公共spec.params显式continuous限制20/10/8与100000冻结。",
+  "expectations": "全部原3body success/partial/request6,5,4/token/call/fullsnapshot/采纳/CAS/secret断言原样，新增冻结budget真实读回精确20,10,8与原180000deadline；不以deps.budget或helper返回冒充冻结",
+  "priorActualFailure": "decoder私有whole0/3：20真实采纳缺group、10/8continuous null限制导致succeeded；保该真实0/3及首轮所有失败",
+  "productionAndOriginalChanged": false,
+  "testsExecuted": false,
+  "sourceBindings": [
+    {
+      "file": "backend/src/modules/ai-runtime/agentic-business-execution.service.ts",
+      "sha256": "168a966a2ba914e3a989b12bbe311062876055e09281a142d0b55a8b253c403b"
+    },
+    {
+      "file": "backend/src/modules/platform-account/account-group.service.ts",
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/agentic-browser-worker.integration.test.ts",
+      "sha256": "90c01621c19fdab72d3b51b3b9651dc768c14eea316baaebff5168d8d0f3a038"
+    },
+    {
+      "file": "contract/src/internal/execution-worker.ts",
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-authority.service.ts",
+      "sha256": "a5f3d6d968c092686be596a95e5784bd720f22525b6b029fe4b346fab9f2c195"
+    },
+    {
+      "file": "backend/src/modules/platform-account/platform-account.service.ts",
+      "sha256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599"
+    },
+    {
+      "file": "backend/src/modules/platform-account/platform-account.repository.ts",
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    }
+  ],
+  "consumers": [
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-business-execution.service.ts",
+      "lines": "41-43、62-66",
+      "fact": "公共spec.params.maxSteps/maxTokens经正整数optionalLimit进入continuous numeric limits，旧deps.budget不作强制默认cap"
+    },
+    {
+      "path": "backend/src/modules/platform-account/platform-account.service.ts",
+      "lines": "181-205 / account-group.service.ts71-78",
+      "fact": "真实createAccount同行registerAccount写真实account/group/membership；候选同服务get/forAccount证明parent关联"
+    }
+  ],
+  "priorUnexecutedDirectSeedCandidateSha256": "d9f63df3a8958ec7d42d9b7baa78dda9f7016885a243417523a2786a476f71c2"
+}

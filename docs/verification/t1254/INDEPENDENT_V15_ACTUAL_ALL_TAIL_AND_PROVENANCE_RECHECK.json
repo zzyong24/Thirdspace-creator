@@ -1,0 +1,47 @@
+{
+  "task": "T-1254",
+  "status": "ACTUAL_V15_RESULTS_AND_OUTPUTS_RECHECK_PASS",
+  "at": "2026-10-12T06:50:31.972742+00:00",
+  "nonce": "668b429310740f9889089f8c6c3f0d26",
+  "actualFactsSha256": "0b7e01654d89f50e587d189de3f072b6da69287189054ac1439c7d52360dc895",
+  "summarySha256": "ce58122bc48da4bcc9df66d580ca423ab2d2c9e4def1d4e7ce2977086c5511d7",
+  "actualEvidenceCount": 64,
+  "actualSourceArchivePatchCount": 4,
+  "readRawBytes": 117727514,
+  "drift": [],
+  "actualClosedChildren": 9,
+  "allClosedGroupEmpty": true,
+  "bothIndependentWholeOriginal9Passed": true,
+  "realOldGraphMainPromiseFailureNotFakeChildExit1": true,
+  "realNewFullMainGreen": true,
+  "actualPathnameFamilies": 7,
+  "scannerJS": 485,
+  "scannerFailures": 0,
+  "actualGeneratedOutputFileCounts": {
+    "native": 395,
+    "static": 300
+  },
+  "fullTwoActualSourceArchiveContents": [
+    {
+      "role": "native",
+      "regular": 819,
+      "symlinks": 0,
+      "exactArchiveCurrentSourceBytesModeAndFullFileSet": true
+    },
+    {
+      "role": "static",
+      "regular": 801,
+      "symlinks": 3,
+      "exactArchiveCurrentSourceBytesModeAndFullFileSet": true
+    }
+  ],
+  "threeOriginalGitChecksActualExit0": true,
+  "sourceBeforeAfterArraysExactlyEqual": true,
+  "sourceAfterDigest": "e0a4f71454a2e794a2fdc2cd0cb46cb78773360de6ce29c24833dc6ee3c397ce",
+  "toolsAfterDigest": "4deaac8de48aab3c60d6028a41362f6df14cbf7b7847e17d179793e2dda37dc8",
+  "priorFailedWrappersOrMissingReceiptsNotRewritten": true,
+  "deliveryAcceptanceStillPending": true,
+  "App": false,
+  "reviewerExecutedOrAppliedSource": false,
+  "reviewHarnessFirstAttempt": "只读审计原Nine结果passed实际为boolean，首harness误按计数9要求导致AssertionError/exit1；已按真实schema严格passed is True并逐9case passed核，未候选执行或source改写。symlink行实际只含link，不虚构mode字段。"
+}

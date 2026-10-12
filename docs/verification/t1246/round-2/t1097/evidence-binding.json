@@ -1,0 +1,197 @@
+{
+  "kind": "T1097-implementation-evidence",
+  "head": "533224f334c43cdb81a344424e420cad93784dd1",
+  "files": [
+    {
+      "path": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "sha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e"
+    },
+    {
+      "path": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "sha256": "2845504e56e4a180b3794f79bf63a2f07d0465d5cb2b6315bbc7d18410ba6f77"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/verification/t1246/round-2/t1097/assembly-inventory-diagnosis.log",
+      "sha256": "70c868c8251ea45e492eb7cdb4c48c2435ec64fe58149cf938aa63281ccb4969"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/backend-broad-first.log",
+      "sha256": "53fd83f5462e3b674d20d582029a34cc87142dcd4ab45522347bb71456f13fe3"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/backend-broad-second.log",
+      "sha256": "68c0aca84b70ef4c71b20eda514a791941368b0769f2ed019383a7c32c8b5a4d"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/backend-broad-third.log",
+      "sha256": "fcc52889aaf9cca0dccffe7ed36a6d326830def3e1d7aad1df4d001ae3ed3109"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/backend-types-current.log",
+      "sha256": "ee666ac4a9f23467637d1ee95b6fd4fa411d2738a74fb7bf3ecc22e4fb88c3ed"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/backend-types-final.log",
+      "sha256": "eb6397bda25131c220dca5718fdbb40413302c10fd98cb550a54b53e6c0d9703"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/backend-types-second.log",
+      "sha256": "f09cefee168d867d807b45007d96f7f8dbf5787bc81bf8a318a2feab354cad16"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/backend-types-third.log",
+      "sha256": "f09cefee168d867d807b45007d96f7f8dbf5787bc81bf8a318a2feab354cad16"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/contract-broad-first.log",
+      "sha256": "5cce07ea6c2d23281677a65a85c60e3c8a48943bffa359964c95ce143080fe80"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/contract-broad-second.log",
+      "sha256": "d4de51bd9b1683387d966e5044a1364740673b4e599501f5f41d5ce0733cef79"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/contract-green.log",
+      "sha256": "ebed879ad18203551f69f0ee33ee32d1b64be500c6d5b04ab11a4c7433a46a71"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/contract-red.log",
+      "sha256": "bd5f1efa2ac393fdba61ed62fb0cf40850c5b1daa28b1cce050ac191adccdf8b"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/contract-types-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/contract-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-article-fifth.log",
+      "sha256": "6ec4304375247d54b7ca1fd24454dbb0a3c7c5f5b65d184948d8dfc5eed0989c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-article-first.log",
+      "sha256": "9654b2889b26e3bd7e27d2444de3382ea11d47e3364b5a367fd2f3c686e0afd3"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-article-fourth.log",
+      "sha256": "5e2fb545ae6f0956793fd5347a8488769e63975468977758f7158a10fdf18c27"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-article-second.log",
+      "sha256": "9cd39705baa4262b1e854477cfa8e3c73fd1a2117ea2d8c2b24ab4716d9734a9"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-article-sixth.log",
+      "sha256": "16519a475adeb9de6d66d4680a8da87c8af7922b8557cfb6f9f7336692bab0ca"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-article-third.log",
+      "sha256": "8656cbb02be7527a62da83ea4f11d32699aa6597c89da773e9d2fbb4dc58cc33"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-focused-red.log",
+      "sha256": "0d6f9a081aa958507d0cfed69aa8a7f44873eb922b8699c8ea5c40434eae638c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-focused-second.log",
+      "sha256": "8c5050d927b5c2187461d3c39291e2bbfdfcc3ddb001ba18a18209fae160ce08"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-types-e2e.log",
+      "sha256": "2e208178bc387ffcaed994dadd231e6b4f53aa2f57b881c81206b2be9ceb081f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-types-first.log",
+      "sha256": "9c9f428b37bc9c556d84ef33b5a9d9e66bae1f9f586037c009b73bf28f4eca44"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-types-second.log",
+      "sha256": "29e945b1d01be66d92355ea6a37062b2c85d3cfb9f718617a73a5d29635284f9"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/frontend-types-third.log",
+      "sha256": "2e208178bc387ffcaed994dadd231e6b4f53aa2f57b881c81206b2be9ceb081f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/projection-assertion-red.log",
+      "sha256": "d37122a38f8165720352ad5bbf9b57e8ebff86e9e23a5e946f8a0e16ad36370b"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/projection-context-green.log",
+      "sha256": "bd974bd80648bf20a0870749db46d1e0b7a86f9220e6d5fff7cb16b541e062d8"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/projection-red.log",
+      "sha256": "160dd370f1356bb867dd607837bfe858ee3bc022df6afeddd1bea5ada427eada"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/source-integration-fifth.log",
+      "sha256": "78f103febd7463346e2e09b0accdf96b12de65043d4d086d84ed77f37b5e0c1e"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/source-integration-first.log",
+      "sha256": "0bdd9b9254e9e0a0e9188e42d4d19b18aaf4b7f51dbbd16603357e113927f511"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/source-integration-fourth.log",
+      "sha256": "59afb3830ed61ba2a7b2d6fd20c844ab66a038dd95efa12a1f88bc2e24399e66"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/source-integration-second.log",
+      "sha256": "6685d4e57bcd0dd69736811fc28f53ee46e4874bc4bccddc836db5f6e313f651"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/source-integration-third.log",
+      "sha256": "8c642e82b436bb3f0485d546fa61597d80506e47067cea5776204bc3a3921f8e"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/ui-list.log",
+      "sha256": "0b6cc2761664c27ac5ecd4b1d58340f4df003cc68176a5de55653764a2c8d556"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/worker-build-observed-binding.json",
+      "sha256": "4ffcebac0ba0260e5d5d06d15c29f36a00203645a281bb008a0971a453b8dcfd"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/worker-integration-first.log",
+      "sha256": "658434e1faf2ef88f6f037d610e7b5e510c3597e41edf9f6bc8af3b34c1e6e27"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/worker-integration-second.log",
+      "sha256": "8c8e4a1ec0a9408d7ab446c586b9d8453606d579e7eff1e2d9274c26ed9ec5b7"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/worker-integration-third-receipt.json",
+      "sha256": "5feca5290ac07ce7a65265e78d73f8553686e44d37e3295dada98bdc6e7912ef"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/worker-integration-third.log",
+      "sha256": "1ca26762ac5b5cbf93b8817e75aa29cb511876d2e0fad2537a997d4f32e26c7c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/t1097/worker-types-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "ui": {
+    "listed": 2,
+    "executed": 0,
+    "officialGeneratedCallsVerified": 0,
+    "caseTimeoutMs": 18000000,
+    "requestActionObservationMinimumMs": 120000,
+    "outerRequired": "两个完整 case + 服务启动 + 项目实际 cleanup 槽 + owned 进程清理；不得缩短内层预算",
+    "surface": "两 viewport 的 article typed_patch；joint、typed_snapshot、ACK/ABA 官方UI不由本文件代签",
+    "responseObservationMs": 420000,
+    "saveObservationAndRemotePollMs": 300000
+  },
+  "readNotificationActual": {
+    "testsPassed": 1,
+    "testsSkippedByExplicitFilter": 166,
+    "filesSkippedByExplicitFilter": 9,
+    "claim": "仅新增模型实际read字段与次序验证，不称全167已跑"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "fixedNode": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSHA": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "privateLogRoot": "/private/tmp/t1246-v6-rename-source-parser-p6l6gjz4",
+  "results": [
+    {
+      "file": "audit-source.cjs",
+      "sha256": "aba8421736eddeb1d3062e2528a3749185d14954865470c2d694adf0a61b04b3",
+      "exit": 0,
+      "positiveMs": 120000,
+      "stdoutSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "onlyParseNoModuleOrPureTestExecuted": true
+    },
+    {
+      "file": "spec-provenance-adapter.cjs",
+      "sha256": "8f8d3399137bee36e5116fe2caeeb9d13aba4cf430e1b4cdc643cbebaf4cc504",
+      "exit": 0,
+      "positiveMs": 120000,
+      "stdoutSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "onlyParseNoModuleOrPureTestExecuted": true
+    },
+    {
+      "file": "rename-match.cjs",
+      "sha256": "45ac79e5cc5525bc0dcf53d4b12ecc8ecaef8a07a249fdce67feb6b8faad2050",
+      "exit": 0,
+      "positiveMs": 120000,
+      "stdoutSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "onlyParseNoModuleOrPureTestExecuted": true
+    },
+    {
+      "file": "rename-projection.cjs",
+      "sha256": "692c938e897751474fd23b3df24ee6954c92af4fb575dd23c56c1285c67b80c9",
+      "exit": 0,
+      "positiveMs": 120000,
+      "stdoutSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "onlyParseNoModuleOrPureTestExecuted": true
+    },
+    {
+      "file": "rename-match-test.cjs",
+      "sha256": "9acd342deb1642594893fb9dffab6ec99089761d92b6c283ddf4ab451a7f988a",
+      "exit": 0,
+      "positiveMs": 120000,
+      "stdoutSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "onlyParseNoModuleOrPureTestExecuted": true
+    }
+  ],
+  "auditOrPureMatcherTestsExecuted": false
+}

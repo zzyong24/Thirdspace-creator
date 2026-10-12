@@ -1,0 +1,148 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+stderr | src/modules/execution/transcribe-command-receipt.integration.test.ts > X02 真实图集与no-project完成后，旧意图回当前succeeded；新retry保终态门
+[ensureTranscriptArtifact] 跳过 awemeId=t215-failed-video-one:找不到对应的 imported 作品
+
+stderr | src/modules/execution/transcribe-command-receipt.integration.test.ts > V01 v1原受理key只回当前succeeded投影，保原事实/费用且旧call兼容
+[ensureTranscriptArtifact] 跳过 awemeId=t215-failed-video-one:找不到对应的 imported 作品
+
+ ✓ src/modules/execution/transcribe-command-receipt.integration.test.ts (43 tests) 156294ms
+   ✓ 同原retry响应丢失后下一attempt再次失败：同key只回当前原任务、不二次排队  4131ms
+   ✓ 同key异command及后来mixed完整目标均拒绝，不修改任何原任务  2670ms
+   ✓ key固定hash，原型名和合法长key不造阈值，所有旧回执保留  5770ms
+   ✓ 完整冻结输入改写与畸形回执拒绝，不静默清空或伪成功  2823ms
+   ✓ 回执insert故障与原状态同tx零提交，同key移除故障后安全受理  2797ms
+   ✓ 原意图回读未知调用当前状态；新key仍不能直接重提  2802ms
+   ✓ 磁盘重开只回同原意图，公开DTO不泄私有回执  7556ms
+   ✓ 没有转写绑定的其它kind/mixed保main通用受理回执，同key回原pair不重复修改  3514ms
+   ✓ 同字符串用于另一个独立target不作全域冲突，原账号组版本变化不封死回放  2948ms
+   ✓ 主路和replay均重核本人当前active组，跨owner/group与归档不写受理  2824ms
+   ✓ X01 running回放保原attempt/fence/lease与全部已存事实  2765ms
+   ✓ X02 真实图集与no-project完成后，旧意图回当前succeeded；新retry保终态门  2636ms
+   ✓ X03 queued取消经原控制确认，retry/cancel旧key只回cancelled  2566ms
+   ✓ X03 running取消经原控制确认，retry/cancel旧key只回cancelled  2625ms
+   ✓ X04 原maxAttempts耗尽不受理新key，旧受理key仍回当前failed  2608ms
+   ✓ X05 原作品扩额预算累计保留，command不造预算门，真实ledger拒绝超额零新增  2833ms
+   ✓ X06 到期后同key只回原failed，新key原可queue但claim/lease拒绝且不延长期限  2729ms
+   ✓ X07 迁移前account-only真实prepare/claim/Host控制不造组，跨owner/account拒绝  2734ms
+   ✓ X08 实际enqueue拒调用方注入空或完整伪Host回执，正常原prepare仍复用  2520ms
+   ✓ X09–X11 实际Source/audio/prepare/ASR/postprocess/保存保回执，公开正文与同付费key恢复闭环：confirmed  7492ms
+   ✓ X09–X11 实际Source/audio/prepare/ASR/postprocess/保存保回执，公开正文与同付费key恢复闭环：fallback  7705ms
+   ✓ X12 waiting_user认可与receipt同写；旧resume不再次认可后续阻断，绑定和strict字段损坏拒绝  2796ms
+   ✓ V01 v1原受理key只回当前queued投影，保原事实/费用且旧call兼容  2745ms
+   ✓ V01 v1原受理key只回当前running投影，保原事实/费用且旧call兼容  2660ms
+   ✓ V01 v1原受理key只回当前failed投影，保原事实/费用且旧call兼容  2861ms
+   ✓ V01 v1原受理key只回当前succeeded投影，保原事实/费用且旧call兼容  3527ms
+   ✓ V01 v1原受理key只回当前cancelled投影，保原事实/费用且旧call兼容  3477ms
+   ✓ V01 v1原受理key只回当前waiting_user投影，保原事实/费用且旧call兼容  2870ms
+   ✓ V01 v1原受理key只回当前unknown_result投影，保原事实/费用且旧call兼容  2828ms
+   ✓ V02 v1 pause/resume/cancel经真实claim/ACK，终态回放不再次执行任何旧控制  3028ms
+   ✓ V03 未支持内部protocol即使带已受理原key也拒绝，原三字段call不受影响  2971ms
+   ✓ V04 v1严格single：mixed/重复target不能借原回执绕域，原call完整mixed规则保  2634ms
+   ✓ V05 非转写source_sync不能用v1取消，旧合法cancel仍可执行  2587ms
+   ✓ V05 非转写ai_task不能用v1取消，旧合法cancel仍可执行  2574ms
+   ✓ V06 实际scheduled attach父子均不属于v1，拒绝零写而原父cancel原子传播  2826ms
+   ✓ V07 已受理direct历史行后来出现delegated标记，v1不能抢先回放原key  4615ms
+   ✓ V08 v1新受理和已有key均核真实owner/group与双向业务绑定，坏映射零写  4372ms
+   ✓ V09 v1合法旧account-only冻结归属继续受理与回放，不补组且跨account拒绝  6401ms
+   ✓ V10 v1回执与状态仍同tx回滚，故障移除后原key首次受理且再次核对零写  3846ms
+   ✓ V11 v1不延长原deadline：旧key回当前事实，新key原queue仍被claim期限门拒绝  3870ms
+   ✓ V12 v1磁盘重开仍用原receipt回当前failed；legacy原call与公开DTO保持兼容  10248ms
+   ✓ T1080 非转写source_sync已有通用受理回执仍拒绝v1原key回放，旧入口保原回放  2770ms
+   ✓ T1080 非转写ai_task已有通用受理回执仍拒绝v1原key回放，旧入口保原回放  2732ms
+stdout | src/modules/assets/assets.legacy-media-backfill.test.ts > assets.service — [T-298] 存量 local-fs 媒体元信息懒回填 > [T-298] list 不等待 ffprobe；后台回填精确旧签名，重复 list 不重复探测
+[assets][T-298] legacy-media-backfill {
+  accountId: { kind: 'legacy-account', id: 'acct-a' },
+  eligible: 1,
+  updated: 1,
+  skipped: 0,
+  failed: 0
+}
+
+ ✓ src/modules/assets/assets.legacy-media-backfill.test.ts (2 tests) 6883ms
+     ✓ [T-298] list 不等待 ffprobe；后台回填精确旧签名，重复 list 不重复探测  4024ms
+     ✓ [T-298] 每批最多 5 条；只扫当前账号的精确 1000ms+1920 签名，并输出批次计数  2857ms
+ ✓ src/modules/analytics/analytics.acceptance.test.ts (6 tests) 17974ms
+     ✓ has the foundation §5 module layout files  4608ms
+     ✓ imports NO peer module's repository (cross-module access only via the port)  2717ms
+     ✓ the repository exposes NO update/delete method (append-only fact store)  2803ms
+     ✓ is idempotent for metrics: re-submission returns the original (created:false)  2668ms
+     ✓ user scope: A cannot read B's snapshots through either op  2667ms
+     ✓ registers the seven approved owned ops into the module op-id list  2511ms
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 剪辑候选工具保留 video.edit 卡与原参数，在真正执行时读取当前版本
+[chat-tool] name=video.edit.render ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 无项目不触发剪辑候选准备
+[chat-tool-internal-error] class=Error reason=unknown message="剪辑调整必须在具体项目的编导对话中进行。"
+
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 无项目不触发剪辑候选准备
+[chat-tool] name=video.edit.render ok durationMs=1
+
+stderr | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 普通读取异常保脱敏错误卡，不产生成功候选
+[chat-tool-internal-error] class=Error reason=unknown message="当前项目还没有已确认的分镜方案"
+
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 普通读取异常保脱敏错误卡，不产生成功候选
+[chat-tool] name=video.edit.render ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 候选准备期间取消后不能返回可采纳成功
+[chat-tool-internal-error] class=AbortError reason=aborted message="This operation was aborted"
+
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 候选准备期间取消后不能返回可采纳成功
+[chat-tool] name=video.edit.render ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 错误的结果卡不能冒充剪辑候选
+[chat-tool] name=video.edit.render ok durationMs=0
+
+ ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts (8 tests | 1 failed) 40ms
+   ✓ 剪辑候选工具保留 video.edit 卡与原参数，在真正执行时读取当前版本 12ms
+   ✓ 账号不触发剪辑候选准备 4ms
+   ✓ 定义不触发剪辑候选准备 3ms
+   ✓ 伪造项目不触发剪辑候选准备 3ms
+   ✓ 无项目不触发剪辑候选准备 4ms
+   × 普通读取异常保脱敏错误卡，不产生成功候选 7ms
+   ✓ 候选准备期间取消后不能返回可采纳成功 4ms
+   ✓ 错误的结果卡不能冒充剪辑候选 3ms
+ ✓ src/modules/ai-runtime/chat-script-draft-preparation.test.ts (5 tests) 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 普通读取异常保脱敏错误卡，不产生成功候选
+AssertionError: expected { status: 'error', …(6) } to match object { status: 'error', …(3) }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,11 +1,11 @@
+  {
+    "data": {
+-     "error": "读取未完成，可检查权限与目标状态后继续",
++     "error": "这一步未能完成，原因尚未确认。请先确认是否已有结果，再决定是否重试。",
+      "kind": "video.edit",
+      "outputId": null,
+-     "projectId": null,
++     "projectId": "project",
+    },
+    "error": {
+      "code": "no_evidence",
+      "retryable": false,
+    },
+
+ ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts:37:17
+     35|  const f=await fixture();expect(f.tool).toBeDefined();f.prepareVideoEd…
+     36|  const result=await f.tool!.execute!(f.context,{instruction:"删卡"},f.sc…
+     37|  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{…
+       |                 ^
+     38|  expect(JSON.stringify(result)).not.toContain("当前项目还没有已确认的分镜方案");
+     39|  expect(f.prepareVideoEdit).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 63 passed (64)
+   Start at  02:54:34
+   Duration  188.63s (transform 2.42s, setup 0ms, import 6.58s, tests 181.20s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/middle-groups-first.json

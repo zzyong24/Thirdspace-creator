@@ -1,0 +1,2095 @@
+[
+  {
+    "file": "frontend/tests-t1246-generated/e2e/ai-nonblocking-recovery.spec.ts",
+    "line": 28,
+    "consumer": "mkdirSync",
+    "arg": "resolve(visibleCopyPath, \"..\")",
+    "lineage": [
+      "visibleCopyPath=resolve(\n  process.cwd(),\n  (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/orchestrator/evidence/T-1023-visible-copy.json\"),\n)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/ai-nonblocking-recovery.spec.ts",
+    "line": 29,
+    "consumer": "writeFileSync",
+    "arg": "visibleCopyPath",
+    "lineage": [
+      "visibleCopyPath=resolve(\n  process.cwd(),\n  (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/orchestrator/evidence/T-1023-visible-copy.json\"),\n)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts",
+    "line": 28,
+    "consumer": "mkdirSync",
+    "arg": "resolve(visibleCopyPath, \"..\")",
+    "lineage": [
+      "visibleCopyPath=resolve(\n  process.cwd(),\n  (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/orchestrator/evidence/T-913-visible-copy.json\"),\n)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts",
+    "line": 29,
+    "consumer": "writeFileSync",
+    "arg": "visibleCopyPath",
+    "lineage": [
+      "visibleCopyPath=resolve(\n  process.cwd(),\n  (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/orchestrator/evidence/T-913-visible-copy.json\"),\n)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts",
+    "line": 140,
+    "consumer": "card.screenshot",
+    "arg": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t913-model-recovery.png\"),\n  timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts",
+    "line": 185,
+    "consumer": "card.screenshot",
+    "arg": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t913-positioning-recovery-compact.png\"),\n  timeout: 120000}",
+    "lineage": [
+      "positioning=card.locator('[data-slot=\"copilot-error-positioning-link\"]')",
+      "card=page.locator('[data-slot=\"copilot-error\"]')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts",
+    "line": 189,
+    "consumer": "page.locator('[data-slot=\"production-decisions\"]').screenshot",
+    "arg": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t806-direct-error-regular.png\"),\n  timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts",
+    "line": 210,
+    "consumer": "page.locator('[data-slot=\"production-decisions\"]').screenshot",
+    "arg": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t806-direct-error-compact.png\"),\n  timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/asr-configuration.spec.ts",
+    "line": 88,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/asr-configuration.spec.ts",
+    "line": 103,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, \"T-641-visible-copy.json\")",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/assets.spec.ts",
+    "line": 234,
+    "consumer": "testInfo.outputPath",
+    "arg": "fileName",
+    "lineage": [
+      "fileName=`t1225-${testKey}-${index + 1}-${fixture.originalName}`",
+      "fixture=PNG_FIXTURES[index]",
+      "PNG_FIXTURES=[\n  { path: \"public/douyin-icon.png\", originalName: \"douyin-icon.png\" },\n  {\n    path: \"public/reference-editors/doocs-md/favicon.png\",\n    originalName: \"doocs-favicon.png\",\n  },\n  {\n    path: \"public/reference-editors/doocs-md/assets/images/logo.png\",\n    originalName: \"doocs-logo.png\",\n  },\n  {\n    path: \"public/reference-editors/doocs-md/assets/images/logo-2.png\",\n    originalName: \"doocs-logo-2.png\",\n  },\n] as const",
+      "assets=result.data.map((asset) => ENDPOINTS.listAssets.response.parse(asset))",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n    timeout: 120_000,\n    headers: {\n      \"content-type\": \"application/json\",\n      ...(groupId ? { \"x-group-id\": groupId } : {}),\n    },\n    data: { id, input },\n  })",
+      "group=await createGroup(page, `T1225 真实空素材组 ${testKey}`)",
+      "testKey=randomUUID()",
+      "id=await cards.nth(i).getAttribute(\"data-asset-id\")",
+      "cards=page.locator('[data-slot=\"asset-card\"]')",
+      "card=page.locator(`[data-slot=\"asset-card\"][data-asset-id=\"${fixture.id}\"]`)",
+      "i=0",
+      "result=await dispatchEnvelope<unknown[]>(page, \"assets.list\", {\n    query: { page: 1, pageSize: 100 },\n  }, groupId)",
+      "path=testInfo.outputPath(fileName)",
+      "index=0"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/assets.spec.ts",
+    "line": 235,
+    "consumer": "mkdir",
+    "arg": "dirname(path)",
+    "lineage": [
+      "path=testInfo.outputPath(fileName)",
+      "fileName=`t1225-${testKey}-${index + 1}-${fixture.originalName}`",
+      "fixture=PNG_FIXTURES[index]",
+      "PNG_FIXTURES=[\n  { path: \"public/douyin-icon.png\", originalName: \"douyin-icon.png\" },\n  {\n    path: \"public/reference-editors/doocs-md/favicon.png\",\n    originalName: \"doocs-favicon.png\",\n  },\n  {\n    path: \"public/reference-editors/doocs-md/assets/images/logo.png\",\n    originalName: \"doocs-logo.png\",\n  },\n  {\n    path: \"public/reference-editors/doocs-md/assets/images/logo-2.png\",\n    originalName: \"doocs-logo-2.png\",\n  },\n] as const",
+      "assets=result.data.map((asset) => ENDPOINTS.listAssets.response.parse(asset))",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n    timeout: 120_000,\n    headers: {\n      \"content-type\": \"application/json\",\n      ...(groupId ? { \"x-group-id\": groupId } : {}),\n    },\n    data: { id, input },\n  })",
+      "group=await createGroup(page, `T1225 真实空素材组 ${testKey}`)",
+      "testKey=randomUUID()",
+      "id=await cards.nth(i).getAttribute(\"data-asset-id\")",
+      "cards=page.locator('[data-slot=\"asset-card\"]')",
+      "card=page.locator(`[data-slot=\"asset-card\"][data-asset-id=\"${fixture.id}\"]`)",
+      "i=0",
+      "result=await dispatchEnvelope<unknown[]>(page, \"assets.list\", {\n    query: { page: 1, pageSize: 100 },\n  }, groupId)",
+      "index=0"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/assets.spec.ts",
+    "line": 236,
+    "consumer": "page.screenshot",
+    "arg": "{ path, fullPage: true, timeout: 120_000, animations: \"disabled\", caret: \"hide\" }",
+    "lineage": [
+      "path=testInfo.outputPath(fileName)",
+      "fileName=`t1225-${testKey}-${index + 1}-${fixture.originalName}`",
+      "fixture=PNG_FIXTURES[index]",
+      "PNG_FIXTURES=[\n  { path: \"public/douyin-icon.png\", originalName: \"douyin-icon.png\" },\n  {\n    path: \"public/reference-editors/doocs-md/favicon.png\",\n    originalName: \"doocs-favicon.png\",\n  },\n  {\n    path: \"public/reference-editors/doocs-md/assets/images/logo.png\",\n    originalName: \"doocs-logo.png\",\n  },\n  {\n    path: \"public/reference-editors/doocs-md/assets/images/logo-2.png\",\n    originalName: \"doocs-logo-2.png\",\n  },\n] as const",
+      "assets=result.data.map((asset) => ENDPOINTS.listAssets.response.parse(asset))",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n    timeout: 120_000,\n    headers: {\n      \"content-type\": \"application/json\",\n      ...(groupId ? { \"x-group-id\": groupId } : {}),\n    },\n    data: { id, input },\n  })",
+      "group=await createGroup(page, `T1225 真实空素材组 ${testKey}`)",
+      "testKey=randomUUID()",
+      "id=await cards.nth(i).getAttribute(\"data-asset-id\")",
+      "cards=page.locator('[data-slot=\"asset-card\"]')",
+      "card=page.locator(`[data-slot=\"asset-card\"][data-asset-id=\"${fixture.id}\"]`)",
+      "i=0",
+      "result=await dispatchEnvelope<unknown[]>(page, \"assets.list\", {\n    query: { page: 1, pageSize: 100 },\n  }, groupId)",
+      "index=0"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 130,
+    "consumer": "info.outputPath",
+    "arg": "`${name}.png`",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 131,
+    "consumer": "page.screenshot",
+    "arg": "{path:file,fullPage:true,timeout:REQUEST_MS}",
+    "lineage": [
+      "REQUEST_MS=120_000",
+      "file=info.outputPath(`${name}.png`)",
+      "path=info.outputPath(\"t1245-responsive-geometry.json\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 224,
+    "consumer": "info.outputPath",
+    "arg": "\"t1245-responsive-geometry.json\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 225,
+    "consumer": "writeFile",
+    "arg": "path",
+    "lineage": [
+      "path=info.outputPath(\"t1245-responsive-geometry.json\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 317,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"run-now-auth-wait-desktop.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 318,
+    "consumer": "page.screenshot",
+    "arg": "{ path: desktopPath, fullPage: true , timeout: 120000}",
+    "lineage": [
+      "path=info.outputPath(\"t1245-responsive-geometry.json\")",
+      "desktopPath=testInfo.outputPath(\"run-now-auth-wait-desktop.png\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 326,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"run-now-auth-wait-narrow-after-reload.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 327,
+    "consumer": "page.screenshot",
+    "arg": "{ path: narrowPath, fullPage: true , timeout: 120000}",
+    "lineage": [
+      "path=info.outputPath(\"t1245-responsive-geometry.json\")",
+      "narrowPath=testInfo.outputPath(\"run-now-auth-wait-narrow-after-reload.png\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 351,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"public-original-task-auth-wait.json\"",
+    "lineage": [
+      "original={ jobId: job.id, runId: trigger.jobRunId, aiId: trigger.aiTaskId, groupId: groupA.id, accountId: account.id }",
+      "groupA=await call(page, ENDPOINTS.createAccountGroup, { body: { name: `T1244 无绑定媒体组 ${key()}`, idempotencyKey: key() } })",
+      "key=() => `t1244-${randomUUID()}`",
+      "body=request.postDataJSON() as { id?: string; input?: { params?: { jobId?: string } } }",
+      "account=await call(page, ENDPOINTS.createAccount, { body: { platform: \"xiaohongshu\", accountHandle: `t1244-neutral-${randomUUID()}`, idempotencyKey: key() } }, { groupId: groupA.id })",
+      "job=await call(page, ENDPOINTS.createScheduledJob, { body: { name: `T1244 中性作品同步 ${key()}`, prompt: \"无绑定隔离验收，不访问外部平台\", sourceKind: \"self.metrics\", target: {}, schedule: \"17 4 * * *\", toolGrants: [] } }, target)",
+      "target={ groupId: groupA.id, accountId: account.id }"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "line": 352,
+    "consumer": "writeFile",
+    "arg": "evidencePath",
+    "lineage": [
+      "evidencePath=testInfo.outputPath(\"public-original-task-auth-wait.json\")",
+      "original={ jobId: job.id, runId: trigger.jobRunId, aiId: trigger.aiTaskId, groupId: groupA.id, accountId: account.id }",
+      "groupA=await call(page, ENDPOINTS.createAccountGroup, { body: { name: `T1244 无绑定媒体组 ${key()}`, idempotencyKey: key() } })",
+      "key=() => `t1244-${randomUUID()}`",
+      "body=request.postDataJSON() as { id?: string; input?: { params?: { jobId?: string } } }",
+      "account=await call(page, ENDPOINTS.createAccount, { body: { platform: \"xiaohongshu\", accountHandle: `t1244-neutral-${randomUUID()}`, idempotencyKey: key() } }, { groupId: groupA.id })",
+      "job=await call(page, ENDPOINTS.createScheduledJob, { body: { name: `T1244 中性作品同步 ${key()}`, prompt: \"无绑定隔离验收，不访问外部平台\", sourceKind: \"self.metrics\", target: {}, schedule: \"17 4 * * *\", toolGrants: [] } }, target)",
+      "target={ groupId: groupA.id, accountId: account.id }"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/built-in-ip-course.spec.ts",
+    "line": 28,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/built-in-ip-course.spec.ts",
+    "line": 33,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, `${TASK_ID}-visible-copy.json`)",
+    "lineage": [
+      "TASK_ID=\"T-664\"",
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts",
+    "line": 402,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=configuredEvidenceDir\n    ? resolve(repoRoot, configuredEvidenceDir)\n    : resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")",
+      "repoRoot=resolve(process.cwd(), \"..\")",
+      "configuredEvidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")",
+      "evidence=evidenceValue as Record<string, unknown>",
+      "evidenceValue=project.briefDetail.contentRadarEvidence",
+      "project=ENDPOINTS.getProject.response.parse(input)",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n      timeout: 120_000,\n      headers: { \"content-type\": \"application/json\" },\n      data: {\n        id: \"accountGroups.list\",\n        input: { query: { page: pageNumber, pageSize: 100 } },\n      },\n    })",
+      "pageNumber=1",
+      "id=\"chatcmpl-t1233-\" + requests.length",
+      "requests=[]"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts",
+    "line": 407,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+    "lineage": [
+      "evidenceDir=configuredEvidenceDir\n    ? resolve(repoRoot, configuredEvidenceDir)\n    : resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")",
+      "repoRoot=resolve(process.cwd(), \"..\")",
+      "configuredEvidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")",
+      "evidence=evidenceValue as Record<string, unknown>",
+      "evidenceValue=project.briefDetail.contentRadarEvidence",
+      "project=ENDPOINTS.getProject.response.parse(input)",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n      timeout: 120_000,\n      headers: { \"content-type\": \"application/json\" },\n      data: {\n        id: \"accountGroups.list\",\n        input: { query: { page: pageNumber, pageSize: 100 } },\n      },\n    })",
+      "pageNumber=1",
+      "id=\"chatcmpl-t1233-\" + requests.length",
+      "requests=[]"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts",
+    "line": 851,
+    "consumer": "page.screenshot",
+    "arg": "{\n      path: info.outputPath(\"radar-ready-1536x1024.png\"),\n      fullPage: false,\n    timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts",
+    "line": 852,
+    "consumer": "info.outputPath",
+    "arg": "\"radar-ready-1536x1024.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts",
+    "line": 926,
+    "consumer": "page.screenshot",
+    "arg": "{\n      path: info.outputPath(\"project-created-1024x720.png\"),\n      fullPage: false,\n    timeout: 120000}",
+    "lineage": [
+      "created=Math.floor(Date.now() / 1000)",
+      "project=ENDPOINTS.getProject.response.parse(input)",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n      timeout: 120_000,\n      headers: { \"content-type\": \"application/json\" },\n      data: {\n        id: \"accountGroups.list\",\n        input: { query: { page: pageNumber, pageSize: 100 } },\n      },\n    })",
+      "pageNumber=1",
+      "id=\"chatcmpl-t1233-\" + requests.length",
+      "requests=[]"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts",
+    "line": 927,
+    "consumer": "info.outputPath",
+    "arg": "\"project-created-1024x720.png\"",
+    "lineage": [
+      "created=Math.floor(Date.now() / 1000)",
+      "project=ENDPOINTS.getProject.response.parse(input)",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n      timeout: 120_000,\n      headers: { \"content-type\": \"application/json\" },\n      data: {\n        id: \"accountGroups.list\",\n        input: { query: { page: pageNumber, pageSize: 100 } },\n      },\n    })",
+      "pageNumber=1",
+      "id=\"chatcmpl-t1233-\" + requests.length",
+      "requests=[]"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts",
+    "line": 1071,
+    "consumer": "page.screenshot",
+    "arg": "{\n      path: info.outputPath(\"project-reloaded-1024x720.png\"),\n      fullPage: false,\n    timeout: 120000}",
+    "lineage": [
+      "project=ENDPOINTS.getProject.response.parse(input)",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n      timeout: 120_000,\n      headers: { \"content-type\": \"application/json\" },\n      data: {\n        id: \"accountGroups.list\",\n        input: { query: { page: pageNumber, pageSize: 100 } },\n      },\n    })",
+      "pageNumber=1",
+      "id=\"chatcmpl-t1233-\" + requests.length",
+      "requests=[]"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts",
+    "line": 1072,
+    "consumer": "info.outputPath",
+    "arg": "\"project-reloaded-1024x720.png\"",
+    "lineage": [
+      "project=ENDPOINTS.getProject.response.parse(input)",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n      timeout: 120_000,\n      headers: { \"content-type\": \"application/json\" },\n      data: {\n        id: \"accountGroups.list\",\n        input: { query: { page: pageNumber, pageSize: 100 } },\n      },\n    })",
+      "pageNumber=1",
+      "id=\"chatcmpl-t1233-\" + requests.length",
+      "requests=[]"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/copilot-project-reference.spec.ts",
+    "line": 125,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/copilot-project-reference.spec.ts",
+    "line": 140,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, \"T-642-visible-copy.json\")",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 254,
+    "consumer": "page.locator('#materials').screenshot",
+    "arg": "{path:testInfo.outputPath(\"project-materials-after.png\"), timeout: 120000}",
+    "lineage": [
+      "project=await dispatch(page,\"projects.create\",{params:undefined,query:undefined,body:{title:\"结果采纳作品\",brief:\"\"}},{groupId:account.groupId})",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 254,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"project-materials-after.png\"",
+    "lineage": [
+      "project=await dispatch(page,\"projects.create\",{params:undefined,query:undefined,body:{title:\"结果采纳作品\",brief:\"\"}},{groupId:account.groupId})",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 261,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath(\"canvas-empty-after.png\"), timeout: 120000}",
+    "lineage": [
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 261,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"canvas-empty-after.png\"",
+    "lineage": [
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 265,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath(\"canvas-narrow-after.png\"), timeout: 120000}",
+    "lineage": [
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 265,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"canvas-narrow-after.png\"",
+    "lineage": [
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 276,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath(\"canvas-assets-after.png\"), timeout: 120000}",
+    "lineage": [
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 276,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"canvas-assets-after.png\"",
+    "lineage": [
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 287,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath(\"canvas-upload-1024.png\"), timeout: 120000}",
+    "lineage": [
+      "upload=gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})",
+      "gallery=page.getByRole('complementary',{name:'当前账号素材'})",
+      "link={id:'fixture-link',canvasId:canvas.id,nodeId:'upstream',attemptId:'fixture-attempt-t1101',taskId,mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png')",
+      "nodeId=\"result-generation-node\"",
+      "result=page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})",
+      "taskId='fixture-task-t1101'",
+      "stamp=new Date().toISOString()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 287,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"canvas-upload-1024.png\"",
+    "lineage": [
+      "upload=gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})",
+      "gallery=page.getByRole('complementary',{name:'当前账号素材'})",
+      "link={id:'fixture-link',canvasId:canvas.id,nodeId:'upstream',attemptId:'fixture-attempt-t1101',taskId,mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png')",
+      "nodeId=\"result-generation-node\"",
+      "result=page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})",
+      "taskId='fixture-task-t1101'",
+      "stamp=new Date().toISOString()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 289,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath(\"canvas-upload-1536.png\"), timeout: 120000}",
+    "lineage": [
+      "upload=gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})",
+      "gallery=page.getByRole('complementary',{name:'当前账号素材'})",
+      "link={id:'fixture-link',canvasId:canvas.id,nodeId:'upstream',attemptId:'fixture-attempt-t1101',taskId,mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png')",
+      "nodeId=\"result-generation-node\"",
+      "result=page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})",
+      "taskId='fixture-task-t1101'",
+      "stamp=new Date().toISOString()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 289,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"canvas-upload-1536.png\"",
+    "lineage": [
+      "upload=gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})",
+      "gallery=page.getByRole('complementary',{name:'当前账号素材'})",
+      "link={id:'fixture-link',canvasId:canvas.id,nodeId:'upstream',attemptId:'fixture-attempt-t1101',taskId,mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png')",
+      "nodeId=\"result-generation-node\"",
+      "result=page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})",
+      "taskId='fixture-task-t1101'",
+      "stamp=new Date().toISOString()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 307,
+    "consumer": "writeFileSync",
+    "arg": "testInfo.outputPath(\"t1220-upload-result.json\")",
+    "lineage": [
+      "upload=gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})",
+      "gallery=page.getByRole('complementary',{name:'当前账号素材'})",
+      "link={id:'fixture-link',canvasId:canvas.id,nodeId:'upstream',attemptId:'fixture-attempt-t1101',taskId,mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png')",
+      "nodeId=\"result-generation-node\"",
+      "result=page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})",
+      "taskId='fixture-task-t1101'",
+      "stamp=new Date().toISOString()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 307,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"t1220-upload-result.json\"",
+    "lineage": [
+      "upload=gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})",
+      "gallery=page.getByRole('complementary',{name:'当前账号素材'})",
+      "link={id:'fixture-link',canvasId:canvas.id,nodeId:'upstream',attemptId:'fixture-attempt-t1101',taskId,mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png')",
+      "nodeId=\"result-generation-node\"",
+      "result=page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})",
+      "taskId='fixture-task-t1101'",
+      "stamp=new Date().toISOString()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 360,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath(\"canvas-result-actions-after.png\"), timeout: 120000}",
+    "lineage": [
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "result=page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 360,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"canvas-result-actions-after.png\"",
+    "lineage": [
+      "after=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "result=page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 440,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1101-running.png'), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 440,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1101-running.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 446,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1108-interrupted-save.png'), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 446,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1108-interrupted-save.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 446,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1117-error-normal.png'), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 446,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1117-error-normal.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 448,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1117-error-narrow.png'), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 448,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1117-error-narrow.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 465,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1108-legacy-normal.png'), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 465,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1108-legacy-normal.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 466,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1108-legacy-narrow.png'), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 466,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1108-legacy-narrow.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 478,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1117-preview-normal.png'), timeout: 120000}",
+    "lineage": [
+      "preview=await dispatch(page,\"accountGroups.members.previewTransfer\",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 478,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1117-preview-normal.png'",
+    "lineage": [
+      "preview=await dispatch(page,\"accountGroups.members.previewTransfer\",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 485,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1117-preview-narrow.png'), timeout: 120000}",
+    "lineage": [
+      "preview=await dispatch(page,\"accountGroups.members.previewTransfer\",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 485,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1117-preview-narrow.png'",
+    "lineage": [
+      "preview=await dispatch(page,\"accountGroups.members.previewTransfer\",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 493,
+    "consumer": "writeFileSync",
+    "arg": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1117/visible-copy.json\"))",
+    "lineage": [
+      "original=await dispatch(page,\"canvas.create\",{body:{title:\"已有创作\"}},{groupId:account.groupId})",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 494,
+    "consumer": "writeFileSync",
+    "arg": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1108/visible-copy.json\"))",
+    "lineage": [
+      "original=await dispatch(page,\"canvas.create\",{body:{title:\"已有创作\"}},{groupId:account.groupId})",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 496,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1101-regenerate.png'), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 496,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1101-regenerate.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 499,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1101-gallery.png'), timeout: 120000}",
+    "lineage": [
+      "gallery=page.getByRole('complementary',{name:'当前账号素材'})"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 499,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1101-gallery.png'",
+    "lineage": [
+      "gallery=page.getByRole('complementary',{name:'当前账号素材'})"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 502,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1101-canvas-narrow.png'), timeout: 120000}",
+    "lineage": [
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 502,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1101-canvas-narrow.png'",
+    "lineage": [
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 505,
+    "consumer": "writeFileSync",
+    "arg": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1101/canvas-copy.json\"))",
+    "lineage": [
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}",
+      "original=await dispatch(page,\"canvas.create\",{body:{title:\"已有创作\"}},{groupId:account.groupId})"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 514,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true, timeout: 120000}",
+    "lineage": [
+      "table=page.getByRole('table',{name:'各平台能力'})"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 514,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1101-platform-table.png'",
+    "lineage": [
+      "table=page.getByRole('table',{name:'各平台能力'})"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 515,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1101-qr-dialog.png'), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 515,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1101-qr-dialog.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 518,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true, timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 518,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t1101-platform-narrow.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts",
+    "line": 519,
+    "consumer": "writeFileSync",
+    "arg": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1101/binding-copy.json\"))",
+    "lineage": [
+      "original=await dispatch(page,\"canvas.create\",{body:{title:\"已有创作\"}},{groupId:account.groupId})",
+      "account=await groupedAccount(page,'douyin','创作验收账号','创作验收组')",
+      "canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)",
+      "document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document",
+      "width=await first.evaluate(node=>parseFloat((node as HTMLElement).style.width))",
+      "first=page.locator('[data-testid=\"canvas-node\"]').first()",
+      "nodes=page.locator('[data-testid=\"canvas-node\"]')",
+      "read=await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000})",
+      "group=await dispatch(page,\"accountGroups.create\",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string}",
+      "id=page.url().split(\"/\").at(-1)!",
+      "headers={\"content-type\":\"application/json\",\"x-group-id\":account.groupId}",
+      "canvasId=new URL(canvasUrl).pathname.split(\"/\").at(-1)!",
+      "canvasUrl=page.url()",
+      "request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}}",
+      "scope={groupId:account.groupId}"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 172,
+    "consumer": "page.screenshot",
+    "arg": "{ path: info.outputPath(\"video-preview-desktop.png\"), timeout: 120_000 }",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 172,
+    "consumer": "info.outputPath",
+    "arg": "\"video-preview-desktop.png\"",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 173,
+    "consumer": "info.outputPath",
+    "arg": "\"video-preview-desktop.png\"",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 208,
+    "consumer": "page.screenshot",
+    "arg": "{ path: info.outputPath(\"video-preview-after-playback.png\"), timeout: 120_000 }",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 208,
+    "consumer": "info.outputPath",
+    "arg": "\"video-preview-after-playback.png\"",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 209,
+    "consumer": "info.outputPath",
+    "arg": "\"video-preview-after-playback.png\"",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 239,
+    "consumer": "page.screenshot",
+    "arg": "{ path: info.outputPath(\"video-preview-compact-after-reload.png\"), timeout: 120_000 }",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 239,
+    "consumer": "info.outputPath",
+    "arg": "\"video-preview-compact-after-reload.png\"",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 240,
+    "consumer": "info.outputPath",
+    "arg": "\"video-preview-compact-after-reload.png\"",
+    "lineage": [
+      "video=dialog.locator('video[data-preview-type=\"video\"]')",
+      "dialog=page.getByRole(\"dialog\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 242,
+    "consumer": "info.outputPath",
+    "arg": "\"evidence\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 243,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=info.outputPath(\"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts",
+    "line": 258,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, \"T-853-visible-copy.json\")",
+    "lineage": [
+      "evidenceDir=info.outputPath(\"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts",
+    "line": 118,
+    "consumer": "testInfo.outputPath",
+    "arg": "name",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts",
+    "line": 119,
+    "consumer": "page.screenshot",
+    "arg": "{ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000}",
+    "lineage": [
+      "path=testInfo.outputPath(name)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/knowledge-library.spec.ts",
+    "line": 43,
+    "consumer": "page.screenshot",
+    "arg": "{\n    path: resolve(evidence, checkpoint + \".png\"),\n    fullPage: true,\n    style: \"nextjs-portal{visibility:hidden}\",\n  timeout: 120000}",
+    "lineage": [
+      "evidence=resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1075\"))",
+      "original=\"访谈记录：先保留完整原文，再整理观点。\\n\\n这份资料讨论课程定价与用户需求。\\n第二段需要完整保存。\""
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/knowledge-library.spec.ts",
+    "line": 655,
+    "consumer": "mkdirSync",
+    "arg": "evidence",
+    "lineage": [
+      "evidence=resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1075\"))",
+      "original=\"访谈记录：先保留完整原文，再整理观点。\\n\\n这份资料讨论课程定价与用户需求。\\n第二段需要完整保存。\""
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/knowledge-library.spec.ts",
+    "line": 659,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidence, \"visible-copy.json\")",
+    "lineage": [
+      "evidence=resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1075\"))",
+      "original=\"访谈记录：先保留完整原文，再整理观点。\\n\\n这份资料讨论课程定价与用户需求。\\n第二段需要完整保存。\""
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/knowledge-library.spec.ts",
+    "line": 673,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidence, \"journey-observations.json\")",
+    "lineage": [
+      "evidence=resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1075\"))",
+      "original=\"访谈记录：先保留完整原文，再整理观点。\\n\\n这份资料讨论课程定价与用户需求。\\n第二段需要完整保存。\""
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts",
+    "line": 173,
+    "consumer": "page.screenshot",
+    "arg": "{ path: info.outputPath(\"group-a-uploaded-asset.png\"), fullPage: true , timeout: 120000}",
+    "lineage": [
+      "uploaded=ENDPOINTS.completeUpload.response.parse((await dispatch<unknown>(page, \"assets.uploads.complete\", {\n    params: { uploadId: started.uploadId },\n    body: { name: fileName },\n  }, groupA.id)).data)",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n    timeout: 120_000,\n    headers: {\n      \"content-type\": \"application/json\",\n      ...(groupId ? { \"x-group-id\": groupId } : {}),\n    },\n    data: { id, input },\n  })",
+      "groupA=ENDPOINTS.createAccountGroup.response.parse((await dispatch<unknown>(page, \"accountGroups.create\", {\n    body: { name: `T1226媒体隔离甲组-${suffix}`, idempotencyKey: crypto.randomUUID() },\n  })).data)",
+      "suffix=crypto.randomUUID()",
+      "fileName=`t1226-${suffix}.png`",
+      "started=ENDPOINTS.createUpload.response.parse((await dispatch<unknown>(page, \"assets.uploads.create\", {\n    body: { assetType: \"image\", mimeType: \"image/png\", fileSize: bytes.length, fileName },\n  }, groupA.id)).data)",
+      "bytes=await readFile(resolve(process.cwd(), \"public/douyin-icon.png\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts",
+    "line": 173,
+    "consumer": "info.outputPath",
+    "arg": "\"group-a-uploaded-asset.png\"",
+    "lineage": [
+      "uploaded=ENDPOINTS.completeUpload.response.parse((await dispatch<unknown>(page, \"assets.uploads.complete\", {\n    params: { uploadId: started.uploadId },\n    body: { name: fileName },\n  }, groupA.id)).data)",
+      "response=await page.request.post(\"/api/v1/dispatch\", {\n    timeout: 120_000,\n    headers: {\n      \"content-type\": \"application/json\",\n      ...(groupId ? { \"x-group-id\": groupId } : {}),\n    },\n    data: { id, input },\n  })",
+      "groupA=ENDPOINTS.createAccountGroup.response.parse((await dispatch<unknown>(page, \"accountGroups.create\", {\n    body: { name: `T1226媒体隔离甲组-${suffix}`, idempotencyKey: crypto.randomUUID() },\n  })).data)",
+      "suffix=crypto.randomUUID()",
+      "fileName=`t1226-${suffix}.png`",
+      "started=ENDPOINTS.createUpload.response.parse((await dispatch<unknown>(page, \"assets.uploads.create\", {\n    body: { assetType: \"image\", mimeType: \"image/png\", fileSize: bytes.length, fileName },\n  }, groupA.id)).data)",
+      "bytes=await readFile(resolve(process.cwd(), \"public/douyin-icon.png\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts",
+    "line": 193,
+    "consumer": "page.screenshot",
+    "arg": "{ path: info.outputPath(\"group-b-cannot-see-group-a-asset.png\"), fullPage: true , timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts",
+    "line": 193,
+    "consumer": "info.outputPath",
+    "arg": "\"group-b-cannot-see-group-a-asset.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/onboarding-and-small-sidebar.spec.ts",
+    "line": 31,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/onboarding-and-small-sidebar.spec.ts",
+    "line": 36,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/production-empty-workbench.spec.ts",
+    "line": 82,
+    "consumer": "page.screenshot",
+    "arg": "{\n    path: info.outputPath(\"no-video-output-workbench.png\"),\n    fullPage: true,\n  timeout: 120000}",
+    "lineage": [
+      "workbench=page.locator('[data-slot=\"production-uploads\"]')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/production-empty-workbench.spec.ts",
+    "line": 83,
+    "consumer": "info.outputPath",
+    "arg": "\"no-video-output-workbench.png\"",
+    "lineage": [
+      "workbench=page.locator('[data-slot=\"production-uploads\"]')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/publish-package-readback.spec.ts",
+    "line": 199,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")",
+      "output=await dispatch<{ id: string }>(\n    page,\n    \"projects.outputs.create\",\n    {\n      params: { projectId: project.id },\n      query: undefined,\n      body: { title: \"主视频\", contentRole: \"conversion\" },\n    },\n    account.id,\n  )",
+      "account=await dispatch<{ id: string }>(page, \"accounts.create\", {\n    params: undefined,\n    query: undefined,\n    body: {\n      platform: \"douyin\",\n      accountHandle: `@e2e-t849-publish-${Date.now()}`,\n    },\n  })",
+      "project=await dispatch<{ id: string }>(\n    page,\n    \"projects.create\",\n    {\n      params: undefined,\n      query: undefined,\n      body: { title: \"发布物料回读真实验收\", brief: \"\" },\n    },\n    account.id,\n  )"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/publish-package-readback.spec.ts",
+    "line": 214,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, \"T-849-visible-copy.json\")",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")",
+      "output=await dispatch<{ id: string }>(\n    page,\n    \"projects.outputs.create\",\n    {\n      params: { projectId: project.id },\n      query: undefined,\n      body: { title: \"主视频\", contentRole: \"conversion\" },\n    },\n    account.id,\n  )",
+      "account=await dispatch<{ id: string }>(page, \"accounts.create\", {\n    params: undefined,\n    query: undefined,\n    body: {\n      platform: \"douyin\",\n      accountHandle: `@e2e-t849-publish-${Date.now()}`,\n    },\n  })",
+      "project=await dispatch<{ id: string }>(\n    page,\n    \"projects.create\",\n    {\n      params: undefined,\n      query: undefined,\n      body: { title: \"发布物料回读真实验收\", brief: \"\" },\n    },\n    account.id,\n  )"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/recent-data-safety.spec.ts",
+    "line": 58,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/recent-data-safety.spec.ts",
+    "line": 63,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/review-empty-diagnosis-entry.spec.ts",
+    "line": 170,
+    "consumer": "testInfo.outputPath",
+    "arg": "name",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/review-empty-diagnosis-entry.spec.ts",
+    "line": 171,
+    "consumer": "page.screenshot",
+    "arg": "{\n    path,\n    fullPage: false,\n    animations: \"disabled\",\n    caret: \"hide\",\n    timeout: REQUEST_TIMEOUT_MS,\n  }",
+    "lineage": [
+      "REQUEST_TIMEOUT_MS=120_000",
+      "path=testInfo.outputPath(name)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/semantic-material-generation.spec.ts",
+    "line": 161,
+    "consumer": "mkdirSync",
+    "arg": "evidenceDir",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/semantic-material-generation.spec.ts",
+    "line": 176,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidenceDir, \"T-854-visible-copy.json\")",
+    "lineage": [
+      "evidenceDir=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/settings-responsive-layout.spec.ts",
+    "line": 131,
+    "consumer": "mkdirSync",
+    "arg": "directory",
+    "lineage": [
+      "directory=resolve(process.cwd(), \"..\", (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1237/browser-3925/visible-copy\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/settings-responsive-layout.spec.ts",
+    "line": 133,
+    "consumer": "page.screenshot",
+    "arg": "{ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000}",
+    "lineage": [
+      "path=resolve(directory, `${name}.png`)",
+      "directory=resolve(process.cwd(), \"..\", (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1237/browser-3925/visible-copy\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+    "line": 80,
+    "consumer": "mkdirSync",
+    "arg": "directory",
+    "lineage": [
+      "directory=resolve(process.cwd(), \"..\", (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1232/browser-3921/visible-copy\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+    "line": 89,
+    "consumer": "page.screenshot",
+    "arg": "{ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000}",
+    "lineage": [
+      "path=resolve(directory, `${info.testId}-${checkpoint}-${viewport.width}.png`)",
+      "directory=resolve(process.cwd(), \"..\", (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1232/browser-3921/visible-copy\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts",
+    "line": 27,
+    "consumer": "panel.screenshot",
+    "arg": "{path:testInfo.outputPath(\"t1105-resource-normal.png\"), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts",
+    "line": 27,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"t1105-resource-normal.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts",
+    "line": 45,
+    "consumer": "panel.screenshot",
+    "arg": "{path:testInfo.outputPath(\"t1105-resource-error.png\"), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts",
+    "line": 45,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"t1105-resource-error.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts",
+    "line": 50,
+    "consumer": "panel.screenshot",
+    "arg": "{path:testInfo.outputPath(\"t1105-resource-narrow.png\"), timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts",
+    "line": 50,
+    "consumer": "testInfo.outputPath",
+    "arg": "\"t1105-resource-narrow.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts",
+    "line": 52,
+    "consumer": "writeFileSync",
+    "arg": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1105/resource-copy.json\"))",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+    "line": 350,
+    "consumer": "page.screenshot",
+    "arg": "{ path: testInfo.outputPath(name), fullPage: true , timeout: 120000}",
+    "lineage": [
+      "path=\"/projects\"",
+      "projects=page.locator('[data-page=\"projects\"]')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+    "line": 350,
+    "consumer": "testInfo.outputPath",
+    "arg": "name",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-asset-picker.spec.ts",
+    "line": 34,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('picker-1366.png'),fullPage:true, timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-asset-picker.spec.ts",
+    "line": 34,
+    "consumer": "testInfo.outputPath",
+    "arg": "'picker-1366.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-asset-picker.spec.ts",
+    "line": 35,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('picker-1024.png'),fullPage:true, timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-asset-picker.spec.ts",
+    "line": 35,
+    "consumer": "testInfo.outputPath",
+    "arg": "'picker-1024.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-asset-picker.spec.ts",
+    "line": 40,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('picker-683x450-reflow.png'),fullPage:true, timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-asset-picker.spec.ts",
+    "line": 40,
+    "consumer": "testInfo.outputPath",
+    "arg": "'picker-683x450-reflow.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-media-tab-session.spec.ts",
+    "line": 41,
+    "consumer": "page.screenshot",
+    "arg": "{path:info.outputPath('video-tab-restored.png'),fullPage:true, timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-media-tab-session.spec.ts",
+    "line": 41,
+    "consumer": "info.outputPath",
+    "arg": "'video-tab-restored.png'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-media-tab-session.spec.ts",
+    "line": 44,
+    "consumer": "info.outputPath",
+    "arg": "'neutral-tab-export.mp4'",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1069-media-tab-session.spec.ts",
+    "line": 44,
+    "consumer": "download.saveAs",
+    "arg": "exportedPath",
+    "lineage": [
+      "exportedPath=info.outputPath('neutral-tab-export.mp4')"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+    "line": 77,
+    "consumer": "mkdirSync",
+    "arg": "directory",
+    "lineage": [
+      "directory=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")",
+      "output=await dispatch(\n    page,\n    ENDPOINTS.createOutput.id,\n    {\n      params: { projectId: project.id },\n      body: {\n        title: \"真实图文\",\n        contentType: \"image\",\n        clientRequestId: randomUUID(),\n      },\n    },\n    group.id,\n  )",
+      "group=await dispatch(page, \"accountGroups.create\", {\n    body: { name: `编导真实UI-${randomUUID()}`, idempotencyKey: randomUUID() },\n  })",
+      "project=await dispatch(\n    page,\n    \"projects.create\",\n    {\n      body: {\n        title: \"同一项目的文章与图文\",\n        brief: \"手工保存与排版验收\",\n        contentType: \"article\",\n      },\n    },\n    group.id,\n  )"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+    "line": 80,
+    "consumer": "info.outputPath",
+    "arg": "name",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+    "line": 151,
+    "consumer": "page.screenshot",
+    "arg": "{\n    path: evidence(info, \"article-after-desktop.png\"),\n    fullPage: true,\n  timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+    "line": 160,
+    "consumer": "download.saveAs",
+    "arg": "html",
+    "lineage": [
+      "html=evidence(info, \"article-real-export.html\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+    "line": 169,
+    "consumer": "page.screenshot",
+    "arg": "{\n    path: evidence(info, \"article-director-narrow.png\"),\n    fullPage: true,\n  timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+    "line": 271,
+    "consumer": "page.screenshot",
+    "arg": "{\n    path: evidence(info, \"graphic-after-desktop.png\"),\n    fullPage: true,\n  timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+    "line": 279,
+    "consumer": "download.saveAs",
+    "arg": "archive",
+    "lineage": [
+      "archive=evidence(info, \"graphic-real-pages.zip\")",
+      "pages=unzipSync(readFileSync(archive))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+    "line": 292,
+    "consumer": "page.screenshot",
+    "arg": "{\n    path: evidence(info, \"graphic-director-narrow.png\"),\n    fullPage: true,\n  timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1136-calendar-dialog-layout.spec.ts",
+    "line": 73,
+    "consumer": "mkdirSync",
+    "arg": "resolve(evidence,\"screenshots\")",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1136-calendar-dialog-layout.spec.ts",
+    "line": 74,
+    "consumer": "page.screenshot",
+    "arg": "{path:resolve(evidence,\"screenshots\",name+\".png\"), timeout: 120000}",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))",
+      "name=\"本地弹窗预览图.png\""
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1136-calendar-dialog-layout.spec.ts",
+    "line": 91,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidence,\"layout-observation.json\")",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1136-calendar-dialog-layout.spec.ts",
+    "line": 141,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidence,\"public-write-read-observation.json\")",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1136-calendar-dialog-layout.spec.ts",
+    "line": 208,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidence,\"shared-consumer-observation.json\")",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1140-picker-low-height.spec.ts",
+    "line": 69,
+    "consumer": "mkdirSync",
+    "arg": "evidence",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1140-picker-low-height.spec.ts",
+    "line": 69,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidence,\"failed-paint-observation.json\")",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1140-picker-low-height.spec.ts",
+    "line": 82,
+    "consumer": "mkdirSync",
+    "arg": "resolve(evidence,\"screenshots\")",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1140-picker-low-height.spec.ts",
+    "line": 82,
+    "consumer": "page.screenshot",
+    "arg": "{path:resolve(evidence,\"screenshots\",name+\".png\"), timeout: 120000}",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1140-picker-low-height.spec.ts",
+    "line": 111,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidence,\"layout-observation.json\")",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1140-picker-low-height.spec.ts",
+    "line": 148,
+    "consumer": "writeFileSync",
+    "arg": "resolve(evidence,\"public-write-read-observation.json\")",
+    "lineage": [
+      "evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))",
+      "read=page.waitForResponse(response=>response.request().method()===\"POST\"&&response.url().endsWith(\"/api/v1/dispatch\")&&response.request().postDataJSON()?.id===\"assets.search\",wait)",
+      "wait={timeout:120_000}",
+      "response=await read",
+      "search=dialog.getByRole(\"textbox\",{name:\"搜索素材\",exact:true})",
+      "dialog=await openReference(page,s.field)",
+      "s=await setup(page,context,baseURL!)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1149-cover-aspect-group.spec.ts",
+    "line": 45,
+    "consumer": "mkdirSync",
+    "arg": "resolve(dir,\"screenshots\")",
+    "lineage": [
+      "dir=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))",
+      "original=await s.get()",
+      "get=()=>dispatch<CreativeCanvasResource>(page,\"canvas.get\",{params:{canvasId:created.id}},group.id)",
+      "group=await dispatch<{id:string}>(page,\"accountGroups.create\",{body:{name:\"画幅交互验收\",idempotencyKey:crypto.randomUUID()}})",
+      "created=await dispatch<CreativeCanvasResource>(page,\"canvas.create\",{body:{title:\"一组图片统一画幅\",projectId:project.id}},group.id)",
+      "project=await dispatch<{id:string}>(page,\"projects.create\",{body:{title:\"图文画幅验收\",brief:\"\"}},group.id)",
+      "s=await setup(page,context,baseURL!,\"16:9\",true)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1149-cover-aspect-group.spec.ts",
+    "line": 45,
+    "consumer": "page.screenshot",
+    "arg": "{path:resolve(dir,\"screenshots\",name+\".png\"), timeout: 120000}",
+    "lineage": [
+      "dir=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))",
+      "original=await s.get()",
+      "get=()=>dispatch<CreativeCanvasResource>(page,\"canvas.get\",{params:{canvasId:created.id}},group.id)",
+      "group=await dispatch<{id:string}>(page,\"accountGroups.create\",{body:{name:\"画幅交互验收\",idempotencyKey:crypto.randomUUID()}})",
+      "created=await dispatch<CreativeCanvasResource>(page,\"canvas.create\",{body:{title:\"一组图片统一画幅\",projectId:project.id}},group.id)",
+      "project=await dispatch<{id:string}>(page,\"projects.create\",{body:{title:\"图文画幅验收\",brief:\"\"}},group.id)",
+      "s=await setup(page,context,baseURL!,\"16:9\",true)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1149-cover-aspect-group.spec.ts",
+    "line": 66,
+    "consumer": "mkdirSync",
+    "arg": "dir",
+    "lineage": [
+      "dir=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))",
+      "original=await s.get()",
+      "get=()=>dispatch<CreativeCanvasResource>(page,\"canvas.get\",{params:{canvasId:created.id}},group.id)",
+      "group=await dispatch<{id:string}>(page,\"accountGroups.create\",{body:{name:\"画幅交互验收\",idempotencyKey:crypto.randomUUID()}})",
+      "created=await dispatch<CreativeCanvasResource>(page,\"canvas.create\",{body:{title:\"一组图片统一画幅\",projectId:project.id}},group.id)",
+      "project=await dispatch<{id:string}>(page,\"projects.create\",{body:{title:\"图文画幅验收\",brief:\"\"}},group.id)",
+      "s=await setup(page,context,baseURL!,\"16:9\",true)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1149-cover-aspect-group.spec.ts",
+    "line": 66,
+    "consumer": "writeFileSync",
+    "arg": "resolve(dir,\"aspect-public-observation.json\")",
+    "lineage": [
+      "dir=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))",
+      "original=await s.get()",
+      "get=()=>dispatch<CreativeCanvasResource>(page,\"canvas.get\",{params:{canvasId:created.id}},group.id)",
+      "group=await dispatch<{id:string}>(page,\"accountGroups.create\",{body:{name:\"画幅交互验收\",idempotencyKey:crypto.randomUUID()}})",
+      "created=await dispatch<CreativeCanvasResource>(page,\"canvas.create\",{body:{title:\"一组图片统一画幅\",projectId:project.id}},group.id)",
+      "project=await dispatch<{id:string}>(page,\"projects.create\",{body:{title:\"图文画幅验收\",brief:\"\"}},group.id)",
+      "s=await setup(page,context,baseURL!,\"16:9\",true)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1149-cover-aspect-group.spec.ts",
+    "line": 83,
+    "consumer": "writeFileSync",
+    "arg": "resolve(dir,\"capability-public-observation.json\")",
+    "lineage": [
+      "dir=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))",
+      "original=await s.get()",
+      "get=()=>dispatch<CreativeCanvasResource>(page,\"canvas.get\",{params:{canvasId:created.id}},group.id)",
+      "group=await dispatch<{id:string}>(page,\"accountGroups.create\",{body:{name:\"画幅交互验收\",idempotencyKey:crypto.randomUUID()}})",
+      "created=await dispatch<CreativeCanvasResource>(page,\"canvas.create\",{body:{title:\"一组图片统一画幅\",projectId:project.id}},group.id)",
+      "project=await dispatch<{id:string}>(page,\"projects.create\",{body:{title:\"图文画幅验收\",brief:\"\"}},group.id)",
+      "s=await setup(page,context,baseURL!,\"16:9\",true)"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts",
+    "line": 26,
+    "consumer": "mkdirSync",
+    "arg": "resolve(output, \"screenshots\")",
+    "lineage": [
+      "output=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1159\"))"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts",
+    "line": 67,
+    "consumer": "page.screenshot",
+    "arg": "{ path: resolve(output, \"screenshots\", `${name}.png`) , timeout: 120000}",
+    "lineage": [
+      "output=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1159\"))",
+      "name=`${account.platform}-identity-required`",
+      "account=await dispatch<PlatformAccountResource>(page, \"accounts.create\", { body: { platform, accountHandle: name, idempotencyKey: crypto.randomUUID() } }, group.id)",
+      "group=await dispatch<AccountGroupResource>(page, \"accountGroups.create\", { body: { name: \"微信报表入口验收\", idempotencyKey: crypto.randomUUID() } })",
+      "accounts=[]",
+      "id=request.postDataJSON()?.id"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts",
+    "line": 90,
+    "consumer": "page.screenshot",
+    "arg": "{ path: resolve(output, \"screenshots\", `${name}.png`) , timeout: 120000}",
+    "lineage": [
+      "output=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1159\"))",
+      "name=`${account.platform}-identity-required`",
+      "account=await dispatch<PlatformAccountResource>(page, \"accounts.create\", { body: { platform, accountHandle: name, idempotencyKey: crypto.randomUUID() } }, group.id)",
+      "group=await dispatch<AccountGroupResource>(page, \"accountGroups.create\", { body: { name: \"微信报表入口验收\", idempotencyKey: crypto.randomUUID() } })",
+      "accounts=[]",
+      "id=request.postDataJSON()?.id"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts",
+    "line": 96,
+    "consumer": "writeFileSync",
+    "arg": "resolve(output, \"public-read-observation.json\")",
+    "lineage": [
+      "output=resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1159\"))",
+      "read=() => dispatch<{ items: unknown[]; total: number; nextCursor: string | null }>(page, \"platforms.reports.list\", { params: { accountId: account.id }, query: { pageSize: 20, cursor: null } }, group.id, account.id)",
+      "group=await dispatch<AccountGroupResource>(page, \"accountGroups.create\", { body: { name: \"微信报表入口验收\", idempotencyKey: crypto.randomUUID() } })",
+      "name=`${account.platform}-identity-required`",
+      "account=await dispatch<PlatformAccountResource>(page, \"accounts.create\", { body: { platform, accountHandle: name, idempotencyKey: crypto.randomUUID() } }, group.id)",
+      "accounts=[]",
+      "id=request.postDataJSON()?.id"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t954-director-review.spec.ts",
+    "line": 34,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t954-review-empty-desktop.png'),fullPage:true, timeout: 120000}",
+    "lineage": [
+      "review=page.getByRole('button',{name:'帮我复盘'}).first()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t954-director-review.spec.ts",
+    "line": 34,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t954-review-empty-desktop.png'",
+    "lineage": [
+      "review=page.getByRole('button',{name:'帮我复盘'}).first()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t954-director-review.spec.ts",
+    "line": 38,
+    "consumer": "page.screenshot",
+    "arg": "{path:testInfo.outputPath('t954-review-empty-narrow.png'),fullPage:true, timeout: 120000}",
+    "lineage": [
+      "review=page.getByRole('button',{name:'帮我复盘'}).first()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/t954-director-review.spec.ts",
+    "line": 38,
+    "consumer": "testInfo.outputPath",
+    "arg": "'t954-review-empty-narrow.png'",
+    "lineage": [
+      "review=page.getByRole('button',{name:'帮我复盘'}).first()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/zz-account-isolation.spec.ts",
+    "line": 110,
+    "consumer": "page.screenshot",
+    "arg": "{ path: info.outputPath(\"group-a-initial.png\"), fullPage: true , timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/zz-account-isolation.spec.ts",
+    "line": 110,
+    "consumer": "info.outputPath",
+    "arg": "\"group-a-initial.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/zz-account-isolation.spec.ts",
+    "line": 116,
+    "consumer": "page.screenshot",
+    "arg": "{ path: info.outputPath(\"group-b-after-switch.png\"), fullPage: true , timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/zz-account-isolation.spec.ts",
+    "line": 116,
+    "consumer": "info.outputPath",
+    "arg": "\"group-b-after-switch.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/zz-account-isolation.spec.ts",
+    "line": 125,
+    "consumer": "page.screenshot",
+    "arg": "{ path: info.outputPath(\"group-a-return-reload.png\"), fullPage: true , timeout: 120000}",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/e2e/zz-account-isolation.spec.ts",
+    "line": 125,
+    "consumer": "info.outputPath",
+    "arg": "\"group-a-return-reload.png\"",
+    "lineage": []
+  },
+  {
+    "file": "frontend/tests-t1246-generated/helpers/test-environment.ts",
+    "line": 51,
+    "consumer": "mkdirSync",
+    "arg": "screenshotRoot",
+    "lineage": [
+      "screenshotRoot=resolve(verificationRoot, \"screenshots\")",
+      "verificationRoot=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"scenario\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/helpers/test-environment.ts",
+    "line": 67,
+    "consumer": "capturedPage.screenshot",
+    "arg": "{\n        path: screenshotPath,\n        animations: \"disabled\",\n        caret: \"hide\",\n      timeout: 120000}",
+    "lineage": [
+      "screenshotPath=resolve(screenshotRoot, screenshotName)",
+      "screenshotRoot=resolve(verificationRoot, \"screenshots\")",
+      "verificationRoot=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"scenario\")",
+      "screenshotName=scenarioScreenshotName(\n    testInfo.testId,\n    testInfo.file,\n    testInfo.titlePath,\n  )"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/helpers/test-environment.ts",
+    "line": 108,
+    "consumer": "appendFileSync",
+    "arg": "scenarioIndexPath",
+    "lineage": [
+      "scenarioIndexPath=resolve(verificationRoot, \"scenario-index.ndjson\")",
+      "verificationRoot=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"scenario\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/visual/__setup__.ts",
+    "line": 28,
+    "consumer": "mkdirSync",
+    "arg": "ARTIFACT_DIR",
+    "lineage": [
+      "ARTIFACT_DIR=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"visual-baseline\")"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/visual/__setup__.ts",
+    "line": 29,
+    "consumer": "writeFileSync",
+    "arg": "FINGERPRINT_PATH",
+    "lineage": [
+      "FINGERPRINT_PATH=resolve(\n  ARTIFACT_DIR,\n  \"baseline-fingerprint.json\",\n)",
+      "ARTIFACT_DIR=resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"visual-baseline\")",
+      "fingerprint=fingerprintReferences(REFERENCE_BASELINES_DIR)",
+      "REFERENCE_BASELINES_DIR=resolve(\n  HERE,\n  \"tests\",\n  \"visual\",\n  \"__screenshots__\",\n  \"reference-images\",\n)",
+      "HERE=process.cwd()"
+    ]
+  },
+  {
+    "file": "frontend/tests-t1246-generated/visual/all-pages.spec.ts",
+    "line": 57,
+    "consumer": "expect(page).toHaveScreenshot",
+    "arg": "`reference-${route.id}.png`",
+    "lineage": []
+  }
+]

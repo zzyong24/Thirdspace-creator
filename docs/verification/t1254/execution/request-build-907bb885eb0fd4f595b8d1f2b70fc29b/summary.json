@@ -1,0 +1,101 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_POST_V12_TWO_REAL_RED_PRIVATE_V2_MODE_REPAIR_REMAINING19_TYPES_BUILD_GRAPH_ONLY",
+  "exitCode": 1,
+  "startedAt": "2026-10-12T04:51:07.699Z",
+  "elapsedMs": 1153972.482,
+  "totalBudgetMs": 88020000,
+  "segmentStepComplete": 10,
+  "segmentStepTotal": 19,
+  "originalPrefixStages": 6,
+  "originalTotalStages": 25,
+  "combinedStagesObserved": 16,
+  "continuedFrom": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-14bcbffb7152bdb2b58cd5a252c2d27e",
+  "originalExitCodeUnchanged": 1,
+  "originalWallDeadline": "2026-10-13T10:50:47.959Z",
+  "signals": [],
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-907bb885eb0fd4f595b8d1f2b70fc29b-l8MDFC",
+  "rootRetained": true,
+  "appliedToPrivateOnly": true,
+  "records": [
+    {
+      "name": "native-whole24",
+      "code": 0,
+      "elapsedMs": 657,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-whole24",
+      "code": 0,
+      "elapsedMs": 964,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-real-green",
+      "code": 0,
+      "elapsedMs": 281290,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-real-green",
+      "code": 0,
+      "elapsedMs": 281361,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-wxt-prepare",
+      "code": 0,
+      "elapsedMs": 4308,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-wxt-prepare",
+      "code": 0,
+      "elapsedMs": 4184,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-shared-types",
+      "code": 0,
+      "elapsedMs": 2375,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-shared-types",
+      "code": 0,
+      "elapsedMs": 2216,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-original-build",
+      "code": 0,
+      "elapsedMs": 18660,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-original-build-verify",
+      "code": 0,
+      "elapsedMs": 2646,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-original-build",
+      "code": 1,
+      "elapsedMs": 16981,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "noProductCopy": true,
+  "noApp": true
+}

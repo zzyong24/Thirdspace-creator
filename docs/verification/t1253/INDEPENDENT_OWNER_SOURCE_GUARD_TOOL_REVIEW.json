@@ -1,0 +1,110 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-11T23:51:37.770103+00:00",
+  "result": "PASS_TOOL_OWNER_BATCHES_ONLY",
+  "scope": "T1253原25/46/两package标准types的精确owner工具；不启动任何测试/build，实际dist窗口由root另准入",
+  "tool": {
+    "file": "/tmp/t1253-candidate/run-final-v3-owner-batches-source-guard.cjs",
+    "sha256": "ebeeed71a63a85f05355bcf0ea1458ba69385a5e2e937fae8336b127e59be924"
+  },
+  "sealSha256": "bc1fd90598c1f450fad3f86f5bceb2e601041bc2d90a08ff11f2f3a806c0bf37",
+  "phases": [
+    {
+      "phase": "calibrated-whole25",
+      "prepareFile": "/tmp/t1253-candidate/source-guard-whole25-prepare.json",
+      "prepareSha256": "70f75b1b1fd6cee4d8923e88e3554c96c834a3804651ebdb2845fc9f31fbccf6",
+      "sourceSnapshotDigest": "c98e5efed906c4ed774206950fbc771a06817647367895c60b5b6d274745447b",
+      "toolDigest": "27810202f3de71d10a031ba84625dd33e85267ce2995b58b304a7b92227c45c5",
+      "sourceInputs": 3035,
+      "toolInputs": 3907,
+      "installedPackages": 93,
+      "installedImplementationFiles": 3888,
+      "slots": {
+        "body": 15300000,
+        "prepare": 2400000,
+        "cleanup": 1200000,
+        "processCleanup": 4320000
+      },
+      "prepareCompleteBudgetMs": 4560000,
+      "totalBudgetMs": 23220000,
+      "expectedCases": 25,
+      "fixedNode": {
+        "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+      },
+      "actualSourceReady": true
+    },
+    {
+      "phase": "regression-whole46",
+      "prepareFile": "/tmp/t1253-candidate/source-guard-whole46-prepare.json",
+      "prepareSha256": "ec8c0b4d0d13079fd24ca64bf1fe3f5f25ba6ce31acdb8aa214343f2494f6a36",
+      "sourceSnapshotDigest": "c98e5efed906c4ed774206950fbc771a06817647367895c60b5b6d274745447b",
+      "toolDigest": "27810202f3de71d10a031ba84625dd33e85267ce2995b58b304a7b92227c45c5",
+      "sourceInputs": 3035,
+      "toolInputs": 3907,
+      "installedPackages": 93,
+      "installedImplementationFiles": 3888,
+      "slots": {
+        "body": 46440000,
+        "prepare": 2400000,
+        "cleanup": 1200000,
+        "processCleanup": 4320000
+      },
+      "prepareCompleteBudgetMs": 4560000,
+      "totalBudgetMs": 54360000,
+      "expectedCases": 46,
+      "fixedNode": {
+        "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+      },
+      "actualSourceReady": true
+    },
+    {
+      "phase": "types",
+      "prepareFile": "/tmp/t1253-candidate/source-guard-types-prepare.json",
+      "prepareSha256": "0315cd24b8ab11eb25ae54675b9de07cd6c5338f51d89b795910b04f1f76790a",
+      "sourceSnapshotDigest": "c98e5efed906c4ed774206950fbc771a06817647367895c60b5b6d274745447b",
+      "toolDigest": "27810202f3de71d10a031ba84625dd33e85267ce2995b58b304a7b92227c45c5",
+      "sourceInputs": 3035,
+      "toolInputs": 3907,
+      "installedPackages": 93,
+      "installedImplementationFiles": 3888,
+      "slots": {
+        "body": 2400000,
+        "prepare": 2400000,
+        "cleanup": 1200000,
+        "processCleanup": 6480000
+      },
+      "prepareCompleteBudgetMs": 4560000,
+      "totalBudgetMs": 12480000,
+      "expectedCases": null,
+      "fixedNode": {
+        "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+      },
+      "actualSourceReady": true
+    }
+  ],
+  "findings": [],
+  "closedFinding": {
+    "id": "OT001",
+    "evidence": "执行后必须after.executionReady=true且ownedActual三实际SHA逐对象同before，才能sourceActualUnchanged；虚拟candidate digest相同不足以通过。原05c与pureExpression5条正负路真实保存，不还原任何实际源。"
+  },
+  "staticConclusions": [
+    "首入口monotonic/wall冻结总外层，module require/全源读取/Node实现校验在同准备期限，不在main重启時計",
+    "原HOME/CODEX_HOME保持、8owned根、模型与PG namespace/secret清理；envproof在真实Node连接前拒55422，工具尚未运行它",
+    "真实Node32e234、backend/worker _tsc与Vitestdist传递93包3888文件已绑定；不是旧shim/candidate types overlay",
+    "whole25/46保原540/180声明和每file/each串行槽；types两package各1.2M，envproof180k及每helper2.16M均纳外层",
+    "每子前remaining校完整positive+未来types第二child+剩余lifecycle+cleanup；scope取消或前一child不quiescent则不启动后续types",
+    "三已apply原test实际SHA与latestFRUSAGE3cb/SPEC/源码3035一致，after source guard不接受恢复known-before",
+    "shared dist前后单独11bundle记录，原test beforeAll会build，必须root独占窗口；sourceSnapshot不把这种合法dist重建误作产品源码漂移"
+  ],
+  "constraints": [
+    "此静态准入不签任何case/count/runtime/types或实际source-after；保持原17/8、CP001/OT001历史与每次新失败",
+    "root精确新toolDigest/phase/source/Node准入；fullhosts/render读dist期间不得执行其beforeAll build",
+    "实际25/46全部原文件/声明、pending0、各原child退出码和真实关闭/owned0入回执，不过滤失败",
+    "原内部beforeAll声明与nested build均180k等继承策略仍原样；本收据证明工具外层声明库存，不能把继承内部策略说成已新验证或据此洗掉hook失败",
+    "不使用真实App/模型/外国PG/用户库；未进行任何OSsignal或业务运行，pureVM只是表达式证据"
+  ],
+  "runtimePermissionByReviewer": false
+}

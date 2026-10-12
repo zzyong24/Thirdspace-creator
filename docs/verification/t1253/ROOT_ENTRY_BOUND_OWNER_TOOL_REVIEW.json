@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "at": "2026-10-11T23:43:00.223026+00:00",
+  "result": "PASS_STATIC_TOOL_AWAIT_INDEPENDENT_NO_RUNTIME",
+  "toolSha256": "05c17133393ccbd742b18a645e1b432c87d456c69ba18680504fc2221daa1341",
+  "fullSealSha256": "6ac8fcc0d7c898ed732c57b90f49bd02e0a560948a007696e34d6eb621176a7b",
+  "sourceSnapshotDigest": "c98e5efed906c4ed774206950fbc771a06817647367895c60b5b6d274745447b",
+  "toolDigest": "2714d140d92101cbd138b522ebf144dea67a323f2ceedee9851131d6650bca86",
+  "sourceFilesActuallyHashVerified": 3035,
+  "installedFilesActuallyHashVerified": 3888,
+  "fullInstalledPackages": 93,
+  "actualSourceAndToolDrift": 0,
+  "readWholeTool": true,
+  "entryClockFirstExecutableLine": true,
+  "originalHomeAndCodexHomePreserved": true,
+  "secretNamespacesCleared": true,
+  "nodeAndRealTscVitestClosureBound": true,
+  "fullRemainingBeforeEveryChild": true,
+  "cancelPreventsNextChild": true,
+  "budgetsMs": {
+    "calibrated-whole25": 23220000,
+    "regression-whole46": 54360000,
+    "types": 12480000
+  },
+  "workerBuildRequiresExclusiveDistWindow": true,
+  "oldToolAndRedEvidencePreserved": true,
+  "runtimeApproved": false,
+  "actualRuns": 0,
+  "noApp": true,
+  "noPG": true,
+  "resultAcceptanceRequiresOriginal25And46NoSkipAndAllSignalsEmpty": true
+}

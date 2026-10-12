@@ -1,0 +1,41 @@
+--- approved-50cf523
++++ candidate-two-case-projection
+@@ -151,7 +151,7 @@
+     expect(saved).toMatchObject({role:"assistant",content:final.text+(mode==="denied"?partialNotice:""),inputTokens:mode==="repeat"?6:mode==="length"?8:4,outputTokens:mode==="repeat"?9:mode==="length"?12:6});
+     const visible=(parts:unknown[])=>parts.map(raw=>{const p=raw as Record<string,unknown>;return {type:p.type,text:p.text,state:p.state,input:p.input,output:p.output,toolCallId:p.toolCallId};});
+     if(mode==="denied"){
+-      expect(final.message.parts).toContainEqual(expect.objectContaining({type:"tool-web_read",state:"approval-responded",approval:expect.objectContaining({approved:false})}));
++      expect(final.message.parts).toContainEqual(expect.objectContaining({type:"tool-web_read",toolCallId:"read-1",input:{query:"真实查询"},state:"output-denied",approval:{id:`chat-approval:${state.calls[0]!.id}:read-1`,approved:false}}));
+       expect(saved!.parts).toContainEqual(expect.objectContaining({type:"tool-web_read",state:"output-denied",approval:expect.objectContaining({approved:false})}));
+       expect(visible(saved!.parts as unknown[]).filter(p=>!p.type?.toString().startsWith("tool-"))).toEqual([...visible(final.message.parts).filter(p=>!p.type?.toString().startsWith("tool-")),visible([{type:"text",text:partialNotice,state:"done"}])[0]]);
+     }else {
+@@ -166,7 +166,28 @@
+         }
+         return part;
+       });
+-      expect(visible(saved!.parts as unknown[])).toEqual(visible(expectedParts));
++      if(mode==="completed"){
++        // 原provider receipt按事件首次出现保序；Pi临时parts在回合末追加累积文字，两者分别核原合同。
++        expect((state.calls[0]!.providerResult as {content:unknown[]}).content).toEqual([
++          {type:"text",text:"先查询。"},
++          {type:"tool-call",toolCallId:"read-1",toolName:"web_read",input:'{"query":"真实查询"}'},
++        ]);
++        const sourceCard={kind:"source-card",url:"https://source.test/real",text:"真实正文"};
++        expect(final.message.parts).toEqual([
++          {type:"step-start"},
++          {type:"tool-web_read",toolCallId:"read-1",input:{query:"真实查询"},state:"output-available",output:sourceCard},
++          {type:"text",text:"先查询。",state:"done"},
++          {type:"step-start"},
++          {type:"text",text:"有来源的结论",state:"done"},
++        ]);
++        expect(saved!.parts).toEqual([
++          {type:"step-start"},
++          {type:"text",text:"先查询。",state:"done"},
++          {type:"tool-web_read",toolCallId:"read-1",input:{query:"真实查询"},state:"output-available",output:{...sourceCard,__creatorosOutcome:{schemaVersion:1,callId:state.calls[1]!.id,status:"ok",summary:"查到来源",error:null,sideEffect:"none",continuation:null}}},
++          {type:"step-start"},
++          {type:"text",text:"有来源的结论",state:"done"},
++        ]);
++      }else expect(visible(saved!.parts as unknown[])).toEqual(visible(expectedParts));
+     }
+     expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
+     const [done]=await f.db.select().from(executionTasks).where(eq(executionTasks.id,task.id));

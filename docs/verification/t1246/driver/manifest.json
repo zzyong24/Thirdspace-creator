@@ -483,11 +483,11 @@
     },
     {
       "file": "e2e/ai-recovery-guidance.spec.ts",
-      "sha256": "e3a3b05b72f5748e711280e06920f8610c7526dca6a1cf117865d47ce360c177"
+      "sha256": "b6ce8815bad417cd54673fd9200c50ea13db8a0ee91736e9e43267ea6b22a0a2"
     },
     {
       "file": "e2e/ai-reliability-recovery.spec.ts",
-      "sha256": "d68cf5ca26f17f8e6037174c4c8a2f7fe92b84d70657831ca65a9eda187f7136"
+      "sha256": "57d09157cd5ba8f7edeb331d07591a4e46a9533f32ce9015704ba57afab6f57f"
     },
     {
       "file": "e2e/all-routes.spec.ts",
@@ -783,11 +783,11 @@
     },
     {
       "file": "visual/__setup__.ts",
-      "sha256": "073be3097ac3173e7dea87548261bab7ce49d7c0acc3763445a8a26d6d3ec779"
+      "sha256": "0ba9d7801bdd36fc2816b681096de517edf5d007b184e54325ca3737d45a140d"
     },
     {
       "file": "visual/__teardown__.ts",
-      "sha256": "f66e5693777c979e20d45d571ce825ec74467c393bc4f48efcc7807798c6e95c"
+      "sha256": "6f7ffe6c1b9db88ec43d65c917b4e9a6d7176e1fbb9b444e501322dbdb86cb12"
     },
     {
       "file": "visual/all-pages.spec.ts",
@@ -892,19 +892,19 @@
     {
       "file": "e2e/ai-recovery-guidance.spec.ts",
       "originalSha256": "500b8cd4407df0553c843a7a99dd14e6987fbb63372715271d119363f64fe0e0",
-      "generatedSha256": "e3a3b05b72f5748e711280e06920f8610c7526dca6a1cf117865d47ce360c177",
+      "generatedSha256": "b6ce8815bad417cd54673fd9200c50ea13db8a0ee91736e9e43267ea6b22a0a2",
       "originalBytes": 8324,
-      "generatedBytes": 8541,
-      "edits": 5,
+      "generatedBytes": 8651,
+      "edits": 7,
       "reconstruction": "original source byte-identical after removing only recorded edits"
     },
     {
       "file": "e2e/ai-reliability-recovery.spec.ts",
       "originalSha256": "d45f2d894a833baa06fc300f579597dcb8f6f6005c57e283f8e20be7bc93a5b1",
-      "generatedSha256": "d68cf5ca26f17f8e6037174c4c8a2f7fe92b84d70657831ca65a9eda187f7136",
+      "generatedSha256": "57d09157cd5ba8f7edeb331d07591a4e46a9533f32ce9015704ba57afab6f57f",
       "originalBytes": 6848,
-      "generatedBytes": 7032,
-      "edits": 6,
+      "generatedBytes": 7142,
+      "edits": 8,
       "reconstruction": "original source byte-identical after removing only recorded edits"
     },
     {
@@ -1382,6 +1382,24 @@
       "originalBytes": 6029,
       "generatedBytes": 6129,
       "edits": 4,
+      "reconstruction": "original source byte-identical after removing only recorded edits"
+    },
+    {
+      "file": "visual/__setup__.ts",
+      "originalSha256": "073be3097ac3173e7dea87548261bab7ce49d7c0acc3763445a8a26d6d3ec779",
+      "generatedSha256": "0ba9d7801bdd36fc2816b681096de517edf5d007b184e54325ca3737d45a140d",
+      "originalBytes": 945,
+      "generatedBytes": 960,
+      "edits": 1,
+      "reconstruction": "original source byte-identical after removing only recorded edits"
+    },
+    {
+      "file": "visual/__teardown__.ts",
+      "originalSha256": "f66e5693777c979e20d45d571ce825ec74467c393bc4f48efcc7807798c6e95c",
+      "generatedSha256": "6f7ffe6c1b9db88ec43d65c917b4e9a6d7176e1fbb9b444e501322dbdb86cb12",
+      "originalBytes": 958,
+      "generatedBytes": 960,
+      "edits": 1,
       "reconstruction": "original source byte-identical after removing only recorded edits"
     }
   ],
@@ -4091,6 +4109,72 @@
       "consumer": "original automatic screenshot fixture teardown",
       "line": 186,
       "context": "     }\n      if (captureError) throw captureError;\n      if (testError) throw testError;\n    },\n    { auto: true },\n  ],\n});\n\nexport { expect };\n"
+    },
+    {
+      "file": "visual/__setup__.ts",
+      "start": 318,
+      "end": 367,
+      "original": "resolve(HERE, \"tests\", \"visual\", \"__artifacts__\")",
+      "replacement": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"visual-baseline\")",
+      "kind": "evidence-output-path",
+      "consumer": "globalSetup mkdirSync/writeFileSync fingerprint OUTPUT; original17 reference INPUT unchanged",
+      "line": 14,
+      "context": "(\n  HERE,\n  \"tests\",\n  \"visual\",\n  \"__screenshots__\",\n  \"reference-images\",\n);\nconst ARTIFACT_DIR = resolve(HERE, \"tests\", \"visual\", \"__artifacts__\");\nconst FINGERPRINT_PATH = resolve(\n  ARTIFACT_DIR,\n  \"baseline-fingerprint.json\",\n);\n\nexport defaul"
+    },
+    {
+      "file": "visual/__teardown__.ts",
+      "start": 342,
+      "end": 433,
+      "original": "resolve(\n  HERE,\n  \"tests\",\n  \"visual\",\n  \"__artifacts__\",\n  \"baseline-fingerprint.json\",\n)",
+      "replacement": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"visual-baseline\", \"baseline-fingerprint.json\")",
+      "kind": "evidence-output-path",
+      "consumer": "globalTeardown readFileSync paired runtime fingerprint OUTPUT; count/hash/entries assertions unchanged",
+      "line": 17,
+      "context": "HERE,\n  \"tests\",\n  \"visual\",\n  \"__screenshots__\",\n  \"reference-images\",\n);\nconst FINGERPRINT_PATH = resolve(\n  HERE,\n  \"tests\",\n  \"visual\",\n  \"__artifacts__\",\n  \"baseline-fingerprint.json\",\n);\n\nexport default async function globalTeardown() {\n  const before = JSON.parse(\n    readFileSync(FI"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "start": 4024,
+      "end": 4063,
+      "original": "\"../.codex-tmp/t913-model-recovery.png\"",
+      "replacement": "(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/.codex-tmp/t913-model-recovery.png\")",
+      "kind": "evidence-output-path",
+      "consumer": "actual card/page.screenshot path; historical .codex-tmp OUTPUT only",
+      "line": 141,
+      "context": "-SETTINGS\",\n    \"AC-AI-COPY-SAFE\",\n  ]);\n  await card.screenshot({\n    path: resolve(process.cwd(), \"../.codex-tmp/t913-model-recovery.png\"),\n  });\n\n  await settings.click();\n  await expect(page).toHaveURL(/\\/settings\\?highlight=text-model"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "start": 5775,
+      "end": 5828,
+      "original": "\"../.codex-tmp/t913-positioning-recovery-compact.png\"",
+      "replacement": "(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/.codex-tmp/t913-positioning-recovery-compact.png\")",
+      "kind": "evidence-output-path",
+      "consumer": "actual card/page.screenshot path; historical .codex-tmp OUTPUT only",
+      "line": 186,
+      "context": "SITIONING\",\n    \"AC-AI-COPY-SAFE\",\n  ]);\n  await card.screenshot({\n    path: resolve(process.cwd(), \"../.codex-tmp/t913-positioning-recovery-compact.png\"),\n  });\n\n  await positioning.click();\n  await expect(page).toHaveURL(/\\/positioning$/);\n  await exp"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "start": 5318,
+      "end": 5363,
+      "original": "\"../.codex-tmp/t806-direct-error-regular.png\"",
+      "replacement": "(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/.codex-tmp/t806-direct-error-regular.png\")",
+      "kind": "evidence-output-path",
+      "consumer": "actual card/page.screenshot path; historical .codex-tmp OUTPUT only",
+      "line": 190,
+      "context": "it page.locator('[data-slot=\"production-decisions\"]').screenshot({\n    path: resolve(process.cwd(), \"../.codex-tmp/t806-direct-error-regular.png\"),\n  });\n  expect(createBodies[0]?.retryOfTaskId).toBeUndefined();\n\n  const terminalGetCount = taskG"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "start": 6076,
+      "end": 6121,
+      "original": "\"../.codex-tmp/t806-direct-error-compact.png\"",
+      "replacement": "(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/.codex-tmp/t806-direct-error-compact.png\")",
+      "kind": "evidence-output-path",
+      "consumer": "actual card/page.screenshot path; historical .codex-tmp OUTPUT only",
+      "line": 211,
+      "context": "it page.locator('[data-slot=\"production-decisions\"]').screenshot({\n    path: resolve(process.cwd(), \"../.codex-tmp/t806-direct-error-compact.png\"),\n  });\n  await button.click();\n  await expect.poll(() => createBodies.length).toBe(2);\n  expect(cr"
     }
   ],
   "budgets": [
@@ -4704,7 +4788,11 @@
     "t1136",
     "t1140",
     "t1149",
-    "t1159"
+    "t1159",
+    ".codex-tmp/t913-model-recovery.png",
+    ".codex-tmp/t913-positioning-recovery-compact.png",
+    ".codex-tmp/t806-direct-error-regular.png",
+    ".codex-tmp/t806-direct-error-compact.png"
   ],
   "unresolved": [],
   "policy": {
@@ -4735,11 +4823,11 @@
   "driverFiles": [
     {
       "file": "prepare-browser-driver.cjs",
-      "sha256": "559f51df5e35b71ba4686a3a515275bb992efe7852abaa78321aa98f4f8d7c03"
+      "sha256": "40dab226779b98ba016b2c0bad03851683a721373801cff79b9df8772ad1f8fc"
     },
     {
       "file": "playwright.config.ts",
-      "sha256": "00496b4b0b5a93ab3c0468d3ea1c4cdb01c350572b10f0fa50c2bb38b0556e37"
+      "sha256": "78f9b52e25056a4c29341e48a11efce748e7f35fdbd2631f27be66006bd6e395"
     },
     {
       "file": "start-isolated-next.cjs",
@@ -4747,15 +4835,49 @@
     },
     {
       "file": "README.md",
-      "sha256": "2665b6783fecc56fe3b458c37c02f344b58f399ea6143c6e6304e1753fd3adc3"
+      "sha256": "85043381f36ff1bd255f6cb3b2556c03c8b0dc3c5637a70fa02ab333c3941d95"
     },
     {
       "file": "changes.diff",
-      "sha256": "79aa3b988ceb353b066452a78d3abb418fa7e74f03bf17f306ec09aa208d4963"
+      "sha256": "88799b194cf9f57817fcdd14bd73b62f4088439676d56d6165f38976d803f711"
     },
     {
       "file": "runtime-list.json",
       "sha256": "f7906784b29d85a8a49c517cba7b46f8114dfc2ffbc67740d8409bf7615e6d32"
+    },
+    {
+      "file": "runtime-output-consumers.json",
+      "sha256": "570cbae89f5943a24b5572b3163698a2c5136a3151611dd076de4addeff06011"
+    },
+    {
+      "file": "path-consumer-audit.json",
+      "sha256": "75328796a60b1ac680eb982e94c12e0026d3290f036ae82bb4584875a79635d5"
+    }
+  ],
+  "runtimeDriverAmendments": [
+    {
+      "id": "DR004",
+      "phase": "真实启动失败，任何test执行前",
+      "observedAt": "2026-10-11T22:53:51.476606+08:00",
+      "before": "webServer cwd缺省=configDir，相对路径解析到double docs",
+      "after": "显式cwd resolve(root,frontend)，保原Node启动命令/产品/54原断言/预算",
+      "candidateCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "redEvidence": "docs/verification/t1246/round-1-original-console.txt"
+    },
+    {
+      "id": "DR005",
+      "reason": "Original globalSetup runtime fingerprint writes source inventory, worker config rejects exact100 inventory; no test bodies reached",
+      "ownedOutputArchive": {
+        "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/visual/__artifacts__/baseline-fingerprint.json",
+        "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/driver-before-dr005/owned-original-baseline-fingerprint.json",
+        "sha256": "ba1b6cc8ca6c7c0a050e00f135aa761eaa27f3856e7123013d7dfd2508f094d0",
+        "bytes": 766,
+        "reason": "Third startup attempt owned globalSetup output; not a frozen test input",
+        "at": "2026-10-11T15:05:41.432714+00:00"
+      },
+      "changes": "2 fingerprint OUTPUT expressions,4 historical .codex-tmp screenshot OUTPUT expressions,explicit generated setup/teardown config; original baselines/assertions unchanged",
+      "previousStartup": "54 config failures,116 did not run,0 body executions",
+      "at": "2026-10-11T15:05:41.599983+00:00"
     }
   ]
 }

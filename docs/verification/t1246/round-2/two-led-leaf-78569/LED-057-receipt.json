@@ -1,0 +1,39 @@
+{
+  "name": "LED-057",
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/no-creatoros-app.sb",
+    "/bin/bash",
+    "-c",
+    "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/LED-057.log",
+  "pid": 56010,
+  "identity": {
+    "pid": 56010,
+    "pgid": 56010,
+    "uid": 501,
+    "birth": "Mon Oct 12 19:05:36 2026",
+    "startedAt": 1791803136610
+  },
+  "startedAt": "2026-10-12T11:05:36.610Z",
+  "endedAt": "2026-10-12T11:06:47.770Z",
+  "elapsedMs": 71160,
+  "budgetMs": 3600000,
+  "deadlineAt": "2026-10-12T12:05:36.610Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

@@ -1,0 +1,34 @@
+{
+  "task": "T-1254",
+  "exitCode": 1,
+  "startedAt": "2026-10-12T07:50:37.651Z",
+  "elapsedMs": 296998.420667,
+  "totalBudgetMs": 19320000,
+  "localSingleBirthMs": 19320000,
+  "inheritedV15Deadline": "2026-10-12T15:56:11.789Z",
+  "steps": 3,
+  "totalSteps": 3,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6",
+  "records": [
+    {
+      "name": "static-complete-and-faults",
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-all-four-verifier",
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "build-entry-prepare-only",
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "noProductionCopy": true,
+  "noApp": true
+}

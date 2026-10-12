@@ -1,0 +1,172 @@
+{
+  "at": "2026-10-11T22:11:21.623093+00:00",
+  "specSha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+  "bindingSha256": "4a635e4d822f023f2cc3d90b4f7ba3d6f07d340df61eb751f203a17421438009",
+  "sourceCount": 34,
+  "installedCount": 6,
+  "driftPaths": [],
+  "rows": [
+    {
+      "path": "backend/src/modules/execution/workbench-artifact.service.ts",
+      "same": true
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "same": true
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-public.transport.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/workbench.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/timeout-policy.ts",
+      "same": true
+    },
+    {
+      "path": "docs/features/t1250-positive-timeout-consumer-closure.md",
+      "same": true
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-preview-read.ts",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/package.json",
+      "same": true
+    },
+    {
+      "path": "mcp-server/scripts/build-runtime.mjs",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/index.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/sea-entry.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/cli-artifacts.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/dispatch.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/group-context.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/group-mcp-context.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/helpers/loopback-cli.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/server-discovery.test.ts",
+      "same": true
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "same": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "same": true
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "same": true
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "same": true
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/package.json",
+      "same": true
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/types/client.d.ts",
+      "same": true
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/types/fetch.d.ts",
+      "same": true
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/lib/web/fetch/index.js",
+      "same": true
+    },
+    {
+      "path": "node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.d.ts",
+      "same": true
+    },
+    {
+      "path": "node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js",
+      "same": true
+    }
+  ],
+  "runtimeExecuted": false,
+  "implementationPass": false
+}

@@ -1,0 +1,153 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+ ✓ src/modules/projects/data-foundation-prefer-real.integration.test.ts (3 tests) 10047ms
+     ✓ 无 imported 项目:hasImportedProjects=false,作品级读回退全量(过渡期演示态)  4249ms
+     ✓ 种 1 个 imported 真项目后:判据翻真,作品级读只返回真实导入作品(fixture 让位)  3068ms
+     ✓ getDashboardRollup 对真采集 key(views)与 fixture key(plays)都鲁棒  2729ms
+ ✓ src/integration/group-platform-facts.integration.test.ts (10 tests) 30509ms
+     ✓ 同内容同平台多个真实账号独立发布，组内可筛选账号  4839ms
+     ✓ 新发布必须验证当前成员和真实账号平台  2698ms
+     ✓ 公开external ID与指标追加跨组拒绝，不能借真实账号读取旧组  2744ms
+     ✓ 首个累计样本不算增长，邻日增量只含可比作品  2691ms
+     ✓ 北京时间归日，漏采与负修正保留真实含义  2905ms
+     ✓ 百分比按真实同口径分母加权，缺字段保持未知  2685ms
+     ✓ 账号转组后采集按真实账号找到历史发布，增量仍冻结在原组且重复导入幂等  3181ms
+     ✓ 空组平台草稿保留物料待选目标，手动复盘来源无需伪平台账号  3202ms
+     ✓ 外部副作用前重验冻结成员，已转出目标不能发布；真实账号创建带版本  2750ms
+     ✓ 原生公众号阅读不混算视频播放，迁移重复应用保持原始指标与冻结归属  2812ms
+ ❯ src/modules/ai/group-task-scope.integration.test.ts (8 tests | 1 failed) 23827ms
+     ✓ 空组无需平台账号能创建会话和候选任务，子消息按父组授权  4007ms
+     ✓ 执行任务创建冻结组；恢复后仍是原组且相同幂等键跨组独立  2829ms
+     ✓ 空组聊天公共入口原子提交消息、AI任务与冻结执行输入  3180ms
+     × 雷达是共享组域，空组同名集合独立且平台筛选不改变共享内容 2780ms
+     ✓ 空组每日创作任务中断后按原冻结组恢复运行，跨组不能恢复  2721ms
+     ✓ 平台任务先创建时转组锁检测阻止转组，转组先完成时旧freeze不能创建  2893ms
+     ✓ Worker外部副作用前复核member版本，stale冻结不会发送  2659ms
+     ✓ 归档组允许读已有会话任务，拒绝写入  2758ms
+ ❯ src/modules/platform-account/platform-account.service.test.ts (16 tests | 2 failed) 51423ms
+     ✓ createAccount happy path → active, baseline echoed  3875ms
+     ✓ createAccount defaults followerBaseline to 0  2777ms
+     ✓ 合同支持的每种平台都可建立账号登记，包含抖音、小红书和快手  3169ms
+     ✓ rejects an invalid platform string with ValidationError  3977ms
+     ✓ rejects a negative followerBaseline with ValidationError  3363ms
+     ✓ rejects an empty handle with ValidationError  3326ms
+     ✓ rejects a duplicate external_account_id with ConflictError; allows duplicate handle  2783ms
+     ✓ updateAccount patches only provided fields and rejects unknown status  4053ms
+     ✓ getAccount cross-user → OwnershipError (404)  3320ms
+       ✓ passes for an owned, active, same-platform account  2971ms
+       ✓ throws OwnershipError for another user's account  3083ms
+       ✓ throws ValidationError on platform mismatch  2793ms
+       ✓ throws ValidationError for an archived account  3724ms
+       × 允许隐藏最后一个active号，真0活跃且原组历史仍可读，外人仍拒绝 2746ms
+       × 多active先隐藏其一，再隐藏末号成功，两账号与原组历史都保留 2791ms
+     ✓ listAccounts is platform-filtered and user-scoped  2671ms
+ ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts (9 tests | 1 failed) 4676ms
+   × 只支持注入类型，真实inputs冻结用户明确连续限制与dryRun，不采纳用户checkpoint 26ms
+   ✓ 用户明确连续限制不被旧默认裁剪，映射重放保历史定义预算，修改公共请求拒绝 16ms
+   ✓ 非法输入归属、网络约束、类型和旧执行状态在转交前拒绝 14ms
+   ✓ 启动扫描只恢复支持且无旧租约的queued任务，失败单项继续 17ms
+   ✓ 兼容旧参数规范化：'fraction'，不因generic params变化阻断合法任务 6ms
+   ✓ 兼容旧参数规范化：'invalid'，不因generic params变化阻断合法任务 5ms
+   ✓ 兼容旧参数规范化：'sub-one'，不因generic params变化阻断合法任务 4ms
+   ✓ 网页操作授权只从用户任务冻结，重放不能由新配置放大 17ms
+   ✓ 无显式网页授权不产生默认授权，非法授权在转交前拒绝 7ms
+ ✓ src/modules/ai-runtime/browser-task-authorization.service.test.ts (4 tests) 4871ms
+ ✓ src/modules/assets/assets.acceptance.test.ts (6 tests) 12561ms
+     ✓ G4 — Asset exists/persists independent of any Project (no projectId in create surface)  4554ms
+     ✓ G6 — completeUpload validates the object (MIME/size via headObject) before materializing  4145ms
+     ✓ G7 — multi-tenant smoke: A cannot list/get B's assets  3651ms
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 剪辑候选工具保留 video.edit 卡与原参数，在真正执行时读取当前版本
+[chat-tool] name=video.edit.render ok durationMs=1
+
+stderr | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 无项目不触发剪辑候选准备
+[chat-tool-internal-error] class=Error reason=unknown message="剪辑调整必须在具体项目的编导对话中进行。"
+
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 无项目不触发剪辑候选准备
+[chat-tool] name=video.edit.render ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 普通读取异常保脱敏错误卡，不产生成功候选
+[chat-tool-internal-error] class=Error reason=unknown message="当前项目还没有已确认的分镜方案"
+
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 普通读取异常保脱敏错误卡，不产生成功候选
+[chat-tool] name=video.edit.render ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 候选准备期间取消后不能返回可采纳成功
+[chat-tool-internal-error] class=AbortError reason=aborted message="This operation was aborted"
+
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 候选准备期间取消后不能返回可采纳成功
+[chat-tool] name=video.edit.render ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 错误的结果卡不能冒充剪辑候选
+[chat-tool] name=video.edit.render ok durationMs=0
+
+ ✓ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts (8 tests) 38ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/agentic-business-execution.service.test.ts > 只支持注入类型，真实inputs冻结用户明确连续限制与dryRun，不采纳用户checkpoint
+AssertionError: expected { policy: 'continuous', …(3) } to deeply equal { policy: 'continuous', …(3) }
+
+- Expected
++ Received
+
+  {
+-   "deadlineMs": 120000,
++   "deadlineMs": 30000,
+    "maxCalls": 4,
+    "maxTokens": 3000,
+    "policy": "continuous",
+  }
+
+ ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts:25:32
+     23|   expect(f.validateInputs).toHaveBeenCalledWith(ctx, spec.inputs);
+     24|   const [row] = await db.select().from(executionTasks).where(eq(execut…
+     25|   expect(row?.executionBudget).toEqual({ policy:"continuous",maxCalls:…
+       |                                ^
+     26|   expect(row?.deadlineAt).toBe("2026-09-05T00:02:00.000Z");
+     27|   expect(row?.payload).toMatchObject({ modelInput: { kind: "agentic.ru…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/ai/group-task-scope.integration.test.ts > T1022 冻结账号组任务范围（隔离数据库） > 雷达是共享组域，空组同名集合独立且平台筛选不改变共享内容
+AssertionError: expected ConflictError: 账号归属已改变，请重新选择目标 { …(1) } to match object { code: 'OwnershipError' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "OwnershipError",
++ ConflictError {
++   "code": "ConflictError",
+  }
+
+ ❯ src/modules/ai/group-task-scope.integration.test.ts:77:63
+     75|   const view=await radar.getWorkspace({...a,accountId:account.id});
+     76|   expect(view.collections).toEqual(emptyView.collections);
+     77|   await expect(radar.getWorkspace({...b,accountId:account.id})).reject…
+       |                                                               ^
+     78|   expect(view.collections.some(row=>row.id===ca.id)).toBe(true);
+     79|   expect(view.collections.some(row=>row.id===cb.id)).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/platform-account/platform-account.service.test.ts > platform-account service > archiveAccount 空组与历史保留 > 允许隐藏最后一个active号，真0活跃且原组历史仍可读，外人仍拒绝
+ FAIL  src/modules/platform-account/platform-account.service.test.ts > platform-account service > archiveAccount 空组与历史保留 > 多active先隐藏其一，再隐藏末号成功，两账号与原组历史都保留
+error: duplicate key value violates unique constraint "project_stages_pkey"
+ ❯ ye.Ve ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:10
+ ❯ ye.nt ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:15
+ ❯ ye.parse ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:24
+ ❯ pe.execProtocol ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:631:25
+ ❯ pe.l ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:130:11
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:267:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  3 failed | 5 passed (8)
+      Tests  4 failed | 60 passed (64)
+   Start at  02:58:35
+   Duration  153.68s (transform 3.88s, setup 0ms, import 14.22s, tests 137.95s, environment 1ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/further-short-groups-first.json

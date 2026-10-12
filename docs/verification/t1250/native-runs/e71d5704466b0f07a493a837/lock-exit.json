@@ -1,0 +1,18 @@
+{
+  "pid": 93850,
+  "label": "lock",
+  "file": "/Users/zyongzhu/.cargo/bin/cargo",
+  "args": [
+    "update",
+    "--manifest-path",
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/source/browser-test/Cargo.toml",
+    "--offline",
+    "--workspace"
+  ],
+  "code": 0,
+  "signal": null,
+  "error": null,
+  "closeAt": "2026-10-11T21:31:20.418Z",
+  "stdioClosed": true,
+  "logClosedAt": "2026-10-11T21:31:20.418Z"
+}

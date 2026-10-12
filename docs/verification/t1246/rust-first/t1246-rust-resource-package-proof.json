@@ -1,0 +1,14 @@
+[
+  {
+    "relativePath": "sidecar.tar.gz",
+    "sourceSha256": "07b9351c8e2f2e49c6ac7c9f50560addf3b6cfb9562bae45a279d01398aa055c",
+    "packagedSha256": "07b9351c8e2f2e49c6ac7c9f50560addf3b6cfb9562bae45a279d01398aa055c",
+    "same": true
+  },
+  {
+    "relativePath": "THIRD_PARTY_NOTICES.md",
+    "sourceSha256": "164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962",
+    "packagedSha256": "164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962",
+    "same": true
+  }
+]

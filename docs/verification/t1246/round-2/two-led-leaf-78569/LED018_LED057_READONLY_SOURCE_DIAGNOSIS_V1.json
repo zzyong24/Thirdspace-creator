@@ -1,0 +1,206 @@
+{
+  "schema": "creatoros-led018-led057-readonly-diagnosis/v1",
+  "utc": "2026-10-12T10:55:16.753619+00:00",
+  "checks": {
+    "LED-018": "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs && cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_",
+    "LED-057": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features"
+  },
+  "noTestsRun": true,
+  "noProductChange": true,
+  "actualControl": [
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/summary.json",
+      "sha256": "1de5e44a6efe26421c0ea93c7b69690cea364213b0018808dc443a103e5d08d7",
+      "size": 572,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/reconcile-receipt.json",
+      "sha256": "c2e4f8e0bba93ad58f15e93c9faa8ab648cf3a0b8851214dc946850be0f5b3c3",
+      "size": 953,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/reconcile.log",
+      "sha256": "492ea335bdd58257ac4702e6fbee0130ac406733238489444cd4f80835700967",
+      "size": 12157,
+      "mode": 420,
+      "uid": 501
+    }
+  ],
+  "originalLeafMissing": "lesson stdio ignore；LED018是否越过&&未知，不回补127或叶子结果",
+  "pathFinding": {
+    "originalPATH": "/opt/homebrew/Cellar/node/25.9.0_2/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "command": "/bin/bash -c command -v cargo",
+    "exit": 1,
+    "stdout": "",
+    "stderr": "",
+    "cargoExists": true,
+    "userEntry": "/Users/zyongzhu/.cargo/bin/cargo",
+    "link": "rustup",
+    "realpath": "/Users/zyongzhu/.cargo/bin/rustup",
+    "conclusion": "原PATH不含Cargo；LED057有明确命令解析前置缺口。LED018尚须原前端链路真实结果。只补新观察env ~/.cargo/bin，不改原check。"
+  },
+  "currentSource": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/src/lib.rs",
+      "sha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
+      "size": 217921,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/build.rs",
+      "sha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "size": 29608,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/Cargo.toml",
+      "sha256": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f",
+      "size": 9320,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.ts",
+      "sha256": "1de2689b4e94ae71ebd23e28d1cfa25cbafa82179add78729e3c111d96af2a53",
+      "size": 165432,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.test.ts",
+      "sha256": "d76edcf3473a8e107e78495fee8c9173d97e11ad58f071bee3442e0f67e7014c",
+      "size": 133829,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/startup-safety-contract.test.mjs",
+      "sha256": "12be26df526ea2bd6f9d4d36ca660c98d10d4e96f9a420d7a66313da2686fb5f",
+      "size": 7448,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/runtime/browser/browser-launch.ts",
+      "sha256": "d177e5a5e1a8f5b7efdf1418c99861c7187ae2b3d500f47dd5dde2f7b228c3f7",
+      "size": 4635,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/runtime/browser/douyin-profile-context.ts",
+      "sha256": "374e73b82f9ed272e73d7b0daa6660ba78c4a32389d71618290d539c74e9936d",
+      "size": 960,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/vitest.config.ts",
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899",
+      "size": 1628,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/test/setup.ts",
+      "sha256": "10d841e42fdb88ca4e51afef9447253a1860513384c412db170437e6849dbb81",
+      "size": 7213,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/binaries/creatoros-server-aarch64-apple-darwin",
+      "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+      "size": 68384,
+      "mode": 493,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar.tar.gz",
+      "sha256": "07b9351c8e2f2e49c6ac7c9f50560addf3b6cfb9562bae45a279d01398aa055c",
+      "size": 853667799,
+      "mode": 420,
+      "uid": 501
+    }
+  ],
+  "currentVsHeadDiffPaths": [],
+  "firstEvidence": {
+    "logs": [
+      {
+        "path": "/tmp/t1246-rust-unit/first.log",
+        "sha256": "c991fd8783a3d1c2d9ee8e2b5b77de09a789f564a9fe21f3e312a6ef58675a8f",
+        "size": 20734,
+        "mode": 420,
+        "uid": 501
+      },
+      {
+        "path": "/tmp/t1246-rust-unit/resource-ready.log",
+        "sha256": "e5335f9d09975f4fe3f9318dea922d9062520f8f0c8609435ec6723420bdadc4",
+        "size": 28129,
+        "mode": 420,
+        "uid": 501
+      }
+    ],
+    "firstCargoMissingBinary": "第一次101/0bodies，tauri_build缺externalBinary；资源准备成功后同原default lib267pass/13ignore/0fail。当前binary68384/32e及tar853667799/07b都与成功时字节同，不支持当前missingbinary原因。",
+    "oldFrontendCandidate533": "原douyin-cdp144 +startup-contract11 pass；当前两个文件及实际browser消费者均HEAD无变。旧PASS不是本輪leaf结果。",
+    "defaultWindowsCases": [
+      "test runtime_cleanup_tests::windows_runtime_升级清理只保留_current ... ok",
+      "test runtime_cleanup_tests::windows_runtime_原子更新_current_不伪造跨版本_previous ... ok",
+      "test runtime_cleanup_tests::windows_runtime_指针拒绝目录穿越 ... ok",
+      "test runtime_cleanup_tests::windows_主动卸载使用_rust_清理深层_runtime ... ok",
+      "test runtime_cleanup_tests::windows_传统完整_runtime_与分层_runtime_都可通过但混合残缺拒绝 ... ok",
+      "test runtime_cleanup_tests::windows_后续启动复用已完成的隔离解压目录 ... ok",
+      "test runtime_cleanup_tests::windows_安装期指针只解析安装目录内已校验_runtime ... ok",
+      "test runtime_cleanup_tests::windows_安装目录展开资源关键结构与入口哈希都必须通过 ... ok",
+      "test runtime_cleanup_tests::windows_已有旧_app_data_runtime_时用新安装_runtime_安全替换 ... ok",
+      "test runtime_cleanup_tests::windows_新安装_runtime_校验失败时保留旧_app_data_runtime ... ok",
+      "test runtime_cleanup_tests::windows_旧安装目录_runtime_迁到_app_data_后才删除旧副本 ... ok",
+      "test runtime_cleanup_tests::windows_旧安装目录缺指针且有多个完整_runtime_时保留旧目录走兜底 ... ok",
+      "test runtime_cleanup_tests::windows_旧安装目录缺指针时从唯一完整_runtime_恢复后迁移 ... ok",
+      "test runtime_cleanup_tests::windows_旧缓存清理只删_runtime_不碰_db_和_auth ... ok",
+      "test runtime_cleanup_tests::windows_目录切换暂时拒绝访问时保留已解压目录供本次启动 ... ok",
+      "test workbench::files::tests::file_journal_fault_windows_never_upgrade_prepared_from_matching_bytes ... ok",
+      "test workbench::files::tests::portable_paths_reject_windows_aliases_and_private_state ... ok"
+    ],
+    "defaultFilterCount": 17,
+    "runtimeCleanupFilterCount": 15,
+    "exactNoDefaultGap": "LED057 --no-default-features不同于首轮default，精确命令当前未证明。",
+    "windowsAppGap": "cfg(windows)真实排他文件句柄用例macOS不编译；不能宣称Windows/App原生绿。",
+    "sourceBoundary": "直接消费者均相对HEAD无变，lib.rs508a同首轮；本轮Rust整crate另有workbench ipc/browser_ipc/ipc_windows变化，必须捕获实际编译结果，不能只凭旧15case替代。"
+  },
+  "retestSource": {
+    "commands": {
+      "LED-018": "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs && cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_",
+      "LED-057": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features"
+    },
+    "env": "尊原HOME，PATH Node32e/bin:/Users/zyongzhu/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin；清PG与secret；ownedTMPDIR/CARGO_TARGET_DIR；无App/install/publish",
+    "preflight": "rustup默认stable-aarch64-apple-darwin，无项目toolchain文件。绑定实际Rustup/toolchain/resources/源；tauri_build会产ACL/schema，预后实核写集。",
+    "capture": "两原完整check原串经/bin/bash -c，&&不拆不改；保存全stdout/stderr及exit/closed/group/signals；不重53全reconcile。",
+    "budget": {
+      "cases": 155,
+      "retry": 2,
+      "attemptUpper": 465,
+      "actualOriginalTestMs": 20000,
+      "actualOriginalAfterEachMs": 20000,
+      "hooks": "仅setup全局afterEach，两个文件无before/afterAll或beforeEach/config覆写",
+      "serialTestPlusHookMs": 18600000,
+      "startupTeardownExitReserveMs": 600000,
+      "cargoFiniteObservationMs": 3600000,
+      "LED018PositiveMs": 22800000,
+      "LED057PositiveMs": 3600000,
+      "eachLifecycleMs": 2160000,
+      "prepareMs": 3600000,
+      "afterMs": 3600000,
+      "parentTotalMs": 37920000,
+      "sum": "3.6M+22.8M+2.16M+3.6M+2.16M+3.6M=37.92M",
+      "guardBoundary": "新增完整bindingGuard必须额外计槽/总预算，不隐藏；原Cargo无内部截止，3.6M仅新有限观察非持久任务，不保证完成、不重发；原20k与SDK原默认事实不洗120k。"
+    }
+  },
+  "reportPreparationFailures": "先前只读Python lexists属性、lesson字段id与browser源码路径定位失败均未运行测试/改文件；本报告使用led及实际ai-worker/src路径核。"
+}

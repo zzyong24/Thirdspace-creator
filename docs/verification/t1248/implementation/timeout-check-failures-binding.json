@@ -1,0 +1,176 @@
+{
+  "check": {
+    "ok": false,
+    "minimumExecutionMs": 120000,
+    "scannedFiles": 2746,
+    "failures": [
+      {
+        "file": "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js",
+        "line": 10081,
+        "kind": "timeout",
+        "valueMs": 400,
+        "source": "timeout: 400"
+      },
+      {
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-codemirror-CzoyEQLj.js",
+        "line": 11,
+        "kind": "timeout",
+        "valueMs": 400,
+        "source": "timeout:400"
+      },
+      {
+        "file": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+        "line": 12,
+        "kind": "timeout",
+        "valueMs": 2000,
+        "source": "timeout:2e3"
+      },
+      {
+        "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+        "line": 63,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 300,
+        "source": "setTimeout(()=>{this.popper&&!this.popperStatus&&(this.popper.popper.style.display=\"none\",this.popper.destroy(),this.popper=null),this.popperStatus=!1},300)"
+      },
+      {
+        "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+        "line": 92,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 300,
+        "source": "setTimeout(()=>{this.destroy(),this.onRemove()},300)"
+      },
+      {
+        "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+        "line": 92,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 300,
+        "source": "setTimeout(()=>{this.closing=!1,this.destroy()},300)"
+      },
+      {
+        "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+        "line": 38974,
+        "kind": "timeout",
+        "valueMs": 1,
+        "source": "timeout: y"
+      },
+      {
+        "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+        "line": 53491,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 300,
+        "source": "setTimeout(() => {\n          this.popper && !this.popperStatus && (this.popper.popper.style.display = \"none\", this.popper.destroy(), this.popper = null), this.popperStatus = !1;\n        }, 300)"
+      },
+      {
+        "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+        "line": 59840,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 300,
+        "source": "setTimeout(() => {\n            this.destroy(), this.onRemove();\n          }, 300)"
+      },
+      {
+        "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+        "line": 60642,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 300,
+        "source": "setTimeout(() => {\n            this.closing = !1, this.destroy();\n          }, 300)"
+      },
+      {
+        "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+        "line": 194,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 90000,
+        "source": "setTimeout(()=>{s.abort.abort();void serial(s,()=>close(s,true)).catch(()=>{});},ports.idleMs??90_000)"
+      },
+      {
+        "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+        "line": 203,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 1000,
+        "source": "setTimeout(()=>{timedOut=true;reject(observationDeadline);},1000)"
+      },
+      {
+        "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+        "line": 240,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 1000,
+        "source": "setTimeout(()=>{active=false;reject(observationDeadline);},1000)"
+      },
+      {
+        "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+        "line": 322,
+        "kind": "abort/reject/kill timer",
+        "valueMs": 5000,
+        "source": "setTimeout(()=>s.abort.abort(),ports.checkoutMs??5000)"
+      },
+      {
+        "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+        "line": 324,
+        "kind": "timeout",
+        "valueMs": 15000,
+        "source": "timeout:15_000"
+      },
+      {
+        "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+        "line": 354,
+        "kind": "timeout",
+        "valueMs": 5000,
+        "source": "timeout:5000"
+      },
+      {
+        "file": "frontend/src/server/workbench-artifact-render.ts",
+        "line": 98,
+        "kind": "timeout",
+        "valueMs": 15000,
+        "source": "timeout:15_000"
+      },
+      {
+        "file": "frontend/src/server/workbench-artifact-render.ts",
+        "line": 112,
+        "kind": "timeout",
+        "valueMs": 15000,
+        "source": "timeout:15_000"
+      },
+      {
+        "file": "frontend/src/server/workbench-artifact-render.ts",
+        "line": 115,
+        "kind": "timeout",
+        "valueMs": 20000,
+        "source": "timeout:20_000"
+      },
+      {
+        "file": "frontend/src/server/workbench-browser-host.ts",
+        "line": 168,
+        "kind": "timeout",
+        "valueMs": 10000,
+        "source": "AbortSignal.timeout(10_000)"
+      },
+      {
+        "file": "frontend/src/server/workbench-browser-host.ts",
+        "line": 180,
+        "kind": "timeout",
+        "valueMs": 15000,
+        "source": "AbortSignal.timeout(15_000)"
+      },
+      {
+        "file": "frontend/src/server/workbench-native-client.ts",
+        "line": 47,
+        "kind": "request timer",
+        "valueMs": 10000,
+        "source": "socket.setTimeout(10_000)"
+      }
+    ],
+    "limits": "静态已知数值及默认回归；动态调用链、库默认、绝对deadline与观察终态由聚焦测试和逐条清单核对"
+  },
+  "source": {
+    "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js": "d95348207c70e7067e2111e70831323b054063a72f1fff28006875b320eb3e00",
+    "frontend/public/reference-editors/doocs-md/static/js/md-codemirror-CzoyEQLj.js": "2459be44482e57531dc4be8d0d51275d8025d27d51048cff14664d6444576536",
+    "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js": "5b601c49f654a23b1d116180ba47145edbe71129c9173e274d389956c26e5315",
+    "frontend/public/reference-editors/kuaitu/js/index.770609ce.js": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+    "frontend/public/reference-editors/kuaitu/native/native.js": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+    "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+    "frontend/src/server/workbench-artifact-render.ts": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+    "frontend/src/server/workbench-browser-host.ts": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+    "frontend/src/server/workbench-native-client.ts": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc"
+  },
+  "note": "actual verifier exit1; selected7followinggroups allPASS, not accepted-risk or fullGatePASS; parent to classify ownership"
+}

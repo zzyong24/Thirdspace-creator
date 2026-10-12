@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Endpoint, RequestContext } from "@creatoros/contract";
 import {
   compositeTransport,
@@ -15,11 +15,17 @@ import { canonicalDataset } from "@/fixtures/canonical";
 // 种 imported 走真 op 链:projects.create(source:imported)→ projects.outputs.create →
 // outputs.publications.create(transition published),与 T-001 落库形状一致(source/外发布)。
 
+// T1246 显式受控平台适配器，只验证原发布事务/幂等/索引；不启动浏览器或发布真人内容。
+vi.mock("@creatoros/backend/modules/publishing", async importOriginal => {
+  const actual = await importOriginal<typeof import("@creatoros/backend/modules/publishing")>();
+  return {...actual,createUnavailablePublisher:()=>actual.createMockPublisher()};
+});
+
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
 // [T-332 S2] strict 账号门:projects/publications/calibration 全部 per-account,ctx 必须
 // 带 accountId(未选号 → AccountRequiredError,SPEC §4.2)。同一派生号贯穿种入与三向读,
 // 保证「种的数据」与「dashboard/复盘读到的数据」在同号域内闭环。
-const owner: RequestContext = {
+let owner: RequestContext = {
   userId: canonicalDataset.user.id,
   requestId: "req-test",
   source: "user",
@@ -62,8 +68,12 @@ async function getCalibrationOverview(): Promise<CalibrationOverviewDto> {
   return res.data;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   __resetPersistenceForTests();
+  const account = await compositeTransport.request(ep("accounts.create"), {
+    params:undefined,query:undefined,body:{platform:"douyin",accountHandle:"@t1246-real-data",followerBaseline:0},
+  } as never, {userId:canonicalDataset.user.id,requestId:"owned-account",source:"user"}) as {data:{id:string}};
+  owner = {...owner,accountId:account.data.id};
 });
 
 describe("数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜底", () => {

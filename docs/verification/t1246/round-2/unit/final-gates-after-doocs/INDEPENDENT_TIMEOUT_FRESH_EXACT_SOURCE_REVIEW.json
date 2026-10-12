@@ -1,0 +1,39 @@
+{
+  "task": "T-1246/T-1254",
+  "phase": "timeout",
+  "at": "2026-10-12T09:11:39.018167+00:00",
+  "status": "SOURCE_PASS_FRESH_AFTER_DOOCS_ORIGINAL_EIGHT_GROUPS_FINITE_OBSERVATION_ONLY",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "toolSha256": "b5a32eadc6aa2bf429c058e4bc95ea4b287296c159f4e797e95abff3e7006bcc",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+  "totalMs": 1581240000,
+  "prepareFile": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates-after-doocs/timeout-prepare.json",
+  "prepareSha256": "ab83a91dd2e9d8de2ae632a5be92a275cbbdb99dee57d99056209d3b6701979b",
+  "priorCompleteToolReviewSha256": "794ef982eafbaf44e33f342ce5f8d7fa707070fc7df4b8b3a084cb906378d1d6",
+  "freshFullInputProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates-after-doocs/INDEPENDENT_TIMEOUT_FRESH_FULL_INPUT_RECHECK.json",
+    "sha256": "76c00b46856d3c2a996231435b7d275d1cb185cc612ceb8b1cd9a2bd07db95b3",
+    "inputCount": 8303,
+    "cachedPathCount": 17867,
+    "drift": []
+  },
+  "originalToolParserHelperNodeAndBudgetsUnchanged": true,
+  "originalEightGroupsAndAllAssertionsRetained": true,
+  "finiteDeclaredCases": 158,
+  "actualGateExecutedByReviewer": false,
+  "runtimeApproved": false,
+  "findings": [],
+  "review": [
+    "沿原 794ef 完整工具独评结论，全文重读 b5a Gate、原 verify.mjs 八组及 ccdd AST预算模块；同一 tool/helper/parser/Node、有限观察范围与预算全字段均等于前次批准版本。",
+    "fresh prepare 的 8303 项字节/缺失事实和真实 git ls-files 17867 项清单均独立核对，重算 sourceDigest 完全一致。原源新增加86项、移除53项、改变24项已记录，是已实交付及正常前序源码事实，不复用旧 sourceDigest。",
+    "本次实际 copy 原始132档、709交付文件、695生成文件及66份原备份已另全文逐字节核验；独评实际copy 8328d830b558eb71fba5020e38f0187b0bf33fffb87df71eaefd0b25ff9a3bda，原 wrapper 失败/缺失回执保留。",
+    "五个有限组的每case/hook更长预算和完整串行公式独立算术复核：1569000000ms + Node观察3600000 + scanner/八次startup2160000 = body1574760000，外层1581240000完整覆盖 prepare、环境探针、两次helper关闭、after、cleanup和margin。",
+    "原 Node 无有限 test timeout、原 render spawnSync timeout undefined 都保持；工具仅有限等待结果观察，不能声称理论执行最坏界或改持久任务期限。",
+    "自然八组全EOF/原退出0、source同Digest、signal空/outerAbort false/group0、取消/到期均为false才可判本次 Gate PASS；本报告只建议ROOT对新精确绑定另签一次原八组运行。"
+  ],
+  "recommendation": "PASS SOURCE：ROOT 可在 sharedDistExclusive 及 source/index/control 冻结条件下，对当前 prepare 绑定唯一一次 timeout Gate 准入。未实际运行 Gate，边界/orphan/开发包/浏览器及 App 均不由本报告预签成功。",
+  "nativeAppAcceptance": "用户暂不授权，保留未完成。"
+}

@@ -1,0 +1,24 @@
+{
+  "classification": "finite-result-observation-of-original-control-commands-not-original-unbounded-consumer-timeout",
+  "startedOnceMonotonic": 45.741417,
+  "totalMs": 9120000,
+  "elapsedMs": 1419880.309708,
+  "records": [
+    {
+      "name": "pmem",
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "reconcile",
+      "code": 1,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "error": null,
+  "noApp": true,
+  "noPublish": true,
+  "originalControlBodiesUnchanged": true
+}

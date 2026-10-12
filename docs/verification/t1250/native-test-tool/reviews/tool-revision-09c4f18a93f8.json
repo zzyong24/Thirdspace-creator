@@ -1,0 +1,47 @@
+{
+  "status": "PENDING_INDEPENDENT_TOOL_REVIEW",
+  "sourceBindings": [
+    {
+      "path": "docs/verification/t1250/native-test-tool/launch.cjs",
+      "sha256": "09c4f18a93f8fba44b7bdfcb8e40403dbcdc97cba97f45d299b046900496c59c"
+    },
+    {
+      "path": "docs/verification/t1250/native-test-tool/input-binding.json",
+      "sha256": "851f882c54fab7eaf45a8625641c88dfbc2c382879e30df80a7d81781e8202a1"
+    },
+    {
+      "path": "docs/verification/t1250/native-test-tool/ownership-negatives.cjs",
+      "sha256": "900d141cb8bf78d74f58afe3df327cd653abb3b8673443336ba86543e9277b46"
+    },
+    {
+      "path": "docs/verification/t1250/native-test-tool/reviews/f406-unexecuted-launch.cjs",
+      "sha256": "f40601ae0910e9dd3ece80e562ad62abdf2093948600025fa65188856db6f486"
+    },
+    {
+      "path": "docs/verification/t1250/native-test-tool/reviews/ownership-negatives-09c4f18a93f8.json",
+      "sha256": "958491d26c5c0adaaeeeb1677b9dc199630feece4edbaffb82b724aa2085fac1"
+    },
+    {
+      "path": "docs/verification/t1250/native-test-tool/README.md",
+      "sha256": "d0406cb297b9c6583eb07d1130ad6418a8e4f17dc8ea43bd2cf1d866e16844a0"
+    }
+  ],
+  "facts": {
+    "nodeSyntaxExitCode": 0,
+    "ownershipCasesPassed": 12,
+    "ownershipNegativeCases": 10,
+    "ownershipPositiveCases": 2,
+    "rustExecuted": false,
+    "productionRustModified": false,
+    "appStarted": false,
+    "pgStarted": false,
+    "modelsCalled": false
+  },
+  "changes": [
+    "所有后代登记必须匹配现场parent birth/UID与记录；直接spawn必须原wrapper birth/UID及原spawn记录。",
+    "outer从run入口计，240秒输入准备槽在复制前后检查；同步IO不声称可抢占，返回后超限拒下一phase。",
+    "每phase开始前检查全部余下串行执行及完整清理/报告预算，保持内层原正预算。"
+  ],
+  "historicalVersion": "f406未执行、未准入原字节已保留",
+  "inputBindingUnchanged": true
+}

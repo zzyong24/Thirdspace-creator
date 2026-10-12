@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-11T21:50:15.042563+00:00",
+  "rootReview": "docs/verification/t1250/native-public-fixture-budget-candidate/ROOT_CFG_SOURCE_CANDIDATE_REVIEW.json",
+  "diffSHA": "4f65c05dd34e364fa4741c70ad0a080cd1c5bffec26ae3672de35c38a18f4d1a",
+  "appliedExactly": true,
+  "scope": "仅两Rust内原3 cfg(test)段",
+  "records": [
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "originalArchive": "docs/verification/t1250/native-public-fixture-budget-candidate/original-tested-sources/ipc.rs",
+      "beforeSHA": "96d2d4df08422c458b248328940e18308b4de45048c8086309545a9d6dc47cb7",
+      "afterSHA": "46ace3fab56c8ed39ebd40e8826f4a00dde09d3d3f76e7b9a15419eaf84568a2"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "originalArchive": "docs/verification/t1250/native-public-fixture-budget-candidate/original-tested-sources/browser_ipc.rs",
+      "beforeSHA": "7c1efaf57c165aea4f7bbe5c5ba0deb798b6e306dd50dfd38964bde9663f8471",
+      "afterSHA": "5dc28fd769a1f60184f7e17146e1b94553ce2e0b9b644c516010de986eef5b21"
+    }
+  ],
+  "productionIPCOrSchemaChanged": false,
+  "oldBinaryPreserved": true,
+  "newCompileYetExecuted": false
+}

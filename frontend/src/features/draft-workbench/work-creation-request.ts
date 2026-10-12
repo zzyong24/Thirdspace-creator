@@ -1,11 +1,13 @@
 import {
   workCreationTarget,
+  type WritingContext,
   type WorkCreationTarget,
   type WorkCompositionResource,
 } from "@creatoros/contract";
 import type { CreationClient } from "@/lib/creation-workspace-scope";
 import type { ScriptSourceRef } from "./draft-chat-request";
 export type WorkCreationRequestState = {
+  writingContext?:WritingContext;
   clientRequestId: string;
   projectId: string;
   source: ScriptSourceRef;
@@ -117,6 +119,7 @@ export async function prepareWorkCreationRequest(
     schemaVersion: 1,
     clientRequestId: state.clientRequestId,
     projectId: state.projectId,
+    ...(state.writingContext?{writingContext:structuredClone(state.writingContext)}:{}),
     compositionId: state.compositionId,
     compositionRevision: composition.currentRevision,
     scriptSourceRef: state.source,

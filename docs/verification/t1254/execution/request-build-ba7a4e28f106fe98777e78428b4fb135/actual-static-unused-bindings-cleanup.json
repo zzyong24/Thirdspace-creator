@@ -1,0 +1,15 @@
+{
+  "task": "T-1256",
+  "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/apps/web/src/components/editor/EditorPanel.vue",
+  "beforeSha256": "a076d986b80fc88a7416e305d125690d0c626c11cf43c4ba6cda1ccfc133046c",
+  "afterSha256": "30b96bf3798976dc6b6038574ea5cf745ca41f2808207af83306705b4a5c745d",
+  "inode": 351268609,
+  "uid": 501,
+  "originalAndPreservedMode": 420,
+  "mechanicalOnlyThreeDeclarations": true,
+  "templateAndStyleByteIdentical": true,
+  "fetchTestAndGraphUnchanged": true,
+  "nativeSourceUnchanged": true,
+  "priorV12AndV13FailuresUnchanged": true,
+  "noProductCopy": true
+}

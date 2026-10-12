@@ -1,0 +1,175 @@
+{
+  "at": "2026-10-11T22:10:16.299461+00:00",
+  "scope": "contract preparation source audit only",
+  "bindingSha256": "52a25aa717d9c4a086fd3a4a41a754d83ff50dc9147c88ad9da7a5cfe2ff3e28",
+  "specSha256": "46359a32866170f450a00f8e03c7c51e4c0e90852ebd9a7ecfe207a13b7fca17",
+  "specMatch": true,
+  "sourceCount": 34,
+  "installedCount": 6,
+  "driftPaths": [],
+  "sourceModifiedByThisProposal": false,
+  "runtimeExecutedByThisProposal": false,
+  "implementationPass": false,
+  "rows": [
+    {
+      "path": "backend/src/modules/execution/workbench-artifact.service.ts",
+      "matches": true
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "matches": true
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-public.transport.ts",
+      "matches": true
+    },
+    {
+      "path": "contract/src/operations/workbench.ts",
+      "matches": true
+    },
+    {
+      "path": "contract/src/timeout-policy.ts",
+      "matches": true
+    },
+    {
+      "path": "docs/features/t1250-positive-timeout-consumer-closure.md",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-preview-read.ts",
+      "matches": true
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/package.json",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/scripts/build-runtime.mjs",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/src/index.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/src/sea-entry.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/tests/cli-artifacts.test.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/tests/dispatch.test.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/tests/group-context.test.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/tests/group-mcp-context.test.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/tests/helpers/loopback-cli.ts",
+      "matches": true
+    },
+    {
+      "path": "mcp-server/tests/server-discovery.test.ts",
+      "matches": true
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "matches": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "matches": true
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "matches": true
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "matches": true
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/package.json",
+      "matches": true
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/types/client.d.ts",
+      "matches": true
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/types/fetch.d.ts",
+      "matches": true
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/lib/web/fetch/index.js",
+      "matches": true
+    },
+    {
+      "path": "node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.d.ts",
+      "matches": true
+    },
+    {
+      "path": "node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js",
+      "matches": true
+    }
+  ]
+}

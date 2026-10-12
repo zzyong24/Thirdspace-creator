@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-11T23:08:26.644991+00:00",
+  "installModeOnly": true,
+  "toolSha256": "91b1f6cc4626cecb3d1d8810027df770168c3b69a648c8e1e8be8af5bbad59b3",
+  "bindingSha256": "1afd64e5b6354ef97109e6bb72beff99a0ac98368154f2e9be42e35cf41973d4",
+  "actualBoundPnpmImplementationFiles": 1077,
+  "sourceInputs": 207,
+  "syntaxActualExit": 0,
+  "pureNegativeActualExit": 0,
+  "runtimeExecuted": false
+}

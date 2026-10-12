@@ -1,0 +1,14 @@
+[
+  {
+    "name": "T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts"
+  },
+  {
+    "name": "T1250 同宿主两dispatch取消隔离：原signal贯穿文件页，取消任务不登记Blob",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-host.test.ts"
+  },
+  {
+    "name": "T1250 私有文件和命令端口传原dispatch signal，原operation/action不变",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-host.test.ts"
+  }
+]

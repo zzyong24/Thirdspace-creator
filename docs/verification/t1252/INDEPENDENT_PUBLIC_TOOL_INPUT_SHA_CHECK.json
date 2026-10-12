@@ -1,0 +1,14 @@
+{
+  "schema": "independent-stream-input-check/v1",
+  "bindingSha256": "d7926dc07548a1226b729d267f4c425eabbdf779b4458ca90f97904b6d7d109a",
+  "counts": {
+    "inputs": 2207,
+    "installedInputs": 111831,
+    "browserInputs": 337
+  },
+  "bytesActuallyRead": 2466725682,
+  "elapsedSeconds": 17.33691650000401,
+  "errors": [],
+  "readOnly": true,
+  "candidateExecuted": false
+}

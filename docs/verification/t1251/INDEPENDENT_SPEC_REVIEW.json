@@ -1,0 +1,83 @@
+{
+  "kind": "READONLY_INDEPENDENT_SPEC_INITIAL_BINDING",
+  "specSha256": "254310755165eff65156a919176345124d00424bb809d2ab8bc7f8f92db1c810",
+  "constitutionSha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "modelIdentity": "unknown/inherited",
+  "reviewMechanism": "独立当前子Agent只读首评；未运行模型/PG/build/Worker/App，不伪造专属源码review或PASS。",
+  "inputs": [
+    {
+      "path": "ai-worker/src/execution/chat-generation-worker.ts",
+      "exists": true,
+      "sha256": "a534a2bf829b55027f46e9d45f47ddc8ac94545f8666bba47221b6f550300810",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "ai-worker/src/execution/chat-generation-worker.test.ts",
+      "exists": false,
+      "sha256": null,
+      "newDeclaredTest": true
+    },
+    {
+      "path": "backend/src/integration/chat-generation-worker.test.ts",
+      "exists": true,
+      "sha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "ai-worker/src/execution/generation-error.ts",
+      "exists": true,
+      "sha256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "ai-worker/src/execution/durable-generation-model.ts",
+      "exists": true,
+      "sha256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "ai-worker/src/nodes/structured-node.ts",
+      "exists": true,
+      "sha256": "a6af5e39c32251043c06bcc1a83145c031e25ca023614f952a43d27311a26ca9",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "ai-worker/src/execution/chat-text-node-worker.ts",
+      "exists": true,
+      "sha256": "5d42306ef1bf139d70858495ed30b42a81c9ac5d9eb79bade3bfa9bd38117526",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-generation.service.ts",
+      "exists": true,
+      "sha256": "43d1fc7d75859c628fd66bcb3372cc3d95cf6fb8d44eb7b906d655f74968b06c",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "exists": true,
+      "sha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1-summary.json",
+      "exists": true,
+      "sha256": "a13cde3b4c24d1cd33046aa468e0cbf64b0dc9f133117f64665bcd686185a2f6",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1.json",
+      "exists": true,
+      "sha256": "3babd19db41390e31f97ebdff3e574a785d39fc3c4d7a44b562e04690089fdb8",
+      "newDeclaredTest": false
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1-exit.json",
+      "exists": true,
+      "sha256": "e909aa8ccdc10419df5d66fb33fc8d9b1db0ffbfa2921c3dea50f44e062d843a",
+      "newDeclaredTest": false
+    }
+  ],
+  "packetSha256": "0759c08aaca57e51f9405ae8fda61c93c4f5fe6b7ad8991837cc097a042962e4",
+  "actualTestsByReviewer": 0
+}

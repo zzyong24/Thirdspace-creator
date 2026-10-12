@@ -1,0 +1,4 @@
+--prepared:/private/tmp/t1246-dmg-readonly-5dnwm_gb/CreatorOS.app/Contents/MacOS/creatoros-server
+--validated:/private/tmp/t1246-dmg-readonly-5dnwm_gb/CreatorOS.app/Contents/MacOS/creatoros-server
+/tmp/t1246-dmg-readonly-5dnwm_gb/CreatorOS.app: valid on disk
+/tmp/t1246-dmg-readonly-5dnwm_gb/CreatorOS.app: satisfies its Designated Requirement

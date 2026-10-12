@@ -1,0 +1,194 @@
+{
+  "actualCollectedCases": 11,
+  "actualFiles": 2,
+  "observed": [
+    {
+      "file": "frontend/src/server/workbench-artifact-render.test.ts",
+      "actualCaseCount": 8,
+      "serialCasesMs": 62400000,
+      "allHooksMs": 6000000
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-representation.test.ts",
+      "actualCaseCount": 3,
+      "serialCasesMs": 27000000,
+      "allHooksMs": 6000000
+    }
+  ],
+  "childBudgetMs": 102120000,
+  "staticBudgetInventory": {
+    "records": [
+      {
+        "file": "frontend/src/server/workbench-artifact-render.test.ts",
+        "cases": [
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "用真实 Chromium 把静态 HTML 渲染为 PNG，脚本和网络资源均不执行",
+            "titleRegex": "用真实 Chromium 把静态 HTML 渲染为 PNG，脚本和网络资源均不执行$",
+            "multiplicity": 1,
+            "explicitBodyMs": 1800000,
+            "effectiveBodyMs": 1800000,
+            "line": 12
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "用真实 Chromium 输出可解析 PDF 字节并保留正文",
+            "titleRegex": "用真实 Chromium 输出可解析 PDF 字节并保留正文$",
+            "multiplicity": 1,
+            "explicitBodyMs": 1800000,
+            "effectiveBodyMs": 1800000,
+            "line": 41
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "运行时缺失时明确失败，不返回伪图像",
+            "titleRegex": "运行时缺失时明确失败，不返回伪图像$",
+            "multiplicity": 1,
+            "explicitBodyMs": null,
+            "effectiveBodyMs": 1800000,
+            "line": 50
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "并发渲染超过固定预算时拒绝额外请求",
+            "titleRegex": "并发渲染超过固定预算时拒绝额外请求$",
+            "multiplicity": 1,
+            "explicitBodyMs": 1800000,
+            "effectiveBodyMs": 1800000,
+            "line": 67
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "T1250 真实离线document超过30秒仍生成原PNG/PDF，完整请求允许串行尾轮",
+            "titleRegex": "T1250 真实离线document超过30秒仍生成原PNG\\/PDF，完整请求允许串行尾轮$",
+            "multiplicity": 1,
+            "explicitBodyMs": 1800000,
+            "effectiveBodyMs": 1800000,
+            "line": 78
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "T1250 launch观察超时后迟到浏览器仅关闭，不产生输出或遗留目录",
+            "titleRegex": "T1250 launch观察超时后迟到浏览器仅关闭，不产生输出或遗留目录$",
+            "multiplicity": 1,
+            "explicitBodyMs": 1800000,
+            "effectiveBodyMs": 1800000,
+            "line": 106
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "T1250 两个browser停止未确认仍占原并发槽，第三请求不得启动",
+            "titleRegex": "T1250 两个browser停止未确认仍占原并发槽，第三请求不得启动$",
+            "multiplicity": 1,
+            "explicitBodyMs": 1800000,
+            "effectiveBodyMs": 1800000,
+            "line": 121
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "T1250 cleanup观察到期后原close成功收据恢复槽并清理目录，不重复close",
+            "titleRegex": "T1250 cleanup观察到期后原close成功收据恢复槽并清理目录，不重复close$",
+            "multiplicity": 1,
+            "explicitBodyMs": 1800000,
+            "effectiveBodyMs": 1800000,
+            "line": 134
+          }
+        ],
+        "hooks": [],
+        "declaredCaseCount": 8,
+        "perCaseHookMs": 6000000,
+        "allHooksMs": 6000000,
+        "serialCasesMs": 62400000,
+        "shortExplicitDeclarations": []
+      },
+      {
+        "file": "frontend/src/server/workbench-artifact-representation.test.ts",
+        "cases": [
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "四种共用 representation 保持来源 hash；真实 Chromium SVG 像素与 PDF 正文可读",
+            "titleRegex": "四种共用 representation 保持来源 hash；真实 Chromium SVG 像素与 PDF 正文可读$",
+            "multiplicity": 1,
+            "explicitBodyMs": 3600000,
+            "effectiveBodyMs": 3600000,
+            "line": 15
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "旧脚本报告四种输出均标记降级，正文保留；脚本不能改写像素且没有外网请求",
+            "titleRegex": "旧脚本报告四种输出均标记降级，正文保留；脚本不能改写像素且没有外网请求$",
+            "multiplicity": 1,
+            "explicitBodyMs": 3600000,
+            "effectiveBodyMs": 3600000,
+            "line": 33
+          },
+          {
+            "disabledByKnownQualification": false,
+            "qualificationSource": null,
+            "qualificationKnown": false,
+            "title": "非 HTML raw/preview 仍返回诊断，来源校验继续拒绝错误 hash",
+            "titleRegex": "非 HTML raw\\/preview 仍返回诊断，来源校验继续拒绝错误 hash$",
+            "multiplicity": 1,
+            "explicitBodyMs": null,
+            "effectiveBodyMs": 1800000,
+            "line": 51
+          }
+        ],
+        "hooks": [],
+        "declaredCaseCount": 3,
+        "perCaseHookMs": 6000000,
+        "allHooksMs": 6000000,
+        "serialCasesMs": 27000000,
+        "shortExplicitDeclarations": []
+      }
+    ],
+    "staticCaseCount": 11,
+    "staticChildMs": 102120000,
+    "collectMs": 1800000,
+    "prepareMs": 120000,
+    "eachProcessTerminationReserveMs": 2160000,
+    "afterSourceReceiptMs": 720000,
+    "outerMs": 109080000,
+    "defaultBodyMs": 1800000,
+    "defaultHookMs": 3000000,
+    "poolStartTeardownMs": 240000,
+    "childCleanupReportMs": 480000,
+    "helperLifecycleSourceFacts": {
+      "identityPsCount": 3,
+      "eachPsMs": 180000,
+      "normalInitialAndFinalSnapshots": 2,
+      "maxSignalSnapshots": 2,
+      "termKillEachGraceMs": 180000,
+      "lastPollingSnapshotOvershootEachMs": 180000,
+      "pollIntervalEachMs": 100,
+      "worstNormalLifecycleMs": 1980200,
+      "allocatedLifecycleMs": 2160000
+    },
+    "shortExplicitDeclarations": []
+  },
+  "entryClock": 39.934708,
+  "entryAbsoluteDeadline": 109080039.934708,
+  "entryAbsoluteOuterMs": 109080000,
+  "collectAndExecutionDoNotRenewOuter": true,
+  "noPersistentDeadlineChange": true
+}

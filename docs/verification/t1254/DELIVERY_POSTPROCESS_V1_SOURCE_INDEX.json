@@ -1,0 +1,45 @@
+{
+  "task": "T-1254",
+  "scope": "DOOCS_ACTUAL_THREE_CHILD_PREPARED_PATH_POSTPROCESS_ONLY",
+  "oldWrapperExit1Unchanged": true,
+  "onlyActualExistingPreparedResultsProjection": true,
+  "noChildReexecution": true,
+  "noProductCopyYet": true,
+  "localPositiveBudgetPreservesPriorLonger19320000": true,
+  "prepareMs": 3600000,
+  "afterMs": 3600000,
+  "inheritedEarliestUTC": "2026-10-12T13:12:37.651Z",
+  "exactCopySourceDraftNotRuntimeAdmitted": true,
+  "files": [
+    {
+      "file": "/private/tmp/t1254-readonly/run-owned-delivery-postprocess-v1.cjs",
+      "sha256": "98633fa2a3fae3df14db5b5c72014904e4a9492382921258a67b5a2410abee55",
+      "size": 9936
+    },
+    {
+      "file": "/private/tmp/t1254-readonly/DELIVERY_POSTPROCESS_V1_INPUTS.json",
+      "sha256": "9b8ba2a32370272ed0897aa98a40ef177e47eb8dcacb8142025aba818681c68e",
+      "size": 59779107
+    },
+    {
+      "file": "/private/tmp/t1254-readonly/prepare-delivery-postprocess-v1.py",
+      "sha256": "bc2137748affddefc96ce9a4842d7ddef32cc3db8a64e77f6b7ef0c96706c281",
+      "size": 2540
+    },
+    {
+      "file": "/private/tmp/t1254-readonly/run-exact-doocs-production-copy-v1.cjs",
+      "sha256": "a2ba9879398dd03beb8e133de11e23012618347447cef7230dab45cac634e629",
+      "size": 10963
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/DELIVERY_V3_ACTUAL_THREE_CHILD_GREEN_WRAPPER_PATH_FAILURE.json",
+      "sha256": "3f85ceec7a1737fa5db36e23491a870cfc0791b6f60445ef77578a5661b0c80c",
+      "size": 9061
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_DELIVERY_9F4_ACTUAL_CHILDREN_AND_PREPARED_RESULTS_RECHECK.json",
+      "sha256": "ed5d2c63e014b97c03f3a17ead5e365e199632ed076ab869434235e9fedd9ce0",
+      "size": 14792
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "at": "2026-10-12T06:52:20.986827+00:00",
+  "status": "syntax-only-parsed",
+  "entries": [
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/common.cjs",
+      "sha256": "aa4936a2cd05519a2e56fa461372cb73ce518cf173d3432ef1922e659cba840b",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__common.cjs.json",
+      "rawSha256": "4959a76142f4e1d04e30a5985b9d3c9b0314d2c1a3b0f1797fd16496f99fa61f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/owned-dyld.cjs",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__owned-dyld.cjs.json",
+      "rawSha256": "0af78150245930cf60449f2387dc2c1140623899909b05695dcc6a871ecc3f02"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/prepare-metadata-input.cjs",
+      "sha256": "b5bf7f6b63d8065c1c9615f0cf661c537ba71156b20b783f86cc58790b93238d",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__prepare-metadata-input.cjs.json",
+      "rawSha256": "92007ea8b66cd6bad943c993358201e6294e7ca843886103fb9f970009af736c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/reseal.cjs",
+      "sha256": "ad6fc364035ca1eb0c258ca3d43e7608b00c1200a22637422f0982fe62693ce0",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__reseal.cjs.json",
+      "rawSha256": "afeca9b377696ca980ba8af1c3f5cf14d00b5b8d97fe080dbded645a20018293"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/run.cjs",
+      "sha256": "79521b70a41ba1195859b6d2c45580bbfc8b7fd391c8793b422cfb3488eb0494",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__run.cjs.json",
+      "rawSha256": "fcf5360c0c0ecdc49eae60fcdc11757febe85bbc4bedc3dce75c91bd5418691d"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/supervise.cjs",
+      "sha256": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__supervise.cjs.json",
+      "rawSha256": "17defdacb7b7a9a3eb6dc273dff1b43f63b8e0315d42308d45366037d7b53b03"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/prepare-runtime.cjs",
+      "sha256": "7ea85e26381261a0d6d60ef2a218df4b611a162d6cdaf107184395c2f000a99f",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/browser-original__prepare-runtime.cjs.json",
+      "rawSha256": "dafb61d6b64d7af3bf1de8e3a3f2b6ddcb7e7ae954a70559943b30ffe4980736"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/verify-binding.cjs",
+      "sha256": "204975e5ef71689d127eacae445b91e0f8bf4a28496c15305bc5a5b63d79d3b6",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/browser-original__verify-binding.cjs.json",
+      "rawSha256": "a62a59d7eb9bdc9b936af7e55d8d9943ac1a16285f2b770740ee1bfe330d93bb"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/launch.cjs",
+      "sha256": "74c5dda545a1583d9d43d7ce42dd22bbafd0d47cff9fbf058efdae050b8e35f0",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/browser-original__launch.cjs__final-ledger.json",
+      "rawSha256": "46cf270130b5774549a5c3d95f30040ceba9a2550db854c7b16b1d1c6d49021b"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/prepare-runtime.cjs",
+      "sha256": "3dda6c2ac7d4a0aae158684b5e4d810401749323a344d4733cd466da788b2af6",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/new-v3__prepare-runtime.cjs.json",
+      "rawSha256": "66cb93b5cdc5910bcceb1d97f578b69d0bfece25fc43f540a7cbcd40872e5baf"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/verify-binding.cjs",
+      "sha256": "93329aa95e829baaa5a941797959314958735f7cedc51fa066ac9cbdfa2f764c",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/new-v3__verify-binding.cjs.json",
+      "rawSha256": "e0ba35a74d39a9c984bafc47950bf2659f8e3cee1caad8c02f69f6b6a1db5290"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/launch.cjs",
+      "sha256": "8c391110ca66326f5da1f8a2165c3466238ef11188f235efc8c396c63ca255cb",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/new-v3__launch.cjs.json",
+      "rawSha256": "a3ebb6d645731e2228a593ec512713219734a9a944991a24578ff223eb456614"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/budget-test.cjs",
+      "sha256": "c6a959c118a82d7dcbad8a7319f636e56454d652c438a54ccd07b7eb1f3b3c1c",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/budget-test.cjs.json",
+      "rawSha256": "08f6e77f803b452bb8e8c58f956d5969cb2c792559ece11d2bdf5c7d1424c4e3"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/discover-joint-pairs.py",
+      "sha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/discover-joint-pairs.py.json",
+      "rawSha256": "6ff12f64128054891a948fdcad5443e49e74e4a58308a924fbef7179a5aea08f"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/prepare-joint-dyld.py",
+      "sha256": "f6610b920a48ba3c1d4e60de51500b4d80dd57d12614d3e6d59e29ec17530ca2",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/prepare-joint-dyld.py.json",
+      "rawSha256": "6ff12f64128054891a948fdcad5443e49e74e4a58308a924fbef7179a5aea08f"
+    }
+  ],
+  "count": 15,
+  "candidateCodeExecuted": false,
+  "pureBudgetTestExecuted": false,
+  "collectorOrPrepareOrVerifyOrServicesExecuted": false,
+  "firstStaticFailurePreserved": "history-first-legacy-syntax-failure/EVIDENCE.json"
+}

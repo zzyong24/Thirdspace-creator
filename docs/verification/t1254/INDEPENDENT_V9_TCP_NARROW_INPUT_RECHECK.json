@@ -1,0 +1,34 @@
+{
+  "at": "2026-10-12T03:13:52.576435+00:00",
+  "sealSha256": "ff8420b3de35b51b73111aeae26c238657580651a15ca28706461ea38ded7e37",
+  "prepareSha256": "ce76d855c831d73a6f1cc37618e0f0219ca8a0309516b22bcf47fd619c18e7f3",
+  "sourceSnapshotDigest": "405ba19e2bdff70a84ac91a6842878dd1b114a322eca6fda98b8c32526a6d279",
+  "toolDigest": "0e00dc6da2640c46e03f3ac9723fcaa8d056a0048d99657d22ff00851c4e43fd",
+  "sourceInputsAllActualChecked": 1684,
+  "sourceBytesHashed": 107662276,
+  "elapsedMs": 465.97479202318937,
+  "allToolsArraysSamePriorFullHash": true,
+  "priorFullProof": {
+    "path": "docs/verification/t1254/INDEPENDENT_V9_FULL_INPUT_HASH_RECHECK.json",
+    "sha256": "71e330b9efcaf74e67bb30a563d738923ca2331c55cb3f51b3df832670dd6f61"
+  },
+  "sourceDelta": [
+    {
+      "old": {
+        "file": "/tmp/t1254-readonly/doocs-owned-network-boundary.mjs",
+        "size": 3585,
+        "sha256": "342bdda2341c57f6b8e298e31d5844f3faab929d9a64278d146213f1e4f9ef5b"
+      },
+      "new": {
+        "file": "/tmp/t1254-readonly/doocs-owned-network-boundary.mjs",
+        "size": 3936,
+        "sha256": "61d861c7648804e1ee977d9b1d32922a0d0491bad36b3d12820fa9551d760b34"
+      }
+    }
+  ],
+  "bothDigestsRecomputedSame": true,
+  "artifactsAllActualChecked": true,
+  "original4MutableFetchAndTestsSHAStillSame": true,
+  "actualAdditionalFullToolStreamClaimed": false,
+  "reviewerExecutedAnyToolOrNetwork": false
+}

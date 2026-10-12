@@ -25,6 +25,7 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "accountGroups.migration.status": "group",
   "accountGroups.migration.undo": "group",
   // ai
+  "ai.workCandidates.source": "group",
   "ai.assistantActions.adopt": "group",
   "ai.assistantActions.receipt": "group",
   "canvas.create.adopt": "group",

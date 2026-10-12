@@ -1,0 +1,30 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "observedAt": "2026-10-11T17:39:19.622Z",
+  "bindings": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "sha256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/assistant-action-adoption.service.ts",
+      "sha256": "a8594a7625e32594bf9492078eab08d64d8a73cef23bb36511306edf3fd31585"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/intelligence/intelligence-workspace-scope.ts",
+      "sha256": "eb55f2e976cfd441b9070a0b8a68cd37f5c13f7b8c9dc2a26c7d8c7a5f3c65ef"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/platform-account/membership-lock.service.ts",
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/intelligence/intelligence.service.ts",
+      "sha256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/application/chat/assistant-system-root.ts",
+      "sha256": "7fc71a6c6a86805760a663d60aac7b3fd04443f389b6f2de23199f0b860b5fa3"
+    }
+  ]
+}

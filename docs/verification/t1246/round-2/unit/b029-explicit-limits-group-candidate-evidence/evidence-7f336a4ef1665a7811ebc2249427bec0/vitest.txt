@@ -1,0 +1,14 @@
+
+ RUN  v4.1.8 /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-b029-7f336a4ef1665a7811ebc2249427bec0-qGwsmu/source/backend
+
+ ✓ src/modules/ai-runtime/agentic-research-worker.integration.test.ts (3 tests) 18882ms
+   ✓ 真实Pi与跨进程研究端口：长文、自修复与采纳，调用上限 20  7449ms
+   ✓ 真实Pi与跨进程研究端口：长文、自修复与采纳，调用上限 10  5541ms
+   ✓ 真实Pi与跨进程研究端口：长文、自修复与采纳，调用上限 8  5890ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  04:41:06
+   Duration  23.05s (transform 2.71s, setup 0ms, import 3.99s, tests 18.88s, environment 0ms)
+
+JSON report written to /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-b029-7f336a4ef1665a7811ebc2249427bec0-qGwsmu/evidence-7f336a4ef1665a7811ebc2249427bec0/vitest.json

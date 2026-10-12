@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-12T00:24:02.669241+00:00",
+  "verdict": "PASS_SPEC_ONLY",
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "initialActualVerdict": "CONCERNS",
+  "initialFindingResolved": "REV-001 exact root index.html write_set",
+  "independentRecheckSha256": "259474ae5b39509bcf3dd7ab59596fb68a2f5fafa95452e75e058409cdc1cbc7",
+  "integrationReview": "433e70ede4d7",
+  "canonicalReview": "1ebe2f90de0b",
+  "round": 2,
+  "maxRounds": 3,
+  "sourceCandidateRuntimeApproved": false,
+  "stage": "BUILD eligible after taskctl start; per-candidate source/tools and exact delivery still reviewed",
+  "authorization": "用户T1246集中修复和逐项验收；App未授权不变"
+}

@@ -1,0 +1,638 @@
+{
+  "specSha256": "8221447156d8ae0194ab343cde1413a378e2fa18a552dbf869b576b5eb26b232",
+  "entries": [
+    {
+      "path": "contract/src/resources/work-writing-context.ts",
+      "frozenSha256": null,
+      "currentSha256": "899c62412286eb5fa5d9b546c195299c4e89c986b50e06c980c216290481fb37",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "contract/src/resources/work-candidate-adoption.ts",
+      "frozenSha256": null,
+      "currentSha256": "206460200cfc9d09f33140443f9ef2c13df069ed820455e789e960643ad56cc0",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "contract/src/resources/work-editor.ts",
+      "frozenSha256": "cdb72233b401b845adca70b569024316e804a1b713f0606e24311336d6775a2c",
+      "currentSha256": "71cf7de0a5d7ee607cf7e3047d7dc4caf0e2a4428c27a41e4f188be9302fdb20",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/resources/work-creation.ts",
+      "frozenSha256": "792f20c7e1d93a7272974054134629813a2b3f041f4aa8f6b02062467c49db9c",
+      "currentSha256": "5259a41efc2a050b493181f69e13ba5a15fe58e1988189411757d58b9f1949a7",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/resources/ai-public-message.ts",
+      "frozenSha256": "12ee680df05b4922a157b760832aeda3fb9cd503e332a49acc7479980f7972fd",
+      "currentSha256": "12ee680df05b4922a157b760832aeda3fb9cd503e332a49acc7479980f7972fd",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "contract/src/resources/assistant-system.ts",
+      "frozenSha256": "a258e187b20bd54c994d2bbff7a25e281506ced3862ca8f92963f0916cbc063b",
+      "currentSha256": "190f828977a7f69fd5823942ad5dd1908f21afa7b2fe9096fa8d035a25fab715",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/operations/ai.ts",
+      "frozenSha256": "f0774d320edac0afa7c26f15cc2c12a6e58158dca7b7534a278f7bbb775e1afb",
+      "currentSha256": "2e2c62179ab7b27a2bd84019580040a457cae69310bcef209ee5095e8920058a",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/operations/articles.ts",
+      "frozenSha256": "90965ac1599736c645012f11b78e0f387599ca25012543c0234c7e016a579f45",
+      "currentSha256": "6245ed7357df7f6208ae0bccd1ee7d30b88ba4b1082a8007bf8473f8fa25e836",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/operations/graphic-posts.ts",
+      "frozenSha256": "6ada9a6b8f919d925478de4ff12c1a96afc6235b4f95f14b0e478c6a8bfe709b",
+      "currentSha256": "587fee72a3f10c92ca6e11e508050267b41ba7264cf8b0d01324f8a07ad79d56",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/index.ts",
+      "frozenSha256": "5aafcf93e5df118f6db5acdd60ca44c014fe105d4edf8da8acabe5269531937a",
+      "currentSha256": "72870c78d09ac76f26b4c1d13b3bfe3d6ec1bae61f21cbcb54b9707adf719ab5",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "frozenSha256": "c657f02191bacfd3381ca7b4215f11920a1aba31c3ecd3a43b96bec56f1a39ce",
+      "currentSha256": "1925bf313c79e1a29f43fb6a06e1087b5cbe870cd91ca21731990d66560d8214",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/cli-policy.ts",
+      "frozenSha256": "04926f4bc6b9ef2620983c633c07585b974f01d03dcadeacb84da72984fd9659",
+      "currentSha256": "103f573f6ef5334f0c250ccc4f0ae8a386c69b385744289bca61571042c2a242",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/application/generation/work-writing-context.ts",
+      "frozenSha256": null,
+      "currentSha256": "4f86065394bd5f8a091eb49a3b31f19a37b04145c2b08faa47e727b460d96241",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "backend/src/application/generation/work-creation-root.ts",
+      "frozenSha256": "4b9fed9754fef552cbeeeb638193048d93caa132b8e9f02da1f28ec2563f9ddb",
+      "currentSha256": "4b9fed9754fef552cbeeeb638193048d93caa132b8e9f02da1f28ec2563f9ddb",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/application/generation/work-candidate-adoption.ts",
+      "frozenSha256": null,
+      "currentSha256": "ca043888cabefb197cf23e886199266025693814e2bb9f39e8870612dce4cc4a",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "backend/src/application/generation/work-candidate-projection.ts",
+      "frozenSha256": null,
+      "currentSha256": "fa23b06a932966d6efc6126fff8d2b1a33be0686f68fa5fede8a41f3fecac926",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "backend/src/modules/ai/work-candidate-source.service.ts",
+      "frozenSha256": null,
+      "currentSha256": "4f9e6e5b7035829b3e1b53a817dc6e7d317905c0ea5e94935b403a0e4f54e052",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "backend/src/modules/ai/chat-proposal-source.service.ts",
+      "frozenSha256": "cbf2961a08a2cf228b70574fa45d69e62166bfff0cce7936581821108da6b0e7",
+      "currentSha256": "cbf2961a08a2cf228b70574fa45d69e62166bfff0cce7936581821108da6b0e7",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/chat-host-context.ts",
+      "frozenSha256": "1a2e2b78460eebd40632065ab98b5d1bcd2ba0d7106d26d7421bd8cc77d8b0dd",
+      "currentSha256": "5201eed019be3f73b56c6ccb0f0d745dd90e1cb67235fb9bb5dcd172466fcdde",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "frozenSha256": "b0f336496e9e58cbd0bc60f11997838b0374718173b587c5c54b907f5de7d756",
+      "currentSha256": "a21dcc6cd25167caf7cec732681b84e37a72dd673f859bcc926a48c30a43f560",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/ai.transport.ts",
+      "frozenSha256": "4a4610fc314f6fea6f1aa38bed599d7a8d777f70f50eab8c767eb2ce28936682",
+      "currentSha256": "eb622fcd2ab39f4cbe810891142ade8cdedccb9005f5feb0ddab0fb601102435",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/work-editor-candidate.ts",
+      "frozenSha256": "396cd5979874ed4b021ffaad92623b0af6c8020f8ef07e7a668fc4c5a05ebdc9",
+      "currentSha256": "396cd5979874ed4b021ffaad92623b0af6c8020f8ef07e7a668fc4c5a05ebdc9",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.ts",
+      "frozenSha256": "e3764dad2e7cfff8473019b9c1eb31e12a49a562677098cf14ddaa058be47943",
+      "currentSha256": "c04505657c09c1ab3ee43e6ea66606fbe8e8321cb0b24927045ba142bf791174",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.ts",
+      "frozenSha256": "e490a57f8b7b4ebfac2b3b9c2266fbf281815981b8bd2393f6ebffd549ebc330",
+      "currentSha256": "c806f16f1e2313bf0d76daaee903c43e6723ad33949e085b4457c61c011056ac",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly.ts",
+      "frozenSha256": "dc35a2c20d031e79e1c2e09dec8a8f9156cac42003a6c41b534981490f693985",
+      "currentSha256": "cdaf63938a9f0641b223ba429546738ad13feb57843772a7977864aa5c5d3bf1",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly-types.ts",
+      "frozenSha256": "e744c008c4d7034185b73806fa687d8014ff1be61a7a690fb65aed4702fea758",
+      "currentSha256": "6e450a05f1435aed9e241d7a821887fd383f3396d103519b5cb4424b336318d2",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+      "frozenSha256": "4bcd064091f18250f1aaf97f6efdcdc06d4b426158dbdc0604cc67e404977ef5",
+      "currentSha256": "5ed2fbf9e76597ecbed16714dca2dafd657681b47aea30feb542786fe0a510bc",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "frozenSha256": "edd2ab1793d000897e71c0ce36976cb778082768be2517373839ce2aeff9c81c",
+      "currentSha256": "494a2087bc7bf255397f656b8c88abb49a2d1b9a5ed9c58a061513c9d8fb33af",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/articles/articles.transport.ts",
+      "frozenSha256": "e580151f10859b957ce14b651763b63672567bbb186b28150fd9bb7fea431156",
+      "currentSha256": "2d657bfec1810408a8cc5fdbb1bc3c9123f2fbc2c080ca487b0bc5399b49b67f",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "frozenSha256": "6105e2170aae0a3b503c26a95b128f683c39e045d346c59d2ca5cf1e663b01fa",
+      "currentSha256": "acef744823fc8c268f1ef5c006da43584ae632ea09b12519f70a574bad63255d",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.transport.ts",
+      "frozenSha256": "97cbc1cdcee5107653baf1b1761eaf8186effc22d587029b1ce30b0f4bfabdf2",
+      "currentSha256": "f66c489f86a0abb9880da0c5bc32b4f46a525fc4f6cdfa173f71baaab158e692",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "frozenSha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d",
+      "currentSha256": "1a894b9ec1d6a63c9ad0036756e01351f0d05020e2d5d4480035c4e244415e04",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/server/prepare-chat-reply.ts",
+      "frozenSha256": "34d8f8099c65cda0313de9520b5a057ad3a1b47d6d9ac27e2b91e0eb36ae8abd",
+      "currentSha256": "a95e38179b1b3a4d273729626e4815c2d790bd246299b8f80c8a1ae061db0acb",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "frozenSha256": "8c8cbeec1a9712249892d2fc6be3856a2c0cd53c549bcea7945ba7bd91102af6",
+      "currentSha256": "51d9d93625b0bc7936e2dab01801ee6750266e09d9408a4027babfe757d1ebf4",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "frozenSha256": "0685de879b73d5293ba627700642601c32ddf518b8f0eadd3b9810211b198730",
+      "currentSha256": "2832781de3c711978cec411fac08798330c7075bbc5852b947ed7b7efd66de57",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/work-creation-request.ts",
+      "frozenSha256": "376a05d4b809bfef5b900ce7fa9832dca19c669b1ef859fbe2fb3bb7c515d952",
+      "currentSha256": "d09627609899b634cc78c17285f83e28b7c38945c5e0281d1a523455449b2d1d",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+      "frozenSha256": "27cca5b5602ae7718d995082f65dc8b8a92131c397665dd63875e9f34909df16",
+      "currentSha256": "9e4a1c5c02eda1393b1dccab0c055bbbbe0825608821ab5a12fb231ab86158bc",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/copilot/conversation-persistence.ts",
+      "frozenSha256": "158eb5da7b57e8c0559b10c6b6c9d33cc6f17da71abed90b81fdabc9347ddaf2",
+      "currentSha256": "0d7d99ecb589b7c88d156f985515ea58cec3b1aa4c3f05fc39734c275f08d7be",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "frozenSha256": "f0359d37a6a4d85ada788920ac4eb36a11dce20aedd09916a44885abc59ec87e",
+      "currentSha256": "f53998894f80c65b4313cba62ecfe04a78abe26b15c504f64795ea9d971e94c8",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-editor-card.tsx",
+      "frozenSha256": "1af168c089aecc67a4251217d96869c7c5de5610dae23a5d708eb40ed6ba8015",
+      "currentSha256": "c9f12ed81a4d5626c88d874db65c21f6f90487cdf32af56d38f985bc60bf0cbe",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-creation-card.tsx",
+      "frozenSha256": "925ce0b5a1c26615afa72883c00dc77649149e9b88563c25272d2a8a587b49aa",
+      "currentSha256": "573b4826de6234f25c5799b33803bd7f8509b360845c0563cb076cc25672c700",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/work-candidate-adoption.test.ts",
+      "frozenSha256": null,
+      "currentSha256": "5b0877bb69f8846ab7a18aea2d33bcb5a6a406bfcd1a776d50d1808bc062795f",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "backend/src/modules/ai/work-candidate-source.service.test.ts",
+      "frozenSha256": null,
+      "currentSha256": "743f17e6e9046e9ccd20989001db31b79442c30d3bdb133749ea54fee07f2a8f",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "backend/src/application/generation/work-writing-context.test.ts",
+      "frozenSha256": null,
+      "currentSha256": "3b3bba5e304ab6579997cd758205b8868aab6739511f8cb6bed8f9309399334b",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "backend/src/application/generation/work-candidate-adoption.integration.test.ts",
+      "frozenSha256": null,
+      "currentSha256": "ca6aedb61f5952f77ca5c173a36661a0f7ab54f135978d9f05a0c903a150250b",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "backend/src/application/generation/work-candidate-projection.test.ts",
+      "frozenSha256": null,
+      "currentSha256": "315136a83a3f5b285fb0b498a6a9b32f959d3162cb5ee358cc6b21f4a8a7d0c2",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "frozenSha256": null,
+      "currentSha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e",
+      "exists": true,
+      "modified": true,
+      "new": true
+    },
+    {
+      "path": "contract/src/assistant-system.test.ts",
+      "frozenSha256": "fff4016197b673c7e79b0eb83901d8b14da165650e8fd787e35da34bafd9bf9f",
+      "currentSha256": "fff4016197b673c7e79b0eb83901d8b14da165650e8fd787e35da34bafd9bf9f",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "contract/tests/endpoint-bootstrap.test.mjs",
+      "frozenSha256": "d789ae86ae7344452ebdbd7e554658f808ed81840c8628ad48496a71e83aea2e",
+      "currentSha256": "da4f739a07c44e09feae413686b6d44cd7aef4d691610300b537d91cda732e62",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/tests/registry.test.ts",
+      "frozenSha256": "a26b8120063bded2b489ca198564a5ddbcbee9ec7d8ab73aacc8be913cd94d7d",
+      "currentSha256": "713b251c8e1c7d0bfefa7285e7b19a8dd22d3ce57efcd5686e8cbddb38a1924a",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/tests/work-editor.test.ts",
+      "frozenSha256": "214e715a065aba4141426f7945f41b8355f75ee7c0f7cbd27211ec1f486d58e5",
+      "currentSha256": "214e715a065aba4141426f7945f41b8355f75ee7c0f7cbd27211ec1f486d58e5",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "contract/tests/ai-public-message.test.ts",
+      "frozenSha256": "d68c6eda0c6eb1f66d9256cd9a3e2313cda5bde6d90b2852e0351726de79f474",
+      "currentSha256": "d68c6eda0c6eb1f66d9256cd9a3e2313cda5bde6d90b2852e0351726de79f474",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.test.tsx",
+      "frozenSha256": "ebd11cf898eb5d8ece2771e8634dcaac69973d1aacc3ca2972b863dda33aa783",
+      "currentSha256": "5475cba2681f5f7406bbd211c3ef505d6e43064dcdc79ef80e7a943518e03733",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench-save-race.test.tsx",
+      "frozenSha256": "acb7b23b69f42f18b0b7302f6993f632d48efd023871517784005fa4e522a440",
+      "currentSha256": "acb7b23b69f42f18b0b7302f6993f632d48efd023871517784005fa4e522a440",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-editor-card.test.tsx",
+      "frozenSha256": "e2ec73e05ed1ab32950112942a96840b5268f0f7b76977fed8f4b87ce2ef341d",
+      "currentSha256": "dbf2e0f2ba68f38bcd3759416908b2e3c8419b2a840247eb355eeee0b18b7fd4",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-creation-card.test.tsx",
+      "frozenSha256": "f1c28e5e74cd3afce22a916c12b1126ce2c61e12b1502b22128511772adfb7f7",
+      "currentSha256": "5e9af0e99029f2778740d5b8a1d6ce5708a3350500b6b468093798e0902b2586",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/work-creation-request.test.ts",
+      "frozenSha256": "2cb9443898719f303cf2d1ad4576ab1cf56bf863f49df749227b62012220097f",
+      "currentSha256": "2cb9443898719f303cf2d1ad4576ab1cf56bf863f49df749227b62012220097f",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+      "frozenSha256": "43ef6054c857a3065a26d39e7bb0e232825ef0a79b8caaa6d664e4ed88fb7893",
+      "currentSha256": "f88491449f2210830edc344d74d79f5ac7b7b964cec2b856eb2f8d780c766ce0",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/copilot/conversation-persistence.test.ts",
+      "frozenSha256": "69d4c098b34bf3d6ee254cfa81c6d2755a6dc039392193eeeca3e256d151fc31",
+      "currentSha256": "69d4c098b34bf3d6ee254cfa81c6d2755a6dc039392193eeeca3e256d151fc31",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+      "frozenSha256": "4700d008edc41e2fce74c9ba64a96445ec0e5e30d1c805523a5714dfc6821533",
+      "currentSha256": "4700d008edc41e2fce74c9ba64a96445ec0e5e30d1c805523a5714dfc6821533",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/application/generation/work-creation-root.test.ts",
+      "frozenSha256": "150c7a24f37671ec49f8a0350ecbd18474e5161d38abfe94d09016bc44cb5b1c",
+      "currentSha256": "150c7a24f37671ec49f8a0350ecbd18474e5161d38abfe94d09016bc44cb5b1c",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/work-editor-candidate.test.ts",
+      "frozenSha256": "aacdf9379c8eb5e81ef9b2985e9ec46ef09af217d8b83677ac6dff4a0ff186f0",
+      "currentSha256": "aacdf9379c8eb5e81ef9b2985e9ec46ef09af217d8b83677ac6dff4a0ff186f0",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.test.ts",
+      "frozenSha256": "e488ec56be537a658b3b30c264837cf6fb1991a84f5fd6900153b38ddb45a26d",
+      "currentSha256": "b3cbccaceecef0d44e956be3569234f90476c1d004fd7433c72eab24691d4707",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.test.ts",
+      "frozenSha256": "8c4858cbe26cc996195d650b92e96226202b278b36d04ba3bb53f22e36d61739",
+      "currentSha256": "8c4858cbe26cc996195d650b92e96226202b278b36d04ba3bb53f22e36d61739",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "frozenSha256": "1829fe2e89c1373db0e09a43f39b913e65d5c82be19916dcdd778dcc8d6d4470",
+      "currentSha256": "aa60be00e2aa25f7b59daaae5f651d878c61b31b55689acf9baf3d0b0a606324",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/work-creation-chat.integration.test.ts",
+      "frozenSha256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e",
+      "currentSha256": "a51663de13419b0179f1638efe762a964651f6b99c09c994b12e8387880193b4",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/integration/chat-work-editor-worker.test.ts",
+      "frozenSha256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+      "currentSha256": "1a5adc8457fa50eea3824be9a3114105427363a538d2faf3b9fd047eaae40dfb",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/chat-host-context.service.test.ts",
+      "frozenSha256": "8436699406efcb1b6d5cee9749786816e88a525908dd477ae215dd9ae5c21911",
+      "currentSha256": "8436699406efcb1b6d5cee9749786816e88a525908dd477ae215dd9ae5c21911",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "frontend/src/server/prepare-chat-reply.test.ts",
+      "frozenSha256": "a965a74928573e455ce2d950f76c27e75fa342211242083c2adb92b0b195c78f",
+      "currentSha256": "a965a74928573e455ce2d950f76c27e75fa342211242083c2adb92b0b195c78f",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "frozenSha256": "fafd6d5bd345d53607b1b0a8aeedc9d9ada88171918dfa4cb04fe05fa6ecfe01",
+      "currentSha256": "a8b06cf05639e31858ba9190317ec58a20bac9785a4af4a5110d0a63869d3be1",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "frozenSha256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+      "currentSha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/external-task-tool.service.ts",
+      "frozenSha256": "b6cb06d2c087ab174d3fba9cac3fd37b624c36e82531f4781c533b2786ca8a5e",
+      "currentSha256": "e9ce0e5e8c9b6a4713760f0f6fae4e8e4d5cab1c0e0261d8915914c61d990d3e",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-turn.service.ts",
+      "frozenSha256": "28a85e06c3762283e20ade420f007d9187a6c7c99fef73ca79763939a7641ea6",
+      "currentSha256": "8c874bfc4f1939ea6aa3ea37c72ac3ece2c1ef85a7288b02924bdbdc77ed3b5a",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+      "frozenSha256": "6d887db42a10c5fe703fc0fc6eb77568353aeb0f35a3a89e11f7f435028e6de4",
+      "currentSha256": "a27a485e646d945b1710211b0ba9704b422adf76f5632cf864c981e0d5ad4917",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "contract/src/internal/execution-worker.test.ts",
+      "frozenSha256": "a8ed36dd8d5678b717f36d420ad8cbdb8da7b050452ae918d46a6b0e83bf9f65",
+      "currentSha256": "a8ed36dd8d5678b717f36d420ad8cbdb8da7b050452ae918d46a6b0e83bf9f65",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/external-task-tool.service.test.ts",
+      "frozenSha256": "bb34095d359b91484bd2cf8046cc5396e1d0dde6161b9c5cf917403e47e4a3fb",
+      "currentSha256": "bb34095d359b91484bd2cf8046cc5396e1d0dde6161b9c5cf917403e47e4a3fb",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-turn.service.test.ts",
+      "frozenSha256": "4edd40a6fca77f6744c9ccfbeec23c8b4493199b76892bea266571e344f674e2",
+      "currentSha256": "4edd40a6fca77f6744c9ccfbeec23c8b4493199b76892bea266571e344f674e2",
+      "exists": true,
+      "modified": false,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+      "frozenSha256": "a3899b5d9e975ab29415343bf5d2a1ed143b5e187d420d29672771dad740d46d",
+      "currentSha256": "2c866ae81ab18e297ea4690a0048079ff87a0b9c72e9c35b7adc2201d58fb95b",
+      "exists": true,
+      "modified": true,
+      "new": false
+    },
+    {
+      "path": "backend/src/modules/ai/external-chat-call-tree.ts",
+      "frozenSha256": "92cf1becdc4e897755879d875eaa0e2273f815e8f531dc52b3e6563cfd544b78",
+      "currentSha256": "92cf1becdc4e897755879d875eaa0e2273f815e8f531dc52b3e6563cfd544b78",
+      "exists": true,
+      "modified": false,
+      "new": false
+    }
+  ],
+  "officialUIExecuted": false
+}

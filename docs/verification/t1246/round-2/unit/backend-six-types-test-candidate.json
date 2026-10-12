@@ -1,0 +1,78 @@
+{
+  "task": "T-1246",
+  "candidateAt": "2026-10-11T20:04:16.943397+00:00",
+  "purpose": "parent报告backend tsc真实6错误逐项最小fixture候选，五个原全文件不缩选",
+  "productionChanged": false,
+  "testSourcesChanged": false,
+  "testsExecuted": false,
+  "candidateRoot": "/tmp/t1246-unit/type-six-candidates",
+  "sourceErrorEvidence": "/tmp/t1248-calibration/backend-types-second-binding.json",
+  "changes": {
+    "backend/src/integration/chat-generation-worker.test.ts": {
+      "beforeSha256": "8f9308c4a87913fb7d1855b655387d58a6e6093907e1f884ffbaa2d3f7b1e41b",
+      "afterSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "candidate": "/tmp/t1246-unit/type-six-candidates/backend/src/integration/chat-generation-worker.test.ts",
+      "reason": "schema/intelligence.ts executionCalls只有createdAt/updatedAt/startedAttempt，无startedAt/settledAt；诊断trace原先虚填undefined，换真实支持列，所有状态/token/调用断言保持。",
+      "originalAssertionsPreserved": true
+    },
+    "backend/src/integration/copilot-worker.fork.test.ts": {
+      "beforeSha256": "fbd1765888f079df6f6590fa002aa0669214d92d67ce626c4a2920935401e482",
+      "afterSha256": "949db6516cb23df1c665c56ebd1f99a8cba001b19d2848ef30d871a36ccff439",
+      "candidate": "/tmp/t1246-unit/type-six-candidates/backend/src/integration/copilot-worker.fork.test.ts",
+      "reason": "model-worker-dispatcher.ts:80-90要求tools或resolveTools恰一；本fixture prepareChatReply明确tools[]，通过真实scope resolver核原用户/account/conversation/冻结空tools与同executionID返回空图，走production端口validateTask而不绕过。",
+      "originalAssertionsPreserved": true
+    },
+    "backend/src/integration/durable-chat-tool-ledger.test.ts": {
+      "beforeSha256": "6c5bb19192fd7bf258896cbe588a1502da2d4cfed44869548cab4c2cd393209e",
+      "afterSha256": "1dbb44fde62b22d57ce3deaa2b93ff74b20ccbb3da808fd3e2078c6e8c4b59df",
+      "candidate": "/tmp/t1246-unit/type-six-candidates/backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "reason": "worker-runtime.ts:196-199实际parse approval receipt，unavailable抛waiting_user/CHAT_APPROVAL_UNAVAILABLE，denied保reason object。测试用已公开DurableToolSuspension（extends同GenerationFailure，无constructor覆盖）保同Error身份/outcome/code，不新跨物理import/不cast unavailable批准。原8输入/结果与权限断言保持。",
+      "originalAssertionsPreserved": true
+    },
+    "backend/src/integration/t1026-tool-result-read.integration.test.ts": {
+      "beforeSha256": "a8eb27b9aa9f4a83e49081aba703ba0a3121ff612acf3b62bcb75e894e382211",
+      "afterSha256": "ab04f77e0ce76c846b74eb77dd4493982cdb8dbde06a09131d8a9d74aefe965a",
+      "candidate": "/tmp/t1246-unit/type-six-candidates/backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "reason": "chatWorkerInputSchema为历史恢复容纳codebuddy，而public submit ChatPrepareOptions只pi/codex；原baseInput显式pi，先真实核并窄化pi再原submit，不cast引擎或改旧恢复。",
+      "originalAssertionsPreserved": true
+    },
+    "backend/src/modules/ai/ai.contract.test.ts": {
+      "beforeSha256": "6a6d6050cec2bc6818b9814b322dbbba04abe77a6a04aafc5e5da79a3e3a5f7f",
+      "afterSha256": "e70bf69fa2b796aa734bf8d094b7a5c0fca557dd8c6487b23e452fbdeb50547f",
+      "candidate": "/tmp/t1246-unit/type-six-candidates/backend/src/modules/ai/ai.contract.test.ts",
+      "reason": "schema/ai.ts modelMetadata jsonb unknown；原String coercion可把不存在ID误成undefined字符串。按原公共已预约chatTaskId事实zod窄化非空string，保持其他metadata，不删除原AI/execution原子映射/assert。",
+      "originalAssertionsPreserved": true
+    }
+  },
+  "consumerBindings": [
+    {
+      "file": "backend/src/schema/intelligence.ts",
+      "sha256": "2ac7b3d136452ce7759847175a62f5a303e9e92b03af4b001eb0945cfe587fcc"
+    },
+    {
+      "file": "backend/src/schema/ai.ts",
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "file": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "sha256": "843405d9faed7880be042171995ae64f1415f25fb4e659c161d8adec7d7dbd08"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "sha256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495"
+    },
+    {
+      "file": "ai-worker/src/execution/worker-runtime.ts",
+      "sha256": "7057344bc467ae84521c610450f40c2f24e30cf607a2226663f1e118eaae350f"
+    },
+    {
+      "file": "ai-worker/src/execution/durable-agentic-tool.ts",
+      "sha256": "01ba54a811b3f915b5fc1369696941ba20fa3ba70fa5e723d0562d4ef78bc796"
+    },
+    {
+      "file": "ai-worker/src/execution/generation-error.ts",
+      "sha256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7"
+    }
+  ],
+  "executionConstraint": "T1248全5/legacy4共享dist独占，待root窄独评和EOF/生产冻结后落实与原五完整文件+backendtypes实际验证；首次所有错误/修复FAIL保留"
+}

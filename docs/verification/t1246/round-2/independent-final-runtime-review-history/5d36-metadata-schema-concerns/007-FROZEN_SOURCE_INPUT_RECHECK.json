@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-12T06:54:36.126373+00:00",
+  "a738BindingSHA": "a7384b4022a8e886194d2e7a4d7480d3cc290de6060aad6c0fa0f743c5acb8c8",
+  "a738Rows": 61,
+  "a738Drift": 0,
+  "Doocs29bBindingSHA": "29b3d1d379ab656b9d780bd5274577d0f1a12ea6bf3251d4deecb7864e22678c",
+  "DoocsRows": 53,
+  "DoocsDrift": 0,
+  "uniqueExternalRows": 111,
+  "sourceOnly": true
+}

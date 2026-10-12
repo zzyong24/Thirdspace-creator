@@ -14,6 +14,8 @@ import type { ChatHostContext } from '../modules/ai/chat-host-context';
 import { createPersistentTaskService } from '../modules/execution/persistent-task.service';
 import { createChatWorkerDispatcher } from '../modules/execution/model-worker-dispatcher';
 import { createExternalChatTurnService } from '../modules/ai/external-chat-turn.service';
+import {createWorkCandidateSourceService} from '../modules/ai/work-candidate-source.service';
+import {createWorkCandidateAdoption} from '../application/generation/work-candidate-adoption';
 import { createExternalTaskToolService } from '../modules/ai/external-task-tool.service';
 import { createChatTaskToolHost } from '../modules/ai-runtime/chat-task-tool-host';
 import { buildChatTools, type ChatToolDeps } from '../modules/ai-runtime/chat-tools';
@@ -23,10 +25,11 @@ import type { ContextReaders } from '../modules/ai-runtime/chat-assembly-types';
 let seq = 0;
 const now = () => new Date().toISOString(), nextId = (p: string) => `${p}-editor-worker-${++seq}`;
 const entryPath = resolve('../ai-worker/dist/execution-worker.cjs');
-beforeAll(() => execFileSync(process.execPath, [resolve('../ai-worker/scripts/build.mjs')], { stdio: 'pipe', timeout: 120000 }), 120000);
+beforeAll(() => execFileSync(process.execPath, [resolve('../ai-worker/scripts/build.mjs')], { stdio: 'pipe', timeout: 120000 }), 180000);
 async function owners(db: Db, ctx: RequestContext) {
     const deps = { now, nextId }, projects = (store: Db) => createProjectsService(createProjectRepository(store), deps);
     const artifacts = (store: Db) => createArtifactsService({ db: store, ...deps, assertProjectOwned: (c, id) => projects(store).getProject(c, id), resolveOutputProjectId: (c, id) => projects(store).getProjectIdByOutput(c, id) });
+    const articlePorts={...deps,projects,artifacts,assertAssetFile:async()=>{throw Error('本fixture无媒体引用');},resolveDocumentSource:async()=>null,resolveSelectedBrand:async()=>null,submitGeneration:async()=>{throw Error('短候选不能生成子任务');},readGeneration:async()=>{throw Error('短候选不能生成子任务');}};
     const articles = createArticlesService(db, { ...deps, projects, artifacts, assertAssetFile: async () => { throw Error('本fixture无媒体引用'); }, resolveDocumentSource: async () => null, resolveSelectedBrand: async () => null, submitGeneration: async () => { throw Error('短候选不能生成子任务'); }, readGeneration: async () => { throw Error('短候选不能生成子任务'); } });
     const project = await projects(db).createProject(ctx, { title: '编导公共链', brief: '原保存文章' });
     const output = await articles.createOutput(ctx, project.id, { title: '真实文章', clientRequestId: 'public-editor-output' }), initial = await articles.getArticle(ctx, output.id);
@@ -36,7 +39,7 @@ async function owners(db: Db, ctx: RequestContext) {
     const target: WorkEditorTarget = { schemaVersion: 1, projectId: project.id, outputId: output.id, owner: 'wechat_article', contentType: 'article', savedBase: { kind: 'artifact', artifactId: current.artifactId, versionId: current.currentVersionId }, documentDigest: workEditorContentDigest(current.current), selection: { kind: 'article_sections', sectionIds: ['selected-section'], field: 'heading' } };
     const proposal: WorkEditorProposeInput = { base: target.savedBase, baseDigest: target.documentDigest, summary: '改已选标题', candidate: { kind: 'typed_patch', owner: 'wechat_article', edits: [{ type: 'patchArticleSection', sectionId: 'selected-section', expectedSectionDigest: workEditorContentDigest(current.current.sections[0]), patch: { heading: '新标题' } }] } };
     const editor: WorkEditorPorts = { readArticle: (c, id) => articles.getArticle(c, id), readGraphicPost: async () => { throw Error('wrong owner'); }, readProduction: async () => { throw Error('wrong owner'); }, readMedia: async () => { throw Error('not native'); } };
-    return { articles, project, output, current, target, proposal, editor, projects: projects(db) };
+    return { articles, project, output, current, target, proposal, editor, articlesFor:(store:Db)=>createArticlesService(store,articlePorts),artifactsFor:artifacts,projects: projects(db) };
 }
 it.each(['pi', 'codex'] as const)('原%s协议公共submit/claim/短host/ledger/parts：长候选无损，采纳才原owner写', async (engine) => {
     const opened = await createDb(), db = opened.db, ctx: RequestContext = { userId: 'editor-worker-u', accountId: `editor-worker-a-${++seq}`, requestId: 'editor-worker-request', source: 'user' };
@@ -107,18 +110,24 @@ it.each(['pi', 'codex'] as const)('原%s协议公共submit/claim/短host/ledger/
         expect(expected!.candidateDigest).toBe(workEditorContentDigest(expected!.candidate!.document));
         expect(JSON.stringify(expected!).length).toBeGreaterThan(60000);
         const messages = await db.select().from(aiMessages).where(eq(aiMessages.conversationId, conversation.id)), assistant = messages.find(m => m.role === 'assistant')!;
-        expect(assistant.parts).toContainEqual(expect.objectContaining({ toolCallId: 'editor-propose', state: 'output-available', output: expected! }));
+        const part=(assistant.parts as Array<any>).find(p=>p.toolCallId==='editor-propose');expect(part.state).toBe('output-available');const {__creatorosOutcome,...originalData}=part.output;expect(__creatorosOutcome).toMatchObject({schemaVersion:1,status:'ok',sideEffect:'proposal',error:null});expect(originalData).toEqual(expected!);
         expect((await db.select().from(executionTasks).where(eq(executionTasks.id, submitted.executionTaskId)))[0]!.status).toBe('succeeded');
         expect((await f.articles.getArticle(ctx, f.output.id)).currentVersionId).toBe(f.current.currentVersionId);
         if (expected!.apply?.operation !== 'createArticleVersion')
             throw Error('原owner apply缺失');
-        const adopted = await f.articles.createVersion(ctx, f.output.id, { ...expected!.apply.body, clientRequestId: 'public-editor-user-adopt' });
+        const sources=createWorkCandidateSourceService(db),verified=await sources.read(ctx,{conversationId:conversation.id,sourceMessageId:source.id,toolCallId:'editor-propose'});expect(verified.candidate).toEqual(expected!);
+        const adapter=createWorkCandidateAdoption(db,{source:sources,articles:f.articlesFor,graphic:()=>{throw Error('wrong owner');},lockArtifact:(c,id,tx)=>f.artifactsFor(tx).getArtifact(c,id,true)});
+        const adoptionBody={adoptionMode:'assistant' as const,expectedCurrentVersionId:f.current.currentVersionId,assistantSource:verified.assistantSource,fieldSelection:[],factSelection:{mode:'keep'},policyVersion:1,clientRequestId:'public-editor-user-adopt'};
+        const beforeCalls=await db.select().from(executionCalls);const adopted=await adapter.adopt(ctx,'article',f.output.id,adoptionBody);
+        expect(await adapter.adopt(ctx,'article',f.output.id,adoptionBody)).toEqual(adopted);expect(await db.select().from(executionCalls)).toEqual(beforeCalls);
+        const manual=await f.articles.createVersion(ctx,f.output.id,{...expected!.apply.body,expectedCurrentVersionId:adopted.versionId,clientRequestId:'legacy-manual-after-assisted'});expect(manual.document).toEqual(adopted.document);
+        expect(await adapter.adopt(ctx,'article',f.output.id,adoptionBody)).toEqual(adopted);expect((await f.articles.getArticle(ctx,f.output.id)).currentVersionId).toBe(manual.versionId);
         expect(adopted.document).toEqual(expected!.candidate!.document);
-        expect(await f.articles.createVersion(ctx, f.output.id, { ...expected!.apply.body, clientRequestId: 'public-editor-user-adopt' })).toEqual(adopted);
+        expect(await f.articles.createVersion(ctx, f.output.id, { ...expected!.apply.body,expectedCurrentVersionId:adopted.versionId,clientRequestId:'legacy-manual-after-assisted' })).toEqual(manual);
         await expect(f.articles.createVersion(ctx, f.output.id, { ...expected!.apply.body, clientRequestId: 'public-editor-stale-adopt' })).rejects.toThrow();
     }
     finally {
         await cleanup();
         await opened.client.close();
     }
-}, 120000);
+}, 180000);

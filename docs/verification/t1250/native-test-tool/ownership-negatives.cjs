@@ -1,0 +1,21 @@
+'use strict';
+// 仅执行真实生产工具的纯归属判定，不启动子进程、不发信号、不执行Rust。
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const tool=path.join(__dirname,'launch.cjs'),{hasOwnedParent}=require(tool),hash=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+const self={pid:100,uid:501,birth:'original-wrapper'},parent={pid:101,ppid:100,uid:501,birth:'original-parent'},desc={pid:102,ppid:101,uid:501,birth:'child'},direct={...parent};
+const children=[{pid:101,exitCode:null,spawnParentPid:100,spawnParentBirth:self.birth}],base=new Map([[100,self],[101,parent],[102,desc]]),owned=new Map([[101,parent]]),cases=[];
+const check=(id,entry,rows,spawns,owners,expected)=>{const accepted=hasOwnedParent(entry,rows,self,spawns,owners);assert.equal(accepted,expected,id);cases.push({id,expected,actual:accepted,status:'passed'});};
+check('direct-original-spawn',direct,base,children,new Map(),true);
+check('direct-wrapper-birth-reused',direct,new Map([...base,[100,{...self,birth:'foreign-wrapper'}]]),children,new Map(),false);
+check('direct-wrapper-uid-changed',direct,new Map([...base,[100,{...self,uid:502}]]),children,new Map(),false);
+check('direct-original-wrapper-missing',direct,new Map([[101,parent]]),children,new Map(),false);
+check('direct-spawn-already-exited',direct,base,[{...children[0],exitCode:0}],new Map(),false);
+check('direct-unrecorded-spawn',direct,base,[],new Map(),false);
+check('descendant-original-parent',desc,base,children,owned,true);
+check('descendant-parent-pid-reused',desc,new Map([...base,[101,{...parent,birth:'foreign-parent'}]]),children,owned,false);
+check('descendant-parent-uid-changed',desc,new Map([...base,[101,{...parent,uid:502}]]),children,owned,false);
+check('descendant-parent-missing',desc,new Map([[100,self],[102,desc]]),children,owned,false);
+check('descendant-parent-never-owned',desc,base,children,new Map(),false);
+check('descendant-candidate-foreign-uid',{...desc,uid:502},base,children,owned,false);
+const result={at:new Date().toISOString(),toolSha256:hash(tool),testSourceSha256:hash(__filename),cases,total:cases.length,passed:cases.length,subprocessesStarted:0,signalsSent:0,rustExecuted:false,noRuntimeApproval:true};
+const output=path.join(__dirname,'reviews','ownership-negatives-'+result.toolSha256.slice(0,12)+'.json');fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n',{flag:'wx'});console.log(JSON.stringify({output,...result}));

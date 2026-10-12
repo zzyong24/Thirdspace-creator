@@ -1,0 +1,30 @@
+{
+  "task": "T-1254",
+  "nonce": "280ac8d0823cc912543cb4bc57653bb8",
+  "loopback": {
+    "address": "127.0.0.1",
+    "port": 62324,
+    "bytes": "280ac8d0823cc912543cb4bc57653bb8",
+    "elapsedMs": 3.1211660000000023
+  },
+  "external": {
+    "address": "192.0.2.1",
+    "port": 9,
+    "refusal": {
+      "name": "Error",
+      "code": "EPERM",
+      "message": "connect EPERM 192.0.2.1:9 - Local (0.0.0.0:0)"
+    },
+    "elapsedMs": 0.569625000000002,
+    "socketClosed": true
+  },
+  "listenerClosed": true,
+  "remainingSockets": 0,
+  "setupBudgetMs": 120000,
+  "loopbackBudgetMs": 120000,
+  "refusalBudgetMs": 120000,
+  "closeBudgetMs": 120000,
+  "passed": true,
+  "noDNS": true,
+  "noOfficialModelOrApp": true
+}

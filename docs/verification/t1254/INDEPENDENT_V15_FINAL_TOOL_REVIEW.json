@@ -1,0 +1,156 @@
+{
+  "task": "T-1254",
+  "reviewType": "INDEPENDENT_EXACT_STATIC_TOOL_REVIEW",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T06:32:32.002655+00:00",
+  "status": "PASS",
+  "scope": "T1254_POST_V14_GRAPH_PATHNAME_CONSUMER_REPAIR_COMBINED_RED_GREEN_REMAINING8_ONLY",
+  "approvedForRootExactOneTimeAdmissionConsideration": true,
+  "runtimeAdmissionPerformedByReviewer": false,
+  "candidateExecutedByReviewer": false,
+  "sourceAppliedByReviewer": false,
+  "productionCopyPerformedByReviewer": false,
+  "appAcceptanceComplete": false,
+  "findings": [],
+  "exactBinding": {
+    "index": "/tmp/t1254-readonly/POST_V14_GRAPH_CONTINUATION_V15_INDEX.json",
+    "indexSha256": "e55a7dc471089f667f8fd30bb3796da8f0c283082154d2b44fdcae89cafaf893",
+    "runnerSha256": "a3f7c9dfd63a6fa538839695cb4bb9e0e7cdc09e3807895e270dfe1c0e7fd3a4",
+    "prepareSha256": "98daeb9bbca495568bcbae1c26e85feaf7839e42d99d2fc1ba097a579eafc5ca",
+    "sealSha256": "a2bf07aeb7eeec907f68b2befc2d0c5c737cf23b5ea17e89410861fca6899cae",
+    "sourceSnapshotDigest": "e0a4f71454a2e794a2fdc2cd0cb46cb78773360de6ce29c24833dc6ee3c397ce",
+    "toolDigest": "4deaac8de48aab3c60d6028a41362f6df14cbf7b7847e17d179793e2dda37dc8",
+    "sourceInputCount": 1867,
+    "toolRows": 141918,
+    "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+    "rootCauseSpecSha256": "b9dc30e952da0239038e8f8c9ce4a33c30d291aede4ba556a553b60d21cc0a3e"
+  },
+  "independentActualReadOnlyRecheck": {
+    "report": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_V15_FINAL_FULL_INPUT_AND_TWO_BUILT_GRAPHS_RECHECK.json",
+    "sha256": "ab2860dbad6e514df30f122e89969faa541afe654e65b7faf2938d58d973443a",
+    "checkedRows": 143821,
+    "readBytes": 3241498327,
+    "elapsedMs": 24625.954999995884,
+    "drift": [],
+    "links": 7484,
+    "oldRealPathRows": 4,
+    "fullRunnerUnifiedDiffAllContextReconstructedExactly": true,
+    "allOriginalV14ToolRowsIdenticalWithOnlyStatic304Added": true
+  },
+  "fullSourceReview": {
+    "files": [
+      {
+        "file": "/tmp/t1254-readonly/run-owned-doocs-post-v14-graph-continuation-v15.cjs",
+        "sha256": "a3f7c9dfd63a6fa538839695cb4bb9e0e7cdc09e3807895e270dfe1c0e7fd3a4"
+      },
+      {
+        "file": "/tmp/t1254-readonly/prepare-v15-tool-candidate.py",
+        "sha256": "1f39e8e2d6d6cd4ec020ed52e15826570aedf2fcb1d15d08f11faa260ca11692"
+      },
+      {
+        "file": "/tmp/t1254-readonly/seal-post-v14-graph-continuation-v15.py",
+        "sha256": "771ab9991bdff7997369589ffb98c995f03dfabecf5986c9f65fec302c573792"
+      },
+      {
+        "file": "/tmp/t1254-readonly/doocs-static-delivery-graph-v15.mjs",
+        "sha256": "95326b4c711e96f95761ce1fe362d52ce421d5a1143c07866fbb4d15ef0e91b4"
+      },
+      {
+        "file": "/tmp/t1254-readonly/prepare-graph-v15-candidate.py",
+        "sha256": "b76b29407bf68f118273082085ef56d4143e62d26687f79551ee0e3096273c51"
+      },
+      {
+        "file": "/tmp/t1254-readonly/GRAPH_V15_EXACT_DIFF.diff",
+        "sha256": "e7ecdacfaec998f17e58177a0f6572ee6b5c76bb0e7fff6e134460a0b7c12cdb"
+      },
+      {
+        "file": "/tmp/t1254-readonly/doocs-static-pathname-red-green-probe-v15.mjs",
+        "sha256": "715da468851fcfc4232760f211f3a7bfb09be5dda9355f0eb9932d4595e5d637"
+      },
+      {
+        "file": "/tmp/t1254-readonly/doocs-static-resource-checker-tests-v15-new.mjs",
+        "sha256": "8d5eb0494acb7c0932ac319d6c6deceebf60a7970740cb9683a434fcc97f981e"
+      },
+      {
+        "file": "/tmp/t1254-readonly/GRAPH_V15_ORIGINAL9_NEW_MODULE_ONLY_DIFF.diff",
+        "sha256": "16310934328cdfe4b14ca1fe9f8f83a893290b0749535675075a6c64fb84f985"
+      },
+      {
+        "file": "/tmp/t1254-readonly/snapshot-v14-actual-complete-static-built-graph.py",
+        "sha256": "2496397843e4dda0271194b937b2ba1de66c1529b1ca9eef47993fdbcb6c730a"
+      },
+      {
+        "file": "/tmp/t1254-readonly/doocs-source-provenance-v14.cjs",
+        "sha256": "cb40021bc45985b522abdca9c3b887247aa97abd46b8d802966eb79dbd97071f"
+      }
+    ],
+    "conclusion": "最终runner、生成器、封印、Graph、combined probe及原9用例模块替换已全文审查。既有helper、profile、82文件/37链接动态库闭包与provenance沿用已独审版本，当前全字节及首个实际存在rpath再核无漂移。OS共享缓存仅声明宿主系统边界。"
+  },
+  "graphConsumerFindingAndRepair": {
+    "actualConsumer": "static/js/md-storage-Cjhmscw8.js: window.location.pathname.includes(`/reference-editors/doocs-md/`)",
+    "actualBuiltFileReadWithoutParserExecution": true,
+    "graphOldSha256": "017ac911172822e211411fa1a24241f2cdfcf96795559b822252cf079594f564",
+    "graphNewSha256": "95326b4c711e96f95761ce1fe362d52ce421d5a1143c07866fbb4d15ef0e91b4",
+    "rule": "仅已知BASE作为实际window.location.pathname.includes的唯一实参且精确AST链成立时计作pathname协议；ParenthesizedExpression只解包原表达式。其它字符串仍走原资源存在/归属检查。",
+    "strictPreserved": [
+      "未知BASE仍拒绝",
+      "错误对象/属性/方法仍拒绝",
+      "真实root import仍拒绝",
+      "真实root new URL仍拒绝",
+      "原JSImport/动态Vite表/CSS/HTML文件集合与存在断言保持",
+      "原CSP与inline脚本机械外置、bridge正文保持"
+    ],
+    "partialFailureReceipt": "新Graph在失败时先保存实际currentArtifact/lastReference及partial=true、complete=false再抛原错误，不补旧Graph缺失报告。"
+  },
+  "combinedProbe": {
+    "positiveBudgetMs": 540000,
+    "orderedConsumers": [
+      "原017 Graph的原9实际解析用例",
+      "原017完整main对实际304构建图的真实Promise拒绝及原报告缺失",
+      "953 Graph仅替换import的同字节原9用例",
+      "953完整main对同一实际304构建图成功",
+      "实际md-storage解析投影和7个严格正负族"
+    ],
+    "originalNineBodyAndExpectationsByteIdentical": true,
+    "partialSavedAfterEachCompletedActualPhase": true,
+    "requiredBeforeSourceApplication": "child code0、closed/group0、完整9/9/7结果及真实原main Promise拒绝/新main completeLocalGraph后才允许应用。",
+    "historicalChildExitNotFabricated": "新probe捕获真实原module-main Promise错误并记录；不宣称另一个历史child exit1，不补旧报告。"
+  },
+  "compiledGraphsAndMutationBoundary": {
+    "nativeFiles": 395,
+    "staticFiles": 304,
+    "bothGraphsExactFileSetsSHA256SizeModeUIDAndRootInodeEveryBinding": true,
+    "nativeOriginalSelfManifest394EntriesExact": true,
+    "currentPanel": "30b96bf3798976dc6b6038574ea5cf745ca41f2808207af83306705b4a5c745d",
+    "panelInode": 351268609,
+    "panelUID": 501,
+    "panelMode": 420,
+    "currentGraphOld017": true,
+    "graphInode": 351787453,
+    "graphUID": 501,
+    "graphMode": 420,
+    "soleNewMutation": "私有static复现Graph脚本017→953，writeFileSync保持原inode/UID/0644；源码/内嵌正文及fetch/test四文件不再改。",
+    "staticBuildNotRepeated": true,
+    "nativeGraphNotRebuilt": true,
+    "provenance": "已审cb400生产者读取实际新Graph与已实际30b Panel，源archive/combined patch纳入真实差异，剩余两个combined patch check必须原Git真实exit0。无生产目录copy。"
+  },
+  "budgetAndOwnership": {
+    "localSingleBirthTotalMs": 33660000,
+    "earliestInheritedUTC": "2026-10-12T16:01:07.952Z",
+    "futureSlots": "原8 tail正执行预算逐项同V14；新增combined540k；每child独立2.16M生命周期；prepare3.6M、apply0.9M、after3.6M全部预留。",
+    "clock": "新段只一出生monotonic；每次准入取本段剩余与V12/V13/V14最早UTC剩余的最小值。拒wall clock回退，原进程monotonic未持久化不补造。",
+    "applyAdmission": "combined完整后应用前显式deadline及APPLY+全部8 future+AFTER足额；每child完整future守门；末source-after同步写完再次显式deadline后才能清timer并总结。",
+    "deadlineNotExtended": true,
+    "launchRootMustStillAdmitFullFutureBeforeExecution": true,
+    "privateLogging": "日志仅owned私有根；helper真实关闭FD/group0后父逐字节SHA归档，归档先于code断言。throw无closure仅保存unclosed路径，不伪造EOF。",
+    "homeNetworkBoundary": "原HOME/CODEX_HOME保持；子进程HOME读写拒绝、网络仅方向分离localhost规则；不改TCC。"
+  },
+  "historyFacts": {
+    "V12": "原6闭合及两30s实际RED保持；应用后mode失败exit1、缺失application/sourceafter receipt不补。",
+    "V13": "原10成功包含两24/两slow/两prepare/types/nativebuild/verify保持；第11 static三TS6133真实exit1保持。",
+    "V14": "原static完整build实际0/16973ms与Graph实际1/2995ms分别保留，两个group均closed/empty；summary1of9、exit1及21原件/sourceafter仍原SHA。",
+    "V14ReviewNotReusedAsV15Approval": true,
+    "noRepeatRequestsOrFakeTDDRed": true
+  },
+  "acceptanceBoundary": "此PASS只代表当前精确字节静态工具评审与独立真实全输入读取无漂移，不能代替combined probe、余8 runtime结果、最终delivery、browser E2E或App验收。ROOT另作当前截止内完整future准入后才可执行一次。"
+}

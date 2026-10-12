@@ -1,0 +1,37 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/bin/tsc",
+    "-p",
+    "tsconfig.json",
+    "--noEmit"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1253/execution/types-d487aa1e00b83e0dcf3f048a45f9b032/ai-worker-types.log",
+  "pid": 44143,
+  "identity": {
+    "pid": 44143,
+    "pgid": 44143,
+    "uid": 501,
+    "birth": "Mon Oct 12 08:00:45 2026",
+    "startedAt": 1791763245860
+  },
+  "startedAt": "2026-10-12T00:00:45.860Z",
+  "endedAt": "2026-10-12T00:00:53.384Z",
+  "elapsedMs": 7524,
+  "budgetMs": 1200000,
+  "deadlineAt": "2026-10-12T00:20:45.860Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

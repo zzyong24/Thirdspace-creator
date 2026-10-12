@@ -1,0 +1,124 @@
+{
+  "at": "2026-10-12T02:31:37.155Z",
+  "kind": "proper-TypeScript-createProgram-semantic-driver-only-real-relative-module-resolution-no-custom-alias",
+  "sourceSha256": "3ee2eb43a97757762bd2d9d1a312cae5bb69bdbe0d96d4cd914f941bf08ce30d",
+  "compilerVersion": "5.9.3",
+  "compilerOptions": {
+    "target": 9,
+    "module": 1,
+    "moduleResolution": 2,
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/@types"
+    ]
+  },
+  "diagnostics": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Module '\"../../../../frontend/node_modules/@playwright/test\"' has no exported member 'test'. Did you mean to use 'import test from \"../../../../frontend/node_modules/@playwright/test\"' instead?",
+      "code": 2614,
+      "line": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Module '\"../../../../frontend/node_modules/@playwright/test\"' has no exported member 'expect'. Did you mean to use 'import expect from \"../../../../frontend/node_modules/@playwright/test\"' instead?",
+      "code": 2614,
+      "line": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Module '\"../../../../frontend/node_modules/@playwright/test\"' has no exported member 'Page'. Did you mean to use 'import Page from \"../../../../frontend/node_modules/@playwright/test\"' instead?",
+      "code": 2614,
+      "line": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Binding element 'context' implicitly has an 'any' type.",
+      "code": 7031,
+      "line": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Binding element 'baseURL' implicitly has an 'any' type.",
+      "code": 7031,
+      "line": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Parameter 'use' implicitly has an 'any' type.",
+      "code": 7006,
+      "line": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Parameter 'route' implicitly has an 'any' type.",
+      "code": 7006,
+      "line": 9
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Parameter 'socket' implicitly has an 'any' type.",
+      "code": 7006,
+      "line": 13
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Binding element 'page' implicitly has an 'any' type.",
+      "code": 7031,
+      "line": 19
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Parameter 'info' implicitly has an 'any' type.",
+      "code": 7006,
+      "line": 19
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Binding element 'page' implicitly has an 'any' type.",
+      "code": 7031,
+      "line": 30
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Binding element 'context' implicitly has an 'any' type.",
+      "code": 7031,
+      "line": 30
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Binding element 'baseURL' implicitly has an 'any' type.",
+      "code": 7031,
+      "line": 30
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Parameter 'info' implicitly has an 'any' type.",
+      "code": 7006,
+      "line": 30
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Parameter 'response' implicitly has an 'any' type.",
+      "code": 7006,
+      "line": 42
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "message": "Parameter 'id' implicitly has an 'any' type.",
+      "code": 7006,
+      "line": 57
+    }
+  ],
+  "frontendGlobalTypesNotClaimed": true,
+  "listed": false,
+  "browserStarted": false,
+  "App": false
+}

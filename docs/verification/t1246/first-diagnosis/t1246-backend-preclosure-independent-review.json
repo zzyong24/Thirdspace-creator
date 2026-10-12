@@ -1,0 +1,2437 @@
+{
+  "schema": "t1246-backend-preclosure-independent-review/v1",
+  "createdAt": "2026-10-11T17:57:28.314622+00:00",
+  "reviewScope": "仅parent后端前置/类型、DR006、PB001窄修法；不独评自身T1097合同",
+  "specSha256": "b295cb6fc92b22433ee7415c12861a1c8b94fc3e842125d7bc99615d1256c875",
+  "frozenProductCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "decision": "PASS_CONTRACT_ONLY",
+  "findings": [],
+  "executed": {
+    "shortStaticASTComparison": true,
+    "moduleExecution": false,
+    "tests": false,
+    "postgres": false,
+    "model": false,
+    "app": false
+  },
+  "pg": {
+    "actualFailedCases": 195,
+    "urlGuardCases": 191,
+    "socketCases": 4,
+    "actualEnvFiles": 26,
+    "staticGuardConsumerFiles": 27,
+    "uniqueCases": 195,
+    "guardSourceAndStackChecks": [
+      {
+        "file": "backend/src/group-upgrade-postgres.integration.test.ts",
+        "title": "隔离PostgreSQL完整dump能恢复所有旧ID并校验升级记录数",
+        "line": 7,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('此测试只允许显式隔离测试服务器55422');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-scheduled-job-migration.test.ts",
+        "title": "T1209真实PG转组先持锁，正常迁移退让后重读；未来私有作业v2、旧历史不改",
+        "line": 146,
+        "frozenSourceLine": "const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-scheduled-job-migration.test.ts",
+        "title": "T1209真实PG迁移先持锁，转组真实等待；提交后原服务转组v2且重开幂等",
+        "line": 146,
+        "frozenSourceLine": "const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG原article owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG原graphic owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG旧来源ROW EXCLUSIVE阻新DDL时，异常回滚释放组锁，新提交来源被最终重采",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG显式归组持真实组/父/来源行锁时，0130退让后沿最新父归属保真",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG错误DDL-first锁序与原article服务形成实际40P01（诊断反例）",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG错误DDL-first锁序与原graphic服务形成实际40P01（诊断反例）",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG错误DDL-first锁序与原group-migration服务形成实际40P01（诊断反例）",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG原membership freeze后转组完成，0130重采真实历史并保持旧NULL来源",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG0130成功轮持锁时，原项目INSERT被阻止；回滚诊断后正常迁移含真实新父",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG来源行锁冲突整轮释放；原事务提交后正常迁移重新盖章",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG整轮退让中取消，旧数据与104账本保持；再次正常升级可完成",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG两原归组服务反向参数a-first，与0130竞争仍正确串行",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/legacy-source-migration.test.ts",
+        "title": "真实PG两原归组服务反向参数b-first，与0130竞争仍正确串行",
+        "line": 116,
+        "frozenSourceLine": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calendar stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calendar migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calendar writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calibration-output stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calibration-output migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calibration-output writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calibration-publication stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calibration-publication migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "calibration-publication writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-create stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-create migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-create writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-imported stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-imported migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-imported writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-register stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-register migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "title": "publication-register writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+        "line": 38,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration root writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration root archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration bump writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration bump archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration prediction writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration prediction archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration draft-prediction writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration draft-prediction archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration lock writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration lock archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration result writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration result archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration suggestion writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration suggestion archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration adopt writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration adopt archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration dismiss writer-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "calibration dismiss archive-first：真实归档与公共写入串行且无半成品",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "两个真实公共版本递增等待同一rubric锁，连续编号且指针指向最新完整版本",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "title": "公共初始化首版失败全部回滚，重试返回完整量表",
+        "line": 31,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识revision：写入先持锁，归组重验",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识revision：归组先持锁，旧组写入拒绝",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识archive：写入先持锁，归组重验",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识archive：归组先持锁，旧组写入拒绝",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识rename：写入先持锁，归组重验",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识rename：归组先持锁，旧组写入拒绝",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识relation-source：写入先持锁，归组重验",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识relation-source：归组先持锁，旧组写入拒绝",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识relation-target：写入先持锁，归组重验",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "title": "知识relation-target：归组先持锁，旧组写入拒绝",
+        "line": 23,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "apply先校验：真实公共项目patch必须等待，不能把旧scope编辑搬入目标组",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "项目patch先持锁：apply等待真实提交后必须重建digest拒绝过期预览",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "undo先校验：其他真实项目的新grant消费等待撤销，不能在撤销后留有效引用",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "grant消费先持真实SHARE锁：undo等待commit后重验ledger，必须拒绝撤销",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "项目已开始移组：旧ctx的无scope output公共写入等锁后必须拒绝",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "项目已开始移组：旧ctx的无scope stage公共写入等锁后必须拒绝",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "项目已开始移组：旧ctx的无scope task公共写入等锁后必须拒绝",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "项目已开始移组：旧ctx的无scope activity公共写入等锁后必须拒绝",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "无scope output公共写入先持锁：移组等提交后必须拒绝旧digest",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "无scope stage公共写入先持锁：移组等提交后必须拒绝旧digest",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "无scope task公共写入先持锁：移组等提交后必须拒绝旧digest",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "title": "无scope activity公共写入先持锁：移组等提交后必须拒绝旧digest",
+        "line": 21,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+        "title": "新建先锁组：归档真实等待，commit后root/7阶段/平台/活动一起可读",
+        "line": 32,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+        "title": "归档先锁组：新建真实等待，归档commit后拒绝且四族均无残行",
+        "line": 32,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+        "title": "project_stages真实INSERT异常：整个公共createProject事务回滚且可以重新创建",
+        "line": 32,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+        "title": "project_target_platforms真实INSERT异常：整个公共createProject事务回滚且可以重新创建",
+        "line": 32,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+        "title": "project_activities真实INSERT异常：整个公共createProject事务回滚且可以重新创建",
+        "line": 32,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+        "title": "真实旧账号scope仍可完整创建，不把legacy账号隐式扩大成组scope",
+        "line": 32,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+        "title": "归档组合法采集历史导入仍完整写入，用户伪造imported不能放行",
+        "line": 32,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "revision writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "revision migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "cover writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "cover migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "schedule writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "schedule migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "publish writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "publish migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "visibility writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "visibility migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "platform-status writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "platform-status migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "import-heal writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "import-heal migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "adopt-draft writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "adopt-draft migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "采集metadata沿原冻结事实组：账号已转出且组已归档仍可补封面、可见性、审核状态",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "title": "真实孤儿publication可补采平台metadata并重锚到用户选择的真实新稿件，不造假parent",
+        "line": 34,
+        "frozenSourceLine": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/scheduled-export-progress.test.ts",
+        "title": "postgres T1213 当前租约写进度、旧fence/错误run/ctx/父停止拒绝，终态仍成功",
+        "line": 31,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/scheduled-export-progress.test.ts",
+        "title": "postgres 默认节流真实装配self子阶段依次落原run，ai终态清lease后仍成功",
+        "line": 31,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/scheduled-export-progress.test.ts",
+        "title": "postgres immediate 旧report经真实runner装配在新fence/旧心跳前不能反写",
+        "line": 31,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/scheduled-export-progress.test.ts",
+        "title": "postgres queued 旧report经真实runner装配在新fence/旧心跳前不能反写",
+        "line": 31,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/scheduled-export-progress.test.ts",
+        "title": "postgres 父pause立即拒绝旧进度且不改变原控制或已有快照",
+        "line": 31,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/scheduled-export-progress.test.ts",
+        "title": "postgres 父cancel立即拒绝旧进度且不改变原控制或已有快照",
+        "line": 31,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+        "title": "postgres self.metrics 真实组公共调度→冻结 Skill→父子绑定→消费→原运行终态",
+        "line": 28,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+        "title": "postgres comments 真实组公共调度→冻结 Skill→父子绑定→消费→原运行终态",
+        "line": 28,
+        "frozenSourceLine": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "review-create / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "review-create / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "review-insight / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "review-insight / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "learning-create / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "learning-create / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "learning-application / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "learning-application / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "conversation-message / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "conversation-message / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "ai-task / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "ai-task / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "conversation-create / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "conversation-create / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "learning-review / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "learning-review / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "learning-adoption-source / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "learning-adoption-source / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "review-output / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "review-output / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "ai-task-output / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "ai-task-output / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+        "line": 27,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "无parent learning-create / writer-first：组归档与公共创建使用同一真实组锁",
+        "line": 82,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "无parent learning-create / archive-first：组归档与公共创建使用同一真实组锁",
+        "line": 82,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "无parent learning-adopt / writer-first：组归档与公共创建使用同一真实组锁",
+        "line": 82,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "无parent learning-adopt / archive-first：组归档与公共创建使用同一真实组锁",
+        "line": 82,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "无parent conversation-create / writer-first：组归档与公共创建使用同一真实组锁",
+        "line": 82,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "无parent conversation-create / archive-first：组归档与公共创建使用同一真实组锁",
+        "line": 82,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "同组两个真实公共AI任务创建：先取得成员组UPDATE，禁止SHARE升级死锁",
+        "line": 82,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "title": "AI任务真实运行准备先读旧项目：移组可提交，落库锁内必须重验实际项目拒绝旧scope",
+        "line": 82,
+        "frozenSourceLine": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "账号组内同类私有任务查询只复用当前实际账号，组总列表仍完整",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "共享选题和雷达任务不需要假账号，私有指标任务仍要求实际账号",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档组仅真实私有系统任务后台创建可行，普通job/shared job拒绝",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档组私有collector沿实际job创建AI task并交接执行，普通AI拒绝",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "转组只重绑未来私有job，历史run和共享选题留原组",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档私有automation入队验证实际job/current member，伪造组/号和共享topic拒绝",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "私有collector创建先持实际账号/member锁：转组真实等待后拒绝，不移动在途task",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "转组先持实际账号/member锁：旧版本collector创建真实等待后拒绝，新版本可执行",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "未来job更新失败导致转组membership与job冻结归属整事务回滚",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "转组后历史run依原冻结组可读，新组不吞旧组历史，跨用户拒绝",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "手动登记的昵称和externalID不能伪装成真实绑定回执，跨用户查询也拒绝",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "实际future job能力不匹配时后台归档通道拒绝其它平台账号",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "真实自动化driver可认领无账号的组共享topic.daily，payload保留真实scope",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "真实自动化driver可认领无账号的组共享intelligence.sync，payload保留真实scope",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "真实自动化driver在归档组只认领活跃真实号的私有collector，冻结payload不取当前页面组",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档组真实公共trigger通过AI admission、run intent和execution交接，保留原实际账号scope",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档后普通写稿和source_sync的既有排队任务不能获得persistent执行权",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档后普通已认领任务的新动作lease admission拒绝，已有结算仍可settle",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "旧AI执行公开入口在归档后拒绝普通claim与新的模型调用，不写调用账本",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档后self.metrics真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档后self.traffic真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档后comments真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档后self.detail真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档claim读取实际job/member/AI映射，missing-job伪造冻结事实不能授予采集豁免",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档claim读取实际job/member/AI映射，other-account-job伪造冻结事实不能授予采集豁免",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档claim读取实际job/member/AI映射，wrong-membership伪造冻结事实不能授予采集豁免",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "归档claim读取实际job/member/AI映射，spoofed-owner伪造冻结事实不能授予采集豁免",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "普通AI模型账本在归档前已启动的调用可结算，归档后新reserve/start拒绝",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "T1101真实PG kuaishou后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "title": "T1101真实PG xiaohongshu后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证",
+        "line": 16,
+        "frozenSourceLine": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+        "title": "T1062真实PG重建根/父/任务锁顺序 archive-first",
+        "line": 134,
+        "frozenSourceLine": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+        "title": "T1062真实PG重建根/父/任务锁顺序 completion-first",
+        "line": 134,
+        "frozenSourceLine": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+        "title": "T1062真实PG重建根/父/任务锁顺序 migration-first",
+        "line": 134,
+        "frozenSourceLine": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+        "title": "T1062真实PG重建根/父/任务锁顺序 completion-first-migration",
+        "line": 134,
+        "frozenSourceLine": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/application/generation/work-review-root.test.ts",
+        "title": "T1062真实PG原审核root→actualAi(tx)同组双父Lock观察及两个阶段原回执恢复",
+        "line": 108,
+        "frozenSourceLine": "const url=new URL(reviewLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/articles/articles.integration.test.ts",
+        "title": "T1062 真实PG项目归档先提交，公共保存等待父锁后零写",
+        "line": 797,
+        "frozenSourceLine": "const url=new URL(isolatedPgUrl!);if(url.hostname!==\"127.0.0.1\"||url.port!==\"55422\")throw Error(\"只允许隔离PG服务\");",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+        "title": "真实PG迁移先校验：作品版本公共子项写等待并在旧scope拒绝",
+        "line": 26,
+        "frozenSourceLine": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+        "title": "真实PG公共作品版本子项写先提交：迁移等待后重验digest拒绝过期预览",
+        "line": 26,
+        "frozenSourceLine": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+        "title": "T1062真实PG Canvas公共generate同组双父Lock观察，原预约/任务/执行唯一且重放零写",
+        "line": 238,
+        "frozenSourceLine": "const url=new URL(canvasLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('只允许55422随机PG库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+        "title": "T1062真实PG素材 prepare 同组不同父并发且原回执重放零新增，legacy=false",
+        "line": 85,
+        "frozenSourceLine": "const url=new URL(assetLockPg);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅允许 localhost55422 随机库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+        "title": "T1062真实PG素材 prepare 同组不同父并发且原回执重放零新增，legacy=true",
+        "line": 85,
+        "frozenSourceLine": "const url=new URL(assetLockPg);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅允许 localhost55422 随机库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+        "title": "T1062真实PG账号 transfer 先持账号/member 等组，素材 prepare 不反向持组等账号",
+        "line": 85,
+        "frozenSourceLine": "const url=new URL(assetLockPg);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅允许 localhost55422 随机库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+        "title": "T1062 真实PG项目归档先提交，公共保存等待父锁后零写",
+        "line": 330,
+        "frozenSourceLine": "const url=new URL(isolatedPgUrl!);if(url.hostname!==\"127.0.0.1\"||url.port!==\"55422\")throw Error(\"只允许隔离PG服务\");",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+        "title": "真实PG迁移先校验：用料链公共子项写等待并在旧scope拒绝",
+        "line": 33,
+        "frozenSourceLine": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+        "title": "真实PG公共用料链子项写先提交：迁移等待后重验digest拒绝过期预览",
+        "line": 33,
+        "frozenSourceLine": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/moments/moments-model.integration.test.ts",
+        "title": "T1062真实PG Moments generate同组不同真实父两路Lock，唯一任务/候选/执行及回放零新增",
+        "line": 97,
+        "frozenSourceLine": "const url=new URL(momentsLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+        "title": "T1062真实PG同组不同父Source并发预约/attach沿原AI创建端口，无SHARE升级互等",
+        "line": 140,
+        "frozenSourceLine": "const url=new URL(sourcePgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+        "title": "T1062真实PG粗剪公共reserve同组双真实父两路Lock、原冻结/回执/任务/执行重放不增费",
+        "line": 130,
+        "frozenSourceLine": "const url=new URL(roughLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+        "title": "T1062真实PG粗剪公共attach同组双真实父两路Lock、原冻结/回执/任务/执行重放不增费",
+        "line": 130,
+        "frozenSourceLine": "const url=new URL(roughLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+        "title": "T1062真实PG粗剪公共readFrozenTask同组双真实父两路Lock、原冻结/回执/任务/执行重放不增费",
+        "line": 130,
+        "frozenSourceLine": "const url=new URL(roughLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+        "title": "真实PG迁移先校验：制作分段公共子项写等待并在旧scope拒绝",
+        "line": 26,
+        "frozenSourceLine": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      },
+      {
+        "file": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+        "title": "真实PG公共制作分段子项写先提交：迁移等待后重验digest拒绝过期预览",
+        "line": 26,
+        "frozenSourceLine": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+        "matchesClassifiedSource": true,
+        "realStackMatchesFileLine": true,
+        "firstErrorInRealStack": true
+      }
+    ],
+    "allChecksPassed": true,
+    "socketAllFirstRealGuardError": true,
+    "currentFirstMarkerNotSecondRoundAuthority": true,
+    "helperImplementationNotYetReviewed": true,
+    "positivePGNotYetExecuted": true,
+    "negativeNoSQLNoCLIMustStillExecute": true,
+    "nativePreloadIsNotFirewall": true
+  },
+  "fixtures": [
+    {
+      "path": "docs/verification/t1217/fixtures/historical-intelligence.service.ts",
+      "currentCanonicalSha256": "aba25b0714313c0e22c5c21a59223a3262e0620c21b2193f1a8f3e8290cebd6c",
+      "expectedSha256Matches": true,
+      "oldRawGitSha256": "3656cf91333147c2372c4d1ae9978d78cddffc3c980dfdb07a21c74703d88b81",
+      "expectedOldRawSha256Matches": true,
+      "absentFromCandidate": true,
+      "nonImportASTStatementsCompared": 62,
+      "nonImportASTExactDifferences": 0,
+      "parseDiagnostics": 0,
+      "ASTComparisonMechanism": "真实安装TypeScript createSourceFile; 排除ImportDeclaration后逐top-level node.getText精确比较已当场运行；不执行模块",
+      "imports": [
+        {
+          "specifier": "../../../../backend/src/schema/platform-account",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/schema/platform-account.ts",
+          "canonicalSha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d",
+          "candidatePath": "backend/src/schema/platform-account.ts",
+          "candidateExists": true,
+          "candidateSha256": "5341893f64db71ecbc44d16127588a5e0956a4c1e40c2839a05eeb699247af5d",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../../backend/src/schema/account-groups",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/schema/account-groups.ts",
+          "canonicalSha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838",
+          "candidatePath": "backend/src/schema/account-groups.ts",
+          "candidateExists": true,
+          "candidateSha256": "ab8570d5537b4f31c68d250b37611364946a210f673112ee5167e378d29c6838",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../../backend/src/workspace-scope",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/workspace-scope.ts",
+          "canonicalSha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+          "candidatePath": "backend/src/workspace-scope.ts",
+          "candidateExists": true,
+          "candidateSha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../../contract/src/internal/execution-worker",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/contract/src/internal/execution-worker.ts",
+          "canonicalSha256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+          "candidatePath": "contract/src/internal/execution-worker.ts",
+          "candidateExists": true,
+          "candidateSha256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../../backend/src/index",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/index.ts",
+          "canonicalSha256": "8884a768915859ebde749fbb95eb31c209a81b604d08b81ed1791f998bbf816b",
+          "candidatePath": "backend/src/index.ts",
+          "candidateExists": true,
+          "candidateSha256": "8884a768915859ebde749fbb95eb31c209a81b604d08b81ed1791f998bbf816b",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../../contract/src/index",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/contract/src/index.ts",
+          "canonicalSha256": "5aafcf93e5df118f6db5acdd60ca44c014fe105d4edf8da8acabe5269531937a",
+          "candidatePath": "contract/src/index.ts",
+          "candidateExists": true,
+          "candidateSha256": "5aafcf93e5df118f6db5acdd60ca44c014fe105d4edf8da8acabe5269531937a",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../../contract/src/index",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/contract/src/index.ts",
+          "canonicalSha256": "5aafcf93e5df118f6db5acdd60ca44c014fe105d4edf8da8acabe5269531937a",
+          "candidatePath": "contract/src/index.ts",
+          "candidateExists": true,
+          "candidateSha256": "5aafcf93e5df118f6db5acdd60ca44c014fe105d4edf8da8acabe5269531937a",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../../backend/src/modules/execution",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/index.ts",
+          "canonicalSha256": "df93fd15655ebef8ebd6c7693778887b6e03aa205dbcf3735b746a4aaf87cbb4",
+          "candidatePath": "backend/src/modules/execution/index.ts",
+          "candidateExists": true,
+          "candidateSha256": "df93fd15655ebef8ebd6c7693778887b6e03aa205dbcf3735b746a4aaf87cbb4",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../../backend/src/modules/intelligence/intelligence.errors",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/intelligence/intelligence.errors.ts",
+          "canonicalSha256": "0fd505acfacdadf8de229ec19eb7dd67ef42a9f38a9bb5d9b01cca8382a1af48",
+          "candidatePath": "backend/src/modules/intelligence/intelligence.errors.ts",
+          "candidateExists": true,
+          "candidateSha256": "0fd505acfacdadf8de229ec19eb7dd67ef42a9f38a9bb5d9b01cca8382a1af48",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        }
+      ]
+    },
+    {
+      "path": "docs/verification/t1229/historical-generation-bridge.ts",
+      "currentCanonicalSha256": "702df82aa972de2ce65dd0886934ebfd8adc520bc82ecb0e1c29ef4fa0f411da",
+      "expectedSha256Matches": true,
+      "oldRawGitSha256": "727d8f42186bbc18e61a03e611db447f5445205517fffa7c26da1389d80aa8c8",
+      "expectedOldRawSha256Matches": true,
+      "absentFromCandidate": true,
+      "nonImportASTStatementsCompared": 10,
+      "nonImportASTExactDifferences": 0,
+      "parseDiagnostics": 0,
+      "ASTComparisonMechanism": "真实安装TypeScript createSourceFile; 排除ImportDeclaration后逐top-level node.getText精确比较已当场运行；不执行模块",
+      "imports": [
+        {
+          "specifier": "../../../backend/node_modules/zod/index.js",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/zod@4.4.3/node_modules/zod/index.js",
+          "canonicalSha256": "c733a1897d6b4b30dad6998597f6896b265b094a65534359ada34b08ecf8932c",
+          "candidatePath": "node_modules/.pnpm/zod@4.4.3/node_modules/zod/index.js",
+          "candidateExists": true,
+          "candidateSha256": "c733a1897d6b4b30dad6998597f6896b265b094a65534359ada34b08ecf8932c",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/index",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/index.ts",
+          "canonicalSha256": "8884a768915859ebde749fbb95eb31c209a81b604d08b81ed1791f998bbf816b",
+          "candidatePath": "backend/src/index.ts",
+          "candidateExists": true,
+          "candidateSha256": "8884a768915859ebde749fbb95eb31c209a81b604d08b81ed1791f998bbf816b",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../contract/src/index",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/contract/src/index.ts",
+          "canonicalSha256": "5aafcf93e5df118f6db5acdd60ca44c014fe105d4edf8da8acabe5269531937a",
+          "candidatePath": "contract/src/index.ts",
+          "candidateExists": true,
+          "candidateSha256": "5aafcf93e5df118f6db5acdd60ca44c014fe105d4edf8da8acabe5269531937a",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../contract/src/internal/execution-worker",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/contract/src/internal/execution-worker.ts",
+          "canonicalSha256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+          "candidatePath": "contract/src/internal/execution-worker.ts",
+          "candidateExists": true,
+          "candidateSha256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/intelligence/topic-preview-runner",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/intelligence/topic-preview-runner.ts",
+          "canonicalSha256": "90576a4fcdd3f3390b2d17bd73ea987b24bf1ad26de0a5c62c74dcb6ee4042cf",
+          "candidatePath": "backend/src/modules/intelligence/topic-preview-runner.ts",
+          "candidateExists": true,
+          "candidateSha256": "90576a4fcdd3f3390b2d17bd73ea987b24bf1ad26de0a5c62c74dcb6ee4042cf",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/execution/execution-worker-outcome.service",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-worker-outcome.service.ts",
+          "canonicalSha256": "ee5239f11abbe91267592c43b979b4e0874fbbd4b2a1b8b6ef02d24d2f70f790",
+          "candidatePath": "backend/src/modules/execution/execution-worker-outcome.service.ts",
+          "candidateExists": true,
+          "candidateSha256": "ee5239f11abbe91267592c43b979b4e0874fbbd4b2a1b8b6ef02d24d2f70f790",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/execution/execution-lease.service",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-lease.service.ts",
+          "canonicalSha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0",
+          "candidatePath": "backend/src/modules/execution/execution-lease.service.ts",
+          "candidateExists": true,
+          "candidateSha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/execution/execution-call-ledger.service",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-call-ledger.service.ts",
+          "canonicalSha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a",
+          "candidatePath": "backend/src/modules/execution/execution-call-ledger.service.ts",
+          "candidateExists": true,
+          "candidateSha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/execution/execution-worker-call-ports.service",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.service.ts",
+          "canonicalSha256": "f5750d99da798f930dad808d8fe27c86983cc43ed1b161580772a1b0ee29a092",
+          "candidatePath": "backend/src/modules/execution/execution-worker-call-ports.service.ts",
+          "candidateExists": true,
+          "candidateSha256": "f5750d99da798f930dad808d8fe27c86983cc43ed1b161580772a1b0ee29a092",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/execution/execution-model-identity.service",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-model-identity.service.ts",
+          "canonicalSha256": "392f14025622b6ecd1f0da46c0a8f66036343036d79c62b426d94fcb10227b12",
+          "candidatePath": "backend/src/modules/execution/execution-model-identity.service.ts",
+          "candidateExists": true,
+          "candidateSha256": "392f14025622b6ecd1f0da46c0a8f66036343036d79c62b426d94fcb10227b12",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/execution/claimed-worker-supervision",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/claimed-worker-supervision.ts",
+          "canonicalSha256": "d0543c159ae2b409c90f9fecbbb4bdd1c83391b981a4edefba9d0dbc4f0adcc1",
+          "candidatePath": "backend/src/modules/execution/claimed-worker-supervision.ts",
+          "candidateExists": true,
+          "candidateSha256": "d0543c159ae2b409c90f9fecbbb4bdd1c83391b981a4edefba9d0dbc4f0adcc1",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/execution/persistent-task.service",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts",
+          "canonicalSha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+          "candidatePath": "backend/src/modules/execution/persistent-task.service.ts",
+          "candidateExists": true,
+          "candidateSha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/intelligence/topic-preview-runner",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/intelligence/topic-preview-runner.ts",
+          "canonicalSha256": "90576a4fcdd3f3390b2d17bd73ea987b24bf1ad26de0a5c62c74dcb6ee4042cf",
+          "candidatePath": "backend/src/modules/intelligence/topic-preview-runner.ts",
+          "candidateExists": true,
+          "candidateSha256": "90576a4fcdd3f3390b2d17bd73ea987b24bf1ad26de0a5c62c74dcb6ee4042cf",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../backend/src/modules/intelligence/project-script-candidate.runner",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/intelligence/project-script-candidate.runner.ts",
+          "canonicalSha256": "bc5c588917fcd10c0df4475313db48a6e5435993cd73c54874104626bb106e37",
+          "candidatePath": "backend/src/modules/intelligence/project-script-candidate.runner.ts",
+          "candidateExists": true,
+          "candidateSha256": "bc5c588917fcd10c0df4475313db48a6e5435993cd73c54874104626bb106e37",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        },
+        {
+          "specifier": "../../../ai-worker/src/index",
+          "canonicalResolved": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/index.ts",
+          "canonicalSha256": "f8514ebf3b4a71aee7b9c70676948b77a8c79f33ba455304e9bca13c0b6d5b50",
+          "candidatePath": "ai-worker/src/index.ts",
+          "candidateExists": true,
+          "candidateSha256": "f8514ebf3b4a71aee7b9c70676948b77a8c79f33ba455304e9bca13c0b6d5b50",
+          "scope": "direct import file resolution only, not semantic typecheck"
+        }
+      ]
+    }
+  ],
+  "cover": {
+    "actualCases": 18,
+    "failedCases": 16,
+    "directZodCases": 14,
+    "negativeAssertionCases": 2,
+    "exactPublicSchema": "publicationCoverSaveResult.revision=publicationRevisionResource.strict()",
+    "privateDbFields": [
+      "userId",
+      "visualAdoptionKey",
+      "visualAdoptionDigest"
+    ],
+    "productionWriteSet": [
+      "backend/src/modules/publishing/publication-cover.service.ts"
+    ],
+    "testReadOnlyRegression": [
+      "backend/src/modules/publishing/publication-cover.integration.test.ts"
+    ],
+    "sourceConsumers": {
+      "save": "publication-cover.service.ts:20 raw createRevision result only strips userId before public parse",
+      "request": "publication-cover.service.ts:19 raw historical revision only strips userId before digest compare",
+      "existingProjection": "publishing.transport.ts:72-90 toRevisionResource"
+    },
+    "cases": [
+      {
+        "title": "原owner新封面必须有真实持久manualsave receipt且同号只一个revision",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "真实请求回读/后改稿失回复恢复原revision且保留原metadata，changedbody409",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "两个真实publication指定ID，不读改另稿；账号/作品不符零写",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "同ID并发winner一次revision，两个新请求旧CAS只有一个成功",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "真实精确旧file非current可采用，legacy_asset不猜且原文字保存不受阻",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原WorkMaterials公共article成员明确publication封面attach/replace/detach同tx落原owner",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at Object.writeTarget (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/work-compositions/publication-cover.materials.ts:9:747)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/work-compositions/work-materials.service.ts:53:140\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原WorkMaterials公共image成员明确publication封面attach/replace/detach同tx落原owner",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at Object.writeTarget (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/work-compositions/publication-cover.materials.ts:9:747)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/work-compositions/work-materials.service.ts:53:140\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原WorkMaterials公共video成员明确publication封面attach/replace/detach同tx落原owner",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at Object.writeTarget (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/work-compositions/publication-cover.materials.ts:9:747)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/work-compositions/work-materials.service.ts:53:140\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原Projects真实删除级联新封面request无孤儿，不靠新runtime清理",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "旧手工createRevision公开body保持，同项目pub锁与新cover并发无反序，原receipt仍读历史",
+        "firstMessage": "AssertionError: expected ZodError: [\n  {\n    \"code\": \"unrecognized… { …(8) } to match object { code: 'ConflictError' }\n(2 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.integration.test.ts:28:627\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      },
+      {
+        "title": "原publication.text publish_title采用保留精确coverfile，不降级为legacy",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原publication.text description采用保留精确coverfile，不降级为legacy",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原publication.text publish_tags采用保留精确coverfile，不降级为legacy",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原setCover回填与新exact cover共享锁，已有封面仍幂等不反杀",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原导入canonical标题回填保留exact coverfile，另一输入output不抢归属",
+        "firstMessage": "ZodError: [\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"visualAdoptionKey\",\n      \"visualAdoptionDigest\"\n    ],\n    \"path\": [\n      \"revision\"\n    ],\n    \"message\": \"Unrecognized keys: \\\"visualAdoptionKey\\\", \\\"visualAdoptionDigest\\\"\"\n  }\n]\n    at change (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.service.ts:20:2517)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616"
+      },
+      {
+        "title": "原导入标题回填与exact cover写者共同锁，并发旧CAS不得迟到覆盖",
+        "firstMessage": "AssertionError: expected ZodError: [\n  {\n    \"code\": \"unrecognized… { …(8) } to match object { code: 'ConflictError' }\n(2 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.integration.test.ts:33:1241\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      }
+    ],
+    "repairContract": "service内统一完整公开revision字段投影，save/request同用；不导入transport、不改schema/DB/CAS/digest/receipt/owner，18原例全重跑，2negative必须到原期望分支"
+  },
+  "dr006": {
+    "cause": "新生成输出表达式resolve(...)，原与生成t1070 import仅join",
+    "contractChosenRepair": "新增import resolve; 新round-2机械driver记录可逆import差异，原driver及round1封存",
+    "candidateExistingGeneratedImportFixOnly": true,
+    "originalAssertionsMustRemain": true,
+    "inverseAnd100InventoryStillMustRun": true
+  },
+  "newPaths": [
+    {
+      "path": "backend/src/test-fixtures/owned-postgres.ts",
+      "exists": false,
+      "scope": "explicit NEW, implementation review required before actual runner"
+    },
+    {
+      "path": "backend/src/test-fixtures/owned-postgres.test.ts",
+      "exists": false,
+      "scope": "explicit NEW, implementation review required before actual runner"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "exists": false,
+      "scope": "explicit NEW, implementation review required before actual runner"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/run-unit.cjs",
+      "exists": false,
+      "scope": "explicit NEW, implementation review required before actual runner"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/verify-source.cjs",
+      "exists": false,
+      "scope": "explicit NEW, implementation review required before actual runner"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/manifest.json",
+      "exists": false,
+      "scope": "explicit NEW, implementation review required before actual runner"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/budget-consumers.json",
+      "exists": false,
+      "scope": "explicit NEW, implementation review required before actual runner"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/prepare-browser-driver.cjs",
+      "exists": false,
+      "scope": "explicit NEW, implementation review required before actual runner"
+    }
+  ],
+  "sourceMap": [
+    {
+      "path": "docs/features/t1246-integrated-dev-package-acceptance.md",
+      "currentSha256": "b295cb6fc92b22433ee7415c12861a1c8b94fc3e842125d7bc99615d1256c875",
+      "frozen533Sha256": "8a4e5ed7ace44905c885410f02e9d1475d49383ff854856342bdea62b8416635",
+      "sameAsFrozen533": false
+    },
+    {
+      "path": "docs/verification/t1246/first-diagnosis/consolidated-write-set-evidence.json",
+      "currentSha256": "1697170a4a779132f105ac3d3e8fd935dda8b684533ec8dc291c8947a137a53c",
+      "frozen533Sha256": null,
+      "sameAsFrozen533": null
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/MINIMAL_FIRST_CLOSURE_CONTRACT.md",
+      "currentSha256": "3db12e845e6c9f050204b2b4aa3ed4ee9097f8a6ddfa2e9717850dfbffef6517",
+      "frozen533Sha256": null,
+      "sameAsFrozen533": null
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/minimal-first-closure-source-map.json",
+      "currentSha256": "0aa3602be45eb7e21f31df3e5825dc092e1a51f50eeef3498a83925b8bc7467a",
+      "frozen533Sha256": null,
+      "sameAsFrozen533": null
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/PG_OWNED_ENV_REPAIR_REVIEW.md",
+      "currentSha256": "d486113d40ad8fe2937baa5958e72c510c3d1cb934b37f9beacbc8f9f63f9441",
+      "frozen533Sha256": null,
+      "sameAsFrozen533": null
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/backend-exact-pg-env-classification-first.json",
+      "currentSha256": "925e3da951c73fb6b6036c2eb7c873608eb7501fefd33bb227ddcefb01ec5d8a",
+      "frozen533Sha256": null,
+      "sameAsFrozen533": null
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/backend-failures.json",
+      "currentSha256": "80cec291eafc8ce864b5fc1b9028da6c4ffc4039e1d1a91f11931c9ab0a8fa54",
+      "frozen533Sha256": null,
+      "sameAsFrozen533": null
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/pg-environment.json",
+      "currentSha256": "dd94c393054eb00a19ab24a7ccf18b421ef7d15272473f9eeb0c68a93040266f",
+      "frozen533Sha256": "dd94c393054eb00a19ab24a7ccf18b421ef7d15272473f9eeb0c68a93040266f",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/pg-environment-setup.cjs",
+      "currentSha256": "bc0dabf75eab1542fcc6126b94440af4752a55277429c72600cf2d7eaea7ec40",
+      "frozen533Sha256": "bc0dabf75eab1542fcc6126b94440af4752a55277429c72600cf2d7eaea7ec40",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/ENV_GUARD_REVIEW_RESULT.md",
+      "currentSha256": "d1919d3eaf7112a2c4046bb0bab62b894b97eccdd2054d174db24d684ef68d15",
+      "frozen533Sha256": null,
+      "sameAsFrozen533": null
+    },
+    {
+      "path": "backend/src/migration-convergence.test.ts",
+      "currentSha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "frozen533Sha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/group-upgrade-postgres.integration.test.ts",
+      "currentSha256": "21e7611fde3d4df4bbe0b6d3592ae374e1879497fd7fb31783beda3821dd5013",
+      "frozen533Sha256": "21e7611fde3d4df4bbe0b6d3592ae374e1879497fd7fb31783beda3821dd5013",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/group-upgrade-backup.ts",
+      "currentSha256": "7e9b108534cf3294f506e1e0426b5f9a7a400eca25e446360cbdb81ac9497c1d",
+      "frozen533Sha256": "7e9b108534cf3294f506e1e0426b5f9a7a400eca25e446360cbdb81ac9497c1d",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-cover.service.ts",
+      "currentSha256": "51060870eeaa19ddace925c1b82889deffc91da9df160aee22b52d13ffc99f33",
+      "frozen533Sha256": "51060870eeaa19ddace925c1b82889deffc91da9df160aee22b52d13ffc99f33",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-cover.integration.test.ts",
+      "currentSha256": "c9e64623264b6c72fb85d8f88beebf9a68ec1cb427bba5eb0190047bfd2d4079",
+      "frozen533Sha256": "c9e64623264b6c72fb85d8f88beebf9a68ec1cb427bba5eb0190047bfd2d4079",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.transport.ts",
+      "currentSha256": "569b4d4d67319ba3c6e7232c6397e497e4b42ebd11f40e70d41c33dddd2fa807",
+      "frozen533Sha256": "569b4d4d67319ba3c6e7232c6397e497e4b42ebd11f40e70d41c33dddd2fa807",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/schema/publishing.ts",
+      "currentSha256": "08baeeb0ab28bfdc4aa6dead81fbeea0d1b3fb5fd266547c49974a42e97b4aaa",
+      "frozen533Sha256": "08baeeb0ab28bfdc4aa6dead81fbeea0d1b3fb5fd266547c49974a42e97b4aaa",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "contract/src/resources/publishing.ts",
+      "currentSha256": "fe655be8ea5511396d0ef6b38f4244df080304d58ec0e4712cede9a1df573fa9",
+      "frozen533Sha256": "fe655be8ea5511396d0ef6b38f4244df080304d58ec0e4712cede9a1df573fa9",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "contract/src/resources/publication-cover.ts",
+      "currentSha256": "bf6ffe2c3f79adb60d58626a532e35a8da6f1799f018ca2fe34dbf832ef44a7f",
+      "frozen533Sha256": "bf6ffe2c3f79adb60d58626a532e35a8da6f1799f018ca2fe34dbf832ef44a7f",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "frontend/tests/e2e/t1070-director-editor.spec.ts",
+      "currentSha256": "f05eb72d068cc2768d799fe715441c3a02db329380418dcb60d4f4929f836757",
+      "frozen533Sha256": "f05eb72d068cc2768d799fe715441c3a02db329380418dcb60d4f4929f836757",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+      "currentSha256": "c162998fbcda7d51658269ebbf8fc5f8d5bafbb08bfc7c97d10cbd176b92c371",
+      "frozen533Sha256": "c162998fbcda7d51658269ebbf8fc5f8d5bafbb08bfc7c97d10cbd176b92c371",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "docs/verification/t1246/driver/prepare-browser-driver.cjs",
+      "currentSha256": "40dab226779b98ba016b2c0bad03851683a721373801cff79b9df8772ad1f8fc",
+      "frozen533Sha256": "559f51df5e35b71ba4686a3a515275bb992efe7852abaa78321aa98f4f8d7c03",
+      "sameAsFrozen533": false
+    },
+    {
+      "path": "backend/src/integration/intelligence-source-workspace.test.ts",
+      "currentSha256": "0769e7f8de6f73e7a68c71057fcf126aca184a722d915011f0efeead821a3a7b",
+      "frozen533Sha256": "0769e7f8de6f73e7a68c71057fcf126aca184a722d915011f0efeead821a3a7b",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence-rewrite-official.integration.test.ts",
+      "currentSha256": "5b1a512c6cfdfbb0108e658e9ae77f6588fca75fd0688addedf81a5ab588b99c",
+      "frozen533Sha256": "5b1a512c6cfdfbb0108e658e9ae77f6588fca75fd0688addedf81a5ab588b99c",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.test.ts",
+      "currentSha256": "cf7347cb43e7127c05e2197ade1e67e9d5b878754293f163dfe6b7bf72790026",
+      "frozen533Sha256": "cf7347cb43e7127c05e2197ade1e67e9d5b878754293f163dfe6b7bf72790026",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "currentSha256": "61e2bc9b394f12618922fc180ea232a4a5d3a80e272c1d935fa6873c988d7645",
+      "frozen533Sha256": "61e2bc9b394f12618922fc180ea232a4a5d3a80e272c1d935fa6873c988d7645",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "currentSha256": "cd55d1cede15641e1b668cfecc10763d63944b4c310e2f49aa6a367524681ffc",
+      "frozen533Sha256": "cd55d1cede15641e1b668cfecc10763d63944b4c310e2f49aa6a367524681ffc",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "currentSha256": "86da1c83a1a3c9f92278c703bea301290f472f0d46458aae1e29ff881544b8a3",
+      "frozen533Sha256": "86da1c83a1a3c9f92278c703bea301290f472f0d46458aae1e29ff881544b8a3",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "currentSha256": "131ffdfdb6952a4e888224fc210e2c3c8df196f0661440402f993ed19dadbc00",
+      "frozen533Sha256": "131ffdfdb6952a4e888224fc210e2c3c8df196f0661440402f993ed19dadbc00",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "currentSha256": "f5beea0e13df190139ecf4666e086bb17695640325c156f2ccd118faaf61d7d4",
+      "frozen533Sha256": "f5beea0e13df190139ecf4666e086bb17695640325c156f2ccd118faaf61d7d4",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "currentSha256": "84dda08648a2de8b0f098bc21352ab20de4cb512e662785874fa146acf051ed9",
+      "frozen533Sha256": "84dda08648a2de8b0f098bc21352ab20de4cb512e662785874fa146acf051ed9",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/scheduled-export-progress.test.ts",
+      "currentSha256": "3265af8ce246585d6a45db95f47f3e18bf8311e38ea321c5a6103bdf38f4655d",
+      "frozen533Sha256": "3265af8ce246585d6a45db95f47f3e18bf8311e38ea321c5a6103bdf38f4655d",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "currentSha256": "43128c2d8b74baf6786350e87542aa18f7b658ace868a9ee31f1d17760df1f82",
+      "frozen533Sha256": "43128c2d8b74baf6786350e87542aa18f7b658ace868a9ee31f1d17760df1f82",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "currentSha256": "a0af88f4cd72f2968703d0e7044182ada4f5607f61bf43ae8d70c0034cc511ff",
+      "frozen533Sha256": "a0af88f4cd72f2968703d0e7044182ada4f5607f61bf43ae8d70c0034cc511ff",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "currentSha256": "969c43578cc96a84ac8714c194443efa24fce531c73203f0c3bf2b8706a544e3",
+      "frozen533Sha256": "969c43578cc96a84ac8714c194443efa24fce531c73203f0c3bf2b8706a544e3",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "currentSha256": "e94d5210c11df4883d455c954ab16418bf6d4dd7916b6422ff6cca15da6ad60f",
+      "frozen533Sha256": "e94d5210c11df4883d455c954ab16418bf6d4dd7916b6422ff6cca15da6ad60f",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "currentSha256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "frozen533Sha256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/legacy-source-migration.test.ts",
+      "currentSha256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "frozen533Sha256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "currentSha256": "9e1df5f7d667165a0a7cd97baf56ee30c716cb53e872197b8ee1039a5fd6ba49",
+      "frozen533Sha256": "9e1df5f7d667165a0a7cd97baf56ee30c716cb53e872197b8ee1039a5fd6ba49",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/articles/articles.integration.test.ts",
+      "currentSha256": "eacc71df7b216f528ad6db72c124c48c038c82350ca5c2c9242e63aff612ad46",
+      "frozen533Sha256": "eacc71df7b216f528ad6db72c124c48c038c82350ca5c2c9242e63aff612ad46",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "currentSha256": "d3bf2d4da45460d02ff5a8f137d13abb819967c1a36c133a5000aa1094d70e58",
+      "frozen533Sha256": "d3bf2d4da45460d02ff5a8f137d13abb819967c1a36c133a5000aa1094d70e58",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "currentSha256": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+      "frozen533Sha256": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "currentSha256": "14761851e1ca3d6c45575e86ff22fa2769f452e5e07571b7498b054861eec51a",
+      "frozen533Sha256": "14761851e1ca3d6c45575e86ff22fa2769f452e5e07571b7498b054861eec51a",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "currentSha256": "40f269b1026c9cfbbe4625c0473327be9f86564fc749a136f24d542567932983",
+      "frozen533Sha256": "40f269b1026c9cfbbe4625c0473327be9f86564fc749a136f24d542567932983",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "currentSha256": "0619b3f891485d73839c55ff1a6571492bfe561f15c6446d4ac1abde361b610a",
+      "frozen533Sha256": "0619b3f891485d73839c55ff1a6571492bfe561f15c6446d4ac1abde361b610a",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "currentSha256": "3fd93ea3546080fd6190a535a6647dd5fb4271cb71c993234799dc48f6648fee",
+      "frozen533Sha256": "3fd93ea3546080fd6190a535a6647dd5fb4271cb71c993234799dc48f6648fee",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "currentSha256": "3eddedaedaeed193144ab360ab4417d8de8313072276ff3015a33b51abef5b01",
+      "frozen533Sha256": "3eddedaedaeed193144ab360ab4417d8de8313072276ff3015a33b51abef5b01",
+      "sameAsFrozen533": true
+    },
+    {
+      "path": "backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "currentSha256": "08e34f1297a06785bc7ce1e67529f13c98ce9ae2810197301865b46393d0e724",
+      "frozen533Sha256": "08e34f1297a06785bc7ce1e67529f13c98ce9ae2810197301865b46393d0e724",
+      "sameAsFrozen533": true
+    }
+  ],
+  "remainingExecutionGates": [
+    "新owned helper/runner完整代码及实际出生/nonce/UID/目录/CLIenv消费者独评",
+    "负URL/marker/角色/未知DB真实SQL0+CLI0，与允许路径真实PG锁/迁移/restore",
+    "两fixture候选复制后collection/类型/原body，不以AST比较签历史运行",
+    "DR006生成100逆构/库存/类型及原case完整body",
+    "PB001 18原例及两negative原后置，公共保存/回放/CAS/真实bytes",
+    "其余原205业务body失败仍按原真实库存诊断，不由本报告泛准入"
+  ],
+  "t1097": "仅引用另一独立route agent既有评审；无自行复评/实施授权"
+}

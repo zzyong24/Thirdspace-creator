@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-11T21:14:41.084Z",
+  "sourceSha256": "bee594c2795354ed7216114f102377b896c3884202ab46f5d627fab242c92331",
+  "scope": "root真实静态消费者反例，不代完整Gate",
+  "cases": [
+    {
+      "id": "named-function-expression",
+      "source": "const WAIT=1000;const cb=function WAIT(){};page.goto(url,{timeout:WAIT});",
+      "expectedFailures": 1,
+      "actualFailures": 0
+    },
+    {
+      "id": "object-method",
+      "source": "const WAIT=1000;const obj={WAIT(){}};page.goto(url,{timeout:WAIT});",
+      "expectedFailures": 1,
+      "actualFailures": 0
+    },
+    {
+      "id": "for-block-binding",
+      "source": "const WAIT=1000;for(let WAIT=120000;false;){};page.goto(url,{timeout:WAIT});",
+      "expectedFailures": 1,
+      "actualFailures": 0
+    }
+  ]
+}

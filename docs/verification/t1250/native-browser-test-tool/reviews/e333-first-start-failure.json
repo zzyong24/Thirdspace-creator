@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-11T21:28:33.724Z",
+  "toolSha256": "e3331794ae00630298618bed44749d76095f2bc433c36b10a422c0d7c585d2d6",
+  "exitCode": 1,
+  "error": "EXACT_REVIEWED_WORKBENCH_VENDOR_INVENTORY_REQUIRED",
+  "rustTestBodies": 0,
+  "cargoInvocations": 0,
+  "actualCount": 328,
+  "expectedCount": 328,
+  "unexpected": [],
+  "missing": [],
+  "firstOrderDiff": 21
+}

@@ -1,0 +1,20 @@
+{
+  "path": "/private/tmp/t1246-package-final-source/run-owned-led018-led057-v1.cjs",
+  "sha256": "1faf0b55e297a7b2f48263a342ec2145905c300b90028e28dd46758bddabf136",
+  "bytes": 9803,
+  "budgetMs": 37920000,
+  "sourceReportSha256": "3b27a11be9ea12fd8d5169719d449bf234418a34846f4cb547fb7455e02d81f0",
+  "reviewSchema": {
+    "admitted": true,
+    "toolSha256": "COPY_ACTUAL_ABOVE",
+    "sourceReportSha256": "3b27a11be9ea12fd8d5169719d449bf234418a34846f4cb547fb7455e02d81f0",
+    "totalMs": 37920000
+  },
+  "environmentImpact": [
+    "仅观察PATH补~/.cargo/bin，固定已装stable toolchain，CARGO_NET_OFFLINE=true拒网络依赖下载",
+    "TMPDIR/CARGO_TARGET_DIR仅本次owned根；不设RUST_TEST_THREADS或Cargo jobs，不改源码contract/原测试调度参数",
+    "原HOME保留，env采用最小字典且PG清空；原两check串未改",
+    "source-before/after为Git cached+others非ignored src/vendor/scripts/config精确文件集及真实资源/工具；Tauri生成权限/schema若造成这些源字节/集合变动则真实FAIL保留",
+    "sandbox允许单测原行为，但拒所有CreatorOS.app写及exec；不运行安装或App"
+  ]
+}

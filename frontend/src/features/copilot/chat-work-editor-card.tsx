@@ -30,6 +30,60 @@ import {
   type EditorAdoption,
   type EditorSaveCandidate,
 } from "@/features/draft-workbench/draft-chat-request";
+export type WorkCandidateLocation={conversationId:string|null;sourceMessageId:string|null;toolCallId:string};
+/** SEMANTIC_BOUNDARY_ALLOW: 与后台一样只预览人的明确字段/事实选择，不做创作判断。 */
+export function previewAssistedWorkDocument(base:any,candidate:any,fields:string[],facts:'keep'|'replace',article:boolean){
+ const output=structuredClone(candidate),copy=(key:string,source:any)=>{if(Object.hasOwn(source,key))output[key]=structuredClone(source[key]);else delete output[key];};
+ for(const key of ['title','summary','tags']){copy(key,fields.includes(key)?candidate:base);if(article&&key!=='tags')copy(`${key}SourceRefs`,fields.includes(key)?candidate:base);}
+ if(!fields.length)copy('metadataSource',base);else if(['title','summary','tags'].every(key=>fields.includes(key)&&Object.hasOwn(candidate,key)))copy('metadataSource',candidate);else delete output.metadataSource;
+ if(article)output.factItems=facts==='keep'?structuredClone(base.factItems):candidate.factItems.map((fact:any)=>{const original=base.factItems.find((old:any)=>old.id===fact.id&&old.text===fact.text&&editorCanonical(old.sourceRefs)===editorCanonical(fact.sourceRefs));return {...fact,reviewState:original?.reviewState??'needs_confirmation'};});
+ else{const seen=new Set<string>();output.sourceRefs=[...candidate.sourceRefs,...base.sourceRefs].filter(ref=>{const key=editorCanonical(ref);if(seen.has(key))return false;seen.add(key);return true;});}
+ return output;
+}
+export function useAssistedWorkReview(client:any,result:EditorSaveCandidate|null,location:WorkCandidateLocation|null,scopeKey:string){
+ const enabled=Boolean(result&&(result.kind==='work.creation.member'||result.target.owner==='wechat_article'));
+ const member=result?.kind==='work.creation.member'?(result.member==='article'?result.proposal.target.articleMember:result.proposal.target.graphicMember):null;
+ const article=result?.kind==='work.creation.member'?result.member==='article':result?.target.owner==='wechat_article';
+ const outputId=member?.outputId??(result?.kind==='work.editor.candidate'?result.target.outputId:''),versionId=member?.baseVersionId??(result?.kind==='work.editor.candidate'&&result.base.kind==='artifact'?result.base.versionId:'');
+ const proposed:any=result?.kind==='work.creation.member'?(article?result.proposal.article:result.proposal.graphic):result?.candidate?.kind==='article'?result.candidate.document:null;
+ const originalCandidate=result?.kind==='work.creation.member'?result.proposal:result;
+ const [base,setBase]=React.useState<any>(null),[source,setSource]=React.useState<import('@creatoros/contract').WorkAssistantSource|null>(null),[fields,setFields]=React.useState<string[]>([]),[facts,setFacts]=React.useState<'keep'|'replace'>('keep'),[error,setError]=React.useState<string|null>(null),[pending,setPending]=React.useState(false);
+ const originalBytes=editorCanonical(originalCandidate),storageKey=`creatoros:t1097:adopt:${scopeKey}:${outputId}:${location?.toolCallId??''}:${versionId}`;
+ React.useEffect(()=>{let active=true;setBase(null);setSource(null);setError(null);if(!enabled)return;void(async()=>{try{
+  if(!location?.conversationId||!location.sourceMessageId)throw Error('这份候选缺少原会话消息来源，不能用最新一轮补造。');
+  const receipt=await client.readWorkCandidateSource({params:{conversationId:location.conversationId},query:{sourceMessageId:location.sourceMessageId,toolCallId:location.toolCallId},body:undefined});
+  if(editorCanonical(receipt.candidate)!==originalBytes)throw Error('来源读回与正在显示的原候选不一致，候选保留。');
+  const exact=await client[article?'getArticleVersion':'getGraphicPostVersion']({params:{outputId,versionId},query:undefined,body:undefined});
+  if(exact.versionId!==versionId)throw Error('原稿版本读回不符');
+  if(!active)return;setBase(exact.document);setSource(receipt.assistantSource);
+  const frozen=sessionStorage.getItem(storageKey);if(frozen){const value=JSON.parse(frozen);if(editorCanonical(value.body.assistantSource)!==editorCanonical(receipt.assistantSource)||value.outputId!==outputId)throw Error('原待确认请求来源不符');setFields(value.body.fieldSelection);setFacts(value.body.factSelection?.mode??'keep');setPending(true);}
+  else{setFields(['title','summary','tags'].filter(key=>Object.hasOwn(proposed??{},key)&&(Array.isArray(exact.document[key])?exact.document[key].length===0:!exact.document[key]?.trim())));setFacts('keep');setPending(false);}
+ }catch(cause){if(active)setError(cause instanceof Error?cause.message:'来源读取未完成');}})();return()=>{active=false;};},[client,enabled,originalBytes,outputId,versionId,location?.conversationId,location?.sourceMessageId,location?.toolCallId,storageKey]);
+ const document=base&&proposed?previewAssistedWorkDocument(base,proposed,fields,facts,Boolean(article)):proposed;
+ async function save(requestId:string){
+  if(!source||!base||!document||!result)throw Error(error??'原候选来源尚未完成核对');
+  const body={adoptionMode:'assistant' as const,expectedCurrentVersionId:versionId,assistantSource:source,fieldSelection:['title','summary','tags'].filter(field=>fields.includes(field)),policyVersion:1,clientRequestId:requestId,...(article?{factSelection:facts==='keep'?{mode:'keep'}:{mode:'replace',expectedBeforeDigest:await editorDigest(base.factItems),proposedFactsDigest:await editorDigest(proposed!.factItems)}}:{})};
+  const frozen={operation:article?'createArticleVersion':'createGraphicPostVersion',outputId,body,document};
+  const prior=sessionStorage.getItem(storageKey);if(prior&&editorCanonical(JSON.parse(prior))!==editorCanonical(frozen))throw Error('原采用结果尚未确认，必须保留原选择与请求恢复，不能自动换key。');
+  sessionStorage.setItem(storageKey,JSON.stringify(frozen));setPending(true);
+  const receipt=await client[frozen.operation]({params:{outputId},query:undefined,body});
+  const exact=await client[article?'getArticleVersion':'getGraphicPostVersion']({params:{outputId,versionId:receipt.versionId},query:undefined,body:undefined});
+  if(exact.versionId!==receipt.versionId||editorCanonical(exact.document)!==editorCanonical(document))throw Error('指定采用版本与原选择的机械投影不符，原请求保留');
+  const current=await client[article?'getArticle':'getGraphicPost']({params:{outputId},query:undefined,body:undefined});
+  // 已确认回执保留至卡生命周期结束，刷新仍以原body/key恢复，不覆盖后续稿。
+  return {receipt,exact,current,currentMatches:current.currentVersionId===receipt.versionId&&editorCanonical(current.current)===editorCanonical(exact.document)};
+ }
+ return {enabled,ready:!enabled||Boolean(source&&base&&!error),base,proposed,document,fields,setFields,facts,setFacts,error,pending,article:Boolean(article),joint:result?.kind==='work.creation.member',save};
+}
+export function AssistedWorkSelection({review}:{review:ReturnType<typeof useAssistedWorkReview>}){
+ if(!review.enabled)return null;
+ if(review.error)return <p role="alert" className="text-sm text-destructive">{review.error}</p>;
+ if(!review.ready)return <p className="text-sm text-muted-foreground">正在核对原候选来源与稿件版本…</p>;
+ return <section aria-label="本次采纳选择" className="space-y-3 rounded-xl border border-border p-3 text-sm"><p>正文采用这份候选；元信息与事实由你选择。未勾选项保留原稿。</p>
+ {['title','summary','tags'].filter(field=>Object.hasOwn(review.proposed,field)).map(field=><label key={field} className="block"><input type="checkbox" disabled={review.pending} checked={review.fields.includes(field)} onChange={event=>review.setFields(event.target.checked?[...review.fields,field]:review.fields.filter(value=>value!==field))}/> 采用候选{field==='title'?'标题':field==='summary'?'摘要':'标签'}<span className="block break-words text-muted-foreground">原稿：{JSON.stringify(review.base[field]??null)} → 候选：{JSON.stringify(review.proposed[field])}</span>{review.article&&field!=='tags'&&<span className="block break-words text-xs">引用：{JSON.stringify(review.fields.includes(field)?review.proposed[`${field}SourceRefs`]??[]:review.base[`${field}SourceRefs`]??[])}</span>}</label>)}
+ {review.article&&<div><p>事实：{review.base.factItems.length} 项 → 候选 {review.proposed.factItems.length} 项</p><label><input type="checkbox" disabled={review.pending||!review.joint} checked={review.facts==='replace'} onChange={event=>review.setFacts(event.target.checked?'replace':'keep')}/> 替换为联合候选事实（新改项仍待确认）</label><details><summary>核对事实、来源与确认状态</summary><pre className="whitespace-pre-wrap break-words">{JSON.stringify({原稿:review.base.factItems,采用后:review.document.factItems},null,2)}</pre></details></div>}
+ <p className="break-words text-xs text-muted-foreground">采用后元信息来源：{review.document.metadataSource?JSON.stringify(review.document.metadataSource):'无整组声明，逐字段引用保留真实来源。'}</p>{review.pending&&<p>原采用请求已冻结，继续恢复原选择；核对后续稿时不会覆盖新的输入。</p>}</section>;
+}
 type AssistantAdoptionReceipt=ReturnType<typeof assistantAdoptionReceiptSchema.parse>;
 /** 正式来源仍由后台验证；此桥接只让原编辑器保留本地输入并刷新精确版本。 */
 export async function adoptAssistantDocumentThroughEditor(input:{
@@ -169,15 +223,18 @@ export async function saveWorkEditorCandidate(
 export function ChatWorkEditorCard({
   result,
   toolCallId,
+  location=null,
 }: {
   result: unknown;
   toolCallId: string;
+  location?:WorkCandidateLocation|null;
 }) {
   const client = useCreationClient(),
     scope = useCreationScope();
   const editor = useDraftChatRequest();
   const parsed = workEditorCandidate.safeParse(result),
     context = workEditorContext.safeParse(result);
+  const review=useAssistedWorkReview(client,parsed.success?parsed.data:null,location,creationScopeKey(scope));
   const [expanded, setExpanded] = React.useState(false),
     [previewReady, setPreviewReady] = React.useState(false),
     [busy, setBusy] = React.useState(false),
@@ -261,23 +318,9 @@ export function ChatWorkEditorCard({
     setBusy(true);
     setError(null);
     try {
-      let saved = await editor.adoptEditorCandidate(
-        value,
-        await editorDigest(key),
-      );
-      if (!saved) {
-        if (candidate?.kind === "native_scene")
-          throw Error("请打开对应视频工作台后采纳。");
-        const output = await saveWorkEditorCandidate(
-          client,
-          value,
-          await editorDigest(key),
-        );
-        saved = {
-          status: output.currentMatches ? "adopted" : "saved-not-synced",
-          versionId: output.receipt.versionId,
-        };
-      }
+      const requestId=await editorDigest(key);
+      const run=async()=>{let saved=await editor.adoptEditorCandidate(value,requestId);if(!saved){if(candidate?.kind==='native_scene')throw Error('请打开对应视频工作台后采纳。');const output=await saveWorkEditorCandidate(client,value,requestId);saved={status:output.currentMatches?'adopted':'saved-not-synced',versionId:output.receipt.versionId};}return saved;};
+      const saved=review.enabled?await withEditorCandidateSave(value,requestId,()=>review.save(requestId),run):await run();
       if (alive.current) setAdoption(saved);
     } catch (cause) {
       if (alive.current)
@@ -331,6 +374,7 @@ export function ChatWorkEditorCard({
             !candidate ||
             !value.apply ||
             !previewReady ||
+            !review.ready ||
             (candidate.kind === "native_scene" && !video) ||
             adoption?.status === "adopted"
           }
@@ -389,6 +433,7 @@ export function ChatWorkEditorCard({
           {error}
         </p>
       ) : null}
+      <AssistedWorkSelection review={review}/>
       {adoption ? (
         <p role="status" className="text-success">
           {adoption.message ??
@@ -410,7 +455,7 @@ export function ChatWorkEditorCard({
         outputId={value.target.outputId}
         sourceVersionId={key}
         platform={candidate.kind === "article" ? "wechat" : "rednote"}
-        value={candidate.document}
+        value={review.enabled&&review.ready?review.document:candidate.document}
         readOnlyCandidate
         onPreviewReady={() => setPreviewReady(true)}
         onLayoutChange={() => {}}

@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-12T09:10:29.034753+00:00",
+  "status": "not-accepted-not-consumed-never-executed",
+  "reason": "作者推测只126 paths已stage；ROOT提供此前真实stage375与完整ROOTS unstaged0。缩小原162 stage guard没有实际根因，故不采纳。",
+  "original162Unchanged": true,
+  "candidateBodyOrGitNotExecuted": true,
+  "rootAllProductStageProofSha256": "0f97cca21668bad6461cfc06cfc9237740bd8b58aafffc7df7f625f0d67a277f"
+}

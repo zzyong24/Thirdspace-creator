@@ -486,6 +486,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/workbench/tasks/:taskId/artifacts/:artifactId/:version"],
   ["GET", "/workbench/tasks/:taskId/artifacts/:artifactId/:version/render"],
   ["POST", "/workbench/conversations/:conversationId/artifacts/reconcile"],
+  ["GET", "/accounts/:accountId/collection-plan-readiness"],
+  ["GET", "/ai/conversations/:conversationId/work-candidates/source"],
   // 补齐既有正式契约清单：production/intelligence/settings/pages，保留穷尽及唯一性断言。
 
 ];
@@ -516,3 +518,6 @@ describe("endpoint registry", () => {
 });
 
 it("纯账号组创作能力请求允许不选择平台账号，拒绝未知字段",()=>{expect(ENDPOINTS.listCreativeCapabilities.query.safeParse({}).success).toBe(true);expect(ENDPOINTS.listCreativeCapabilities.query.safeParse({projectId:"real-project"}).success).toBe(true);expect(ENDPOINTS.listCreativeCapabilities.query.safeParse({groupId:"client-owner-guess"}).success).toBe(false);});
+
+it("T1097来源只读GET与原采集计划资格唯一，拒绝猜任务和前端候选参数",()=>{expect(ENDPOINTS.readWorkCandidateSource.method).toBe("GET");expect(ENDPOINTS.readWorkCandidateSource.query.safeParse({sourceMessageId:"source",toolCallId:"tool"}).success).toBe(true);expect(ENDPOINTS.readWorkCandidateSource.query.safeParse({sourceMessageId:"source",toolCallId:"tool",taskId:"guess"}).success).toBe(false);expect(registeredSentinel()).toHaveLength(1);});
+function registeredSentinel(){return Object.values(ENDPOINTS).filter(e=>e.method==="GET"&&e.path==="/accounts/:accountId/collection-plan-readiness");}

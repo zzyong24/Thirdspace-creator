@@ -1,0 +1,159 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+ ✓ src/modules/ai-runtime/agentic-browser-worker.integration.test.ts (2 tests) 15557ms
+   ✓ 真实Pi跨进程浏览器：旧观察自修复、填写点击、证据与公共采纳 normal  9550ms
+   ✓ 真实Pi跨进程浏览器：旧观察自修复、填写点击、证据与公共采纳 unknown  6005ms
+ ✓ src/modules/knowledge/knowledge.repository.integration.test.ts (17 tests) 45812ms
+     ✓ list is user-scoped: A sees only A's items  4101ms
+     ✓ [T-547] list 按写入时间倒序返回，最新导入排在最前  2572ms
+     ✓ get(B, aItemId) throws OwnershipError (no existence leak)  2519ms
+     ✓ createRevision(B, aItemId) throws — cannot revise A's item  2534ms
+     ✓ [T-211] renameTitle 只改标题(content/status/currentRevisionId 不变)  2999ms
+     ✓ [T-211] renameTitle(B, aItemId) throws — 跨用户不能改 A 的标题  2572ms
+     ✓ createRelation cannot link to B's item (both ends must be owned)  2522ms
+     ✓ createRelation rejects a self-link with ConflictError  2600ms
+     ✓ create produces revision #1 and sets currentRevisionId  2652ms
+     ✓ a second revision yields #2, repoints currentRevisionId, leaves #1 unchanged (append-only)  2573ms
+     ✓ createRelation between two owned items returns a numeric strength  2903ms
+     ✓ accountId scopes reads strictly within a user (A 号知识 B 号不可见)  2682ms
+     ✓ listAllAccountsSystem / renameTitleSystem are user-level (跨号可见/可改,仅系统巡检用)  2563ms
+     ✓ create 透传 sourceNote,get/list 原样读回;缺省为 NULL  2488ms
+     ✓ 四原子类型可落库(claim/evidence/quote/qa)  2482ms
+     ✓ usedCount = materialLinks(entity_type='knowledge') 反查计数;无用料 = 0  2509ms
+     ✓ usedInPublished = 所挂项目存在 status='published' 的 publication  2540ms
+stdout | src/integration/structured-target-adoption.test.ts > 并发确认选题卡且成功重放不覆盖人工改卡
+[ai-task-runner] taskId=ai-task-2 taskType=topic.enrich status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 拒绝候选替换原任务目标
+[ai-task-runner] taskId=ai-task-3 taskType=topic.enrich status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 素材无项目不能假成功
+[ai-task-runner] taskId=ai-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 素材并发确认及成功重放仅落一条真实边
+[ai-task-runner] taskId=ai-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > topic.enrich 领域写后失败回滚并可恢复
+[ai-task-runner] taskId=ai-task-2 taskType=topic.enrich status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > material.match 领域写后失败回滚并可恢复
+[ai-task-runner] taskId=ai-task-2 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 跨账号确认拒绝且不改真实选题
+[ai-task-runner] taskId=ai-task-2 taskType=topic.enrich status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 真实事务领域服务拒绝跨账号asset，且没有部分链接
+[ai-task-runner] taskId=ai-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 真实事务领域服务拒绝跨账号project，且没有部分链接
+[ai-task-runner] taskId=historical-unadopted-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 第二条真实资产不存在导致第一条已写边回滚
+[ai-task-runner] taskId=ai-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 候选冻结后素材已删除，第二条不可采纳且整批回滚
+[ai-task-runner] taskId=ai-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/structured-target-adoption.test.ts > 旧任务逐项已采纳边被用户删除后，恢复不会重建该边
+[ai-task-runner] taskId=ai-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ✓ src/integration/structured-target-adoption.test.ts (12 tests) 34195ms
+   ✓ 并发确认选题卡且成功重放不覆盖人工改卡  3873ms
+   ✓ 拒绝候选替换原任务目标  2638ms
+   ✓ 素材无项目不能假成功  3384ms
+   ✓ 素材并发确认及成功重放仅落一条真实边  2616ms
+   ✓ topic.enrich 领域写后失败回滚并可恢复  2840ms
+   ✓ material.match 领域写后失败回滚并可恢复  2664ms
+   ✓ 跨账号确认拒绝且不改真实选题  2611ms
+   ✓ 真实事务领域服务拒绝跨账号asset，且没有部分链接  2678ms
+   ✓ 真实事务领域服务拒绝跨账号project，且没有部分链接  2690ms
+   ✓ 第二条真实资产不存在导致第一条已写边回滚  2691ms
+   ✓ 候选冻结后素材已删除，第二条不可采纳且整批回滚  2926ms
+   ✓ 旧任务逐项已采纳边被用户删除后，恢复不会重建该边  2583ms
+stdout | src/integration/research-material-adoption.test.ts > 并发采纳与成功回执重放仅创建一份知识和链接
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 链接失败回滚已创建知识和首版
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 空候选不可假成功
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 跨账号项目拒绝且知识和链接均为零
+[ai-task-runner] taskId=historical-unadopted-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 无项目生成素材仍可采纳为独立知识
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 成功后用户归档知识并删除边，回执重放不重建
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 真实旧部分采纳journal保留用户归档删除，恢复只新增未采纳项
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 冻结为model_memory，模型自报来源不能升级成web
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 无合法冻结来源不可采纳
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ✓ src/integration/research-material-adoption.test.ts (9 tests) 25192ms
+   ✓ 并发采纳与成功回执重放仅创建一份知识和链接  3761ms
+   ✓ 链接失败回滚已创建知识和首版  2652ms
+   ✓ 空候选不可假成功  2632ms
+   ✓ 跨账号项目拒绝且知识和链接均为零  2584ms
+   ✓ 无项目生成素材仍可采纳为独立知识  2572ms
+   ✓ 成功后用户归档知识并删除边，回执重放不重建  2633ms
+   ✓ 真实旧部分采纳journal保留用户归档删除，恢复只新增未采纳项  3159ms
+   ✓ 冻结为model_memory，模型自报来源不能升级成web  2605ms
+   ✓ 无合法冻结来源不可采纳  2593ms
+ ✓ src/modules/ai/script-draft-task-submission.integration.test.ts (7 tests) 4571ms
+stdout | src/modules/ai/agentic-proposal-adoption.integration.test.ts > 公开AI确认入口的自主候选原子采纳 > 确认前没有领域写入，并发确认/响应重试只产生一份知识
+[ai-task-runner] taskId=ai-task-1 taskType=exec.agentic.research status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/modules/ai/agentic-proposal-adoption.integration.test.ts > 公开AI确认入口的自主候选原子采纳 > 领域写后异常回滚整批、回执和任务状态，可沿原候选重试
+[ai-task-runner] taskId=ai-task-1 taskType=exec.agentic.research status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/modules/ai/agentic-proposal-adoption.integration.test.ts > 公开AI确认入口的自主候选原子采纳 > 已取消任务、跨账号及伪造来源不能采纳
+[ai-task-runner] taskId=ai-task-1 taskType=exec.agentic.research status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/modules/ai/agentic-proposal-adoption.integration.test.ts > 公开AI确认入口的自主候选原子采纳 > 已取消任务、跨账号及伪造来源不能采纳
+[ai-task-runner] taskId=ai-task-1 taskType=exec.agentic.research status=cancelled finishReason=null usage=null candidateCount=1
+
+stdout | src/modules/ai/agentic-proposal-adoption.integration.test.ts > 公开AI确认入口的自主候选原子采纳 > 混合知识与标签候选在同一事务采纳
+[ai-task-runner] taskId=ai-task-1 taskType=exec.agentic.research status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/modules/ai/agentic-proposal-adoption.integration.test.ts > 公开AI确认入口的自主候选原子采纳 > 已映射候选的迟到取消不能覆盖确认成功
+[ai-task-runner] taskId=ai-task-1 taskType=exec.agentic.research status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ✓ src/modules/ai/agentic-proposal-adoption.integration.test.ts (5 tests) 14271ms
+     ✓ 确认前没有领域写入，并发确认/响应重试只产生一份知识  3816ms
+     ✓ 领域写后异常回滚整批、回执和任务状态，可沿原候选重试  2587ms
+     ✓ 已取消任务、跨账号及伪造来源不能采纳  2639ms
+     ✓ 混合知识与标签候选在同一事务采纳  2587ms
+     ✓ 已映射候选的迟到取消不能覆盖确认成功  2641ms
+ ✓ src/modules/ai/ai-task-commit.integration.test.ts (6 tests) 16951ms
+   ✓ 原子准备不建任务，外层事务回滚同时撤销子任务  3697ms
+   ✓ 相同来源重放返回原任务，不能接管公开提交或其他父调用  2609ms
+   ✓ 准备期间及准备后修改外部输入，不改变账号、正文或冻结配置  2566ms
+   ✓ 缺账号、无稳定键、保留字段或非法来源不进入持久写入  2886ms
+   ✓ 真实pi父路由冻结进原子任务，不靠当前偏好或API权限续建  2594ms
+   ✓ 真实codex父路由冻结进原子任务，不靠当前偏好或API权限续建  2598ms
+ ✓ src/modules/knowledge/knowledge-proposal-adoption.service.test.ts (4 tests) 11771ms
+     ✓ 准备候选不写知识；并发采纳只建一条知识、一版和一张回执  3803ms
+     ✓ 采纳回执重放不覆写后续人工修改或归档  2931ms
+     ✓ 同一候选篡改正文拒绝，跨用户与跨账号目标不能采纳  2528ms
+     ✓ 目标冲突回滚回执，不能把已有条目当作本次创建  2509ms
+ ✓ src/modules/knowledge/knowledge.db-schema.test.ts (4 tests) 11824ms
+     ✓ knowledge_items round-trips (jsonb source_metadata survives as object)  3925ms
+     ✓ knowledge_revisions round-trips (jsonb structured_data survives)  2502ms
+     ✓ A2: createDb() applies KNOWLEDGE_DDL — knowledge_items exists, empty  2513ms
+     ✓ knowledge_relations round-trips (strength text holds the decimal '0.8')  2882ms
+
+ Test Files  9 passed (9)
+      Tests  66 passed (66)
+   Start at  04:27:11
+   Duration  193.83s (transform 3.00s, setup 0ms, import 11.85s, tests 180.14s, environment 1ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/own-adoption-requested-whole-attempt2.json

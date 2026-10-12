@@ -1,0 +1,22 @@
+[
+  {
+    "label": "environment-proof",
+    "elapsedMs": 1179.46475,
+    "remainingMs": 23218820.53525,
+    "requiredMs": 21000000,
+    "positiveMs": 180000,
+    "futurePositiveMs": 15300000,
+    "remainingChildren": 2,
+    "independentOuterDeadline": "2026-10-12T06:20:14.422Z"
+  },
+  {
+    "label": "calibrated-whole25",
+    "elapsedMs": 1407.515458,
+    "remainingMs": 23218592.484542,
+    "requiredMs": 18660000,
+    "positiveMs": 15300000,
+    "futurePositiveMs": 0,
+    "remainingChildren": 1,
+    "independentOuterDeadline": "2026-10-12T06:20:14.422Z"
+  }
+]

@@ -1,0 +1,193 @@
+{
+  "scope": "原完整five whole 首次repair回执：不洗原first或当前9FAIL",
+  "actualFiles": 5,
+  "caseCounts": {
+    "numTotalTests": 42,
+    "numPassedTests": 33,
+    "numFailedTests": 9,
+    "numPendingTests": 0,
+    "numTodoTests": 0
+  },
+  "reportedVitestSuites": {
+    "numTotalTestSuites": 6,
+    "note": "包含describe计数，不能冒6个file"
+  },
+  "fileResults": [
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts",
+      "status": "failed",
+      "total": 21,
+      "pass": 12,
+      "fail": 9
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/copilot-worker.fork.test.ts",
+      "status": "passed",
+      "total": 3,
+      "pass": 3,
+      "fail": 0
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "status": "passed",
+      "total": 8,
+      "pass": 8,
+      "fail": 0
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "status": "passed",
+      "total": 2,
+      "pass": 2,
+      "fail": 0
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.contract.test.ts",
+      "status": "passed",
+      "total": 8,
+      "pass": 8,
+      "fail": 0
+    }
+  ],
+  "sourceBindingUnchanged": true,
+  "caseInputsUnchanged": true,
+  "afterReceiptUnchanged": true,
+  "elapsedMs": 1204261,
+  "exit": 1,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "signals": [],
+  "notClaimed": "signals0/ownedgroup0不等于所有fixture异步body/进程自然结束；具体9红和跨case迟到仍保留",
+  "failures": [
+    {
+      "mode": "reject429",
+      "name": "同一真实 Worker 内部结构化生成：reject429",
+      "classification": "CONFIRMED_PRODUCT_RECLASSIFICATION",
+      "cause": "durable generation 已知retry_wait经chat-generation-worker再classification丢失；当前2HTTP/childsuperseded→toolunknown。原retry_wait断言不能改unknown。",
+      "originalStack": [
+        "AssertionError: expected 'unknown_result' to be 'retry_wait' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:109:28\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    },
+    {
+      "mode": "reject429drop",
+      "name": "同一真实 Worker 内部结构化生成：reject429drop",
+      "classification": "CONFIRMED_PRODUCT_RECLASSIFICATION",
+      "cause": "同429，重试failure ACK丢失原路径未到，先生产错误吞已知GenerationFailure。",
+      "originalStack": [
+        "AssertionError: expected 'unknown_result' to be 'retry_wait' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:109:28\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    },
+    {
+      "mode": "crashUnknownChild",
+      "name": "同一真实 Worker 内部结构化生成：crashUnknownChild",
+      "classification": "APPROVED_CONTRACT_FIXTURE_PENDING_REVIEW",
+      "cause": "实际continuous+allowUnconfirmedModelRetry候选废弃后第三HTTP，原2次断言不符；原ID、superseded/retry链及未知终态仍须独评whole。",
+      "originalStack": [
+        "AssertionError: expected [ { model: 'fixture', …(7) }, …(2) ] to have a length of 2 but got 3\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:122:21\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    },
+    {
+      "mode": "crashDeadline",
+      "name": "同一真实 Worker 内部结构化生成：crashDeadline",
+      "classification": "INVALID_PUBLIC_FIXTURE_PRECONDITION",
+      "cause": "当前公共submit111 createContinuousExecutionBudget deadline null；Date.parse(null)导致clockOffset NaN/Invalid time value；没有公开bounded入口，不能SQL改预算或换原任务。",
+      "originalStack": [
+        "RangeError: Invalid time value\n    at Date.toISOString (<anonymous>)\n    at now (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:35:155)\n    at Object.recoverExpiredLeases (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts:954:21)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:470:19\n    at Object.drainOnce (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:572:5)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:99:33\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    },
+    {
+      "mode": "badOutput",
+      "name": "同一真实 Worker 内部结构化生成：badOutput",
+      "classification": "APPROVED_TERMINAL_POLICY_PENDING_REVIEW",
+      "cause": "实际parent partial/child3/HTTP5；原succeeded/HTTP3在首次终态断言未到，不能只改partial后假绿，需核全部原调用/usage。",
+      "originalStack": [
+        "AssertionError: expected 'partial' to be 'succeeded' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:129:24\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    },
+    {
+      "mode": "crashTwoNodes",
+      "name": "同一真实 Worker 内部结构化生成：crashTwoNodes",
+      "classification": "CONFIRMED_FIXTURE_ACK_BARRIER",
+      "cause": "first child settle原ACKawait allSettled，Pi sequential无法发next child；原540s超时；随后body才终于继续。/tmp最小候选未应用/未验。",
+      "originalStack": [
+        "Error: STACK_TRACE_ERROR\n    at task (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1784:27)\n    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1817:16)\n    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:28)\n    at Object.chain (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:7\n    at Array.forEach (<anonymous>)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2021:10\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:27:324\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at VitestModuleEvaluator._runInlinedModule (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/module-evaluator.js:206:4)"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    },
+    {
+      "mode": "positioning",
+      "name": "同一真实 Worker 内部结构化生成：positioning",
+      "classification": "SECONDARY_CROSS_CASE_POLLUTION_NOT_ISOLATED",
+      "cause": "先crashTwoNodes540s timeout后spy仍在下一case，positioning child真实settled但commitResult HOST_PORT_REJECTED。完整日志时间吻合；产品故障尚未隔离证实。",
+      "originalStack": [
+        "AssertionError: expected 'running' to be 'succeeded' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:129:24\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    },
+    {
+      "mode": "crashMixed",
+      "name": "同一真实 Worker 内部结构化生成：crashMixed",
+      "classification": "CONFIRMED_FIXTURE_ACK_BARRIER_WITH_COUNT_UNKNOWN",
+      "cause": "同first ACK屏障；原同时两个不同tool的31token/5HTTP假设需真实seq契约核，去barrier不保证原counts。",
+      "originalStack": [
+        "Error: STACK_TRACE_ERROR\n    at task (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1784:27)\n    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1817:16)\n    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:28)\n    at Object.chain (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:7\n    at Array.forEach (<anonymous>)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2021:10\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:27:324\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at VitestModuleEvaluator._runInlinedModule (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/module-evaluator.js:206:4)"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    },
+    {
+      "mode": "diagnosisEmpty",
+      "name": "同一真实 Worker 内部结构化生成：diagnosisEmpty",
+      "classification": "APPROVED_TERMINAL_POLICY_PENDING_REVIEW",
+      "cause": "实际parent partial/HTTP3；原succeeded期望与诚实empty no_evidence合同不符，未经窄复不改。",
+      "originalStack": [
+        "AssertionError: expected 'partial' to be 'succeeded' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:129:24\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "source": "backend/src/integration/chat-generation-worker.test.ts",
+      "sourceSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de",
+      "notFixed": true
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1.json",
+      "sha256": "3babd19db41390e31f97ebdff3e574a785d39fc3c4d7a44b562e04690089fdb8"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1.txt",
+      "sha256": "997759037b097267b70f5bf171a5818273b55942c7301f2f7ddfbe95a3fd4d01"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1-exit.json",
+      "sha256": "e909aa8ccdc10419df5d66fb33fc8d9b1db0ffbfa2921c3dea50f44e062d843a"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1-source-before.json",
+      "sha256": "f178bbe7fe9153751134614436f2d5e378842850ba21b92a321d8c1f631d0333"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1-source-after.json",
+      "sha256": "274cb236c636fe247f6f174f0f612eab1c327c8d0cb7f5621165a146a08f16d3"
+    }
+  ]
+}

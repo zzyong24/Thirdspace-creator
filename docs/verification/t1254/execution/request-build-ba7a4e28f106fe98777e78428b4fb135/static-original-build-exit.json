@@ -1,0 +1,40 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-ba7a4e28f106fe98777e78428b4fb135-8qjJec/child-restriction.sb",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/@pnpm/exe.darwin-arm64/pnpm",
+    "--filter",
+    "@md/web",
+    "run",
+    "build"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-ba7a4e28f106fe98777e78428b4fb135-8qjJec/child-logs/static-original-build.log",
+  "pid": 40223,
+  "identity": {
+    "pid": 40223,
+    "pgid": 40223,
+    "uid": 501,
+    "birth": "Mon Oct 12 13:50:42 2026",
+    "startedAt": 1791784242916
+  },
+  "startedAt": "2026-10-12T05:50:42.916Z",
+  "endedAt": "2026-10-12T05:50:59.889Z",
+  "elapsedMs": 16973,
+  "budgetMs": 3600000,
+  "deadlineAt": "2026-10-12T06:50:42.916Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

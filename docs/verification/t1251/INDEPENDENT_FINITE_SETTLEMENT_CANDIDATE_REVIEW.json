@@ -1,0 +1,66 @@
+{
+  "schema": "t1251-independent-finite-ledger-candidate/v1",
+  "status": "PASS_TEST_CANDIDATE_ONLY",
+  "findings": [],
+  "bindings": [
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.integration-stage1.test.ts",
+      "sha256": "0d5bbe422401b03959c1e5ac40f9b451a2b13f0872f5765527ffbf151eb4c15d"
+    },
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.integration-stage1-finite-settlement.test.ts",
+      "sha256": "df9fa08bf2f68f14261f8ca8d3c620fe387ffb30e0863f376f8a1b0a7a4039a4"
+    },
+    {
+      "path": "/tmp/t1251-candidate/integration-stage1-finite-settlement.diff",
+      "sha256": "188e295359d7b890976c7b5558a094749cc49b4a0a3b507c56e2fa054e75cf5b"
+    },
+    {
+      "path": "/tmp/t1251-candidate/integration-stage1-finite-settlement-binding.json",
+      "sha256": "b8d03c0b95304fe52f6e0a3e93e41d66009893019ab129875f30391f7feba165"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/structured-worker-generation.ts",
+      "sha256": "bd931b33b775d569c4958d010a0dbfcef0b174577b2186fe6431dd6878b006af"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-generation-model.ts",
+      "sha256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/generation-error.ts",
+      "sha256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-lease.service.ts",
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-generation-ports.service.ts",
+      "sha256": "37e809e0c9dc372f7352c761e74042cc47ff37150ae2d846e892b614f8859a5c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "sha256": "843405d9faed7880be042171995ae64f1415f25fb4e659c161d8adec7d7dbd08"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/worker-supervisor.ts",
+      "sha256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e"
+    }
+  ],
+  "actualDiff": "仅新增finite在停止后同call的期望 started → unknown，其他字节全同",
+  "cause": "真实structured generic无allowUnconfirmedModelRetry，原deadline信号中断已派发请求后durable catch以无signal端口结算unknown；settlement原attempt/fence允许停止后记账。仍须完整Worker/HTTP实际验证是否达到这一确定回执。",
+  "retained": [
+    "parent failed/EXECUTION_DEADLINE",
+    "同原task/call/operationKey/nullreceipt/nulltokens",
+    "原budget/deadline/modelInput不变",
+    "HTTP只1/无重发/候选投影0/AI结果0",
+    "真实owner与组资格/严格单状态unknown"
+  ],
+  "limits": [
+    "这不是实际started红测修正，旧0d5预测保历史",
+    "无PG/模型/Worker/测试执行，不签Gate或正式AI业务成功",
+    "unknown stage2/partial/counts不在本签"
+  ],
+  "model": "unknown/inherited"
+}

@@ -1,0 +1,73 @@
+{
+  "files": [
+    {
+      "file": "frontend/src/test/icons.test.ts",
+      "sha256": "434ca2759fc4a3554724f4f567f3ec6ec2b6756b5be57d4ea2b00cdff08f3e57"
+    },
+    {
+      "file": "frontend/src/app/(creator)/layout.guard.test.tsx",
+      "sha256": "9ba4cd1797a1253aede19b4f7d2efc3eeba9ff7e87c3775ddd128993eae1078e"
+    },
+    {
+      "file": "frontend/src/components/overlays/new-project-dialog.prefill.test.tsx",
+      "sha256": "8e7d6182c95d4e8379165ace96e43c30f00b1179ecbf3384ad13c1dced3b01da"
+    },
+    {
+      "file": "frontend/src/components/shell/account-switcher.test.tsx",
+      "sha256": "87b2fdd5b95bbedde1418560a96b025c7fa02f2613853c6ed33634497c0b656c"
+    },
+    {
+      "file": "frontend/src/components/shell/settings-return-context.test.tsx",
+      "sha256": "672ee22873c3ede6a3bb5327712e2e19ec4839d60c788400bcfb4b9e662cda45"
+    },
+    {
+      "file": "frontend/src/components/shell/workspace-initialization.test.tsx",
+      "sha256": "ef4c16f2f924e2652c46fc995d5864994da450c5da91baba3da07c6bd73e11a2"
+    },
+    {
+      "file": "frontend/src/components/shell/zero-account-guidance.test.tsx",
+      "sha256": "0879ed30ab257446956025be02c67ffab31f1cf0fb7afaf4a713b517d7c4b252"
+    },
+    {
+      "file": "frontend/src/components/ui/creator-date-picker-antd.test.tsx",
+      "sha256": "8f27baea5674066f71ed34aa3ae6b60bd386c8d4280eda1ae9fa8a2d054a3f59"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-diagnosis-card.test.tsx",
+      "sha256": "c6f648f9f4ad18b3519381292aea7cef4246a94fd307deee6ca911945b58abca"
+    },
+    {
+      "file": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "sha256": "2c8a84e0312e9d8084c775207beff57cc6f09add1298196d1f2c406b76ac159b"
+    },
+    {
+      "file": "frontend/src/features/platform-account/platform-work-catalog.test.tsx",
+      "sha256": "233d9b04114642b72cab8a5cc5c201c06c704a3c200b9a7b5030e0e750531f25"
+    },
+    {
+      "file": "frontend/src/features/projects/work-editing-recovery.test.tsx",
+      "sha256": "23e54d578e56d1f7cfed7abb03397d2c9bc2b340573a7272f772c240816de056"
+    },
+    {
+      "file": "frontend/src/features/settings/settings-dialog-return.test.tsx",
+      "sha256": "a0b4cce33f6d51f1d4091ce9c1ffaf968fe7be1d627e934b72ab31ae03375919"
+    },
+    {
+      "file": "frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+      "sha256": "20f57eda32d3dd007d4d8cecbb9f1a3f9b27c88583f48a9cdd17e8ec56d6e64d"
+    }
+  ],
+  "sourceUnchangedRequired": true,
+  "sharedWorkerDistNotBuilt": true,
+  "finishedAt": "2026-10-11T20:12:04.116189+00:00",
+  "sourceUnchanged": true,
+  "mismatches": [],
+  "actualWholeFiles": 14,
+  "cases": {
+    "total": 128,
+    "pass": 128,
+    "fail": 0
+  },
+  "exitReceipt": "focused-root-ui-fixtures-attempt2-exit.json",
+  "noSharedWorkerBuild": true
+}

@@ -1,0 +1,43 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/creatoros.cjs",
+    "call",
+    "accounts.list",
+    "--input",
+    "{}",
+    "--account",
+    "owned-account-250186bf-8e46-457a-8769-b0dda9b02cde",
+    "--group",
+    "owned-group-250186bf-8e46-457a-8769-b0dda9b02cde",
+    "--json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-bundled-green-cQhzHK",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-bundled-green-cQhzHK/body-actual-cli.log",
+  "pid": 38901,
+  "identity": {
+    "pid": 38901,
+    "pgid": 38901,
+    "uid": 501,
+    "birth": "Mon Oct 12 07:44:41 2026",
+    "startedAt": 1791762281639
+  },
+  "startedAt": "2026-10-11T23:44:41.639Z",
+  "endedAt": "2026-10-11T23:49:52.077Z",
+  "elapsedMs": 310438,
+  "budgetMs": 8400000,
+  "deadlineAt": "2026-10-12T02:04:41.639Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

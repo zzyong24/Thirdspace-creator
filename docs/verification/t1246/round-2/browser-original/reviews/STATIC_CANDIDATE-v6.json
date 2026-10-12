@@ -1,0 +1,109 @@
+{
+  "task": "T-1246",
+  "phase": "静态工具复评候选，不能启动runtime",
+  "at": "2026-10-11T20:06:47.668337+00:00",
+  "manifestSha256": "f69fc92eadcc77cf0d9f115059559862438142c58fd5f980ad9aa2a95ede6a9c",
+  "driver9": [
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/prepare-browser-driver.cjs",
+      "sha256": "24e86d7cdb2d7116deb8be3d55a52ea9c4b1c7da63f74717c13c5da8b842bd30"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "sha256": "d8b043b22dc256c99eb7efbb1cda5d856bffe40468eccc37f2ea22366f696af8"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "sha256": "7b4d6d60c3dca32761ef50e739902dde59642154879806ad8a59a431dc492c2c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "sha256": "9ad0cc232a7743c9887b4dd77478144b8c7128d0d9c4dfab6c1816132deb64d4"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/playwright.config.ts",
+      "sha256": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/manifest.json",
+      "sha256": "f69fc92eadcc77cf0d9f115059559862438142c58fd5f980ad9aa2a95ede6a9c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/budget-consumers.json",
+      "sha256": "9dd245713f08434bb940b1c02268572d6d24723e30073fd9e504b4dfeee0451c"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/runtime-closure.json",
+      "sha256": "350d1e8febe75ba228a36e81a80e3fc89aeae3cb3b63b336f94e79b493666240"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/README.md",
+      "sha256": "fa13d79a214a9857b81311d8228a00ad951d437d7996b0f4e51850c77cb22d74"
+    }
+  ],
+  "sourceGuardDrift": [
+    {
+      "path": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "preparedSha256": "7931e1cd3037a26b51a2d8d0a22571906e7f4eb35ecc70afd9fc0d5fcc32a0be",
+      "currentSha256": "4d53770576533ac7c6f15200778c85c4331ced4123c602ab4a6f90895d3e9831",
+      "classification": "准备期并行源变化；finalfreeze前不能签完整来源guard"
+    }
+  ],
+  "firstGenerated100": {
+    "files": 100,
+    "mismatches": [],
+    "untouched": true
+  },
+  "actualListing": {
+    "path": "docs/verification/t1246/round-2/browser-original/reviews/list-static-v6.txt",
+    "sha256": "895e77a7a821e8b4bc0a4983f804f34795f9c3658328663b3832ad00458368ae",
+    "files": 54,
+    "bodies": 170,
+    "sameOriginal170Names": true,
+    "noBodiesRun": true
+  },
+  "inverseAndTypes": {
+    "path": "docs/verification/t1246/round-2/browser-original/reviews/static-review-receipt-v6.json",
+    "sha256": "d591c74f9979976ffbeedc63fb75bac6490ec718f0d4bd0d9ad67be9d9bf697b",
+    "inverseFailures": 0,
+    "generatedTypes": 0,
+    "standardFrontendTsc": "未代签；首轮tracked generated100原字节仍保留，标准类型红必须如实记录"
+  },
+  "observerBudget": {
+    "path": "docs/verification/t1246/round-2/browser-original/reviews/observer-and-budget-closure-v6.json",
+    "sha256": "144ee49e142135a06808b4904c789141c67882b6d5d43103e17073af51bcffed",
+    "consumers": 89,
+    "minMs": 300000,
+    "settingsTestSerialMs": 420000,
+    "namedWaitWrapped": 8
+  },
+  "ownedNodeActualNegative": {
+    "path": "docs/verification/t1246/round-2/browser-original/reviews/owned-node-closure-negatives-result.json",
+    "sha256": "03e2a0b1ec7547b787dabe013c8642c54dd0fb486705c35d8e87a4754575c97c",
+    "actualPositiveBudgetMs": 120000,
+    "currentLauncherByteSame": true,
+    "currentValidatorByteSame": true,
+    "noDatabaseSuccessClaim": true
+  },
+  "runnerBudget": {
+    "bodyCount": 170,
+    "fileCount": 54,
+    "serialBodySumMs": 24219180000,
+    "separatePerBodyFixtureHookAllowanceMs": 24280380000,
+    "globalSetupTeardownAllowanceMs": 240000,
+    "workerProjectCleanupSlotMs": 672840000,
+    "startupFullSlotsMs": 1800000,
+    "commandListMs": 480000,
+    "readonlyLedgerSlotMs": 1200000,
+    "cleanupFullMs": 4800000,
+    "marginMs": 600000,
+    "outerMs": 49181520000,
+    "monotonicSegmentsMaxMs": 60000,
+    "notPersistentDeadlineInput": true
+  },
+  "runtimeApproval": false,
+  "candidate": null,
+  "packageSealed": false,
+  "v3CurrentManifestSha256": "726a0aa80e0f080459595e7dd89a41cf66a4407fa1f2cb9c281661b64338a98c",
+  "v3CurrentLaunchSha256": "92091e47db4ae758e74ee70f1c8eebb3e32edbbefc4a75b3e8ad3536f8f344a9"
+}

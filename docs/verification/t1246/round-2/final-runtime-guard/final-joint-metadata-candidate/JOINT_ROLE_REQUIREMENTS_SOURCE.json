@@ -1,0 +1,43 @@
+{
+  "kind": "future-joint-metadata-required-role-consumers-SOURCE-only-not-fresh-root-inventory",
+  "original170": 170,
+  "official": 103,
+  "protocol": 7,
+  "pi": 1,
+  "originalFirst100Frozen": 100,
+  "node": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+  },
+  "browsers": {
+    "legacy170AndNew111": "Playwright registry chromium-headless-shell executablePath/directory at revision1223, actual legacy default implementation unchanged",
+    "Doocs2": "Playwright.chromium.executablePath fullChrome executable and entire implementation independently included",
+    "helpers": "every regular Mach-O under both real implementation roots, actual own MH_EXECUTE uses own @executable_path; dlopen libraries enumerate real same-arch contexts and keep callerObserved=false"
+  },
+  "ffmpeg": {
+    "name": "ffmpeg",
+    "path": "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/bin/ffmpeg",
+    "sha256": "9f5ddd4f8b36eb07b0c5d60ab6ea1e618bedd70bc45feab82b4dc23be1596ad1"
+  },
+  "pgTools": [
+    {
+      "name": "initdb",
+      "path": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/initdb",
+      "sha256": "799b4b47a7553e94f109d6b3e1358bc015e81799eaa413f15b7f585b8f41d490"
+    },
+    {
+      "name": "postgres",
+      "path": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/postgres",
+      "sha256": "d4cf545b3463cb8e5a828aa3c9b6228f0fa0c3da11a835a803ca305be32e4c64"
+    }
+  ],
+  "installed": "every actual regular Mach-O under six installed node_modules roots, including Codex official native binary/resources, Pi and addon dependency closure; no private protocolCJS replacement exists at source stage",
+  "git": "actual whitelist PATH first executable and actual git --exec-path logical clones, source plus full recursive non-system dependencies",
+  "metadataTool": "actual fixed Xcode otool-classic executable and non-system closure",
+  "pythonInterpreter": "future wrapper fixed actual executable/closure must be sealed with bootstrap before Python child; current old074 is historical source metadata, not this final joint or Python runtime proof",
+  "sourceMainContexts": "standalone Node/eachChromeHelper/PG/ffmpeg/Codex actual MH_EXECUTE gets itself; node addons get actual Node main LC_RPATH; relative loads resolve per real chain, original absolute loads remain absolute",
+  "futureUniqueFileArchPairs": null,
+  "futureContextCount": null,
+  "oldDoocs074UniquePairs131HistoricalOnly": true,
+  "actualFreshJointGraphCollected": false
+}

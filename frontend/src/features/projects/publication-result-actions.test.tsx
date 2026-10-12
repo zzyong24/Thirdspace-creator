@@ -60,6 +60,8 @@ describe("发布内容卡片", () => {
     api.listResults.mockResolvedValue({ items: [cover] });
     api.listPublications.mockResolvedValue([{ id: "pub", contentOutputId: "output", platform: "douyin", currentRevisionId: "rev" }]);
     api.listPublicationRevisions.mockResolvedValue([{ id: "rev", revisionNumber: 2, title: "旧标题", description: "", platformTags: [] }]);
+    api.adoptResult.mockResolvedValue({ status: "adopted" });
+    api.getResult.mockResolvedValue({ ...cover, status: "adopted" });
     const { rerender } = render(<PublicationResultActions accountId="account" outputId="output" outputType="video" platform="douyin" dirty />);
     expect(await screen.findByRole("button", { name: "重新生成发布封面" })).toBeDisabled();
     expect(await screen.findByRole("button", { name: "采纳这张发布封面" })).toBeDisabled();
@@ -161,3 +163,61 @@ describe("发布标签候选刷新与编辑保护", () => {
     expect(api.getResult).not.toHaveBeenCalled();
   });
 });
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+
+// T1246 显式本例选择；不替换真实scope/epoch或生产default。
+import {beforeEach as scopeBeforeEach,afterEach as scopeAfterEach} from "vitest";
+scopeBeforeEach(()=>{localStorage.removeItem("creatoros:current-group");localStorage.setItem("creatoros:current-account","account");});
+scopeAfterEach(()=>{localStorage.removeItem("creatoros:current-group");localStorage.removeItem("creatoros:current-account");});

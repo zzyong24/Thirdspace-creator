@@ -1,0 +1,19 @@
+{
+  "specSha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84",
+  "phase": "whole-stage1",
+  "scope": "original-source-generation-whole-phase",
+  "sourceSnapshotDigest": "25ac2135c732b48e0ad306af3b535cd6d5b7dc571ab85e343fa46a452b7c1d9b",
+  "toolDigest": "acf3385355804b7c3383103c2158fe36246318a284344dc86eda6dfc1d49854f",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "runtimeDistExclusive": true,
+  "approved": true,
+  "reviewer": "root",
+  "reviewedAt": "2026-10-11T21:30:14.500503+00:00",
+  "candidateWholeSha256": "fa4f5498f379fac868d4f3912c83e86b4556847a6e41e01342b310f9edc80fe2",
+  "constraints": [
+    "保留已实际首21完整红与leaf红绿，归档590后仅exact应用fa4f",
+    "完整22 body/原partial/count断言，不only/skip/retry；实际JSON及raw finally双收据",
+    "独占shareddist生产build/source冻结到EOF及group0；不签真实模型/App",
+    "本工具只wholeSHA新签，旧e857实际运行工具原字节保留"
+  ]
+}

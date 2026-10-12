@@ -239,6 +239,7 @@ export interface AiAssetLibraryPort {
 }
 
 export interface ServiceDeps {
+  readWorkCandidateSource?:(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string;toolCallId:string})=>Promise<import("@creatoros/contract").WorkCandidateSourceResult>;
   prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot,options:AiPublicChatPrepareOptions)=>Promise<ChatTurnAssembly>;
   assertChatProject?: (ctx:RequestContext,projectId:string)=>Promise<unknown>;
   projectTranscriptionTargets?: {lock(tx:Db,ctx:RequestContext,projectId:string):Promise<unknown>;read(tx:Db,ctx:RequestContext,projectId:string):Promise<{awemeId:string;hasTranscript:boolean}>};
@@ -351,6 +352,7 @@ export interface AiService {
       modelKey?: string | null;
     },
   ): Promise<AIMessageResource>;
+  readWorkCandidateSource(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string;toolCallId:string}):Promise<import("@creatoros/contract").WorkCandidateSourceResult>;
   listMessages(
     ctx: RequestContext,
     conversationId: string,
@@ -824,6 +826,10 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toConversationDto(row);
     },
 
+    async readWorkCandidateSource(ctx,input){
+      if(!deps.readWorkCandidateSource)throw new ConflictError('候选来源读取服务尚未装配');
+      return deps.readWorkCandidateSource(ctx,input);
+    },
     async getConversation(ctx, conversationId) {
       // T-096:ownership 门复用 requireConversation(跨用户/未知 id → OwnershipError → 404,
       // 不泄漏存在性)。路由用它做续接的 scope 一致性校验。

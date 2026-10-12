@@ -1,0 +1,9 @@
+{
+  "task": "T-1254",
+  "nonce": "c488a5a1ada148c38b24aae34499552c",
+  "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ",
+  "uid": 501,
+  "inode": 351184646,
+  "createdAt": "2026-10-12T00:42:59.606Z",
+  "purpose": "official registry metadata lookup only, no install or downloaded PNPM execution"
+}

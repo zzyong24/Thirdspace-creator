@@ -1,0 +1,19 @@
+{
+  "task": "T-1246",
+  "scope": "EXTERNAL_7391_ONLY_PURE_EXACT_WRAPPER",
+  "approved": true,
+  "maximumExecutions": 1,
+  "wrapper": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/run-once.cjs",
+  "wrapperSHA": "f11cafb012273a6c3f0584f3df4f306e1d187cad4cc08349265c19f073472835",
+  "preDispatchSHA": "606f2128a2be29cd1a4766534b90ee182b03eaa82a55202329acdd3f3e163074",
+  "pureApprovalSHA": "49c8cdd4de84c454bedcb2538b2ff0cb02e771fb859de4767b76a1219cb82bf6",
+  "rootFullSourceRead": true,
+  "lifecycleDeltaFullRead": true,
+  "positiveMs": 120000,
+  "independentHelperLifecycleMs": 2160000,
+  "aggregateHelperMs": 2280000,
+  "outerMs": 3840000,
+  "nodeSHA": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "at": "2026-10-12T08:34:14.968039+00:00",
+  "noMetadataOrResealOrServicesOrBrowser": true
+}

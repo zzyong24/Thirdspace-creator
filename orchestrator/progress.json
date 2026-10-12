@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 108,
+    "verticals": 110,
     "tasks_done": 62,
-    "tasks_total": 210,
-    "tasks_pending": 148,
+    "tasks_total": 212,
+    "tasks_pending": 150,
     "verticals_complete": 18
   },
   "verticals": [
@@ -8485,6 +8485,481 @@
           "git diff --check"
         ]
       }
+    },
+    {
+      "id": "T-1247",
+      "task_id": "T-1247",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1247-timeout-git-inventory-buffer.md",
+        "docs/verification/t1247/REVIEW.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "tools/timeout-policy/check.mjs",
+        "docs/features/t1247-timeout-git-inventory-buffer.md",
+        "docs/features/t1247-timeout-git-inventory-buffer.review.md",
+        "docs/features/t1247-timeout-git-inventory-buffer.review.history.json",
+        "docs/verification/t1247/**",
+        "orchestrator/context/T-1247.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json"
+      ],
+      "commits": {}
+    },
+    {
+      "id": "T-1249",
+      "task_id": "T-1249",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1249-durable-chat-current-receipts.md",
+        "docs/verification/t1246/first-diagnosis/t1249-durable-chat-spec-review.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "backend/src/integration/durable-chat-tool-ledger.test.ts",
+        "docs/features/t1249-durable-chat-current-receipts*",
+        "docs/verification/t1246/first-diagnosis/t1249-*",
+        "docs/verification/t1246/round-2/unit/**",
+        "orchestrator/context/T-1249.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json"
+      ],
+      "commits": {}
+    },
+    {
+      "id": "T-1248",
+      "task_id": "T-1248",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1248-frozen-system-action-compatibility.md",
+        "docs/verification/t1248/INDEPENDENT_SPEC_RECHECK.md",
+        "docs/verification/t1248/system-action-v1.definition.json",
+        "docs/verification/t1246/round-2/server-entry-calibration/REPORT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "contract/src/resources/assistant-system.ts",
+        "backend/src/modules/ai-runtime/chat-tools.ts",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+        "backend/src/application/chat/assistant-system-root.ts",
+        "backend/src/modules/ai/chat-proposal-source.service.ts",
+        "contract/src/assistant-system.test.ts",
+        "backend/src/modules/ai-runtime/chat-tools.test.ts",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts",
+        "backend/src/application/chat/assistant-system-root.integration.test.ts",
+        "backend/src/modules/ai/chat-proposal-source.service.test.ts",
+        "docs/features/t1248-frozen-system-action-compatibility*",
+        "docs/verification/t1248/**",
+        "orchestrator/context/T-1248.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原真实golden RED→contract/backend whole-known合同聚焦，retry0，严格原owner/claim/ack/digest/采用回执断言",
+          "原legacy4完整body，只读104原producer/当前migrator/hash/frozen/settled/130ownership，独占shared dist后实际EOF",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1250",
+      "task_id": "T-1250",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md",
+        "docs/verification/t1246/first-diagnosis/timeout-22-consumer-readonly-audit.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+        "frontend/src/server/workbench-artifact-render.ts",
+        "frontend/src/server/workbench-browser-host.ts",
+        "frontend/src/server/workbench-browser-client.ts",
+        "frontend/src/server/workbench-native-client.ts",
+        "frontend/src/server/workbench-native-host.ts",
+        "frontend/src/server/workbench-artifact-host.ts",
+        "backend/src/modules/execution/workbench-file-recovery.service.ts",
+        "frontend/src-tauri/src/workbench/ipc.rs",
+        "frontend/src-tauri/src/workbench/ipc_windows.rs",
+        "frontend/src-tauri/src/workbench/browser_ipc.rs",
+        "tools/timeout-policy/check.mjs",
+        "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+        "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+        "frontend/src/server/workbench-artifact-render.test.ts",
+        "frontend/src/server/workbench-artifact-representation.test.ts",
+        "frontend/src/server/workbench-public.integration.test.ts",
+        "frontend/src/server/workbench-browser-client.test.ts",
+        "frontend/src/server/workbench-browser-host.test.ts",
+        "frontend/src/server/workbench-native-client.test.ts",
+        "frontend/src/server/workbench-native-host.test.ts",
+        "frontend/src/server/workbench-artifact-host.test.ts",
+        "frontend/src/server/workbench-file-recovery.test.ts",
+        "tools/timeout-policy/check.test.mjs",
+        "docs/features/t1250-positive-timeout-consumer-closure*",
+        "docs/verification/t1250/**",
+        "orchestrator/context/T-1250.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "首轮原100及所有已封存证据",
+        "真实用户APP/DB/auth与未授权原生App",
+        "他人dist写窗与package封存"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node tools/timeout-policy/verify.mjs",
+          "按SPEC完整公共CDP/离线PNG/PDF/原profile恢复/owned Unix socket协议链与原聚焦安全回归；只由独评工具执行"
+        ]
+      },
+      "scope_note": "24精确路径，独立SPEC PASS前不实施；首轮标准frontend4个历史错误不删除/排除、不代签全局绿；纯Rust/owned socket不启动用户App。主会话写控制面，contract单写源码，独评后私有数据执行。",
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1251",
+      "task_id": "T-1251",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+        "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1-summary.json",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "ai-worker/src/execution/chat-generation-worker.ts",
+        "ai-worker/src/execution/chat-generation-worker.test.ts",
+        "backend/src/integration/chat-generation-worker.test.ts",
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.review.md",
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.review.history.json",
+        "docs/verification/t1251/**",
+        "orchestrator/context/T-1251.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "PG27/78输入与shared dist写窗",
+        "首轮全部证据与用户真实DB/auth",
+        "非本任务生产/schema/原任务期限/未知结果"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原完整generation21及新增finite/叶失败负例，独评owned runner完整预算retry0",
+          "proper worker/backend类型、boundary/orphan、完整timeout Gate保真实全局失败"
+        ]
+      },
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1253",
+      "task_id": "T-1253",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+        "docs/verification/t1253/SPEC_CANDIDATE_SOURCE_BINDING.json",
+        "docs/verification/t1253/ROOT_SPEC_REVIEW.json",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "backend/src/integration/chat-hooks-worker.test.ts",
+        "backend/src/integration/chat-script-draft-worker.test.ts",
+        "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+        "BACKLOG.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.review.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.review.history.json",
+        "docs/verification/t1253/**",
+        "orchestrator/context/T-1253.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "生产backend/worker/contract源码、schema、原预算/unknown/accounting",
+        "首轮和三包已有8红原证据、真实用户DB/auth与native App",
+        "其它Agent/frontend/T1252源码和shared worker dist并发build"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原3完整文件25例（先只观察保原刺激/断言），再原9文件46例；独评owned工具/SPEC/source绑定、retry0、原case540s/hook180s、完整外层与cleanup",
+          "proper backend/worker tsc；boundary/orphan、完整timeout Gate与公开>30s依赖实际报告，非零和App未验明确保留"
+        ]
+      },
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1252",
+      "task_id": "T-1252",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1252-cli-http-consumer-budget-closure.md",
+        "docs/verification/t1252/ROOT_SPEC_REVIEW.json",
+        "docs/verification/t1252/spec-review-initial.json",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "mcp-server/src/dispatch.ts",
+        "mcp-server/src/cli.ts",
+        "mcp-server/src/server.ts",
+        "mcp-server/package.json",
+        "pnpm-lock.yaml",
+        "tools/timeout-policy/check.mjs",
+        "mcp-server/tests/dispatch.test.ts",
+        "mcp-server/tests/cli.test.ts",
+        "mcp-server/tests/group-mcp-context.test.ts",
+        "mcp-server/tests/server-discovery.test.ts",
+        "mcp-server/tests/group-context.test.ts",
+        "mcp-server/tests/cli-artifacts.test.ts",
+        "frontend/src/server/workbench-file-recovery.test.ts",
+        "frontend/src/server/workbench-public.integration.test.ts",
+        "tools/timeout-policy/check.test.mjs",
+        "docs/verification/t1252/**",
+        "docs/features/t1252-cli-http-consumer-budget-closure*",
+        "orchestrator/context/T-1252.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "isolated_from": [
+        "T1250/frontend types与T1253 shared dist在途窗口；未释放前只私有候选/docs",
+        "原首轮全部源码/断言/证据与用户DB/HOME/CODEX_HOME/auth/未授权App",
+        "其他Undici版本/global fetch/global dispatcher/原业务期限与unknown恢复许可"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原6个MCP测试与scanner原回归/proper mcp-server tsc；Node25包creatoros.cjs真实bundle闭包",
+          "真实headers/body各>300秒RED与GREEN，owned工具独评后串行完整外层/close回执；同原HTTP/Rust journal及真实render累计>300完整公开链",
+          "node tools/timeout-policy/verify.mjs；boundary/orphan及reconcile保真实非零，不用helper代签"
+        ]
+      },
+      "scope_note": "SPEC f3b2413独评+root合同准入，integration REV fc42b1d42391 / canonical5ceaed23e00c；唯一6产品和9原tests，当前implementation pending，不修改T1026旧write_set。source/lock freeze窗口只读；真实300秒RED缺失不得补历史。原T1250 public body:undefined已授权真实476c4a差异保。",
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1254",
+      "task_id": "T-1254",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+        "docs/verification/t1254/DOOCS_CONTRACT_INVENTORY.json",
+        "docs/verification/t1254/BUILD_INPUT_COMPARISON.json",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "reference-editors/doocs-md/native/native-source.tar.gz",
+        "reference-editors/doocs-md/native/NATIVE_PATCHES_FROM_T1049.diff",
+        "reference-editors/doocs-md/native/native-delivery.json",
+        "reference-editors/doocs-md/native/SHA256.json",
+        "reference-editors/doocs-md/native/README.md",
+        "reference-editors/doocs-md/native/VERIFY.md",
+        "frontend/public/reference-editors/sources/doocs-md/native-source.tar.gz",
+        "frontend/public/reference-editors/sources/doocs-md/native-patches.diff",
+        "frontend/public/reference-editors/sources/doocs-md/request-budget-static-source.tar.gz",
+        "frontend/public/reference-editors/sources/doocs-md/request-budget-static-patches.diff",
+        "frontend/public/reference-editors/doocs-md/native/**",
+        "frontend/public/reference-editors/doocs-md/static/**",
+        "frontend/public/reference-editors/doocs-md/index.html",
+        "reference-editors/manifest.json",
+        "frontend/scripts/verify-native-editors.mjs",
+        "frontend/scripts/verify-doocs-static.mjs",
+        "frontend/scripts/build-doocs-request-budget.mjs",
+        "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+        "docs/features/t1254-doocs-request-budget-and-source-closure.review.md",
+        "docs/features/t1254-doocs-request-budget-and-source-closure.review.history.json",
+        "docs/verification/t1254/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1254.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "不可变a7原archive、原22/2失败和T1053/T1062历史build附件",
+        "root favicon/assets/notice与原bridge、其它三编辑器、CSP权限/外网平台/App",
+        "sharedworker/dist在途读写、真实用户库/.env/HOME/CODEX_HOME或依赖冒用"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "两对应源真实锁安装/完整构建；shared fetch原完整测试及新增边界/真实owned31s和120s+更长loopback；工具全源码/实际安装实现/完整生命周期独评",
+          "精确DELIVERY_EXACT_FILE_MANIFEST逐新增删除hash双审再copy，native原来源/manifest和static新增完整图验证故障负路；原编辑器Playwright留PNG/trace",
+          "完整timeout verify原8组、boundary/orphan、pmem sync与reconcile；保全局真实非零与App未验"
+        ]
+      },
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "task_id": "T-1256",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1256-doocs-static-unused-bindings-build-closure.md",
+        "docs/verification/t1254/V13_ACTUAL_STATIC_ORIGINAL_TYPECHECK_FAILURE.json",
+        "docs/verification/t1254/candidates/static-unused-bindings-readonly-v1/**",
+        "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "docs/features/t1256-doocs-static-unused-bindings-build-closure.md",
+        "docs/features/t1256-doocs-static-unused-bindings-build-closure.review.md",
+        "docs/verification/t1256/**",
+        "docs/verification/t1254/**",
+        "frontend/public/reference-editors/sources/doocs-md/request-budget-static-source.tar.gz",
+        "frontend/public/reference-editors/sources/doocs-md/request-budget-static-patches.diff",
+        "frontend/public/reference-editors/doocs-md/static/**",
+        "frontend/public/reference-editors/doocs-md/index.html",
+        "reference-editors/manifest.json",
+        "BACKLOG.md",
+        "orchestrator/context/T-1256.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "native原源、a7不可变归档/55ab旧patch、其它编辑器、tsconfig/原build/typecheck策略、template/style/CSP/bridge与原FAIL",
+        "真实用户库/HOME/CODEX_HOME/App系统权限与共享worker/dist在途读写"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "精确三无用声明删除双审、原static完整build与vue-tsc实际0、template/style字节同、原剩9闭合与新对应源/patch真实检查",
+          "T1254精确交付列表ROOT和独审；完整原timeout/boundary/orphan与pmem/reconcile；不代签App或全T1246"
+        ]
+      },
+      "id": "T-1256",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null
     }
   ],
   "leases": {

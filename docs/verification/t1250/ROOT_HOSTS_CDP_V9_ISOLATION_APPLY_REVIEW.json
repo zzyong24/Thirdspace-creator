@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-12T00:08:42.688551+00:00",
+  "reviewer": "/root",
+  "decision": "PASS_TWO_TEST_ISOLATION_AND_V9_TOOL_ONLY",
+  "peer": "docs/verification/t1250/public-host-cdp-v9-isolation-independent-review.json",
+  "peerSha256": "fa21776704ab7ce43d4bf9f690aa6f91b7b0cba6972f9bb9b7088934f49d56da",
+  "bindingSha256": "69c44b1c1a25bb93db4764c8e8fc1bd064aa9938339d962e70bd8065bba45f86",
+  "changes": [
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "beforeSha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105",
+      "afterSha256": "71ca29aefa7535d48b8d627e462587fa2fae92e974b6588cc29a75a0051be879",
+      "preserved": "docs/verification/t1250/approved-hosts-cdp-isolation-originals/workbench-browser-host.test.ts"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "beforeSha256": "bbd3b552830a1410ec3b5424eac14e8c3637d6148718ba3cf3a371c3a908693d",
+      "afterSha256": "2eda778df59bba89905e68249403c3819c22a5579f952c0fa19c2c43a308d561",
+      "preserved": "docs/verification/t1250/approved-hosts-cdp-isolation-originals/douyin-cdp-comment-diagnosis.integration.test.ts"
+    }
+  ],
+  "confirmed": [
+    "完整两个diff已读取；仅新增慢case局部DB与同owned监听env",
+    "原host负例held lease、142/34 expects、预算、原公开任务ID与生产源码不动",
+    "V9两个owned缺失文件阻止HOME默认发现，HOME不改",
+    "实际runtime另需fresh prepare及精确输入复核"
+  ],
+  "actualRuntime": false
+}

@@ -1,0 +1,10 @@
+{
+  "boundary": "仅后续startup完整槽与publishing计量措辞修订；负向实测的close/watchdog/signalOwned helper逐字节不变，不冒称新launcher完整runtime跑过",
+  "currentLaunchSha256": "1840a7fa8f2ddc50153030b8157565cdc242ec0a714375082d4d571776512773",
+  "actualNegativeToolSha256": "2d48c8cdea6c87d9b1fd27bcfc15283c0153abd0634fca0da4e861c6e4d0c394",
+  "helperByteEquality": true,
+  "helperSha256": "92adc0530ec884b5535ed7a85461712ed39cbf8e8be22b4987022023202f7b5b",
+  "previousReviewedSourceReconstructedByExactInverseShaMatch": true,
+  "runtimeExecuted": false,
+  "currentManifestSha256": "749b168070bb8179472c58e39f23283b26fda2b91b46bc47760ac486bf11be3d"
+}

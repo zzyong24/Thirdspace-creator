@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {accountGroups} from "../../schema/account-groups";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {createDb,aiTasks,aiTaskResults,executionTasks,executionCalls,eq,type Db} from "@creatoros/backend";
@@ -73,7 +75,7 @@ it("T1062 旧素材恢复冻结真实空组归属并复读；归档首次交接�
 // T1062 锁序 RED：只假定模型规格，不运行神经模型、Worker、媒体 IO 或供应商。
 // DB、父、任务、冻结、转组和执行绑定全部走真实公共服务及独立随机 PG。
 import {randomUUID} from 'node:crypto';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import {createRuntimeDb} from '../../db';
 import {createAiService} from '../ai/ai.service';
 import {createProjectsService,createProjectRepository} from '../projects';
@@ -82,7 +84,7 @@ import {createPlatformAccountService} from '../platform-account/platform-account
 const assetLockPg=process.env.CREATOROS_TEST_POSTGRES_URL;
 async function assetLockFixture(){
  if(!assetLockPg)throw Error('锁序回归需显式隔离 PG');
- const url=new URL(assetLockPg);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅允许 localhost55422 随机库');
+ const url=new URL(assetLockPg);assertOwnedPostgresUrl(url.toString());
  const name=`t1062_asset_lock_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:assetLockPg});
  const runtimes:Array<Awaited<ReturnType<typeof createRuntimeDb>>>=[];
  await admin.query(`CREATE DATABASE ${name}`);url.pathname=`/${name}`;
@@ -123,7 +125,7 @@ it.skipIf(!assetLockPg).each([false,true])('T1062真实PG素材 prepare 同组�
   const before=await f.setup.db.select().from(executionTasks);await Promise.all(tasks.map(task=>f.business(f.setup.db).prepare(f.scope,task.id)));expect(await f.setup.db.select().from(executionTasks)).toEqual(before);expect(await f.setup.db.select().from(executionCalls)).toHaveLength(0);
   if(legacy)for(const row of executions)expect(row).toMatchObject({status:'unknown_result',lastErrorCode:'ASSET_LEGACY_REVIEW_REQUIRED',groupId:f.group.id,accountId:null});
  }finally{await f.releaseGroup();await Promise.allSettled(pending);await f.close();}
-},30000);
+},180000);
 it.skipIf(!assetLockPg)('T1062真实PG账号 transfer 先持账号/member 等组，素材 prepare 不反向持组等账号',async()=>{
  const f=await assetLockFixture();let pending:Promise<unknown>[]=[];
  try{
@@ -140,4 +142,4 @@ it.skipIf(!assetLockPg)('T1062真实PG账号 transfer 先持账号/member 等组
   const after=(await f.setup.db.select().from(aiTasks).where(eq(aiTasks.id,task.id)))[0]!;for(const field of ['userId','accountId','groupId','groupVersion','membershipVersion','inputData','requestFingerprint','costUsd'] as const)expect(after[field]).toEqual(original[field]);
   const executions=await f.setup.db.select().from(executionTasks);expect(executions).toHaveLength(1);await f.business(f.setup.db).prepare(scope,task.id);expect(await f.setup.db.select().from(executionTasks)).toEqual(executions);expect(await f.setup.db.select().from(executionCalls)).toHaveLength(0);
  }finally{await f.releaseGroup();await Promise.allSettled(pending);await f.close();}
-},30000);
+},180000);

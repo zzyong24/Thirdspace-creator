@@ -1,0 +1,59 @@
+{
+  "at": "2026-10-12T03:43:24.409070+00:00",
+  "kind": "source-only-byte-comparison",
+  "oldLaunchPath": "docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+  "oldLaunchSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+  "newLaunchSha256": "f9670d3a841a41a134c03b5c10340ea0185f7d187d40862311a0656403274a6d",
+  "oldPrepareSha256": "6d7706baaa4f9272d1cf64572689395bc9cbd14573470a8030e98fd711f31962",
+  "newPrepareSha256": "23c5bfe8636ce2d03282430737e2b5101946b0b4bd6276a1d5eaf1f92f031193",
+  "unchangedFunctions": [
+    {
+      "function": "processSnapshot",
+      "unchangedBytes": 466,
+      "sha256": "456d69b6d7a6884eceeb65796ce5d068a154d75a30abbb09e5808cd61b7448c0"
+    },
+    {
+      "function": "identity",
+      "unchangedBytes": 88,
+      "sha256": "298decf44a51915e9e57852a8277f4c28e6e2e95dc73e5d33bfd825dc0a53660"
+    },
+    {
+      "function": "childClosure",
+      "unchangedBytes": 768,
+      "sha256": "cad71fb121661e21ef3053558b77f0092e2fbb16efac67b2fcbe91d6395a185a"
+    },
+    {
+      "function": "boundedClosure",
+      "unchangedBytes": 352,
+      "sha256": "8c26469ad9e3316df2522aff2ba915eacf2290533da6695eaa47d5116e2441ca"
+    },
+    {
+      "function": "signalOwned",
+      "unchangedBytes": 486,
+      "sha256": "fa22da4bf9d8ebdd3b82c8742445ab7136c355d979ffd4ba8d0a99255f418417"
+    },
+    {
+      "function": "assertOwnedPgFacts",
+      "unchangedBytes": 1911,
+      "sha256": "e2f22cf1977bfecbf3ba0865d7c496bf1e75b2d2498788ddd6b073c8b2d4033f"
+    },
+    {
+      "function": "assertOwnedPgBeforeConnect",
+      "unchangedBytes": 608,
+      "sha256": "5afd6d8a7d08a052982221742d53ac049a29accf21025a9715a27d0267a0b207"
+    },
+    {
+      "function": "exclusivePort",
+      "unchangedBytes": 265,
+      "sha256": "293500327aa0aad26061c784b3ce52e00c4869cf61951b6f08e46bebd71cad78"
+    },
+    {
+      "function": "nextOnly",
+      "unchangedBytes": 2334,
+      "sha256": "152a4036e18c360a5f111ea090567ae92ecf7e9b60be550d2cef02d0035700ec"
+    }
+  ],
+  "mainScopeAdaptedToTwoDoocsOnly": true,
+  "old170AndNew111Unchanged": true,
+  "notRuntimeOrFullToolReview": true
+}

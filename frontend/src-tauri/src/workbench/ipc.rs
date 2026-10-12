@@ -11,7 +11,9 @@ use rand::RngCore as _;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::fs::{self, DirBuilder};
-use std::io::{self, BufRead, BufReader, Read, Write};
+use std::io::{self, Read, Write};
+#[cfg(test)]
+use std::io::{BufRead, BufReader};
 use std::os::fd::AsRawFd;
 use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -19,7 +21,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const MAX_REQUEST: u64 = 1_400_000;
 
@@ -300,24 +302,87 @@ fn peer_is_sidecar(stream: &UnixStream, expected_pid: u32) -> io::Result<bool> {
         && pid as u32 == expected_pid)
 }
 
+// Positive framing and reply phases each freeze their deadline once. Polling
+// only wakes owned cancellation; partial bytes never extend either phase.
+const IO_PHASE: Duration = Duration::from_secs(120);
+
+fn io_remaining(deadline: Instant, stop: &AtomicBool) -> io::Result<Duration> {
+    if stop.load(Ordering::Acquire) {
+        return Err(io::Error::new(io::ErrorKind::Interrupted, "owned IPC stopped"));
+    }
+    deadline.checked_duration_since(Instant::now())
+        .filter(|remaining| !remaining.is_zero())
+        .ok_or_else(|| io::Error::new(io::ErrorKind::TimedOut, "IPC phase deadline exhausted"))
+}
+
+fn wait_ready(stream: &UnixStream, events: i16, deadline: Instant, stop: &AtomicBool) -> io::Result<()> {
+    loop {
+        let remaining = io_remaining(deadline, stop)?;
+        let milliseconds = remaining.as_millis().clamp(1, 100) as i32;
+        let mut descriptor = libc::pollfd { fd: stream.as_raw_fd(), events, revents: 0 };
+        let result = unsafe { libc::poll(&mut descriptor, 1, milliseconds) };
+        if result > 0 {
+            io_remaining(deadline, stop)?;
+            if descriptor.revents & libc::POLLNVAL != 0 {
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid owned socket"));
+            }
+            return Ok(());
+        }
+        if result < 0 {
+            let error = io::Error::last_os_error();
+            if error.kind() != io::ErrorKind::Interrupted { return Err(error); }
+        }
+    }
+}
+
+fn read_frame(stream: &mut UnixStream, maximum: usize, deadline: Instant, stop: &AtomicBool) -> io::Result<Vec<u8>> {
+    let mut body = Vec::new();
+    let mut chunk = [0u8; 8192];
+    while body.len() <= maximum {
+        wait_ready(stream, libc::POLLIN, deadline, stop)?;
+        let length = chunk.len().min(maximum + 1 - body.len());
+        match stream.read(&mut chunk[..length]) {
+            Ok(0) => break,
+            Ok(count) => {
+                let end = chunk[..count].iter().position(|byte| *byte == b'\n').map(|index| index + 1);
+                body.extend_from_slice(&chunk[..end.unwrap_or(count)]);
+                if end.is_some() { break; }
+            }
+            Err(error) if matches!(error.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => {}
+            Err(error) => return Err(error),
+        }
+    }
+    io_remaining(deadline, stop)?;
+    Ok(body)
+}
+
+fn write_frame(stream: &mut UnixStream, mut bytes: &[u8], deadline: Instant, stop: &AtomicBool) -> io::Result<()> {
+    while !bytes.is_empty() {
+        wait_ready(stream, libc::POLLOUT, deadline, stop)?;
+        match stream.write(bytes) {
+            Ok(0) => return Err(io::Error::new(io::ErrorKind::WriteZero, "empty owned socket write")),
+            Ok(count) => bytes = &bytes[count..],
+            Err(error) if matches!(error.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => {}
+            Err(error) => return Err(error),
+        }
+    }
+    io_remaining(deadline, stop)?;
+    Ok(())
+}
+
 fn serve_one(
     mut stream: UnixStream,
     expected_pid: u32,
     base: &Path,
     commands: &CommandHost,
+    read_deadline: Instant,
+    stop: &AtomicBool,
 ) -> io::Result<()> {
-    // macOS may inherit O_NONBLOCK from the listener. Each accepted request
-    // uses read/write deadlines instead, so a client still writing cannot
-    // turn an early EAGAIN into an empty or broken IPC reply.
-    stream.set_nonblocking(false)?;
-    stream.set_read_timeout(Some(Duration::from_secs(10)))?;
-    stream.set_write_timeout(Some(Duration::from_secs(10)))?;
+    stream.set_nonblocking(true)?;
     if !peer_is_sidecar(&stream, expected_pid)? {
-        stream.write_all(b"{\"ok\":false,\"code\":\"UNAUTHORIZED_PEER\"}\n")?;
-        return Ok(());
+        return write_frame(&mut stream, b"{\"ok\":false,\"code\":\"UNAUTHORIZED_PEER\"}\n", Instant::now() + IO_PHASE, stop);
     }
-    let mut body = Vec::new();
-    BufReader::new((&stream).take(MAX_REQUEST + 1)).read_until(b'\n', &mut body)?;
+    let body = read_frame(&mut stream, MAX_REQUEST as usize, read_deadline, stop)?;
     let reply = if body.len() as u64 > MAX_REQUEST || body.last() != Some(&b'\n') {
         json!({"ok": false, "code": "INVALID_REQUEST"})
     } else {
@@ -326,9 +391,10 @@ fn serve_one(
             Err(_) => json!({"ok": false, "code": "INVALID_REQUEST"}),
         }
     };
-    serde_json::to_writer(&mut stream, &reply)?;
-    stream.write_all(b"\n")?;
-    Ok(())
+    let write_deadline = Instant::now() + IO_PHASE;
+    let mut encoded = serde_json::to_vec(&reply)?;
+    encoded.push(b'\n');
+    write_frame(&mut stream, &encoded, write_deadline, stop)
 }
 
 pub struct PendingBridge {
@@ -395,7 +461,8 @@ impl PendingBridge {
                 match listener.accept() {
                     Ok((stream, _)) => {
                         idle_polls = 0;
-                        let _ = serve_one(stream, expected_pid, &base, &thread_commands);
+                        let read_deadline = Instant::now() + IO_PHASE;
+                        let _ = serve_one(stream, expected_pid, &base, &thread_commands, read_deadline, &stop_thread);
                     }
                     Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
                         std::thread::sleep(Duration::from_millis(20));
@@ -452,6 +519,58 @@ pub struct BridgeState(pub Mutex<Option<RunningBridge>>);
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn t1250_partial_frame_activity_does_not_renew_frozen_deadline() {
+        let (mut server, mut client) = UnixStream::pair().unwrap();
+        server.set_nonblocking(true).unwrap();
+        let finished = Arc::new(AtomicBool::new(false));
+        let sent = finished.clone();
+        let writer = std::thread::spawn(move || {
+            while !sent.load(Ordering::Acquire) {
+                if client.write_all(b"x").is_err() { break; }
+                std::thread::sleep(Duration::from_millis(10));
+            }
+        });
+        let started = Instant::now();
+        // Simulate an already almost exhausted frozen phase, not a new
+        // production execution cap. Production read/write slots remain 120s.
+        let result = read_frame(&mut server, 1400000, started + Duration::from_millis(120), &AtomicBool::new(false));
+        finished.store(true, Ordering::Release);
+        writer.join().unwrap();
+        assert_eq!(result.unwrap_err().kind(), io::ErrorKind::TimedOut);
+        assert!(started.elapsed() < Duration::from_secs(2));
+    }
+
+    #[test]
+    fn t1250_backpressured_reply_uses_one_deadline() {
+        let (mut server, _client) = UnixStream::pair().unwrap();
+        server.set_nonblocking(true).unwrap();
+        let started = Instant::now();
+        let bytes = vec![b'x'; 4000001];
+        let result = write_frame(&mut server, &bytes, started + Duration::from_millis(120), &AtomicBool::new(false));
+        assert_eq!(result.unwrap_err().kind(), io::ErrorKind::TimedOut);
+        assert!(started.elapsed() < Duration::from_secs(2));
+    }
+
+    #[test]
+    fn t1250_cancel_wakes_owned_reply_without_claiming_write_rollback() {
+        let (mut server, _client) = UnixStream::pair().unwrap();
+        server.set_nonblocking(true).unwrap();
+        let stop = Arc::new(AtomicBool::new(false));
+        let setter = stop.clone();
+        let cancel = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(100));
+            setter.store(true, Ordering::Release);
+        });
+        let started = Instant::now();
+        let result = write_frame(&mut server, &vec![b'x'; 4000001], started + IO_PHASE, &stop);
+        cancel.join().unwrap();
+        assert_eq!(result.unwrap_err().kind(), io::ErrorKind::Interrupted);
+        assert!(started.elapsed() < Duration::from_secs(2));
+        // Some bytes may already have been written; no receipt/effect rollback
+        // or new operation is inferred from this cancelled connection.
+    }
+
     use std::io::Write;
 
     fn request(action: Value) -> Value {
@@ -483,6 +602,52 @@ mod tests {
         drop(running);
         fs::remove_dir_all(base).unwrap();
     }
+    #[test]
+    fn t1250_authorized_frame_after_thirty_seconds_keeps_original_operation() {
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let base = temp_base();
+        let running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
+        let mut stream = UnixStream::connect(&socket).unwrap();
+        stream.set_read_timeout(Some(Duration::from_secs(120))).unwrap();
+        // Actual slow authorized framing, not a fake clock or a model fixture.
+        std::thread::sleep(Duration::from_secs(31));
+        let sent = stream.write_all(format!("{}\n", request(json!({"kind":"list"}))).as_bytes());
+        let mut line = String::new();
+        let read = BufReader::new(stream).read_line(&mut line);
+        drop(running);
+        let _ = fs::remove_dir_all(&base);
+        assert!(sent.is_ok(), "authorized delayed frame was cut off: {sent:?}");
+        assert!(read.is_ok(), "authorized delayed receipt was cut off: {read:?}");
+        let reply: Value = serde_json::from_str(&line).unwrap();
+        assert_eq!(reply["ok"], true, "{reply}");
+        assert_eq!(reply["operationId"], "op-1");
+    }
+
+    #[test]
+    fn t1250_owned_bridge_stop_wakes_incomplete_frame_without_effect() {
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let base = temp_base();
+        let running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
+        let mut client = UnixStream::connect(&socket).unwrap();
+        client.write_all(b"{\"operationId\":").unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+        let (tx, rx) = std::sync::mpsc::channel();
+        let started = std::time::Instant::now();
+        let join = std::thread::spawn(move || { drop(running); tx.send(()).unwrap(); });
+        // 120s is the finite test observation; 2s checks cancellation latency only.
+        let stopped = rx.recv_timeout(Duration::from_secs(120));
+        let elapsed = started.elapsed();
+        drop(client);
+        join.join().unwrap();
+        let effect_absent = !base.exists() || fs::read_dir(&base).unwrap().next().is_none();
+        let _ = fs::remove_dir_all(&base);
+        assert!(stopped.is_ok(), "owned bridge stop was not observed");
+        assert!(elapsed < Duration::from_secs(2), "cancellation waited for active IO: {elapsed:?}");
+        assert!(effect_absent, "an incomplete request created task files");
+    }
+
     fn temp_base() -> PathBuf {
         let path = std::env::temp_dir().join(format!("cw-test-{}", rand::random::<u64>()));
         fs::create_dir(&path).unwrap();
@@ -811,6 +976,15 @@ mod tests {
     #[test]
     #[ignore = "isolated Node/PGlite public file reconciliation fixture"]
     fn external_node_file_journal_fixture() {
+        // Test-only milliseconds, frozen once after ready; never extends a task/RPC deadline.
+        let wait_ms = match std::env::var("CREATOROS_TEST_WORKBENCH_FIXTURE_WAIT_MS") {
+            Ok(value) => value.parse::<u64>().expect("fixture wait must be unsigned milliseconds"),
+            Err(std::env::VarError::NotPresent) => 120_000,
+            Err(error) => panic!("fixture wait environment is invalid: {error}"),
+        };
+        assert!(wait_ms >= 120_000, "fixture wait must be at least 120000 milliseconds");
+        let wait_budget = Duration::from_millis(wait_ms);
+        std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
         let pid = std::env::var("CREATOROS_FILES_E2E_NODE_PID").unwrap().parse().unwrap();
         let ready = PathBuf::from(std::env::var("CREATOROS_FILES_E2E_READY_FILE").unwrap());
         let done = PathBuf::from(std::env::var("CREATOROS_FILES_E2E_DONE_FILE").unwrap());
@@ -819,7 +993,7 @@ mod tests {
         let socket = bridge.socket_path();
         let running = bridge.start(pid, base.clone(), test_runtimes(&base));
         fs::write(ready, socket.to_string_lossy().as_bytes()).unwrap();
-        let deadline = std::time::Instant::now() + Duration::from_secs(90);
+        let deadline = std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
         while !done.exists() && std::time::Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(25));
         }
@@ -830,6 +1004,15 @@ mod tests {
     #[test]
     #[ignore = "external Node/database file host fixture; requires the installed Mac runtime"]
     fn external_node_files_host_fixture() {
+        // Test-only milliseconds, frozen once after ready; never extends a task/RPC deadline.
+        let wait_ms = match std::env::var("CREATOROS_TEST_WORKBENCH_FIXTURE_WAIT_MS") {
+            Ok(value) => value.parse::<u64>().expect("fixture wait must be unsigned milliseconds"),
+            Err(std::env::VarError::NotPresent) => 120_000,
+            Err(error) => panic!("fixture wait environment is invalid: {error}"),
+        };
+        assert!(wait_ms >= 120_000, "fixture wait must be at least 120000 milliseconds");
+        let wait_budget = Duration::from_millis(wait_ms);
+        std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
         let expected_pid: u32 = std::env::var("CREATOROS_FILES_E2E_NODE_PID")
             .expect("set CREATOROS_FILES_E2E_NODE_PID")
             .parse()
@@ -858,7 +1041,7 @@ mod tests {
             RuntimeRegistry::from_sidecar(&runtime_root).unwrap(),
         );
         fs::write(&ready, socket.to_string_lossy().as_bytes()).unwrap();
-        let deadline = std::time::Instant::now() + Duration::from_secs(120);
+        let deadline = std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
         while !done.exists() && std::time::Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(100));
         }

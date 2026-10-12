@@ -1,0 +1,7 @@
+{
+  "originalHomeAndCodexHomePreserved": true,
+  "noInheritedCredentials": true,
+  "childOnlyNoTCCChange": true,
+  "network": "only loopback127.0.0.1",
+  "profileSha256": "21f4db4425c96ef202ca843612a0297ac629967dfb44c1b8e094a05bfe7ee3ef"
+}

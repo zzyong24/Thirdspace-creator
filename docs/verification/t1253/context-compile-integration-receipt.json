@@ -1,0 +1,7 @@
+{
+  "exitCode": 0,
+  "stdout": "✓ Task Packet 已生成 → orchestrator/context/T-1253.md\n",
+  "stderr": "",
+  "budgetMs": 180000,
+  "noT1026Change": true
+}

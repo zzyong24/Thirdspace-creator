@@ -1,0 +1,57 @@
+{
+  "at": "2026-10-12T02:17:58.232Z",
+  "scope": "抽取真实候选完整stage，只删TS类型的确定性数值/清理检查；无真实浏览器/慢请求/产品源码运行",
+  "cases": [
+    {
+      "case": "早0.1485ms后补等1ms，真实value保留",
+      "stages": [
+        {
+          "kind": "early",
+          "elapsedMs": 110000.8515
+        }
+      ],
+      "delays": [
+        110000,
+        1
+      ],
+      "clear": [
+        2
+      ]
+    },
+    {
+      "case": "连续提前回调不续出生minimumAt，恰好110000完成",
+      "stages": [
+        {
+          "kind": "repeat",
+          "elapsedMs": 110000
+        }
+      ],
+      "delays": [
+        110000,
+        110000,
+        109999,
+        20000,
+        2,
+        1
+      ]
+    },
+    {
+      "case": "真实SDK拒绝由finally清当前timer且保原error identity",
+      "active": 0,
+      "clear": [
+        1
+      ]
+    },
+    {
+      "case": "SDK同步抛错仍finally清当前timer",
+      "active": 0,
+      "clear": [
+        1
+      ]
+    },
+    {
+      "case": "延迟结束仍等待原SDK，不跳过work",
+      "active": 0
+    }
+  ]
+}

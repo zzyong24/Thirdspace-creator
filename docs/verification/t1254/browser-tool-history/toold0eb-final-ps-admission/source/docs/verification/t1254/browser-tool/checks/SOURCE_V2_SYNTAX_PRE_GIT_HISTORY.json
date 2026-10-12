@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-12T04:20:56.616445+00:00",
+  "fixedParserNode": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeEntrySha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "rows": [
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+      "sha256": "8ac60e9ab2af43b0355f6c5b1624af783e9a1d0ceb7275a055016df0863c22c3",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-syntax-ojjlq82v/complete-run.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/driver-types.cjs",
+      "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-syntax-ojjlq82v/driver-types.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/launch.cjs",
+      "sha256": "afebd49f175d8c6b3a00f26d49065178da99ff652f6ad75b9252ddba7eeac692",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-syntax-ojjlq82v/launch.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+      "sha256": "38f777a9f95ebe1c066e64d454bc915658d4b90feffe1399d02e4ffef6ec5864",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-syntax-ojjlq82v/prepare-runtime.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/runtime-dyld.cjs",
+      "sha256": "bbd4a6c0dfb15ecb90f701619e0d0c08c976982ee3f8bcca634160d83609872f",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-syntax-ojjlq82v/runtime-dyld.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/seal.cjs",
+      "sha256": "53014f224708aefb768b72f94172e2616ad85a67334c038e49d64c7ea2c8ee48",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-syntax-ojjlq82v/seal.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "sha256": "ca5b3290037490064f9a5de97d62d2ba17555c51e9a118d8f68e69bdad86000a",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-syntax-ojjlq82v/verify-binding.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "candidateCodeNeverEvaluated": true,
+  "ownedMetadataTypesListBodiesNeverExecuted": true,
+  "noService": true,
+  "noBrowser": true,
+  "noSQL": true,
+  "oldPureChecksNotRerunForNewDynamicConsumer": true
+}

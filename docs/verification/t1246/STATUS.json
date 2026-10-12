@@ -1,0 +1,1686 @@
+{
+  "asOf": "2026-10-12T06:51:41.031951+00:00",
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "browserOriginal": {
+    "planned": 170,
+    "actualExitCode": 1,
+    "uniqueCompleted": 170,
+    "statuses": {
+      "passed": 131,
+      "failed": 39
+    },
+    "specs": 54,
+    "screenshots": {
+      "captured": 170
+    },
+    "final": true,
+    "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/FINAL_FIRST_ROUND.json"
+  },
+  "browserNew": {
+    "planned": 59,
+    "actualExitCode": 1,
+    "frameworkStats": {
+      "startTime": "2026-10-11T15:43:26.048Z",
+      "duration": 967371.046,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 55,
+      "flaky": 0
+    },
+    "journeyCounts": {
+      "fail": 50,
+      "blocked": 5,
+      "pass": 4
+    },
+    "actualGenerationModelCalls": 0,
+    "configuredIndependentModels": 0,
+    "defaultUnconfiguredRows": 7,
+    "final": true,
+    "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/new-native-v2/FINAL_FIRST_ROUND.json"
+  },
+  "official49": "新增49官方调用尚未全部到达，结果须逐任务账本复核，未验不预签",
+  "nativeApp": "用户暂不授权，未验；不再请求Automation Mode/Appium授权",
+  "package": "首包真实构建/verify/开发签名通过并另存原SHA；修复后第二包尚未构建，不代签App",
+  "backend": {
+    "actualExitCode": 1,
+    "files": 643,
+    "passedFiles": 554,
+    "failedFiles": 88,
+    "skippedFiles": 1,
+    "passedTests": 6492,
+    "failedTests": 400,
+    "skippedTests": 1,
+    "final": true,
+    "confirmedEnvironmentFailures": 195,
+    "remainingCaseDiagnosis": 3,
+    "collectionFailuresSeparate": 2,
+    "bodyCasesMapped": 205,
+    "sourceOrFirstBlockerBound": 202
+  },
+  "frontend": {
+    "actualExitCode": 1,
+    "files": 559,
+    "failedFiles": 38,
+    "totalTests": 5078,
+    "passedTests": 4911,
+    "failedTests": 158,
+    "pendingTests": 8,
+    "todoTests": 1,
+    "unhandledErrorsFromOriginalLog": 1,
+    "final": true
+  },
+  "timeoutPublicSmoke": {
+    "actualExitCode": 0,
+    "passed": 1,
+    "failed": 0,
+    "actualPublicReaderMs": 31138,
+    "originalAssertionsUnchanged": true,
+    "originalFullSuiteSkipPreserved": true,
+    "nativeAppAcceptance": false,
+    "officialPlatform": false
+  },
+  "concentratedRepairStarted": true,
+  "confirmedDefects": [
+    {
+      "id": "BC003",
+      "behavior": "可达封面预填仍要求独立生图模型，与Codex免配置合同冲突",
+      "status": "已实施Codex免独立模型配置窄修；前填0自动提交与当前选择器targeted通过，完整官方模型E2E待验"
+    },
+    {
+      "id": "BA001",
+      "behavior": "首载合法LS工作区与SSR组根不一致仍可能放行",
+      "status": "已实施窄修复及targeted通过，公共E2E/完整套件待验"
+    },
+    {
+      "id": "FF001",
+      "behavior": "真实绑定业务严格schema拒绝持久执行附加的executionRoute",
+      "status": "已实施窄修复及targeted通过，公共E2E/完整套件待验"
+    },
+    {
+      "id": "D01",
+      "behavior": "管理页只读账号组第一页，漏掉第二页的当前合法组及成员入口",
+      "status": "已实施窄修复及targeted通过，公共E2E/完整套件待验"
+    }
+  ],
+  "settingsReturn": "4产品窄修复已实施，controller/Shell/nav13与真实Dialog3 targeted通过；新公共浏览器7个body已编写待独评运行，原两首红及fresh补充不改；工程在途联合链待V3",
+  "writeSetEvidence": "first-diagnosis/consolidated-write-set-evidence.json",
+  "settingsHistoryDiagnostic": {
+    "actualSessionId": 60183,
+    "actualExitCode": 0,
+    "originalAcceptancePass": false,
+    "sourceBeforeAfterErrors": 0,
+    "observations": {
+      "shortSidebar": "/accounts",
+      "directSettings": "about:blank"
+    },
+    "evidence": "settings-history-diagnosis/SEALED_OBSERVATION.json"
+  },
+  "t1097Contract": {
+    "specSHA256": "8221447156d8ae0194ab343cde1413a378e2fa18a552dbf869b576b5eb26b232",
+    "status": "按正式合同实施完成：公开来源/受控候选/用户采纳targeted及Worker入口通过；最终两视口公共官方E2E未执行，非完整验收"
+  },
+  "typechecks": {
+    "contract": 0,
+    "ai-worker": 0,
+    "backend": 2,
+    "frontend": 2,
+    "final": true
+  },
+  "settingsFullSupplement": {
+    "actualSessionId": 50968,
+    "actualExitCode": 0,
+    "passed": 2,
+    "failed": 0,
+    "retry": 0,
+    "originalFullRunUnchanged": true,
+    "evidence": "settings-full-history-runs/2026-10-11T17-19-06-539Z/FINAL_DIAGNOSIS.json"
+  },
+  "concentratedRepairContract": {
+    "specSHA256": "fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a",
+    "integrationReceipt": "e75e32a6b7a8",
+    "canonicalReceipt": "883f7fe733ba",
+    "implementationAcceptance": false
+  },
+  "targetedRepairResults": [
+    {
+      "id": "FF001/PB001",
+      "exitCode": 0,
+      "passed": 41,
+      "failed": 0,
+      "evidence": "round-2/unit/focused-ff001-pb001.json"
+    },
+    {
+      "id": "D01/D02",
+      "exitCode": 0,
+      "passed": 34,
+      "failed": 0,
+      "evidence": "round-2/unit/focused-d01-d02-green.json"
+    },
+    {
+      "id": "BA001",
+      "exitCode": 0,
+      "passed": 37,
+      "failed": 0,
+      "evidence": "round-2/unit/focused-ba001-green-attempt1.json"
+    },
+    {
+      "id": "settings-controller-shell-nav",
+      "exitCode": 0,
+      "passed": 13,
+      "failed": 0,
+      "evidence": "round-2/unit/focused-settings-green-attempt1.json"
+    },
+    {
+      "id": "settings-real-dialog",
+      "exitCode": 0,
+      "passed": 3,
+      "failed": 0,
+      "evidence": "round-2/unit/focused-settings-dialog-attempt1.json"
+    }
+  ],
+  "targetedDoesNotReplaceFirstRound": true,
+  "targetedBudgetLimitation": "本次短targeted未附独立完整外层启动器，不能作为LED053完整超时策略验收；新工具需独评后用于完整套件",
+  "phase": "编辑器私有原请求/完整构建与剩余交付检查已通过，正在精确交付清单双审；最终Gate、新包、浏览器仍待实际完成",
+  "repairFollowup": {
+    "originalResultsPreserved": true,
+    "noOverlappingCountsAdded": true,
+    "ownedPG27": {
+      "files": 27,
+      "passedTests": 504,
+      "failedTests": 5,
+      "exitCode": 1,
+      "sourceSnapshot": "a51998165d48eb5faba557ae650c1c5a772beac863829e0d6e994fa9e05a67bd",
+      "nonce": "0e808708c36f04da3a422326ab565b02",
+      "fixtureRepairNotRetested": true
+    },
+    "B003Original75": {
+      "passed": 75,
+      "failed": 0,
+      "exitCode": 0,
+      "nonce": "cdda95f460f49097b885d675e17555a5",
+      "sourceSnapshot": "33e853528124cb781f3192784f2933d3ffcd76fe9f603df5ee8d30e13cfb7f1d",
+      "sourceBeforeAfterEqual": true,
+      "ownedCleanupComplete": true,
+      "scope": "该旧候选真实75body，不代后续T1248修改产品"
+    },
+    "entryPlatformReviewOriginal6": {
+      "passed": 6,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "rootEntries20First": {
+      "passed": 18,
+      "failed": 2,
+      "exitCode": 1,
+      "evidence": "round-2/unit/focused-worker-entry-public-attempt1.json",
+      "subsequentFixtureFixPendingRetest": true
+    },
+    "legacyOriginal4": {
+      "passed": 1,
+      "failed": 3,
+      "exitCode": 1,
+      "cause": "固定历史settings action完整定义及正式采纳版本兼容待T1248独评/实现；未改历史frozen",
+      "evidence": "round-2/server-entry-calibration/legacy-first.json"
+    },
+    "T1249": "最新实际whole5中的原durable完整8body8PASS0FAIL，保首轮3/5与中间两ordering红；尚未task收尾或代签其他generation9红。",
+    "T1247FullTimeoutGate": {
+      "exitCode": 1,
+      "staticFailures": 22,
+      "staticFiles": 9,
+      "otherSevenGroups": "实际全部通过",
+      "gitInventoryENOBUFSFixed": true,
+      "scope": "全Gate未通过，22项归原消费者与LED053债，不改规则洗绿"
+    },
+    "B004Original2Families": {
+      "passed": 16,
+      "failed": 2,
+      "cause": "offset固定fixture缺失，未合成替代",
+      "scope": "正常AAC完整原正文及公共链已跑；offset未验不签全绿"
+    },
+    "B006FullBrowserOriginal2": {
+      "passed": 2,
+      "failed": 0,
+      "exitCode": 0,
+      "positiveExecutionBudgetMs": 180000,
+      "privateBundle": true
+    },
+    "V3Tools": "单snapshot逐listener14、PG连接前31与预算5反例通过；最终source（含Tauri）/新11bundle/第二包未统一封存，无runtime准入。",
+    "browserOriginal170Second": "第4private工具54spec/170完整body仅静态list；未启动最终E2E",
+    "nativeApp": "用户暂不授权，AC5未完成；禁止浏览器/打包代签",
+    "rootEntriesScript6Third": {
+      "passed": 6,
+      "failed": 0,
+      "exitCode": 0,
+      "elapsedMs": 61176,
+      "evidence": "round-2/unit/focused-script-entry-public-attempt3.json",
+      "original14ChatPassPreserved": true,
+      "nonOverlappingMeaning": "14chat原body+5script原body+1新增cancel，跨不同EOF只作覆盖说明不代单轮20全绿",
+      "firstAndSecondFailuresPreserved": true
+    },
+    "T1248": "当前精确合同实现完成；最新whole347=344PASS/3PG SKIP，原legacy4新EOF4PASS，proper contract/backend types0。新whole78与3锁竞争真实PG仍待执行，未完成任务。",
+    "ownFiveWhole": {
+      "files": 5,
+      "tests": 42,
+      "passed": 33,
+      "failed": 9,
+      "skipped": 0,
+      "exitCode": 1,
+      "elapsedMs": 1204261,
+      "stdoutClosed": true,
+      "ownedGroupRemaining": 0,
+      "sourceUnchanged": true,
+      "budgetsExhausted": false,
+      "wholeFiles": {
+        "copilot": 3,
+        "durableChat": 8,
+        "toolResultRead": 2,
+        "aiContract": 8,
+        "generation": 21
+      },
+      "generation": {
+        "passed": 12,
+        "failed": 9,
+        "causesPending": "429旧状态、unknown请求次数、缺deadline、失败工具partial、两个串行barrier死锁及越case污染待独立核对"
+      },
+      "evidence": "round-2/unit/own-five-types-whole-attempt1-exit.json",
+      "noProductionOrOriginalSourceChangedAfterResult": true
+    },
+    "ownedPG27Current": {
+      "files": 27,
+      "passed": 509,
+      "failed": 0,
+      "exitCode": 0,
+      "elapsedMs": 1769881,
+      "sourceDigest": "e6675bf31732d207c33c591c8a67b5578b5e5b9976fa0c8c504e13700f6a32d6",
+      "sourceUnchanged": true,
+      "ownedPGStoppedAndRootCleaned": true,
+      "evidence": "round-2/unit/evidence/b0d7c5f8619f89dd565342c109914593/summary.json",
+      "first5FailuresPreserved": true
+    },
+    "B003CurrentWhole78": {
+      "passed": 78,
+      "failed": 0,
+      "skipped": 0,
+      "actualExitCode": 0,
+      "elapsedMs": 34799,
+      "sourceDigest": "207d02c16d1c072255e0d471e6fe09a9010d0f83040a89917a55a31eb50f5351",
+      "ownedPGStoppedAndRootCleaned": true,
+      "sourceUnchanged": true,
+      "evidence": "round-2/unit/t1074-evidence/cfed5064871630c5fb64c62949a89fa8/summary.json",
+      "scope": "完整原75及T1248新增3真实PG正文；不是官方模型或App"
+    }
+  },
+  "acceptanceComplete": false,
+  "rootUiWhole14Second": {
+    "files": 14,
+    "tests": 128,
+    "passed": 128,
+    "failed": 0,
+    "elapsedMs": 25219,
+    "evidence": "round-2/unit/focused-root-ui-fixtures-attempt2-exit.json",
+    "firstFailurePreserved": true,
+    "sourceUnchanged": true
+  },
+  "frontendStandardTypesAfterRepairs": {
+    "actualExit": 2,
+    "errors": 4,
+    "files": 2,
+    "firstGenerated100Unchanged": true,
+    "evidence": "round-2/unit/frontend-standard-types-attempt2-binding.json"
+  },
+  "t1248Latest": {
+    "formalSpecSHA256": "a815e5da23ef92579ae722ba9bd4227259d0bb9d14960d6c9dffa626395195de",
+    "whole5": {
+      "total": 347,
+      "passed": 344,
+      "failed": 0,
+      "PGSkipped": 3
+    },
+    "legacyOriginal4": {
+      "passed": 4,
+      "failed": 0,
+      "producerUnmodified": true,
+      "productionSource2101Unchanged": true
+    },
+    "backendTypes": 0,
+    "contractTypes": 0,
+    "boundary": 0,
+    "orphan": 0,
+    "timeoutGate": {
+      "exit": 1,
+      "staticFailures": 22,
+      "other7GroupsPass": true
+    },
+    "evidence": "../t1248/implementation/IMPLEMENTATION_RESULT.json",
+    "finalAppPassed": false
+  },
+  "firstRoundTypechecksNote": "typechecks保持首轮真实退出码；修复后最新结果单列，不能覆写原失败。",
+  "t1250": {
+    "status": "独立SPEC已正式PASS；scanner与Rust协议实际RED后实施中，clients首次路径EINVAL未到生产，短路径第二RED待跑",
+    "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+    "scope": "11真实正执行/观察+idle active隔离及10静态误报；原截止/取消/owner不降低",
+    "currentFullTimeoutGate": "22FAIL保留，不能签全绿",
+    "nativeProtocolRed": {
+      "cases": 2,
+      "passed": 0,
+      "failed": 2,
+      "actualExit": 1,
+      "actualEOF": true,
+      "ownedCleanup": true,
+      "sourceUnchanged": true,
+      "evidence": "../t1250/native-runs/76059dbc05089dbf518a9d59/final.json",
+      "notAppAcceptance": true
+    },
+    "nativeProtocolGreen": {
+      "declaredAndActualListed": 18,
+      "passed": 15,
+      "failed": 0,
+      "originalIgnored": 3,
+      "actualExitCode": 0,
+      "ownedCleanup": true,
+      "sourceUnchanged": true,
+      "evidence": "../t1250/native-runs/0c40c3baa69dda6cc9366459/final.json",
+      "notAppOrWindowsOrBrowserAcceptance": true
+    }
+  },
+  "pendingAcceptance": [
+    "第二包尚未构建",
+    "最终原170及新增官方/协议/Pi111浏览器尚未执行",
+    "原native App用户暂不授权，未验",
+    "真实offset原fixture缺失，保实际失败",
+    "标准frontend tsc首轮封存两文件4错误保非零回执"
+  ],
+  "t1251": {
+    "status": "PG27及whole78完整EOF已释放；原源叶RED和完整22工具准备复核中，尚未实际新测试/小prod应用",
+    "specSha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84",
+    "integrationReceipt": "07e80ff95068",
+    "canonicalReceipt": "41b45f1c67d4",
+    "sharedPGInputWindowFrozen": false,
+    "actualNewTests": 0,
+    "outcomeClarification": "坏结构/空诊断严格真实transient工具失败回执与版本1零交付partial条件，其他no_evidence保；原完整结果账本待收集，不从status推断"
+  },
+  "latestUserNativeAutomationDecision": {
+    "recordedAt": "2026-10-11T21:29:13.575599+00:00",
+    "decision": "暂不授权，保留 App 验收未完成",
+    "appAcceptanceComplete": false,
+    "noRepeatAuthorizationRequest": true
+  },
+  "latestFocusedChecks": {
+    "scannerNew": {
+      "passed": 7,
+      "failed": 0,
+      "sourceUnchanged": true,
+      "closed": true,
+      "ownedGroupSurvivors": 0
+    },
+    "clientNew": {
+      "passed": 4,
+      "failed": 0,
+      "originalUnselected": 15,
+      "notOriginalWholePass": true
+    },
+    "generationLeafRed": {
+      "passed": 3,
+      "failed": 7,
+      "realChildExit": 1,
+      "expectedRedWrapperExit": 0,
+      "reason": "可信失败状态被原叶实现重分类为unknown",
+      "evidence": "docs/verification/t1251/execution/leaf-red-eeb49f32bbbf0e4a4955cfdfbc561b78",
+      "notGreen": true
+    }
+  },
+  "t1251CurrentActual": {
+    "leaf": {
+      "total": 10,
+      "pass": 10,
+      "fail": 0,
+      "redTotal": 10,
+      "redPass": 3,
+      "redFail": 7,
+      "notAdditive": true
+    },
+    "whole": {
+      "total": 22,
+      "pass": 18,
+      "fail": 4,
+      "exit": 1,
+      "elapsedMs": 73030,
+      "sourceUnchanged": true,
+      "closed": true,
+      "ownedGroupSurvivors": 0,
+      "evidence": "docs/verification/t1251/execution/whole-stage1-4fc0261d7b2741fab63e11cf238fe4a0"
+    },
+    "pending": [
+      "proper backend/worker types",
+      "boundary/orphan/full timeout gate",
+      "T1246重新打包/最终浏览器验收"
+    ],
+    "wholeFinalFocused": {
+      "total": 22,
+      "pass": 22,
+      "fail": 0,
+      "skip": 0,
+      "exit": 0,
+      "elapsedMs": 62669,
+      "sourceUnchanged": true,
+      "closed": true,
+      "ownedGroupSurvivors": 0,
+      "evidence": "docs/verification/t1251/execution/whole-stage1-95103e8e94b4990e2b8a9da2fd9f0847",
+      "notAdditiveWithPriorWhole": true,
+      "finiteActualDeadlinePassed": true,
+      "lastHttpMessagesCapturedThisRound": true,
+      "notAllProductOrAppPass": true,
+      "wrapperElapsedMs": 63313,
+      "elapsedReceipt": "Vitest child exit.json，wrapper耗时单列"
+    }
+  },
+  "t1250CurrentActual": {
+    "scannerNew": {
+      "pass": 7,
+      "fail": 0
+    },
+    "clientsWhole": {
+      "total": 19,
+      "pass": 19,
+      "fail": 0,
+      "originalIncluded": true,
+      "notAdditiveWithNew4": true
+    },
+    "rustIpc": {
+      "totalListed": 18,
+      "pass": 15,
+      "fail": 0,
+      "originalIgnored": 3,
+      "dependencyScope": "standalone"
+    },
+    "rustBrowser": {
+      "totalListed": 12,
+      "pass": 11,
+      "fail": 0,
+      "originalIgnored": 1,
+      "productionPackageSubsetVerified": true,
+      "mainPackages": 708,
+      "actualPackages": 417,
+      "differences": 0
+    },
+    "hostCdpRenderRed": {
+      "hostFail": 3,
+      "cdpFail": 1,
+      "renderFail": 1,
+      "originalEvidencePreserved": true
+    },
+    "publicNode": "待验",
+    "Windows": "未运行",
+    "App": "用户暂不授权，未验",
+    "focusedNew": {
+      "hosts": {
+        "pass": 3,
+        "fail": 0,
+        "filteredOriginal": 33,
+        "elapsedMs": 52420,
+        "evidence": "docs/verification/t1250/runs/ct1250-green-hosts-LuMJjJ"
+      },
+      "cdp": {
+        "pass": 2,
+        "fail": 0,
+        "filteredOriginal": 29,
+        "elapsedMs": 78682,
+        "evidence": "docs/verification/t1250/runs/ct1250-green-cdp-kg7B1z"
+      },
+      "render": {
+        "pass": 4,
+        "fail": 0,
+        "filteredOriginal": 7,
+        "elapsedMs": 75600,
+        "evidence": "docs/verification/t1250/runs/ct1250-green-render-Y0Wd3p"
+      },
+      "public": {
+        "pass": 1,
+        "fail": 0,
+        "filteredOriginal": 1,
+        "elapsedMs": 82456,
+        "evidence": "docs/verification/t1250/runs/ct1250-green-public-qN4Vu4"
+      },
+      "notOriginalFullRegressions": true
+    }
+  },
+  "latestOwnerFinalBatches": {
+    "observedAt": "2026-10-11T22:04:47.156791+00:00",
+    "originalB029": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "skip": 0,
+      "exitCode": 0,
+      "evidence": "round-2/unit/owner-final-evidence/b029-aa6eef7b0e74392254af4b83d57cfef1",
+      "sourceUnchanged": true,
+      "processClosed": true,
+      "ownedGroupRemaining": 0
+    },
+    "originalWorkerNine": {
+      "files": 9,
+      "passedFiles": 6,
+      "failedFiles": 3,
+      "total": 46,
+      "passed": 38,
+      "failed": 8,
+      "skip": 0,
+      "exitCode": 1,
+      "evidence": "round-2/unit/owner-final-evidence/worker-nine-f01a9beb4c293b63a659c3ebbb45e323",
+      "sourceUnchanged": true,
+      "processClosed": true,
+      "ownedGroupRemaining": 0,
+      "triageTask": "T-1253独立SPEC通过并start；原25观察执行中，尚未校准/代签"
+    },
+    "standardBackendTypes": {
+      "exitCode": 0,
+      "elapsedMs": 41251
+    },
+    "standardWorkerTypes": {
+      "exitCode": 0,
+      "elapsedMs": 7549
+    },
+    "typesEvidence": "round-2/unit/owner-final-evidence/types-1d3097dbfa98ce7fd382a6a7504af0a4",
+    "notAppOrFullSystemPass": true
+  },
+  "newlyRecordedCliBudgetGap": {
+    "task": "T-1252",
+    "status": "独立SPEC已通过并taskctl真实start；实施与真实>300秒公共验收待验",
+    "consumer": "mcp-server/src/dispatch.ts的默认Node/Undici headers/body300000ms，小于原生单RPC420000ms",
+    "implemented": false,
+    "publicFullSlowChainPassed": false,
+    "reviewIntegration": "fc42b1d42391",
+    "reviewCanonical": "5ceaed23e00c",
+    "actualDefaultRed": {
+      "evidence": "docs/verification/t1252/actual-red/EVIDENCE.json",
+      "evidenceSha256": "535fd59124a4e6b39e6ef8f0186ffbf5d815f66868de8ad1509702b416832555",
+      "productPassed": 0,
+      "productFailed": 2,
+      "collectorExit": 0,
+      "headersElapsedMs": 301418.836084,
+      "bodyElapsedMs": 301383.644791,
+      "eachRequests": 1,
+      "cleanupConfirmed": true,
+      "implementationApplied": false,
+      "greenNotRun": true
+    },
+    "implementationReview": {
+      "specSha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+      "candidateBindingSha256": "cf927b8d82b83cbfd203fc3b52ebab8ccda2fbf968c7a90a62d52adec4b2c450",
+      "rootReview": "docs/verification/t1252/ROOT_IMPLEMENTATION_CANDIDATE_CF927_REVIEW.json",
+      "rootReviewSha256": "da4a6f5129f446310014b51fdf94198ac11b9c220e6025c276094c9bcb5c490d",
+      "independentReviewSha256": "f447305271cb80c2cc2a4b2439b5701937ef72baa680b966128f2596b4d090ff",
+      "approvedExactApplication": true,
+      "greenActual": false,
+      "packagedActual": false
+    },
+    "implementationApplication": {
+      "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/apply-cf927/APPLY.json",
+      "evidenceSha256": "6bac23dae986a3f1be9139314e7a699bdf8df49a809b37b8d7f4098149561ec6",
+      "sourceApplied": true,
+      "sourceReviewOnly": true,
+      "standardChecksCompleted": true,
+      "physicalSlowGreenCompleted": false,
+      "packageCompleted": false
+    }
+  },
+  "latestStandardContractTypes": {
+    "exitCode": 0,
+    "elapsedMs": 4763,
+    "sourceUnchanged": true,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "evidence": "round-2/unit/current-contract-standard-types-exit.json",
+    "noFullSystemClaim": true
+  },
+  "latestStandardFrontendTypes": {
+    "exitCode": 2,
+    "elapsedMs": 44444,
+    "sourceInputCount": 4323,
+    "sourceUnchanged": true,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "newT1250Errors": 0,
+    "historicalErrors": 4,
+    "historicalErrorsNotExcluded": true,
+    "evidence": "docs/verification/t1250/runs/ct1250-types-VZNGG9/result.json",
+    "priorSevenErrorsPreserved": "docs/verification/t1250/runs/ct1250-types-kPuf02/result.json",
+    "notGlobalGreen": true
+  },
+  "latestT1253Observation": {
+    "total": 25,
+    "passed": 17,
+    "failed": 8,
+    "skip": 0,
+    "exitCode": 1,
+    "childElapsedMs": 62919,
+    "wrapperElapsedMs": 63795,
+    "sourceUnchanged": true,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "ownedRootCleaned": true,
+    "originalAssertionsAndStimulusUnchanged": true,
+    "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1253/execution/observation-whole25-936861b3079dc6f7c610d656dad8d7fb",
+    "actualRetryPermissionAdditionalFieldsPending": true,
+    "secondFieldsObservation": {
+      "evidence": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141",
+      "total": 25,
+      "passed": 17,
+      "failed": 8,
+      "skip": 0,
+      "childElapsedMs": 64376,
+      "wrapperElapsedMs": 65372.220708,
+      "sourceUnchanged": true,
+      "processClosed": true,
+      "ownedGroupMembers": 0,
+      "ownedRootCleaned": true,
+      "observations": 11,
+      "originalAssertionsAndStimulusUnchanged": true,
+      "noProductionChange": true,
+      "legalRetryVerdict": "待独立合同复核，不改期望或签通过"
+    }
+  },
+  "workerFixtureContractClarification": {
+    "specSha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484",
+    "integrationReview": "908ff8f5d3da",
+    "canonicalReview": "e890e7d4ffac",
+    "reviewCycle": 1,
+    "reviewRound": 3,
+    "independentReviewSha256": "f469a7e4c9d90ac11b1edc2b55035a79ab60b1113df770c1ed4b3713818856a3",
+    "rootReviewSha256": "b29514129f37941cc731ece7b6e5ba557a15530223b60e3786fb16c25bb1b930",
+    "scope": "既有纯Pi候选原锁下合法恢复归属，三原测试写集不变；Codex及外部副作用不获该许可",
+    "newAssertionsApplied": true,
+    "runtimePass": false,
+    "productTableZeroStillRequiresDirectAssertion": true,
+    "firstAndSecondObservation25Each": {
+      "passed": 17,
+      "failed": 8
+    },
+    "contextCompileBothExitCode": 0,
+    "decision": "DEC-T1253-USAGE-FAILURE-REPORT-003",
+    "applicationEvidence": "docs/verification/t1253/COMBINED_V3_APPROVED_APPLICATION.json"
+  },
+  "latestT1252StandardChecks": {
+    "exitCode": 0,
+    "files": 8,
+    "tests": 116,
+    "passed": 116,
+    "failed": 0,
+    "skip": 0,
+    "properMcpTypesExitCode": 0,
+    "scannerPassed": 8,
+    "actualBundledBuildExitCode": 0,
+    "sourceInputCount": 210,
+    "sourceDrift": 0,
+    "allFiveChildrenClosedAndGroupZero": true,
+    "bundleSha256": "84260be6df120ec18b9b91b17112cbee37fd1bba448205ccfbbd147646218caf",
+    "evidence": "docs/verification/t1252/actual-standard-checks/EVIDENCE.json",
+    "physicalSlowGreenCompleted": true
+  },
+  "latestT1250FullRender": {
+    "files": 2,
+    "tests": 11,
+    "passed": 11,
+    "failed": 0,
+    "skip": 0,
+    "childElapsedMs": 81235,
+    "sourceDrift": 0,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "evidence": "docs/verification/t1250/runs/ct1250-regression-render-vgQSV1",
+    "notAppOrFullSystemPass": true
+  },
+  "latestFullFinalGates": {
+    "toolSha256": "b5a32eadc6aa2bf429c058e4bc95ea4b287296c159f4e797e95abff3e7006bcc",
+    "phases": {
+      "boundary": {
+        "exitCode": 0,
+        "elapsedMs": 1921.1512500000001,
+        "processClosed": true,
+        "ownedGroupRemaining": 0,
+        "budgetExhausted": false,
+        "sourceBeforeAfterExact": true,
+        "evidence": "docs/verification/t1246/round-2/unit/final-gates/boundary-815077fefa7310926bb959b26007ba53"
+      },
+      "orphan": {
+        "exitCode": 0,
+        "elapsedMs": 1843.380417,
+        "processClosed": true,
+        "ownedGroupRemaining": 0,
+        "budgetExhausted": false,
+        "sourceBeforeAfterExact": true,
+        "evidence": "docs/verification/t1246/round-2/unit/final-gates/orphan-9805bed09feb385052a49514a5f48e64"
+      },
+      "timeout": {
+        "exitCode": 1,
+        "elapsedMs": 37284.58375,
+        "processClosed": true,
+        "ownedGroupRemaining": 0,
+        "budgetExhausted": false,
+        "sourceBeforeAfterExact": true,
+        "evidence": "docs/verification/t1246/round-2/unit/final-gates/timeout-1609ea867b99a9759ebfbb44e6547b21"
+      }
+    },
+    "timeoutStaticFailures": 2,
+    "timeoutOtherSevenGroupsPassed": true,
+    "timeoutRemainingFiles": [
+      "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "frontend/public/reference-editors/doocs-md/static/js/md-config-BhBc-hVt.js"
+    ],
+    "finiteObservationDoesNotBoundUnboundedOriginalConsumers": true,
+    "noGlobalGreen": true
+  },
+  "latestT1250FullHosts": {
+    "declared": 36,
+    "passed": 29,
+    "failed": 1,
+    "originalQualifiedSkip": 6,
+    "files": 3,
+    "exitCode": 1,
+    "sourceUnchanged": true,
+    "childElapsedMs": 27896,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "failure": "T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放",
+    "evidence": "docs/verification/t1250/runs/ct1250-regression-hosts-RRhxJc",
+    "diagnosisPending": true
+  },
+  "remainingDoocsRequestBudgetRootTask": {
+    "task": "T-1254",
+    "registeredBothTrees": true,
+    "stage": "BUILD候选双审及私有工具准备",
+    "productionEdits": 0,
+    "staticFailures": 2,
+    "evidence": "docs/verification/t1246/round-2/unit/DOOCS_TWO_REQUEST_DEFAULTS_READONLY.json",
+    "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+    "productionChanged": false,
+    "firstFormalVerdict": "CONCERNS",
+    "firstOpenFindings": 1,
+    "firstIntegrationReview": "f3a5d915a9e1",
+    "firstCanonicalReview": "c310d25e06f0",
+    "formalVerdict": "PASS",
+    "integrationReview": "433e70ede4d7",
+    "canonicalReview": "1ebe2f90de0b",
+    "reviewRound": 2,
+    "firstFormalConcernsPreserved": true,
+    "taskctlStartBothExitCode": 0,
+    "contextCompileFinalBothExitCode": 0,
+    "sourceCandidateApplied": false
+  },
+  "latestT1250FullCdp": {
+    "files": 2,
+    "tests": 31,
+    "passed": 30,
+    "failed": 1,
+    "skip": 0,
+    "exitCode": 1,
+    "childElapsedMs": 17822,
+    "sourceUnchanged": true,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "evidence": "docs/verification/t1250/runs/ct1250-regression-cdp-2YtCnR",
+    "failure": "新慢公共case OwnershipError: platform account not found: a",
+    "diagnosisPending": true
+  },
+  "latestT1250FullPublic": {
+    "files": 1,
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skip": 0,
+    "exitCode": 0,
+    "childElapsedMs": 85791,
+    "sourceUnchanged": true,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "evidence": "docs/verification/t1250/runs/ct1250-regression-public-K89IYy"
+  },
+  "latestT1250FullRecovery": {
+    "files": 1,
+    "tests": 55,
+    "passed": 54,
+    "failed": 0,
+    "originalNativeSkip": 1,
+    "exitCode": 0,
+    "childElapsedMs": 12020,
+    "sourceUnchanged": true,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "evidence": "docs/verification/t1250/runs/ct1250-regression-recovery-D3kgXk",
+    "nativePublicJournalNotPassedByThisRun": true
+  },
+  "latestT1253V3ActualWhole25": {
+    "total": 25,
+    "passed": 23,
+    "failed": 2,
+    "skip": 0,
+    "exitCode": 1,
+    "childElapsedMs": 74332,
+    "wrapperElapsedMs": 76262.20875,
+    "sourceActualUnchanged": true,
+    "sourceDigestUnchanged": true,
+    "processClosed": true,
+    "ownedGroupRemaining": 0,
+    "signals": [],
+    "ownedRootCleaned": true,
+    "evidence": "docs/verification/t1253/execution/calibrated-whole25-ebf72f4351973c3e394f42e8d9195a64",
+    "failureFields": [
+      "recovered child usage canonical shape",
+      "failure commitResult own optional retryAfterMs undefined"
+    ],
+    "nextCandidateApplied": false,
+    "notFullSystemPass": true
+  },
+  "latestT1252BundledSlowGreen": {
+    "actualPassed": 2,
+    "actualFailed": 0,
+    "headersElapsedMs": 310443.101875,
+    "bodyElapsedMs": 310439.995375,
+    "eachActualPostCount": 1,
+    "completeJsonEof": true,
+    "allChildrenClosedGroupZero": true,
+    "allOwnedListenersClosed": true,
+    "sourceUnchanged": true,
+    "tenRawShaVerifiedByRoot": true,
+    "evidence": "docs/verification/t1252/actual-bundled-slow-green/EVIDENCE.json",
+    "evidenceSha256": "05eaf92f7b3d6e55ef0d5e605a7abcaad5d3e4c0968da71321ca11329130e558",
+    "scope": "固定Node25与实际creatoros.cjs受控loopback协议；不代签公共Native/render、官方模型、App或Windows",
+    "originalTwoRedPreserved": true
+  },
+  "latestT1253V3ThreePhases": {
+    "whole25": {
+      "passed": 23,
+      "failed": 2,
+      "skipped": 0,
+      "exitCode": 1
+    },
+    "whole46": {
+      "passed": 44,
+      "failed": 2,
+      "skipped": 0,
+      "exitCode": 1
+    },
+    "properTypes": {
+      "backendExitCode": 0,
+      "backendElapsedMs": 40012,
+      "workerExitCode": 0,
+      "workerElapsedMs": 7524
+    },
+    "allSourceActualUnchanged": true,
+    "allChildrenClosedGroupZero": true,
+    "allRootsCleaned": true,
+    "evidence": "docs/verification/t1253/V3_THREE_PHASE_ACTUAL_RESULTS.json",
+    "remainingFailures": "同两严格回执形状：usage标准化明细、raw retryAfterMs own undefined；V4候选待双审后完整重跑",
+    "overlappingCountsNeverAdded": true
+  },
+  "latestT1250HostsCdpIsolationApplication": {
+    "actualApplied": true,
+    "testsChanged": 2,
+    "productionChanged": false,
+    "runtimePassed": true,
+    "evidence": "docs/verification/t1250/HOSTS_CDP_ISOLATION_APPROVED_APPLICATION.json",
+    "rootAndIndependentReviewed": true,
+    "currentHostsRuntimeInProgress": false,
+    "cdpOldFailureActualTarget": "UNKNOWN；全局unstubAllEnvs后缺显式BASEURL导致默认发现，未读取真实descriptor核target",
+    "v9Boundary": "所有child默认连接文件/credential固定owned不存在路径；HOME原值不改"
+  },
+  "latestT1250FullHostsAfterIsolation": {
+    "files": 3,
+    "declaredOriginalTests": 36,
+    "passed": 30,
+    "failed": 0,
+    "originalQualifiedNativeSkip": 6,
+    "childElapsedMs": 65843,
+    "sourceUnchanged": true,
+    "closed": true,
+    "remainingOwnedGroupMembers": 0,
+    "evidence": "docs/verification/t1250/runs/ct1250-regression-hosts-v0Tmn9",
+    "firstFull29Pass1Fail6SkipPreserved": true,
+    "nativeApp": false
+  },
+  "latestT1250FullCdpAfterIsolation": {
+    "files": 2,
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0,
+    "childElapsedMs": 88023,
+    "sourceUnchanged": true,
+    "closed": true,
+    "remainingOwnedGroupMembers": 0,
+    "evidence": "docs/verification/t1250/runs/ct1250-regression-cdp-kH7ir7",
+    "firstFull30Pass1FailPreserved": true,
+    "realSlowCliServiceChromiumBodyMs": 72834,
+    "defaultHomeDiscoveryBlocked": true,
+    "notNativeApp": true
+  },
+  "latestT1253V4ActualWhole": {
+    "results": [
+      {
+        "group": "whole25",
+        "files": 3,
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0,
+        "childElapsedMs": 75590,
+        "wrapperElapsedMs": 77345.99954100001,
+        "actualShaUnchanged": true,
+        "ownedGroupZeroAndRootCleaned": true,
+        "evidence": "docs/verification/t1253/execution/calibrated-whole25-48934efbca0c0231dc939e44b28ae9be"
+      },
+      {
+        "group": "whole46",
+        "files": 9,
+        "passed": 46,
+        "failed": 0,
+        "skipped": 0,
+        "childElapsedMs": 137042,
+        "wrapperElapsedMs": 138708.116083,
+        "actualShaUnchanged": true,
+        "ownedGroupZeroAndRootCleaned": true,
+        "evidence": "docs/verification/t1253/execution/regression-whole46-44a4e622e3f5b2ed13bd9c8e33d49b46"
+      }
+    ],
+    "properTypes": {
+      "results": [
+        {
+          "package": "backend",
+          "exitCode": 0,
+          "elapsedMs": 39354
+        },
+        {
+          "package": "ai-worker",
+          "exitCode": 0,
+          "elapsedMs": 7088
+        }
+      ],
+      "actualGuardsAndCleanup": true,
+      "evidence": "docs/verification/t1253/execution/types-c5115258513508a340a10f66bd01c788"
+    },
+    "countsOverlapNeverAdded": true,
+    "sourceSnapshotDigest": "7ea09334f719556fed9d699ae676a9ab1579379b0d132659748e9d21911c3fac",
+    "originalV3FailuresPreserved": true,
+    "notFullSystemAcceptance": true,
+    "summaryEvidence": "docs/verification/t1253/V4_THREE_PHASE_ACTUAL_RESULTS.json",
+    "summarySha256": "77757f2c41897c5f8bd0e4d7cd4ceddffef63950a2b2ec5c25fef9c08ecd4f09"
+  },
+  "latestT1254ActualRegistryMetadata": {
+    "at": "2026-10-12T00:44:33.304742+00:00",
+    "evidence": "docs/verification/t1254/execution/pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c",
+    "summarySha256": "3b138132a57efd54b5619e551d0ef0f10be535f03726985a258b04bb0b0f1ac6",
+    "version": "12.6.0",
+    "metadataExit": 0,
+    "childElapsedMs": 3205,
+    "wrapperElapsedMs": 3429.766166,
+    "sourceUnchanged": true,
+    "ownedGroupClosed": true,
+    "installCompleted": false,
+    "newPnpmExecuted": false,
+    "buildCompleted": false,
+    "productionApplied": false
+  },
+  "latestT1252PublicBodyRuntimeAdmission": {
+    "at": "2026-10-12T00:50:42.613420+00:00",
+    "sourceApplication": "docs/verification/t1252/PUBLIC_SOURCE_APPROVED_APPLICATION.json",
+    "sourceSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+    "toolSha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9",
+    "bindingSha256": "5d62c13de340a088e612d657b422298c0026a4ad37d813d4c459c2ab884e0714",
+    "rootReviewSha256": "505757abf8a353b27ed9eeaa4c21e66e4aa28e902b122fd60184e9a0b054083b",
+    "runtimeApproved": true,
+    "actualCasesCompleted": 0,
+    "actualPassClaim": false,
+    "AppAuthorized": false
+  },
+  "latestPartialSourceSnapshot": {
+    "at": "2026-10-12T02:20:46.722116+00:00",
+    "evidence": "docs/verification/t1246/round-2/unit/current-exact-source-write-set-partial-latest.json",
+    "sha256": "f5d0e51c21b32800bdbf41852591a16b6368cdd902bb732f43f36336ba8a4d85",
+    "sourceEntries": 275,
+    "driverSourceEntries": 100,
+    "shaDrift": 0,
+    "partialSourceSnapshotNotFinalSeal": true,
+    "newChange": "T1252受控delay最低等待一行2a15→11907；原严格110000断言不变",
+    "sourceApplication": "docs/verification/t1252/ROOT_MINIMUM_DELAY_SOURCE_APPROVED_APPLICATION.json"
+  },
+  "latestT1254ActualPnpmBootstrapInstall": {
+    "at": "2026-10-12T00:57:42.557339+00:00",
+    "evidence": "docs/verification/t1254/execution/pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c",
+    "summarySha256": "a1642f5655c43bc16bb984f25ce99f94e760330df9fc76845ca07a45c32c761a",
+    "actualExit": 0,
+    "childElapsedMs": 10887,
+    "wrapperElapsedMs": 11322.834208,
+    "actualImplementationFiles": 458,
+    "actualImplementationBytes": 46657823,
+    "rootAllImplementationShaDrift": [],
+    "registryIntegrityMatched": true,
+    "sourceUnchanged": true,
+    "ownedGroupClosed": true,
+    "newPnpmExecuted": false,
+    "sourceDependencyInstallCompleted": false,
+    "buildCompleted": false,
+    "productionApplied": false
+  },
+  "latestT1252PublicFirstCollectionFailure": {
+    "at": "2026-10-12T00:54:57.607Z",
+    "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID",
+    "finalSha256": "be2e87e895a4205c3381e69ae9b3dbbc5c5cfde154ad6275cd427bf05ff7750c",
+    "code": 143,
+    "budgetExhausted": true,
+    "collectElapsedMs": 240375,
+    "wrapperElapsedMs": 282185.470333,
+    "closed": true,
+    "remainingOwnedGroupMembers": [],
+    "sourceUnchanged": {
+      "allBoundSourceInstalledBrowserNodeBinaryToolSame": true
+    },
+    "actualBodyCount": 0,
+    "findingId": "PT002",
+    "independentDiagnosis": "docs/verification/t1252/INDEPENDENT_PUBLIC_COLLECTION_FIRST_DIAGNOSIS.json",
+    "diagnosisSha256": "67b06adf86be776fd913e9a2ed19a80f6fe83f807b684ee0e10231353a978b6b",
+    "AppAccepted": false
+  },
+  "latestT1252PublicBodiesProgress": {
+    "at": "2026-10-12T02:16:17.565090+00:00",
+    "runRoot": "/private/tmp/t1252p-QTwUuo",
+    "session": 18956,
+    "toolSha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+    "bindingSha256": "978bd84566b88c8512cf5e75ceed60fc034775207dc99f3cbd4774a5822d3360",
+    "actualListCount": 3,
+    "listExit": 0,
+    "listElapsedMs": 4281,
+    "originalNative8HttpBodyActualPass": 1,
+    "originalNativeBodyChildElapsedMs": 12395,
+    "originalNativeBodyResultSha256": "a57dc61f3f9ecdfe8e445576deb9a9d9a5be84b34e49f35dcc911fca3509624b",
+    "originalTaskDeadlineMs": 60000,
+    "otherTwoBodiesCompleted": false,
+    "wholeRuntimeComplete": false,
+    "AppAccepted": false,
+    "filtered56NotCountedAsPass": true,
+    "newNative310SecondsActualPass": 1,
+    "newNativeChildElapsedMs": 318613,
+    "newNativeResultSha256": "d5cfabcd961d03f87a4e9c4bc67b1df048488a9bac313a7c8dd5d7c79557335e",
+    "newNativeOriginalTaskDeadlineMs": 36000000,
+    "actualCompletedBodyCount": 3,
+    "renderBodyCompleted": true,
+    "actualPassedBodyCount": 2,
+    "actualFailedBodyCount": 1,
+    "renderBodyPassed": false,
+    "historicalFinalClosureMissing": true,
+    "scope": "三实际body的JSON 2PASS/1FAIL；wrapper中断无最终close/source-after回执，不代签整轮"
+  },
+  "latestT1254ActualNativePnpmInformation": {
+    "at": "2026-10-12T01:21:00.689256+00:00",
+    "evidence": "docs/verification/t1254/execution/pnpm-native-info-b146c566699c4cde147db3f2db4939f4",
+    "summarySha256": "1846fa3cd5d5f53807b5296712e3001a9ea3549532e71951ce6cb78dcf0ff647",
+    "nativeVersion": "12.6.0",
+    "versionAndInstallHelpExitCodes": [
+      0,
+      0
+    ],
+    "childElapsedMs": [
+      1537,
+      134
+    ],
+    "wrapperElapsedMs": 2083.444125,
+    "newPnpmExecuted": true,
+    "scope": "原生可执行文件只运行version及install --help；未使用旧错误bin/pnpm.cjs路径或自动下载wrapper",
+    "sourceDependencyInstallCompleted": false,
+    "buildCompleted": false,
+    "productionApplied": false,
+    "allChildrenClosedGroupZero": true,
+    "AppAccepted": false
+  },
+  "latestT1252PublicRenderMinimumFailure": {
+    "evidence": "docs/verification/t1252/actual-public-second-render-failed-interrupted/EVIDENCE.json",
+    "evidenceSha256": "c1cb71c940e2161b7f41fb684c4a023b6b54955f044d85683de3ac9cc5e5da86",
+    "rawFilesRootShaVerified": 16,
+    "actualFailed": 1,
+    "actualPassed": 0,
+    "actualBodyDurationMs": 661486.826334,
+    "actualWaitMs": 109999.8515,
+    "requiredMinimumMs": 110000,
+    "missingHistoricalReceipts": [
+      "case-2-child.json",
+      "case-2-proof.json",
+      "final.json"
+    ],
+    "AppAccepted": false,
+    "fixed": true,
+    "candidateApplied": true,
+    "newGreenEvidence": "docs/verification/t1252/actual-public-three-body-green/EVIDENCE.json"
+  },
+  "latestT1254TwoSourceInstallationAdmission": {
+    "at": "2026-10-12T02:20:46.722116+00:00",
+    "evidence": "docs/verification/t1254/ROOT_TWO_SOURCE_INSTALL_V6_RUNTIME_REVIEW.json",
+    "sha256": "b14845fe07aaef60916714db7e18651d82d1506d21eb5d1df6b3df422394476c",
+    "session": 93725,
+    "wholeInstallCompleted": true,
+    "sourceBudgetCandidateApplied": false,
+    "buildCompleted": false,
+    "productionApplied": false,
+    "AppAccepted": false
+  },
+  "latestT1252MinimumRetest": {
+    "at": "2026-10-12T02:47:14.265353+00:00",
+    "runRoot": "/private/tmp/t1252p-E5iiqj",
+    "session": 50113,
+    "nonce": "fc3a1e56-c7af-44fa-b264-c0930c0ba105",
+    "sourceCandidateSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+    "bindingSha256": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3",
+    "toolSha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+    "originalNative8HttpActualPass": 1,
+    "originalNativeChildElapsedMs": 12468,
+    "originalNativeResultSha256": "bb803eb4f11930c97a90055d97a68c8856ddf27c0dcf72d98bd58767ddbc7d25",
+    "otherTwoBodiesCompleted": true,
+    "wholeRuntimeComplete": true,
+    "originalSecondFailureAndMissingClosurePreserved": true,
+    "AppAccepted": false,
+    "evidence": "docs/verification/t1252/actual-public-three-body-green/EVIDENCE.json",
+    "evidenceSha256": "14a5f46c4d345b620064e47cc3e2540f9f73b8a6da31424f7d54e7c0597a6845",
+    "actualSelectedBodies": 3,
+    "actualPassed": 3,
+    "actualFailed": 0,
+    "allFourChildrenClosedGroupZeroSignalsNone": true,
+    "sourceAfterAllSame": true,
+    "ownedSurvivors": [],
+    "wrapperElapsedMs": 1102779.864083,
+    "rawFilesRootShaVerified": 39,
+    "notAppOrOfficialModelOrWindows": true,
+    "actualProtocolOutputBytesNotSavedAsBrowserScreenshots": true
+  },
+  "latestT1254TwoSourceInstallationActual": {
+    "at": "2026-10-12T02:29:17.654529+00:00",
+    "evidence": "docs/verification/t1254/execution/two-source-install-6d5352cae24244b586ad3ae094717bba",
+    "summarySha256": "d29069449f65683dbbc1cb0a6f3c0615b798da0a5ca05419eb52d4b7ab3a7d02",
+    "actualExit": 0,
+    "wrapperElapsedMs": 597011.373375,
+    "childElapsedMs": {
+      "static-original-patch": 128,
+      "native-frozen-lock-install": 357614,
+      "static-frozen-lock-install": 193231
+    },
+    "allThreeChildrenClosedGroupZero": true,
+    "sourceAfterUnchanged": true,
+    "installedInventoryCounts": {
+      "native": 70264,
+      "static": 70248
+    },
+    "installedInventories": {
+      "nativeSha256": "950d820dbdaecc8c3397b4394e777886e55213d639cbcf496a430f70a4c5f712",
+      "staticSha256": "0d66a037620173f96b27ce936f29ce644509662f20020b97d62645012d7579fa"
+    },
+    "originalFetchAndLockUnchanged": true,
+    "newDependenciesExecuted": false,
+    "testsCompleted": false,
+    "buildCompleted": false,
+    "productionApplied": false,
+    "AppAccepted": false
+  },
+  "latestT1252PublicThreeBodyGreen": {
+    "at": "2026-10-12T02:47:14.265353+00:00",
+    "runRoot": "/private/tmp/t1252p-E5iiqj",
+    "session": 50113,
+    "nonce": "fc3a1e56-c7af-44fa-b264-c0930c0ba105",
+    "sourceCandidateSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+    "bindingSha256": "dd018f772aa7bbd10b62d3bc2b982e45822986bff84383aa44d79a420d3828a3",
+    "toolSha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+    "originalNative8HttpActualPass": 1,
+    "originalNativeChildElapsedMs": 12468,
+    "originalNativeResultSha256": "bb803eb4f11930c97a90055d97a68c8856ddf27c0dcf72d98bd58767ddbc7d25",
+    "otherTwoBodiesCompleted": true,
+    "wholeRuntimeComplete": true,
+    "originalSecondFailureAndMissingClosurePreserved": true,
+    "AppAccepted": false,
+    "evidence": "docs/verification/t1252/actual-public-three-body-green/EVIDENCE.json",
+    "evidenceSha256": "14a5f46c4d345b620064e47cc3e2540f9f73b8a6da31424f7d54e7c0597a6845",
+    "actualSelectedBodies": 3,
+    "actualPassed": 3,
+    "actualFailed": 0,
+    "allFourChildrenClosedGroupZeroSignalsNone": true,
+    "sourceAfterAllSame": true,
+    "ownedSurvivors": [],
+    "wrapperElapsedMs": 1102779.864083,
+    "rawFilesRootShaVerified": 39,
+    "notAppOrOfficialModelOrWindows": true,
+    "actualProtocolOutputBytesNotSavedAsBrowserScreenshots": true
+  },
+  "latestT1254ActualFirstBuildToolFailure": {
+    "at": "2026-10-12T03:01:44.594341+00:00",
+    "evidence": "docs/verification/t1254/execution/request-build-55d29f3ee1faeb10e9f588d1baf25707",
+    "summarySha256": "b143cd8bed9dd50482a2998bc96dd2ceed6440397e10a86116c8f68f3f5e3a9b",
+    "wrapperExit": 1,
+    "wrapperElapsedMs": 55735.437333999995,
+    "actualCompleteSteps": 0,
+    "plannedSteps": 24,
+    "firstChildExit": 65,
+    "firstChildElapsedMs": 118,
+    "firstChildClosedGroupZero": true,
+    "actualError": "sandbox-exec: host must be * or localhost in network address",
+    "sourceAfterBoundInputsUnchanged": true,
+    "sourceBudgetApplied": false,
+    "actualRedOccurred": false,
+    "newDependencyTestExecuted": false,
+    "buildCompleted": false,
+    "productionApplied": false,
+    "AppAccepted": false
+  },
+  "latestT1254ActualNodeInitializationFailure": {
+    "task": "T-1254",
+    "scope": "真实V9首次Node初始化失败，只读原始文件与独核证据核对",
+    "asOf": "2026-10-12T03:29:08.032380+00:00",
+    "nonce": "b559d0cf89accea8faf82f2c00370e9f",
+    "actualExitCode": 1,
+    "elapsedMs": 58346.031624999996,
+    "completedSteps": 0,
+    "declaredSteps": 25,
+    "firstChild": {
+      "pid": 89663,
+      "code": null,
+      "signal": "SIGABRT",
+      "elapsedMs": 274,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    "probeOrTestsStarted": false,
+    "privateCandidateApplied": false,
+    "productCopied": false,
+    "diagnosisConfirmed": "实际标准输出fd1的fstat错误分支ABORT",
+    "diagnosisInference": "HOME内日志FD与child禁止HOME访问冲突；具体errno未观察，下一窄候选需实际验证",
+    "diagnosisSha256": "9f02bc91e38523c87aee83ee49d255e3258fec1857f7e52be40046432dec64de",
+    "historicalEvidenceUnchanged": true,
+    "evidenceSha256": "e165362c7dd9fa30deb6fc616880a495500714f7670b7d539156eab34d95aab3",
+    "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/ROOT_V9_ACTUAL_NODE_INITIALIZATION_FAILURE.json"
+  },
+  "latestT1254ActualStaticGraphCheckerFailure": {
+    "task": "T-1254",
+    "asOf": "2026-10-12T03:50:42.990091+00:00",
+    "scope": "真实V10首网络通过、第二AST校验失败；非请求预算TDD红测",
+    "nonce": "2829e301398ddc9461fe76cb1ff133f1",
+    "actualExitCode": 1,
+    "elapsedMs": 103057.347417,
+    "completedSteps": 1,
+    "declaredSteps": 25,
+    "children": [
+      {
+        "name": "owned-network-boundary",
+        "code": 0,
+        "elapsedMs": 215,
+        "signal": null,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "archivedLogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "static-resource-checker-tests",
+        "code": 1,
+        "elapsedMs": 2096,
+        "signal": null,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "archivedLogSha256": "8ff4c6678bd1ad456cbf4dce0591813f393afa5548a06fab0b22a45a363fe1aa"
+      }
+    ],
+    "sourceAfterUnchanged": true,
+    "sourceSnapshotDigest": "9135874a042fb63479043f596d311e0812719ea4d3eb2e1abb4adbbe309b12be",
+    "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+    "failure": "真实mapDeps正例AST的reuse未被现LogicalExpression断言接受；实际AST包装形状待确认",
+    "checkerResultJSONMissing": true,
+    "original8OrRealRequestRedStarted": false,
+    "privateCandidateApplied": false,
+    "productCopied": false,
+    "noApp": true,
+    "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/ROOT_V10_ACTUAL_STATIC_GRAPH_CHECKER_FAILURE.json",
+    "evidenceSha256": "101ea460bfa6c0d244c963922a97e95343f48e37247dce524e9c4707a173cd8e"
+  },
+  "latestT1254ActualOld30sRedAndSocketProofFailure": {
+    "task": "T-1254",
+    "asOf": "2026-10-12T04:06:19.842820+00:00",
+    "scope": "旧31秒合法请求真实30秒abort已发生；清理证明未被完整Gate接受",
+    "nonce": "7898956fe904642f2d58a421f5350a39",
+    "actualExitCode": 1,
+    "elapsedMs": 245642.264459,
+    "completedChildSteps": 4,
+    "declaredChildSteps": 25,
+    "actualOriginalRequestEarlyAbortObserved": true,
+    "originalSourceSha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+    "requestElapsedMs": 30003.785832999998,
+    "singlePost": 1,
+    "originalSuccessAssertionFailed": {
+      "name": "AssertionError",
+      "message": "合法完整正文应成功\n+ actual - expected\n\n+ {\n+   message: 'This operation was aborted',\n+   name: 'AbortError'\n+ }\n- null\n"
+    },
+    "listenerClosedAtMeasurement": true,
+    "remainingSocketsAtMeasurement": 1,
+    "fullRedAndCleanupProofAccepted": false,
+    "sourceAfterUnchanged": true,
+    "privateCandidateApplied": false,
+    "productCopied": false,
+    "nativeOld8ActualPassed": 8,
+    "staticResourceCheckerActualPassed": 9,
+    "App": false,
+    "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/ROOT_V11_ACTUAL_OLD30S_RED_AND_SOCKET_CLOSE_PROOF_FAILURE.json",
+    "evidenceSha256": "7e474fb4171bbb75a94cfec1d6accce59c934f2e5a2e77779c79273a40747884"
+  },
+  "latestT1254ActualTwoRedsAndPrivateCopyModeFailure": {
+    "task": "T-1254",
+    "asOf": "2026-10-12T04:32:37.863712+00:00",
+    "scope": "两个真实RED及四private候选内容已发生；两个static权限复制改变使后验失败",
+    "nonce": "14bcbffb7152bdb2b58cd5a252c2d27e",
+    "actualExitCode": 1,
+    "elapsedMs": 494006.856042,
+    "completedChildSteps": 6,
+    "declaredChildSteps": 25,
+    "originalAbsoluteObservationDeadlineUTC": "2026-10-13T10:50:47.959Z",
+    "originalSummaryStartedAt": "2026-10-12T04:17:47.959Z",
+    "originalTotalBudgetMs": 109980000,
+    "old8AndCompleteRealRedProofs": [
+      {
+        "role": "native",
+        "original8Passed": 8,
+        "old30sAbortElapsedMs": 30004.740542,
+        "singlePost": 1,
+        "socketCloseEvents": 1,
+        "socketPromiseCount": 1,
+        "remainingSockets": 0,
+        "cleanupComplete": true,
+        "childCode": 1,
+        "processClosed": true,
+        "ownedGroupMembers": []
+      },
+      {
+        "role": "static",
+        "original8Passed": 8,
+        "old30sAbortElapsedMs": 30004.243958000003,
+        "singlePost": 1,
+        "socketCloseEvents": 1,
+        "socketPromiseCount": 1,
+        "remainingSockets": 0,
+        "cleanupComplete": true,
+        "childCode": 1,
+        "processClosed": true,
+        "ownedGroupMembers": []
+      }
+    ],
+    "currentAppliedPrivateFiles": [
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.ts",
+        "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+        "actualModeOctal": "0o644",
+        "expectedOriginalModeOctal": "0o644",
+        "uid": 501
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.test.ts",
+        "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+        "actualModeOctal": "0o644",
+        "expectedOriginalModeOctal": "0o644",
+        "uid": 501
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+        "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+        "actualModeOctal": "0o644",
+        "expectedOriginalModeOctal": "0o664",
+        "uid": 501
+      },
+      {
+        "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts",
+        "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+        "actualModeOctal": "0o644",
+        "expectedOriginalModeOctal": "0o664",
+        "uid": 501
+      }
+    ],
+    "privateCandidateApplied": true,
+    "applicationReceiptMissing": true,
+    "successfulSourceAfterMissing": true,
+    "sourceAfterErrorPreserved": true,
+    "whole24OrGreenBuildStarted": false,
+    "productCopied": false,
+    "priorFailuresUnchanged": true,
+    "noApp": true,
+    "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/ROOT_V12_ACTUAL_TWO_REDS_AND_PRIVATE_COPY_MODE_FAILURE.json",
+    "evidenceSha256": "75e921d90010c41925f5d2e9a96bc3c02f0d979d9ae6ec2a855156eaae39c639"
+  },
+  "latestT1254ContinuationReadOnlyPreparation": {
+    "scope": "只读完成续段准备，尚未执行",
+    "sourceSnapshotDigest": "26b028843e335f4234f29603baa2ed50aaa1d663710c0b2917cd537ff6088823",
+    "sealSha256": "948448ff91957eeb0d7d613f7716d292f6c44c780d67072f7c651bfc54c634b5",
+    "rootFreshFullCheck": "docs/verification/t1254/ROOT_POST_V12_CONTINUATION_V13_FULL_INPUT_RECHECK.json",
+    "rootFreshFullCheckSha256": "2d0f6dd99b359794aceb4031f849dd92052ff31740f4bed9b1086079b6a21cb9",
+    "inputRows": 1752,
+    "toolRows": 141220,
+    "drift": 0,
+    "originalV12Exit1AndMissingReceiptsPreserved": true,
+    "privateStaticModeRepairPending": true,
+    "remainingOriginalSteps": 19,
+    "originalUTCUpperBound": "2026-10-13T10:50:47.959Z",
+    "localSingleBirthBudgetMs": 88020000,
+    "runtimeStarted": false,
+    "productionCopy": false,
+    "AppAcceptance": false
+  },
+  "latestT1254V13ActualInProgress": {
+    "run": "docs/verification/t1254/execution/request-build-907bb885eb0fd4f595b8d1f2b70fc29b",
+    "rootAdmissionSha256": "b6dec7049e38eeb79db6a0699a471899d3d9193cd0e6c981936876df90e3f73d",
+    "independentReviewSha256": "c5ff5340e31c95921bf60554de486bb216f1f4f9ab6a1699501fef147e7aabe8",
+    "nativeWhole24": {
+      "passed": 24,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "staticWhole24": {
+      "passed": 24,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "exactPrivateModeRestored": true,
+    "realGreen": "both_3_pass",
+    "build": "native_pass_static_failed_TS6133",
+    "productionCopy": false,
+    "oldV12Exit1MissingPreserved": true,
+    "AppAcceptance": false,
+    "runtimeFinished": true
+  },
+  "latestT1254ActualStaticBuildFailure": {
+    "run": "docs/verification/t1254/execution/request-build-907bb885eb0fd4f595b8d1f2b70fc29b",
+    "rootProof": "docs/verification/t1254/ROOT_V13_ACTUAL_STATIC_BUILD_UNUSED_BINDINGS_FAILURE.json",
+    "rootProofSha256": "f1a69dc144ec8f112645d45dded4cf8073bf05c478e6d081440e8820a85f8e69",
+    "wrapperExit": 1,
+    "elapsedMs": 1153972.482,
+    "newSegmentCompleted": 10,
+    "newSegmentPlanned": 19,
+    "actualChildReceipts": 11,
+    "nativeWhole24Pass": 24,
+    "staticWhole24Pass": 24,
+    "nativeRealSlow3Pass": 3,
+    "staticRealSlow3Pass": 3,
+    "bothSharedTypesExit": 0,
+    "nativeOriginalBuildExit": 0,
+    "nativeOriginalBuildVerifyExit": 0,
+    "staticOriginalBuildExit": 1,
+    "staticFullWebTypesErrors": [
+      "TS6133 showAIToolbox",
+      "TS6133 isMobile",
+      "TS6133 showEditor"
+    ],
+    "sourceAfterSame": true,
+    "privateModeRepaired": true,
+    "productionCopy": false,
+    "staticPartialDistNotAccepted": true,
+    "rootCauseTask": "T-1256",
+    "rootCauseSpecSha256": "b7bddf48b56b3590ad95c22dd88d0c41be067f6cc4881a1870cce39e3a0f5fe3",
+    "AppAcceptance": false
+  },
+  "latestT1256V14RuntimeAdmission": {
+    "run": "docs/verification/t1254/execution/request-build-ba7a4e28f106fe98777e78428b4fb135",
+    "runtimeAdmission": "docs/verification/t1256/ROOT_V14_FINAL_RUNTIME_REVIEW.json",
+    "runtimeAdmissionSha256": "034e1a784dc4839b2a8685b0a7851cc994028b095b63958e1b4f26d94ee14694",
+    "source": "42ba082e18c46ef3378807edf2a3dc03e678c0d561387017a3978772289929f7",
+    "tool": "1724b9b96eae4f890e189539fecb98231249b407c97630b465d912c6a6c1f0b0",
+    "peerExactToolReview": "5590547329a0f930e9a412afa6615f19a55ff60e6c3291106113e6e6c54ef6d1",
+    "rootFullActualByteProof": "b158c89c37222884f2804f8cb328298a33d79e5918fe74038bfd8757fe1e4bc2",
+    "plannedRemainingOriginalStages": 9,
+    "inputRows": 1837,
+    "toolRows": 141614,
+    "carriedNativeActualFiles": 395,
+    "localSingleBirthBudgetMs": 36720000,
+    "earlierInheritedUTC": "2026-10-13T05:18:07.699Z",
+    "status": "actual_started_pending_child_result",
+    "productionCopy": false,
+    "oldFailedWrappersPreserved": true,
+    "AppAcceptance": false
+  },
+  "latestT1256V14Actual": {
+    "run": "docs/verification/t1254/execution/request-build-ba7a4e28f106fe98777e78428b4fb135",
+    "wrapperExit": 1,
+    "elapsedMs": 179108.132166,
+    "newSegmentCompleted": 1,
+    "newSegmentPlanned": 9,
+    "actualChildReceipts": 2,
+    "PanelCleanupActual": true,
+    "staticOriginalBuildExit": 0,
+    "staticOriginalBuildMs": 16973,
+    "properOriginalWebTypesExit": 0,
+    "staticGraphExit": 1,
+    "staticGraphMs": 2995,
+    "sourceAfterSame": true,
+    "rootProof": "docs/verification/t1256/ROOT_V14_ACTUAL_TYPE_GREEN_GRAPH_BASE_REFERENCE_FAILURE.json",
+    "rootProofSha256": "5723f77b1bf487164aa43bc58c02d322461815fbeb1c64ed2f476a53d86e0289",
+    "compiledRootBaseNotAResourceConsumer": "window.location.pathname.includes(BASE)",
+    "nextScope": "原9保持+真实pathname族及negative；Graph parser精确双审后原8续段",
+    "earlierInheritedUTC": "2026-10-12T16:01:07.952Z",
+    "productionCopy": false,
+    "AppAcceptance": false
+  },
+  "latestT1254V15Actual": {
+    "nonce": "668b429310740f9889089f8c6c3f0d26",
+    "wrapperExit": 0,
+    "elapsedMs": 484392.85175,
+    "newCombinedProbeAndEightTail": 9,
+    "allNineClosedGroupZero": true,
+    "sourceBeforeAfterSame": true,
+    "sourceSnapshotDigest": "e0a4f71454a2e794a2fdc2cd0cb46cb78773360de6ce29c24833dc6ee3c397ce",
+    "toolDigest": "4deaac8de48aab3c60d6028a41362f6df14cbf7b7847e17d179793e2dda37dc8",
+    "actualScannerJsFiles": 485,
+    "scannerFailures": 0,
+    "nativeActualOutputFiles": 395,
+    "staticActualDeliveryFiles": 300,
+    "sourceTarCompleteNativeMembers": 819,
+    "sourceTarCompleteStaticMembers": 804,
+    "threeOriginalGitPatchChecksExit0": true,
+    "rootProof": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/ROOT_V15_ACTUAL_COMPLETE_TAIL_AND_TAR_RECHECK.json",
+    "rootProofSha256": "38aa823df623b8446b87171c01c560a54a64d80cbe0be5cde674b834500f5bee",
+    "factsSha256": "0b7e01654d89f50e587d189de3f072b6da69287189054ac1439c7d52360dc895",
+    "historicalWrappersExit1AndMissingReceiptsPreserved": true,
+    "productionCopy": false,
+    "finalBrowser": false,
+    "newPackage": false,
+    "AppAcceptance": false
+  },
+  "latestExternalPureBudget": {
+    "result": "FAIL",
+    "wrapperEOF": 1,
+    "childCode": 1,
+    "actualElapsedMs": 209,
+    "evidenceSha256": "65266392ff9713c8e7ac38b8067e7f4c4958969223231fc5c3b4e1c03fa7b206",
+    "oldJSONStartupMs": 1800000,
+    "actualConsumerStartupMs": 2400000,
+    "next7391SourceOnly": true,
+    "browserAcceptanceComplete": false,
+    "successorActual": {
+      "bindingSHA": "7391c163398d7fe7f7b11fbcd51d5482da3005e07fef5aa9e2c974b028a6047c",
+      "actualResult": "PASS",
+      "wrapperEOF": 0,
+      "childCode": 0,
+      "evidenceSHA": "b0c0983c96e0c0c967fc6df691a88223ad3b7d9817558aec3c2099a410be3da0",
+      "browserAcceptanceComplete": false
+    }
+  },
+  "latestDeliveryValidation": {
+    "result": "FAIL",
+    "wrapperEOF": 1,
+    "childrenPassed": 3,
+    "childrenTotal": 3,
+    "error": "PREPARED_OWNER_PATH",
+    "sourceAfterInputsUnchanged": true,
+    "productCopied": false,
+    "newEarliestInheritedUTC": "2026-10-12T13:12:37.651Z",
+    "continuation": "only result path/ownership/binding observation; no child repetition",
+    "successorProjectionActual": {
+      "result": "PASS",
+      "wrapperEOF": 0,
+      "run": "delivery-postprocess-d7598cc0b19c22378e2b6c70bf0065a0",
+      "originalFailurePreserved": true
+    }
+  },
+  "latestDoocsProductionCopy": {
+    "actualResult": "PASS",
+    "naturalEOF": 0,
+    "writes": 73,
+    "deletes": 53,
+    "unchanged": 636,
+    "wholeDeliveryFiles": 709,
+    "beforeBackups": 66,
+    "evidenceSHA": "3552ee6b93cebce37d3ef4199cdb744ca8cc8b0b7d2b7b6fa6ecbc2739729a1e",
+    "peerActualSHA": "8328d830b558eb71fba5020e38f0187b0bf33fffb87df71eaefd0b25ff9a3bda",
+    "exactStageActualExit": 0,
+    "allProductUnstagedPaths": 0,
+    "newPackageAndBrowserAcceptancePending": true
+  },
+  "latestFinalOriginalGatesAfterDoocs": {
+    "timeoutActualEOF": 0,
+    "originalCommandGroups": 8,
+    "vitestPassed": 158,
+    "nodePassed": 11,
+    "windowsPolicyPassed": 5,
+    "windowsAppAccepted": false,
+    "boundaryActualEOF": 0,
+    "newBoundaryViolations": 0,
+    "remainingBoundaryBaseline": 5,
+    "orphanActualEOF": 0,
+    "orphanErrors": 0,
+    "orphanWarnings": 100,
+    "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+    "AppAccepted": false
+  },
+  "latestStageSourceAudit": {
+    "actualEOF": 0,
+    "session": 95729,
+    "reportSHA256": "f70fb8817204b544e80dad365a4cfe60fd6bc11c016b626a9812e6a6e4ffcc7f",
+    "sourceCount": 348,
+    "driverCount": 100,
+    "deleteCount": 53,
+    "unknown": 0,
+    "actualInventoryCount": 6369,
+    "actualApprovedRenamePairs": 52,
+    "originalFirst100Unchanged": true,
+    "oldV5ActualEOF1Preserved": true,
+    "purePositivePassed": 52,
+    "pureNegativePassed": 421,
+    "newHEADPackageBrowserPending": true
+  },
+  "latestActualGlobalReconcile": {
+    "session": 94775,
+    "pmemEOF": 0,
+    "reconcileEOF": 1,
+    "errors": 23,
+    "warnings": 0,
+    "exactNewErrorLinesComparedToT1238": 0,
+    "rootCauseTask": "T-1204",
+    "backlogCapacityTask": "T-1171",
+    "globalGreen": false,
+    "threeLessonCauseAuditPending": true
+  },
+  "latestGlobalLessonIndependentRetest": {
+    "session": 78569,
+    "actualEOF": 0,
+    "LED018VitestPassed": 155,
+    "LED018RustPassed": 17,
+    "LED057RustNoDefaultPassed": 15,
+    "sourceBeforeAfterSame": true,
+    "originalGlobal23FAILPreserved": true,
+    "LED052OriginalEntryENVStillFailed": true,
+    "globalGreen": false,
+    "AppAccepted": false
+  }
+}

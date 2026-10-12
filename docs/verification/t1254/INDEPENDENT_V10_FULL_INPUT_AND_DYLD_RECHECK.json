@@ -1,0 +1,67 @@
+{
+  "task": "T-1254",
+  "status": "PASS_ACTUAL_FULL_BYTE_RECHECK_NO_RUNTIME",
+  "sealFile": "/tmp/t1254-readonly/REQUEST_BUILD_V10_FULL_SEAL.json",
+  "sealSha256": "a73dea901ebc2b03d177ea6db62c1a64234d29ae92e6005cd115c74396229a59",
+  "prepareSha256": "14832062217cf38ba794d0b94f84f5dbafc01495ff8791a2188f76f4146b01be",
+  "sourceSnapshotDigest": "9135874a042fb63479043f596d311e0812719ea4d3eb2e1abb4adbbe309b12be",
+  "toolDigest": "cd9957aafc27c224e06be8735af5b9699cd4d5aecf3aa70b0e6d0528eabd5336",
+  "inputCount": 1693,
+  "toolRows": 141220,
+  "regularOrTargetFullByteChecks": 135459,
+  "linkChecks": 7488,
+  "bytesRead": 2668035576,
+  "elapsedMs": 21763.442,
+  "drift": [],
+  "oldToolsExactlySameSuffix": true,
+  "stepsAndFull109260000BudgetIdentical": true,
+  "dynamicFiles": 82,
+  "dynamicLinks": 37,
+  "dynamicEdges": 51,
+  "systemOsBoundaryEdges": 234,
+  "actualOtoolMetadataContexts": 84,
+  "actualExecutablePathTokenConsumers": 0,
+  "rpathFirstExistingSelectionsActualMatch": true,
+  "mutableSourcesBeforeRealRed": [
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.ts",
+      "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "state": "exact_original_before_real_red",
+      "actualRecheckSame": true
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+      "state": "exact_original_before_real_red",
+      "actualRecheckSame": true
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+      "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "state": "exact_original_before_real_red",
+      "actualRecheckSame": true
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+      "state": "exact_original_before_real_red",
+      "actualRecheckSame": true
+    }
+  ],
+  "harnessFailuresPreserved": [
+    {
+      "attempt": 1,
+      "kind": "AssertionError",
+      "fileSuffix": "tools/node_modules/.bin/pn",
+      "reason": "旧bootstrap row是realPath字段且无link，初次harness误按regular；修harness支持既有schema，封印/工具/源码不改"
+    },
+    {
+      "attempt": 2,
+      "kind": "AttributeError list has no items",
+      "phase": "全hash和84 metadata核通过后，mutable records投影误按dict；实际schema是带role/mutableConsumers数组，仅修只读harness投影"
+    }
+  ],
+  "harnessFailuresNotCandidateOrRuntimeFailures": true,
+  "noChildExecution": true,
+  "noProductChange": true
+}

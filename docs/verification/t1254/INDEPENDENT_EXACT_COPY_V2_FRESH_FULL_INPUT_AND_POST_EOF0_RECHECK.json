@@ -1,0 +1,376 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T08:54:56.888587+00:00",
+  "status": "EXACT_COPY_V2_FRESH_FULL_INPUT_BEFORE_AND_ACTUAL_POSTPROJECTION_RECHECK_PASS_NOT_COPY",
+  "indexSha256": "7c6ae7440bceb425d70014d6c6316cadaff8c142bc0a1af51cffa9cd5cb92f95",
+  "sealSha256": "c12d7da875d293b0fad7c2aea67c4a0b101e7ad5bd18e17886cc1910fb8c254e",
+  "runnerSha256": "e2e1e742a384f1d222a60ad143f5e36b88c27272119eaa1a65c7ae72b2a70f9f",
+  "manifestSha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd",
+  "postprocessProofSha256": "1137e5f28faed37ac1a98279f8dfedc482a0afa31cd9ee186477222a36552767",
+  "inputSha256": "9b8ba2a32370272ed0897aa98a40ef177e47eb8dcacb8142025aba818681c68e",
+  "fullRows": 144537,
+  "sourceSealRows": 9,
+  "postNaturalEOF0ActualFiveRawAndBeforeAfterSame": true,
+  "original9F4Wrapper1AndMissingNotRewritten": true,
+  "core57629ActualEOF0CurrentBinding": true,
+  "counts": {
+    "write": 73,
+    "delete": 53,
+    "unchanged": 636
+  },
+  "allCurrentBeforeAfterCandidateModesUIDBytesSame": true,
+  "allExistingMutationTargetsNlink1": [
+    {
+      "path": "frontend/public/reference-editors/doocs-md/index.html",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/SHA256.json",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/native.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/doocs-md/native-patches.diff",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/doocs-md/native-source.tar.gz",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/scripts/verify-native-editors.mjs",
+      "nlink": 1
+    },
+    {
+      "path": "reference-editors/doocs-md/native/NATIVE_PATCHES_FROM_T1049.diff",
+      "nlink": 1
+    },
+    {
+      "path": "reference-editors/doocs-md/native/README.md",
+      "nlink": 1
+    },
+    {
+      "path": "reference-editors/doocs-md/native/SHA256.json",
+      "nlink": 1
+    },
+    {
+      "path": "reference-editors/doocs-md/native/VERIFY.md",
+      "nlink": 1
+    },
+    {
+      "path": "reference-editors/doocs-md/native/native-delivery.json",
+      "nlink": 1
+    },
+    {
+      "path": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "nlink": 1
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-B_etG6Rp.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-luI7Wkxl.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-Cl7WEyAt.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-B7Jpldbh.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-BXHl_kMQ.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-wZLC_pTV.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bd_SEvWI.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-CN0-Wcs0.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/providers-5OiUFt8V.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/render-C0-GwsvR.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bz80_cwg.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-CP-K_yWo.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-BawQ5Q6I.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/css/md-index-9PNpNGUa.css",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-C-l5A6vK.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-DfNpoxs6.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-BO3RH86h.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Be9_RozG.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-BJdrURW-.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-C1zEtBm-.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CB74oqBL.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D8m8Y5IS.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-TEm2HKiq.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-C-hBAbgh.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-9ZpYLtCg.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-DEpTD7Ru.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-CNJopoPm.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-eximbpzJ.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-BXqfIH1Q.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CPsXDRjK.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-BjUIeOur.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-BsDUHnIi.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-auth-Lj20kOUp.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-client-BtSlI_Gv.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-config-BhBc-hVt.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-BLaxswny.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-export-BG6p5-Wz.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-DYwdTMDU.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-CFPNYZKu.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-CSX1gdNq.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-BCzwh0d_.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-aZldM3cv.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dc8_KifI.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-y0FDEGp1.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-sync-DJtROAMh.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-Cv1siQDW.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-B72X2veA.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-BYymQo69.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-D-3eBhAl.js",
+      "nlink": 1
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-Cw9gwpgj.js",
+      "nlink": 1
+    }
+  ],
+  "parentDirectories": {
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606165
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606163
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606132
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348605877
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348592577
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/native": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606177
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/native/chunks": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606184
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/static/css": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606580
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/static": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606579
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/static/js": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606592
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/sources/doocs-md": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606957
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/sources": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606953
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348607006
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/reference-editors/doocs-md/native": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348610141
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/reference-editors/doocs-md": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348610140
+    },
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/reference-editors": {
+      "uid": 501,
+      "mode": 493,
+      "inode": 348610138
+    }
+  },
+  "otherThreeEditorFullFileSetsAndManifestValuesSame": true,
+  "fullDraftDiffStrictContextMechanicallyReconstructsV2": true,
+  "readUniqueBytes": 2418272242,
+  "elapsedMs": 33991.682666994166,
+  "drift": [],
+  "copyExecutedByReviewer": false
+}

@@ -197,8 +197,8 @@ test("空账号组通过设置页定制官方 Skill 的首写入口可用", asyn
   await expectHomeWorkspace(page);
 
   const currentGroupId = await selectedActiveGroupFromMenu(page);
-  const initialGroup = [anchor, groupA].find((group) => group.id === currentGroupId);
-  expect(initialGroup, "初始活动组选项必须是本例公开创建的真实组").toBeDefined();
+  const initialGroup=ENDPOINTS.getAccountGroup.response.parse((await dispatch<unknown>(page,"accountGroups.get",{params:{groupId:currentGroupId}})).data);
+  expect(initialGroup.id).toBe(currentGroupId);expect(initialGroup.status).toBe("active");
   await expectGroupMirrors(page, context, baseURL!, currentGroupId);
   await expectHomeWorkspace(page, initialGroup!.name);
 

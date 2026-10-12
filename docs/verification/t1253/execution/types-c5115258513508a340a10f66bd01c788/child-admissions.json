@@ -1,0 +1,32 @@
+[
+  {
+    "label": "environment-proof",
+    "elapsedMs": 539.295292,
+    "remainingMs": 12479460.704708,
+    "requiredMs": 10260000,
+    "positiveMs": 180000,
+    "futurePositiveMs": 2400000,
+    "remainingChildren": 3,
+    "independentOuterDeadline": "2026-10-12T03:46:32.103Z"
+  },
+  {
+    "label": "types:backend",
+    "elapsedMs": 761.332042,
+    "remainingMs": 12479238.667958,
+    "requiredMs": 7920000,
+    "positiveMs": 1200000,
+    "futurePositiveMs": 1200000,
+    "remainingChildren": 2,
+    "independentOuterDeadline": "2026-10-12T03:46:32.103Z"
+  },
+  {
+    "label": "types:ai-worker",
+    "elapsedMs": 40116.220417000004,
+    "remainingMs": 12439883.779583,
+    "requiredMs": 4560000,
+    "positiveMs": 1200000,
+    "futurePositiveMs": 0,
+    "remainingChildren": 1,
+    "independentOuterDeadline": "2026-10-12T03:46:32.103Z"
+  }
+]

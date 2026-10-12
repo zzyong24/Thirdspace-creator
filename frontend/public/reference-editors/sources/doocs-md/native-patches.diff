@@ -3487,3 +3487,579 @@
  const cancel=new AbortController()
  const handle=await module.mount(first.container,{owner,theme,portalContainer:first.portal,signal:cancel.signal,onChanged:value=>changed.push(value),onError:value=>errors.push(value),importMedia:async file=>{imports.push(file);if(deferImports)return await new Promise(resolve=>{lateReceipt=resolve});return {mediaId:'creatoros-asset:import-asset:import-file'}}})
  assert.equal(first.container.querySelectorAll('.cm-editor').length,1)
+diff --git a/packages/shared/src/utils/fetch.ts b/packages/shared/src/utils/fetch.ts
+--- a/packages/shared/src/utils/fetch.ts
++++ b/packages/shared/src/utils/fetch.ts
+@@ -1,123 +1,138 @@
+-export interface RequestConfig {
+-  url?: string
+-  method?: string
+-  headers?: Record<string, string>
+-  data?: unknown
+-  timeout?: number
+-}
+-
+-// Some APIs (e.g. WeChat media/uploadimg) return a JSON body with a
+-// text/plain Content-Type. Mirror axios's forcedJSONParsing behavior so
+-// such responses are still parsed into objects.
+-function tryParseJson(text: string): unknown {
+-  const trimmed = text.trim()
+-  if (!trimmed.startsWith(`{`) && !trimmed.startsWith(`[`))
+-    return text
+-  try {
+-    return JSON.parse(trimmed)
+-  }
+-  catch {
+-    return text
+-  }
+-}
+-
+-async function request<T = unknown>(config: RequestConfig): Promise<T> {
+-  const method = (config.method || `GET`).toUpperCase()
+-  const url = config.url || ``
+-  const headers: Record<string, string> = { ...config.headers }
+-  const controller = new AbortController()
+-  const timeout = config.timeout ?? 30_000
+-  const timer = setTimeout(() => controller.abort(), timeout)
+-
+-  let body: BodyInit | undefined
+-  if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {
+-    if (typeof FormData !== `undefined` && config.data instanceof FormData) {
+-      body = config.data
+-      // Browser sets multipart boundary; drop explicit multipart Content-Type
+-      for (const key of Object.keys(headers)) {
+-        if (key.toLowerCase() === `content-type` && headers[key].includes(`multipart/form-data`))
+-          delete headers[key]
+-      }
+-    }
+-    else if (typeof config.data === `object` && config.data !== null && !(config.data instanceof Blob) && !(config.data instanceof ArrayBuffer)) {
+-      body = JSON.stringify(config.data)
+-      if (!Object.keys(headers).some(k => k.toLowerCase() === `content-type`))
+-        headers[`Content-Type`] = `application/json`
+-    }
+-    else {
+-      body = config.data as BodyInit
+-    }
+-  }
+-
+-  try {
+-    const res = await globalThis.fetch(url, {
+-      method,
+-      headers,
+-      body,
+-      signal: controller.signal,
+-    })
+-
+-    const contentType = res.headers.get(`content-type`) || ``
+-    const data = contentType.includes(`application/json`)
+-      ? await res.json()
+-      : tryParseJson(await res.text())
+-
+-    if (!res.ok) {
+-      const err = Object.assign(new Error(`Request failed with status ${res.status}`), {
+-        response: { status: res.status, data },
+-        data,
+-        status: res.status,
+-      })
+-      return Promise.reject(err)
+-    }
+-
+-    // Match previous axios interceptor: reject empty bodies
+-    if (data === null || data === undefined || data === ``)
+-      return Promise.reject(new Error(`Empty response`))
+-
+-    return data as T
+-  }
+-  finally {
+-    clearTimeout(timer)
+-  }
+-}
+-
+-function createDataMethod(method: string) {
+-  return <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) =>
+-    request<T>({ ...config, url, method, data })
+-}
+-
+-function createConfigMethod(method: string) {
+-  return <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) =>
+-    request<T>({ ...config, url, method })
+-}
+-
+-interface FetchCallable {
+-  // Two type params kept for call-site compatibility (request body / response)
+-  <_TReq = unknown, TRes = unknown>(config: RequestConfig): Promise<TRes>
+-  <_TReq = unknown, TRes = unknown>(url: string, config?: RequestConfig): Promise<TRes>
+-  get: <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) => Promise<T>
+-  post: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
+-  put: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
+-  delete: <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) => Promise<T>
+-  patch: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
+-  request: typeof request
+-}
+-
+-const service = (async function fetchLike(
+-  urlOrConfig: string | RequestConfig,
+-  maybeConfig?: RequestConfig,
+-): Promise<unknown> {
+-  if (typeof urlOrConfig === `string`)
+-    return request({ ...maybeConfig, url: urlOrConfig })
+-  return request(urlOrConfig)
+-}) as FetchCallable
+-
+-service.get = createConfigMethod(`GET`)
+-service.post = createDataMethod(`POST`)
+-service.put = createDataMethod(`PUT`)
+-service.delete = createConfigMethod(`DELETE`)
+-service.patch = createDataMethod(`PATCH`)
+-service.request = request
+-
+-export default service
++export interface RequestConfig {
++  url?: string
++  method?: string
++  headers?: Record<string, string>
++  data?: unknown
++  timeout?: number
++}
++
++// Some APIs (e.g. WeChat media/uploadimg) return a JSON body with a
++// text/plain Content-Type. Mirror axios's forcedJSONParsing behavior so
++// such responses are still parsed into objects.
++function tryParseJson(text: string): unknown {
++  const trimmed = text.trim()
++  if (!trimmed.startsWith(`{`) && !trimmed.startsWith(`[`))
++    return text
++  try {
++    return JSON.parse(trimmed)
++  }
++  catch {
++    return text
++  }
++}
++
++async function request<T = unknown>(config: RequestConfig): Promise<T> {
++  const method = (config.method || `GET`).toUpperCase()
++  const url = config.url || ``
++  const headers: Record<string, string> = { ...config.headers }
++  const controller = new AbortController()
++  // SEMANTIC_BOUNDARY_ALLOW: 只校验独立请求预算与时间，不做内容理解或创作选择。
++  const requestedTimeout = config.timeout
++  const timeout = typeof requestedTimeout === `number` && Number.isFinite(requestedTimeout) && requestedTimeout >= 0
++    ? Math.max(120_000, requestedTimeout)
++    : 120_000
++  // 宿主单个 timer 有 32 位上界；所有 tick 共用同一个出生时间与预算，不能续期。
++  const bornAt = performance.now()
++  const maxTimerDelay = 2_147_483_647
++  const abortAtDeadline = () => {
++    const remaining = timeout - (performance.now() - bornAt)
++    if (remaining <= 0) {
++      controller.abort()
++      return
++    }
++    timer = setTimeout(abortAtDeadline, Math.min(remaining, maxTimerDelay))
++  }
++  let timer = setTimeout(abortAtDeadline, Math.min(timeout, maxTimerDelay))
++
++  try {
++    let body: BodyInit | undefined
++    if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {
++      if (typeof FormData !== `undefined` && config.data instanceof FormData) {
++        body = config.data
++        // Browser sets multipart boundary; drop explicit multipart Content-Type
++        for (const key of Object.keys(headers)) {
++          if (key.toLowerCase() === `content-type` && headers[key].includes(`multipart/form-data`))
++            delete headers[key]
++        }
++      }
++      else if (typeof config.data === `object` && config.data !== null && !(config.data instanceof Blob) && !(config.data instanceof ArrayBuffer)) {
++        body = JSON.stringify(config.data)
++        if (!Object.keys(headers).some(k => k.toLowerCase() === `content-type`))
++          headers[`Content-Type`] = `application/json`
++      }
++      else {
++        body = config.data as BodyInit
++      }
++    }
++
++    const res = await globalThis.fetch(url, {
++      method,
++      headers,
++      body,
++      signal: controller.signal,
++    })
++
++    const contentType = res.headers.get(`content-type`) || ``
++    const data = contentType.includes(`application/json`)
++      ? await res.json()
++      : tryParseJson(await res.text())
++
++    if (!res.ok) {
++      const err = Object.assign(new Error(`Request failed with status ${res.status}`), {
++        response: { status: res.status, data },
++        data,
++        status: res.status,
++      })
++      return Promise.reject(err)
++    }
++
++    // Match previous axios interceptor: reject empty bodies
++    if (data === null || data === undefined || data === ``)
++      return Promise.reject(new Error(`Empty response`))
++
++    return data as T
++  }
++  finally {
++    clearTimeout(timer)
++  }
++}
++
++function createDataMethod(method: string) {
++  return <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) =>
++    request<T>({ ...config, url, method, data })
++}
++
++function createConfigMethod(method: string) {
++  return <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) =>
++    request<T>({ ...config, url, method })
++}
++
++interface FetchCallable {
++  // Two type params kept for call-site compatibility (request body / response)
++  <_TReq = unknown, TRes = unknown>(config: RequestConfig): Promise<TRes>
++  <_TReq = unknown, TRes = unknown>(url: string, config?: RequestConfig): Promise<TRes>
++  get: <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) => Promise<T>
++  post: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
++  put: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
++  delete: <T = unknown>(url: string, config?: Omit<RequestConfig, `url` | `method`>) => Promise<T>
++  patch: <T = unknown>(url: string, data?: unknown, config?: Omit<RequestConfig, `url` | `method` | `data`>) => Promise<T>
++  request: typeof request
++}
++
++const service = (async function fetchLike(
++  urlOrConfig: string | RequestConfig,
++  maybeConfig?: RequestConfig,
++): Promise<unknown> {
++  if (typeof urlOrConfig === `string`)
++    return request({ ...maybeConfig, url: urlOrConfig })
++  return request(urlOrConfig)
++}) as FetchCallable
++
++service.get = createConfigMethod(`GET`)
++service.post = createDataMethod(`POST`)
++service.put = createDataMethod(`PUT`)
++service.delete = createConfigMethod(`DELETE`)
++service.patch = createDataMethod(`PATCH`)
++service.request = request
++
++export default service
+diff --git a/packages/shared/src/utils/fetch.test.ts b/packages/shared/src/utils/fetch.test.ts
+--- a/packages/shared/src/utils/fetch.test.ts
++++ b/packages/shared/src/utils/fetch.test.ts
+@@ -1,102 +1,205 @@
+-import { afterEach, describe, expect, it, vi } from 'vitest'
+-import fetch from './fetch'
+-
+-function jsonResponse(body: unknown, init?: ResponseInit) {
+-  return new Response(JSON.stringify(body), {
+-    status: 200,
+-    ...init,
+-    headers: { 'content-type': `application/json`, ...init?.headers },
+-  })
+-}
+-
+-function stubFetch(handler: (url: string, init?: RequestInit) => Response | Promise<Response>) {
+-  const mock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => Promise.resolve(handler(String(input), init)))
+-  vi.stubGlobal(`fetch`, mock)
+-  return mock
+-}
+-
+-describe(`fetch utils`, () => {
+-  afterEach(() => {
+-    vi.unstubAllGlobals()
+-  })
+-
+-  it(`parses application/json responses`, async () => {
+-    stubFetch(() => jsonResponse({ url: `https://example.com/a.png` }))
+-
+-    const res = await fetch<any, { url: string }>(`https://api.example.com/upload`, { method: `POST` })
+-    expect(res.url).toBe(`https://example.com/a.png`)
+-  })
+-
+-  // Regression test for doocs/md#1877: WeChat media/uploadimg answers a JSON
+-  // body with Content-Type text/plain, which must still be parsed as JSON
+-  it(`parses JSON bodies returned with a text/plain Content-Type`, async () => {
+-    stubFetch(() => new Response(JSON.stringify({ url: `https://mmbiz.qpic.cn/pic` }), {
+-      status: 200,
+-      headers: { 'content-type': `text/plain` },
+-    }))
+-
+-    const res = await fetch<any, { url: string }>(`https://api.weixin.qq.com/cgi-bin/media/uploadimg`, { method: `POST` })
+-    expect(res.url).toBe(`https://mmbiz.qpic.cn/pic`)
+-  })
+-
+-  it(`returns non-JSON text bodies as strings`, async () => {
+-    stubFetch(() => new Response(`plain text`, {
+-      status: 200,
+-      headers: { 'content-type': `text/plain` },
+-    }))
+-
+-    const res = await fetch(`https://api.example.com/raw`)
+-    expect(res).toBe(`plain text`)
+-  })
+-
+-  it(`keeps malformed JSON-looking text as a string`, async () => {
+-    stubFetch(() => new Response(`{broken`, {
+-      status: 200,
+-      headers: { 'content-type': `text/plain` },
+-    }))
+-
+-    const res = await fetch(`https://api.example.com/raw`)
+-    expect(res).toBe(`{broken`)
+-  })
+-
+-  it(`rejects on empty response bodies`, async () => {
+-    stubFetch(() => new Response(``, {
+-      status: 200,
+-      headers: { 'content-type': `text/plain` },
+-    }))
+-
+-    await expect(fetch(`https://api.example.com/empty`)).rejects.toThrow(`Empty response`)
+-  })
+-
+-  it(`rejects with the status code on non-OK responses`, async () => {
+-    stubFetch(() => jsonResponse({ errcode: 40013 }, { status: 401 }))
+-
+-    await expect(fetch(`https://api.example.com/fail`)).rejects.toThrow(`Request failed with status 401`)
+-  })
+-
+-  it(`serializes object bodies as JSON with a Content-Type header`, async () => {
+-    const mock = stubFetch(() => jsonResponse({ ok: true }))
+-
+-    await fetch(`https://api.example.com/post`, { method: `POST`, data: { a: 1 } })
+-
+-    const init = mock.mock.calls[0][1]
+-    expect(init?.body).toBe(JSON.stringify({ a: 1 }))
+-    expect((init?.headers as Record<string, string>)[`Content-Type`]).toBe(`application/json`)
+-  })
+-
+-  it(`passes FormData bodies through without a manual Content-Type`, async () => {
+-    const mock = stubFetch(() => jsonResponse({ ok: true }))
+-
+-    const form = new FormData()
+-    form.append(`media`, new Blob([`x`]), `a.png`)
+-    await fetch(`https://api.example.com/upload`, {
+-      method: `POST`,
+-      headers: { 'content-type': `multipart/form-data` },
+-      data: form,
+-    })
+-
+-    const init = mock.mock.calls[0][1]
+-    expect(init?.body).toBe(form)
+-    expect((init?.headers as Record<string, string>)[`content-type`]).toBeUndefined()
+-  })
+-})
++import { afterEach, describe, expect, it, vi } from 'vitest'
++import fetch from './fetch'
++
++function jsonResponse(body: unknown, init?: ResponseInit) {
++  return new Response(JSON.stringify(body), {
++    status: 200,
++    ...init,
++    headers: { 'content-type': `application/json`, ...init?.headers },
++  })
++}
++
++function stubFetch(handler: (url: string, init?: RequestInit) => Response | Promise<Response>) {
++  const mock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => Promise.resolve(handler(String(input), init)))
++  vi.stubGlobal(`fetch`, mock)
++  return mock
++}
++
++describe(`fetch utils`, () => {
++  afterEach(() => {
++    vi.unstubAllGlobals()
++  })
++
++  it(`parses application/json responses`, async () => {
++    stubFetch(() => jsonResponse({ url: `https://example.com/a.png` }))
++
++    const res = await fetch<any, { url: string }>(`https://api.example.com/upload`, { method: `POST` })
++    expect(res.url).toBe(`https://example.com/a.png`)
++  })
++
++  // Regression test for doocs/md#1877: WeChat media/uploadimg answers a JSON
++  // body with Content-Type text/plain, which must still be parsed as JSON
++  it(`parses JSON bodies returned with a text/plain Content-Type`, async () => {
++    stubFetch(() => new Response(JSON.stringify({ url: `https://mmbiz.qpic.cn/pic` }), {
++      status: 200,
++      headers: { 'content-type': `text/plain` },
++    }))
++
++    const res = await fetch<any, { url: string }>(`https://api.weixin.qq.com/cgi-bin/media/uploadimg`, { method: `POST` })
++    expect(res.url).toBe(`https://mmbiz.qpic.cn/pic`)
++  })
++
++  it(`returns non-JSON text bodies as strings`, async () => {
++    stubFetch(() => new Response(`plain text`, {
++      status: 200,
++      headers: { 'content-type': `text/plain` },
++    }))
++
++    const res = await fetch(`https://api.example.com/raw`)
++    expect(res).toBe(`plain text`)
++  })
++
++  it(`keeps malformed JSON-looking text as a string`, async () => {
++    stubFetch(() => new Response(`{broken`, {
++      status: 200,
++      headers: { 'content-type': `text/plain` },
++    }))
++
++    const res = await fetch(`https://api.example.com/raw`)
++    expect(res).toBe(`{broken`)
++  })
++
++  it(`rejects on empty response bodies`, async () => {
++    stubFetch(() => new Response(``, {
++      status: 200,
++      headers: { 'content-type': `text/plain` },
++    }))
++
++    await expect(fetch(`https://api.example.com/empty`)).rejects.toThrow(`Empty response`)
++  })
++
++  it(`rejects with the status code on non-OK responses`, async () => {
++    stubFetch(() => jsonResponse({ errcode: 40013 }, { status: 401 }))
++
++    await expect(fetch(`https://api.example.com/fail`)).rejects.toThrow(`Request failed with status 401`)
++  })
++
++  it(`serializes object bodies as JSON with a Content-Type header`, async () => {
++    const mock = stubFetch(() => jsonResponse({ ok: true }))
++
++    await fetch(`https://api.example.com/post`, { method: `POST`, data: { a: 1 } })
++
++    const init = mock.mock.calls[0][1]
++    expect(init?.body).toBe(JSON.stringify({ a: 1 }))
++    expect((init?.headers as Record<string, string>)[`Content-Type`]).toBe(`application/json`)
++  })
++
++  it(`passes FormData bodies through without a manual Content-Type`, async () => {
++    const mock = stubFetch(() => jsonResponse({ ok: true }))
++
++    const form = new FormData()
++    form.append(`media`, new Blob([`x`]), `a.png`)
++    await fetch(`https://api.example.com/upload`, {
++      method: `POST`,
++      headers: { 'content-type': `multipart/form-data` },
++      data: form,
++    })
++
++    const init = mock.mock.calls[0][1]
++    expect(init?.body).toBe(form)
++    expect((init?.headers as Record<string, string>)[`content-type`]).toBeUndefined()
++  })
++})
++
++describe(`CreatorOS 独立请求预算`, () => {
++  afterEach(() => {
++    vi.restoreAllMocks()
++    vi.useRealTimers()
++    vi.unstubAllGlobals()
++  })
++
++  it.each([
++    [`默认`, undefined, 120_000],
++    [`null`, null, 120_000],
++    [`零`, 0, 120_000],
++    [`短值`, 30_000, 120_000],
++    [`较长`, 180_000, 180_000],
++    [`负数`, -1, 120_000],
++    [`NaN`, Number.NaN, 120_000],
++    [`Infinity`, Number.POSITIVE_INFINITY, 120_000],
++    [`非数字`, `180000`, 120_000],
++    [`超宿主单 timer 上界`, 2_147_483_647 + 120_000, 2_147_483_647 + 120_000],
++  ] as const)(`%s 保完整出生预算与单请求`, async (_name, timeout, expectedMs) => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const config = { url: `http://127.0.0.1:1/owned-budget-unit` }
++    Reflect.set(config, `timeout`, timeout)
++    let receivedSignal: AbortSignal | null = null
++    const readSignal = (): AbortSignal | null => receivedSignal
++    const mock = stubFetch((_url, init) => new Promise<Response>((_resolve, reject) => {
++      const signal = init?.signal
++      if (!signal)
++        throw new Error(`missing actual request signal`)
++      receivedSignal = signal
++      signal.addEventListener(`abort`, () => reject(new DOMException(`Aborted`, `AbortError`)), { once: true })
++    }))
++    const observed = fetch.request(config).then(value => ({ value, error: null }), error => ({ value: null, error }))
++    await vi.advanceTimersByTimeAsync(expectedMs - 1)
++    expect(readSignal()).not.toBeNull()
++    expect(readSignal()!.aborted).toBe(false)
++    expect(mock).toHaveBeenCalledTimes(1)
++    await vi.advanceTimersByTimeAsync(1)
++    const settled = await observed
++    expect(settled.error).toBeInstanceOf(DOMException)
++    expect(settled.error?.name).toBe(`AbortError`)
++    expect(readSignal()!.aborted).toBe(true)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++
++  it(`响应头之后仍以同出生预算监督完整 body`, async () => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    let actualSignal: AbortSignal | null = null
++    const readBodySignal = (): AbortSignal | null => actualSignal
++    const mock = stubFetch((_url, init) => {
++      const signal = init?.signal
++      if (!signal)
++        throw new Error(`missing actual request signal`)
++      actualSignal = signal
++      const response = jsonResponse({ ok: true })
++      vi.spyOn(response, `json`).mockImplementation(() => new Promise((_resolve, reject) => {
++        signal.addEventListener(`abort`, () => reject(new DOMException(`Body aborted`, `AbortError`)), { once: true })
++      }))
++      return response
++    })
++    const observed = fetch.get(`http://127.0.0.1:1/owned-body-unit`).then(value => ({ value, error: null }), error => ({ value: null, error }))
++    await vi.advanceTimersByTimeAsync(119_999)
++    expect(readBodySignal()).not.toBeNull()
++    expect(readBodySignal()!.aborted).toBe(false)
++    await vi.advanceTimersByTimeAsync(1)
++    expect((await observed).error?.name).toBe(`AbortError`)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++
++  it.each([`成功`, `HTTP错误`, `空响应`, `body读取错误`])(`%s finally 清理最后 timer`, async (mode) => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const mock = stubFetch(() => {
++      const response = mode === `空响应` ? new Response(``, { status: 200 }) : jsonResponse({ ok: true }, { status: mode === `HTTP错误` ? 503 : 200 })
++      if (mode === `body读取错误`)
++        vi.spyOn(response, `json`).mockRejectedValue(new Error(`owned body read failed`))
++      return response
++    })
++    if (mode === `成功`)
++      await expect(fetch.get(`http://127.0.0.1:1/owned-finally-unit`)).resolves.toEqual({ ok: true })
++    else
++      await expect(fetch.get(`http://127.0.0.1:1/owned-finally-unit`)).rejects.toBeInstanceOf(Error)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++
++
++  it(`正文序列化错误保原错误且不发送请求或遗留 timer`, async () => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const mock = stubFetch(() => jsonResponse({ shouldNotBeRequested: true }))
++    const circular: { self?: unknown } = {}
++    circular.self = circular
++    await expect(fetch.post(`http://127.0.0.1:1/owned-serialization-unit`, circular)).rejects.toBeInstanceOf(TypeError)
++    expect(mock).toHaveBeenCalledTimes(0)
++    expect(vi.getTimerCount()).toBe(0)
++    const originalError = new Error(`owned toJSON error`)
++    const throwsOnSerialization = { toJSON() { throw originalError } }
++    await expect(fetch.post(`http://127.0.0.1:1/owned-serialization-unit`, throwsOnSerialization)).rejects.toBe(originalError)
++    expect(mock).toHaveBeenCalledTimes(0)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++})

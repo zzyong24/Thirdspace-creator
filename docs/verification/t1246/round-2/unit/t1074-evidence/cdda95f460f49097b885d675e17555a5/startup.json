@@ -1,0 +1,41 @@
+{
+  "file": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/pg_ctl",
+  "args": [
+    "-D",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-msCvpB/data",
+    "-l",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-msCvpB/postgres.log",
+    "-w",
+    "-t",
+    "180",
+    "-o",
+    "-h 127.0.0.1 -p 60146 -k /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-msCvpB",
+    "start"
+  ],
+  "pid": 39316,
+  "identity": {
+    "pid": 39316,
+    "pgid": 39316,
+    "uid": 501,
+    "birth": "Mon Oct 12 03:43:39 2026",
+    "startedAt": 1791747819538
+  },
+  "startedAt": "2026-10-11T19:43:39.538Z",
+  "endedAt": "2026-10-11T19:43:39.759Z",
+  "elapsedMs": 221,
+  "budgetMs": 360000,
+  "deadlineAt": "2026-10-11T19:49:39.538Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": true,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "waiting for server to start.... done\nserver started\n",
+  "stderr": ""
+}

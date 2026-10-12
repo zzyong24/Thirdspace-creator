@@ -1,0 +1,16 @@
+{
+  "pid": 52923,
+  "pgid": 52923,
+  "argv": [
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/cli.js",
+    "test",
+    "--config",
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/settings-full-history-tool/playwright.config.ts",
+    "--project",
+    "e2e",
+    "--grep",
+    "renders the settings structure|外观主题与密度"
+  ],
+  "deadlineMs": 5530920000,
+  "at": "2026-10-11T17:27:03.182Z"
+}

@@ -1,3 +1,5 @@
+import {platformAccounts as originalAccounts,type Db as OwnedFixtureDb} from "@creatoros/backend";
+import {createAccountGroupService} from "../platform-account/account-group.service";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 
@@ -16,7 +18,7 @@ describe("knowledge db-schema (KNOWLEDGE_DDL round-trip)", () => {
     const created = await createDb();
     db = created.db;
     client = created.client as unknown as typeof client;
-    void db;
+    await seedOwnedKnowledgeAccount(db,"user-a","acct-a");
   });
 
   it("knowledge_items round-trips (jsonb source_metadata survives as object)", async () => {
@@ -90,3 +92,9 @@ describe("knowledge db-schema (KNOWLEDGE_DDL round-trip)", () => {
     expect(row.created_by_type).toBe("user");
   });
 });
+
+async function seedOwnedKnowledgeAccount(db:OwnedFixtureDb,userId:string,accountId:string){
+ const stamp="2026-06-21T00:00:00.000Z";
+ await db.insert(originalAccounts).values({id:accountId,userId,platform:'douyin',accountHandle:accountId,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing();
+ await createAccountGroupService({db,now:()=>stamp,nextId:prefix=>`${prefix}-${accountId}-fixture`}).ensureLegacyGroups({userId,requestId:'original-knowledge-fixture',source:'user'});
+}

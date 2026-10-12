@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-12T07:12:41.725779+00:00",
+  "previousBindingSha256": "5d36f89c6dd3421fed8829ac4e6e09df701becc4b1b1ee68cf5125180abcbdc5",
+  "previousFull203SnapshotsVerified": 203,
+  "previousSnapshotByteDrift": 0,
+  "previousIndependentConcerns": {
+    "path": "docs/verification/t1246/round-2/INDEPENDENT_EXTERNAL_5D36_COMPLETE_SOURCE_REVIEW_CONCERNS.json",
+    "sha256": "6c6649cc489cd8d2f3bc610d44ff185cc81506afb3bd027b6ae0c734d06fddf0"
+  },
+  "changes": [
+    {
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-history/tool5d36-schema-concerns/discover-joint-pairs.py",
+      "originalSha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/discover-joint-pairs.py",
+      "candidateSha256": "3324eb3f4bf006349e56f85ba17248b3b04c5f1b1a91423ea9ef782d17937845",
+      "allowedSingleLineOnly": true,
+      "mechanicalInverseExact": true,
+      "actualAstCode": 0,
+      "runtimeExecuted": false
+    },
+    {
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-history/tool5d36-schema-concerns/prepare-joint-dyld.py",
+      "originalSha256": "f6610b920a48ba3c1d4e60de51500b4d80dd57d12614d3e6d59e29ec17530ca2",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/prepare-joint-dyld.py",
+      "candidateSha256": "0430982cd69814dcd76ddfe0289d93a6254dc01dbecca8731a5dc809216d2c4a",
+      "allowedSingleLineOnly": true,
+      "mechanicalInverseExact": true,
+      "actualAstCode": 0,
+      "runtimeExecuted": false
+    }
+  ],
+  "forwardSha256": "8397caffc0061199390a7abcc78c6e01f3e391f216cedfcacc3c27c6bbb7754d",
+  "inverseSha256": "986514eb077316e7b4c9867669ff4732461f63a09e7285eadd0d6a41349737aa",
+  "allOtherRuntimeSourceBytesUnchanged": true,
+  "candidateBodiesOrPureOrCollectorExecuted": false
+}

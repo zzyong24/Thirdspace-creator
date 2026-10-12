@@ -1,0 +1,114 @@
+{
+  "task": "T-1254",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T07:32:26.546200+00:00",
+  "status": "CONCERNS",
+  "reviewScope": "最终709 exactdelivery/三scripts/独立验证driver源码双审；不是复制或runtime通过",
+  "indexSha256": "718eda4d885f0cc0843c209319093620ee20b31f46302396f30be3ed06dd1fb8",
+  "manifestSha256": "f4b9fae25cbf52268f87c35a160af3c068a5ec20791eeeb38e0f1da436f3ce32",
+  "inputsSha256": "258e219529aba56fb2283387b20d1b9048a319d87b1ee4cff9f76b0c312c33ca",
+  "fullInputProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_DELIVERY_718_FULL_BYTES_AND_SETS_RECHECK.json",
+    "sha256": "829aa0da69d39850b47ba4c81e4dc1ac962214a5feaf7eb55c26361181cb78da",
+    "inputRows": 143462,
+    "mirrorFiles": 1018,
+    "candidateFiles": 709,
+    "writes": 73,
+    "deletes": 53,
+    "unchanged": 636,
+    "actualReadBytes": 2295707640,
+    "elapsedMs": 38654.88229197217,
+    "drift": []
+  },
+  "allMetadataAndThreeScriptsUnifiedDiff": {
+    "sha256": "417c2932add6d3e056990c3bcf61ffe112b09875017e9cd425fce0b31d83e68f",
+    "mechanicalCompleteContexts": [
+      {
+        "path": "frontend/scripts/build-doocs-request-budget.mjs",
+        "sha256": "460153610a087c92560f185bc77b3c571bd8bd1636cc0002940665cc13ad7441",
+        "fullContextAndCompleteReconstruction": true
+      },
+      {
+        "path": "frontend/scripts/verify-doocs-static.mjs",
+        "sha256": "57875f61e4ab8356abe0a803d21ee93807ae355128ac4ea50e17166ba5151c49",
+        "fullContextAndCompleteReconstruction": true
+      },
+      {
+        "path": "frontend/scripts/verify-native-editors.mjs",
+        "sha256": "aa452bfe9131f3f1b056f56bda6a286daa96b03ab4428857abbcb0793033edf0",
+        "fullContextAndCompleteReconstruction": true
+      },
+      {
+        "path": "reference-editors/doocs-md/native/README.md",
+        "sha256": "04799b49cfb4ff50c1242242e70dac0492b7bfadb696c73c5aed47e29b7dbe51",
+        "fullContextAndCompleteReconstruction": true
+      },
+      {
+        "path": "reference-editors/doocs-md/native/SHA256.json",
+        "sha256": "9e0d25d94e52946f5d66c2a42c17c310297e6d4c9ffe026034d1cd92f521959a",
+        "fullContextAndCompleteReconstruction": true
+      },
+      {
+        "path": "reference-editors/doocs-md/native/VERIFY.md",
+        "sha256": "b5dc4172e5193579594e6adbf38a06bc95beb9a4ac73e6f05dd163e7f08f56dc",
+        "fullContextAndCompleteReconstruction": true
+      },
+      {
+        "path": "reference-editors/doocs-md/native/native-delivery.json",
+        "sha256": "33bbc9a6dd55d2a5f2b03f29828bd7ed37da9ee62dd3a15fa0f8915ae1b5ae43",
+        "fullContextAndCompleteReconstruction": true
+      },
+      {
+        "path": "reference-editors/manifest.json",
+        "sha256": "38cfdb1fe0c230d98bcdbbe596511070397b5e05dd5f183a243c7aba5227bcff",
+        "fullContextAndCompleteReconstruction": true
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "DELIVERY-BUILD-MINIMUM-FUTURE",
+      "status": "CONCERNS",
+      "file": "frontend/scripts/build-doocs-request-budget.mjs",
+      "fact": "execute取继承剩余与新单birth总槽min后直接setTimeout(limit)，未timer前显式>=120k。prepare只要求inherited>wallBorn，未入口保完整3.6M只读prepare槽。现实际残余充裕、未运行，不能作为将来standalone保证。",
+      "required": "timer前入口拒不足120k；prepare入口完整只读槽不足即拒；保原继承截止、不续期。"
+    },
+    {
+      "id": "DELIVERY-BUILD-MACHO-ROOTS",
+      "status": "CONCERNS",
+      "file": "frontend/scripts/build-doocs-request-budget.mjs",
+      "fact": "prepare只要求dynamic包含Node root，未显式覆盖实际manager和完整source依赖scope的所有MachO/.node根。当前58根实际闭合，但future新根误配旧图可穿透Node-only门。",
+      "required": "实际magic读取完整manager/scopes MachO根集合，每个realpath必须在封存dynamic.rootMachOFiles；保持系统cache边界明确。"
+    },
+    {
+      "id": "DELIVERY-BUILD-SOURCE-FILESET",
+      "status": "CONCERNS",
+      "file": "frontend/scripts/build-doocs-request-budget.mjs",
+      "fact": "819/804 sourceFiles逐SHA/size/mode有核，但未拒原src新增文件；Vite/TS glob可消费未封新增输入。",
+      "required": "只剪node_modules与apps/web/.wxt/dist/dist-native四明确目录，其余全部regular/link文件集严格等归档sourceFiles，每binding守卫；现actual source无额外文件且真实V15不变。"
+    },
+    {
+      "id": "DELIVERY-BUILD-SCOPE-LINK-OWNER",
+      "status": "CONCERNS",
+      "file": "frontend/scripts/build-doocs-request-budget.mjs",
+      "fact": "source dependency scopes的link封realpath/bytes但未把resolved目标约束本owner.root；manager scope也需自己的toolRoot边界。",
+      "required": "prepare与每binding显式source scope link目标属于sourceOwner.root，manager scope属于批准managerToolsRoot；动态库非系统绝对加载目标沿现实际图独立核。"
+    }
+  ],
+  "fullCodeRead": "三scripts/12625B readonly driver/23positive-fault validator/3 producer-sealer全文；原native四编辑器验证body仅加static hook与结果，不削原宏、合同、OpenCut模块/归档/补丁断言。",
+  "staticConclusions": {
+    "actualV15Outputs": "native395/static300全部candidate字节逐V15 actual库存同，原sourceArchive/patch实际摘要相同",
+    "otherEditors": "原3其它编辑器manifest完整JSON相同；镜像涵盖原4编辑器/原合同/TypeScript完整实现，703产品读不改",
+    "CSPBridge": "保原CSP/meta connect-none，inline仅机械外置；原bridge文本V15已实际证明，当前entry同V15 byte",
+    "sourceArchives": "native819 regular/static801 regular+3link真实内容与源已2995独核；当前descriptor公开与本地archive副本相同",
+    "classification": "精确73writes/53deletes/636same完整集合和原before SHA/mode/UID核，无额外删除/不可归属替换",
+    "readonlyValidation": "3child完整positive540/900/4200k+3*2.16M生命周期+prepare3.6/after3.6=19.32M；继承V15最早15:56:11.789，应用前future/每child/final fullhash+dyn首命中+mirror全部守卫，私有日志close后归档；未运行也不预签23族绿",
+    "staticVerifier": "实际TS AST/import/export/template/BASE协议/Vite表/HTML/CSS/fullSHA和文件集/CSP/source归档校验；23族实际positive/fault只能由一次真实child证明，不拿源码代PASS"
+  },
+  "noNewRuntimeFailureClaim": "四项为builder自查与独立源码核共同确认的新standalone工具finding，旧V15 EOF0、前旧FAIL/缺失不改。自己的只读metadata初次字典slice KeyError已fullproof诚实记，非candidate失败。",
+  "reviewerCandidateExecution": false,
+  "productionCopyApproved": false,
+  "productionCopyExecuted": false,
+  "AppAcceptanceComplete": false,
+  "next": "集中四项窄修后fresh exactmanifest/index/inputs与正逆差异统一交审，再由ROOT一次真实3child准入。只有实际验证与sourceafter闭合后另行73writes/53deletes复制双审。"
+}

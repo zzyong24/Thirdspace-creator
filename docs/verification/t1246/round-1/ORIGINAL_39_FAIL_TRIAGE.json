@@ -1,0 +1,1792 @@
+{
+  "task": "T-1246",
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "mode": "只读分诊；未修产品/原断言/v2；未启动v3",
+  "sourceFinalSha256": "327e1b78367758c19fad677c8d07913d23874ae55abf3d849335cabcc30069bd",
+  "actualStats": {
+    "startTime": "2026-10-11T15:09:47.446Z",
+    "duration": 4154783.594,
+    "expected": 131,
+    "skipped": 0,
+    "unexpected": 39,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "index": 1,
+      "testId": "398e1e2dd9ad70ed36f5-fcf91ee232c21f1ceebf",
+      "spec": "frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts",
+      "title": "opens the centered dialog from any page via ?copilot=open",
+      "firstFailure": "Error: expect(locator).toBeVisible() failed\n\nLocator: locator('[data-slot=\"copilot-dashboard\"]')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 120000ms\n  - waiting for locator('[data-slot=\"copilot-dashboard\"]')\n",
+      "failureLocation": "ai-copilot.spec.ts:40:67",
+      "url": "http://127.0.0.1:61346/?copilot=open",
+      "classification": "已确认原合同漂移",
+      "cause": "BC001：T354已退役dashboard次区；真实弹窗打开，首断言仍找退役slot。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/ai-copilot.spec.ts",
+      "proposal": "改验当前真实输入、快速入口、单弹窗；保打开不发生成。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/ai-copilot--AI-Copilot-dialog-opens-the-centered-dialog-from-any-page-via-copilot-op--9480b6ed6fd209fa023c72a96f8437ac6d707b133b429ca9e2aa0fcff8e57dca.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "398e1e2dd9ad70ed36f5-fcf91ee232c21f1ceebf",
+        "titlePath": [
+          "e2e/ai-copilot.spec.ts",
+          "AI Copilot dialog",
+          "opens the centered dialog from any page via ?copilot=open"
+        ],
+        "title": "opens the centered dialog from any page via ?copilot=open",
+        "spec": "frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts",
+        "url": "http://127.0.0.1:61346/?copilot=open",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/ai-copilot--AI-Copilot-dialog-opens-the-centered-dialog-from-any-page-via-copilot-op--9480b6ed6fd209fa023c72a96f8437ac6d707b133b429ca9e2aa0fcff8e57dca.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"copilot-dashboard\"]')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"copilot-dashboard\"]')\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"copilot-dashboard\"]')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"copilot-dashboard\"]')\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts:40:67"
+          }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "testId": "398e1e2dd9ad70ed36f5-1f5c45fadccdf95473d0",
+      "spec": "frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts",
+      "title": "submit button does not post a real network request",
+      "firstFailure": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 9\n\n- Array []\n+ Array [\n+   \"http://127.0.0.1:61346/api/v1/dispatch\",\n+   \"http://127.0.0.1:61346/api/v1/dispatch\",\n+   \"http://127.0.0.1:61346/api/v1/dispatch\",\n+   \"http://127.0.0.1:61346/api/v1/dispatch\",\n+   \"http://127.0.0.1:61346/api/v1/dispatch\",\n+   \"http://127.0.0.1:61346/__nextjs_original-stack-frames\",\n+   \"http://127.0.0.1:61346/api/chat\",\n+ ]",
+      "failureLocation": "ai-copilot.spec.ts:84:22",
+      "url": "http://127.0.0.1:61346/?copilot=open",
+      "classification": "已确认原合同漂移",
+      "cause": "BC002：T1024/T1026真实持久聊天已替代submit无POST；实际7个POST含/api/chat。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/ai-copilot.spec.ts",
+      "proposal": "拆打开/预填不发与明确提交一次原消息/原task真实请求，不把任意POST签成功。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/ai-copilot--AI-Copilot-dialog-submit-button-does-not-post-a-real-network-request--ba1032b3334eee45de5a5392d824bdf91ebe1ac69bb790e4b112f9c23d760a9d.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "398e1e2dd9ad70ed36f5-1f5c45fadccdf95473d0",
+        "titlePath": [
+          "e2e/ai-copilot.spec.ts",
+          "AI Copilot dialog",
+          "submit button does not post a real network request"
+        ],
+        "title": "submit button does not post a real network request",
+        "spec": "frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts",
+        "url": "http://127.0.0.1:61346/?copilot=open",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/ai-copilot--AI-Copilot-dialog-submit-button-does-not-post-a-real-network-request--ba1032b3334eee45de5a5392d824bdf91ebe1ac69bb790e4b112f9c23d760a9d.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 9\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/__nextjs_original-stack-frames\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/chat\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 9\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/v1/dispatch\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/__nextjs_original-stack-frames\",\u001b[39m\n\u001b[31m+   \"http://127.0.0.1:61346/api/chat\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts:84:22"
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "testId": "78c95fd594dd575ec449-d42c1ed4c6ebb279cf35",
+      "spec": "frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts",
+      "title": "视频决策失败可见、终态停轮询，重新运行显式携带来源任务",
+      "firstFailure": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: \"cancelled\"\nReceived: \"failed\"\n\nCall Log:\n- Timeout 120000ms exceeded while waiting on the predicate",
+      "failureLocation": "ai-reliability-recovery.spec.ts:149:6",
+      "url": "http://127.0.0.1:61346/projects/project-81b98377-247/production",
+      "classification": "待定位",
+      "cause": "原无效SRT任务真实终态failed，测试硬等cancelled；尚未核该任务原receipt及取消来源，不能改期望洗绿。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/ai-reliability-recovery.spec.ts；backend/src/modules/execution/execution-video.service.ts（调查）",
+      "proposal": "只读原任务/输入/状态/receipt，区分明确cancel与非法输入失败后才能定写集。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/ai-reliability-recovery--视频决策失败可见-终态停轮询-重新运行显式携带来源任务--fb887f54404721c89720d47f625aa4e35ff1a6053a48705d41ec93cebae5b538.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "78c95fd594dd575ec449-d42c1ed4c6ebb279cf35",
+        "titlePath": [
+          "e2e/ai-reliability-recovery.spec.ts",
+          "视频决策失败可见、终态停轮询，重新运行显式携带来源任务"
+        ],
+        "title": "视频决策失败可见、终态停轮询，重新运行显式携带来源任务",
+        "spec": "frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/project-81b98377-247/production",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/ai-reliability-recovery--视频决策失败可见-终态停轮询-重新运行显式携带来源任务--fb887f54404721c89720d47f625aa4e35ff1a6053a48705d41ec93cebae5b538.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"\u001b[7mcancel\u001b[27mled\"\u001b[39m\nReceived: \u001b[31m\"\u001b[7mfai\u001b[27mled\"\u001b[39m\n\nCall Log:\n- Timeout 120000ms exceeded while waiting on the predicate",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"\u001b[7mcancel\u001b[27mled\"\u001b[39m\nReceived: \u001b[31m\"\u001b[7mfai\u001b[27mled\"\u001b[39m\n\nCall Log:\n- Timeout 120000ms exceeded while waiting on the predicate\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts:149:6"
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "testId": "66d28c9c49bf28775f51-234ab65402bd8d1f3b8d",
+      "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+      "title": "route project-overview (/projects/ai-native-browser) renders with single shell and correct active state",
+      "firstFailure": "Error: expect(locator).toHaveAttribute(expected) failed\n\nLocator:  locator('[data-slot=\"app-top-header\"]')\nExpected: \"project-overview\"\nReceived: \"project-workspace\"\nTimeout:  120000ms\n\nCall log:\n  - Expect \"toHaveAttribute\" with timeout 120000ms\n  - waiting for locator('[data-slot=\"app-top-header\"]')\n    242 × locator resolved to <header data-layout=\"flow\" data-masked=\"false\" data-slot=\"app-top-header\" data-testid=\"app-top-header\" data-mode=\"project-workspace\" class=\"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface\">…</header>\n        - unexpected value \"project-workspace\"\n",
+      "failureLocation": "all-routes.spec.ts:35:28",
+      "url": "http://127.0.0.1:61346/projects/ai-native-browser",
+      "classification": "已确认原合同漂移",
+      "cause": "T075真实project root已统一project-workspace顶栏，shell-router与对应测试一致。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts",
+      "proposal": "按当前同一项目阶段条核顶栏/真实project前置，保单壳/标题/可操作内容。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/all-routes--Whole-system-route-matrix-Task-26-route-project-overview-projects-ai-nat--a07312b283a9c97d88aa65e6ddb0a3ea68173fcb4739801e8f12a80eba4c3ebb.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "66d28c9c49bf28775f51-234ab65402bd8d1f3b8d",
+        "titlePath": [
+          "e2e/all-routes.spec.ts",
+          "Whole-system route matrix (Task 26)",
+          "route project-overview (/projects/ai-native-browser) renders with single shell and correct active state"
+        ],
+        "title": "route project-overview (/projects/ai-native-browser) renders with single shell and correct active state",
+        "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/ai-native-browser",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-project-overview-projects-ai-nat--a07312b283a9c97d88aa65e6ddb0a3ea68173fcb4739801e8f12a80eba4c3ebb.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-slot=\"app-top-header\"]')\nExpected: \u001b[32m\"project-\u001b[7moverview\u001b[27m\"\u001b[39m\nReceived: \u001b[31m\"project-\u001b[7mworkspace\u001b[27m\"\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"app-top-header\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to <header data-layout=\"flow\" data-masked=\"false\" data-slot=\"app-top-header\" data-testid=\"app-top-header\" data-mode=\"project-workspace\" class=\"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface\">…</header>\u001b[22m\n\u001b[2m        - unexpected value \"project-workspace\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-slot=\"app-top-header\"]')\nExpected: \u001b[32m\"project-\u001b[7moverview\u001b[27m\"\u001b[39m\nReceived: \u001b[31m\"project-\u001b[7mworkspace\u001b[27m\"\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"app-top-header\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to <header data-layout=\"flow\" data-masked=\"false\" data-slot=\"app-top-header\" data-testid=\"app-top-header\" data-mode=\"project-workspace\" class=\"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface\">…</header>\u001b[22m\n\u001b[2m        - unexpected value \"project-workspace\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:35:28"
+          }
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "testId": "66d28c9c49bf28775f51-a9d66ebd122c84407a70",
+      "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+      "title": "route analytics-review (/projects/ai-native-browser/review) renders with single shell and correct active state",
+      "firstFailure": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  -  1\n+ Received  + 28\n\n- Array []\n+ Array [\n+   \"%c%s%c [review] readReviewHistory 读失败(诚实空,但这不是正常态): background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   AccountRequiredError: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)\n+     at requireAccountId (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?23:1549:15)\n+     at workspaceKey (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?24:1676:158)\n+     at requireWorkspace (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?25:1680:5)\n+     at Object.listOutputIdsByProject (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_projects_1yng5d3._.js?26:1215:170)\n+     at Object.verifyProjectOwned (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/frontend_src_server_persistence-client_ts_15iwk1j._.js?27:2729:39)\n+     at Object.listReviews (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?28:6751:28)\n+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?29:6876:55)\n+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_application_0pvo0v6._.js?30:9668:45)\n+     at resolveErrorDev (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1919:105)\n+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1469:28)\n+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1584:50)\n+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\n+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\n+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\n+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1407:17)\n+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1639:50)\n+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\n+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2525:61)\n+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\n+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\n+     at resolveConsoleEntry (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2047:96)\n+     at processFullStringRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2453:17)\n+     at processFullBinaryRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2393:9)\n+     at processBinaryChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2502:221)\n+     at progress (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2676:20)\",\n+ ]",
+      "failureLocation": "all-routes.spec.ts:49:29",
+      "url": "http://127.0.0.1:61346/projects/ai-native-browser/review",
+      "classification": "前置与产品责任待区分",
+      "cause": "BA004：旧fixture slug无选组/账号首载，readReviewHistory真实AccountRequiredError；未验合法纯组复盘。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts；frontend/src/app/(creator)/projects/[projectId]/review/page.tsx（条件性调查）",
+      "proposal": "真实公共创建项目并选原组后核console；若无scope首屏应可用，明确缺工作区资格，不吞业务错误。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/all-routes--Whole-system-route-matrix-Task-26-route-analytics-review-projects-ai-nat--71d4d620f468a1b26152e6f43e9bbb1cc57f4ea2721b593fd94e7b1008087710.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "66d28c9c49bf28775f51-a9d66ebd122c84407a70",
+        "titlePath": [
+          "e2e/all-routes.spec.ts",
+          "Whole-system route matrix (Task 26)",
+          "route analytics-review (/projects/ai-native-browser/review) renders with single shell and correct active state"
+        ],
+        "title": "route analytics-review (/projects/ai-native-browser/review) renders with single shell and correct active state",
+        "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/ai-native-browser/review",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-analytics-review-projects-ai-nat--71d4d620f468a1b26152e6f43e9bbb1cc57f4ea2721b593fd94e7b1008087710.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 28\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"%c%s%c [review] readReviewHistory 读失败(诚实空,但这不是正常态): background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   AccountRequiredError: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)\u001b[39m\n\u001b[31m+     at requireAccountId (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?23:1549:15)\u001b[39m\n\u001b[31m+     at workspaceKey (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?24:1676:158)\u001b[39m\n\u001b[31m+     at requireWorkspace (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?25:1680:5)\u001b[39m\n\u001b[31m+     at Object.listOutputIdsByProject (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_projects_1yng5d3._.js?26:1215:170)\u001b[39m\n\u001b[31m+     at Object.verifyProjectOwned (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/frontend_src_server_persistence-client_ts_15iwk1j._.js?27:2729:39)\u001b[39m\n\u001b[31m+     at Object.listReviews (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?28:6751:28)\u001b[39m\n\u001b[31m+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?29:6876:55)\u001b[39m\n\u001b[31m+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_application_0pvo0v6._.js?30:9668:45)\u001b[39m\n\u001b[31m+     at resolveErrorDev (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1919:105)\u001b[39m\n\u001b[31m+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1469:28)\u001b[39m\n\u001b[31m+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1584:50)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\u001b[39m\n\u001b[31m+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\u001b[39m\n\u001b[31m+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\u001b[39m\n\u001b[31m+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1407:17)\u001b[39m\n\u001b[31m+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1639:50)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2525:61)\u001b[39m\n\u001b[31m+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\u001b[39m\n\u001b[31m+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\u001b[39m\n\u001b[31m+     at resolveConsoleEntry (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2047:96)\u001b[39m\n\u001b[31m+     at processFullStringRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2453:17)\u001b[39m\n\u001b[31m+     at processFullBinaryRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2393:9)\u001b[39m\n\u001b[31m+     at processBinaryChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2502:221)\u001b[39m\n\u001b[31m+     at progress (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2676:20)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 28\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"%c%s%c [review] readReviewHistory 读失败(诚实空,但这不是正常态): background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   AccountRequiredError: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)\u001b[39m\n\u001b[31m+     at requireAccountId (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?23:1549:15)\u001b[39m\n\u001b[31m+     at workspaceKey (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?24:1676:158)\u001b[39m\n\u001b[31m+     at requireWorkspace (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?25:1680:5)\u001b[39m\n\u001b[31m+     at Object.listOutputIdsByProject (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_projects_1yng5d3._.js?26:1215:170)\u001b[39m\n\u001b[31m+     at Object.verifyProjectOwned (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/frontend_src_server_persistence-client_ts_15iwk1j._.js?27:2729:39)\u001b[39m\n\u001b[31m+     at Object.listReviews (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?28:6751:28)\u001b[39m\n\u001b[31m+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?29:6876:55)\u001b[39m\n\u001b[31m+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_application_0pvo0v6._.js?30:9668:45)\u001b[39m\n\u001b[31m+     at resolveErrorDev (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1919:105)\u001b[39m\n\u001b[31m+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1469:28)\u001b[39m\n\u001b[31m+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1584:50)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\u001b[39m\n\u001b[31m+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\u001b[39m\n\u001b[31m+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\u001b[39m\n\u001b[31m+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1407:17)\u001b[39m\n\u001b[31m+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1639:50)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2525:61)\u001b[39m\n\u001b[31m+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\u001b[39m\n\u001b[31m+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\u001b[39m\n\u001b[31m+     at resolveConsoleEntry (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2047:96)\u001b[39m\n\u001b[31m+     at processFullStringRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2453:17)\u001b[39m\n\u001b[31m+     at processFullBinaryRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2393:9)\u001b[39m\n\u001b[31m+     at processBinaryChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2502:221)\u001b[39m\n\u001b[31m+     at progress (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2676:20)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:49:29"
+          }
+        ]
+      }
+    },
+    {
+      "index": 6,
+      "testId": "66d28c9c49bf28775f51-5839d001c13f1e01acb5",
+      "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+      "title": "route experience (/experience) renders with single shell and correct active state",
+      "firstFailure": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: \"/experience\"\nReceived: \"/knowledge\"",
+      "failureLocation": "all-routes.spec.ts:46:26",
+      "url": "http://127.0.0.1:61346/knowledge",
+      "classification": "已确认原合同漂移",
+      "cause": "T118c/T1239经验独立页已退役，真实redirect /knowledge。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts",
+      "proposal": "验正式redirect、知识当前路由；复盘采纳/翻案独立链不得省略。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/all-routes--Whole-system-route-matrix-Task-26-route-experience-experience-renders-wi--15ecdf978e8123b80eab8b9383835820df1ce5ed3c38db407eec09cf84edd422.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "66d28c9c49bf28775f51-5839d001c13f1e01acb5",
+        "titlePath": [
+          "e2e/all-routes.spec.ts",
+          "Whole-system route matrix (Task 26)",
+          "route experience (/experience) renders with single shell and correct active state"
+        ],
+        "title": "route experience (/experience) renders with single shell and correct active state",
+        "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+        "url": "http://127.0.0.1:61346/knowledge",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-experience-experience-renders-wi--15ecdf978e8123b80eab8b9383835820df1ce5ed3c38db407eec09cf84edd422.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"/\u001b[7mexperienc\u001b[27me\"\u001b[39m\nReceived: \u001b[31m\"/\u001b[7mknowledg\u001b[27me\"\u001b[39m",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"/\u001b[7mexperienc\u001b[27me\"\u001b[39m\nReceived: \u001b[31m\"/\u001b[7mknowledg\u001b[27me\"\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:46:26"
+          }
+        ]
+      }
+    },
+    {
+      "index": 7,
+      "testId": "66d28c9c49bf28775f51-f186a8ca4c212fd720d3",
+      "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+      "title": "route search (/search) renders with single shell and correct active state",
+      "firstFailure": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: 1\nReceived: 0\nTimeout:  120000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 120000ms\n  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\n    242 × locator resolved to 0 elements\n        - unexpected value \"0\"\n",
+      "failureLocation": "all-routes.spec.ts:40:28",
+      "url": "http://127.0.0.1:61346/search",
+      "classification": "已确认原合同漂移",
+      "cause": "sidebar PRIMARY_NAV明确/search无独立主nav项；原所有路由必须一条aria-current假设不成立。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts",
+      "proposal": "逐路由声明当前合法nav归属，无入口路由期待0；仍验真实搜索字段/结果/单壳。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/all-routes--Whole-system-route-matrix-Task-26-route-search-search-renders-with-singl--9ac05c8d94c5578eee5d42e0f1111f90a4b2c7f4086649eb6b2bc48287c37b47.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "66d28c9c49bf28775f51-f186a8ca4c212fd720d3",
+        "titlePath": [
+          "e2e/all-routes.spec.ts",
+          "Whole-system route matrix (Task 26)",
+          "route search (/search) renders with single shell and correct active state"
+        ],
+        "title": "route search (/search) renders with single shell and correct active state",
+        "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+        "url": "http://127.0.0.1:61346/search",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-search-search-renders-with-singl--9ac05c8d94c5578eee5d42e0f1111f90a4b2c7f4086649eb6b2bc48287c37b47.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:40:28"
+          }
+        ]
+      }
+    },
+    {
+      "index": 8,
+      "testId": "66d28c9c49bf28775f51-d79ab2f37da89909c2fc",
+      "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+      "title": "route settings (/settings) renders with single shell and correct active state",
+      "firstFailure": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: 1\nReceived: 0\nTimeout:  120000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 120000ms\n  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\n    242 × locator resolved to 0 elements\n        - unexpected value \"0\"\n",
+      "failureLocation": "all-routes.spec.ts:40:28",
+      "url": "http://127.0.0.1:61346/settings",
+      "classification": "待定位",
+      "cause": "settings实际aria-current为0；须结合本地弹层背景路由核其当前nav合同，不能统一所有页都改0。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts；frontend/src/components/shell/use-primary-navigation.ts（调查）",
+      "proposal": "核直接访问与从账号页本地打开两种背景语义，保原返回位置与可见弹窗。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/all-routes--Whole-system-route-matrix-Task-26-route-settings-settings-renders-with-s--ad51719822f06d3755706e1143f79844c00a9872a7497123389188d1e1105172.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "66d28c9c49bf28775f51-d79ab2f37da89909c2fc",
+        "titlePath": [
+          "e2e/all-routes.spec.ts",
+          "Whole-system route matrix (Task 26)",
+          "route settings (/settings) renders with single shell and correct active state"
+        ],
+        "title": "route settings (/settings) renders with single shell and correct active state",
+        "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+        "url": "http://127.0.0.1:61346/settings",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-settings-settings-renders-with-s--ad51719822f06d3755706e1143f79844c00a9872a7497123389188d1e1105172.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:40:28"
+          }
+        ]
+      }
+    },
+    {
+      "index": 9,
+      "testId": "826b944a90800335c80d-29f41b2bbed70474183c",
+      "spec": "frontend/tests-t1246-generated/e2e/app-shell.spec.ts",
+      "title": "lists the seven approved primary nav items",
+      "firstFailure": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).getByRole('link')\nExpected: 7\nReceived: 13\nTimeout:  120000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 120000ms\n  - waiting for getByRole('navigation', { name: '主要导航' }).getByRole('link')\n    242 × locator resolved to 13 elements\n        - unexpected value \"13\"\n",
+      "failureLocation": "app-shell.spec.ts:37:25",
+      "url": "http://127.0.0.1:61346/",
+      "classification": "已确认原合同漂移",
+      "cause": "真实PRIMARY_NAV已有13入口，含定位/雷达/选题/画布/自动化，T118c经验入口已移除；旧七项清单过时。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/app-shell.spec.ts",
+      "proposal": "用当前已批准IA完整清单逐项核实际href/顺序/可操作，不能仅改数量13。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/app-shell--AppShell-lists-the-seven-approved-primary-nav-items--38bf68205e93247e3a2aee57633531300ae46f1f4f714f90fa31813bc0e22b54.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "826b944a90800335c80d-29f41b2bbed70474183c",
+        "titlePath": [
+          "e2e/app-shell.spec.ts",
+          "AppShell",
+          "lists the seven approved primary nav items"
+        ],
+        "title": "lists the seven approved primary nav items",
+        "spec": "frontend/tests-t1246-generated/e2e/app-shell.spec.ts",
+        "url": "http://127.0.0.1:61346/",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/app-shell--AppShell-lists-the-seven-approved-primary-nav-items--38bf68205e93247e3a2aee57633531300ae46f1f4f714f90fa31813bc0e22b54.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).getByRole('link')\nExpected: \u001b[32m7\u001b[39m\nReceived: \u001b[31m13\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).getByRole('link')\u001b[22m\n\u001b[2m    242 × locator resolved to 13 elements\u001b[22m\n\u001b[2m        - unexpected value \"13\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).getByRole('link')\nExpected: \u001b[32m7\u001b[39m\nReceived: \u001b[31m13\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).getByRole('link')\u001b[22m\n\u001b[2m    242 × locator resolved to 13 elements\u001b[22m\n\u001b[2m        - unexpected value \"13\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/app-shell.spec.ts:37:25"
+          }
+        ]
+      }
+    },
+    {
+      "index": 10,
+      "testId": "826b944a90800335c80d-9f1ba789128856c63381",
+      "spec": "frontend/tests-t1246-generated/e2e/app-shell.spec.ts",
+      "title": "focus order: sidebar -> top header -> page content",
+      "firstFailure": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "failureLocation": "app-shell.spec.ts:83:22",
+      "url": "http://127.0.0.1:61346/",
+      "classification": "测试观察范围不足，产品顺序仍待核",
+      "cause": "原12次Tab上限少于现13主nav链接，首轮未进入header；尚未证明实际焦点顺序错误。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/app-shell.spec.ts",
+      "proposal": "按可见实际focusable导航数+有界完整路径核header→正文，保跳转与无焦点陷阱断言。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/app-shell--AppShell-focus-order-sidebar-top-header-page-content--655a5b554f7ce62af7138aec8b4c7e45be657ef1f41cf51d0d18f79b8af151ee.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "826b944a90800335c80d-9f1ba789128856c63381",
+        "titlePath": [
+          "e2e/app-shell.spec.ts",
+          "AppShell",
+          "focus order: sidebar -> top header -> page content"
+        ],
+        "title": "focus order: sidebar -> top header -> page content",
+        "spec": "frontend/tests-t1246-generated/e2e/app-shell.spec.ts",
+        "url": "http://127.0.0.1:61346/",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/app-shell--AppShell-focus-order-sidebar-top-header-page-content--655a5b554f7ce62af7138aec8b4c7e45be657ef1f41cf51d0d18f79b8af151ee.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/app-shell.spec.ts:83:22"
+          }
+        ]
+      }
+    },
+    {
+      "index": 11,
+      "testId": "826b944a90800335c80d-4077f0e7e007a8275809",
+      "spec": "frontend/tests-t1246-generated/e2e/app-shell.spec.ts",
+      "title": "applies shared page spacing tokens in the browser",
+      "firstFailure": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 1\n\n  Object {\n-   \"gap\": \"20px\",\n+   \"gap\": \"normal\",\n    \"paddingLeft\": \"24px\",\n    \"paddingRight\": \"24px\",\n  }",
+      "failureLocation": "app-shell.spec.ts:202:20",
+      "url": "http://127.0.0.1:61346/",
+      "classification": "待定位",
+      "cause": "实际firstElementChild gap normal；dashboard真实main仍gap-section-gap。应先核app-page-content首子是否初始化boundary/内容容器。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/app-shell.spec.ts；frontend/src/features/dashboard/dashboard-page.tsx（调查）",
+      "proposal": "等待已确认dashboard内容后测真实布局节点；实际tokens偏离则再最小产品修，不改normal为期望。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/app-shell--AppShell-applies-shared-page-spacing-tokens-in-the-browser--db37cd9c5f34b35e0dd088e5ef866bc447aedf1ab3d7e17f44adf41f0ff67de4.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "826b944a90800335c80d-4077f0e7e007a8275809",
+        "titlePath": [
+          "e2e/app-shell.spec.ts",
+          "AppShell",
+          "applies shared page spacing tokens in the browser"
+        ],
+        "title": "applies shared page spacing tokens in the browser",
+        "spec": "frontend/tests-t1246-generated/e2e/app-shell.spec.ts",
+        "url": "http://127.0.0.1:61346/",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/app-shell--AppShell-applies-shared-page-spacing-tokens-in-the-browser--db37cd9c5f34b35e0dd088e5ef866bc447aedf1ab3d7e17f44adf41f0ff67de4.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[32m-   \"gap\": \"20px\",\u001b[39m\n\u001b[31m+   \"gap\": \"normal\",\u001b[39m\n\u001b[2m    \"paddingLeft\": \"24px\",\u001b[22m\n\u001b[2m    \"paddingRight\": \"24px\",\u001b[22m\n\u001b[2m  }\u001b[22m",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[32m-   \"gap\": \"20px\",\u001b[39m\n\u001b[31m+   \"gap\": \"normal\",\u001b[39m\n\u001b[2m    \"paddingLeft\": \"24px\",\u001b[22m\n\u001b[2m    \"paddingRight\": \"24px\",\u001b[22m\n\u001b[2m  }\u001b[22m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/app-shell.spec.ts:202:20"
+          }
+        ]
+      }
+    },
+    {
+      "index": 12,
+      "testId": "8cf1aa680fa498b7616c-970fa63bd6a10887733c",
+      "spec": "frontend/tests-t1246-generated/e2e/automations-group-media-jobs.spec.ts",
+      "title": "切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同",
+      "firstFailure": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  locator('[data-slot=\"automations-list\"] li[data-job-id]')\nExpected: 2\nReceived: 0\nTimeout:  120000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 120000ms\n  - waiting for locator('[data-slot=\"automations-list\"] li[data-job-id]')\n    242 × locator resolved to 0 elements\n        - unexpected value \"0\"\n",
+      "failureLocation": "automations-group-media-jobs.spec.ts:139:82",
+      "url": "http://127.0.0.1:61346/automations",
+      "classification": "测试竞争＋已确认产品风险",
+      "cause": "BA001：真实GET仍发旧legacy Cookie，菜单为目标新组而正文0jobs；尚未进行切B/回A。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/automations-group-media-jobs.spec.ts；frontend/src/components/shell/account-switcher.tsx；frontend/src/components/shell/workspace-initialization.tsx；对应初始化/切组tests",
+      "proposal": "fixture先真实选择/核cookie+LS；产品首载合法LS根与SSR初始根不同须沿原受控refresh后ready，保dirty/ABA/取消。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/automations-group-media-jobs--账号组内多平台定时任务可见性-T-1199-切换账号组只改变工作区列表-回到原组后原-job-ID-与排期仍相同--21413cb7b7a6986cc776adc504a213000dfc9dd3e96138ba996c45be6bdceca0.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "8cf1aa680fa498b7616c-970fa63bd6a10887733c",
+        "titlePath": [
+          "e2e/automations-group-media-jobs.spec.ts",
+          "账号组内多平台定时任务可见性（T-1199）",
+          "切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同"
+        ],
+        "title": "切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同",
+        "spec": "frontend/tests-t1246-generated/e2e/automations-group-media-jobs.spec.ts",
+        "url": "http://127.0.0.1:61346/automations",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/automations-group-media-jobs--账号组内多平台定时任务可见性-T-1199-切换账号组只改变工作区列表-回到原组后原-job-ID-与排期仍相同--21413cb7b7a6986cc776adc504a213000dfc9dd3e96138ba996c45be6bdceca0.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-slot=\"automations-list\"] li[data-job-id]')\nExpected: \u001b[32m2\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"automations-list\"] li[data-job-id]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-slot=\"automations-list\"] li[data-job-id]')\nExpected: \u001b[32m2\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"automations-list\"] li[data-job-id]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/automations-group-media-jobs.spec.ts:139:82"
+          }
+        ]
+      }
+    },
+    {
+      "index": 13,
+      "testId": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+      "spec": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+      "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+      "firstFailure": "Error: expect(locator).toContainText(expected) failed\n\nLocator: getByTestId('automations-current-group')\nExpected substring: \"T1244 无绑定媒体组 t1244-908de3a4-9440-41b5-b16b-ae856a6444d9\"\nReceived string:    \"@t1022-1 · 全组任务\"\nTimeout: 120000ms\n\nCall log:\n  - Expect \"toContainText\" with timeout 120000ms\n  - waiting for getByTestId('automations-current-group')\n    239 × locator resolved to <span data-testid=\"automations-current-group\">@t1022-1 · 全组任务</span>\n        - unexpected value \"@t1022-1 · 全组任务\"\n",
+      "failureLocation": "automations-run-now-public.spec.ts:253:63",
+      "url": "http://127.0.0.1:61346/automations",
+      "classification": "测试竞争＋已确认产品风险",
+      "cause": "BA001同根：实际GET旧组，正文@t1022-1；未到runNow。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/automations-run-now-public.spec.ts；同上一行产品两文件与tests",
+      "proposal": "保真实本例组、原jobID、待扫码/开关/runNow后置，禁止改组名字为旧组。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/automations-run-now-public--组内真实作业通过立即运行准入并保原任务显示待扫码--4c83cfc4891336584a6d18f5f6f9fe57ea7c6fb261be338409a5cc32a0cbfed9.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+        "titlePath": [
+          "e2e/automations-run-now-public.spec.ts",
+          "组内真实作业通过立即运行准入并保原任务显示待扫码"
+        ],
+        "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+        "spec": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+        "url": "http://127.0.0.1:61346/automations",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/automations-run-now-public--组内真实作业通过立即运行准入并保原任务显示待扫码--4c83cfc4891336584a6d18f5f6f9fe57ea7c6fb261be338409a5cc32a0cbfed9.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('automations-current-group')\nExpected substring: \u001b[32m\"T1244 无绑定媒体组 t1244-908de3a4-9440-41b5-b16b-ae856a6444d9\"\u001b[39m\nReceived string:    \u001b[31m\"@t1022-1 · 全组任务\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('automations-current-group')\u001b[22m\n\u001b[2m    239 × locator resolved to <span data-testid=\"automations-current-group\">@t1022-1 · 全组任务</span>\u001b[22m\n\u001b[2m        - unexpected value \"@t1022-1 · 全组任务\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('automations-current-group')\nExpected substring: \u001b[32m\"T1244 无绑定媒体组 t1244-908de3a4-9440-41b5-b16b-ae856a6444d9\"\u001b[39m\nReceived string:    \u001b[31m\"@t1022-1 · 全组任务\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('automations-current-group')\u001b[22m\n\u001b[2m    239 × locator resolved to <span data-testid=\"automations-current-group\">@t1022-1 · 全组任务</span>\u001b[22m\n\u001b[2m        - unexpected value \"@t1022-1 · 全组任务\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts:253:63"
+          }
+        ]
+      }
+    },
+    {
+      "index": 14,
+      "testId": "b64559fc4465ec32f46c-c9e4a01ada78a3a6ab2c",
+      "spec": "frontend/tests-t1246-generated/e2e/experience.spec.ts",
+      "title": "renders the adjudication workbench on the /experience route",
+      "firstFailure": "Error: expect(locator).toContainText(expected) failed\n\nLocator: locator('[data-slot=\"header-page-heading\"]')\nExpected substring: \"经验沉淀\"\nReceived string:    \"知识库沉淀的笔记、灵感与外部参考\"\nTimeout: 120000ms\n\nCall log:\n  - Expect \"toContainText\" with timeout 120000ms\n  - waiting for locator('[data-slot=\"header-page-heading\"]')\n    5 × locator resolved to <div class=\"min-w-0 flex-1\" data-slot=\"header-page-heading\"></div>\n      - unexpected value \"\"\n    237 × locator resolved to <div data-slot=\"header-page-heading\" class=\"flex min-w-0 flex-1 flex-col sr-only\">…</div>\n        - unexpected value \"知识库沉淀的笔记、灵感与外部参考\"\n",
+      "failureLocation": "experience.spec.ts:28:27",
+      "url": "http://127.0.0.1:61346/knowledge",
+      "classification": "已确认原合同漂移",
+      "cause": "同T118c/T1239真实redirect导致知识页标题；原经验裁决页退役。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/experience.spec.ts",
+      "proposal": "按批准合并知识页与复盘真实裁决链更新原合同，不重建退役页。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/experience--经验裁决台-page-renders-the-adjudication-workbench-on-the-experience-route--724bef1fc8d4839ad58a56bbc19ab847bf25a445c539c5091f196d802e475150.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "b64559fc4465ec32f46c-c9e4a01ada78a3a6ab2c",
+        "titlePath": [
+          "e2e/experience.spec.ts",
+          "经验裁决台 page",
+          "renders the adjudication workbench on the /experience route"
+        ],
+        "title": "renders the adjudication workbench on the /experience route",
+        "spec": "frontend/tests-t1246-generated/e2e/experience.spec.ts",
+        "url": "http://127.0.0.1:61346/knowledge",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/experience--经验裁决台-page-renders-the-adjudication-workbench-on-the-experience-route--724bef1fc8d4839ad58a56bbc19ab847bf25a445c539c5091f196d802e475150.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"header-page-heading\"]')\nExpected substring: \u001b[32m\"经验沉淀\"\u001b[39m\nReceived string:    \u001b[31m\"知识库沉淀的笔记、灵感与外部参考\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"header-page-heading\"]')\u001b[22m\n\u001b[2m    5 × locator resolved to <div class=\"min-w-0 flex-1\" data-slot=\"header-page-heading\"></div>\u001b[22m\n\u001b[2m      - unexpected value \"\"\u001b[22m\n\u001b[2m    237 × locator resolved to <div data-slot=\"header-page-heading\" class=\"flex min-w-0 flex-1 flex-col sr-only\">…</div>\u001b[22m\n\u001b[2m        - unexpected value \"知识库沉淀的笔记、灵感与外部参考\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"header-page-heading\"]')\nExpected substring: \u001b[32m\"经验沉淀\"\u001b[39m\nReceived string:    \u001b[31m\"知识库沉淀的笔记、灵感与外部参考\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"header-page-heading\"]')\u001b[22m\n\u001b[2m    5 × locator resolved to <div class=\"min-w-0 flex-1\" data-slot=\"header-page-heading\"></div>\u001b[22m\n\u001b[2m      - unexpected value \"\"\u001b[22m\n\u001b[2m    237 × locator resolved to <div data-slot=\"header-page-heading\" class=\"flex min-w-0 flex-1 flex-col sr-only\">…</div>\u001b[22m\n\u001b[2m        - unexpected value \"知识库沉淀的笔记、灵感与外部参考\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/experience.spec.ts:28:27"
+          }
+        ]
+      }
+    },
+    {
+      "index": 15,
+      "testId": "41050249d47ab09b44f8-452e9ace5f8248c451ed",
+      "spec": "frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts",
+      "title": "空账号组通过设置页定制官方 Skill 的首写入口可用",
+      "firstFailure": "Error: 初始活动组选项必须是本例公开创建的真实组\n\nexpect(received).toBeDefined()\n\nReceived: undefined",
+      "failureLocation": "group-skill-customization.spec.ts:201:48",
+      "url": "http://127.0.0.1:61346/",
+      "classification": "已确认fixture前置漂移",
+      "cause": "BA002：原活跃合法迁移组已存在；创建两新组不代表自动选中新组，首断言未到Skill编辑。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/group-skill-customization.spec.ts",
+      "proposal": "读取真实当前组并显式UI选择本例空组；保首写/CAS/刷新/跨组版本全部后置。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/group-skill-customization--空账号组通过设置页定制官方-Skill-的首写入口可用--c1e9245b2e80759ea81ea10d348ec369d8a175879feaf8f7cc38ca7140ca6a8d.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "41050249d47ab09b44f8-452e9ace5f8248c451ed",
+        "titlePath": [
+          "e2e/group-skill-customization.spec.ts",
+          "空账号组通过设置页定制官方 Skill 的首写入口可用"
+        ],
+        "title": "空账号组通过设置页定制官方 Skill 的首写入口可用",
+        "spec": "frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts",
+        "url": "http://127.0.0.1:61346/",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/group-skill-customization--空账号组通过设置页定制官方-Skill-的首写入口可用--c1e9245b2e80759ea81ea10d348ec369d8a175879feaf8f7cc38ca7140ca6a8d.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: 初始活动组选项必须是本例公开创建的真实组\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeDefined\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m",
+            "stack": "Error: 初始活动组选项必须是本例公开创建的真实组\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeDefined\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts:201:48"
+          }
+        ]
+      }
+    },
+    {
+      "index": 16,
+      "testId": "37c0a50c9e3744722adf-720e6f026bb155ed6457",
+      "spec": "frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts",
+      "title": "T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根",
+      "firstFailure": "Error: 隔离数据根必须位于系统临时目录\n\nexpect(received).toBe(expected) // Object.is equality\n\nExpected: false\nReceived: true",
+      "failureLocation": "media-root-isolation.spec.ts:93:85",
+      "url": "about:blank",
+      "classification": "已确认验收工具前置",
+      "cause": "BA003：本轮/tmp数据根不满足os.tmpdir真实父路径＋creatoros-playwright-*前缀；未上传。",
+      "minimalWriteSetOrInvestigation": "docs/verification/t1246/driver运行根生成消费者",
+      "proposal": "新fresh mkdtemp位于realpath(os.tmpdir())且原前缀，media/data/env一致，原guard不放宽。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/media-root-isolation--T-1226-上传-公开下载与错组拒绝都使用本轮隔离媒体根--a288d1cd277759942e6df98e2b54363340d83b0538a5e7d0dcaa3bb689f1910e.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "37c0a50c9e3744722adf-720e6f026bb155ed6457",
+        "titlePath": [
+          "e2e/media-root-isolation.spec.ts",
+          "T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根"
+        ],
+        "title": "T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根",
+        "spec": "frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/media-root-isolation--T-1226-上传-公开下载与错组拒绝都使用本轮隔离媒体根--a288d1cd277759942e6df98e2b54363340d83b0538a5e7d0dcaa3bb689f1910e.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: 隔离数据根必须位于系统临时目录\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m",
+            "stack": "Error: 隔离数据根必须位于系统临时目录\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts:93:85"
+          }
+        ]
+      }
+    },
+    {
+      "index": 17,
+      "testId": "d9613b8836b17a7105de-3b722d27bb7db20a75f4",
+      "spec": "frontend/tests-t1246-generated/e2e/onboarding-and-small-sidebar.spec.ts",
+      "title": "重新打开后真实回到首页，并保留新号/已有作品两条连续路径",
+      "firstFailure": "Error: expect(locator).toContainText(expected) failed\n\nLocator: locator('[data-slot=\"onboarding-card\"]')\nExpected substring: \"绑定你的抖音号\"\nReceived string:    \"上手引导已完成 1 / 6结束引导将平台账号加入账号组已完成2确认创作起点选择从零开始，或先整理已有内容。历史资料可在绑定账号中显式归组。从零开始已有内容3确定账号组的内容定位先明确受众、内容方向和表达方式，后续对标、选题和项目才不会跑偏。去创建定位4添加一个对标账号在内容雷达里持续监控一个对标账号，后续可以直接从真实内容中找机会。去监控对标5从对标内容创建选题选一条对标内容完成拆解，并转成符合你账号定位的选题。去创建选题6把选题变成项目从刚创建的选题进入项目，继续完成脚本、制作、发布和复盘。去选题中心立项引导仅提供建议。你可以直接使用所有功能，或在设置中重新查看。\"\nTimeout: 120000ms\n\nCall log:\n  - Expect \"toContainText\" with timeout 120000ms\n  - waiting for locator('[data-slot=\"onboarding-card\"]')\n    242 × locator resolved to <section aria-label=\"新手引导\" data-slot=\"onboarding-card\" class=\"mt-14 flex flex-col gap-3 rounded-card border border-brand/25 bg-brand-soft/20 p-4\">…</section>\n        - unexpected value \"上手引导已完成 1 / 6结束引导将平台账号加入账号组已完成2确认创作起点选择从零开始，或先整理已有内容。历史资料可在绑定账号中显式归组。从零开始已有内容3确定账号组的内容定位先明确受众、内容方向和表达方式，后续对标、选题和项目才不会跑偏。去创建定位4添加一个对标账号在内容雷达里持续监控一个对标账号，后续可以直接从真实内容中找机会。去监控对标5从对标内容创建选题选一条对标内容完成拆解，并转成符合你账号定位的选题。去创建选题6把选题变成项目从刚创建的选题进入项目，继续完成脚本、制作、发布和复盘。去选题中心立项引导仅提供建议。你可以直接使用所有功能，或在设置中重新查看。\"\n",
+      "failureLocation": "onboarding-and-small-sidebar.spec.ts:76:24",
+      "url": "http://127.0.0.1:61346/",
+      "classification": "已确认账号组合同漂移",
+      "cause": "onboarding-steps.ts:168组模式真实标题将平台账号加入账号组；旧测试还硬等单账号绑定抖音标题。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts",
+      "proposal": "区分组/旧account真实scope，验组完整6步/两条路径/重开行为，不只换一条文案。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/onboarding-and-small-sidebar--新手成果路径与低高度侧栏-重新打开后真实回到首页-并保留新号-已有作品两条连续路径--32965c6ce883c7907b6e118e8e6909e02c7b24bcef0ec800ce424adba1994f6e.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "d9613b8836b17a7105de-3b722d27bb7db20a75f4",
+        "titlePath": [
+          "e2e/onboarding-and-small-sidebar.spec.ts",
+          "新手成果路径与低高度侧栏",
+          "重新打开后真实回到首页，并保留新号/已有作品两条连续路径"
+        ],
+        "title": "重新打开后真实回到首页，并保留新号/已有作品两条连续路径",
+        "spec": "frontend/tests-t1246-generated/e2e/onboarding-and-small-sidebar.spec.ts",
+        "url": "http://127.0.0.1:61346/",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/onboarding-and-small-sidebar--新手成果路径与低高度侧栏-重新打开后真实回到首页-并保留新号-已有作品两条连续路径--32965c6ce883c7907b6e118e8e6909e02c7b24bcef0ec800ce424adba1994f6e.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"onboarding-card\"]')\nExpected substring: \u001b[32m\"绑定你的抖音号\"\u001b[39m\nReceived string:    \u001b[31m\"上手引导已完成 1 / 6结束引导将平台账号加入账号组已完成2确认创作起点选择从零开始，或先整理已有内容。历史资料可在绑定账号中显式归组。从零开始已有内容3确定账号组的内容定位先明确受众、内容方向和表达方式，后续对标、选题和项目才不会跑偏。去创建定位4添加一个对标账号在内容雷达里持续监控一个对标账号，后续可以直接从真实内容中找机会。去监控对标5从对标内容创建选题选一条对标内容完成拆解，并转成符合你账号定位的选题。去创建选题6把选题变成项目从刚创建的选题进入项目，继续完成脚本、制作、发布和复盘。去选题中心立项引导仅提供建议。你可以直接使用所有功能，或在设置中重新查看。\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"onboarding-card\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to <section aria-label=\"新手引导\" data-slot=\"onboarding-card\" class=\"mt-14 flex flex-col gap-3 rounded-card border border-brand/25 bg-brand-soft/20 p-4\">…</section>\u001b[22m\n\u001b[2m        - unexpected value \"上手引导已完成 1 / 6结束引导将平台账号加入账号组已完成2确认创作起点选择从零开始，或先整理已有内容。历史资料可在绑定账号中显式归组。从零开始已有内容3确定账号组的内容定位先明确受众、内容方向和表达方式，后续对标、选题和项目才不会跑偏。去创建定位4添加一个对标账号在内容雷达里持续监控一个对标账号，后续可以直接从真实内容中找机会。去监控对标5从对标内容创建选题选一条对标内容完成拆解，并转成符合你账号定位的选题。去创建选题6把选题变成项目从刚创建的选题进入项目，继续完成脚本、制作、发布和复盘。去选题中心立项引导仅提供建议。你可以直接使用所有功能，或在设置中重新查看。\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"onboarding-card\"]')\nExpected substring: \u001b[32m\"绑定你的抖音号\"\u001b[39m\nReceived string:    \u001b[31m\"上手引导已完成 1 / 6结束引导将平台账号加入账号组已完成2确认创作起点选择从零开始，或先整理已有内容。历史资料可在绑定账号中显式归组。从零开始已有内容3确定账号组的内容定位先明确受众、内容方向和表达方式，后续对标、选题和项目才不会跑偏。去创建定位4添加一个对标账号在内容雷达里持续监控一个对标账号，后续可以直接从真实内容中找机会。去监控对标5从对标内容创建选题选一条对标内容完成拆解，并转成符合你账号定位的选题。去创建选题6把选题变成项目从刚创建的选题进入项目，继续完成脚本、制作、发布和复盘。去选题中心立项引导仅提供建议。你可以直接使用所有功能，或在设置中重新查看。\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"onboarding-card\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to <section aria-label=\"新手引导\" data-slot=\"onboarding-card\" class=\"mt-14 flex flex-col gap-3 rounded-card border border-brand/25 bg-brand-soft/20 p-4\">…</section>\u001b[22m\n\u001b[2m        - unexpected value \"上手引导已完成 1 / 6结束引导将平台账号加入账号组已完成2确认创作起点选择从零开始，或先整理已有内容。历史资料可在绑定账号中显式归组。从零开始已有内容3确定账号组的内容定位先明确受众、内容方向和表达方式，后续对标、选题和项目才不会跑偏。去创建定位4添加一个对标账号在内容雷达里持续监控一个对标账号，后续可以直接从真实内容中找机会。去监控对标5从对标内容创建选题选一条对标内容完成拆解，并转成符合你账号定位的选题。去创建选题6把选题变成项目从刚创建的选题进入项目，继续完成脚本、制作、发布和复盘。去选题中心立项引导仅提供建议。你可以直接使用所有功能，或在设置中重新查看。\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/onboarding-and-small-sidebar.spec.ts:76:24"
+          }
+        ]
+      }
+    },
+    {
+      "index": 18,
+      "testId": "ff88aeb912d54d19c019-07fb539b46563c1a126c",
+      "spec": "frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts",
+      "title": "平台作品页按当前账号显示真实空目录和待核验能力",
+      "firstFailure": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByTestId('platform-capability-overview')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 120000ms\n  - waiting for getByTestId('platform-capability-overview')\n",
+      "failureLocation": "platform-work-catalog.spec.ts:31:66",
+      "url": "http://127.0.0.1:61346/accounts",
+      "classification": "待定位",
+      "cause": "旧platform-capability-overview在/accounts不见；真实新组管理页面与旧能力组件仍存在，未核批准IA/实际入口。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/platform-work-catalog.spec.ts；frontend/src/features/platform-account/account-group-manager.tsx（调查）",
+      "proposal": "明确组选中/账号身份与当前各平台能力表真实入口后更新；不能删能力核验或签空目录下游。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/platform-work-catalog--平台作品页按当前账号显示真实空目录和待核验能力--e6031b558bb620c5e73ffcf019e0338f14297bfc00029cf75ed2ecc6d4cb7707.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "ff88aeb912d54d19c019-07fb539b46563c1a126c",
+        "titlePath": [
+          "e2e/platform-work-catalog.spec.ts",
+          "平台作品页按当前账号显示真实空目录和待核验能力"
+        ],
+        "title": "平台作品页按当前账号显示真实空目录和待核验能力",
+        "spec": "frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts",
+        "url": "http://127.0.0.1:61346/accounts",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/platform-work-catalog--平台作品页按当前账号显示真实空目录和待核验能力--e6031b558bb620c5e73ffcf019e0338f14297bfc00029cf75ed2ecc6d4cb7707.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('platform-capability-overview')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('platform-capability-overview')\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('platform-capability-overview')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('platform-capability-overview')\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts:31:66"
+          }
+        ]
+      }
+    },
+    {
+      "index": 19,
+      "testId": "ff88aeb912d54d19c019-cfdcf5687c7b5f5352b8",
+      "spec": "frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts",
+      "title": "本地账号完成多平台目标项目与发布草稿，账号归属隔离",
+      "firstFailure": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('小红书账号视频创作链验收', { exact: true }).first()\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 120000ms\n  - waiting for getByText('小红书账号视频创作链验收', { exact: true }).first()\n",
+      "failureLocation": "platform-work-catalog.spec.ts:98:66",
+      "url": "http://127.0.0.1:61346/projects/project-81b98377-3964",
+      "classification": "待定位",
+      "cause": "第二平台项目真实创建API成功但页面标题未见；fixture只写account Cookie/LS，未冻结/清除旧group，疑作用域分裂尚无trace定因。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/platform-work-catalog.spec.ts；shell范围相关源（调查）",
+      "proposal": "逐原projectID对账请求scope、SSR根及DOM，保跨账号404/目标平台/发布草稿全部断言。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/platform-work-catalog--本地账号完成多平台目标项目与发布草稿-账号归属隔离--2d02dff5e2ca3565bb845b998035a9e03c1300b8b405c4f763296b038d60a063.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "ff88aeb912d54d19c019-cfdcf5687c7b5f5352b8",
+        "titlePath": [
+          "e2e/platform-work-catalog.spec.ts",
+          "本地账号完成多平台目标项目与发布草稿，账号归属隔离"
+        ],
+        "title": "本地账号完成多平台目标项目与发布草稿，账号归属隔离",
+        "spec": "frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/project-81b98377-3964",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/platform-work-catalog--本地账号完成多平台目标项目与发布草稿-账号归属隔离--2d02dff5e2ca3565bb845b998035a9e03c1300b8b405c4f763296b038d60a063.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('小红书账号视频创作链验收', { exact: true }).first()\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByText('小红书账号视频创作链验收', { exact: true }).first()\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('小红书账号视频创作链验收', { exact: true }).first()\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByText('小红书账号视频创作链验收', { exact: true }).first()\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts:98:66"
+          }
+        ]
+      }
+    },
+    {
+      "index": 20,
+      "testId": "ff88aeb912d54d19c019-9d7913f6044d65d5c8a4",
+      "spec": "frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts",
+      "title": "账号页绑定成功后可直接切换到对应的小红书与快手作品页",
+      "firstFailure": "TimeoutError: locator.click: Timeout 120000ms exceeded.\nCall log:\n  - waiting for getByTestId('bind-xiaohongshu-scan')\n",
+      "failureLocation": "platform-work-catalog.spec.ts:128:53",
+      "url": "http://127.0.0.1:61346/accounts",
+      "classification": "待定位",
+      "cause": "旧bind-xiaohongshu-scan测试id不见；新组管理真实扫码能力按钮需核原接入/批准入口。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/platform-work-catalog.spec.ts；frontend/src/features/platform-account/account-group-manager.tsx（调查）",
+      "proposal": "选当前正确组真实能力表入口；fixture上游明标，不执行用户平台登录，保身份/成功切换同ID。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/platform-work-catalog--账号页绑定成功后可直接切换到对应的小红书与快手作品页--bb3e74f6fb11dc43b8938cacc06cd80aa512f1a72fbd0f2235910ed9e154ce03.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "ff88aeb912d54d19c019-9d7913f6044d65d5c8a4",
+        "titlePath": [
+          "e2e/platform-work-catalog.spec.ts",
+          "账号页绑定成功后可直接切换到对应的小红书与快手作品页"
+        ],
+        "title": "账号页绑定成功后可直接切换到对应的小红书与快手作品页",
+        "spec": "frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts",
+        "url": "http://127.0.0.1:61346/accounts",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/platform-work-catalog--账号页绑定成功后可直接切换到对应的小红书与快手作品页--bb3e74f6fb11dc43b8938cacc06cd80aa512f1a72fbd0f2235910ed9e154ce03.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "TimeoutError: locator.click: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('bind-xiaohongshu-scan')\u001b[22m\n",
+            "stack": "TimeoutError: locator.click: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('bind-xiaohongshu-scan')\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts:128:53"
+          }
+        ]
+      }
+    },
+    {
+      "index": 21,
+      "testId": "90d32f0826f75e4378df-34912ade6a99810c4747",
+      "spec": "frontend/tests-t1246-generated/e2e/production-broll-remove.spec.ts",
+      "title": "已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧素材",
+      "firstFailure": "Error: expect(locator).toBeVisible() failed\n\nLocator: locator('[data-slot=\"confirmed-decisions-notice\"]')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 120000ms\n  - waiting for locator('[data-slot=\"confirmed-decisions-notice\"]')\n",
+      "failureLocation": "production-broll-remove.spec.ts:236:74",
+      "url": "http://127.0.0.1:61346/projects/project-81b98377-4014/production",
+      "classification": "待定位",
+      "cause": "已确认分镜notice未呈现；production源码仍有该slot，不能归为退役。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/production-broll-remove.spec.ts；frontend/src/features/production/production-workbench.tsx（调查）",
+      "proposal": "原decisions/task/project/receipt scope与确认状态真实读回，定位未呈现来源后再定产品或fixture。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/production-broll-remove--已确认分镜剔除-B-roll-后写入新版本-刷新也不会恢复旧素材--21c4f4802932b9bacda9aa47af4bb4e0251fabffe475f9b844795f56bc30f467.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "90d32f0826f75e4378df-34912ade6a99810c4747",
+        "titlePath": [
+          "e2e/production-broll-remove.spec.ts",
+          "已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧素材"
+        ],
+        "title": "已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧素材",
+        "spec": "frontend/tests-t1246-generated/e2e/production-broll-remove.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/project-81b98377-4014/production",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/production-broll-remove--已确认分镜剔除-B-roll-后写入新版本-刷新也不会恢复旧素材--21c4f4802932b9bacda9aa47af4bb4e0251fabffe475f9b844795f56bc30f467.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"confirmed-decisions-notice\"]')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"confirmed-decisions-notice\"]')\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-slot=\"confirmed-decisions-notice\"]')\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"confirmed-decisions-notice\"]')\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/production-broll-remove.spec.ts:236:74"
+          }
+        ]
+      }
+    },
+    {
+      "index": 22,
+      "testId": "4f3e74964b66d244a3b5-d02911a1d5be5b1c6704",
+      "spec": "frontend/tests-t1246-generated/e2e/publishing-center.spec.ts",
+      "title": "真实项目排期出现在 70/30 日历视图，旧重复列表已移除",
+      "firstFailure": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  locator('main[data-page=\"publishing-center\"]').locator('[data-slot=\"publishing-center-layout\"]').locator('[data-slot=\"publishing-calendar-region\"]').locator('[data-testid=\"calendar-entry-row\"]')\nExpected: 1\nReceived: 0\nTimeout:  120000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 120000ms\n  - waiting for locator('main[data-page=\"publishing-center\"]').locator('[data-slot=\"publishing-center-layout\"]').locator('[data-slot=\"publishing-calendar-region\"]').locator('[data-testid=\"calendar-entry-row\"]')\n    242 × locator resolved to 0 elements\n        - unexpected value \"0\"\n",
+      "failureLocation": "publishing-center.spec.ts:97:34",
+      "url": "http://127.0.0.1:61346/publishing?month=2099-12",
+      "classification": "待定位",
+      "cause": "已排期项目日历month=2099-12无entry；尚未核同project排期、scope、目标月时区/真实视图筛选。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/publishing-center.spec.ts；frontend/src/features/publishing（调查）",
+      "proposal": "按原projectID/排期字段同scope核；不能改1为0或随意month替换。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/publishing-center--发布中心日历主视图-T-599-真实项目排期出现在-70-30-日历视图-旧重复列表已移除--0999c4940f2590baef2d443a0b2fff6279b523ac3273823d49277a3af1536376.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "4f3e74964b66d244a3b5-d02911a1d5be5b1c6704",
+        "titlePath": [
+          "e2e/publishing-center.spec.ts",
+          "发布中心日历主视图（T-599）",
+          "真实项目排期出现在 70/30 日历视图，旧重复列表已移除"
+        ],
+        "title": "真实项目排期出现在 70/30 日历视图，旧重复列表已移除",
+        "spec": "frontend/tests-t1246-generated/e2e/publishing-center.spec.ts",
+        "url": "http://127.0.0.1:61346/publishing?month=2099-12",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/publishing-center--发布中心日历主视图-T-599-真实项目排期出现在-70-30-日历视图-旧重复列表已移除--0999c4940f2590baef2d443a0b2fff6279b523ac3273823d49277a3af1536376.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('main[data-page=\"publishing-center\"]').locator('[data-slot=\"publishing-center-layout\"]').locator('[data-slot=\"publishing-calendar-region\"]').locator('[data-testid=\"calendar-entry-row\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('main[data-page=\"publishing-center\"]').locator('[data-slot=\"publishing-center-layout\"]').locator('[data-slot=\"publishing-calendar-region\"]').locator('[data-testid=\"calendar-entry-row\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('main[data-page=\"publishing-center\"]').locator('[data-slot=\"publishing-center-layout\"]').locator('[data-slot=\"publishing-calendar-region\"]').locator('[data-testid=\"calendar-entry-row\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('main[data-page=\"publishing-center\"]').locator('[data-slot=\"publishing-center-layout\"]').locator('[data-slot=\"publishing-calendar-region\"]').locator('[data-testid=\"calendar-entry-row\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/publishing-center.spec.ts:97:34"
+          }
+        ]
+      }
+    },
+    {
+      "index": 23,
+      "testId": "8e7a9a57a62b196b6936-eead317e609b857c2ca4",
+      "spec": "frontend/tests-t1246-generated/e2e/recent-data-safety.spec.ts",
+      "title": "已有定位进入从零前采时，正式母版和历史始终可见，搜索默认国内中文",
+      "firstFailure": "Error: expect(locator).toContainText(expected) failed\n\nLocator: getByTestId('positioning-center')\nExpected substring: \"当前定位母版\"\nReceived string:    \"定位中心账号的定位母版——下游的选题、评分、素材匹配与发布都以它为约束源。用 Copilot 把定位聊清楚不再填写固定六问，也不会因为资料不全卡住生成。Copilot 会先判断你是想继续深入当前账号、调整方向，还是重新定位；再结合可用作品和你的回答， 每次只补一个真正影响结果的信息。纯人设不会被强塞产品；有产品或服务时，才继续梳理产品、 人群、场景、痛点和信任证明。 随时可说“先给我一版” 未采纳前不改当前母版开始定位对话\"\nTimeout: 120000ms\n\nCall log:\n  - Expect \"toContainText\" with timeout 120000ms\n  - waiting for getByTestId('positioning-center')\n    237 × locator resolved to <div data-slot=\"positioning-center\" data-testid=\"positioning-center\" class=\"flex h-full min-h-0 flex-col gap-4\">…</div>\n        - unexpected value \"定位中心账号的定位母版——下游的选题、评分、素材匹配与发布都以它为约束源。用 Copilot 把定位聊清楚不再填写固定六问，也不会因为资料不全卡住生成。Copilot 会先判断你是想继续深入当前账号、调整方向，还是重新定位；再结合可用作品和你的回答， 每次只补一个真正影响结果的信息。纯人设不会被强塞产品；有产品或服务时，才继续梳理产品、 人群、场景、痛点和信任证明。 随时可说“先给我一版” 未采纳前不改当前母版开始定位对话\"\n",
+      "failureLocation": "recent-data-safety.spec.ts:134:24",
+      "url": "http://127.0.0.1:61346/positioning",
+      "classification": "待定位",
+      "cause": "原已创建定位母版未在真实positioning页显示，当前只见Copilot起点；旧新账号scope及母版归属未对账。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/recent-data-safety.spec.ts；frontend/src/features/positioning（调查）",
+      "proposal": "核原母版版本/历史同scope及当前UI入口；保正式母版不可被候选覆盖、国内中文搜索范围。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/recent-data-safety--已有定位进入从零前采时-正式母版和历史始终可见-搜索默认国内中文--82cad332dfd9a62d847ab9249828c039625e2956bc932f79a0af25fcb7a1518f.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "8e7a9a57a62b196b6936-eead317e609b857c2ca4",
+        "titlePath": [
+          "e2e/recent-data-safety.spec.ts",
+          "已有定位进入从零前采时，正式母版和历史始终可见，搜索默认国内中文"
+        ],
+        "title": "已有定位进入从零前采时，正式母版和历史始终可见，搜索默认国内中文",
+        "spec": "frontend/tests-t1246-generated/e2e/recent-data-safety.spec.ts",
+        "url": "http://127.0.0.1:61346/positioning",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/recent-data-safety--已有定位进入从零前采时-正式母版和历史始终可见-搜索默认国内中文--82cad332dfd9a62d847ab9249828c039625e2956bc932f79a0af25fcb7a1518f.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('positioning-center')\nExpected substring: \u001b[32m\"当前定位母版\"\u001b[39m\nReceived string:    \u001b[31m\"定位中心账号的定位母版——下游的选题、评分、素材匹配与发布都以它为约束源。用 Copilot 把定位聊清楚不再填写固定六问，也不会因为资料不全卡住生成。Copilot 会先判断你是想继续深入当前账号、调整方向，还是重新定位；再结合可用作品和你的回答， 每次只补一个真正影响结果的信息。纯人设不会被强塞产品；有产品或服务时，才继续梳理产品、 人群、场景、痛点和信任证明。 随时可说“先给我一版” 未采纳前不改当前母版开始定位对话\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('positioning-center')\u001b[22m\n\u001b[2m    237 × locator resolved to <div data-slot=\"positioning-center\" data-testid=\"positioning-center\" class=\"flex h-full min-h-0 flex-col gap-4\">…</div>\u001b[22m\n\u001b[2m        - unexpected value \"定位中心账号的定位母版——下游的选题、评分、素材匹配与发布都以它为约束源。用 Copilot 把定位聊清楚不再填写固定六问，也不会因为资料不全卡住生成。Copilot 会先判断你是想继续深入当前账号、调整方向，还是重新定位；再结合可用作品和你的回答， 每次只补一个真正影响结果的信息。纯人设不会被强塞产品；有产品或服务时，才继续梳理产品、 人群、场景、痛点和信任证明。 随时可说“先给我一版” 未采纳前不改当前母版开始定位对话\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('positioning-center')\nExpected substring: \u001b[32m\"当前定位母版\"\u001b[39m\nReceived string:    \u001b[31m\"定位中心账号的定位母版——下游的选题、评分、素材匹配与发布都以它为约束源。用 Copilot 把定位聊清楚不再填写固定六问，也不会因为资料不全卡住生成。Copilot 会先判断你是想继续深入当前账号、调整方向，还是重新定位；再结合可用作品和你的回答， 每次只补一个真正影响结果的信息。纯人设不会被强塞产品；有产品或服务时，才继续梳理产品、 人群、场景、痛点和信任证明。 随时可说“先给我一版” 未采纳前不改当前母版开始定位对话\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('positioning-center')\u001b[22m\n\u001b[2m    237 × locator resolved to <div data-slot=\"positioning-center\" data-testid=\"positioning-center\" class=\"flex h-full min-h-0 flex-col gap-4\">…</div>\u001b[22m\n\u001b[2m        - unexpected value \"定位中心账号的定位母版——下游的选题、评分、素材匹配与发布都以它为约束源。用 Copilot 把定位聊清楚不再填写固定六问，也不会因为资料不全卡住生成。Copilot 会先判断你是想继续深入当前账号、调整方向，还是重新定位；再结合可用作品和你的回答， 每次只补一个真正影响结果的信息。纯人设不会被强塞产品；有产品或服务时，才继续梳理产品、 人群、场景、痛点和信任证明。 随时可说“先给我一版” 未采纳前不改当前母版开始定位对话\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/recent-data-safety.spec.ts:134:24"
+          }
+        ]
+      }
+    },
+    {
+      "index": 24,
+      "testId": "f4a36a9939d689d57a9d-16a12204dc96e9f901a5",
+      "spec": "frontend/tests-t1246-generated/e2e/search.spec.ts",
+      "title": "renders the global search structure on the /search route",
+      "firstFailure": "Error: expect(locator).toBeVisible() failed\n\nLocator:  locator('main[data-page=\"search\"]').locator('[data-slot=\"project-result-section\"]')\nExpected: visible\nReceived: hidden\nTimeout:  120000ms\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 120000ms\n  - waiting for locator('main[data-page=\"search\"]').locator('[data-slot=\"project-result-section\"]')\n    241 × locator resolved to <div data-slot=\"project-result-section\" class=\"grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-3\"></div>\n        - unexpected value \"hidden\"\n",
+      "failureLocation": "search.spec.ts:74:34",
+      "url": "http://127.0.0.1:61346/search",
+      "classification": "待定位",
+      "cause": "真实project-result-section节点空grid隐藏；无本例公开搜索数据准备，不能凭标题判产品检索失败。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/search.spec.ts；frontend/src/features/search/search-page.tsx（调查）",
+      "proposal": "真实创建可搜索原project并核查询/结果ID，空数据按真实0；原其他结果族不偷删。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/search--Global-Search-page-renders-the-global-search-structure-on-the-search-rou--c957fde88ebffe52aeec45c2d41e5d163f83345dcfe8d1453aa9d391ba26aa4b.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "f4a36a9939d689d57a9d-16a12204dc96e9f901a5",
+        "titlePath": [
+          "e2e/search.spec.ts",
+          "Global Search page",
+          "renders the global search structure on the /search route"
+        ],
+        "title": "renders the global search structure on the /search route",
+        "spec": "frontend/tests-t1246-generated/e2e/search.spec.ts",
+        "url": "http://127.0.0.1:61346/search",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/search--Global-Search-page-renders-the-global-search-structure-on-the-search-rou--c957fde88ebffe52aeec45c2d41e5d163f83345dcfe8d1453aa9d391ba26aa4b.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('main[data-page=\"search\"]').locator('[data-slot=\"project-result-section\"]')\nExpected: visible\nReceived: hidden\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('main[data-page=\"search\"]').locator('[data-slot=\"project-result-section\"]')\u001b[22m\n\u001b[2m    241 × locator resolved to <div data-slot=\"project-result-section\" class=\"grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-3\"></div>\u001b[22m\n\u001b[2m        - unexpected value \"hidden\"\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('main[data-page=\"search\"]').locator('[data-slot=\"project-result-section\"]')\nExpected: visible\nReceived: hidden\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('main[data-page=\"search\"]').locator('[data-slot=\"project-result-section\"]')\u001b[22m\n\u001b[2m    241 × locator resolved to <div data-slot=\"project-result-section\" class=\"grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-3\"></div>\u001b[22m\n\u001b[2m        - unexpected value \"hidden\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/search.spec.ts:74:34"
+          }
+        ]
+      }
+    },
+    {
+      "index": 25,
+      "testId": "f4a36a9939d689d57a9d-45aa1522353ea5990897",
+      "spec": "frontend/tests-t1246-generated/e2e/search.spec.ts",
+      "title": "URL ?q=... is reflected in the search input value",
+      "firstFailure": "Error: expect(locator).toHaveValue(expected) failed\n\nLocator: locator('main[data-page=\"search\"]').locator('[data-slot=\"search-page-input\"]')\nExpected: \"AI\"\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toHaveValue\" with timeout 120000ms\n  - waiting for locator('main[data-page=\"search\"]').locator('[data-slot=\"search-page-input\"]')\n",
+      "failureLocation": "search.spec.ts:101:25",
+      "url": "http://127.0.0.1:61346/search?q=AI",
+      "classification": "已确认原合同漂移",
+      "cause": "T051 2d退役重复page-input，真实查询字段在TopHeader HeaderGlobalSearch，源文件明确该消费者。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/search.spec.ts",
+      "proposal": "按真实共享header输入核q并操作URL/实际结果ID；不恢复sr-only假输入。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/search--Global-Search-page-URL-q-is-reflected-in-the-search-input-value--58bbfd5324006532622f7971434c5ceb027347b6e8ca94bbc06b3661c5871420.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "f4a36a9939d689d57a9d-45aa1522353ea5990897",
+        "titlePath": [
+          "e2e/search.spec.ts",
+          "Global Search page",
+          "URL ?q=... is reflected in the search input value"
+        ],
+        "title": "URL ?q=... is reflected in the search input value",
+        "spec": "frontend/tests-t1246-generated/e2e/search.spec.ts",
+        "url": "http://127.0.0.1:61346/search?q=AI",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/search--Global-Search-page-URL-q-is-reflected-in-the-search-input-value--58bbfd5324006532622f7971434c5ceb027347b6e8ca94bbc06b3661c5871420.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveValue\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('main[data-page=\"search\"]').locator('[data-slot=\"search-page-input\"]')\nExpected: \u001b[32m\"AI\"\u001b[39m\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveValue\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('main[data-page=\"search\"]').locator('[data-slot=\"search-page-input\"]')\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveValue\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('main[data-page=\"search\"]').locator('[data-slot=\"search-page-input\"]')\nExpected: \u001b[32m\"AI\"\u001b[39m\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveValue\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('main[data-page=\"search\"]').locator('[data-slot=\"search-page-input\"]')\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/search.spec.ts:101:25"
+          }
+        ]
+      }
+    },
+    {
+      "index": 26,
+      "testId": "ab4ba88af7a7cf4851d3-7777bc4d99ffaf6b4a45",
+      "spec": "frontend/tests-t1246-generated/e2e/semantic-material-generation.spec.ts",
+      "title": "图片按确认稿需要预填多个候选，视频默认预填一个候选，点击不自动发送",
+      "firstFailure": "TimeoutError: locator.click: Timeout 120000ms exceeded.\nCall log:\n  - waiting for getByText('打开 AI 助手', { exact: true })\n",
+      "failureLocation": "semantic-material-generation.spec.ts:143:55",
+      "url": "http://127.0.0.1:61346/projects/project-81b98377-4370",
+      "classification": "待定位",
+      "cause": "本例大屏图/视频预填已到；1024宽侧栏打开AI助手入口缺，源码仍有该入口，可能侧栏折叠/响应式定位。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/semantic-material-generation.spec.ts；frontend/src/components/shell/sidebar.tsx（调查）",
+      "proposal": "核当前可点击真实全局按钮/可见状态，保同会话预填、多候选/单视频、点击不发请求；非共用main截图。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/semantic-material-generation--图片按确认稿需要预填多个候选-视频默认预填一个候选-点击不自动发送--3b9efd03da8d97c7de9072e52972923efe0f39f28a281d0aeb3c16c2c00c04d4.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "ab4ba88af7a7cf4851d3-7777bc4d99ffaf6b4a45",
+        "titlePath": [
+          "e2e/semantic-material-generation.spec.ts",
+          "图片按确认稿需要预填多个候选，视频默认预填一个候选，点击不自动发送"
+        ],
+        "title": "图片按确认稿需要预填多个候选，视频默认预填一个候选，点击不自动发送",
+        "spec": "frontend/tests-t1246-generated/e2e/semantic-material-generation.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/project-81b98377-4370",
+        "viewport": {
+          "width": 1024,
+          "height": 768
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/semantic-material-generation--图片按确认稿需要预填多个候选-视频默认预填一个候选-点击不自动发送--3b9efd03da8d97c7de9072e52972923efe0f39f28a281d0aeb3c16c2c00c04d4.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "TimeoutError: locator.click: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('打开 AI 助手', { exact: true })\u001b[22m\n",
+            "stack": "TimeoutError: locator.click: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('打开 AI 助手', { exact: true })\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/semantic-material-generation.spec.ts:143:55"
+          }
+        ]
+      }
+    },
+    {
+      "index": 27,
+      "testId": "87418b536bb3b16b9965-9d167bbc2a2b29b9bb07",
+      "spec": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+      "title": "renders the settings structure on the /settings route",
+      "firstFailure": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================",
+      "failureLocation": "settings.spec.ts:233:16",
+      "url": "about:blank",
+      "classification": "待定位，真实返回风险",
+      "cause": "设置关闭后真实URL为about:blank，等/accounts失败；handleOpenChange history.length>1→router.back，需核本地开弹窗是否push历史。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/settings.spec.ts；frontend/src/features/settings/settings-interactive-region.tsx；frontend/src/components/shell/use-primary-navigation.ts（调查）",
+      "proposal": "读取trace实际opening/closing history操作，若local开未push需产品回原背景，不能改预期about:blank/首页。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/settings--Settings-page-renders-the-settings-structure-on-the-settings-route--3bbd8db718cbc889382b928e65341a5271f7da93d3867f172e612644b18c2964.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "87418b536bb3b16b9965-9d167bbc2a2b29b9bb07",
+        "titlePath": [
+          "e2e/settings.spec.ts",
+          "Settings page",
+          "renders the settings structure on the /settings route"
+        ],
+        "title": "renders the settings structure on the /settings route",
+        "spec": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/settings--Settings-page-renders-the-settings-structure-on-the-settings-route--3bbd8db718cbc889382b928e65341a5271f7da93d3867f172e612644b18c2964.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================",
+            "stack": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/settings.spec.ts:233:16"
+          }
+        ]
+      }
+    },
+    {
+      "index": 28,
+      "testId": "87418b536bb3b16b9965-1daf9239c5bf49000f59",
+      "spec": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+      "title": "[T-1232] 外观主题与密度按本地消费者持久并返回刷新",
+      "firstFailure": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================",
+      "failureLocation": "settings.spec.ts:298:16",
+      "url": "about:blank",
+      "classification": "待定位，真实返回风险",
+      "cause": "同设置关闭about:blank断点，外观持久验证尚未到刷新回读。",
+      "minimalWriteSetOrInvestigation": "同上一行",
+      "proposal": "保关闭返回/accounts、刷新主题/密度原值与重新打开同原配置，不能用另外探针PASS代签。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/settings--Settings-page-T-1232-外观主题与密度按本地消费者持久并返回刷新--d5365957c511f405ee9c0f4c97406aa620490a547284b73502b3f1e4a4fa94d6.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "87418b536bb3b16b9965-1daf9239c5bf49000f59",
+        "titlePath": [
+          "e2e/settings.spec.ts",
+          "Settings page",
+          "[T-1232] 外观主题与密度按本地消费者持久并返回刷新"
+        ],
+        "title": "[T-1232] 外观主题与密度按本地消费者持久并返回刷新",
+        "spec": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/settings--Settings-page-T-1232-外观主题与密度按本地消费者持久并返回刷新--d5365957c511f405ee9c0f4c97406aa620490a547284b73502b3f1e4a4fa94d6.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================",
+            "stack": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/settings.spec.ts:298:16"
+          }
+        ]
+      }
+    },
+    {
+      "index": 29,
+      "testId": "a8c4891f095c8a8e2a8e-78c06f6ccaa7f5fd8b4e",
+      "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "title": "纯组无平台账号仍可通过真实创建弹层创建项目、保存画布和打开原生剪辑",
+      "firstFailure": "Error: 禁止真实数据根",
+      "failureLocation": "t1062-group-native-rough.spec.ts:333:118",
+      "url": "about:blank",
+      "classification": "已确认验收工具前置",
+      "cause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+      "minimalWriteSetOrInvestigation": "docs/verification/t1246/driver运行根生成消费者",
+      "proposal": "与媒体例同真实os.tmpdir mkdtemp根；ASR按当前候选交付真实cache/admission，保原guard和原声/手工降级断言。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-纯组无平台账号仍可通过真实创建弹层创建项目-保存画布和打开原生剪辑--4eac819eeb26607479736fb2a70743e9e65625b58156aee3c4a471a88cbfb0df.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "a8c4891f095c8a8e2a8e-78c06f6ccaa7f5fd8b4e",
+        "titlePath": [
+          "e2e/t1062-group-native-rough.spec.ts",
+          "T1062 账号组真实原生粗剪",
+          "纯组无平台账号仍可通过真实创建弹层创建项目、保存画布和打开原生剪辑"
+        ],
+        "title": "纯组无平台账号仍可通过真实创建弹层创建项目、保存画布和打开原生剪辑",
+        "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1366,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-纯组无平台账号仍可通过真实创建弹层创建项目-保存画布和打开原生剪辑--4eac819eeb26607479736fb2a70743e9e65625b58156aee3c4a471a88cbfb0df.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: 禁止真实数据根",
+            "stack": "Error: 禁止真实数据根\n    at assertPrivateRuntime (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:333:118)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:357:59"
+          }
+        ]
+      }
+    },
+    {
+      "index": 30,
+      "testId": "a8c4891f095c8a8e2a8e-4a616b4b5d877c355ca2",
+      "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "title": "同组多个账号/平台筛选保留dirty和真实native实例，公共保存始终冻结组根",
+      "firstFailure": "Error: 禁止真实数据根",
+      "failureLocation": "t1062-group-native-rough.spec.ts:333:118",
+      "url": "about:blank",
+      "classification": "已确认验收工具前置",
+      "cause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+      "minimalWriteSetOrInvestigation": "docs/verification/t1246/driver运行根生成消费者",
+      "proposal": "与媒体例同真实os.tmpdir mkdtemp根；ASR按当前候选交付真实cache/admission，保原guard和原声/手工降级断言。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-同组多个账号-平台筛选保留dirty和真实native实例-公共保存始终冻结组根--da2e067d5e7a1cc5664d5d98a80ac1561c4ed9900c2e896ee4518c42a36b20c2.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "a8c4891f095c8a8e2a8e-4a616b4b5d877c355ca2",
+        "titlePath": [
+          "e2e/t1062-group-native-rough.spec.ts",
+          "T1062 账号组真实原生粗剪",
+          "同组多个账号/平台筛选保留dirty和真实native实例，公共保存始终冻结组根"
+        ],
+        "title": "同组多个账号/平台筛选保留dirty和真实native实例，公共保存始终冻结组根",
+        "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1366,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-同组多个账号-平台筛选保留dirty和真实native实例-公共保存始终冻结组根--da2e067d5e7a1cc5664d5d98a80ac1561c4ed9900c2e896ee4518c42a36b20c2.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: 禁止真实数据根",
+            "stack": "Error: 禁止真实数据根\n    at assertPrivateRuntime (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:333:118)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:357:59"
+          }
+        ]
+      }
+    },
+    {
+      "index": 31,
+      "testId": "a8c4891f095c8a8e2a8e-ca78d653a89a51c55966",
+      "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "title": "跨组时取消真实在途素材响应，旧组晚到结果不能回写或继续保存",
+      "firstFailure": "Error: 禁止真实数据根",
+      "failureLocation": "t1062-group-native-rough.spec.ts:333:118",
+      "url": "about:blank",
+      "classification": "已确认验收工具前置",
+      "cause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+      "minimalWriteSetOrInvestigation": "docs/verification/t1246/driver运行根生成消费者",
+      "proposal": "与媒体例同真实os.tmpdir mkdtemp根；ASR按当前候选交付真实cache/admission，保原guard和原声/手工降级断言。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-跨组时取消真实在途素材响应-旧组晚到结果不能回写或继续保存--1f6d86c1682165414a47a39259d8033de417e5e2e02433ed115293bcde3477d2.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "a8c4891f095c8a8e2a8e-ca78d653a89a51c55966",
+        "titlePath": [
+          "e2e/t1062-group-native-rough.spec.ts",
+          "T1062 账号组真实原生粗剪",
+          "跨组时取消真实在途素材响应，旧组晚到结果不能回写或继续保存"
+        ],
+        "title": "跨组时取消真实在途素材响应，旧组晚到结果不能回写或继续保存",
+        "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1366,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-跨组时取消真实在途素材响应-旧组晚到结果不能回写或继续保存--1f6d86c1682165414a47a39259d8033de417e5e2e02433ed115293bcde3477d2.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: 禁止真实数据根",
+            "stack": "Error: 禁止真实数据根\n    at assertPrivateRuntime (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:333:118)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:357:59"
+          }
+        ]
+      }
+    },
+    {
+      "index": 32,
+      "testId": "a8c4891f095c8a8e2a8e-408b513e0317a7efece3",
+      "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "title": "真实迁组历史画布保留account出处，group归属可读写；错误组读回明确结束loading",
+      "firstFailure": "Error: 禁止真实数据根",
+      "failureLocation": "t1062-group-native-rough.spec.ts:333:118",
+      "url": "about:blank",
+      "classification": "已确认验收工具前置",
+      "cause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+      "minimalWriteSetOrInvestigation": "docs/verification/t1246/driver运行根生成消费者",
+      "proposal": "与媒体例同真实os.tmpdir mkdtemp根；ASR按当前候选交付真实cache/admission，保原guard和原声/手工降级断言。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-真实迁组历史画布保留account出处-group归属可读写-错误组读回明确结束loading--629b3693c18235a81a1efd43ed69b6cb388457c3f6f72fd9193ab6066de45614.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "a8c4891f095c8a8e2a8e-408b513e0317a7efece3",
+        "titlePath": [
+          "e2e/t1062-group-native-rough.spec.ts",
+          "T1062 账号组真实原生粗剪",
+          "真实迁组历史画布保留account出处，group归属可读写；错误组读回明确结束loading"
+        ],
+        "title": "真实迁组历史画布保留account出处，group归属可读写；错误组读回明确结束loading",
+        "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1366,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-真实迁组历史画布保留account出处-group归属可读写-错误组读回明确结束loading--629b3693c18235a81a1efd43ed69b6cb388457c3f6f72fd9193ab6066de45614.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: 禁止真实数据根",
+            "stack": "Error: 禁止真实数据根\n    at assertPrivateRuntime (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:333:118)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:357:59"
+          }
+        ]
+      }
+    },
+    {
+      "index": 33,
+      "testId": "a8c4891f095c8a8e2a8e-d6ac7f086c19a59f1b17",
+      "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "title": "真实默认ASR与原生原声：普通AAC完整自然播放、单独核对、明确采用与保存刷新",
+      "firstFailure": "Error: 禁止真实数据根",
+      "failureLocation": "t1062-group-native-rough.spec.ts:333:118",
+      "url": "about:blank",
+      "classification": "已确认验收工具前置",
+      "cause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+      "minimalWriteSetOrInvestigation": "docs/verification/t1246/driver运行根生成消费者",
+      "proposal": "与媒体例同真实os.tmpdir mkdtemp根；ASR按当前候选交付真实cache/admission，保原guard和原声/手工降级断言。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-真实默认ASR与原生原声-普通AAC完整自然播放-单独核对-明确采用与保存刷新--07ae4779f1fd86c0bb501b65736511dde87233fc193b472a80920f2a9d4eb877.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "a8c4891f095c8a8e2a8e-d6ac7f086c19a59f1b17",
+        "titlePath": [
+          "e2e/t1062-group-native-rough.spec.ts",
+          "T1062 账号组真实原生粗剪",
+          "真实默认ASR与原生原声：普通AAC完整自然播放、单独核对、明确采用与保存刷新"
+        ],
+        "title": "真实默认ASR与原生原声：普通AAC完整自然播放、单独核对、明确采用与保存刷新",
+        "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1366,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-真实默认ASR与原生原声-普通AAC完整自然播放-单独核对-明确采用与保存刷新--07ae4779f1fd86c0bb501b65736511dde87233fc193b472a80920f2a9d4eb877.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: 禁止真实数据根",
+            "stack": "Error: 禁止真实数据根\n    at assertPrivateRuntime (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:333:118)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:357:59"
+          }
+        ]
+      }
+    },
+    {
+      "index": 34,
+      "testId": "a8c4891f095c8a8e2a8e-6dc193773c32133c3858",
+      "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "title": "真实默认ASR与原生原声：非零视频起点仅此项手工降级，原工程仍可保存",
+      "firstFailure": "Error: 禁止真实数据根",
+      "failureLocation": "t1062-group-native-rough.spec.ts:333:118",
+      "url": "about:blank",
+      "classification": "已确认验收工具前置",
+      "cause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+      "minimalWriteSetOrInvestigation": "docs/verification/t1246/driver运行根生成消费者",
+      "proposal": "与媒体例同真实os.tmpdir mkdtemp根；ASR按当前候选交付真实cache/admission，保原guard和原声/手工降级断言。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-真实默认ASR与原生原声-非零视频起点仅此项手工降级-原工程仍可保存--cf662ccde952ddbe384aa4328cf71a5eb41a95fed49b091ab968b3c1c631822c.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "a8c4891f095c8a8e2a8e-6dc193773c32133c3858",
+        "titlePath": [
+          "e2e/t1062-group-native-rough.spec.ts",
+          "T1062 账号组真实原生粗剪",
+          "真实默认ASR与原生原声：非零视频起点仅此项手工降级，原工程仍可保存"
+        ],
+        "title": "真实默认ASR与原生原声：非零视频起点仅此项手工降级，原工程仍可保存",
+        "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "url": "about:blank",
+        "viewport": {
+          "width": 1366,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1062-group-native-rough--T1062-账号组真实原生粗剪-真实默认ASR与原生原声-非零视频起点仅此项手工降级-原工程仍可保存--cf662ccde952ddbe384aa4328cf71a5eb41a95fed49b091ab968b3c1c631822c.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: 禁止真实数据根",
+            "stack": "Error: 禁止真实数据根\n    at assertPrivateRuntime (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:333:118)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:357:59"
+          }
+        ]
+      }
+    },
+    {
+      "index": 35,
+      "testId": "a8c4891f095c8a8e2a8e-e6085f74588844d59da3",
+      "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "title": "真实首载RSC一直未交付：有界超时后显式整页重试，同B根可创建保存回读",
+      "firstFailure": "Error: expect(locator).toContainText(expected) failed\n\nLocator: getByTestId('workspace-initialization-error')\nExpected substring: \"工作区页面打开超时，请重试。\"\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toContainText\" with timeout 120000ms\n  - waiting for getByTestId('workspace-initialization-error')\n",
+      "failureLocation": "t1062-group-native-rough.spec.ts:883:25",
+      "url": "http://127.0.0.1:61346/projects",
+      "classification": "已确认预算观察缺口，产品终态待核",
+      "cause": "旧注释说15s，但实际WORKSPACE_INITIALIZATION_TIMEOUT_MS=120000；外层error观察也120000无独立余量，本轮未看到error。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "proposal": "保产品120s原deadline，观测覆盖启动/真实120s刷新＋至少请求/settlement余量；仍实际核超时阻留/整页retry/晚响应不解锁。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1062-group-native-rough--真实首载RSC一直未交付-有界超时后显式整页重试-同B根可创建保存回读--617178d5263b32e48635c705dcab578e16dea7f7f2a3492d9a1e03e801a550b1.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "a8c4891f095c8a8e2a8e-e6085f74588844d59da3",
+        "titlePath": [
+          "e2e/t1062-group-native-rough.spec.ts",
+          "真实首载RSC一直未交付：有界超时后显式整页重试，同B根可创建保存回读"
+        ],
+        "title": "真实首载RSC一直未交付：有界超时后显式整页重试，同B根可创建保存回读",
+        "spec": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "url": "http://127.0.0.1:61346/projects",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1062-group-native-rough--真实首载RSC一直未交付-有界超时后显式整页重试-同B根可创建保存回读--617178d5263b32e48635c705dcab578e16dea7f7f2a3492d9a1e03e801a550b1.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('workspace-initialization-error')\nExpected substring: \u001b[32m\"工作区页面打开超时，请重试。\"\u001b[39m\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('workspace-initialization-error')\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('workspace-initialization-error')\nExpected substring: \u001b[32m\"工作区页面打开超时，请重试。\"\u001b[39m\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('workspace-initialization-error')\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts:883:25"
+          }
+        ]
+      }
+    },
+    {
+      "index": 36,
+      "testId": "e350765340916b502f9a-1807c0969f844b2c0026",
+      "spec": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+      "title": "真实文章保存、指定版本刷新、同项目编导窄屏打开、NoteRelay HTML交付",
+      "firstFailure": "ReferenceError: resolve is not defined",
+      "failureLocation": "t1070-director-editor.spec.ts:75:21",
+      "url": "http://127.0.0.1:61346/projects/project-81b98377-5904/article?outputId=output-81b98377-5916",
+      "classification": "已确认本轮driver回归DR006",
+      "cause": "prepare输出迁移为resolve(...)但原test只import join；真实保存后evidence()ReferenceError。",
+      "minimalWriteSetOrInvestigation": "docs/verification/t1246/driver/prepare-browser-driver.cjs",
+      "proposal": "仅路径表达式用原已导入join或准确新增consumer依赖；完整252逆重构/inventory/SHA独评，不改生产或原assert。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1070-director-editor--真实文章保存-指定版本刷新-同项目编导窄屏打开-NoteRelay-HTML交付--c3cec85ec6a9d8bc65fe2355499f4dc4323150dc50591388d024f9275d0181fb.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "e350765340916b502f9a-1807c0969f844b2c0026",
+        "titlePath": [
+          "e2e/t1070-director-editor.spec.ts",
+          "真实文章保存、指定版本刷新、同项目编导窄屏打开、NoteRelay HTML交付"
+        ],
+        "title": "真实文章保存、指定版本刷新、同项目编导窄屏打开、NoteRelay HTML交付",
+        "spec": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/project-81b98377-5904/article?outputId=output-81b98377-5916",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1070-director-editor--真实文章保存-指定版本刷新-同项目编导窄屏打开-NoteRelay-HTML交付--c3cec85ec6a9d8bc65fe2355499f4dc4323150dc50591388d024f9275d0181fb.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "ReferenceError: resolve is not defined",
+            "stack": "ReferenceError: resolve is not defined\n    at evidence (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts:75:21)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts:152:11"
+          }
+        ]
+      }
+    },
+    {
+      "index": 37,
+      "testId": "e350765340916b502f9a-3a87c779b994624d42ef",
+      "spec": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+      "title": "真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片入口与历史保留",
+      "firstFailure": "ReferenceError: resolve is not defined",
+      "failureLocation": "t1070-director-editor.spec.ts:75:21",
+      "url": "http://127.0.0.1:61346/projects/project-81b98377-5951/outputs/output-81b98377-5963/image",
+      "classification": "已确认本轮driver回归DR006",
+      "cause": "与上一行同evidence()，真实图文保存后证据阶段失败；下游未代签。",
+      "minimalWriteSetOrInvestigation": "同上一行",
+      "proposal": "保旧红与原HTML/ZIP/历史后置，修driver后同原case完整跑。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1070-director-editor--真实图文三卡保存刷新-NoteRelay翻页与ZIP可用-旧图片入口与历史保留--0e4d38097b70cc8fee2b2e16c3ecbf71767d6e482195cc145e76fd5ee722fa85.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "e350765340916b502f9a-3a87c779b994624d42ef",
+        "titlePath": [
+          "e2e/t1070-director-editor.spec.ts",
+          "真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片入口与历史保留"
+        ],
+        "title": "真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片入口与历史保留",
+        "spec": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/project-81b98377-5951/outputs/output-81b98377-5963/image",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1070-director-editor--真实图文三卡保存刷新-NoteRelay翻页与ZIP可用-旧图片入口与历史保留--0e4d38097b70cc8fee2b2e16c3ecbf71767d6e482195cc145e76fd5ee722fa85.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "ReferenceError: resolve is not defined",
+            "stack": "ReferenceError: resolve is not defined\n    at evidence (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts:75:21)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts:272:11"
+          }
+        ]
+      }
+    },
+    {
+      "index": 38,
+      "testId": "10645feaadfc4eb9725d-37a520db61507269907f",
+      "spec": "frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts",
+      "title": "T1159 两微信账号从组成员进入真实0报告，刷新返回与身份拒绝",
+      "firstFailure": "Error: expect(locator).toHaveAttribute(expected) failed\n\nLocator: getByRole('link', { name: '查看中性视频号账号的数据', exact: true })\nExpected: \"/accounts/works?accountId=acct-81b98377-6352\"\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toHaveAttribute\" with timeout 120000ms\n  - waiting for getByRole('link', { name: '查看中性视频号账号的数据', exact: true })\n",
+      "failureLocation": "t1159-wechat-native-report.spec.ts:50:26",
+      "url": "http://127.0.0.1:61346/accounts",
+      "classification": "待定位",
+      "cause": "组内成员只选当前活动组才显示微信报告链接；本例注入组cookie/LS后链接缺，尚未读实际当前组选中/成员sameID。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/t1159-wechat-native-report.spec.ts；frontend/src/features/platform-account/account-group-manager.tsx（调查）",
+      "proposal": "核真实当前组/成员/账号/链接href；不得伪造externalAccountId或登录用户平台，保0报告/错组/身份拒绝。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/t1159-wechat-native-report--T1159-两微信账号从组成员进入真实0报告-刷新返回与身份拒绝--375c1f8cbc6b7a98e9047cbe1bf7f454e6f1ea7d2eca48f6bd996b99798b4258.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "10645feaadfc4eb9725d-37a520db61507269907f",
+        "titlePath": [
+          "e2e/t1159-wechat-native-report.spec.ts",
+          "T1159 两微信账号从组成员进入真实0报告，刷新返回与身份拒绝"
+        ],
+        "title": "T1159 两微信账号从组成员进入真实0报告，刷新返回与身份拒绝",
+        "spec": "frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts",
+        "url": "http://127.0.0.1:61346/accounts",
+        "viewport": {
+          "width": 1366,
+          "height": 900
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/t1159-wechat-native-report--T1159-两微信账号从组成员进入真实0报告-刷新返回与身份拒绝--375c1f8cbc6b7a98e9047cbe1bf7f454e6f1ea7d2eca48f6bd996b99798b4258.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('link', { name: '查看中性视频号账号的数据', exact: true })\nExpected: \u001b[32m\"/accounts/works?accountId=acct-81b98377-6352\"\u001b[39m\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('link', { name: '查看中性视频号账号的数据', exact: true })\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('link', { name: '查看中性视频号账号的数据', exact: true })\nExpected: \u001b[32m\"/accounts/works?accountId=acct-81b98377-6352\"\u001b[39m\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('link', { name: '查看中性视频号账号的数据', exact: true })\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts:50:26"
+          }
+        ]
+      }
+    },
+    {
+      "index": 39,
+      "testId": "bf4a1cd0b0748cf23b48-209b5f7d65fc4e79a89e",
+      "spec": "frontend/tests-t1246-generated/e2e/wechat-article-workbench.spec.ts",
+      "title": "公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读",
+      "firstFailure": "TimeoutError: page.waitForResponse: Timeout 120000ms exceeded while waiting for event \"response\"",
+      "failureLocation": "wechat-article-workbench.spec.ts:194:41",
+      "url": "http://127.0.0.1:61346/projects/project-81b98377-6841/article?outputId=output-81b98377-6864",
+      "classification": "已确认旧入口漂移，独立Pi链未验",
+      "cause": "T1097/DEC3671移除旧根据脚本扩写按钮；本例在articles.candidates.generate响应观察120s停止，trace没有该POST/模型call。",
+      "minimalWriteSetOrInvestigation": "frontend/tests/e2e/wechat-article-workbench.spec.ts；frontend/src/features/article/article-workbench.test.tsx（已有unit同根）",
+      "proposal": "按当前批准公共AI入口接本例真实PiHTTP fixture、原candidate/task/Worker/采纳/version，保来源与原人工题摘要不覆盖；不能拿手写PASS/模型probe替代。",
+      "screenshot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original-dr005/scenario/screenshots/wechat-article-workbench--公众号文章经独立模型-Worker-生成候选-用户审读采纳后刷新回读--5071a38795708d96a9728721d253a9b5c6d72e99af17bf497ca05d1fff4e1ca3.png",
+      "sourceCase": {
+        "schemaVersion": 1,
+        "testId": "bf4a1cd0b0748cf23b48-209b5f7d65fc4e79a89e",
+        "titlePath": [
+          "e2e/wechat-article-workbench.spec.ts",
+          "公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读"
+        ],
+        "title": "公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读",
+        "spec": "frontend/tests-t1246-generated/e2e/wechat-article-workbench.spec.ts",
+        "url": "http://127.0.0.1:61346/projects/project-81b98377-6841/article?outputId=output-81b98377-6864",
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "status": "failed",
+        "acceptanceStatus": "review",
+        "expectedStatus": "passed",
+        "retry": 0,
+        "screenshot": "screenshots/wechat-article-workbench--公众号文章经独立模型-Worker-生成候选-用户审读采纳后刷新回读--5071a38795708d96a9728721d253a9b5c6d72e99af17bf497ca05d1fff4e1ca3.png",
+        "screenshotStatus": "captured",
+        "screenshotError": null,
+        "pageClosedBeforeCapture": false,
+        "externalNetworkAttempts": [],
+        "errors": [
+          {
+            "message": "TimeoutError: page.waitForResponse: Timeout 120000ms exceeded while waiting for event \"response\"",
+            "stack": "TimeoutError: page.waitForResponse: Timeout 120000ms exceeded while waiting for event \"response\"\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/wechat-article-workbench.spec.ts:194:41"
+          },
+          {
+            "message": "TimeoutError: locator.click: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-page=\"article-workbench\"]').getByRole('button', { name: '根据脚本扩写文章' })\u001b[22m\n",
+            "stack": "TimeoutError: locator.click: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-page=\"article-workbench\"]').getByRole('button', { name: '根据脚本扩写文章' })\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/wechat-article-workbench.spec.ts:198:63"
+          }
+        ]
+      }
+    }
+  ],
+  "peerEvidence": [
+    {
+      "original": "/tmp/t1246-browser-additional-first-diagnosis.md",
+      "archived": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/readonly-diagnoses/t1246-browser-additional-first-diagnosis.md",
+      "sha256": "1a6a4c56bf0a3832227b1de63ac8706a15e7f3aa1eb7e521c2fd0b5926ce4316"
+    },
+    {
+      "original": "/tmp/t1246-copilot-first-diagnosis.md",
+      "archived": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/readonly-diagnoses/t1246-copilot-first-diagnosis.md",
+      "sha256": "cdfdb6725b5a9f108b9d91462416ef66edef72d701bc73267e33764e49711fbc"
+    },
+    {
+      "original": "/tmp/t1246-browser-additional-source-binding.json",
+      "archived": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/readonly-diagnoses/t1246-browser-additional-source-binding.json",
+      "sha256": "1512d786a300388768ef3e7b1de2d36c1ca0e29c6abd9aae936dc3399bec1527"
+    },
+    {
+      "original": "/tmp/t1246-browser-additional-selected.json",
+      "archived": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/readonly-diagnoses/t1246-browser-additional-selected.json",
+      "sha256": "842fee7e94da6fc94b89ae5c1fd254c9caa9019c5a84b1b1777b9bc29de2a32b"
+    },
+    {
+      "original": "/tmp/t1246-browser-group-trace-observations.json",
+      "archived": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/readonly-diagnoses/t1246-browser-group-trace-observations.json",
+      "sha256": "2ebbc84b0fb571281a9b4691d6552a6f7c2ef07d3049f015995dbcd73cc5697c"
+    },
+    {
+      "original": "/tmp/t1246-frontend-first-additional-diagnosis.md",
+      "archived": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/readonly-diagnoses/t1246-frontend-first-additional-diagnosis.md",
+      "sha256": "10c6142fc3344e03a23d3a16c88443ac19859ebb7adf8a4751553e630c8124b8"
+    }
+  ]
+}

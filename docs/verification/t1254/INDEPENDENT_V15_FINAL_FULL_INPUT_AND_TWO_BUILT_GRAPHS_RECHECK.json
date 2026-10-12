@@ -1,0 +1,50 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T06:26:32.037530+00:00",
+  "scope": "最终V15只读独立全输入/实际Native395 Static304与完整统一diff复核",
+  "sourceSnapshotDigest": "e0a4f71454a2e794a2fdc2cd0cb46cb78773360de6ce29c24833dc6ee3c397ce",
+  "toolDigest": "4deaac8de48aab3c60d6028a41362f6df14cbf7b7847e17d179793e2dda37dc8",
+  "sealSHA": "a2bf07aeb7eeec907f68b2befc2d0c5c737cf23b5ea17e89410861fca6899cae",
+  "runnerSHA": "a3f7c9dfd63a6fa538839695cb4bb9e0e7cdc09e3807895e270dfe1c0e7fd3a4",
+  "prepareSHA": "98daeb9bbca495568bcbae1c26e85feaf7839e42d99d2fc1ba097a579eafc5ca",
+  "indexSHA": "e55a7dc471089f667f8fd30bb3796da8f0c283082154d2b44fdcae89cafaf893",
+  "inputs": 1867,
+  "tools": 141918,
+  "artifactRows": 22,
+  "indexRows": 14,
+  "totalCheckedRows": 143821,
+  "links": 7484,
+  "oldRealPathRows": 4,
+  "readBytes": 3241498327,
+  "elapsedMs": 24625.954999995884,
+  "drift": [],
+  "old8TailSlotsIdenticalPlusCombined540k": true,
+  "toolsExactlyStatic304PlusEveryOriginalV14Row": true,
+  "graphs": [
+    {
+      "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web/dist-native",
+      "rootInode": 351826429,
+      "rootMode": 493,
+      "rootUID": 501,
+      "files": 395,
+      "exactCurrentFilesAndAllToolRows": true,
+      "actualOriginReceiptsSHA0": true
+    },
+    {
+      "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/apps/web/dist",
+      "rootInode": 351827921,
+      "rootMode": 493,
+      "rootUID": 501,
+      "files": 304,
+      "exactCurrentFilesAndAllToolRows": true,
+      "actualOriginReceiptsSHA0": true
+    }
+  ],
+  "nativeManifest394EntriesExact": true,
+  "PanelCurrent30b0644InodeUIDSame": true,
+  "GraphCurrent0170644InodeUIDSame": true,
+  "old9BodyAndExpectationsExactOnlyImportChanges": true,
+  "allRpathFirstExistingSame": true,
+  "fullUnifiedDiffReconstructsCurrentExactly": true,
+  "reviewerRuntimeOrSourceApply": false
+}

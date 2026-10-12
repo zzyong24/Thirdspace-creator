@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-12T02:36:52.668728+00:00",
+  "sourceSha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+  "candidateLivesUnderDocs": true,
+  "runtimeCopyDestination": "fresh owned clone/frontend/tests-t1254-doocs/doocs-public.spec.ts",
+  "copySourceBytesUnchanged": true,
+  "runtimeImport": "normal @playwright/test resolves from owned frontend package node_modules",
+  "staticTypesUsedExplicitPaths": "@playwright/test -> actual frontend node_modules; declaration createProgram0 only, not runtime/list or global frontend types",
+  "directRelativeImportAttempt": "preserved 3ee2 source/type errors; relative directory bypass package realpath type resolving re-export playwright/test failed; do not use this direct-import variant",
+  "postOwnedCopyRequired": "exact types and --list two body counts, source/hash inverse, runner closed source/tool/runtime full seal + peer/ROOT before execution",
+  "priorBoundaryPreserved": "history/source-v1-marker-static-concerns/MODULE_RESOLUTION_BOUNDARY.json"
+}

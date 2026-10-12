@@ -1,0 +1,38 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-14bcbffb7152bdb2b58cd5a252c2d27e-y0vweC/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/tmp/t1254-readonly/doocs-owned-network-boundary.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-14bcbffb7152bdb2b58cd5a252c2d27e-y0vweC/reports/owned-network-boundary-results.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-14bcbffb7152bdb2b58cd5a252c2d27e-y0vweC/child-logs/owned-network-boundary.log",
+  "pid": 12506,
+  "identity": {
+    "pid": 12506,
+    "pgid": 12506,
+    "uid": 501,
+    "birth": "Mon Oct 12 12:18:33 2026",
+    "startedAt": 1791778713733
+  },
+  "startedAt": "2026-10-12T04:18:33.733Z",
+  "endedAt": "2026-10-12T04:18:33.933Z",
+  "elapsedMs": 200,
+  "budgetMs": 540000,
+  "deadlineAt": "2026-10-12T04:27:33.733Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

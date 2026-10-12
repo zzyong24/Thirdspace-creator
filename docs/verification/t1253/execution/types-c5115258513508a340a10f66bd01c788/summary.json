@@ -1,0 +1,52 @@
+{
+  "phase": "types",
+  "scopeSignals": [],
+  "childAdmissions": [
+    {
+      "label": "environment-proof",
+      "elapsedMs": 539.295292,
+      "remainingMs": 12479460.704708,
+      "requiredMs": 10260000,
+      "positiveMs": 180000,
+      "futurePositiveMs": 2400000,
+      "remainingChildren": 3,
+      "independentOuterDeadline": "2026-10-12T03:46:32.103Z"
+    },
+    {
+      "label": "types:backend",
+      "elapsedMs": 761.332042,
+      "remainingMs": 12479238.667958,
+      "requiredMs": 7920000,
+      "positiveMs": 1200000,
+      "futurePositiveMs": 1200000,
+      "remainingChildren": 2,
+      "independentOuterDeadline": "2026-10-12T03:46:32.103Z"
+    },
+    {
+      "label": "types:ai-worker",
+      "elapsedMs": 40116.220417000004,
+      "remainingMs": 12439883.779583,
+      "requiredMs": 4560000,
+      "positiveMs": 1200000,
+      "futurePositiveMs": 0,
+      "remainingChildren": 1,
+      "independentOuterDeadline": "2026-10-12T03:46:32.103Z"
+    }
+  ],
+  "entryClockUsed": true,
+  "startedAt": "2026-10-12T00:18:32.103Z",
+  "deadlineAt": "2026-10-12T03:46:32.103Z",
+  "elapsedMs": 47713.386000000006,
+  "totalBudgetMs": 12480000,
+  "outerBudgetExhausted": false,
+  "cleanupElapsedMs": 508.7045419999995,
+  "cleanupBudgetMs": 1200000,
+  "exitCode": 0,
+  "ownedDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1253-calibrated-c5115258513508a340a10f66bd01c788-WzazZh",
+  "cleaned": true,
+  "ownedRootRetained": false,
+  "noPG": true,
+  "noApp": true,
+  "retry": 0,
+  "firstEvidencePreserved": true
+}

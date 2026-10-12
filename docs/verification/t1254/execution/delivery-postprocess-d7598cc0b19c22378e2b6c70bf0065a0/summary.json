@@ -1,0 +1,14 @@
+{
+  "task": "T-1254",
+  "exitCode": 0,
+  "startedAt": "2026-10-12T08:39:29.831Z",
+  "elapsedMs": 125390.09270899999,
+  "totalBudgetMs": 16387820,
+  "localSingleBirthMs": 19320000,
+  "inheritedDeadline": "2026-10-12T13:12:37.651Z",
+  "records": [],
+  "projectionOnly": true,
+  "noChildReexecuted": true,
+  "noProductionCopy": true,
+  "oldWrapperExitCodeUnchanged": 1
+}

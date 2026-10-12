@@ -1,0 +1,97 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/automations-group-media-jobs.spec.ts",
+      "sha256": "17c8beeeee88f9583d3c1f59aa2ec389ca5fabd87a07479bb3cad0a8837df0c7"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/automations-run-now-public.spec.ts",
+      "sha256": "748976450dc39d1f59991c79a624775cd993ffc6cd5e57b36c27cb635cf0e1a7"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/group-skill-customization.spec.ts",
+      "sha256": "ad9f7f6cd052467698bacda10daa3c421cc0d215a327bda498cca3bc3f1d6b80"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/media-root-isolation.spec.ts",
+      "sha256": "cb063f9b66416e3d927c9df9ec73b89c60a279ff2b5eac8f57224c908d7bf717"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "sha256": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/knowledge-library.spec.ts",
+      "sha256": "8eed8c2b0d52323d921b2f80da1d3cfa7c948e1c28d45f7ea94158f3b5ddb840"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/creative-canvas.spec.ts",
+      "sha256": "0b99bc21babdb3859ccf5f39d2ebb12ce63088e8297e8c6f94ba496fc9390edd"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/account-switcher.tsx",
+      "sha256": "701fff5fbbb54378b9cdc8d9f695a649807cf6fb6ca1a0a873be5efe7d257aee"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/account-switcher-logic.ts",
+      "sha256": "6e7777d0f7594553da94ab54bf1a4270feec7ee649ee5f276bd05e3288b7635d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/workspace-initialization.tsx",
+      "sha256": "a70c883b68a2c9e13aae29304d90205ac7821f7e3ee0aac68a5ccf3a84281b99"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/lib/session.server.ts",
+      "sha256": "27c876bf5eb423f30f5730c8cc897ed7f64ca8645d8ac0b9c3afa449412dfa27"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/lib/request-context.server.ts",
+      "sha256": "b4b218b8ad70fa4c627bb11e9c5f60f6de39a3afd8f7e6dd851210ac842b0c31"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/lib/http-transport.ts",
+      "sha256": "3c89798b49c372bdb60be1cb255fe1b85ea9449752c97d7bdb4bdad1bff79302"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/(creator)/automations/page.tsx",
+      "sha256": "1163bb7f58cb87f5e15f6d9e464a04fe77d3f6a563eb3718521e5c0b53c3eaa0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/automations/automations-page.tsx",
+      "sha256": "79cfb995df8f7e0e0213ee1bcd20ce94041dabbc6a8491e35d0db8ca5a813a66"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/(creator)/projects/[projectId]/review/page.tsx",
+      "sha256": "1d32839d38bf5fb641ec867baae4d4533a816bfb3dc67223b79fd77330de13d5"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/review/review-workspace-data.ts",
+      "sha256": "8abdf221086fd87dc8f4b911de935d5fefbef7254241098824e9b0f78b9667db"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/reviews/reviews.service.ts",
+      "sha256": "0bcc661cd9b83991ab520c3c2461e977da5cdf2ffb20fd3af56afed14ef1e12d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/playwright.config.ts",
+      "sha256": "9b4ea64f81fadc0282a33ae0223c45a75a8649d98ef2c91ee97b2580caa597b6"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1022-account-group-workspace.md",
+      "sha256": "6bd95c85af7c09612acb36c3596cc43e5e48ed789b5284c7bc8f5d5c3e5ca29f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1199-bound-platform-scheduled-visibility.md",
+      "sha256": "a1cf0ae4040368d289117784ccaf5cb81c9d8199fe97c1926fb85cf775b4e05a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1234-group-skill-customize-availability.md",
+      "sha256": "a9e6e9fdbf33240e85923e8a8cb3a26c549b2c7a61f52d40fda8e4a0f25d470a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1226-playwright-media-root-isolation.md",
+      "sha256": "572a1453d45a2d7af2b72e571863084c63e8c0accd832b2306605aae7821cac9"
+    }
+  ]
+}

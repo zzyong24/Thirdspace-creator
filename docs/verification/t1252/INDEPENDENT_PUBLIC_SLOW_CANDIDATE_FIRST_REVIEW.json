@@ -1,0 +1,32 @@
+{
+  "schema": "independent-source-candidate-review/v1",
+  "at": "2026-10-12T00:11:13.738289+00:00",
+  "result": "REQUEST_PRIVATE_CANDIDATE_CHANGES",
+  "candidatePacketSha256": "521ce13a11a6c3fb6704f5d1e2c7df011eb4f8e64f9e8f60af9a6c97f9a8d7bd",
+  "candidateSha256": "583be69931492591d018279e12d64a5dd5a0f2e8e685d228bd4ed9f870e5dcb0",
+  "actualBindingsChecked": 26,
+  "hashDrift": [],
+  "findings": [
+    {
+      "id": "PC001",
+      "location": "新Native it finally",
+      "evidence": "clearTimeout(queueTimer);await cli?.close();await writeFile(done,...);observeExit顺序：HTTP close reject跳过done发送及真实Native exit观察，原body reason也会被finally新错误覆盖",
+      "minimumConstraint": "HTTP.close/done写独立attempt；始终observeExit；原body reason优先透传，cleanup error独立脱敏保存，不能把未知停机假签closed/cleaned；原IPC/filter/队列310s/call/CAS/36M不改",
+      "evidenceLevel": "静态可反驳异常路径，未运行这个失败分支，不冒TDD红"
+    }
+  ],
+  "reviewedNonBlocking": [
+    "原8 Native body未改，六个fixture参数默认仍60k，新增finite只新task出生，原数据反变换等于71c0整个原文件",
+    "Native真实已启动未知call→queue310→正式POST→Rustreceipt→CAS原call→原IDresume只回放，无SQLsettled/人工ASR/model假产物",
+    "render沿真实artifact.register/版本/hash与正式transport/representation→Chromium六个真实SDK阶段；delay与SDK并行各110s在原120s phase内，无fetch monkeypatch",
+    "跨account/版本负族，PNG像素/PDF文字/MIME/size/hash与sourceHash，task出生deadline读真实row不续原D",
+    "b88实际list72/唯一exactignore只列表，没有运行ignored body；privateoverlaytype0不是standardfullfrontend0"
+  ],
+  "pendingToolConstraints": [
+    "原native8含旧60k task期限不由新observer续；原调用计数与pause/unknown断言须原样实际执行",
+    "真正Rust fixture WAIT_MS由未来runner按case内完整串行+done前cleanup余量导出；新36Mbody不能仍继承120kdefault",
+    "新Node/Rust同peercred/compiledSHA/exactfilter/ownedbirthuid及真实close/logEOF/remaining0；默认user连接必须owned failclosed",
+    "公共source候选未apply，工具/runtime需要ROOT+独评另准"
+  ],
+  "runtimePermission": false
+}

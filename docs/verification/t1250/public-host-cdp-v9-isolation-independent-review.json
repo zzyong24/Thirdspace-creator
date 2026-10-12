@@ -1,0 +1,133 @@
+{
+  "schema": "independent-private-tool-candidate-review/v1",
+  "at": "2026-10-12T00:02:51.714045+00:00",
+  "reviewer": "/root/codex_route_inventory",
+  "author": "/root/codex_contract_review",
+  "decision": "PASS_PRIVATE_CANDIDATE_ONLY_PENDING_ROOT_APPLY_AND_FRESH_BINDING",
+  "findings": [],
+  "reviewedBindings": {
+    "V9": "119f3c49230b4174fa9b596681341c9793f51ea887150e1428ea57d1a4700cac",
+    "isolation": "69c44b1c1a25bb93db4764c8e8fc1bd064aa9938339d962e70bd8065bba45f86",
+    "staticBodyProof": "1a4f700e2611c4e784f087f3e6dfc9015c7290fa486c972eec19e4ab15b53950"
+  },
+  "records": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools-candidate/run-focused-v8-candidate.cjs",
+      "sha256": "f71d3a25d4bf8c13288f3a077545a8a7c97efd7a999bf9b6259fee6e88fd4a28"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools-candidate/run-focused-v9-candidate.cjs",
+      "sha256": "ca24b82b9ce6cc65833db8f9e6cd22592e61e219903e4e170bf230b6e5cd610c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools-candidate/v9-runner.diff",
+      "sha256": "bc68f78a43d61ff3ba65dc8b56f31b1c0af65d3f05f4c8a5dc3e4d409cdb301d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools-candidate/runner-budget-inventory-v8-candidate.cjs",
+      "sha256": "833c0119d6ac1a4d5de4a7e7c5268c5ff3be5de07437f0c2fcef7b908254e871"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/src/connection.ts",
+      "sha256": "1b00d8e0c338cd57b848a70a01f85ddb39629d21c2d97257581fdd55aa50aa05"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/src/cli.ts",
+      "sha256": "7b3b056f7873a9b5e4df35da6d14d6d3a10730ecd22529529f541fcea082c677"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/src/context.ts",
+      "sha256": "c403cf8a914cd2b6b18ad56c0740824056e4ed3a815d6cf771b5298fca1027cf"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/api/v1/dispatch/route.ts",
+      "sha256": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/test/setup.ts",
+      "sha256": "10d841e42fdb88ca4e51afef9447253a1860513384c412db170437e6849dbb81"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.test.ts",
+      "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105"
+    },
+    {
+      "path": "/tmp/t1250-regression-isolation-candidate/workbench-browser-host.test.ts",
+      "sha256": "71ca29aefa7535d48b8d627e462587fa2fae92e974b6588cc29a75a0051be879"
+    },
+    {
+      "path": "/tmp/t1250-regression-isolation-candidate/workbench-browser-host.test.ts.diff",
+      "sha256": "090f5ce61f793ed5b6cedda337017add78915d4f758be0c57a3c17ce4ccb1e0a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "sha256": "bbd3b552830a1410ec3b5424eac14e8c3637d6148718ba3cf3a371c3a908693d"
+    },
+    {
+      "path": "/tmp/t1250-regression-isolation-candidate/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "sha256": "2eda778df59bba89905e68249403c3819c22a5579f952c0fa19c2c43a308d561"
+    },
+    {
+      "path": "/tmp/t1250-regression-isolation-candidate/douyin-cdp-comment-diagnosis.integration.test.ts.diff",
+      "sha256": "1398d66186228854565a7c1ed88d720e1da7ccf5fc1caea0d3f1a248b98c1613"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/test/setup.ts",
+      "sha256": "10d841e42fdb88ca4e51afef9447253a1860513384c412db170437e6849dbb81"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/src/cli.ts",
+      "sha256": "7b3b056f7873a9b5e4df35da6d14d6d3a10730ecd22529529f541fcea082c677"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/src/connection.ts",
+      "sha256": "1b00d8e0c338cd57b848a70a01f85ddb39629d21c2d97257581fdd55aa50aa05"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-browser-profile-lease.service.ts",
+      "sha256": "151c9a325ddcda253582176c5dc80b0c801ffb415856625f5b91079be9938873"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-host.ts",
+      "sha256": "2f2638540072fc79da7d650bc779fee028c557fbc21f03b7e542a8e89f108571"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools-candidate/run-focused-v8-candidate.cjs",
+      "sha256": "f71d3a25d4bf8c13288f3a077545a8a7c97efd7a999bf9b6259fee6e88fd4a28"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/db.ts",
+      "sha256": "aa74a324e2fe0a566accaff9e8346a6fc52b8161dad71311d4cb2833d13ba71c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/ct1250-regression-hosts-RRhxJc/tests.json",
+      "sha256": "dbc88b99b8f338cbe6e1f5a9fb931561c875f35078f37bef873e27ff21251da4"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/ct1250-regression-hosts-RRhxJc/result.json",
+      "sha256": "82c5f77bfc6caed66d8e7b70e34efda097194636c0dcf4eeeec3aba968f615ce"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/ct1250-regression-cdp-2YtCnR/tests.json",
+      "sha256": "5405164185c2307ac044f92a59ff255f7510e0853b8e128da0b5375a285c8870"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/ct1250-regression-cdp-2YtCnR/result.json",
+      "sha256": "712d024d0448fe8fa21e86d05b948a38e321b2d29dba538041579c2d328cb272"
+    }
+  ],
+  "confirmed": [
+    "V9唯一5行独立新根失效connection/access哨兵；其余V8所有预算、库存、qualifier/closed/ownership/assert消费者字节逆构相等",
+    "cli clientFor有显式BASEURL才用原DispatchClient，否则原discoverConnection仅先access显式不存在哨兵，未读HOME默认descriptor或token，未HTTP；不保证业务正常fixture未正确设置BASEURL时PASS",
+    "hosts只新增慢case局部新PGlite变量，outer finally包enqueue/claim/socket/setup全路径并关闭ownedDB；inner原host.dispose/release与全部142 expect AST原样，35s延迟/预算不变",
+    "CDP只新增慢case真实读取原server.address并重设4个原隔离env，与beforeAll一致；全局afterEach unstubAllEnvs真实根因有setup源支持，全部34 expect AST不变；原case来源不是账号被删的假判断",
+    "V8/833c预算实际保hosts36声明/30可运行/6原资格skip，render11；候选并不授予privateNative flags；原结果保留",
+    "HEAD产品及shareddist未改；候选源未apply/未执行，无HTTP/PG/browser/App/model调用"
+  ],
+  "notProven": [
+    "新候选是否实际修复全hosts/CDP运行需freshprepare/list/body证据",
+    "原6native资格仍未实测，不以pending计PASS",
+    "新的product/bundle/runtime最终SHA与工具必须freshseal后root准入"
+  ],
+  "runtimePermission": false
+}

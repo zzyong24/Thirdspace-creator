@@ -1,0 +1,7 @@
+{
+  "actualPriorDiagnosticExitCode": 1,
+  "actualPriorDiagnosticOutput": "Traceback (most recent call last):\n  File \"<stdin>\", line 28, in <module>\nAssertionError\n",
+  "actualRootCause": "Diagnostic incorrectly asserted old JSON formula must equal actual original verifier formula; old JSON is1.8M while actual function is2.4M.",
+  "actualReadonlySourceDyldAfterAndPSAlreadySavedBeforeDiagnosticAssertion": true,
+  "candidateWasNotExecutedAgain": true
+}

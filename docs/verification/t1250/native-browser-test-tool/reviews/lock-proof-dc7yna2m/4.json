@@ -1,0 +1,23 @@
+{
+  "accepted": false,
+  "originalPackageCount": 3,
+  "actualPackageCount": 2,
+  "privateRootCount": 1,
+  "differences": [
+    [
+      "foreign",
+      "1.0.0",
+      null,
+      null
+    ]
+  ],
+  "differenceCount": 1,
+  "comparisonFields": [
+    "name",
+    "version",
+    "source",
+    "checksum"
+  ],
+  "productionSubsetConfirmed": false,
+  "noBuildPermissionOnMismatch": true
+}

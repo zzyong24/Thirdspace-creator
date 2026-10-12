@@ -1,0 +1,73 @@
+{
+  "review": "static only",
+  "frozen": "533224f334c43cdb81a344424e420cad93784dd1",
+  "approvedLauncherSHA256": "f2ef3152bfdebc16fe307a22346fac2077c50c3ecaa61be970a150b177a1f38c",
+  "tools": [
+    {
+      "file": "private-source-binding.json",
+      "sha256": "c72930c9b1314afed375fe8b8616a623042e13cf21bf662947196f012a3c9cdf"
+    },
+    {
+      "file": "injection.txt",
+      "sha256": "8a0381f5bf32d98c864d617b6f5316b64f8d2abd99ead435abe2b9d8c899a4ad"
+    },
+    {
+      "file": "playwright.config.ts",
+      "sha256": "36e058165453e0a24b998b9b4b6ef2acb60e433fd62fe21fdbc2ee20dc180acf"
+    },
+    {
+      "file": "launch.cjs",
+      "sha256": "f2ef3152bfdebc16fe307a22346fac2077c50c3ecaa61be970a150b177a1f38c"
+    }
+  ],
+  "runDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/settings-full-history-runs/2026-10-11T17-19-06-539Z",
+  "beforeCounts": {
+    "product253": 253,
+    "worker11": 11,
+    "original100": 100,
+    "generated100": 100,
+    "originalConfig": 1,
+    "driver8": 8,
+    "privateOriginal": 3,
+    "private3": 3
+  },
+  "afterCounts": {
+    "product253": 253,
+    "worker11": 11,
+    "original100": 100,
+    "generated100": 100,
+    "originalConfig": 1,
+    "driver8": 8,
+    "privateOriginal": 3,
+    "private3": 3
+  },
+  "currentInputHashesChecked": 473,
+  "sourceInventoryCurrentErrors": [],
+  "selected": {
+    "count": 2,
+    "tests": [
+      {
+        "id": "87418b536bb3b16b9965-9d167bbc2a2b29b9bb07",
+        "title": "renders the settings structure on the /settings route",
+        "file": "e2e/settings.spec.ts",
+        "line": 158,
+        "project": "e2e",
+        "timeout": 74100000
+      },
+      {
+        "id": "87418b536bb3b16b9965-1daf9239c5bf49000f59",
+        "title": "[T-1232] 外观主题与密度按本地消费者持久并返回刷新",
+        "file": "e2e/settings.spec.ts",
+        "line": 283,
+        "project": "e2e",
+        "timeout": 74100000
+      }
+    ],
+    "notExecuted": true
+  },
+  "sumBudgetMs": 5530920000,
+  "outerMs": 5530920000,
+  "bodyExecutedByReviewer": false,
+  "nextStartedByReviewer": false,
+  "modelsCalledByReviewer": 0
+}

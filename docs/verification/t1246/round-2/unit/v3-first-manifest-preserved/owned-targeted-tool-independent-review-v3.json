@@ -1,0 +1,28 @@
+{
+  "approved": true,
+  "scope": "owned-pg-unit",
+  "toolManifestSha256": "0268b8ee71c5b59266b4fe63f59256f560016b0bb23f32017e5b8c416868b931",
+  "sourceSnapshotDigest": "a51998165d48eb5faba557ae650c1c5a772beac863829e0d6e994fa9e05a67bd",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "runtimeDistExclusive": true,
+  "mode": "targeted-pg-27",
+  "reviewer": "/root",
+  "reviewedAt": "2026-10-11T18:55:36.116Z",
+  "status": "PASS_TOOL_ONLY",
+  "actualPgExecuted": false,
+  "conditions": [
+    "执行前取得独占dist窗口并逐字复核本回执；不改27原body/产品",
+    "全4包和类型检查另等final freeze；App未完成"
+  ],
+  "reviewFindings": [],
+  "evidence": [
+    "owned-process-group-proof-result-v2.json",
+    "owned-source-bind-v3-targeted.json"
+  ],
+  "reviewBasis": [
+    "独读run-unit/verify-source/owned-pg-runtime/budget-consumers/35精确输入",
+    "每个串行阶段有限正执行预算与独立外层、TERM/KILL清理余量",
+    "fresh nonce/PID出生/UID/dataDir/服务器身份核验；禁止5432/55422；注册精确数据库",
+    "targeted源绑定含backend/worker/contract production与27测试闭包；不将frontend并行改动冒称冻结"
+  ]
+}

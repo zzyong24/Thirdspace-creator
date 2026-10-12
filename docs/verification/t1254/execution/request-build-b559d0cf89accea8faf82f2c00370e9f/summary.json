@@ -1,0 +1,25 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+  "exitCode": 1,
+  "startedAt": "2026-10-12T03:17:34.202Z",
+  "elapsedMs": 58346.031624999996,
+  "totalBudgetMs": 109260000,
+  "stepComplete": 0,
+  "stepTotal": 25,
+  "signals": [],
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-b559d0cf89accea8faf82f2c00370e9f-ZKkNkg",
+  "rootRetained": true,
+  "appliedToPrivateOnly": false,
+  "records": [
+    {
+      "name": "owned-network-boundary",
+      "code": null,
+      "elapsedMs": 274,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "noProductCopy": true,
+  "noApp": true
+}

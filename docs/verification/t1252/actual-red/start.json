@@ -1,0 +1,68 @@
+{
+  "at": "2026-10-11T22:33:28.239Z",
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "toolSha256": "2c0b6965f02cad572680073163b6754756cc563839c684f8ec39fb5a25183c25",
+  "bindingSha256": "af00315bbbe57ac92e34f4f2123b22989f389c403394624a17aa0213bed63738",
+  "inputs": [
+    {
+      "path": "docs/features/t1252-cli-http-consumer-budget-closure.md",
+      "sha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+      "expected": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402"
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/launch.cjs",
+      "sha256": "2c0b6965f02cad572680073163b6754756cc563839c684f8ec39fb5a25183c25",
+      "expected": "2c0b6965f02cad572680073163b6754756cc563839c684f8ec39fb5a25183c25"
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/ownership-negatives.cjs",
+      "sha256": "266f308c38e2675f26c156e1ff9aefd56e7fc6b6fa66706eaae3bbd15653d5aa",
+      "expected": "266f308c38e2675f26c156e1ff9aefd56e7fc6b6fa66706eaae3bbd15653d5aa"
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/protocol-red.cjs",
+      "sha256": "885ff7ca6d06c4b9dcd579e08421cc8f839752e7aaecdce64e43e07a2aaf842c",
+      "expected": "885ff7ca6d06c4b9dcd579e08421cc8f839752e7aaecdce64e43e07a2aaf842c"
+    },
+    {
+      "path": "mcp-server/package.json",
+      "sha256": "2ab421c76f3977b43e052699fefec3000816475eb78c26c80cd110dc38df0c3b",
+      "expected": "2ab421c76f3977b43e052699fefec3000816475eb78c26c80cd110dc38df0c3b"
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "sha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4",
+      "expected": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4"
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "sha256": "4e679f48074de96a2c1badd3ef5a3950ca32fb8c3bd9de3dca12c39768ccf532",
+      "expected": "4e679f48074de96a2c1badd3ef5a3950ca32fb8c3bd9de3dca12c39768ccf532"
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "sha256": "360e4531b26e7fe540bcca5efbfe08f12ba38a2b48bfb1d660a2527e1085f957",
+      "expected": "360e4531b26e7fe540bcca5efbfe08f12ba38a2b48bfb1d660a2527e1085f957"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6",
+      "expected": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6"
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "sha256": "6ef4e5c873fcd5ac2719a220454ba3ed33be78394b63d3fd7cba5140aaddff13",
+      "expected": "6ef4e5c873fcd5ac2719a220454ba3ed33be78394b63d3fd7cba5140aaddff13"
+    }
+  ],
+  "nonce": "f0757f924f378ed53b8680c5",
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-ANZdLY",
+  "outerMs": 3240000,
+  "caseMs": 780000,
+  "cleanupMs": 1200000,
+  "preparationElapsedMs": 62.129,
+  "noApp": true,
+  "noModel": true,
+  "noPG": true
+}

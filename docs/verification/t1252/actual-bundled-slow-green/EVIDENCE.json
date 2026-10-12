@@ -1,0 +1,85 @@
+{
+  "at": "2026-10-11T23:57:46.183777+00:00",
+  "scope": "实际固定Node25与原构建creatoros.cjs的受控loopback header/body协议回归；不代签公共Native、官方模型、App或Windows",
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-bundled-green-cQhzHK",
+  "collectorExitCode": 0,
+  "actualPassed": 2,
+  "actualFailed": 0,
+  "results": [
+    {
+      "scenario": "headers",
+      "elapsedMs": 310443.101875,
+      "actualPostCount": 1,
+      "serverClosed": true,
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "scenario": "body",
+      "elapsedMs": 310439.99537500006,
+      "actualPostCount": 1,
+      "serverClosed": true,
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "toolSha256": "de048571a626864a14b2e590be84b5847bb87664c2ea1931e67d214f8e9d6642",
+  "bindingSha256": "e5d37451ddad1968a624894775c5f701b8f1ae86799b9da2dce0f635b5afb003",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "bundleSha256": "84260be6df120ec18b9b91b17112cbee37fd1bba448205ccfbbd147646218caf",
+  "originalRedEvidence": "docs/verification/t1252/actual-red/EVIDENCE.json",
+  "rawFiles": [
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/body-actual-cli.log",
+      "sha256": "a3a16b62778a825d1d357e69132d58f37a4397d56e3870f3b8acebfd9120d112",
+      "bytes": 456
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/body-actual-green.json",
+      "sha256": "0323f22c7e9712a0f27816b19157e3710edf257b9689645be8278d2115935ee8",
+      "bytes": 2347
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/body-cli-receipt.json",
+      "sha256": "017d9aee455198ff051c936d6157c8b2a51514a542e55f00939f15bc8b93bbc9",
+      "bytes": 1268
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/body-listener.json",
+      "sha256": "30d983988cfd72897d8150fc11c712c09127c51210eea6fff4067aaaa87a0883",
+      "bytes": 132
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/final.json",
+      "sha256": "8350d165bfd911f67de02f7ab26cf475bc5ad3f080395bab67c2bfc6282d093c",
+      "bytes": 24180
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/headers-actual-cli.log",
+      "sha256": "d0505c22b321a059186805b094c02d84874d744f62354d71d4ba6a957e70c455",
+      "bytes": 465
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/headers-actual-green.json",
+      "sha256": "a94736dbbcf4791414ca7fb3deafa377e419c96a0fc0f2e8be61b9ac5e33bd77",
+      "bytes": 2236
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/headers-cli-receipt.json",
+      "sha256": "ae9dd05d4b71ec38d6f425226d15a05aec04178526fee751e2eb1ddef56a4d83",
+      "bytes": 1271
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/headers-listener.json",
+      "sha256": "6b1a3133083652e8782cbf01298c3a2caf7e74d10533615fb664dd58b7f2afdb",
+      "bytes": 135
+    },
+    {
+      "path": "docs/verification/t1252/actual-bundled-slow-green/start.json",
+      "sha256": "9cb902c8ce28d888db4546fdc090bb3e38613578a739ac496072b9b86d861e39",
+      "bytes": 1340
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+[
+  {
+    "label": "tests",
+    "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "args": [
+      "--test",
+      "--test-timeout=120000",
+      "tools/timeout-policy/check.test.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/ct1250-green-scanner-35qvgU/tests.log",
+    "pid": 90252,
+    "identity": {
+      "pid": 90252,
+      "pgid": 90252,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:22:14 2026",
+      "startedAt": 1791753734076
+    },
+    "startedAt": "2026-10-11T21:22:14.076Z",
+    "endedAt": "2026-10-11T21:22:17.094Z",
+    "elapsedMs": 3018,
+    "budgetMs": 1320000,
+    "deadlineAt": "2026-10-11T21:44:14.076Z",
+    "budgetExhausted": false,
+    "termGraceMs": 180000,
+    "killGraceMs": 180000,
+    "signals": [],
+    "processClosed": true,
+    "remainingOwnedGroupMembers": [],
+    "persistentOwnedServer": false,
+    "outerAbort": false,
+    "code": 0,
+    "signal": null,
+    "spawnError": null,
+    "stdout": "",
+    "stderr": ""
+  }
+]

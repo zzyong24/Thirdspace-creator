@@ -1,0 +1,227 @@
+[
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/acpx-notification-drain.test.ts",
+    "title": "复用真实客户端和上游 stdio fixture：结算等待客户端通知尾队列，不漏最终正文",
+    "duration": 376.754583,
+    "failureMessages": [
+      "Error: CODEX_ACP_HOST_FAILED\n    at Module.runCodexAcpInWorker (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/codex-acp-worker-run.ts:107:9)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/acpx-notification-drain.test.ts:47:15\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-01"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-research-browser.integration.test.ts",
+    "title": "真实浏览器解析搜索页并切换空来源，结果沿聊天观察协议结算",
+    "duration": 1215.388375,
+    "failureMessages": [
+      "AssertionError: expected { callId: 'search', …(1) } to match object { observation: { status: 'ok', …(1) } }\n(1 matching property omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-research-browser.integration.test.ts:12:15\n    at Mock (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-research-worker.ts:10:104\n    at runChatResearchInWorker (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-research-worker.ts:10:40)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-research-browser.integration.test.ts:28:3\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-02"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-completions' HTTP 429保留可信拒绝，不由SDK重试",
+    "duration": 33.574250000000006,
+    "failureMessages": [
+      "AssertionError: expected [ 'settleGenerationCall', …(1) ] to deeply equal [ 'settleGenerationCall', …(1) ]\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:61:36\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-03"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-completions' HTTP 503保留可信拒绝，不由SDK重试",
+    "duration": 2.9184999999999945,
+    "failureMessages": [
+      "AssertionError: expected [ 'settleGenerationCall', …(1) ] to deeply equal [ 'settleGenerationCall', …(1) ]\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:61:36\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-04"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-completions' truncated没有明确HTTP拒绝，保持unknown",
+    "duration": 25.236207999999976,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:71:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-05"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-completions' disconnect没有明确HTTP拒绝，保持unknown",
+    "duration": 3.033999999999992,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:71:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-06"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-completions' 带status字段的普通异常不是可信HTTP拒绝",
+    "duration": 1.228749999999991,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:80:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-07"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-responses' HTTP 429保留可信拒绝，不由SDK重试",
+    "duration": 3.2472080000000005,
+    "failureMessages": [
+      "AssertionError: expected [ 'settleGenerationCall', …(1) ] to deeply equal [ 'settleGenerationCall', …(1) ]\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:61:36\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-08"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-responses' HTTP 503保留可信拒绝，不由SDK重试",
+    "duration": 2.0241659999999797,
+    "failureMessages": [
+      "AssertionError: expected [ 'settleGenerationCall', …(1) ] to deeply equal [ 'settleGenerationCall', …(1) ]\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:61:36\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-09"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-responses' truncated没有明确HTTP拒绝，保持unknown",
+    "duration": 23.25875000000002,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:71:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-10"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-responses' disconnect没有明确HTTP拒绝，保持unknown",
+    "duration": 2.9395829999999705,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:71:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-11"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'openai-responses' 带status字段的普通异常不是可信HTTP拒绝",
+    "duration": 0.9429999999999836,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:80:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-12"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'anthropic-messages' HTTP 429保留可信拒绝，不由SDK重试",
+    "duration": 4.157582999999988,
+    "failureMessages": [
+      "AssertionError: expected [ 'settleGenerationCall', …(1) ] to deeply equal [ 'settleGenerationCall', …(1) ]\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:61:36\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-13"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'anthropic-messages' HTTP 503保留可信拒绝，不由SDK重试",
+    "duration": 1.5378329999999778,
+    "failureMessages": [
+      "AssertionError: expected [ 'settleGenerationCall', …(1) ] to deeply equal [ 'settleGenerationCall', …(1) ]\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:61:36\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-14"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'anthropic-messages' truncated没有明确HTTP拒绝，保持unknown",
+    "duration": 24.098416000000043,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:71:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-15"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'anthropic-messages' disconnect没有明确HTTP拒绝，保持unknown",
+    "duration": 2.4642089999999826,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:71:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-16"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts",
+    "title": "真实Pi HTTP兼容：'anthropic-messages' 带status字段的普通异常不是可信HTTP拒绝",
+    "duration": 0.7232079999999996,
+    "failureMessages": [
+      "Error: expected Error: MODEL_STREAM_INTERRUPTED { …(3) } to match object { outcome: 'unknown_result' }\n(2 matching properties omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-pi-http.integration.test.ts:80:31\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-17"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/generation-replay.test.ts",
+    "title": "仅已确认坏输出可投影为节点失败，未知、篡改和多余回执仍拒绝",
+    "duration": 6.891750000000002,
+    "failureMessages": [
+      "AssertionError: expected { status: 'next-request', …(2) } to deeply equal { status: 'failed', consumed: 1 }\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/generation-replay.test.ts:97:131\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+    ],
+    "caseId": "T1246-WF-18"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/intelligence-worker-bundle.test.ts",
+    "title": "CJS 安装入口 openai_chat / execution 初始化 Pi 并到预留端口；禁止开始收费调用",
+    "duration": 411.426917,
+    "failureMessages": [
+      "Error: 打包 Worker 提前退出\n    at ChildProcess.<anonymous> (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/intelligence-worker-bundle.test.ts:29:69)\n    at ChildProcess.emit (node:events:509:20)\n    at Process.ChildProcess._handle.onexit (node:internal/child_process:294:12)"
+    ],
+    "caseId": "T1246-WF-19"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/intelligence-worker-bundle.test.ts",
+    "title": "CJS 安装入口 anthropic / execution 初始化 Pi 并到预留端口；禁止开始收费调用",
+    "duration": 406.3945409999999,
+    "failureMessages": [
+      "Error: 打包 Worker 提前退出\n    at ChildProcess.<anonymous> (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/intelligence-worker-bundle.test.ts:29:69)\n    at ChildProcess.emit (node:events:509:20)\n    at Process.ChildProcess._handle.onexit (node:internal/child_process:294:12)"
+    ],
+    "caseId": "T1246-WF-20"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/intelligence-worker-bundle.test.ts",
+    "title": "CJS 安装入口 openai_responses / execution 初始化 Pi 并到预留端口；禁止开始收费调用",
+    "duration": 409.7479580000004,
+    "failureMessages": [
+      "Error: 打包 Worker 提前退出\n    at ChildProcess.<anonymous> (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/intelligence-worker-bundle.test.ts:29:69)\n    at ChildProcess.emit (node:events:509:20)\n    at Process.ChildProcess._handle.onexit (node:internal/child_process:294:12)"
+    ],
+    "caseId": "T1246-WF-21"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/research-worker-tools.test.ts",
+    "title": "原始搜索只访问指定引擎，保留结果且不触发宿主结算或会话",
+    "duration": 1.8061250000000655,
+    "failureMessages": [
+      "SearchExecutionError: 搜索页面查询词与本次请求不一致，不能使用这批结果\n    at assertSearchQueryIdentity (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/browser/search-browser.ts:60:13)\n    at Object.search (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/browser/search-browser.ts:286:9)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/research-worker-tools.ts:262:23"
+    ],
+    "caseId": "T1246-WF-22"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/research-worker-tools.test.ts",
+    "title": "原始搜索空结果不私自切引擎，导航错误保留供上层选择备用来源",
+    "duration": 0.35079099999984464,
+    "failureMessages": [
+      "SearchExecutionError: 搜索页面查询词与本次请求不一致，不能使用这批结果\n    at assertSearchQueryIdentity (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/browser/search-browser.ts:60:13)\n    at Object.search (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/browser/search-browser.ts:286:9)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/execution/research-worker-tools.ts:262:23"
+    ],
+    "caseId": "T1246-WF-23"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/prompt/director-methods.test.ts",
+    "title": "T-944 编导方法实际装配边界 intelligence.topic-adapted-draft 实际可见三种目的与独立表现形式方法",
+    "duration": 4.444749999999999,
+    "failureMessages": [
+      "AssertionError: expected '【本账号定位】\\n服务线下门店\\n\\n【来源作品】\\n标题：\\n作者：真实…' to contain '\"contentRole\":\"conversion\"'\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/prompt/director-methods.test.ts:28:71\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)"
+    ],
+    "caseId": "T1246-WF-24"
+  },
+  {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+    "title": "本地 Whisper 取消与资源归属 普通推理失败后复用 worker，崩溃后重建且忽略旧 exit",
+    "duration": 180009.723208,
+    "failureMessages": [
+      "Error: STACK_TRACE_ERROR\n    at task (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1784:27)\n    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1817:16)\n    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:28)\n    at chain (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts:130:5\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1889:40\n    at runWithSuite (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2258:8)\n    at Object.collect (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1889:10)\n    at Object.collect (file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1893:54)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    ],
+    "caseId": "T1246-WF-25"
+  }
+]

@@ -1,3 +1,4 @@
+import {articleManualVersionBody,graphicManualVersionBody} from './work-candidate-adoption';
 import {z} from "zod";
 import {id,platformId} from "../primitives";
 import {projectsOperations} from "../operations/projects";
@@ -71,13 +72,13 @@ export const assistantFeaturesInputSchema=z.object({feature:z.string().min(1).op
 export const assistantProposalSourceSchema=z.object({taskId:id,callId:id,toolCallId:z.string().min(1).max(256),candidateDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/)}).strict();
 export type AssistantProposalSource=z.infer<typeof assistantProposalSourceSchema>;
 const kind=<T extends string>(value:T)=>({kind:z.literal(value)});
-export const assistantActionInputSchema=z.discriminatedUnion("kind",[
+const assistantActionBranches=[
  projectsOperations.createProject.body.omit({source:true,platformRef:true}).extend(kind("project.create")).strict(),
  candidateOperations.createCandidate.body.extend(kind("topic.create")).strict(),
  z.object({...kind("topic.promote"),candidateId:id}).strict(),
  artifactsOperations.applyScriptPatch.body.extend({...kind("script.patch"),artifactId:id}).strict(),
- articlesOperations.createArticleVersion.body.omit({clientRequestId:true}).extend({...kind("article.save"),outputId:id}).strict(),
- graphicPostsOperations.createGraphicPostVersion.body.omit({clientRequestId:true}).extend({...kind("graphic.save"),outputId:id}).strict(),
+ articleManualVersionBody.omit({clientRequestId:true}).extend({...kind("article.save"),outputId:id}).strict(),
+ graphicManualVersionBody.omit({clientRequestId:true}).extend({...kind("graphic.save"),outputId:id}).strict(),
  z.object({...kind("asset.tag"),targets:z.array(z.object({assetId:id,expectedVersion:z.string().min(1).max(256)}).strict()).min(1).max(100),tag:z.string().trim().min(1).max(200)}).strict(),
  knowledgeOperations.createKnowledge.body.pick({title:true,sourceNote:true,folderId:true}).extend({...kind("knowledge.create"),note:knowledgeOperations.createKnowledge.body.shape.content}).strict(),
  knowledgeOperations.createKnowledgeFolder.body.extend(kind("knowledge.folder.create")).strict(),
@@ -90,13 +91,26 @@ export const assistantActionInputSchema=z.discriminatedUnion("kind",[
  contentCalendarOperations.createGroupEntry.body.extend(kind("calendar.plan")).strict(),
  schedulingOperations.createScheduledJob.body.pick({name:true,prompt:true,schedule:true}).extend({...kind("automation.createDraft"),sourceKind:z.enum(["topic.daily","self.metrics","comments"]),targetAccountId:id.nullable()}).strict(),
  z.object({...kind("automation.enable"),jobId:id,enabled:z.boolean()}).strict(),
- settingsOperations.patchPreferences.body.extend(kind("preferences.update")).strict(),
-]).superRefine((action,ctx)=>{
+ ] as const;
+// 固定历史协议字段；不能从演进中的公开patch schema动态删字段生成旧版本。
+const historicalPreferencesAction=z.object({
+ defaultHome:z.string().optional(),defaultCreationMode:z.enum(['guided','flexible','freeform']).optional(),
+ defaultVisibility:z.enum(['private','unlisted','public']).optional(),autosaveEnabled:z.boolean().optional(),
+ fileNamingRule:z.string().optional(),analyticsEnabled:z.boolean().optional(),...kind('preferences.update'),
+}).strict();
+const currentPreferencesAction=settingsOperations.patchPreferences.body.extend(kind('preferences.update')).strict();
+function assistantActionSchema(preferences:typeof historicalPreferencesAction|typeof currentPreferencesAction){
+ return z.discriminatedUnion('kind',[...assistantActionBranches,preferences]).superRefine((action,ctx)=>{
  if(action.kind==="automation.createDraft"&&action.sourceKind!=="topic.daily"&&action.targetAccountId===null)ctx.addIssue({code:"custom",message:"该自动化必须选择当前组真实平台账号"});
  if(action.kind==="preferences.update"&&Object.keys(action).length===1)ctx.addIssue({code:"custom",message:"请选择要修改的偏好字段"});
  if(JSON.stringify(action).length>900_000)ctx.addIssue({code:"custom",message:"候选内容过大，请缩小本次修改"});
-});
+ });
+}
+export type AssistantActionCatalogVersion=1|2;
+export const assistantActionInputSchemaV1=assistantActionSchema(historicalPreferencesAction);
+export const assistantActionInputSchema=assistantActionSchema(currentPreferencesAction);
 export type AssistantActionInput=z.infer<typeof assistantActionInputSchema>;
+export const assistantActionProposeInputSchemaV1=z.object({action:assistantActionInputSchemaV1}).strict();
 export const assistantActionProposeInputSchema=z.object({action:assistantActionInputSchema}).strict();
 export const assistantActionCandidateSchema=z.object({schemaVersion:z.literal(1),kind:z.literal("system.action.proposal"),request:assistantActionProposeInputSchema,observations:z.record(z.string(),z.json()),source:assistantProposalSourceSchema}).strict();
 export type AssistantActionCandidate=z.infer<typeof assistantActionCandidateSchema>;

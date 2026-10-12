@@ -1,0 +1,81 @@
+{
+  "kind": "SOURCE-only-exact-eight-tool-reuse-not-execution",
+  "previousBindingPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/SOURCE_TOOL_BINDING.json",
+  "previousBindingSHA": "7391c163398d7fe7f7b11fbcd51d5482da3005e07fef5aa9e2c974b028a6047c",
+  "rows": [
+    {
+      "name": "common.cjs",
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/common.cjs",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/final-joint-metadata-candidate/tool/common.cjs",
+      "sha256": "5fac7f48b0db4bc6befac1fe319364815244f6d80fcc2ae913364f65063805a1",
+      "size": 22030,
+      "identical": true,
+      "usedByMetadataPhases": true
+    },
+    {
+      "name": "run.cjs",
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/run.cjs",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/final-joint-metadata-candidate/tool/run.cjs",
+      "sha256": "79521b70a41ba1195859b6d2c45580bbfc8b7fd391c8793b422cfb3488eb0494",
+      "size": 10068,
+      "identical": true,
+      "usedByMetadataPhases": false
+    },
+    {
+      "name": "reseal.cjs",
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/reseal.cjs",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/final-joint-metadata-candidate/tool/reseal.cjs",
+      "sha256": "05825374a61c5c10e95d8f0d4319994da804dac289638b21745f8d42610495bb",
+      "size": 14591,
+      "identical": true,
+      "usedByMetadataPhases": false
+    },
+    {
+      "name": "prepare-metadata-input.cjs",
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/prepare-metadata-input.cjs",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/final-joint-metadata-candidate/tool/prepare-metadata-input.cjs",
+      "sha256": "b5bf7f6b63d8065c1c9615f0cf661c537ba71156b20b783f86cc58790b93238d",
+      "size": 5297,
+      "identical": true,
+      "usedByMetadataPhases": true
+    },
+    {
+      "name": "owned-dyld.cjs",
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/owned-dyld.cjs",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/final-joint-metadata-candidate/tool/owned-dyld.cjs",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "size": 10866,
+      "identical": true,
+      "usedByMetadataPhases": false
+    },
+    {
+      "name": "supervise.cjs",
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/supervise.cjs",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/final-joint-metadata-candidate/tool/supervise.cjs",
+      "sha256": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4",
+      "size": 4385,
+      "identical": true,
+      "usedByMetadataPhases": true
+    },
+    {
+      "name": "discover-joint-pairs.py",
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/discover-joint-pairs.py",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/final-joint-metadata-candidate/tool/discover-joint-pairs.py",
+      "sha256": "3324eb3f4bf006349e56f85ba17248b3b04c5f1b1a91423ea9ef782d17937845",
+      "size": 13768,
+      "identical": true,
+      "usedByMetadataPhases": true
+    },
+    {
+      "name": "prepare-joint-dyld.py",
+      "original": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/prepare-joint-dyld.py",
+      "candidate": "docs/verification/t1246/round-2/final-runtime-guard/final-joint-metadata-candidate/tool/prepare-joint-dyld.py",
+      "sha256": "0430982cd69814dcd76ddfe0289d93a6254dc01dbecca8731a5dc809216d2c4a",
+      "size": 16810,
+      "identical": true,
+      "usedByMetadataPhases": true
+    }
+  ],
+  "original6CJS2PythonUnmodified": true,
+  "collectorOToolResealServicesNotExecuted": true
+}

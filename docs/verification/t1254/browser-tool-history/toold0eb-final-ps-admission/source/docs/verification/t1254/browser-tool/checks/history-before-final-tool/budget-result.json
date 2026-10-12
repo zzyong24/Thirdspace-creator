@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-12T03:40:58.961Z",
+  "kind": "pure-guard-static-only",
+  "budgets": {
+    "bodyCount": 2,
+    "perBodyMs": 72000000,
+    "serialBodySumMs": 144000000,
+    "separatePerBodyFixtureHookAllowanceMs": 144720000,
+    "driverTypesMs": 1200000,
+    "listMs": 240000,
+    "startupFullSlotsMs": 3000000,
+    "readonlyLedgerSlotMs": 1800000,
+    "cleanupFullMs": 4800000,
+    "globalSetupTeardownMs": 240000,
+    "workerProjectCleanupMs": 72180000,
+    "entrySourceVerifyMs": 900000,
+    "sourceVerifyMs": 900000,
+    "marginMs": 600000,
+    "outerMs": 374580000,
+    "monotonicSegmentsMaxMs": 60000,
+    "notPersistentDeadlineInput": true
+  },
+  "negativeChecks": [
+    "one-body",
+    "three-bodies",
+    "extra-profile",
+    "duplicate-title",
+    "missing-title",
+    "1ms-under",
+    "elapsed",
+    "invalid-deadline",
+    "negative-reserve"
+  ],
+  "noService": true,
+  "noBrowser": true,
+  "noSQL": true,
+  "notActualTypesOrListOrBodies": true
+}

@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-11T22:02:36.682595+00:00",
+  "scope": "只读proposal，未运行HTTP/PG/App/模型，未修改产品",
+  "sources": [
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "sha256": "4e679f48074de96a2c1badd3ef5a3950ca32fb8c3bd9de3dca12c39768ccf532"
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "sha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4"
+    },
+    {
+      "path": "mcp-server/src/index.ts",
+      "sha256": "9975083dd1457fcbfc756643a69b9cdb5a8dbffea656cad1a9f9a03c1a418bcd"
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "sha256": "360e4531b26e7fe540bcca5efbfe08f12ba38a2b48bfb1d660a2527e1085f957"
+    },
+    {
+      "path": "mcp-server/package.json",
+      "sha256": "2ab421c76f3977b43e052699fefec3000816475eb78c26c80cd110dc38df0c3b"
+    },
+    {
+      "path": "mcp-server/scripts/build-runtime.mjs",
+      "sha256": "312cf5a13083730702e8e5e92f042c317b8e24737fdd17ecff7e0a7078c13fdb"
+    },
+    {
+      "path": "mcp-server/tests/helpers/loopback-cli.ts",
+      "sha256": "396da24a2758d789d5f97ae2d21ef3c49c139be9d7b1d8364a124479419e1617"
+    },
+    {
+      "path": "mcp-server/tests/dispatch.test.ts",
+      "sha256": "7f884b3feae4258ccdf22d1423d999c7381b4eb1c8b7216cb540b5e156d22bba"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "sha256": "89df7926d81f68b8b6dbca54b8b773fd846dc5ab6f7536545144af4bc0e89f01"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "sha256": "5b39a3848dfd22996e0ca8837a68ece88ffbb00d1dbdd12fa881abd30b6e6b2f"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "sha256": "2f2638540072fc79da7d650bc779fee028c557fbc21f03b7e542a8e89f108571"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "sha256": "1a5613702ab81e92cc4a33d437d9aa78c58c6f318dd5c2ae838e63887bcb892b"
+    },
+    {
+      "path": "docs/features/t1250-positive-timeout-consumer-closure.md",
+      "sha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4"
+    }
+  ],
+  "actualNode": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+    "undiciVersion": "7.24.4",
+    "builtinSource": "internal/deps/undici/undici",
+    "headersTimeoutMs": 300000,
+    "bodyTimeoutMs": 300000,
+    "clientLines": [
+      9165,
+      9166
+    ],
+    "fetchDispatchLines": [
+      13616,
+      13624
+    ]
+  }
+}

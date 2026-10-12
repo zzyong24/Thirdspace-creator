@@ -1,0 +1,226 @@
+{
+  "schema": "independent-spec-source-binding/v1",
+  "at": "2026-10-12T00:18:46.602385+00:00",
+  "task": "T-1254",
+  "packetSha256": "87fafae7a22a2d4e00470f4b062b2f459bc6943a55b175fc49c0a1bc05c8eb8c",
+  "reviewerModel": "unknown/inherited",
+  "reviewerMechanism": "独立子Agent，只读实际文件/归档成员/hash与消费者；未调用reviewctl record",
+  "sources": [
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+      "sha256": "20df0b3e01055e1ad64eab3af1f408b1cfb244549e0a227982538efd9de3d2a2"
+    },
+    {
+      "path": "docs/verification/t1254/DOOCS_CONTRACT_INVENTORY.json",
+      "sha256": "060a0f92ee64d4a1f777099a1438c0b8ae71c359338ecf33e432a236a865e834"
+    },
+    {
+      "path": "docs/verification/t1254/BUILD_INPUT_COMPARISON.json",
+      "sha256": "629fb3ddb61fa3cea2fded5339ee8a4d950d32ec1373c0cdb6a1b8d26a24ac56"
+    },
+    {
+      "path": "docs/verification/t1254/STATIC_SOURCE_PATCH_CHECK.json",
+      "sha256": "c6fab82217b0c6c3231e3c17219ff3b525c024b1f99d3fca8363ff8704e62c27"
+    },
+    {
+      "path": "docs/verification/t1254/STATIC_SOURCE_EXTRACT_FIRST_REJECTED.json",
+      "sha256": "7df256c2fd3a83a0bfb6164f6d9ae6e8d634599e2d404c78742747b62f4c4901"
+    },
+    {
+      "path": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "sha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583"
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "sha256": "9335e7d501df0271a861b787fbc3bd155da45c29bd3af5a328e421c19f655822"
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/doocs-md-creatoros.patch",
+      "sha256": "55ab4bb69a49a08d64fdd2737549fa78edf90830b3d62a2fd592b119d00a3426"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "sha256": "be6f97ab7e84116fbd22a0328f245dbd45a0b209f1e4a85d5815ffd21845614f"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-config-BhBc-hVt.js",
+      "sha256": "34fce8be0bf22d9603bec258ea6e0cc34c79d334381a29f8d233c8a74f06e587"
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "sha256": "d021479434cef9d4e928ff42371766ba85fa3faae82801ac1ffcd171bf41f4e6"
+    },
+    {
+      "path": "frontend/scripts/verify-native-editors.mjs",
+      "sha256": "a4dbbac4d5d386eed8b8a239c77b4576092819e7a22366ea35701bac16ce2153"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-loader.ts",
+      "sha256": "ab09e9b6eace951ca14559b62c01db0f8496d56a11d6e3562d7d28a2cc7acf29"
+    },
+    {
+      "path": "frontend/src/features/article/doocs-article-editor.tsx",
+      "sha256": "18756ac113c0eff92714d7cef592faa6362a25376059f90c703d7100f0503877"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/final-gates/timeout-1609ea867b99a9759ebfbb44e6547b21/summary.json",
+      "sha256": "895ec81ba4cf289936864ec60aed4a49003c26950a57a7cac0349e22c96af72d"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/index.html",
+      "sha256": "ebf9222ba890986091b90f6dd72affe9d9e04ddb8deb1ba0d922ab1e1fdd9b73"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/favicon.png",
+      "sha256": "b611e578a233595003ac6cc6691bccce3c2cd643ef379a1541d9feb4465f8f68"
+    }
+  ],
+  "archiveEntriesActuallyChecked": [
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/packages/shared/src/utils/fetch.ts",
+      "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "bytes": 4397
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+      "bytes": 3603
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/apps/web/src/services/upload/providers.ts",
+      "sha256": "80b8a4c592a3a28d2c3dd1026cfcdbc5498397bd899a31c9f62373b36531c124",
+      "bytes": 24919
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/apps/web/src/composables/useImageUploader.ts",
+      "sha256": "9b7262bad9137e46e1adc7dc900a7051b1f1858ad6ca303992fa7d76e6b33a17",
+      "bytes": 4474
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/apps/web/src/services/upload/index.ts",
+      "sha256": "e30a3261168726e041b409a8b7230b67c1399068c305b73167501263cf4524df",
+      "bytes": 175
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/apps/web/src/native-entry.ts",
+      "sha256": "7c00495934d9ca6bc114552a50ccc5287a52f3a9e7eee9ca997fd856d55df36b",
+      "bytes": 13111
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/apps/web/vite.config.ts",
+      "sha256": "fdd144a48488d55dcca0ba77c2256805ed2177ffb06a29736f7d0bc7ef677ae5",
+      "bytes": 6156
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/apps/web/vite.native.config.ts",
+      "sha256": "7418e2cca6db6def4aeadcc4ff0dab0cc8d79458b8ef686e5d019d2735582fca",
+      "bytes": 4153
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/apps/web/package.json",
+      "sha256": "2bd2c2cd11a5bc5b6c3588e126e7e3caba17ce038003f1e44f77ca22fc8d4122",
+      "bytes": 3012
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/scripts/build-native.mjs",
+      "sha256": "e2311c02592dfa03954a6b41d821e698a645e851e52c80c4ebf48475e7dde57b",
+      "bytes": 1599
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/scripts/verify-native-build.mjs",
+      "sha256": "ac58319b710f1e567c70c72bbb6970f693046492f36d9bce59f31aff9f251542",
+      "bytes": 3278
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/NATIVE_SOURCE.json",
+      "sha256": "f487bcb0d3388229f908416771b08d781c9a7aa47d25a6001be3261287529efd",
+      "bytes": 789
+    },
+    {
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "entry": "doocs-md-native/pnpm-lock.yaml",
+      "sha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+      "bytes": 452784
+    },
+    {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "entry": "packages/shared/src/utils/fetch.ts",
+      "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "bytes": 4397
+    },
+    {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "entry": "packages/shared/src/utils/fetch.test.ts",
+      "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+      "bytes": 3603
+    },
+    {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "entry": "apps/web/src/services/upload/providers.ts",
+      "sha256": "80b8a4c592a3a28d2c3dd1026cfcdbc5498397bd899a31c9f62373b36531c124",
+      "bytes": 24919
+    },
+    {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "entry": "apps/web/src/composables/useImageUploader.ts",
+      "sha256": "35d2e01ea127a1430b00b23a24e0a70997d6952fe26826defe4b86fa8b70194b",
+      "bytes": 3605
+    },
+    {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "entry": "apps/web/src/services/upload/index.ts",
+      "sha256": "e30a3261168726e041b409a8b7230b67c1399068c305b73167501263cf4524df",
+      "bytes": 175
+    },
+    {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "entry": "apps/web/vite.config.ts",
+      "sha256": "31fe094de0c8cf480373ae65252641e8fd26177520d1516b8a6255e3f789d5cd",
+      "bytes": 6185
+    },
+    {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "entry": "apps/web/package.json",
+      "sha256": "2bd2c2cd11a5bc5b6c3588e126e7e3caba17ce038003f1e44f77ca22fc8d4122",
+      "bytes": 3012
+    },
+    {
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "entry": "pnpm-lock.yaml",
+      "sha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+      "bytes": 452784
+    }
+  ],
+  "run": {
+    "newTests": 0,
+    "newBuilds": 0,
+    "newInstalls": 0,
+    "newBrowserBodies": 0,
+    "App": false,
+    "userDescriptorRead": false
+  },
+  "constraints": [
+    "CONTRACT不准BUILD；正式record/start之后每工具源码/Node/pnpm/锁/实际工具链/两根artifact候选仍须双审",
+    "生成文件族的exact新删路径须DELIVERY_EXACT_FILE_MANIFEST实际形成并独审才复制；不直接压缩块替换",
+    "legacy network module loopback只该模块，current native media upload另公共host链，不把static CSPnone放开",
+    "standardfrontend四历史类型错误以及T1246未验49/原生App不借本Gate通过闭合"
+  ],
+  "reviewStatus": "initial one open major; verdict left to reviewctl",
+  "unissuedDraftHistory": "review-draft-unissued-history contains pre-delivery drafts, not recorded rounds/PASS evidence"
+}

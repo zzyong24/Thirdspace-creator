@@ -1,0 +1,20 @@
+{
+  "task": "T-1254",
+  "previousIndexSHA": "718eda4d885f0cc0843c209319093620ee20b31f46302396f30be3ed06dd1fb8",
+  "previousActualCorePrepareEOF0": true,
+  "onlyChangedCandidateFiles": [
+    "frontend/scripts/build-doocs-request-budget.mjs"
+  ],
+  "allOther708CandidateFilesByteIdentical": true,
+  "all73Writes53Deletes636UnchangedPathSetsSame": true,
+  "sourceFileSetReadonlyExtra": {
+    "native": 0,
+    "static": 0
+  },
+  "sourceAndManagerRecordedActualMachORoots": 55,
+  "actualMachONotInV10Roots": [],
+  "scopeLinkEscapes": 0,
+  "noNewChildExecuted": true,
+  "newBuilderChangedSourceSHA": "08c9d827e85df4296de24f319834da707b245f47819aed12306f97c3c1e6b134",
+  "deltaSHA": "75d3065f05978f9a2344791703294fdba14acf340b781b2cafa7a309e26b11bb"
+}

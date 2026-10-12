@@ -1,0 +1,15 @@
+{
+  "status": "公共慢链已实测通过；fake观察前置红保留，不签整组绿",
+  "run": "docs/verification/t1250/runs/ct1250-green-cdp-dWwfpT",
+  "testsSha256": "bbb850dc77f1ca6673f9569befe815703b4571f709b968d692a2219ae70ac185",
+  "counts": {
+    "numPassedTests": 1,
+    "numFailedTests": 1,
+    "numPendingTests": 29
+  },
+  "sourceInputUnchanged": true,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "failedConsumer": ".test.ts:194 completed，真实422ms调度观察不足；后置phase/idle断言未到达",
+  "narrowTestCorrection": "真实monotonic120000ms观察＋真实50ms间隔；每轮fake仅1ms，原95s/90s及expiresAt断言不变"
+}

@@ -1,0 +1,22 @@
+{
+  "nonce": "51423dea25343a726d94758a",
+  "approvalSha256": "cbf25ecabebb3d42e2393f8e5bcbfbb72aff48d9d5a24568c3a6c4fe47254414",
+  "entry": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audit-provenance-v5/audit-source.cjs",
+  "entrySha256": "6564c1f87e26e779fcffa63380424165f78b0a4a421c93da58deb0f20c6c5b0d",
+  "maximumExecutions": 1,
+  "plan": {
+    "prepareMs": 600000,
+    "positiveMs": 3000000,
+    "helperLifecycleMs": 2160000,
+    "afterMs": 600000,
+    "processProofMs": 180000,
+    "marginMs": 180000,
+    "outerMs": 6720000
+  },
+  "singleBirth": 45.56725,
+  "formula": "before600k+positive3M+independentLifecycle2160k+after600k+process180k+margin180k",
+  "App": false,
+  "metadata": false,
+  "services": false,
+  "browser": false
+}

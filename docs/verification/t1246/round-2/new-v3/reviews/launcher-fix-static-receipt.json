@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-11T19:21:09.797Z",
+  "manifestSha256": "688ad46a3e7190a70bffda3b723c3701544a2ac50cb3a2659a978484abe5723e",
+  "launcherSha256": "2d48c8cdea6c87d9b1fd27bcfc15283c0153abd0634fca0da4e861c6e4d0c394",
+  "source9": 9,
+  "driver9": 9,
+  "expectedBodies": {
+    "official": 103,
+    "protocol": 7,
+    "pi": 1
+  },
+  "guard": {
+    "status": "STATIC_SOURCE_CHANGED_RESEAL_REQUIRED",
+    "error": "Error: [\"product frontend/src/features/projects/work-editing-recovery.test.tsx\"]"
+  },
+  "noRuntimeExecuted": true
+}

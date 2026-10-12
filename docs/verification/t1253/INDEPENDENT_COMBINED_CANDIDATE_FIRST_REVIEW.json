@@ -1,0 +1,103 @@
+{
+  "schema": "independent-test-candidate-review/v1",
+  "at": "2026-10-11T23:19:12.480209+00:00",
+  "result": "REQUEST_CANDIDATE_CHANGES",
+  "scope": "T1253 3原测试私有组合候选静态独评；未apply/types/build/test",
+  "candidateBindingSha256": "c9b53dd44be0df6678b05ad33b752f84c2832bb72282c8e2d5bb9f972ce59f6d",
+  "checkedBindings": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+      "sha256": "b132114ba0b561dc362b9f10d2cb5471a12206a35ef6377bfa3324859661059c"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1253/HTTP_PERMISSION_OBSERVATION_SECOND_ACTUAL.json",
+      "sha256": "67e078cd00c6004773884e20d98669927c13862b534d61f699e23fa8573fbb2a"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "sha256": "f9fe46310f1f18a5185a4bc56c84cf3906bb27e13f8c734ee0e35fd722d72bc0"
+    },
+    {
+      "file": "/tmp/t1253-candidate/hooks-all-families-combined.test.ts",
+      "sha256": "9f9505eca46c1fd6d929e8f22cf21dd4890427e5c58c682a9a8163ec3a02f1f3"
+    },
+    {
+      "file": "/tmp/t1253-candidate/hooks-all-families-combined.diff",
+      "sha256": "dc5f58818d8fcecb7d113f33fb6f4df069b9b55cd43bb78b29392540645c8b25"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+      "sha256": "44be1b5c2e3834bcc957aa6330a5d3065f8f985a7d480bcc95b65347a525ddd0"
+    },
+    {
+      "file": "/tmp/t1253-candidate/draft-all-families-combined.test.ts",
+      "sha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60"
+    },
+    {
+      "file": "/tmp/t1253-candidate/draft-all-families-combined.diff",
+      "sha256": "e023dabd9d26b01848365bffcdc29e7050797fc8225c031a10f8b309ccc72ca0"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "sha256": "0d758bfa7ce0bbae6b16aeb9db39e3e3c5bd4c1decdd3c1dc8a9ea8fc061752e"
+    },
+    {
+      "file": "/tmp/t1253-candidate/ports-all-families-combined.test.ts",
+      "sha256": "4b1a1b07152e9a7a0bff44cb125675e4ae60b25d974ab44e4b79ad1f6901d2ae"
+    },
+    {
+      "file": "/tmp/t1253-candidate/ports-all-families-combined.diff",
+      "sha256": "d4475e27227c7f74eda487f36793b86941c4a58faba471d1fe4ad1ddf4909939"
+    }
+  ],
+  "productionBindings": [
+    {
+      "path": "ai-worker/src/execution/worker-runtime.ts",
+      "sha256": "7057344bc467ae84521c610450f40c2f24e30cf607a2226663f1e118eaae350f"
+    },
+    {
+      "path": "backend/src/modules/ai/execution-candidate.service.ts",
+      "sha256": "bb669b03cd66ea582e57a60c387dc73a91d97e28189885a488c38b361c918784"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/execution/model-call-recovery.ts",
+      "sha256": "a96b971c39046008560bbb3d3ad5d6a1bf07645454b4afe3d2b570042659041b"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    }
+  ],
+  "findings": [
+    {
+      "id": "CP001",
+      "priority": "blocking_candidate",
+      "candidate": "ports-all-families-combined.test.ts",
+      "evidence": [
+        "worker-runtime.ts304拒Pi requires_reconciliation时，catch353仍发仅失败状态commitResult {outcome:unknown_result,errorCode:CHECKPOINT_REQUIRES_RECONCILIATION}",
+        "原fixturecommitResult分支未区分outcome，第二轮failCommit=false，先committedTexts.push(data.text)，失败通报text不存在，随后candidate.service.ts54拒绝非成功",
+        "新candidate同时断言committedTexts=[]且所有commitResult port0，与真实原消费者不符；不能用全局过滤掩盖"
+      ],
+      "minimum": "在原fixture中严格解析成功/失败通报；非成功不push text/不走候选owner，保唯一unknown_result与准确errorCode及完整raw事实。0新reserve/start/settle/checkpoint/provider和0成功候选仍严格；失败通报若需实际状态写须使用已存在精确状态端口并根审批，不改worker生产或usage。SPEC不能commit文字需root解释为不提交候选，不能假装原IPC无失败通报。"
+    }
+  ],
+  "positiveStaticConclusions": [
+    "两Pi UNKNOWN候选保原res.destroy和原provider回复；新attempt/fence/retryOf/rawpayload/hash/key/parent/reservation/provider事实严格证明",
+    "inspect通过settlement真实ref，仅锁原task和读calls，不initializeBudget/reserve/settle或伪造SQL事实",
+    "superseded旧nullusage预留继续计入totals；hooks终态unknown/formal0，draftpartial/schemaVersion1/完整尾流及direct产品0严格新增",
+    "三个429仅可信retry_wait中child superseded预期；401/400不放宽",
+    "continuous保持出生null deadline及原租约恢复，不人为finite"
+  ],
+  "runtimeConclusions": [
+    "旧17PASS8FAIL保持，不拿AST声明/语法当types或测试PASS",
+    "尚未验证新增产品0/预算inspect和精确HTTP计数断言达到；须完整原25/9file46实际运行"
+  ]
+}

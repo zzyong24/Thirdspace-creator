@@ -3,10 +3,10 @@ import type { Page } from "@playwright/test";
 import { createServer } from "node:http";
 import { ENDPOINTS } from "@creatoros/contract";
 
-type RequestScope = string | { groupId: string };
+type RequestScope = string | { groupId: string; accountId?: string };
 async function dispatch<T>(page: Page, id: string, input: unknown, scope?: RequestScope): Promise<T> {
   const response = await page.request.post("/api/v1/dispatch", {
-    headers: { "content-type": "application/json", ...(typeof scope === "string" ? { "x-account-id": scope } : scope?.groupId ? { "x-group-id": scope.groupId } : {}) },
+    headers: { "content-type": "application/json", ...(typeof scope === "string" ? { "x-account-id": scope } : scope?.groupId ? { "x-group-id": scope.groupId, ...(scope.accountId ? { "x-account-id": scope.accountId } : {}) } : {}) },
     data: { id, input },
   });
   expect(response.ok(), `${id}: ${response.status()} ${await response.text()}`).toBe(true);
@@ -138,27 +138,32 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
         usage: { prompt_tokens: 20, completion_tokens: 40, total_tokens: 60 } })}\n\n` + "data: [DONE]\n\n");
   });
   await new Promise<void>((done) => model.listen(0, "127.0.0.1", done));
+  let priorEngine: "pi" | "codex" | undefined;
   try {
+    priorEngine = (await dispatch<{ assistantExecutionEngine: "pi" | "codex" }>(page, "settings.preferences.get", {})).assistantExecutionEngine;
+    await dispatch(page, "settings.preferences.patch", { body: { assistantExecutionEngine: "pi" } });
     const address = model.address();
     if (!address || typeof address === "string") throw new Error("隔离模型服务未取得端口");
+    const group = await dispatch<{ id: string }>(page, "accountGroups.create", { body: { name: "文章Pi Worker独立组", idempotencyKey: crypto.randomUUID() } });
+    const groupId = group.id;
     const account = await dispatch<{ id: string }>(page, "accounts.create", {
       params: undefined, query: undefined, body: { platform: "xiaohongshu", accountHandle: `article-model-${Date.now()}` },
-    });
+    }, {groupId});
     await dispatch(page, "settings.models.put", { params: { capability: "copy.generate" }, query: undefined,
       body: { provider: "openai-compatible", modelName: "article-e2e", baseUrl: `http://127.0.0.1:${address.port}/v1`,
-        apiFormat: "openai_chat", settings: { structuredOutputs: true }, secret: "local-article-e2e-only", isDefault: false } }, account.id);
+        apiFormat: "openai_chat", settings: { structuredOutputs: true }, secret: "local-article-e2e-only", isDefault: false } }, {groupId, accountId: account.id});
     const project = await dispatch<{ id: string }>(page, "projects.create", { params: undefined, query: undefined,
       body: { title: "模型文章创作验收", brief: "介绍账号核验与作品归属的真实方法", contentType: "article",
-        targetPlatforms: ["wechatOfficialAccount"] } }, account.id);
+        targetPlatforms: ["wechatOfficialAccount"] } }, {groupId, accountId: account.id});
     const projectCurrent = await dispatch<{ updatedAt: string }>(page, "projects.get", {
       params: { projectId: project.id }, query: undefined, body: undefined,
-    }, account.id);
+    }, {groupId, accountId: account.id});
     projectRef = {kind: "project", id: project.id, versionId: projectCurrent.updatedAt};
     await context.addCookies([{ name: "creatoros_current_account", value: encodeURIComponent(account.id),
       url: baseURL ?? "http://127.0.0.1" }]);
     await page.addInitScript(([key, id]) => window.localStorage.setItem(key!, id!),
       ["creatoros:current-account", account.id]);
-    const groupId = await selectAccountGroup(page, account.id, baseURL);
+    expect(await selectAccountGroup(page, account.id, baseURL)).toBe(groupId);
     await page.goto(`/projects/${project.id}/article`);
     const workbench = page.locator('[data-page="article-workbench"]');
     await workbench.getByRole("button", { name: "新建文章" }).click();
@@ -190,13 +195,18 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
     }, {groupId});
     expect(before.currentVersionId).toBe(saved.versionId);
     expect(before.current).toEqual(saved.document);
+    // 原生成按钮已退役；公开原候选producer真实执行，原恢复key仅保存公开返回ID。
+    // 此例证明API producer→真实Worker→原UI恢复/采纳，不声称点击退役按钮。
+    const generated = await dispatch<{taskId:string;candidateId:string;status:string}>(page, "articles.candidates.generate", {
+      params: { outputId: output!.id }, query: undefined,
+      body: { clientRequestId: crypto.randomUUID(), sourceAssets: [] },
+    }, {groupId});
+    expect(generated.taskId).toBeTruthy(); expect(generated.candidateId).toBe(generated.taskId);
+    await page.evaluate(({outputId, taskId}) => sessionStorage.setItem(`creatoros:article-task:${outputId}`, taskId), {outputId:output!.id, taskId:generated.taskId});
+    await page.reload();
+    await expect(workbench).toBeVisible();
     await workbench.getByText("AI 辅助生成与内容扩展", { exact: true }).click();
-    const generatedResponsePromise=page.waitForResponse(response=>{
-      if(!response.url().includes("/api/v1/dispatch"))return false;
-      try{return response.request().postDataJSON()?.id==="articles.candidates.generate";}catch{return false;}
-    });
-    await workbench.getByRole("button", { name: "根据脚本扩写文章" }).click();
-    const generatedEnvelope=await (await generatedResponsePromise).json() as {data:{candidateId:string}};
+    const generatedEnvelope = {data:generated};
     await expect(workbench.getByRole("heading", { name: "待审读候选" })).toBeVisible({ timeout: 60_000 });
     await expect(workbench.getByText("来源：项目资料").first()).toBeVisible();
     const generatedCandidate=await dispatch<{proposedTitle:string;proposedTitleSourceRefs:unknown[];proposedSummary:string;proposedSummarySourceRefs:unknown[];proposedSections:Array<{sourceRefs:unknown[]}>}>(page,"articles.candidates.get",{params:{candidateId:generatedEnvelope.data.candidateId},query:undefined,body:undefined},{groupId});
@@ -247,7 +257,9 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
     await expect(page).toHaveURL(/fn=material\.generate\.image/);
     await expect(page.getByRole("textbox", {name: "我能帮你做什么"})).toHaveValue(/账号与作品归属示意图/);
   } finally {
+    try { if(priorEngine)await dispatch(page, "settings.preferences.patch", { body: { assistantExecutionEngine: priorEngine } }); } finally {
     model.closeAllConnections();
     await new Promise<void>((done) => model.close(() => done()));
+    }
   }
 });

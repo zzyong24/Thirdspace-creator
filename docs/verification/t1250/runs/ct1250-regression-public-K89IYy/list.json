@@ -1,0 +1,10 @@
+[
+  {
+    "name": "公开dispatch真实装配可发现宿主能力，并拒绝未授权任务/产物",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-public.integration.test.ts"
+  },
+  {
+    "name": "T1250 原任务真实登记HTML版本→公共render transport→慢Chromium PNG/PDF保同来源hash和有效字节",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-public.integration.test.ts"
+  }
+]

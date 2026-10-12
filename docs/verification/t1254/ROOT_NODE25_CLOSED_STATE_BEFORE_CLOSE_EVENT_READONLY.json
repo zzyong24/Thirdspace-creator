@@ -1,0 +1,124 @@
+{
+  "task": "T-1254",
+  "scope": "读取当前Node内置关闭消费者；不运行候选、parser、server或测试",
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeVersion": "v25.9.0",
+  "asOf": "2026-10-12T04:05:24.400Z",
+  "modules": [
+    {
+      "name": "internal/streams/destroy",
+      "sha256": "74aaae64ff7e4553fbf981baffb1f1dab7748c1e3fedfbef59eb8ab9ed4ec22d",
+      "snippets": [
+        {
+          "startLine": 95,
+          "lines": [
+            "      return;",
+            "    }",
+            "    called = true;",
+            "",
+            "    const r = self._readableState;",
+            "    const w = self._writableState;",
+            "",
+            "    checkError(err, w, r);",
+            "",
+            "    if (w) {",
+            "      w[kState] |= kClosed;",
+            "    }",
+            "    if (r) {",
+            "      r[kState] |= kClosed;",
+            "    }",
+            "",
+            "    if (typeof cb === 'function') {",
+            "      cb(err);",
+            "    }",
+            "",
+            "    if (err) {",
+            "      process.nextTick(emitErrorCloseNT, self, err);",
+            "    } else {",
+            "      process.nextTick(emitCloseNT, self);",
+            "    }",
+            "  }",
+            "  try {",
+            "    self._destroy(err || null, onDestroy);"
+          ]
+        },
+        {
+          "startLine": 128,
+          "lines": [
+            "function emitErrorCloseNT(self, err) {",
+            "  emitErrorNT(self, err);",
+            "  emitCloseNT(self);",
+            "}",
+            "",
+            "function emitCloseNT(self) {",
+            "  const r = self._readableState;",
+            "  const w = self._writableState;",
+            "",
+            "  if (w) {",
+            "    w[kState] |= kCloseEmitted;",
+            "  }",
+            "  if (r) {",
+            "    r[kState] |= kCloseEmitted;",
+            "  }",
+            "",
+            "  if (",
+            "    (w && (w[kState] & kEmitClose) !== 0) ||",
+            "    (r && (r[kState] & kEmitClose) !== 0)",
+            "  ) {",
+            "    self.emit('close');",
+            "  }",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "internal/streams/readable",
+      "sha256": "565bdef5abbc8ef96f9192e2f3f09157efe449a454749775cb72361c8f8e4882",
+      "snippets": [
+        {
+          "startLine": 170,
+          "lines": [
+            "  closed: makeBitMapDescriptor(kClosed),",
+            "  // True if close has been emitted or would have been emitted",
+            "  // depending on emitClose.",
+            "  closeEmitted: makeBitMapDescriptor(kCloseEmitted),",
+            "  multiAwaitDrain: makeBitMapDescriptor(kMultiAwaitDrain),",
+            "  // If true, a maybeReadMore has been scheduled.",
+            "  readingMore: makeBitMapDescriptor(kReadingMore),",
+            "  dataEmitted: makeBitMapDescriptor(kDataEmitted),",
+            "",
+            "  // Indicates whether the stream has errored. When true no further",
+            "  // _read calls, 'data' or 'readable' events should occur. This is needed",
+            "  // since when autoDestroy is disabled we need a way to tell whether the",
+            "  // stream has failed."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "internal/streams/writable",
+      "sha256": "7aae77c483373029827412567e695c31c654ad8d405370d64a7480a46998bcc5",
+      "snippets": [
+        {
+          "startLine": 198,
+          "lines": [
+            "  closed: makeBitMapDescriptor(kClosed),",
+            "",
+            "  // True if close has been emitted or would have been emitted",
+            "  // depending on emitClose.",
+            "  closeEmitted: makeBitMapDescriptor(kCloseEmitted),",
+            "",
+            "  allBuffers: makeBitMapDescriptor(kAllBuffers),",
+            "  allNoop: makeBitMapDescriptor(kAllNoop),",
+            "",
+            "  // Indicates whether the stream has errored. When true all write() calls",
+            "  // should return false. This is needed since when autoDestroy",
+            "  // is disabled we need a way to tell whether the stream has failed.",
+            "  // This is/should be a cold path."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+{
+  "at": "2026-10-11T21:34:39.546067+00:00",
+  "task": "T1250",
+  "scope": "仅Rust3及docs自有工具",
+  "implementation": {
+    "sourceBindings": [
+      {
+        "path": "frontend/src-tauri/src/workbench/ipc.rs",
+        "sha256": "96d2d4df08422c458b248328940e18308b4de45048c8086309545a9d6dc47cb7"
+      },
+      {
+        "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+        "sha256": "d0a6b971c28aae27d49134fc091d2eab25edb9fa338ef029a5738aa9b3df508f"
+      },
+      {
+        "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+        "sha256": "7c1efaf57c165aea4f7bbe5c5ba0deb798b6e306dd50dfd38964bde9663f8471"
+      }
+    ],
+    "readWriteFrozenMs": 120000,
+    "unixPollIntervalMs": 100,
+    "windowsDrainStackLifetimePreserved": true,
+    "unknownEffectRollbackNotClaimed": true,
+    "publicSchemaChanged": false
+  },
+  "actualRed": {
+    "passed": 0,
+    "failed": 2,
+    "elapsedMs": 41010,
+    "reason": [
+      "31秒合法frame被BrokenPipe",
+      "取消等待9.895721917秒"
+    ],
+    "cleanupConfirmed": true,
+    "inputDrift": 0
+  },
+  "actualIpcGreen": {
+    "listed": 18,
+    "passed": 15,
+    "failed": 0,
+    "originalIgnored": 3,
+    "elapsedMs": 32840,
+    "cleanupConfirmed": true,
+    "inputDrift": 0,
+    "dependencyScope": "原独立workbench Cargo.lock，与main production依赖版本有真实差异，不扩大签production依赖"
+  },
+  "pending": {
+    "browserActualResolverBuildRun": false,
+    "publicBackendNodeRustChain": true,
+    "windowsActualCompileRun": true,
+    "appUnauthorizedUnexecuted": true
+  },
+  "actualReceiptBindings": [
+    {
+      "runRoot": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59",
+      "receipts": [
+        {
+          "path": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/start.json",
+          "sha256": "140d460338223d0ff1c374fa327c99d7a8ed147a4178827951bfc7ef66cdaf37"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/build-exit.json",
+          "sha256": "9d337b565099d97f75ce55bfcd90fd32e39a6eaae3dac0738a4f49fa8afaf54e"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/actual-list.json",
+          "sha256": "02fd24d5ba65cb4850aebda0fba957058dfa5bb4e5c5d4566847a5e4f7c3b9e7"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/test-exit.json",
+          "sha256": "c8d8491e47d68fed9b267a01ca49915f3770b6768ca492cc3593da1b51fa15f6"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/test.log",
+          "sha256": "39dc88cba1db5c6cd32bab74ce7041878187b832f5b15b8fdb5027440764a07d"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/cleanup.json",
+          "sha256": "c57c75dfa0e3620c438c682c3efee5561c6f35f941962a15076ca456daf6e77e"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/final.json",
+          "sha256": "505c7b6f7496244dbcc48dc87090be809939ad53ea5129e59014e510ece18a79"
+        }
+      ]
+    },
+    {
+      "runRoot": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459",
+      "receipts": [
+        {
+          "path": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/start.json",
+          "sha256": "b32c95677b222baba7e437fa263f2b3e4950823571f4669daae2e48120854e25"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/build-exit.json",
+          "sha256": "0ff13dcc473c311577630f67927c9a6b61cb782ac14b2f3ecca724ea65bd3f7c"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/actual-list.json",
+          "sha256": "49d53e2258810503e1b0069c364ffe350163b13e8232b76874787b5c94ea96e6"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/test-exit.json",
+          "sha256": "1774bc7ba2b7645a9b621d7a44bca0540c3e7266e005564c135a4d1b09842a1d"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/test.log",
+          "sha256": "bd32039ee71a3c2f5c66bb1734da2b874a97fc6433459c52de53bafb17827d8b"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/cleanup.json",
+          "sha256": "d22bfe771dff6fc1a6105d1fec4f25f72637ebc8975035c67483742c4fe969fd"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/final.json",
+          "sha256": "b3ef6bf3142818287d8a561d255df176948a8a291b3727edc2bbf66bbfaf81ef"
+        }
+      ]
+    },
+    {
+      "runRoot": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837",
+      "receipts": [
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/start.json",
+          "sha256": "144561bdad2c3ecf92d209e8057193a5ccac5bf8361a70782554a4136e1b6374"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/private-manifest-provenance.json",
+          "sha256": "d87348db7bc45fda3edadb246b7c331debdf4189b8bbe2b2e2df5a07cfdee1a2"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/seed-lock-receipt.json",
+          "sha256": "b778bad964319ff7b0a5cf85360f04300dad0d797a49dfb5f97db0c2d5403e70"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/seed-exit.json",
+          "sha256": "b1b19047bacc7a5ebc973699b2ae0f13983686aad02d31884adae6b16eb3c463"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/lock-exit.json",
+          "sha256": "c515c9d54914117a3606ed272cecdfbeda079b0de108f728771998f25c899e81"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/actual-offline-lock.json",
+          "sha256": "0a4414a2000d461d9c6b51044cc907ed700f0da5293f038742f7496eb6524df5"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/production-lock-subset-receipt.json",
+          "sha256": "d09bb56819b6e1f7e467c2d04245604486dfa4cd3117cb06ea7f9048e3827f48"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/proof-exit.json",
+          "sha256": "48e49e52cdb02fd3d7475792208bca79bf02b5a2ce1b2a1c6a2cb07506860d36"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/build-exit.json",
+          "sha256": "5777c84dc354c8b985afde675dee7f606993752da9f16d2ce11490f99aee62d0"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/actual-list.json",
+          "sha256": "b339a7759da3be433e8cb784fe458c0f0d949c916c8be1351d5cb145b14e9bc9"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/list-exit.json",
+          "sha256": "d3127c3b8a772efd631a640c1244101867a116588a36b5341a6a3a5c7df59639"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/test-exit.json",
+          "sha256": "a4e2014fbb95a2cda73bc8c0216769589a34fbfeabaac5daf10d2853faa1c24e"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/test.log",
+          "sha256": "a33a3b3dc2b75037ed862467e592ad42caaa5b3b9e88bad42cd6e494fcb6d13c"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/cleanup.json",
+          "sha256": "1d90ff6d4970b85e390f33e6e994a84207d57b5e5b50ca62036020193783febe"
+        },
+        {
+          "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/final.json",
+          "sha256": "8f47a04367a5568baf1d9e36410b3ec50264d2392aa0bafded43894240c2bd66"
+        }
+      ]
+    }
+  ],
+  "browserCandidate": {
+    "toolSha256": "e3331794ae00630298618bed44749d76095f2bc433c36b10a422c0d7c585d2d6",
+    "bindingSha256": "82a952bfd1b63f13a2c61ad1e6c07af1bb7faf40d713f4a21367a03018873b43",
+    "lockProofSha256": "54daad3fc503629b715e09416516c42600224506b08372c313eac8152125e5df",
+    "runtimeApproval": true,
+    "pureOwnershipChecksPassed": 12,
+    "pureTomlChecksPassed": 8,
+    "originalMainSeedPackages": 708,
+    "originalMainSeedSourceOnlyNotCargoResolved": false,
+    "approvalScope": "仅本轮12列举browser pure Rust，不签外部ignored/公开链/Windows/App",
+    "actualResolverExecuted": true
+  },
+  "actualBrowserGreen": {
+    "listed": 12,
+    "passed": 11,
+    "failed": 0,
+    "originalIgnored": 1,
+    "ignoredName": "browser_ipc::tests::external_node_host_fixture",
+    "elapsedMs": 31980,
+    "buildExit": 0,
+    "resolverExit": 0,
+    "productionPackageCount": 708,
+    "actualPackageCount": 417,
+    "privateRootCount": 1,
+    "productionLockTupleDifferences": 0,
+    "comparisonFields": [
+      "name",
+      "version",
+      "source",
+      "checksum"
+    ],
+    "dependencyScope": "实际offline workspace解析后的417包，除私有测试根外严格属于原main708包的name/version/source/checksum集合；真实workbench-browser模块，不包含主App/Tauri",
+    "cleanupConfirmed": true,
+    "cleanupElapsedMs": 1017.6956250000076,
+    "survivors": 0,
+    "unknown": 0,
+    "proofErrors": 0,
+    "inputCount": 328,
+    "inputDrift": 0,
+    "binary": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/target/debug/deps/creatoros_workbench_test-aea06d844e53bf27",
+    "binarySha256": "c31ca419c9adf44fd44c648c33a7b9ff24c3989a4d977c21df8ff1cc5051f6ae",
+    "notPublicChainProof": true
+  },
+  "browserStartupFailure": {
+    "scope": "真实启动排序门拒绝，不计产品FAIL/不计12已跑",
+    "cargoInvocations": 0,
+    "testBodies": 0,
+    "exitCode": 1,
+    "reason": "EXACT_REVIEWED_WORKBENCH_VENDOR_INVENTORY_REQUIRED",
+    "pathSHASetUnchanged": true,
+    "repairedOnlyCompletePathStringOrder": true,
+    "receipts": [
+      {
+        "path": "docs/verification/t1250/native-browser-test-tool/reviews/e333-first-start-failure.json",
+        "sha256": "80ceca65fb5bcdeebd828c956a4d7fdd72273a2a77009ca8680b5d50189495f4"
+      },
+      {
+        "path": "docs/verification/t1250/native-browser-test-tool/reviews/input-binding-120f-first-failed.json",
+        "sha256": "120f0fb9b79afe383212bd6fbef96c2ca6a33e890b49db48cfd704a9279b1bb8"
+      }
+    ]
+  }
+}

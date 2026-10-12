@@ -1,0 +1,101 @@
+{
+  "schema": "independent-execution-tool-narrow-review/v1",
+  "task": "T-1254",
+  "at": "2026-10-12T03:16:26.270759+00:00",
+  "result": "PASS_TOOL_V9_DIRECTION_SPLIT_AND_BOUNDED_TCP_STREAM",
+  "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+  "tool": {
+    "path": "/tmp/t1254-readonly/run-owned-doocs-request-and-build-v9.cjs",
+    "sha256": "2ce5215e244e9ca00e71ca8b31b15f18754819952ea5df760da0edc8598da41a",
+    "size": 27262
+  },
+  "networkProbe": {
+    "path": "/tmp/t1254-readonly/doocs-owned-network-boundary.mjs",
+    "sha256": "61d861c7648804e1ee977d9b1d32922a0d0491bad36b3d12820fa9551d760b34"
+  },
+  "seal": {
+    "path": "/tmp/t1254-readonly/REQUEST_BUILD_V9_FULL_SEAL.json",
+    "sha256": "ff8420b3de35b51b73111aeae26c238657580651a15ca28706461ea38ded7e37"
+  },
+  "prepare": {
+    "path": "/tmp/t1254-readonly/REQUEST_BUILD_V9_PREPARE.json",
+    "sha256": "ce76d855c831d73a6f1cc37618e0f0219ca8a0309516b22bcf47fd619c18e7f3"
+  },
+  "sourceSnapshotDigest": "405ba19e2bdff70a84ac91a6842878dd1b114a322eca6fda98b8c32526a6d279",
+  "toolDigest": "0e00dc6da2640c46e03f3ac9723fcaa8d056a0048d99657d22ff00851c4e43fd",
+  "actualInputProof": {
+    "freshAllSource1684": {
+      "path": "docs/verification/t1254/INDEPENDENT_V9_TCP_NARROW_INPUT_RECHECK.json",
+      "sha256": "1a3c027eb5f3b455861b7a7ef7ecf72ae6b3a179d9c7de0cf4c193e304afe8b3",
+      "actualSourceBytes": 107662276,
+      "onlySourceDelta": "network342b→61d",
+      "original4FetchTestStillOriginal": true,
+      "artifactsAndBothDigestsActualRechecked": true
+    },
+    "priorFullStream": {
+      "path": "docs/verification/t1254/INDEPENDENT_V9_FULL_INPUT_HASH_RECHECK.json",
+      "sha256": "71e330b9efcaf74e67bb30a563d738923ca2331c55cb3f51b3df832670dd6f61",
+      "regularHashSizeModeChecks": 135338,
+      "linksChecked": 7447,
+      "bytesRead": 1857257891,
+      "drift": []
+    },
+    "toolRows141101ExactlySamePriorFull": true,
+    "additionalWholeToolStreamClaimed": false
+  },
+  "previousFullRunnerReview": {
+    "path": "docs/verification/t1254/INDEPENDENT_REQUEST_BUILD_V8_TOOL_REVIEW.json",
+    "sha256": "60c2e13bb3767ff613715ec748a45daa7cebe009a4c35fe0cd47a541a4af1771"
+  },
+  "directionPrimaryConsumerProof": {
+    "path": "docs/verification/t1254/INDEPENDENT_SANDBOX_DIRECTION_PRIMARY_CONSUMERS.json",
+    "sha256": "042233457243c5b91b2c32c8af450ecb828e0e9ca6b144bcdbade64a6e17d0da",
+    "statement": "实际本机Apple profile网络入站用local、出站remote、localhost可作宏；同条多互斥remote条件支持OR推断，方向分离避免混合规则误放宽"
+  },
+  "fullNewNetworkAndRunnerDeltaRead": true,
+  "proof": [
+    "保deny network*和HOME file-read/write限制，单allow network-bind/inbound local localhost:*、单allow outbound remote localhost:*；原HOME/CODEX_HOME实际值和凭据白名单不变，无TCC/App授权改变。",
+    "probe只新owned server.listen(0,127.0.0.1)，随机nonce32 bytes在loopback完整严格echo，data按真实byteLength累计、等长全字节相等、超长拒；保每phase单一120k有限观察，finally关闭全部自有socket/listener。",
+    "TEST-NET-1 192.0.2.1:9仅connect policy拒绝探针，不DNS/HTTP/发送业务正文；真实只有EPERM/EACCES可判隔离通过，不把timeout/unreachable/拒绝连接当sandbox拒绝，不意外连接后继续下一child。",
+    "先compiler真实接受profile且同probe实际positive/negative/close/socket0报告满足才能进入checker；原24正文/Graph1dc7/REAL0253/PROVENANCE0a37/原test/type/build/同V2一字未变。",
+    "新540k=4×120k setup/loopbackclose/refusalclose/listenerclose+60k启动退出，加独立helper2.16M；总25child109.26M，其余完整future槽/取消/identity/source漂移/非预期非零/EOF和group0守门保持。",
+    "TCP累计严格回调静态抽取检查4族：8/24分块、32单字节都完整接受，错误32/超长33均拒；这是数值/字节检查，无真实网络或sandbox运行，不签policyPASS。"
+  ],
+  "callbackStaticProof": {
+    "path": "docs/verification/t1254/INDEPENDENT_V9_TCP_STATIC_CALLBACK_PROOF.json",
+    "sha256": "5d877ccf79129c196ef81d6745b92fd56de13cc2fbfc1a9668902bff5e6ea6d0"
+  },
+  "actualV8Failure": {
+    "path": "docs/verification/t1254/execution/request-build-55d29f3ee1faeb10e9f588d1baf25707",
+    "summarySha256": "b143cd8bed9dd50482a2998bc96dd2ceed6440397e10a86116c8f68f3f5e3a9b",
+    "exitSha256": "7d799e64e00808b2bf7755af0d8234cfaf34e40df7e99ec7fe9f53fe87a22722",
+    "logSha256": "db47c151ef01a3d6598ed67b68cedcbba39ca80b5312e2e97f47980c8ae3ceb0",
+    "code": 65,
+    "elapsedMs": 118,
+    "closed": true,
+    "groupZero": true,
+    "actualBodyCount": 0,
+    "stepComplete": 0,
+    "sourceStillA46": true,
+    "noFakeSharedFetchRed": true,
+    "oldStaticReviewMissPreserved": true
+  },
+  "historicalCorrection": {
+    "path": "docs/verification/t1254/INDEPENDENT_V9_CONCERNS_ARCHIVE_CORRECTION.json",
+    "sha256": "83857fb043a012c432ebb311a02117d93a75fe06a3d5f8a07e3a0e30af7fd9ab",
+    "statement": "reviewer原concerns通用archive在producer写61d后才复制，不能该副本称旧342；原342实际来源在producer history且已复核单独保全，旧concerns报告原样保并新correction明确，不造任何runtimeFAIL。"
+  },
+  "findings": [],
+  "limitations": [
+    "只有ROOT可按本精确source405b/tool0e00/runner2ce/net61d给一次运行准入。未执行任何新network/driver/依赖/构建。",
+    "localhost可能含IPv6；当前真实计划只127.0.0.1 positive，IPv6未独验。无未知外端连接、无实际业务写入的许可。",
+    "probe或后续原test/build/graph若失败，原FAIL永久保，不fallback全网/星号host、改锁或改原适配源码洗绿。",
+    "原源archive内容和最终delivery新增/删除manifest/生产copy还需另双审；本报告不批准产品复制、最终打包/browser/App。"
+  ],
+  "totalBudgetMs": 109260000,
+  "childCount": 25,
+  "runtimePermissionByReviewer": false,
+  "reviewerExecutedNetworkOrDriver": false,
+  "reviewerChangedProductSource": false,
+  "AppPassed": false
+}

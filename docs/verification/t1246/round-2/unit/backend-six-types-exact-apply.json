@@ -1,0 +1,32 @@
+{
+  "appliedAt": "2026-10-11T20:10:22.026166+00:00",
+  "reviewSha256": "763380132533cc4884a6cda3daad080881e795d5c9d005714851255a14b6554d",
+  "exactAllBeforeShaMatched": true,
+  "exactAllCandidateShaMatched": true,
+  "paths": [
+    {
+      "file": "backend/src/integration/chat-generation-worker.test.ts",
+      "sha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de"
+    },
+    {
+      "file": "backend/src/integration/copilot-worker.fork.test.ts",
+      "sha256": "949db6516cb23df1c665c56ebd1f99a8cba001b19d2848ef30d871a36ccff439"
+    },
+    {
+      "file": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "sha256": "1dbb44fde62b22d57ce3deaa2b93ff74b20ccbb3da808fd3e2078c6e8c4b59df"
+    },
+    {
+      "file": "backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "sha256": "ab04f77e0ce76c846b74eb77dd4493982cdb8dbde06a09131d8a9d74aefe965a"
+    },
+    {
+      "file": "backend/src/modules/ai/ai.contract.test.ts",
+      "sha256": "e70bf69fa2b796aa734bf8d094b7a5c0fca557dd8c6487b23e452fbdeb50547f"
+    }
+  ],
+  "productionChanged": false,
+  "testsExecuted": false,
+  "typesExecuted": false,
+  "waiting": "T1248 final production freeze/shared dist release for whole5 original bodies and typecheck"
+}

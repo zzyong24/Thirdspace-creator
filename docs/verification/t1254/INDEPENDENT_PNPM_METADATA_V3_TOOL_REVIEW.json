@@ -1,0 +1,87 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-12T00:41:40.736821+00:00",
+  "result": "PASS_TOOL_OFFICIAL_REGISTRY_METADATA_ONLY",
+  "tool": {
+    "path": "/tmp/t1254-readonly/run-owned-pnpm-registry-metadata-v3.cjs",
+    "sha256": "31c69e5dcad3fd5f44564354e8d378cfc983ba05cc338fce9774990eeadd3829"
+  },
+  "seal": {
+    "path": "/tmp/t1254-readonly/PNPM_METADATA_V3_FULL_SEAL.json",
+    "sha256": "d3913fc474048aa107e3f197f7369cf8ae89c5efc5675991854da243e52fff9e"
+  },
+  "prepare": {
+    "path": "/tmp/t1254-readonly/PNPM_METADATA_V3_PREPARE.json",
+    "sha256": "bf4ea24b24ba058e06eb82fdc3a4b97fe0502c877a18ba986d6904020ae94e63"
+  },
+  "sourceSnapshotDigest": "1a1411cb9a40453000b0020acfcd23a14062f1d2fac0f12ceee57bb9d478e6f1",
+  "toolDigest": "4d830e1f88ae5a6bc859915b9b73c8d5263824e6a5e889d40c5951522bc6675a",
+  "checked": {
+    "sourceInputs": 19,
+    "actualNodeAndNpmImplementationFiles": 1803,
+    "hashDrift": [],
+    "actualNpmVersion": "11.12.1"
+  },
+  "actualSourceManagers": [
+    {
+      "role": "native",
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "archiveSha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583",
+      "packageJson": {
+        "archiveMember": "doocs-md-native/package.json",
+        "sha256": "fdab72823157a3ae6494848cf70ba333f8308da20b8170334868de6f37857e77",
+        "packageManager": "pnpm@12.6.0",
+        "engines": {
+          "node": ">=22.22.2"
+        },
+        "projectVersion": "2.1.0"
+      },
+      "lock": {
+        "archiveMember": "doocs-md-native/pnpm-lock.yaml",
+        "sha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+        "lockfileVersion": "9.0"
+      }
+    },
+    {
+      "role": "static-fixed",
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "archiveSha256": "9335e7d501df0271a861b787fbc3bd155da45c29bd3af5a328e421c19f655822",
+      "packageJson": {
+        "archiveMember": "package.json",
+        "sha256": "fdab72823157a3ae6494848cf70ba333f8308da20b8170334868de6f37857e77",
+        "packageManager": "pnpm@12.6.0",
+        "engines": {
+          "node": ">=22.22.2"
+        },
+        "projectVersion": "2.1.0"
+      },
+      "lock": {
+        "archiveMember": "pnpm-lock.yaml",
+        "sha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+        "lockfileVersion": "9.0"
+      }
+    }
+  ],
+  "slots": {
+    "prepare": 900000,
+    "positiveInstall": 900000,
+    "childLifecycle": 2160000,
+    "reportCleanup": 900000
+  },
+  "outerMs": 4860000,
+  "findings": [],
+  "staticProof": [
+    "第一执行行冻结monotonic/wall/ctrl，4.86M覆盖prepare900k+positive900k+393f完整2.16M+report900k；重hashadmission后核fullremaining，不续外层",
+    "单受控Node+当前真实NPM11 view pnpm@12.6.0 --json，官方registry300k timeout原预算保/retries0；没有install/下载PNPM实现/新CLI/build调用",
+    "19source与1803现有Node/npm实现全部逐SHA核，无shim冒源码；原两归档manager/engines/projectVersion/lock9.0按真实member与副本严格绑定",
+    "清NPM/PNPM/corepack及模型/PG/secret/proxy/NodeOptions，空owned user/globalnpmrc、ownedcache/tmp/workspace；HOME/CODEX_HOME不改，cwd/prefix全自有",
+    "ROOTreview匹配scope/spec/root/source/tool；scope取消只393f ownedgroup，未知/失败/nonzero/源漂移不能启动后续",
+    "输出只官方metadataprojection+raw日志hash，version/integrity/tarball strict；404保原失败而非10.32fallback；成功/失败自有根有意保留供后验，不称已rm"
+  ],
+  "constraints": [
+    "仅ROOT精确准入后允许本metadata网络读；reviewer未运行它，不宣称版本存在或可安装",
+    "b615安装候选未执行历史保持，新PNPM包实际下载后完整实现/lock/integrity另独审，不能用此工具批准",
+    "仍不准两root安装build/产物copy、App/模型/用户库；未来工具必须独立封实际已产实现"
+  ],
+  "runtimePermissionByReviewer": false
+}

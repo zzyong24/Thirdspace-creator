@@ -1,0 +1,18 @@
+{
+  "task": "T-1246",
+  "scope": "EXTERNAL_27CF_ONLY_PURE_BUDGET_FORMULAS",
+  "at": "2026-10-12T07:21:46.680932+00:00",
+  "approved": true,
+  "maximumExecutions": 1,
+  "candidateBindingSHA": "27cf7abc90b0a2cdb295e59a8a744178ccfc2ba7180125dc86a06ae983d80092",
+  "pureEntry": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/budget-test.cjs",
+  "pureEntrySHA": "c6a959c118a82d7dcbad8a7319f636e56454d652c438a54ccd07b7eb1f3b3c1c",
+  "independentSourceReviewSHA": "5b184bbb4d6858cc23f26fcdaa24503b2c61be89d25d6a34141d418df1a40a98",
+  "rootFullByteProofSHA": "bc3a641be71bfabf65e816c2bce9f26b02d7f94a8733290603811e0062f56fb4",
+  "positiveMs": 120000,
+  "ownedHelperLifecycleMs": 2160000,
+  "helperSHA": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "metadataPrepareResealVerifyListServicesBrowserAllowed": false,
+  "productCopyAllowed": false,
+  "App": false
+}

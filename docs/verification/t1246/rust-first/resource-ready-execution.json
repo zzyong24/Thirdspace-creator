@@ -1,0 +1,27 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/frontend/src-tauri",
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "--offline",
+    "--lib",
+    "--",
+    "--test-threads=1"
+  ],
+  "startedAt": "2026-10-11T15:08:38.504113+00:00",
+  "source_before": "",
+  "resourceReceipt": "/tmp/t1246-rust-unit/resource-copy.json",
+  "appLaunched": false,
+  "nativeAppAcceptance": false,
+  "userAuthenticationTriggered": false,
+  "testThreads": 1,
+  "cargoBuildJobs": 2,
+  "cargoTargetDir": "/tmp/t1246-rust-unit/target",
+  "status": "completed",
+  "pid": 96421,
+  "exitCode": 0,
+  "endedAt": "2026-10-11T15:11:48.150233+00:00",
+  "source_after": ""
+}

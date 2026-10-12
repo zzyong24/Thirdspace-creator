@@ -1,0 +1,69 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-11T23:21:38.924604+00:00",
+  "result": "PASS_TOOL_STANDARD_CHECKS_ONLY",
+  "scope": "仅安装后的标准MCP types、原8files完整list/run、scanner、自有CLI bundle；未签正文通过",
+  "toolSha256": "b038e590570a42637a50587a6776ca107325270410c400845c33176f440fb9be",
+  "bindingSha256": "6bac073275080c223faff2f2d292248c000541336727a73157dc83e45deb41fd",
+  "node": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+  },
+  "helper": {
+    "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+    "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea"
+  },
+  "installFinalSha256": "e4c5efe71a054b90542dc1b404a60926184592fbbea8df3e2309a97ac9c0f820",
+  "sourceInputCount": 210,
+  "actualInstalledPackages": 145,
+  "actualImplementationFiles": 4914,
+  "drift": [],
+  "slots": {
+    "prepareMs": 240000,
+    "typesMs": 1800000,
+    "listMs": 900000,
+    "maxTestMs": 543600000,
+    "scannerMs": 5040000,
+    "buildMs": 1800000,
+    "fiveHelperLifecycleMs": 10800000,
+    "afterMs": 600000,
+    "marginMs": 120000
+  },
+  "completeOuterMs": 564900000,
+  "findings": [],
+  "caseAndHookFacts": {
+    "testMs": 420000,
+    "hookMs": 180000,
+    "perBodyMs": 1800000,
+    "perBodyFormula": "420000+4*180000+660000",
+    "suiteMarginMs": 3600000,
+    "originalFiles": [
+      "mcp-server/tests/cli-artifacts.test.ts",
+      "mcp-server/tests/cli.test.ts",
+      "mcp-server/tests/connection.test.ts",
+      "mcp-server/tests/dispatch.test.ts",
+      "mcp-server/tests/group-context.test.ts",
+      "mcp-server/tests/group-mcp-context.test.ts",
+      "mcp-server/tests/server-discovery.test.ts",
+      "mcp-server/tests/tools.test.ts"
+    ],
+    "actualEachHookDeclarationCount": 4,
+    "actualAllHookDeclarationCount": 0,
+    "longerExplicitHooks": false,
+    "actualListingOrBodiesNotYetRun": true
+  },
+  "closedFindings": [
+    "SDK取消case显式声明真实420k；CLI默认不再遮蔽短声明，另9M假钟正例180k保",
+    "实际TS _tsc/Vitest dist、SDK/Vite/Undici/esbuild本平台binary与传递包已绑定，不是shim/overlay",
+    "5阶段各2.16M原393f生命周期，未知及原非零保留",
+    "scanner两个真实vendor字节读已绑定；8*600k+240k完整串行"
+  ],
+  "constraints": [
+    "root精确准入后执行且源/lock/实际installed依赖冻结",
+    "实际list唯一case身份和完整8文件分母，正文total匹配/pending0；非零不隐藏",
+    "不能将300上限/静态声明冒实际case统计",
+    "types失败独立保；bundle不能代types或全测试",
+    "不含slowHTTP、publicRust、App、模型或PG准入"
+  ],
+  "actualExecutionByReviewer": false
+}

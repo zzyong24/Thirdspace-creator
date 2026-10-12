@@ -1,0 +1,11 @@
+# T1250 V8 资格工具独立复评
+
+结论：PASS_V8_QUALIFICATION_TOOL_STATIC_ONLY，findings=[]。绑定runner f71d3a25d4bf8c13288f3a077545a8a7c97efd7a999bf9b6259fee6e88fd4a28 / inventory833c0119d6ac1a4d5de4a7e7c5268c5ff3be5de07437f0c2fcef7b908254e871，完整packet来源binding见JSON；本评没有运行Vitest/list/body或服务、模型、PG、App、build。
+
+此前4341的ST1250-FULL-HOSTS-ALIAS精确关闭：V8递归解释已知const资格，原realMacFiles/realTest清env后的it.skip状态传播到所有原声明；unknown条件、歧义资格变量、循环alias及runner会注入的APP/DB/media/auth根不猜missing。原case/stimulus不改，36全声明仍保预算299.52M/outer306.48M，并分出实际可执行30/原资格skip6。实际list只匹配runnable逐title/each；run JSON再核完整36、pending6、执行30、todo0；错误file/name/基数/新增skip均非零。不能把原未满足native/auth前置6项签PASS。
+
+两diff已读，原ccdd/4341字节保；作者真实纯AST旧负路明确旧skip0、新skip6，11新parser反例仅工具parse事实，不代产品测试。freshhosts2189/render2188来源逐SHA实核0漂移。helper393f原完整归属/2.16M收尾、入口deadline、whole原serial及collect预算保持；没有新增thread/model/任务期限或底层库长观察。
+
+render原11、pending0，两个representation3.6M声明仍保，outer109.08M。实际CLI schema另读本任务新标准MCP JSON及原render JSON，numTotal/Passed/Failed/Pending/Todo字段均真实存在，新账本不是猜字段。根给过的原render11真实通过仅属于其原执行回执，本工具候选不倒拍PASS。
+
+本次仅当前hosts/render精确工具范围，泛其它group/未来source漂移仍须fresh封源再审；未知底层评审模型版本不虚构。root可独核当前SHA后准指定group实际list/run，先前原36只静态库存历史不覆盖。

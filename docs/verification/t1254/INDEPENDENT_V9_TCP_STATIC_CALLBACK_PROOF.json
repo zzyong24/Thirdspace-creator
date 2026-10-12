@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-12T03:14:33.804Z",
+  "sourceSha256": "61d861c7648804e1ee977d9b1d32922a0d0491bad36b3d12820fa9551d760b34",
+  "scope": "抽取真实61d data callback的有限字节边界检查；无network/sandbox/新依赖/driver运行",
+  "cases": [
+    {
+      "name": "合法8/24分块",
+      "parts": 2,
+      "strictlyAccepted": true,
+      "error": null
+    },
+    {
+      "name": "合法32个单字节分块",
+      "parts": 32,
+      "strictlyAccepted": true,
+      "error": null
+    },
+    {
+      "name": "完整不同nonce拒绝",
+      "parts": 1,
+      "strictlyAccepted": false,
+      "error": "AssertionError"
+    },
+    {
+      "name": "超长33bytes拒绝",
+      "parts": 1,
+      "strictlyAccepted": false,
+      "error": "AssertionError"
+    }
+  ]
+}

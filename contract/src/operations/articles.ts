@@ -1,3 +1,4 @@
+import {articleManualVersionBody,articleAssistedVersionBody} from '../resources/work-candidate-adoption';
 import { z } from "zod";
 import { defineEndpoint } from "../endpoint-definition";
 import { aiTaskStatus, id } from "../primitives";
@@ -70,11 +71,7 @@ export const articlesOperations = {
     method: "POST",
     path: "/outputs/:outputId/article/versions",
     params: outputParams,
-    body: z.object({
-      expectedCurrentVersionId: id,
-      document: articleDocument,
-      clientRequestId: requestId,
-    }).strict(),
+    body: z.union([articleManualVersionBody,articleAssistedVersionBody]),
     response: articleWriteResult,
     fr: ["FR-ARTICLE-EDIT"],
   }),

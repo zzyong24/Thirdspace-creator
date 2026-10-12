@@ -1,0 +1,52 @@
+{
+  "task": "T-1254",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T08:37:34.750198+00:00",
+  "status": "PASS",
+  "scope": "DOOCS_ACTUAL_THREE_CHILD_PREPARED_PATH_POSTPROCESS_ONLY",
+  "findings": [],
+  "exact": {
+    "sourceIndexSha256": "3cf6a0fc449c8f1db56745ff36b91c43bb631a8b5ec157f3a5860fb9c76a9c89",
+    "runnerSha256": "98633fa2a3fae3df14db5b5c72014904e4a9492382921258a67b5a2410abee55",
+    "inputSha256": "9b8ba2a32370272ed0897aa98a40ef177e47eb8dcacb8142025aba818681c68e",
+    "factsSha256": "3f85ceec7a1737fa5db36e23491a870cfc0791b6f60445ef77578a5661b0c80c",
+    "preparedBindingSha256": "34f2ecf6992081c5a5ac5672a2142424fb1cadd9a9afd56549fd62c3eab4d233"
+  },
+  "independentFullProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_POSTPROCESS_V1_FULL_INPUT_AND_ACTUAL_PREPARED_RECHECK.json",
+    "sha256": "ff5190f50c58275cab09f7ab7da772cee940dce16a135a6eec142f86f26da0e2",
+    "rows": 144537,
+    "readBytes": 2600895472,
+    "elapsedMs": 35549.565040972084,
+    "drift": []
+  },
+  "completeSourceReview": "98633全部9936字及producer全文已读。只builtin/core读取原facts/原20raw/原3日志/已有4prepared文件与完整source/scopes/dyld，生成全新delivery-postprocess nonce下review/sourcebefore/projection/sourceafter/summary；无cp spawn/import安装实现/三child重跑/旧目录写或产品写。",
+  "actualPathOwnership": "按原owned.root/tmp而非parent os.tmpdir；prepared.parent精确同tmp，目录realpath/inode352033687/UID501/0700守卫，4文件集合严格等。原oldowner marker/根inode/nonce及rawstdout唯一一行路径严格核。",
+  "oldResults": "三child真实code0/closed/group0/logprivate=archiveSHA，actual23passed+4nativepassed、prepare141014/binding34f2/core summarypassed records[]/sourceafterfullBindingRechecked，已有ed5d实际独核保持；原wrapperexit1/PREPARED_OWNER_PATH/旧missing buildresults仍缺失禁止补写。",
+  "sourceAndCleanup": "每144537行size/SHA/modeUID/link全核，prepared全部sourceFileSet与依赖scope完整集合/链接归属，dyldfirstexists/目标realpath保持；新投影最终再同全guard并写sourceafter，末显式deadline后才能总结清timer。",
+  "budget": {
+    "localPreservedLongerMs": 19320000,
+    "effectiveBudget": "min本单出生LOCAL与原绝对UTC剩余，不续期",
+    "inheritedEarliestUTC": "2026-10-12T13:12:37.651Z",
+    "prepareMs": 3600000,
+    "afterMs": 3600000,
+    "rootCurrentAdmissionMustReserveBothFullSlotsMs": 7200000,
+    "minimumPositiveMs": 120000,
+    "clockRegressionRejectedAndLatestObservedOriginalUTCGuarded": true,
+    "noNeedToRestoreFull19320000BeyondInheritedRemaining": true
+  },
+  "corePrepare": {
+    "session": 57338,
+    "actualFinalExitCode": 0,
+    "receiptSha256": "3264c1b0d615c3c89d963be7b176119f5b3c01ee9430a2cf7962676589bb49f3",
+    "exactCurrentBinding": true,
+    "noChildOrCopy": true
+  },
+  "recommendation": "仅可ROOT对本精确INPUT/runner/facts/preparedbinding/UTC发一次纯postprocess执行准入。实际新EOF0/fullafter后，未来copy工具另fresh exactscope双审。",
+  "reviewerExecutedProjection": false,
+  "copyDraftA2OnlyIndexHashNotCodeAdmission": true,
+  "copyApproved": false,
+  "copyPerformed": false,
+  "standaloneRebuildExecuteApproved": false,
+  "browserAndAppAcceptanceClaimed": false
+}

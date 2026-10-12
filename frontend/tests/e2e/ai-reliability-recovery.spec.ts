@@ -115,7 +115,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
   await expect(page.getByText("已上传:t804.srt")).toBeVisible();
 
   // 页面初始状态确认无历史失败后，再生成一条真实 terminal 任务。无效 SRT 在备料阶段
-  // 立即取消且不调用外部模型；首次按钮点击仍代表“本轮新发起”，刷新后则应恢复它。
+  // 以原 VIDEO_DECISIONS_FAILED 失败且不调用外部模型；首次按钮点击仍代表本轮新发起。
   const terminalTask = await dispatch<{ id: string; status: string }>(
     page,
     "ai.tasks.create",
@@ -146,7 +146,19 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
           )
         ).status,
     )
-    .toBe("cancelled");
+    .toBe("failed");
+
+  const failedTask = await dispatch<{ id: string; status: string; errorCode: string; executionTaskId: string }>(
+    page, "ai.tasks.get", { params: { taskId: terminalTask.id }, query: undefined, body: undefined }, account.id,
+  );
+  expect(failedTask).toMatchObject({ id: terminalTask.id, status: "failed", errorCode: "VIDEO_DECISIONS_FAILED" });
+  expect(failedTask.executionTaskId).toBeTruthy();
+  const originalExecution = await dispatch<{ task: { id: string; ownerId: string; attempt: number; status: string; errorCode: string }; calls: Array<{ kind: string }>; hasMore: boolean }>(
+    page, "workbench.tasks.inspect", { params: { taskId: failedTask.executionTaskId }, query: { afterSequence: 0, limit: 100 }, body: undefined }, account.id,
+  );
+  expect(originalExecution.task).toMatchObject({ id: failedTask.executionTaskId, ownerId: terminalTask.id, attempt: 1, status: "failed", errorCode: "VIDEO_DECISIONS_FAILED" });
+  expect(originalExecution.hasMore).toBe(false);
+  expect(originalExecution.calls.filter((call) => call.kind === "model" || call.kind === "external_agent")).toHaveLength(0);
 
   const createBodies: Array<Record<string, unknown>> = [];
   let taskGetCount = 0;

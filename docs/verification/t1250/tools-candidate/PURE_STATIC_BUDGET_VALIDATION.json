@@ -1,0 +1,10 @@
+{
+  "kind": "PURE_STATIC_TOOL_HELPER_NOT_PRODUCT_TEST",
+  "checks": {
+    "declared3600000Preserved": true,
+    "declared6000000HookPreserved": true,
+    "threeBadDeclarationInputsRejectedOrFlagged": true,
+    "lifecycle2160000BothProcesses": true
+  },
+  "publicScenarioRun": false
+}

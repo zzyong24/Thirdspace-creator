@@ -1,0 +1,19 @@
+{
+  "schema": "root-tool-review/v1",
+  "at": "2026-10-11T23:13:18.653110+00:00",
+  "result": "PASS_INSTALL_ONLY",
+  "toolSha256": "e2cd37f189b291f4882977fc8edc21ea8d8281e1830370d0fd2680fcda9b0409",
+  "bindingSha256": "abf9cef344a8ff7fc3665ff3958b943c66983d0a6548aaa7325dd803d34fbd16",
+  "independentReviewSha256": "ca759c8d637727782769be0dc82675113ab78e9ff4c36f9374e54f5daddecb71",
+  "readFullTool": true,
+  "actualInputCount": 207,
+  "actualPnpmImplementationCount": 1077,
+  "allInputDrift": [],
+  "entryFullOuterMs": 4920000,
+  "original393fHelperReadAndExistingLifecycleProofRetained": true,
+  "allowedCommand": "fixed Node pnpm --filter @creatoros/mcp-server install --offline --frozen-lockfile --ignore-scripts",
+  "noTestsOrBuildsApproved": true,
+  "noApp": true,
+  "noOfficialModels": true,
+  "runtimeExecuted": false
+}

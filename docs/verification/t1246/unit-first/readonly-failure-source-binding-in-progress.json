@@ -1,0 +1,735 @@
+[
+  {
+    "package": "backend",
+    "observedAt": "2026-10-11T17:39:19.622Z",
+    "partialOnly": true,
+    "status": "running",
+    "completedLogFileRows": 631,
+    "failedLogFileRows": 87,
+    "failed": [
+      {
+        "observedLogLine": " ❯ src/application/chat/assistant-system-root.integration.test.ts (75 tests | 1 failed) 142882ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/application/chat/assistant-system-root.integration.test.ts",
+        "sha256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/chat-assembly.test.ts (106 tests | 2 failed) 1128ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-assembly.test.ts",
+        "sha256": "1829fe2e89c1373db0e09a43f39b913e65d5c82be19916dcdd778dcc8d6d4470",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/intelligence-source-workspace.test.ts (0 test)",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/intelligence-source-workspace.test.ts",
+        "sha256": "0769e7f8de6f73e7a68c71057fcf126aca184a722d915011f0efeead821a3a7b",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/articles/articles.integration.test.ts (45 tests | 1 failed) 124610ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/articles/articles.integration.test.ts",
+        "sha256": "eacc71df7b216f528ad6db72c124c48c038c82350ca5c2c9242e63aff612ad46",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/execution/transcribe-command-receipt.integration.test.ts (43 tests | 1 failed) 134771ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+        "sha256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/production/production-rough-cut.integration.test.ts (15 tests | 3 failed) 48366ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+        "sha256": "3eddedaedaeed193144ab360ab4417d8de8313072276ff3015a33b51abef5b01",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/creative-canvas/creative-canvas.service.test.ts (25 tests | 1 failed) 4102ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+        "sha256": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/moments/moments-model.integration.test.ts (24 tests | 1 failed) 65754ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/moments/moments-model.integration.test.ts",
+        "sha256": "0619b3f891485d73839c55ff1a6571492bfe561f15c6446d4ac1abde361b610a",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/legacy-source-migration.test.ts (31 tests | 15 failed) 109582ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+        "sha256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/production/production-asset-asr.integration.test.ts (9 tests | 1 failed) 33031ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-asset-asr.integration.test.ts",
+        "sha256": "3fd93ea3546080fd6190a535a6647dd5fb4271cb71c993234799dc48f6648fee",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/graphic-posts/graphic-posts.integration.test.ts (22 tests | 1 failed) 59130ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+        "sha256": "14761851e1ca3d6c45575e86ff22fa2769f452e5e07571b7498b054861eec51a",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/migration-convergence.test.ts (23 tests | 4 failed) 119980ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts",
+        "sha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/startup-group-collectors.postgres.integration.test.ts (30 tests | 30 failed) 11ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "sha256": "969c43578cc96a84ac8714c194443efa24fce531c73203f0c3bf2b8706a544e3",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/t1062-new-domain-group-workspace.integration.test.ts (25 tests | 4 failed) 62790ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+        "sha256": "e94d5210c11df4883d455c954ab16418bf6d4dd7916b6422ff6cca15da6ad60f",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/settings/settings.service.test.ts (20 tests | 1 failed) 3705ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/settings/settings.service.test.ts",
+        "sha256": "9a4eb4fce360a6e191100435389f8dea17a5442fcadcd42349f6d5f2f58300e5",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/ai.task-execution.integration.test.ts (19 tests | 6 failed) 56739ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.task-execution.integration.test.ts",
+        "sha256": "d45a33b753d504ef195fd2e50d492f0c6c5285cbac5bdcf85db61d8e56d95f5a",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/application/generation/work-review-root.test.ts (12 tests | 1 failed) 37408ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/application/generation/work-review-root.test.ts",
+        "sha256": "cf7347cb43e7127c05e2197ade1e67e9d5b878754293f163dfe6b7bf72790026",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/publishing/publication-cover.integration.test.ts (18 tests | 16 failed) 52521ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.integration.test.ts",
+        "sha256": "c9e64623264b6c72fb85d8f88beebf9a68ec1cb427bba5eb0190047bfd2d4079",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/shared-parent-writers.postgres.integration.test.ts (30 tests | 30 failed) 7ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+        "sha256": "a0af88f4cd72f2968703d0e7044182ada4f5607f61bf43ae8d70c0034cc511ff",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/production/production-precise-asr.integration.test.ts (11 tests | 3 failed) 35752ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts",
+        "sha256": "bcd1adec028173a3affaed5e5d815aab9bdbb238dd681b07ba504320797a86d0",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/platform-account/account-binding.integration.test.ts (23 tests | 16 failed) 73260ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/platform-account/account-binding.integration.test.ts",
+        "sha256": "4d9ead0cb83b171e73369405514a756958a413b8c2dda7b83b472abdcdd035a1",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/production/production-precise-asr-mapping.test.ts (7 tests | 3 failed) 1607ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr-mapping.test.ts",
+        "sha256": "231627cc43e5ea9fae9e1acb451b40d8a5ab9b645af66ad8b449b823f1e6913d",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/scheduled-flywheel-consumption.test.ts (16 tests | 2 failed) 71504ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-flywheel-consumption.test.ts",
+        "sha256": "43128c2d8b74baf6786350e87542aa18f7b658ace868a9ee31f1d17760df1f82",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/legacy-scheduled-job-migration.test.ts (17 tests | 3 failed) 99353ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-scheduled-job-migration.test.ts",
+        "sha256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/agentic-browser-worker.integration.test.ts (2 tests | 1 failed) 20835ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/agentic-browser-worker.integration.test.ts",
+        "sha256": "371cb953b41e470152ff27142c6ca44b9e7e67ed72f6948a80e7d7c96b369b08",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/asset-business-execution.service.test.ts (12 tests | 3 failed) 4337ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+        "sha256": "9e1df5f7d667165a0a7cd97baf56ee30c716cb53e872197b8ee1039a5fd6ba49",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/intelligence/intelligence-rewrite-official.integration.test.ts (0 test)",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/intelligence/intelligence-rewrite-official.integration.test.ts",
+        "sha256": "5b1a512c6cfdfbb0108e658e9ae77f6588fca75fd0688addedf81a5ab588b99c",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/chat-generation-worker.test.ts (21 tests | 21 failed) 51317ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts",
+        "sha256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/knowledge/knowledge.repository.integration.test.ts (17 tests | 16 failed) 44871ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/knowledge/knowledge.repository.integration.test.ts",
+        "sha256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/work-creation-chat.integration.test.ts (4 tests | 2 failed) 12986ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/work-creation-chat.integration.test.ts",
+        "sha256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/chat-hooks-worker.test.ts (14 tests | 13 failed) 23392ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+        "sha256": "141cb1f32bde1c24b46eedb8a34731bdd07fb8af4d0194c6a0e6ec3855cdf4a4",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/scheduled-export-progress.test.ts (7 tests | 6 failed) 3794ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+        "sha256": "3265af8ce246585d6a45db95f47f3e18bf8311e38ea321c5a6103bdf38f4655d",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/chat-work-editor-worker.test.ts (2 tests | 2 failed) 13097ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-work-editor-worker.test.ts",
+        "sha256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/projects/data-foundation-prefer-real.integration.test.ts (3 tests | 1 failed) 8772ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/projects/data-foundation-prefer-real.integration.test.ts",
+        "sha256": "25e9227870bdc256711f667d936063d7628334d293993e258d242ebc90cc0a0d",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/durable-chat-tool-ledger.test.ts (8 tests | 5 failed) 23679ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/durable-chat-tool-ledger.test.ts",
+        "sha256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/group-migration-concurrency.postgres.integration.test.ts (12 tests | 12 failed) 6ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "sha256": "131ffdfdb6952a4e888224fc210e2c3c8df196f0661440402f993ed19dadbc00",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/chat-script-draft-worker.test.ts (8 tests | 3 failed) 20498ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+        "sha256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/group-platform-facts.integration.test.ts (10 tests | 2 failed) 26704ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-platform-facts.integration.test.ts",
+        "sha256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/publication-mutations-migration.postgres.integration.test.ts (18 tests | 18 failed) 7ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "sha256": "84dda08648a2de8b0f098bc21352ab20de4cb512e662785874fa146acf051ed9",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/agentic-research-worker.integration.test.ts (3 tests | 3 failed) 15657ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+        "sha256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/structured-target-adoption.test.ts (12 tests | 1 failed) 32100ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/structured-target-adoption.test.ts",
+        "sha256": "3073b9ba8e447a315434d22e0e430caa4e201154883aac0fae7129d9f5bd9afd",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/calibration-archive-concurrency.postgres.integration.test.ts (20 tests | 20 failed) 6ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "sha256": "cd55d1cede15641e1b668cfecc10763d63944b4c310e2f49aa6a367524681ffc",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/chat-redfox-worker.test.ts (5 tests | 2 failed) 10639ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-redfox-worker.test.ts",
+        "sha256": "369d58133d3160a7f987e532d14f772535cf3459435721ad09187ea75bd11ab5",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/t1026-tool-result-read.integration.test.ts (2 tests | 2 failed) 3958ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1026-tool-result-read.integration.test.ts",
+        "sha256": "b53f2fbf0fe94481a99ce9a4181c457bf057063e09d7c573168db352944ddd48",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/adjacent-parent-migration.postgres.integration.test.ts (18 tests | 18 failed) 6ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "sha256": "61e2bc9b394f12618922fc180ea232a4a5d3a80e272c1d935fa6873c988d7645",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/chat-research-worker.test.ts (5 tests | 3 failed) 7537ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-research-worker.test.ts",
+        "sha256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/execution/execution-provider-job.service.test.ts (29 tests | 1 failed) 4298ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-provider-job.service.test.ts",
+        "sha256": "ac6b8d56807976c5ce4ca954503fd0b29c0055c86076ce985c558740cd72fd27",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/group-task-scope.integration.test.ts (8 tests | 1 failed) 22089ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/group-task-scope.integration.test.ts",
+        "sha256": "177da560287eef8a007d9efdbd2ecaf47a86de738de7901fc6ab718cf3e0ee6a",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts (9 tests | 5 failed) 3726ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/agentic-business-execution.service.test.ts",
+        "sha256": "7c079a240a876f8bbf3c0b553256f1af21d469f588614da4422b1cf4055793b7",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/research-material-adoption.test.ts (9 tests | 7 failed) 24296ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/research-material-adoption.test.ts",
+        "sha256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/script-draft-task-submission.integration.test.ts (7 tests | 3 failed) 3790ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/script-draft-task-submission.integration.test.ts",
+        "sha256": "18014d0a6efccdbf47fcb118267e200e497b6d2f93e3a832e3888a49c98c3e00",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/material-links/workspace-parent-write.integration.test.ts (5 tests | 2 failed) 14049ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+        "sha256": "40f269b1026c9cfbbe4625c0473327be9f86564fc749a136f24d542567932983",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/platform-account/platform-account.service.test.ts (16 tests | 2 failed) 41259ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/platform-account/platform-account.service.test.ts",
+        "sha256": "1c408630d69c0592a049f893aa6c1e9bac03dc6f0b8e37b8d9536bddb3e96b22",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/execution/execution-worker-call-ports.integration.test.ts (3 tests | 1 failed) 6863ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+        "sha256": "faca92020432da7084b2f3bb6500451759bcfa18324dd1c94c14af480eda9a36",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/project-create-archive.postgres.integration.test.ts (7 tests | 7 failed) 5ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+        "sha256": "f5beea0e13df190139ecf4666e086bb17695640325c156f2ccd118faaf61d7d4",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/copilot-worker.fork.test.ts (3 tests | 3 failed) 4560ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/copilot-worker.fork.test.ts",
+        "sha256": "2290d5a213670844c2bc5e661ed5f6dc3748bd420472411acfdc6cf823559850",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/agentic-proposal-adoption.integration.test.ts (5 tests | 4 failed) 13943ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/agentic-proposal-adoption.integration.test.ts",
+        "sha256": "48b0219eb6e72048608ba49d387798c8f58e6b141cd89c6f1ff9a740fc202a00",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/production/workspace-parent-write.integration.test.ts (4 tests | 2 failed) 11359ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/workspace-parent-write.integration.test.ts",
+        "sha256": "08e34f1297a06785bc7ce1e67529f13c98ce9ae2810197301865b46393d0e724",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/chat-video-edit-worker.test.ts (4 tests | 4 failed) 4559ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-video-edit-worker.test.ts",
+        "sha256": "383fc9df5829a126a4ad1001112116f3a7c741c17cde81c54e59af6e74061f97",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/ai.contract.test.ts (8 tests | 2 failed) 21405ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.contract.test.ts",
+        "sha256": "564dc6733e231415562b17b9d7b9139355d8a5aaf28dba43291ebb5db5c9c637",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/chat-script-patch-worker.test.ts (4 tests | 1 failed) 10726ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-script-patch-worker.test.ts",
+        "sha256": "aa0b2fb423ff1807551c1580fb61d8cc903e766ee801f2770899ef3ef2c5d0fa",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/artifacts/workspace-parent-write.integration.test.ts (4 tests | 2 failed) 11399ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+        "sha256": "d3bf2d4da45460d02ff5a8f137d13abb819967c1a36c133a5000aa1094d70e58",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/integration/group-knowledge-write.postgres.integration.test.ts (10 tests | 10 failed) 5ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "sha256": "86da1c83a1a3c9f92278c703bea301290f472f0d46458aae1e29ff881544b8a3",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/platform-adapt-execution.integration.test.ts (1 test | 1 failed) 5633ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/platform-adapt-execution.integration.test.ts",
+        "sha256": "914c909614d3c12093e7334023a0c348cd6530551d30acb1ac7d637eb45e54af",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/browser-task-authorization.service.test.ts (4 tests | 2 failed) 3702ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/browser-task-authorization.service.test.ts",
+        "sha256": "abcfdbae1a6c30b6c9636fb8fedd82b9e44fe0379e60269dc60c1139f9dfd278",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/assets/assets.legacy-media-backfill.test.ts (2 tests | 1 failed) 7337ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/assets/assets.legacy-media-backfill.test.ts",
+        "sha256": "597de28bf4690403a4ba06a89058907a49e9b44bef932d173ff2c6e2d82b713c",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/analytics/analytics.acceptance.test.ts (6 tests | 1 failed) 16198ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/analytics/analytics.acceptance.test.ts",
+        "sha256": "7f3944e6667358cb550d59693befd145e9b74594dc2d5886d1b7b0842c819893",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/reviews/reviews.contract.test.ts (7 tests | 6 failed) 18791ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/reviews/reviews.contract.test.ts",
+        "sha256": "f22f3b624f1ae91ae39ff5ab743971d0be405d95f431388f256fc4ee342d902f",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/learnings/learnings-calibration-reflow.integration.test.ts (2 tests | 1 failed) 6125ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/learnings-calibration-reflow.integration.test.ts",
+        "sha256": "b6fe7627562442ff34fd148efb00fc7fb90f5a5246f0aa2499cf7a7f782f2706",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/learnings/learnings.acceptance.test.ts (7 tests | 2 failed) 18664ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/learnings.acceptance.test.ts",
+        "sha256": "204cfa0634888f080f4c275f9525a96e18b8875dde51870e5bcdc1f4ed700468",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/reviews/reviews.acceptance.test.ts (7 tests | 3 failed) 18720ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/reviews/reviews.acceptance.test.ts",
+        "sha256": "2c33fd88e1073b80b9bcc5eb18b78ec1c5925005e2bbc21a682fb81cd46e9c35",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/assets/assets.acceptance.test.ts (6 tests | 1 failed) 8870ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/assets/assets.acceptance.test.ts",
+        "sha256": "d20d23a958bbf98c15b6890d9aa59985bc89eafea108535b80843c516b28a976",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/learnings/learnings.contract.test.ts (6 tests | 1 failed) 16182ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/learnings.contract.test.ts",
+        "sha256": "0f651494f746d9931fcf9f7031f0da31612331325a7d356687f08682ca2d4301",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/ai-task-submission.service.test.ts (5 tests | 4 failed) 3790ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai-task-submission.service.test.ts",
+        "sha256": "7bd107e9de2937bf6042faae112005d9f954adad0133d9dfb7468b5887e9b5d2",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/review-insights-injection.test.ts (4 tests | 2 failed) 8ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/review-insights-injection.test.ts",
+        "sha256": "0e1315f495dca87c7895a8e80b49b4f056296505186db42b4e5d1a19e4aecef7",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/ai.learnings-project-scope.integration.test.ts (1 test | 1 failed) 3687ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.learnings-project-scope.integration.test.ts",
+        "sha256": "4fa897fb7b22286dea1e997110a4bddd468c82c51dda40f05c0b62b75408741c",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai/ai-task-commit.integration.test.ts (4 tests | 3 failed) 3631ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai-task-commit.integration.test.ts",
+        "sha256": "072f831be45324e4bc408c45bbbd8aca349bccf11836a7637da9d5b938ed5cbe",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/knowledge/knowledge-proposal-adoption.service.test.ts (4 tests | 4 failed) 11158ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/knowledge/knowledge-proposal-adoption.service.test.ts",
+        "sha256": "eadf4486eeb4fdfce5ecd09b80f7f9a47a26db8c11c4ed2fb5f50e73e4247790",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/knowledge/knowledge.db-schema.test.ts (4 tests | 1 failed) 11171ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/knowledge/knowledge.db-schema.test.ts",
+        "sha256": "499bb0e5f0156b26a743c1b6229ad539d07b359e8b4943baa1293b19f2bc467b",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts (8 tests | 1 failed) 42ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-video-edit-tool-host.test.ts",
+        "sha256": "f9bffb38e5be09ead3c7183e12404ca9eeb3c140ce78624c0caa6b63f733ec16",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/creative-canvas/creative-canvas-series-reference.test.ts (2 tests | 1 failed) 6225ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/creative-canvas/creative-canvas-series-reference.test.ts",
+        "sha256": "9db7c2a5f05fbcb5f8f506a84ca55190dbf95812bfc9b4639514ddf4b4e7f3ae",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/chat-local-tool-host.test.ts (7 tests | 1 failed) 29ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-local-tool-host.test.ts",
+        "sha256": "2ea6d37c50c1fae54ee0a0f5f13fb940564d7d41c322fefff71122776f0e8318",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/chat-script-draft-preparation.test.ts (5 tests | 1 failed) 9ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-script-draft-preparation.test.ts",
+        "sha256": "3d914b47629716d3e18a674c933aed2ff3cc5f1784a65e555bec176da784c13f",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/group-upgrade-postgres.integration.test.ts (1 test | 1 failed) 4ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/group-upgrade-postgres.integration.test.ts",
+        "sha256": "21e7611fde3d4df4bbe0b6d3592ae374e1879497fd7fb31783beda3821dd5013",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/ai-runtime/review-facets.test.ts (4 tests | 1 failed) 6ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/review-facets.test.ts",
+        "sha256": "a848907363c161d898d9cab811f36200e481b171aaf2ea032d715adfda37713a",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/learnings/learning-adoption-key.integration.test.ts (2 tests | 1 failed) 6358ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/learning-adoption-key.integration.test.ts",
+        "sha256": "39a1475a3a256835bd4f48ede70b45a738a648b351280583faa780aac9c014cc",
+        "classification": "pending_full_failure_stack"
+      },
+      {
+        "observedLogLine": " ❯ src/modules/execution/chat-web-profile-wait.test.ts (8 tests | 1 failed) 120013ms",
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/chat-web-profile-wait.test.ts",
+        "sha256": "7bbe75f93a8d4005e6fe9862bcebea331fcf931c308b60512ef2a677ca3d7f7a",
+        "classification": "pending_full_failure_stack"
+      }
+    ]
+  },
+  {
+    "package": "frontend",
+    "observedAt": "2026-10-11T17:39:19.622Z",
+    "partialOnly": false,
+    "countSource": "final_json",
+    "status": "completed_nonzero",
+    "completedLogFileRows": 559,
+    "failedLogFileRows": 38,
+    "failed": [
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/test/function-key-invariant.test.ts",
+        "sha256": "4def088daa3fba0f548a74446b0245df50ba34019c026f139dc54defa9135de0",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/test/icons.test.ts",
+        "sha256": "d0b0930c2f182de4f3bb16cfc5023a3964d1ca85fb13078ba6df3e13fc5c3cc0",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/chat-task-submission.integration.test.ts",
+        "sha256": "55350e1cc89623996b6b891d5b1788b4d1eddfe60569d8b56534e3b388d90832",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+        "sha256": "cfa9e53e4ed52a6a0708f997a840e7740504bfd1daa28846e54a7bb4f1bd084b",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/persistence-client.favorites-diagnostics.test.ts",
+        "sha256": "c63ba22bbe95bedef67adee7bd3aa983d2e5b985f65cd90df1c9a45733956cd8",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/platform-worker-entry.integration.test.ts",
+        "sha256": "2632c48cb0fe6cca31f318add3f8a78a99ef44a8151352a460cf771154da3045",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/review-insights-worker-entry.integration.test.ts",
+        "sha256": "17e0ea70278efd1da071515b722a84af061fe1ead1804eb6705b91d8383d534b",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/script-worker-entry.integration.test.ts",
+        "sha256": "9be37e3ba4e797d9af0b7efbb79e28eb1fea6d954b0c75bc85d438491d095314",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/(creator)/layout.guard.test.tsx",
+        "sha256": "645a23af709ed99362179c7d9d34a38b0ddfa26b54bdeae91819919eb5bba155",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/overlays/new-project-dialog.prefill.test.tsx",
+        "sha256": "31d3d42b299befabf402343e1b22e609f44608f22ea0502e0209b81f726a0008",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/shell/zero-account-guidance.test.tsx",
+        "sha256": "2125077db72bf5a39c6ae17d56181dd72df0170ceb7da17aed6bd6565b9c85a6",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/article/article-workbench.test.tsx",
+        "sha256": "ebd11cf898eb5d8ece2771e8634dcaac69973d1aacc3ca2972b863dda33aa783",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/ui/creator-date-picker-antd.test.tsx",
+        "sha256": "bbe0e44635d260d02ede9cba06b7335dd6cab83c6656576a1e002d83a2a93078",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/copilot/chat-diagnosis-card.test.tsx",
+        "sha256": "086c4cf03c38c2d83b5819f5c7879188a5c443a2aeef67eb808768a97116097f",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/publication-result-actions.test.tsx",
+        "sha256": "e6d79cda51993379b128eecbe8c23e6ab61679cba553a01ce1bcf35d23391e41",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/quick-create-work.test.tsx",
+        "sha256": "ba3f8276c5c1f5316c624f792eb7224e14e39f80c1e5edabc7b5df56c25c27e5",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/work-editing-recovery.test.tsx",
+        "sha256": "a744b940e39fce83fa3978688009479934856b5b90feb6e25bc49213c050eace",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/check-update-card.test.tsx",
+        "sha256": "a6bfeacdc1101fa5b92dcfdbea8dba566ef13a5ff4e2c3335639f325d1707619",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/identity-section.test.tsx",
+        "sha256": "2018a4f89ed7cd533a12a6f18888bfb6b2475a9bcdd55f4cdf5bbe28ecf5b453",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "sha256": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/assets.persistence-client.test.ts",
+        "sha256": "bf9efb76a9f928e5a69da19a8ce2cbc99a3b5b0e60f138f406991636cf372fd3",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/content-calendar.persistence-client.test.ts",
+        "sha256": "61f767a3f0eb4b5ba66f3cd67f20008aa98157b882086ecca406673522de25e8",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts",
+        "sha256": "45abee8a414db68f9694d3af1f0e29772ff51a9597cc165d318d428da2300686",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts",
+        "sha256": "a4427b419b85f78afff2fcc86aaa1ef85d3eb2d0ecd6ec9c9c0908df8cfb6885",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+        "sha256": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/platform-account.persistence-client.test.ts",
+        "sha256": "347588e5ce867019d130a49a60f8a5cd64389829e5a1065aabb67855361627da",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/publication-cover-bytes.persistence-client.test.ts",
+        "sha256": "11b22a934369949ed2570c17409d113224e6523e2cc6e18a03bf36d1b8f888cf",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/publishing.persistence-client.test.ts",
+        "sha256": "2d7895cf662bfc27ef00f45b2c8750674f13128fcf1392bd5e5cc370bd73cc7c",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/query-services.contract.test.ts",
+        "sha256": "64eaf2d6fbff99041f40ab59ec4c8d00de2aca0da6573471a0016855f3cad9a1",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/search-indexing.persistence-client.test.ts",
+        "sha256": "e97df3faa9e4fbdd1864b09925758f0c4cd8d7e1aa820cde80095873890c1bf6",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/intelligence/share-import-runner.test.ts",
+        "sha256": "dc3bd0192199a68a6b96d0c6ce017417d3c1b224b218b239f2bbf7425fdb9ab1",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+        "sha256": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/chromium-guard.test.ts",
+        "sha256": "64398cc8bd849301b479ab20bcf07ce2a8910f3be7199a2e5a707e1f264b3be6",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+        "sha256": "3d9380877c76c39da124dc646575aa91244de0e25e81886b70d412caf1cd3779",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/douyin-throttle-integration.test.ts",
+        "sha256": "66b8db85d662fa454abe9cad102e2fb59d14a7aa8adcff2afd3bd6acdf0ccc49",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+        "sha256": "58916cb4c38b4e1acd3c8f87259e0ff12bff7e1f0a95b3bc6ae83c5b43bbfe92",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/auth/auth-routes.test.ts",
+        "sha256": "fc7f4e2c415ac345584a04b17a10b36cbf507946593801c519e6a75c512fc42a",
+        "classification": "pending_full_failure_causal_review"
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/route.test.ts",
+        "sha256": "070b63c49329af2a48fc6befa3e0bc5778dd329d73bec92ad9888e5449f20875",
+        "classification": "pending_full_failure_causal_review"
+      }
+    ]
+  }
+]

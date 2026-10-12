@@ -1,0 +1,33 @@
+{
+  "schema": "independent-source-candidate-review/v1",
+  "at": "2026-10-12T00:26:39.868048+00:00",
+  "result": "REQUEST_PRIVATE_CANDIDATE_CHANGES",
+  "packetSha256": "fbfcf39c5217db51c4ff660b9300ca61206365bddb2c95e66ef283684a74fcd9",
+  "sourceCandidateSha256": "38e7b302b2fcfe404d363a40a9bced2003d59957a08b61820dc5bdb7319ec387",
+  "testCandidateSha256": "32a4dac647a9bcd4709b9737576c99ebb222b81a13faa19c242e71bcdccb5909",
+  "hashProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_REQUEST_CANDIDATE_FIRST_HASH_PROOF.json",
+    "sha256": "d17db85048f8fb8959ae4f1c1bd8c9ed2f94573b29edb911abfe124529b760f2"
+  },
+  "findings": [
+    {
+      "id": "CC001",
+      "status": "open",
+      "requirement": "FR-REQUEST：finally无成功/失败遗留timer",
+      "acceptance": "AC-REQUEST：method/JSON/FormData/HTTP/空响应/单请求/finally保留",
+      "location": "fetch-budget-candidate.ts:45 timer创建；JSON.stringify:59；try:68",
+      "failureMode": "timer创建后body构造/JSON序列化位于try之前。cyclic data或toJSON抛错会reject且fetch未发，但finally未进入，120s或合法长分段timer留存，仍可继续tick。",
+      "evidence": "实际38e7完整函数控制流；新32a4测试只有成功/HTTP/空响应/body读取错误四finally族，没有序列化throw覆盖；原archive同位置已有缺口但本合同承诺清理必须闭合",
+      "minimumConstraint": "同timer所有拥有路径须由同finally清最后timer；保持原JSON错误/无fetch事实，新序列化异常验证fetch0/timer0/原error透传，不改原完整测试和HTTP处理。",
+      "evidenceLevel": "静态候选分支，未运行，不冒TDD RED"
+    }
+  ],
+  "reviewedNonBlocking": [
+    "原8测试026114字节前缀完整，15新cases使用setTimeout/clearTimeout/performance共同fakeclock，数值边界不冒真实慢链",
+    "默认/null/0/短120k、更长有限保持、非法回120k；分段回调用出生差值，无tick新起deadline",
+    "原HTTP/header/FormData/textJSON/空响应/错误 projection单请求不改，两archive original shared fetch相同",
+    "两源原native/static不同适配完整保留，原archive/patch/root8asset/actualrootHTML都绑定，不准复制production"
+  ],
+  "runtimePermission": false,
+  "newToolAndDeliveryPermission": false
+}

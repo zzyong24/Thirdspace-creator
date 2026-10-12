@@ -1,0 +1,35 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-641",
+  "commit_sha": "533224f334c43cdb81a344424e420cad93784dd1",
+  "captures": [
+    {
+      "checkpoint": "desktop-asr-card",
+      "check_ids": [
+        "AC-ASR-PRESET",
+        "AC-ASR-RECOMMENDED",
+        "AC-ASR-ADVANCED",
+        "AC-ASR-NARROW"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n小米 MiMo（推荐）\n提供商\n预设会自动填写；只有自建中转或其他厂商才需要修改。\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n接口地址\n自定义 baseUrl;留空走 provider 默认。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n收起高级设置\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置"
+    },
+    {
+      "checkpoint": "minimum-asr-card",
+      "check_ids": [
+        "AC-ASR-PRESET",
+        "AC-ASR-RECOMMENDED",
+        "AC-ASR-ADVANCED",
+        "AC-ASR-NARROW"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "text": "选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n小米 MiMo（推荐）\n提供商\n预设会自动填写；只有自建中转或其他厂商才需要修改。\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n接口地址\n自定义 baseUrl;留空走 provider 默认。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n收起高级设置\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置"
+    }
+  ]
+}

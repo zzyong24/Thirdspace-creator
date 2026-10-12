@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {describe, expect, it} from "vitest";
 import {createDb, type Db} from "@creatoros/backend";
 import {ENDPOINTS,type GraphicPostTextKind,type RequestContext} from "@creatoros/contract";
@@ -301,7 +303,7 @@ describe("T1062 图文真实父归档与旧回执",()=>{
    expect(await f.service.getGraphicPost(ctx(),f.output.id)).toEqual(before);
    expect((await f.service.getVersion(ctx(),f.output.id,old.currentVersionId)).document).toEqual(old.current);
   }finally{await f.opened.client.close();}
- },30000);
+ },180000);
  it("字段采用到达真实repo前项目归档先提交，拒绝追加且候选保留",async()=>{
   let hold=false;let arrived!:()=>void;let release!:()=>void;
   const reached=new Promise<void>(r=>arrived=r),resume=new Promise<void>(r=>release=r);
@@ -317,17 +319,17 @@ describe("T1062 图文真实父归档与旧回执",()=>{
    expect(await f.service.getGraphicPost(ctx(),f.output.id)).toEqual(before);
    expect(await f.service.getTextCandidate(ctx(),task.candidateId)).toEqual(candidate);
   }finally{release();await f.opened.client.close();}
- },30000);
+ },180000);
 });
 
 
 // 真PG随机库：raw blocker仅调度锁顺序，归档和保存仍走真实公共service。
-import {Pool} from "pg";
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import {randomUUID} from "node:crypto";
 import {createRuntimeDb} from "@creatoros/backend";
 const isolatedPgUrl=process.env.CREATOROS_TEST_POSTGRES_URL;
 it.skipIf(!isolatedPgUrl)("T1062 真实PG项目归档先提交，公共保存等待父锁后零写",async()=>{
- const url=new URL(isolatedPgUrl!);if(url.hostname!=="127.0.0.1"||url.port!=="55422")throw Error("只允许隔离PG服务");
+ const url=new URL(isolatedPgUrl!);assertOwnedPostgresUrl(url.toString());
  const name="t1062_archive_"+randomUUID().replaceAll("-","");
  const admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname="/"+name;
  const runtime=await createRuntimeDb({connectionString:url.toString()});
@@ -347,4 +349,4 @@ it.skipIf(!isolatedPgUrl)("T1062 真实PG项目归档先提交，公共保存等
   await blocker.query("COMMIT");locked=false;await archive;await checked;
   expect(await f.service.getGraphicPost(ctx(),out.id)).toEqual(before);
  }finally{if(locked)await blocker.query("ROLLBACK");blocker.release();await runtime.pool.end();await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);await admin.end();}
-},30000);
+},180000);

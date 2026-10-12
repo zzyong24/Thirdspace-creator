@@ -1877,12 +1877,29 @@ it('联合创作准备先确认真实source/member并冻结两个短工具顺序
 it.each(['topics','canvas'])('T1074 %s 的Codex真实准备仅冻结已审宿主读取/候选，工具目录对应实际定义',async surface=>{
  const {deps}=makeDeps();
  const prepared=await prepareChatTurn(ctx,{executionEngine:'codex',messages:[{id:'source',role:'user',parts:[{type:'text',text:'读取真实状态后帮我调整'}]}],chatContext:{surface,...(surface==='canvas'?{selection:{kind:'canvas',ids:['canvas-1']}}:{functionKey:'web.read'})}},deps,{workerWebRead:true,workerResearch:true,workerScriptDraft:true,workerStructuredNodes:true});
- expect(prepared.toolDefinitions.map(t=>t.name)).not.toContain('web.read');
- expect(prepared.toolDefinitions.every(t=>(t.execution??'host')==='host'&&(t.effect==='none'||t.effect==='proposal'))).toBe(true);
+ const read=prepared.toolDefinitions.find(t=>t.name==='web.read');expect(read).toMatchObject({effect:'committed',execution:'worker.web-read'});
+ const permittedNonRead=surface==='topics'?[['topic.generate','proposal','worker.structured-node'],['topic.enrich','proposal','worker.structured-node'],['script.draft','committed','worker.script-draft'],['material.gather','none','worker.research'],['positioning.generate','proposal','worker.structured-node'],['knowledge.distill','proposal','worker.structured-node'],['calibration.diagnose','proposal','worker.structured-node'],['redfox.query','committed','worker.redfox'],['material.screenshot','committed','host'],['local.read','committed','host']]:[['material.gather','none','worker.research'],['redfox.query','committed','worker.redfox'],['material.screenshot','committed','host'],['local.read','committed','host']];
+ expect(prepared.toolDefinitions.filter(t=>t.name!=='web.read'&&((t.execution??'host')!=='host'||!['none','proposal'].includes(t.effect))).map(t=>[t.name,t.effect,t.execution??'host']).sort()).toEqual(permittedNonRead.sort());
+ expect(prepared.toolDefinitions.every(t=>Boolean(t.version)&&t.parameters.additionalProperties===false)).toBe(true);
  if(surface==='canvas')expect(prepared.toolDefinitions.map(t=>t.name)).toEqual(expect.arrayContaining(['canvas.read','canvas.propose']));
- else expect(prepared.assembly.forcedTool).not.toBe('web.read');
+ else expect(prepared.assembly.forcedTool).toBe('web.read');
  const block=prepared.assembly.system.split('【本轮实际工具目录】')[1]?.split('【工具目录结束】')[0];
  expect(block).toBeDefined();
  const names=[...block!.matchAll(/\(([^()]+)\):/g)].map(m=>m[1]);
  expect(names).toEqual(prepared.toolDefinitions.map(t=>t.name));
 });
+
+ it('T1097 解析选择首await前冻结且中性只读资料不漏全局品牌/文档，v2定义仍宿主候选',async()=>{
+ const {createWorkWritingContext}=await import('../../application/generation/work-writing-context');let release!:()=>void,entered!:()=>void;
+ const gate=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>entered=r);
+ const real=createWorkWritingContext({assertProject:async()=>{},readCenter:async()=>{throw Error('中性不能读品牌');},readStatement:async()=>{throw Error('中性不能读品牌');},readDocument:async()=>({label:'真实资料',text:'冻结的已选资料'})});
+ const resolver=vi.fn(async(c:RequestContext,id:string,choice:any)=>{entered();await gate;return real.resolve(c,id,choice);});
+ const target={...editorAssemblyTarget(),writingContext:{schemaVersion:1 as const,brandProfileVersionId:null,sourceAssets:[{assetId:'a',assetFileId:'f'}]}};
+ const {deps}=makeDeps({readEditorTarget:async(_c,t)=>structuredClone(t),resolveWritingContext:resolver});
+ const input={executionEngine:'pi' as const,messages:[{id:'source',role:'user' as const,parts:[{type:'text' as const,text:'原指令'}]}],chatContext:{surface:'project' as const,projectId:'proj-1',editorTarget:target}};
+ const pending=prepareDurableChatTurn(ctx,input,deps,durableChatSnapshot('acct-current','真实方法'));await ready;
+ target.writingContext.sourceAssets[0]!.assetFileId='later';input.messages[0]!.parts[0]!.text='后来';release();const result=await pending;
+ expect(resolver).toHaveBeenCalledOnce();expect(result.hostContext.resolvedWritingContext?.sourceMaterials[0]?.assetFileId).toBe('f');expect(result.hostContext.chatContext.editorTarget?.owner==='wechat_article'&&result.hostContext.chatContext.editorTarget.writingContext?.sourceAssets[0]?.assetFileId).toBe('f');
+ expect(result.toolDefinitions.filter(t=>t.name.startsWith('work.editor')).every(t=>t.version.startsWith('chat-tools-work-director-v2:'))).toBe(true);
+ expect(result.assembly.system).toContain('brand为null表示中性写作');expect(result.hostContext.resolvedWritingContext?.brand).toBeNull();
+ });

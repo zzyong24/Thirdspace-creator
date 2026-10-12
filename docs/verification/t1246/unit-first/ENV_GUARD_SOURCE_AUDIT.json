@@ -1,0 +1,101 @@
+{
+  "recordedAt": "2026-10-11T14:38:41.439Z",
+  "kind": "read_only_source_audit_not_execution",
+  "files": [
+    {
+      "file": "backend/src/migration-convergence.test.ts",
+      "sha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "matches": [
+        {
+          "line": 95,
+          "text": "const pgAdminUrl='postgresql://zyongzhu@127.0.0.1:55422/postgres';"
+        },
+        {
+          "line": 99,
+          "text": " try{await admin.query(`CREATE DATABASE ${quote(name)}`);"
+        },
+        {
+          "line": 105,
+          "text": "    await admin.query(`CREATE DATABASE ${quote(restoreName)}`);await runFile('pg_restore',['--no-owner','--no-acl','--dbname',restoreName,manifest.databasePath],{env:{...process.env,PGHOST:'127.0.0.1',PGPORT:'55422',PGUSER:'zyongzhu',PGDATABASE:restoreName},maxBuffer:1024*1024});const restoreUrl=new URL(pgAdminUrl);restoreUrl.pathname='/'+restoreName;const restored=new Pool({connectionString:restoreUrl.toString()});try{const actual=await snapshot(restored as Client,before!.columns);expect(actual.rows).toEqual(before!.rows);expect(actual.counts).toEqual(before!.counts);expect(actual.ledger).toEqual(before!.ledger);}finally{await restored.end();}"
+        },
+        {
+          "line": 109,
+          "text": " }finally{if(oldBackupDir===undefined)delete process.env.CREATOROS_DATABASE_BACKUP_DIR;else process.env.CREATOROS_DATABASE_BACKUP_DIR=oldBackupDir;await admin.query(`DROP DATABASE IF EXISTS ${quote(restoreName)} WITH (FORCE)`);await admin.query(`DROP DATABASE IF EXISTS ${quote(name)} WITH (FORCE)`);await admin.end();}"
+        }
+      ]
+    },
+    {
+      "file": "backend/src/group-upgrade-postgres.integration.test.ts",
+      "sha256": "21e7611fde3d4df4bbe0b6d3592ae374e1879497fd7fb31783beda3821dd5013",
+      "matches": [
+        {
+          "line": 7,
+          "text": " const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('此测试只允许显式隔离测试服务器55422');"
+        },
+        {
+          "line": 9,
+          "text": " await admin.query(`CREATE DATABASE ${source}`);await admin.query(`CREATE DATABASE ${target}`);cleanup.push(async()=>{await admin.query(`DROP DATABASE ${source}`);await admin.query(`DROP DATABASE ${target}`);});"
+        },
+        {
+          "line": 16,
+          "text": " await promisify(execFile)('pg_restore',['--no-owner','--dbname',dstUrl.toString(),backup!.databasePath]);expect((await restored.query('SELECT id FROM projects')).rows).toEqual([{id:'old-p'}]);expect((await restored.query('SELECT storage_key FROM asset_files')).rows).toEqual([{storage_key:'owner/original.mp4'}]);"
+        }
+      ]
+    },
+    {
+      "file": "backend/src/group-upgrade-backup.ts",
+      "sha256": "7e9b108534cf3294f506e1e0426b5f9a7a400eca25e446360cbdb81ac9497c1d",
+      "matches": [
+        {
+          "line": 18,
+          "text": "async function counts(client:QueryClient,names:string[]){const result:Record<string,number>={};for(const name of names){const row=await client.query<{n:number}>(`SELECT count(*)::int AS n FROM ${quote(name)}`);result[name]=row.rows[0]!.n;}return result;}"
+        },
+        {
+          "line": 19,
+          "text": "async function groupHistory(client:QueryClient,names:string[]){"
+        },
+        {
+          "line": 26,
+          "text": " const names=await tables(client);"
+        },
+        {
+          "line": 30,
+          "text": " const count=await counts(client,names);"
+        },
+        {
+          "line": 31,
+          "text": " const history=await groupHistory(client,names);"
+        },
+        {
+          "line": 54,
+          "text": " const after=await counts(client,Object.keys(backup.counts));"
+        },
+        {
+          "line": 61,
+          "text": " const names=await tables(client);if((!options.convergence&&names.includes('account_groups'))||!names.includes('projects'))return null;"
+        },
+        {
+          "line": 65,
+          "text": " const count=await counts(client,names);"
+        },
+        {
+          "line": 66,
+          "text": " const history=await groupHistory(client,names);"
+        },
+        {
+          "line": 67,
+          "text": " try{await runFile('pg_dump',['--format=custom','--no-owner','--file',databasePath+'.pending'],{env,maxBuffer:1024*1024});}"
+        },
+        {
+          "line": 68,
+          "text": " catch{throw new Error('账号组升级前 PostgreSQL 完整备份未完成。请安装可用的 pg_dump 并检查备份目录和数据库权限；原库尚未执行账号组迁移。');}"
+        }
+      ]
+    },
+    {
+      "file": "backend/src/group-upgrade-backup.integration.test.ts",
+      "sha256": "660ae6174539561db538f80b9c315f53382814d045a8406b2b7d707d16ab301d",
+      "matches": []
+    }
+  ]
+}

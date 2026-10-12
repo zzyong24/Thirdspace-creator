@@ -1,0 +1,34 @@
+{
+  "task": "T-1254",
+  "evidenceLevel": "独立临时源码根上真实 git apply --check；无源码改动、构建、测试或网络",
+  "sourceArchive": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+    "sha256": "9335e7d501df0271a861b787fbc3bd155da45c29bd3af5a328e421c19f655822"
+  },
+  "patch": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/sources/doocs-md-creatoros.patch",
+    "sha256": "55ab4bb69a49a08d64fdd2737549fa78edf90830b3d62a2fd592b119d00a3426"
+  },
+  "ownedRoot": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-static-source-check-ni3vrmhr",
+  "extractedRegularFiles": 798,
+  "notMaterializedSymlinks": [
+    {
+      "file": ".claude/skills/create-pr",
+      "target": "../../.agents/skills/create-pr"
+    },
+    {
+      "file": ".claude/skills/git-commit",
+      "target": "../../.agents/skills/git-commit"
+    },
+    {
+      "file": ".claude/skills/wechat-svg",
+      "target": "../../.agents/skills/wechat-svg"
+    }
+  ],
+  "exitCode": 0,
+  "elapsedMs": 39.175208017695695,
+  "stdout": "",
+  "stderr": "",
+  "sourcePatchApplied": false,
+  "rootRetainedForReadonlyReview": true
+}

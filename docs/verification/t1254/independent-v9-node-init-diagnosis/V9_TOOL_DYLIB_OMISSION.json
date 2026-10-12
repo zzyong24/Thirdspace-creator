@@ -1,0 +1,16 @@
+{
+  "sourcePrepare": "/tmp/t1254-readonly/REQUEST_BUILD_V9_PREPARE.json",
+  "sourcePrepareSha256": "ce76d855c831d73a6f1cc37618e0f0219ca8a0309516b22bcf47fd619c18e7f3",
+  "sourceSnapshotDigest": "405ba19e2bdff70a84ac91a6842878dd1b114a322eca6fda98b8c32526a6d279",
+  "toolDigest": "0e00dc6da2640c46e03f3ac9723fcaa8d056a0048d99657d22ff00851c4e43fd",
+  "toolsLength": 141101,
+  "nodeNonSystemDylibRows": [],
+  "status": "CONFIRMED_OLD_TOOL_CLOSURE_OMISSION_NO_RUNTIME",
+  "fixedNodeRows": [
+    {
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+      "size": 68384
+    }
+  ]
+}

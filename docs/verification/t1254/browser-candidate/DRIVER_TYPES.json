@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-12T02:35:38.269Z",
+  "kind": "proper-TypeScript-createProgram-semantic-driver-only-explicit-actual-frontend-module-path",
+  "sourceSha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+  "compilerVersion": "5.9.3",
+  "options": {
+    "target": 9,
+    "module": 1,
+    "moduleResolution": 2,
+    "strict": true,
+    "noEmit": true,
+    "incremental": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "baseUrl": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "paths": {
+      "@playwright/test": [
+        "frontend/node_modules/@playwright/test"
+      ]
+    },
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/@types"
+    ]
+  },
+  "diagnostics": [],
+  "frontendGlobalTypesNotClaimed": true,
+  "listed": false,
+  "browserStarted": false,
+  "App": false
+}

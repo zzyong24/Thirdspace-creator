@@ -120,6 +120,7 @@ import {
   IMAGE_MATERIAL_PREFILL,
   VIDEO_MATERIAL_PREFILL,
 } from "@/fixtures/selectors";
+import {copilotImageEnginePrefill} from "@/fixtures/selectors/copilot";
 import {
   CHAT_TOOL_LABELS,
   SCHEDULED_TASK_TYPE_LABELS,
@@ -597,12 +598,12 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
   // 通用 AI 素材生成(配图/B-roll;依赖设置里配好的生图/生视频模型;未配时工具卡自带「去设置」降级)。
   "material.generate":
-    "帮我为这条内容生成一张配图/一个画面素材(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
+    "帮我为这条内容生成一张配图/一个画面素材，按当前编导引擎执行。",
   "material.generate.image": IMAGE_MATERIAL_PREFILL,
   "material.generate.video": VIDEO_MATERIAL_PREFILL,
   // [T-271] 制作封面链 —— 硬锚立项核心信息 + 口播稿产结构化封面文案(过诚实门,不编数字)并生图。
   "cover.generate":
-    "帮我为这条内容生成封面:先基于这条的立项核心信息和口播稿产一版封面文案方案(主标题/副标题/信息点 + 主视觉 + 构图),封面文案不许编造数字/成绩,再据此生成封面图(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
+    "帮我为这条内容生成封面:先基于这条的立项核心信息和口播稿产一版封面文案方案(主标题/副标题/信息点 + 主视觉 + 构图),封面文案不许编造数字/成绩,再据此生成封面图，按当前编导引擎执行。",
 };
 
 // [T-060②→T-077c] 工具 trace 的中文名(对话内「正在调用/已调用」行;未知工具回落原名)。
@@ -1056,6 +1057,8 @@ export function AICopilotContent({
   // Resolvable(每次请求求值),ref 更新不重建 transport(重建会打断进行中的流)。
   const draftEditor=useDraftChatRequest();
   const preparedTargets=React.useRef<{editorTarget?:WorkEditorTarget;creationTarget?:WorkCreationTarget}>({});
+  const workMessageSources=React.useRef(new Map<string,{conversationId:string;sourceMessageId:string;toolCallId?:string}>());
+  const workSourceTurn=React.useRef<{conversationId:string;sourceMessageId:string;clientUserId:string;session:typeof liveSession;epoch:number}|null>(null);
   const preparedReceipt=React.useRef<{sourceMessageId?:string;conversationId?:string;sourceText?:string;attachmentIds?:string[];chatContext:Record<string,unknown>;executionEngine?:string}|null>(null);
   const receiptStorageKey=`creatoros:t1070:turn:${liveSessionKey}`;
   React.useEffect(()=>{try{const stored=sessionStorage.getItem(receiptStorageKey);preparedReceipt.current=stored?JSON.parse(stored):null;}catch{preparedReceipt.current=null;}},[receiptStorageKey]);
@@ -1163,12 +1166,14 @@ export function AICopilotContent({
           const attempt=submissionAttempt.current;
           if(attempt&&attempt.session===liveSession&&attempt.epoch===epoch&&liveSessionRef.current===liveSession&&conversationStorageOwner()===sessionOwner&&!attempt.networkStarted){attempt.networkStarted=true;attempt.request?.onCreationSubmission?.("submitted-unknown");}
           const sourceHeaders=new Headers(init?.headers);
+          const clientUserId=liveSession.chat.messages.filter(message=>message.role==='user').at(-1)?.id;
           const res = await liveSession.control.fetch(input as RequestInfo, init);
           try {
             const sourceTaskId=res.headers.get("x-ai-task-id");
             if(sourceTaskId&&liveSession.epoch===epoch&&liveSessionRef.current===liveSession)rememberAssistantSourceScope(sourceTaskId,sourceHeaders);
             const cid = res.headers.get("x-conversation-id");
             const sourceMessageId=res.headers.get("x-source-message-id");
+            if(cid&&sourceMessageId&&clientUserId&&liveSessionRef.current===liveSession&&liveSession.epoch===epoch)workSourceTurn.current={conversationId:cid,sourceMessageId,clientUserId,session:liveSession,epoch};
             if((sourceMessageId||cid)&&preparedReceipt.current&&liveSession.epoch===epoch){preparedReceipt.current={...preparedReceipt.current,...(sourceMessageId?{sourceMessageId}:{}),...(cid?{conversationId:cid}:{})};sessionStorage.setItem(receiptStorageKey,JSON.stringify(preparedReceipt.current));const executionEngine=preparedReceipt.current.executionEngine;if(sourceMessageId&&(executionEngine==="codex"||executionEngine==="pi"))liveSession.sourceEngines.set(sourceMessageId,executionEngine);}
             if (cid && liveSession.epoch === epoch) captureConversationId(cid);
           } catch {
@@ -1211,6 +1216,13 @@ export function AICopilotContent({
     chat: liveSession.chat,
     experimental_throttle: 50,
   });
+  function workSourceLocation(message:(typeof messages)[number],toolCallId:string){
+    const metadata=message.metadata as {sourceMessageId?:unknown}|undefined;
+    if(typeof metadata?.sourceMessageId==='string'&&conversationId)return {conversationId,sourceMessageId:metadata.sourceMessageId,toolCallId};
+    let known=workMessageSources.current.get(message.id);
+    if(!known){const turn=workSourceTurn.current,index=messages.findIndex(row=>row.id===message.id),prior=messages.slice(0,index).filter(row=>row.role==='user').at(-1);if(turn&&turn.session===liveSession&&turn.epoch===liveSession.epoch&&message.role==='assistant'&&prior?.id===turn.clientUserId){known={conversationId:turn.conversationId,sourceMessageId:turn.sourceMessageId};workMessageSources.current.set(message.id,known);}}
+    return known?{...known,toolCallId}:null;
+  }
   React.useEffect(() => {
     if (liveSession.conversationId && conversationIdRef.current !== liveSession.conversationId) {
       conversationIdRef.current = liveSession.conversationId;
@@ -1711,13 +1723,13 @@ export function AICopilotContent({
     if (prefilledRef.current) return;
     if (messages.length > 0 || streaming) return;
     // [T-060①] 没有自定义预填时，空会话可使用 fn 的默认话术。
-    const text = urlPrefill || (functionKey ? FUNCTION_KEY_PREFILL[functionKey] : "");
+    const text = urlPrefill || (functionKey ? copilotImageEnginePrefill(FUNCTION_KEY_PREFILL[functionKey]??"",functionKey,assistantEngine.engine) : "");
     if (!text) return;
     prefilledRef.current = true;
     // 不覆盖用户已敲的字(预填只填空输入框)。
     setPrompt((prev) => (prev.trim().length > 0 ? prev : text));
     lastPrefillRef.current = text;
-  }, [functionKey, messages.length, streaming, urlPrefill, urlPrefillIdentity]);
+  }, [functionKey, messages.length, streaming, urlPrefill, urlPrefillIdentity,assistantEngine.engine]);
 
   // [T-108] 外部对话请求(方案 A)—— 稿面 AI 按钮点击后 embed.request.nonce 自增,本 effect
   // 据 nonce 变化处理该请求。functionKey/selection 已在上方按 request 优先重算(置顶专用工具 +
@@ -1895,7 +1907,7 @@ export function AICopilotContent({
   // (T-055b 铁律),用户按发送才出手。无 prefill/functionKey 的老条目退化为原「填字条」。
   const applyQuickPrompt = React.useCallback(
     (item: { readonly prefill?: string; readonly functionKey?: string }, fallbackText: string) => {
-      const text = item.prefill ?? fallbackText;
+      const text = copilotImageEnginePrefill(item.prefill ?? fallbackText,item.functionKey,assistantEngine.engine);
       if (!text) return;
       if (item.functionKey && item.functionKey !== "script.patch") {
         // 用户点了另一个明确功能，旧段落锚点和失败重试都不应暗中跟过去。
@@ -1912,7 +1924,7 @@ export function AICopilotContent({
       quickFunctionKeyRef.current = item.functionKey ?? null;
       textareaRef.current?.focus();
     },
-    [finishComposerRequest],
+    [finishComposerRequest,assistantEngine.engine],
   );
 
   // [T-239e] 会话成本角标 —— 历史底数(读回时从落库行 token 列累计;老消息 null 兼容跳过)。
@@ -2814,8 +2826,8 @@ export function AICopilotContent({
                         textareaRef.current?.focus();
                       }}/></React.Fragment>;
                     }
-                    if((name==="work.editor.read"||name==="work.editor.propose")&&(out.kind==="work.editor.context"||out.kind==="work.editor.candidate"))return <React.Fragment key={key}>{traceRow}<ChatWorkEditorCard result={out} toolCallId={part.toolCallId}/></React.Fragment>;
-                    if((name==="work.creation.read"||name==="work.creation.propose")&&(out.kind==="work.creation.read"||out.kind==="work.creation.propose"))return <React.Fragment key={key}>{traceRow}<ChatWorkCreationCard result={out} toolCallId={part.toolCallId}/></React.Fragment>;
+                    if((name==="work.editor.read"||name==="work.editor.propose")&&(out.kind==="work.editor.context"||out.kind==="work.editor.candidate"))return <React.Fragment key={key}>{traceRow}<ChatWorkEditorCard result={out} toolCallId={part.toolCallId} location={workSourceLocation(message,part.toolCallId)}/></React.Fragment>;
+                    if((name==="work.creation.read"||name==="work.creation.propose")&&(out.kind==="work.creation.read"||out.kind==="work.creation.propose"))return <React.Fragment key={key}>{traceRow}<ChatWorkCreationCard result={out} toolCallId={part.toolCallId} location={workSourceLocation(message,part.toolCallId)}/></React.Fragment>;
                     if(name==="plan.update"){
                       const result=workbenchResultOf(out);
                       const plan=workbenchPlanSchema.safeParse(workbenchPayload(result));

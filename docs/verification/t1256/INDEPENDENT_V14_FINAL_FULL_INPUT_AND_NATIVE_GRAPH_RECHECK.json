@@ -1,0 +1,64 @@
+{
+  "task": "T-1254/T-1256",
+  "at": "2026-10-12T05:45:27.821040+00:00",
+  "scope": "V14最终7a5a/37512只读独立全量与跨段产物复核",
+  "sourceSnapshotDigest": "42ba082e18c46ef3378807edf2a3dc03e678c0d561387017a3978772289929f7",
+  "toolDigest": "1724b9b96eae4f890e189539fecb98231249b407c97630b465d912c6a6c1f0b0",
+  "sealSHA": "37512ddaa83918292b35bd55bde8fab397185a6993b398e5be1bb53fea9faa20",
+  "runnerSHA": "7a5a33c0f67ba70da3d93e337f6e52f87bde260cb0ff8fb64d84c8b6fcb67c7e",
+  "prepareSHA": "57ceee241c854b73d7e9da3cf90036b41f574d8c7eb1f834d2c51af0679d85ad",
+  "inputRows": 1837,
+  "toolRows": 141614,
+  "artifactRows": 25,
+  "indexRows": 10,
+  "totalCheckedRows": 143486,
+  "links": 7484,
+  "oldRealPathRows": 4,
+  "readBytes": 3095916107,
+  "elapsedMs": 22250.822875008453,
+  "drift": [],
+  "remaining9ExactlyOriginal": true,
+  "onlyPanelMovedToPlannedMutableAndNative395Added": true,
+  "allOtherOriginalToolRowsExactlySame": true,
+  "nativeGeneratedGraph": {
+    "manifestSHA": "72333d489389f50828383cdd585bf8bb1632b805f83074d52b6ba8a604ae3c55",
+    "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web/dist-native",
+    "files": 395,
+    "rootInode": 351826429,
+    "exactAllFilesModeUIDBytes": true,
+    "selfSHA256JSONCompleteFileSetAndDigests": true,
+    "actualOriginReceiptsFullSHASame": true
+  },
+  "currentPanel": {
+    "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/apps/web/src/components/editor/EditorPanel.vue",
+    "mode": 420,
+    "uid": 501,
+    "inode": 351268609,
+    "sha256": "a076d986b80fc88a7416e305d125690d0c626c11cf43c4ba6cda1ccfc133046c"
+  },
+  "fourV2Consumers": [
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.ts",
+      "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+      "mode": 420
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+      "mode": 420
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+      "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375",
+      "mode": 436
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e",
+      "mode": 436
+    }
+  ],
+  "allRpathFirstExistingSame": true,
+  "fullUnifiedDiffExactlyReconstructsCurrent": true,
+  "reviewerRuntimeOrApply": false
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-11T23:12:33.191916+00:00",
+  "result": "PASS_TOOL_INSTALL_ONLY",
+  "scope": "仅离线frozen-lockfile/ignore-scripts安装；不准用此收据执行checks/list/types/build/HTTP/Rust公共链",
+  "toolSha256": "e2cd37f189b291f4882977fc8edc21ea8d8281e1830370d0fd2680fcda9b0409",
+  "bindingSha256": "abf9cef344a8ff7fc3665ff3958b943c66983d0a6548aaa7325dd803d34fbd16",
+  "node": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+  },
+  "helper": {
+    "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+    "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea"
+  },
+  "actualSourceInputCount": 207,
+  "actualPnpmImplementationInputCount": 1077,
+  "sourceDrift": [],
+  "installedImplementationDrift": [],
+  "slots": {
+    "prepareMs": 240000,
+    "installMs": 1800000,
+    "helperLifecycleMs": 2160000,
+    "afterBindingMs": 600000,
+    "marginMs": 120000
+  },
+  "completeOuterMs": 4920000,
+  "findings": [],
+  "closedFindings": [
+    "第一入口monotonic固定；prepare和安装后hash都在同outer",
+    "checks分离；只安装实际PNPM1077实现及207源，不拿tsc/Vitest shim代标准检查",
+    "移除独立自造pipe/signal清理，完全复用原393f：TERM/KILL归属、实际close、ownedgroup、未知读取端有界销毁和log fd实际关闭"
+  ],
+  "constraints": [
+    "执行须root精确e2cd/abf9准入且源/Node/PNPM/helper不漂移",
+    "offline缓存缺失保真实非零；不能转联网安装",
+    "成功仅说明实际离线安装完成及真实direct undici7.27.2路径；不签transport/runtime/原MCP通过",
+    "安装后checks须新输入封印，包括实际compiler/runner/esbuild/Undici与更长case消费者",
+    "原候选与所有原失败保留；未运行新生命周期/安装实验由此评审代造"
+  ],
+  "actualExecutionByReviewer": {
+    "install": false,
+    "tests": false,
+    "build": false,
+    "server": false,
+    "PG": false,
+    "App": false,
+    "model": false
+  }
+}

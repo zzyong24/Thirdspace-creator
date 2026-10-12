@@ -1,0 +1,113 @@
+{
+  "at": "2026-10-12T00:57:29.413139+00:00",
+  "scope": "实际tool收集失败；不是目标product/body FAIL",
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID",
+  "actualCollectorExit": 1,
+  "selectedBodyExecuted": 0,
+  "selectedBodyPassed": 0,
+  "selectedBodyFailed": 0,
+  "selectedBodyUnrun": 3,
+  "failure": "mergeConfig test.include concat原frontend规则，240000 collect超时",
+  "actualListReceipt": {
+    "label": "list",
+    "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "args": [
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/vitest/vitest.mjs",
+      "list",
+      "--config",
+      "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list/vitest.config.mts",
+      "--retry=0",
+      "--bail=0",
+      "--allowOnly=false",
+      "--no-file-parallelism",
+      "--maxWorkers=1",
+      "--maxConcurrency=1",
+      "--testTimeout=180000",
+      "--hookTimeout=180000",
+      "--teardownTimeout=120000",
+      "--testNamePattern=^真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写$|^T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期$|^T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节$",
+      "--json=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/actual-list.json"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",
+    "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list.log",
+    "pid": 56570,
+    "identity": {
+      "pid": 56570,
+      "pgid": 56570,
+      "uid": 501,
+      "birth": "Mon Oct 12 08:50:43 2026",
+      "startedAt": 1791766243373
+    },
+    "startedAt": "2026-10-12T00:50:43.373Z",
+    "endedAt": "2026-10-12T00:54:43.748Z",
+    "elapsedMs": 240375,
+    "budgetMs": 240000,
+    "deadlineAt": "2026-10-12T00:54:43.373Z",
+    "budgetExhausted": true,
+    "termGraceMs": 180000,
+    "killGraceMs": 180000,
+    "signals": [
+      {
+        "signal": "SIGTERM",
+        "at": "2026-10-12T00:54:43.446Z",
+        "alreadyExited": false,
+        "members": [
+          {
+            "pid": 56570,
+            "pgid": 56570,
+            "uid": 501,
+            "birth": "Mon Oct 12 08:50:43 2026",
+            "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/vitest/vitest.mjs list --config /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list/vitest.config.mts --retry=0 --bail=0 --allowOnly=false --no-file-parallelism --maxWorkers=1 --maxConcurrency=1 --testTimeout=180000 --hookTimeout=180000 --teardownTimeout=120000 --testNamePattern=^M-gM^\\M^_M-eM-.M^^Rust journalM-bM^FM^RM-fM--M-#M-eM-<M^OM-hM-#M^EM-iM^EM^MM-bM^FM^RM-eM^EM-,M-eM^EM-1M-eM-/M-9M-hM-4M-&M-oM-<M^ZpauseM-fM^RM^^M-eM-7M-2M-fM^OM^PM-dM-:M-$M-eM^FM^YM-oM-<M^LM-eM^NM^_callM-gM-;M^SM-gM-.M^WM-eM^PM^NresumeM-dM-8M^MM-iM^GM^MM-eM-$M^MM-eM^FM^Y$|^T1252 M-fM^VM-0M-eM^GM-:M-gM^TM^_M-eM^NM^_IDM-eM^EM-,M-eM^EM-1RustM-eM-/M-9M-hM-4M-&M-eM^\\M-(ownedM-iM^XM^_M-eM^HM^W310M-gM-'M^RM-eM^PM^NM-dM-;M^MM-eM^[M^^M-eM^NM^_M-hM-/M^AM-fM^MM-.M-oM-<M^LM-dM-8M^MM-iM^GM^MM-eM-$M^MM-eM^FM^YM-fM^HM^VM-gM-;M--M-fM^\\M^_$|^T1252 M-eM^NM^_M-fM-3M-(M-eM^FM^LM-gM^IM^HM-fM^\\M-,M-gM^\\M^_M-eM-.M^^CLIM-eM^EM-,M-eM^EM-1renderM-dM-8M^IM-eM^PM^HM-fM-3M^UChromiumM-iM^XM-6M-fM-.M-5M-gM-4M-/M-hM-.M-!M-hM-6M^EM-hM-?M^G300M-gM-'M^RM-oM-<M^LPNG/PDFM-dM-;M^MM-eM^PM^LsourceHashM-fM^\\M^IM-fM^UM^HM-eM--M^WM-hM^JM^B$ --json=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/actual-list.json"
+          },
+          {
+            "pid": 57706,
+            "pgid": 56570,
+            "uid": 501,
+            "birth": "Mon Oct 12 08:54:42 2026",
+            "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node --experimental-import-meta-resolve --require /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/suppress-warnings.cjs --conditions node --conditions development /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/workers/forks.js"
+          }
+        ]
+      }
+    ],
+    "processClosed": true,
+    "remainingOwnedGroupMembers": [],
+    "persistentOwnedServer": false,
+    "outerAbort": false,
+    "code": 143,
+    "signal": null,
+    "spawnError": null,
+    "stdout": "",
+    "stderr": ""
+  },
+  "inputAfter": {
+    "allBoundSourceInstalledBrowserNodeBinaryToolSame": true
+  },
+  "ownedSurvivors": [],
+  "toolSha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9",
+  "bindingSha256": "5d62c13de340a088e612d657b422298c0026a4ad37d813d4c459c2ab884e0714",
+  "allRaw": [
+    {
+      "path": "docs/verification/t1252/actual-public-first-collection-failed/start.json",
+      "sha256": "dc04739cdb10f16fd977cc779cd459fe9f4065a270f8b1e2d8b0e8c8a4d5457f",
+      "bytes": 2206
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-first-collection-failed/list.log",
+      "sha256": "2a6c4ebf9a09029a26b333bc5937676398cd45218993cd8b7cdd0ad1a08e28cf",
+      "bytes": 37814
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-first-collection-failed/final.json",
+      "sha256": "be2e87e895a4205c3381e69ae9b3dbbc5c5cfde154ad6275cd427bf05ff7750c",
+      "bytes": 5247
+    },
+    {
+      "path": "docs/verification/t1252/actual-public-first-collection-failed/list-child.json",
+      "sha256": "305b8ee9f4a608db5dd623b12a0a975e02aebf4782cb31df40dc25102aee23d2",
+      "bytes": 4464
+    }
+  ],
+  "entireRunRootPreserved": true,
+  "sourceOrAssertionMutation": false,
+  "futureSocketLongTmpRisk": "Rust temp_dir/cw-32hex/workbench.sock>=104拒；本次无Native正文，不计Native实际FAIL"
+}

@@ -1,0 +1,108 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-12T00:53:30.322636+00:00",
+  "result": "PASS_TOOL_PINNED_PNPM_INSTALL_ONLY",
+  "task": "T-1254",
+  "scope": "T1254_OWNED_PNPM_BOOTSTRAP_INSTALL_ONLY",
+  "tool": {
+    "path": "/tmp/t1254-readonly/run-owned-pnpm-bootstrap-install-v4.cjs",
+    "sha256": "0039ae9df2c00d15a4956151bb44ea08339ac4586fc5fff14253cbc9b9e790f9"
+  },
+  "seal": {
+    "path": "/tmp/t1254-readonly/PNPM_INSTALL_V4_FULL_SEAL.json",
+    "sha256": "f12fc14aa88c9eb5ecd75b9d4c85409315d6adf7a35310974081f434b51b37b3"
+  },
+  "prepare": {
+    "path": "/tmp/t1254-readonly/PNPM_INSTALL_V4_PREPARE.json",
+    "sha256": "710b695351d06c55705cca11289c11469d7b0cc42f40e0b361f2cec2940ac744"
+  },
+  "diff": {
+    "path": "/tmp/t1254-readonly/pnpm-metadata-v3-to-install-v4.diff",
+    "sha256": "9b341dd4116bdb5b8e6fd81086bda050f1c57e4f5534acd460adfb351d3ba8fb"
+  },
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+  "sourceSnapshotDigest": "b1fc133afd30a73f766d2456bda0788df8ce528164a1f2b12a5fc8756960994f",
+  "toolDigest": "27a5bab85b30b0a0a4642858437009de1c875c4f2474a78b149fd980afe25965",
+  "checked": {
+    "sourceInputs": 24,
+    "actualNodeAndNpmImplementationFiles": 1803,
+    "fullReadHashBytes": 15425759,
+    "hashDrift": [],
+    "actualNpmVersion": "11.12.1",
+    "priorMetadataActualExit": 0,
+    "priorMetadataActualClosed": true,
+    "priorMetadataActualOwnedGroupRemaining": 0,
+    "priorMetadataActualSourceUnchanged": true
+  },
+  "actualRegistryMetadata": {
+    "version": "12.6.0",
+    "engines": {
+      "node": ">=18.*"
+    },
+    "integrity": "sha512-PvaPlRyxEawgS0paFvCy3fDaVqluBBPoHYVdnwtV75JnFHCQKOHNAMQFwsX7e56OxNxGd3yAXQNzwvL/AP0g7A==",
+    "tarball": "https://registry.npmjs.org/pnpm/-/pnpm-12.6.0.tgz",
+    "originalMetadataReceipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c/registry-metadata-projection.json"
+  },
+  "actualSourceManagers": [
+    {
+      "role": "native",
+      "archive": "reference-editors/doocs-md/native/native-source.tar.gz",
+      "archiveSha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583",
+      "packageJson": {
+        "archiveMember": "doocs-md-native/package.json",
+        "sha256": "fdab72823157a3ae6494848cf70ba333f8308da20b8170334868de6f37857e77",
+        "packageManager": "pnpm@12.6.0",
+        "engines": {
+          "node": ">=22.22.2"
+        },
+        "projectVersion": "2.1.0"
+      },
+      "lock": {
+        "archiveMember": "doocs-md-native/pnpm-lock.yaml",
+        "sha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+        "lockfileVersion": "9.0"
+      }
+    },
+    {
+      "role": "static-fixed",
+      "archive": "frontend/public/reference-editors/sources/doocs-md-a7c17fc4cda92e3c13aa7e24f06615cfa4219b31.tar.gz",
+      "archiveSha256": "9335e7d501df0271a861b787fbc3bd155da45c29bd3af5a328e421c19f655822",
+      "packageJson": {
+        "archiveMember": "package.json",
+        "sha256": "fdab72823157a3ae6494848cf70ba333f8308da20b8170334868de6f37857e77",
+        "packageManager": "pnpm@12.6.0",
+        "engines": {
+          "node": ">=22.22.2"
+        },
+        "projectVersion": "2.1.0"
+      },
+      "lock": {
+        "archiveMember": "pnpm-lock.yaml",
+        "sha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+        "lockfileVersion": "9.0"
+      }
+    }
+  ],
+  "slots": {
+    "prepare": 900000,
+    "positiveInstall": 900000,
+    "childLifecycle": 2160000,
+    "reportCleanup": 900000
+  },
+  "outerMs": 4860000,
+  "findings": [],
+  "staticProof": [
+    "入口冻结4.86M，900k准备+900k安装+393f完整2160k生命周期+900k后验；启动前重hash并核完整剩余，取消不启动后续。",
+    "24来源及1803当前Node/npm真实实现全部独立逐SHA读取0漂移；原两归档packageManager pnpm12.6、Node门与lock9.0原字节保持。",
+    "实际前一npm view五份原回执已读取：12.6版本、官方tarball及sha512，原exit0/closed/group0/sourceunchanged；raw hash纳来源，未反造历史。",
+    "唯一子进程为固定Node+已安装NPM11执行fresh owned tools的install pnpm@12.6.0，ignore-scripts/no-audit/no-fund，300k真实HTTP原预算与retry0；没有执行下载后的PNPM、两源root或构建。",
+    "完整清模型/PG/secret/NodeOptions/proxy/NPM/PNPM/corepack，独立空user/globalnpmrc和owned缓存/tmp，HOME/CODEX_HOME保原；只本组取消/关闭，根保留有明确用途。",
+    "成功必须真实0/closed/group0/source同；安装后package-lock version/integrity/resolved严格等此前metadata，并全封所有node_modules包和.bin实际目标；任何下载代码执行必须另审该实际实现。"
+  ],
+  "constraints": [
+    "本报告仅静态安装工具通过，reviewer没有运行网络/安装/子进程；ROOT仍负责exact准入。",
+    "新PNPM实现尚未产生，不以此报告签它的执行、依赖安装、测试、构建或产物复制。",
+    "不准App/用户库/官方模型/foreign PG，不修改两archive及产品来源；安装成功根有意保留不冒cleanup全删。"
+  ],
+  "runtimePermissionByReviewer": false
+}

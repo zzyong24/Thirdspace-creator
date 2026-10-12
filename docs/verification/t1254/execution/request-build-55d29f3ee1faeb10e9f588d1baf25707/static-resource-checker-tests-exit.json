@@ -1,0 +1,40 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-55d29f3ee1faeb10e9f588d1baf25707-XUM9tw/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/tmp/t1254-readonly/doocs-static-resource-checker-tests.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-55d29f3ee1faeb10e9f588d1baf25707-XUM9tw",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-55d29f3ee1faeb10e9f588d1baf25707-XUM9tw/reports/static-resource-checker-tests-results.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-55d29f3ee1faeb10e9f588d1baf25707/static-resource-checker-tests.log",
+  "pid": 84881,
+  "identity": {
+    "pid": 84881,
+    "pgid": 84881,
+    "uid": 501,
+    "birth": "Mon Oct 12 10:55:04 2026",
+    "startedAt": 1791773704636
+  },
+  "startedAt": "2026-10-12T02:55:04.636Z",
+  "endedAt": "2026-10-12T02:55:04.754Z",
+  "elapsedMs": 118,
+  "budgetMs": 180000,
+  "deadlineAt": "2026-10-12T02:58:04.636Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 65,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

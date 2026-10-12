@@ -1,0 +1,29 @@
+{
+  "specSha256": "093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19",
+  "phase": "observation-whole25",
+  "scope": "original-three-file-unknown-observation",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "sourceSnapshotDigest": "f63f0ae63ee6c1ebccf5833a323d8d4eef8850ac089d4d3a55152db922e003a3",
+  "toolDigest": "ffc6b7ada9a61d85943d3ffae3bd349b53deb3b79e6f52077a655b56f85797ef",
+  "sharedDistExclusive": true,
+  "approved": true,
+  "reviewedAt": "2026-10-11T22:44:57.636654+00:00",
+  "schema": "t1253-root-http-permission-observation-review/v1",
+  "toolSha256": "748f02c7848ba950ea0d4fb196187609720dd77c4f4a2fc21842a3ab6f34068b",
+  "independentToolReviewSha256": "9995faacfeef276cb6de0ce3db7e958ac9fccd480948e78a602c74631b7175e3",
+  "independentCandidateReviewSha256": "22cc6d38d720d8589a3a394989947e5776a274746b9f16d833f322bf812a2d87",
+  "actualInputsChecked": 3035,
+  "actualToolsChecked": 10,
+  "drift": [],
+  "slots": {
+    "body": 15300000,
+    "prepare": 2400000,
+    "cleanup": 1200000,
+    "processCleanup": 4320000
+  },
+  "totalBudgetMs": 23220000,
+  "approval": "仅两观察候选归档后精确应用、fresh重算executionReady/source/tool，执行完整原25例保原刺激与全部期望；不准校准断言或改变生产。",
+  "historicalHelperBudgetGapPreserved": true,
+  "noPG": true,
+  "noApp": true
+}

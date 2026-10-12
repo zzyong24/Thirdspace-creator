@@ -27,6 +27,7 @@ vi.mock("@tauri-apps/plugin-opener", () => ({
 }));
 
 const mockClient = {
+  getPreferences: vi.fn().mockResolvedValue({assistantExecutionEngine:"pi"}),
   patchPreferences: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   putModel: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   putChannelModelCredential: vi.fn(
@@ -61,6 +62,7 @@ const mockClient = {
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    getPreferences: () => mockClient.getPreferences(),
     getReportingStatus: () => Promise.resolve({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
     patchPreferences: (input: unknown) => mockClient.patchPreferences(input),
     putModel: (input: unknown) => mockClient.putModel(input),
@@ -169,9 +171,10 @@ const VM: SettingsViewModel = {
   douyinAccount: { loggedIn: false },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
+  mockClient.getPreferences.mockReset().mockResolvedValue({assistantExecutionEngine:"pi"});
   mockSearchParams = new URLSearchParams();
-  mockRouter.refresh.mockClear();
+  mockRouter.refresh.mockReset();
   mockClient.patchPreferences.mockClear();
   mockClient.putModel.mockClear();
   mockClient.putChannelModelCredential.mockClear();
@@ -187,6 +190,8 @@ beforeEach(() => {
     detail: "已发 1 token 真实补全,连通。",
   });
   mockOpenExternalUrl.mockReset();
+  const {loadAssistantEngine}=await import("@/features/copilot/assistant-engine");
+  await loadAssistantEngine(true);
 });
 
 afterEach(() => {
@@ -2048,4 +2053,16 @@ describe("Settings 测试连接 (T-377)", () => {
     expect(result.textContent ?? "").toContain("本地 Whisper");
     expect(result.textContent ?? "").not.toContain("✗ 失败");
   });
+});
+
+it("T1246 Codex执行引擎不要求独立文本和图片配置，ASR与视频仍保独立入口",async()=>{
+ mockClient.getPreferences.mockResolvedValue({assistantExecutionEngine:"codex"});
+ const {loadAssistantEngine}=await import("@/features/copilot/assistant-engine");await loadAssistantEngine(true);
+ renderDialog();
+ expect(document.querySelector('[data-slot="model-configuration-card"]')).toBeNull();
+ expect(document.querySelector('[data-slot="multimodal-image-card"]')).toBeNull();
+ expect(document.body).toHaveTextContent("Codex");
+ expect(document.querySelector('[data-slot="multimodal-audio-card"]')).not.toBeNull();
+ expect(document.querySelector('[data-slot="multimodal-video-card"]')).not.toBeNull();
+ expect(mockClient.putModel).not.toHaveBeenCalled();expect(mockClient.testModelConnection).not.toHaveBeenCalled();
 });

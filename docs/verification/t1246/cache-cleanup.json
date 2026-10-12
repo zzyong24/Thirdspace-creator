@@ -1,0 +1,135 @@
+{
+  "oldCandidate": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+  "reason": "磁盘仅12-13Gi可用，为当前完整验收与后续重新打包回收本任务已完成旧树的编译缓存",
+  "sourceAndVerificationPreserved": true,
+  "officialImagesPreserved": true,
+  "workerDistPreserved": true,
+  "noCwdOrCommandReferences": true,
+  "trackedCacheFiles": 0,
+  "paths": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/.next",
+      "removed": true,
+      "kind": "仅忽略的可重建编译缓存"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/src-tauri/target/debug",
+      "removed": true,
+      "kind": "仅忽略的可重建编译缓存"
+    }
+  ],
+  "startedAt": "2026-10-11T15:37:56.663751+00:00",
+  "endedAt": "2026-10-11T15:38:03.838077+00:00",
+  "oldTrackedDiff": "",
+  "actualPreservedT1238PngInventory": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/integrated-settings-connected-built.png",
+      "bytes": 95531,
+      "sha256": "873c75c91de3241895b3985dafd13a8bdce48550447a3ca30155945ee91d8857",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/integrated-settings-connected-pending-final.png",
+      "bytes": 78046,
+      "sha256": "45d00f10d96d35ab0d1bddfa24dc499b6944a9d167d9e3425f44f7cc70e2d81d",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/integrated-settings-connected.png",
+      "bytes": 79459,
+      "sha256": "6deaa359d4d900ad409930e17f03a90c64e73e8737d8dd5fd164736c65744cd6",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/integrated-settings-preference-loading-final.png",
+      "bytes": 188335,
+      "sha256": "6756c08799032b87867aa63d9e956fceace9bf2cbe4abdc2f5906757cf098779",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/native-image.png",
+      "bytes": 1012956,
+      "sha256": "07fc41e54529eac0f4ead5fd18458eb592653207cd01050768d67df4e3d654be",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-image-fifth.png",
+      "bytes": 1041054,
+      "sha256": "fa1699c26812764f4414434fbb1a1bdf515d378c78154b8795aa7c898f580cb1",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-image-reference.png",
+      "bytes": 1414662,
+      "sha256": "b6f573c10f728efdfb0114e5bb4b0c940890cc8882daf8e1f6e3a3df7abfece7",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-before-narrow.png",
+      "bytes": 52045,
+      "sha256": "a1ae37f20b31cf5f3592e33877e5ea7f33f63f45c6e81ad4bdf63d51bc7d5a8f",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-before-wide.png",
+      "bytes": 43414,
+      "sha256": "f9753adc78ab4605654bcc80b51b6c92546e44b7ce6f5a62a5be0740440d9b61",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-codex-connected.png",
+      "bytes": 94096,
+      "sha256": "a0c85ac88684f2e6a20ba471b00a946eba71307ce49b254c0a640a805622b6b1",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-model-after-narrow.png",
+      "bytes": 95533,
+      "sha256": "c946bd2cf14adb5bd1952f85221574bce5c1f4bdf69167da7acdd6fa5d8816ff",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-model-after-wide.png",
+      "bytes": 191439,
+      "sha256": "146009b867a0e6d8219ec674ec3c4ca00ed88aff9c1bf21c4dbe0fed8fcfd328",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-model-before-narrow.png",
+      "bytes": 75540,
+      "sha256": "f979fe34d5189dbc7cf9e3aadf7ba65e59ec34be47cc422c6f8c1e485e0267a1",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-model-before-wide.png",
+      "bytes": 184683,
+      "sha256": "9c9b78f8445c816b5aa8623cd400345dfd276a809dabc2e04aa06f9a47b2cc14",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-preference-loading.png",
+      "bytes": 188488,
+      "sha256": "f376de8eeb0b032c9376c47ddb6bbf568d95875adae97a0cab16154be2d8e9f2",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-save-failure.png",
+      "bytes": 98022,
+      "sha256": "890696734b7c055517c960d3223dbe9da419c93a54c5ab21eb3d8db339fd26de",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/ui-final-diagnostic.png",
+      "bytes": 43414,
+      "sha256": "f9753adc78ab4605654bcc80b51b6c92546e44b7ce6f5a62a5be0740440d9b61",
+      "existsAfterCleanup": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/ui-hydration-diagnostic.png",
+      "bytes": 36255,
+      "sha256": "9007e714ff8c201cb2a33504b55c4f9177b8ec69b3e30917e0d847f55ecc7af5",
+      "existsAfterCleanup": true
+    }
+  ],
+  "claims": "仅已完成旧树Next及Rust debug编译缓存被删，未清理用户媒体；PNG清单为当前存在和SHA，不冒称本次官方模型调用"
+}

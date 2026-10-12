@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-11T21:40:21.350609+00:00",
+  "mode": "PLAN_ONLY_NO_COPY_NO_DELETE",
+  "runRoot": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837",
+  "target": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/target",
+  "actualBinary": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/target/debug/deps/creatoros_workbench_test-aea06d844e53bf27",
+  "actualBinarySha256": "c31ca419c9adf44fd44c648c33a7b9ff24c3989a4d977c21df8ff1cc5051f6ae",
+  "currentActualBinarySHAEqual": true,
+  "currentSymlinkCount": 0,
+  "symlinks": [],
+  "regularFileCount": 8569,
+  "currentRunProcessMatches": [],
+  "cleanupReceipt": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/cleanup.json",
+  "cleanupReceiptSha256": "1d90ff6d4970b85e390f33e6e994a84207d57b5e5b50ca62036020193783febe",
+  "futurePreservedBinaryPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/preserved-binaries/browser-e71d5704466b0f07a493a837-creatoros_workbench_test-aea06d844e53bf27",
+  "orderedFutureChecks": [
+    "独立明确授权仅owned target缓存",
+    "直接字节copy新文件inode，拒既有目标/符号链接，before/after binary SHA与actual-list一致；不hardlink",
+    "保actual-list/source/manifests/log/receipts全部原字节，并记录binary新path/inode/sha",
+    "重新现场证明原wrapper/已登记children birth/uid均停止及target/root command/cwd无活引用；任何未知不删",
+    "重新全target不跟symlink盘点；逃逸/不确认拒绝清理",
+    "只删除本runRoot/target，不删runRoot其他内容，不删任何新target/Next/user数据",
+    "新Cargo只新runRoot/source/target，禁止以hardlink重编覆盖历史binary"
+  ],
+  "ownershipClaim": "当前snapshot仅准备期；真正清理前必须重新现场验证，无清理执行证明"
+}

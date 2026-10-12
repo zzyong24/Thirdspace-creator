@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-12T03:13:08.118315+00:00",
+  "originalConcernReportSha256": "bdfefe8d8a92b5be7306d9816f04aa19f3257db5381e0707a3501298664ec21c",
+  "originalConcernReportNotRewritten": true,
+  "archivalRace": "记录concerns时producer已写新61d；本reviewer原archive通用network路径实际复制了新61d，不能将该副本当旧342 source证据。原真实发现基于先前全文读342和完整oldsealed输入proof71e330，parent同时读同once(data)候选。",
+  "mistakenArchiveSha256": "61d861c7648804e1ee977d9b1d32922a0d0491bad36b3d12820fa9551d760b34",
+  "correctOldActualArchive": {
+    "path": "docs/verification/t1254/review-tool-history/v9-first-static-stream-concerns/NETWORK_ACTUAL_342B_ORIGINAL.mjs",
+    "sha256": "342bdda2341c57f6b8e298e31d5844f3faab929d9a64278d146213f1e4f9ef5b",
+    "producerOriginalHistory": "/tmp/t1254-readonly/history/v9-static-tcp-concerns/doocs-owned-network-boundary.mjs"
+  },
+  "noRuntimeFailureInvented": true,
+  "new61dCandidateSeparate": true
+}

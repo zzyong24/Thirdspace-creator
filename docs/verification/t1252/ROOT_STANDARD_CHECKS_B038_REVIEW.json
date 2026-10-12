@@ -1,0 +1,30 @@
+{
+  "schema": "root-tool-review/v1",
+  "at": "2026-10-11T23:18:00.997057+00:00",
+  "result": "ROOT_STATIC_PASS_AWAIT_INDEPENDENT_CHECKS_REVIEW",
+  "toolSha256": "b038e590570a42637a50587a6776ca107325270410c400845c33176f440fb9be",
+  "bindingSha256": "33e8590d577f86616324e2efe3a98c5a9c9010d4faae08c186f7247afcaf12f2",
+  "readFullToolAndReadme": true,
+  "actualSourceCount": 208,
+  "actualInstalledCodeFiles": 4914,
+  "installedPackageCount": 145,
+  "actualSourceDrift": [],
+  "entryFullOuterMs": 564900000,
+  "testMs": 420000,
+  "hookMs": 180000,
+  "perBodyMs": 1800000,
+  "helperLifecycleEachPhaseMs": 2160000,
+  "allEightFilesActualListingAndZeroPendingRequired": true,
+  "fiveActualPhases": [
+    "proper-mcp-types",
+    "whole-mcp-list",
+    "all-original-mcp-and-new",
+    "whole-original-scanner-and-new",
+    "actual-package-cli-build"
+  ],
+  "noRuntimeYet": true,
+  "noSlowHttpYet": true,
+  "noApp": true,
+  "noOfficialModels": true,
+  "executionRequiresIndependentReview": true
+}

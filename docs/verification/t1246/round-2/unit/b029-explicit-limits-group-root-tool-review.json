@@ -1,0 +1,35 @@
+{
+  "schema": "t1246-independent-tool-review/v1",
+  "verdict": "PASS_TOOL_ONLY",
+  "mode": "FIXTURE_EXPLICIT_LIMITS_GROUP_CANDIDATE_TEST",
+  "reviewedAt": "2026-10-11T20:38:12.932964+00:00",
+  "tools": [
+    {
+      "file": "/private/tmp/t1246-unit/run-b029-explicit-limits-group-candidate.cjs",
+      "sha256": "cf15bb92624314ad737c5444888ac6ec6fbcfeaf8363ed6187a178efef67b7b2"
+    },
+    {
+      "file": "/tmp/t1246-unit/b029-explicit-limits-group-candidate.test.ts",
+      "sha256": "0a6bbc9d52f059426d832da2459db44b4c77ff56ffaadd71484758f68c11e191"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea"
+    }
+  ],
+  "sourceDigest": "b59b499d8c5f38e7c7590eca954113bf3c88a95538c4bf267146c7f9b64539eb",
+  "candidateSha256": "0a6bbc9d52f059426d832da2459db44b4c77ff56ffaadd71484758f68c11e191",
+  "beforeClosureSha256": "e60609b3da6a64c1220fd2e12dc1e3c045edf453f2ab585fa70f946d501b9685",
+  "independentCandidateReview": "/tmp/t1246-b029-explicit-limits-independent-review.json",
+  "findings": [],
+  "facts": [
+    "独立私有三workspace source完整复制逐SHA比对，本地workspace imports改私有，第三方installed dependency只读链接有package SHA，不宣称全部E2E私有克隆。",
+    "原B0296e1f不改，临时候选走真实账号服务及真实spec.params，全部原三body状态/请求次数/断言保留。",
+    "2520000ms完整三case执行槽+360000ms owned cleanup+720000ms prepare构成3600000ms outer，独立AbortController监督，不int32溢出；prepare超720000拒绝。",
+    "新nonce数据/输出，清PG与模型/业务环境，deny-old-PG preload；不创建PG/主App、不读取或构建共享dist。"
+  ],
+  "limits": [
+    "只准当前精确候选与工具的一次whole三例，不代签生产修复、真实平台或最终全功能。",
+    "所有真实失败及第一轮输出保持；若source/tool漂移拒绝重用本回执。"
+  ]
+}

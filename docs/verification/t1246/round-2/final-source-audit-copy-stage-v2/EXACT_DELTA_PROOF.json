@@ -1,0 +1,10 @@
+{
+  "previousSource162SHA": "162557019cfc099019e46263753b0375e31c3abdb62587f3f6da5c73c86d3e2b",
+  "candidateSHA": "b7de338755fc8558b02ac8257ea8e92adcad61e3c611b4310556faa7de162e4b",
+  "forwardSHA": "10f80c61788422d6c161e6377c50a54057444253d30c245ee9fc7a3cfa08f20a",
+  "inverseSHA": "b23b03b06b6e03bdaca1cfacb4bcfed80d4d8ddd91e35a8807e2bd7fd3e65b98",
+  "fullContextMechanicalForwardInverseExact": true,
+  "scope": "只把stage检查对应真实receipt126paths；其它批准275/100的stage状态如实记录，完整SHA/未知0/Git raw不减",
+  "newStageAuditNotFinalCommitSeal": true,
+  "auditOrGitNotExecuted": true
+}

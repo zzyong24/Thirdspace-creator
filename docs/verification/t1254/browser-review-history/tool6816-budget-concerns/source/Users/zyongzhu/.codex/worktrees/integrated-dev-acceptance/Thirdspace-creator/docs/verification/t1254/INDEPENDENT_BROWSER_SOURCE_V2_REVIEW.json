@@ -1,0 +1,87 @@
+{
+  "schema": "independent-browser-source-review/v1",
+  "task": "T-1254",
+  "at": "2026-10-12T02:36:55.968835+00:00",
+  "result": "PASS_BROWSER_SOURCE_ONLY",
+  "sourceSha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+  "oldSourceSha256": "014a276cb46db9c217516367626d869112aa94162f8b309743a8c46012fce9ba",
+  "files": [
+    {
+      "path": "docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "sha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee"
+    },
+    {
+      "path": "docs/verification/t1254/browser-candidate/MARKER_V2_ONLY.diff",
+      "sha256": "9a10e90308c2ffa6c36cc900ce995d57e70cdc0bfa44789498b8f9a4e632d44f"
+    },
+    {
+      "path": "docs/verification/t1254/browser-candidate/SOURCE_V2_BINDING.json",
+      "sha256": "74e21edf5b2803b2dbd5f885233c40363a3a8d5dc0d339d12f5293e9895acbcc"
+    },
+    {
+      "path": "docs/verification/t1254/browser-candidate/DRIVER_TYPES.json",
+      "sha256": "9cac21266aa3b2aaedd24077128a06ec619b791164d43da5cf9a5dd795a9e338"
+    },
+    {
+      "path": "docs/verification/t1254/browser-candidate/STATIC_PARSE.json",
+      "sha256": "d12397d129d7f54cdfffdf77908e9ed65b8b6acb75e120de00fbc758abd871ee"
+    },
+    {
+      "path": "docs/verification/t1254/browser-candidate/MODULE_RESOLUTION_BOUNDARY.json",
+      "sha256": "e5ac3cb6a02c27c51a2867de9dbc8ca844321b388ef4de1b97b172150fef9381"
+    }
+  ],
+  "consumers": [
+    {
+      "path": "frontend/src/features/article/doocs-markdown.ts",
+      "sha256": "1e12a602e5b28d5d50c57920a986d14ff5b263d6b09bca6a42045c3c7dcc2aa8"
+    },
+    {
+      "path": "frontend/src/features/article/doocs-article-editor.tsx",
+      "sha256": "18756ac113c0eff92714d7cef592faa6362a25376059f90c703d7100f0503877"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "sha256": "51d9d93625b0bc7936e2dab01801ee6750266e09d9408a4027babfe757d1ebf4"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/reference-editor-media.ts",
+      "sha256": "831f3355d3abb908af63ff49b00bc105c1bbe5ab11b77c1cf9437344f5bf6194"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-surface.tsx",
+      "sha256": "7a8b3b2c37a78a568940b4c5a8ae35ac111ba7cd215da20e835c5fca269ce879"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-loader.ts",
+      "sha256": "ab09e9b6eace951ca14559b62c01db0f8496d56a11d6e3562d7d28a2cc7acf29"
+    }
+  ],
+  "fullBodyAndConsumersRead": true,
+  "sourceChangesOnlyApprovedMarkerCorrection": true,
+  "findingClosure": {
+    "T1254-BR001": "原marker/真实IDs和全部顺序由短UI完整.cm-line取出，与public articles.get当前section IDs逐一严格相等，唯一明确旧用户正文出现计数1后只替换正文；标记与原heading/顺序保留，不生成IDs或松parser"
+  },
+  "proof": [
+    "2视口独立owned组/项目，真实Next文章创建/手写/保存→LazyDisclosure→open Shadow DOM/Vue/CodeMirror；原生产loadNativeEditor实际import本地native.js及CSS。",
+    "宿主input image/*→原NativeEditorSurface onImport→getOutput归属→真实uploadEditorMedia.createUpload/PUT/complete/link；保存通过snapshot/documentFromSnapshot和ArticleWorkbench指定版本readback，刷新正文和原asset ID/fileID恢复。",
+    "新manifest完整bundleFiles中每个实际native响应逐字节SHA200对账；实际sourcearchive本地最终URL/SHA与新provenance一致，entryCSS均实际加载；这是浏览器实际已加载图，不冒全产物图验证。",
+    "公开saved image.asset/file准确下载原PNG字节SHA；未调用模型、图床、平台或App，context请求/WS外网拒绝且denied必须空，backend外网/runner隔离另待runtime封印。",
+    "页面截图实际attach3点+afterEach、trace要求runner开启；源码SHA/commit/package环境64/40hex只声明，未来runner必须从真实exact receipt验证，不能靠环境声明签真包。"
+  ],
+  "runtimeConditions": [
+    "新two-source实际build/完整graph/provenance/delivery exactmanifest双审及应用",
+    "clean新commit/11Workers/newDMG45安全/SHA闭包",
+    "freshownedfrontend/tests-t1254-doocs同字节copy后proper types和实际--list精确两body，Node/Chrome/依赖/数据库/媒体/root归属/预算/所有者清理工具独审",
+    "retry0/workers1/action/request/expect/navigation>=120000，每body72M，外层覆盖两body和启动/hook/cleanup且分段冻结"
+  ],
+  "findings": [],
+  "typesBoundary": "已有5.9.3 createProgram strict/noEmit使用frontend真实@playwright/test paths为该driver0，无globalfrontend/运行module/listPASS；旧相对路径16错误保全",
+  "selectorRuntimeProved": false,
+  "deliveryAvailable": false,
+  "reviewerExecutedBrowserOrTypes": false,
+  "runtimePermissionByReviewer": false,
+  "reviewerChangedProduction": false,
+  "AppAcceptancePassed": false,
+  "firstRuntimeFailed": false
+}

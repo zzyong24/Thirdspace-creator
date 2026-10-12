@@ -1,0 +1,110 @@
+{
+  "at": "2026-10-11T20:12:42.674Z",
+  "checks": [
+    {
+      "profile": "official",
+      "kind": "missing",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "official",
+      "kind": "NaN",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "official",
+      "kind": "zero",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "official",
+      "kind": "wrong-count",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "protocol",
+      "kind": "missing",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "protocol",
+      "kind": "NaN",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "protocol",
+      "kind": "zero",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "protocol",
+      "kind": "wrong-count",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "pi",
+      "kind": "missing",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "pi",
+      "kind": "NaN",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "pi",
+      "kind": "zero",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "profile": "pi",
+      "kind": "wrong-count",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "kind": "extra-profile",
+      "refusedBeforeRuntime": true
+    }
+  ],
+  "valid111": {
+    "official": {
+      "bodyCount": 103,
+      "bodySlotMs": 72000000,
+      "workerFixtureTeardownSlotMs": 72000000,
+      "twoHookSlotsMs": 360000,
+      "startupSlotsMs": 1800000,
+      "commandSlotMs": 240000,
+      "ownedCleanupSlotMs": 4800000,
+      "readonlyLedgerSlotMs": 1200000,
+      "reportSlotMs": 600000,
+      "outerMs": 14877720000
+    },
+    "protocol": {
+      "bodyCount": 7,
+      "bodySlotMs": 72000000,
+      "workerFixtureTeardownSlotMs": 72000000,
+      "twoHookSlotsMs": 360000,
+      "startupSlotsMs": 1800000,
+      "commandSlotMs": 240000,
+      "ownedCleanupSlotMs": 4800000,
+      "readonlyLedgerSlotMs": 1200000,
+      "reportSlotMs": 600000,
+      "outerMs": 1019160000
+    },
+    "pi": {
+      "bodyCount": 1,
+      "bodySlotMs": 72000000,
+      "workerFixtureTeardownSlotMs": 72000000,
+      "twoHookSlotsMs": 360000,
+      "startupSlotsMs": 1800000,
+      "commandSlotMs": 240000,
+      "ownedCleanupSlotMs": 4800000,
+      "readonlyLedgerSlotMs": 1200000,
+      "reportSlotMs": 600000,
+      "outerMs": 153000000
+    }
+  },
+  "manifestSha256": "da9b1f6be8e7d039cb8a60d1f31ab5a90fa9b2eed9863ec6344fbabab497817a",
+  "validatorSha256": "415eb94f052bde9e9197ad41605ff0a407a7136236f3eafb6e4191795fef38f4",
+  "noRuntime": true
+}

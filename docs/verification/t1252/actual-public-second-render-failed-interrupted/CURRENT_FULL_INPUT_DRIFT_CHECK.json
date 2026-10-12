@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-12T02:15:19.266996+00:00",
+  "counts": {
+    "inputs": 2207,
+    "installedInputs": 111831,
+    "browserInputs": 337
+  },
+  "bytesHashed": 2466741485,
+  "elapsedMs": 21436.49029097287,
+  "drift": [],
+  "isPostInterruptionCurrentObservation": true,
+  "doesNotBackfillMissingFinalReceipt": true
+}

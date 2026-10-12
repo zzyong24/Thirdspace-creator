@@ -1,0 +1,321 @@
+{
+  "errorsVerbatim": [
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-rDOOcLd1.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-DUTywkQa.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-BEywkWYm.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-CPpQMmMv.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-0WQyHr22.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-B64hzoVj.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/config-CS1KboEo.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bubu1InB.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/oauth-B-yEgkSe.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/providers-Bmgr2ar7.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/render-BKss5lW7.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bp20Gpjz.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-w4Z-KUpo.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-ClCBoDF9.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/css/md-index-BloSDdq8.css",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-BShGTSED.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-Uxnqxt0m.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-CAAfHrue.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Dwecx1yJ.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-FVBRez8G.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-BjP8WUy_.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CM7_3dsC.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D5100ikB.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-NF3jLaOG.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-CguVq_vs.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-Cbto2qFZ.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-fbhZdm1E.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-DDERPDI0.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-Cue0FhPF.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-DCHHMNez.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CM56dGUF.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-DtMUyz1f.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-CO41N3bd.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-auth-BXbgldX_.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-client-BB2xPD1D.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-AxY1c5Fn.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-export-D0-VySQO.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-B304ID7X.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-index-CpBfvD8M.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-markdown-DOEEgCa0.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-marketplace-DkjF6lU2.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-oauth-DuO7yV8Y.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-post-slider-BiY6y-Z9.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-providers-Dg1U5yAr.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-BGmxJIbL.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-sync-pbgNQam0.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-ui-Blb0P3M9.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-zoTJhDnV.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-C5h1ZRIv.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-D5hGf28N.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-DWbsbzfW.js",
+    "unexpected rename/copy frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-dvEItN-h.js"
+  ],
+  "actualGitRenameCopyRows": [
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-rDOOcLd1.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-B_etG6Rp.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-DUTywkQa.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-luI7Wkxl.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-BEywkWYm.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-Cl7WEyAt.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-CPpQMmMv.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-B7Jpldbh.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-0WQyHr22.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-BXHl_kMQ.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-B64hzoVj.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-wZLC_pTV.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/config-CS1KboEo.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bubu1InB.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-Bd_SEvWI.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-B-yEgkSe.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-CN0-Wcs0.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/providers-Bmgr2ar7.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/providers-5OiUFt8V.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/render-BKss5lW7.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/render-C0-GwsvR.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bp20Gpjz.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-Bz80_cwg.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-w4Z-KUpo.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-CP-K_yWo.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-ClCBoDF9.js",
+      "source": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-BawQ5Q6I.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/css/md-index-BloSDdq8.css",
+      "source": "frontend/public/reference-editors/doocs-md/static/css/md-index-9PNpNGUa.css"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-BShGTSED.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-AccountDialog-C-l5A6vK.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-Uxnqxt0m.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-CssEditor-DfNpoxs6.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-CAAfHrue.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-CustomComponentDialog-BO3RH86h.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Dwecx1yJ.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-EditorStateDialog-Be9_RozG.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-FVBRez8G.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-EmojiManagerPanel-BJdrURW-.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-BjP8WUy_.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-FormulaEditorDialog-C1zEtBm-.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CM7_3dsC.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-ImportMarkdownDialog-CB74oqBL.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D5100ikB.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-LocalImageUploadDialog-D8m8Y5IS.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-NF3jLaOG.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-MarketplaceDialog-TEm2HKiq.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-CguVq_vs.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-PdfExportDialog-C-hBAbgh.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-Cbto2qFZ.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-PreferencesDialog-9ZpYLtCg.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-fbhZdm1E.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-RightSlider-DEpTD7Ru.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-DDERPDI0.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-ShareDialog-CNJopoPm.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-Cue0FhPF.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-SlashCommandMenu-eximbpzJ.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-DCHHMNez.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-SyncDialog-BXqfIH1Q.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CM56dGUF.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-TableEditDialog-CPsXDRjK.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-DtMUyz1f.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-TemplateDialog-BjUIeOur.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-CO41N3bd.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-UploadImgDialog-BsDUHnIi.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-auth-BXbgldX_.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-auth-Lj20kOUp.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-client-BB2xPD1D.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-client-BtSlI_Gv.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-AxY1c5Fn.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-emojiPack-BLaxswny.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-export-D0-VySQO.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-export-BG6p5-Wz.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-B304ID7X.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-folder-source-panel-DYwdTMDU.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-index-CpBfvD8M.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-DOEEgCa0.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-markdown-CFPNYZKu.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-DkjF6lU2.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-marketplace-CSX1gdNq.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-DuO7yV8Y.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-oauth-BCzwh0d_.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-BiY6y-Z9.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-post-slider-aZldM3cv.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dg1U5yAr.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-providers-Dc8_KifI.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-BGmxJIbL.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-slashCommands-y0FDEGp1.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-sync-pbgNQam0.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-sync-DJtROAMh.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Blb0P3M9.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-zoTJhDnV.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useEditorRefresh-Cv1siQDW.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-C5h1ZRIv.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useImageUploader-B72X2veA.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-D5hGf28N.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedBuiltinComponents-BYymQo69.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-DWbsbzfW.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useLocalizedStyleOptions-D-3eBhAl.js"
+    },
+    {
+      "status": "R ",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-dvEItN-h.js",
+      "source": "frontend/public/reference-editors/doocs-md/static/js/md-useSyncStatusMeta-Cw9gwpgj.js"
+    }
+  ],
+  "notProductMutationOrBudgetFailureDetermination": true,
+  "auditToolFAILPreserved": true,
+  "newToolChangeOrRetryExecuted": false
+}

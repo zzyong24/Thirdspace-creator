@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "frozenCandidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "actualSessionId": 60183,
+  "actualExitCode": 0,
+  "sourceAndWorkers": {
+    "before": {
+      "sourceCount": 253,
+      "workerCount": 11,
+      "errors": []
+    },
+    "after": {
+      "sourceCount": 253,
+      "workerCount": 11,
+      "errors": []
+    }
+  },
+  "retainedDataRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-t1246-settings-history-yQfWKd",
+  "ownershipAfter": [
+    {
+      "pid": 42794,
+      "exitCode": 1,
+      "output": ""
+    },
+    {
+      "pid": 42812,
+      "exitCode": 1,
+      "output": ""
+    }
+  ],
+  "portAfter": {
+    "port": 61348,
+    "exitCode": 1,
+    "stdout": ""
+  },
+  "files": [
+    {
+      "path": "direct-settings-close-after-close.png",
+      "sha256": "0a769127a6652efc8ec85cada3d2103af6005b8b8543333a63591985d8ec360b",
+      "bytes": 6897
+    },
+    {
+      "path": "direct-settings-close-before-close.png",
+      "sha256": "ea248979afcc760adebc454f2babd16e2efd5057f3c2bd589a11f02f0f8f6df9",
+      "bytes": 115204
+    },
+    {
+      "path": "direct-settings-close-trace.zip",
+      "sha256": "4a8c40460bd1214541895019fd1cec8c1aa6453bc896563f899f01ef3bc659e3",
+      "bytes": 1389978
+    },
+    {
+      "path": "events.jsonl",
+      "sha256": "a9906f0aa777e60505c24ab67910270541b48ea491bb60623202dc251b2d39f8",
+      "bytes": 5660
+    },
+    {
+      "path": "next-cleanup.json",
+      "sha256": "19e85293cded4134d0498e2e31f5312e3260db621b8c7051c9832414100c2cff",
+      "bytes": 593
+    },
+    {
+      "path": "next-launch.json",
+      "sha256": "041d904a1c3cc16d804dc8523ff57629f80eaa0dae59f6e39c1f3e32200781e2",
+      "bytes": 2117
+    },
+    {
+      "path": "result.json",
+      "sha256": "92ee47206574f0b117fd285aa3408b35df207b305a9869dcc4f0098ca724f057",
+      "bytes": 9717
+    },
+    {
+      "path": "server.log",
+      "sha256": "47c919dde9705fbb01c97320a694327e6473cd790c6e924aa068089cc0fb605c",
+      "bytes": 4093
+    },
+    {
+      "path": "sidebar-close-after-close.png",
+      "sha256": "7fb89b424325ec9609e10636476bb036ef0a7a4a671a7f80fa9c469c97a42f13",
+      "bytes": 89004
+    },
+    {
+      "path": "sidebar-close-before-close.png",
+      "sha256": "17f2a7e1f17fc54400553b3d5266d0f6d798e8522c6fe21abf8119c43bde3a74",
+      "bytes": 115307
+    },
+    {
+      "path": "sidebar-close-trace.zip",
+      "sha256": "af0cb18ea66045f1e571fd7d849a0e4e7f2d5f6e8a08641583cd30c9087e1d22",
+      "bytes": 4599320
+    },
+    {
+      "path": "tool.cjs",
+      "sha256": "c37517e4cf8ba8129cc39e6e18f0f23ff08f0f8f8a325c4402204b3b24f508c8",
+      "bytes": 10761
+    }
+  ],
+  "notOriginalAcceptance": true,
+  "officialModelCalls": 0,
+  "nativeAppExecuted": false
+}

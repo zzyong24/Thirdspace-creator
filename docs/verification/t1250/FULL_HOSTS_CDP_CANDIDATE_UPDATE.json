@@ -1,0 +1,33 @@
+{
+  "schema": "readonly-candidate-update/v1",
+  "at": "2026-10-12T00:01:29.074078+00:00",
+  "initialReportUnchanged": {
+    "path": "docs/verification/t1250/FULL_HOSTS_CDP_FIRST_ISOLATION_DIAGNOSIS.json",
+    "sha256": "e7ac402b2a04377589a8bb57a4c4a1406e5f407419be1f2854b2f2330bc8a578"
+  },
+  "initialBindingExactArchive": {
+    "path": "/tmp/t1250-regression-isolation-candidate/source-binding-unexecuted-abceccbb.json",
+    "sha256": "abceccbb11bfe7d2035abaac64fb5901bda14cad47e9e09513c980db6ffcbd4d"
+  },
+  "currentCandidateBinding": {
+    "path": "/tmp/t1250-regression-isolation-candidate/source-binding.json",
+    "sha256": "69c44b1c1a25bb93db4764c8e8fc1bd064aa9938339d962e70bd8065bba45f86"
+  },
+  "staticASTProof": {
+    "path": "/tmp/t1250-regression-isolation-candidate/static-body-budget-proof.json",
+    "sha256": "1a4f700e2611c4e784f087f3e6dfc9015c7290fa486c972eec19e4ab15b53950"
+  },
+  "v9ToolBinding": {
+    "path": "docs/verification/t1250/tools-candidate/V9_CANDIDATE_BINDING.json",
+    "sha256": "119f3c49230b4174fa9b596681341c9793f51ea887150e1428ea57d1a4700cac"
+  },
+  "newCleanupConstraint": "hosts独立库开后完整setup/body均outer finally关闭，旧109准备候选未执行保留",
+  "findingsUnchanged": [
+    "FI001",
+    "FI002"
+  ],
+  "sourceModified": false,
+  "runtime": false,
+  "originalFailedResultsUnchanged": true,
+  "independentReviewPending": true
+}

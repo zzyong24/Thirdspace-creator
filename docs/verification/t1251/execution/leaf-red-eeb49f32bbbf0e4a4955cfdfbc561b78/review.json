@@ -1,0 +1,17 @@
+{
+  "specSha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84",
+  "phase": "leaf-red",
+  "scope": "original-source-generation-whole-phase",
+  "sourceSnapshotDigest": "ff3ecf3758831cdc7c879da1935c3b41815163aacacabe77c88a483ca696299c",
+  "toolDigest": "cb0d92d0e741dfd32bd8d6d4d89a5dd821ee6fe1cf382618bb7ff62d20e53770",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "approved": true,
+  "reviewedAt": "2026-10-11T21:25:00Z",
+  "reviewer": "root",
+  "candidateLeafSha256": "3758fa3b71a58e3a3238467491233f6ae6efa73c3145f449961259dbf88b2fb8",
+  "constraints": [
+    "只应用新leaf测试；生产保留a534，whole保留590",
+    "实际10例RED必须核命名失败栈；不将收集或schema错误作为因果证据",
+    "全过程源与工具绑定、真实closed与group0，不运行App/PG；本签不授权后续生产或whole候选"
+  ]
+}

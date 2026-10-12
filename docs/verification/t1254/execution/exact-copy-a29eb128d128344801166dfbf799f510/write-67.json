@@ -1,0 +1,10 @@
+{
+  "path": "reference-editors/doocs-md/native/NATIVE_PATCHES_FROM_T1049.diff",
+  "after": {
+    "sha256": "ba256e44dacee468db1d3ae82c17ad98a3d607bedb67149c15a57a8a86a41cbd",
+    "size": 210567,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

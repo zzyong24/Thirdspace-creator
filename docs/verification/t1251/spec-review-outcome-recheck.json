@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "已逐字核旧254310→新79ea仅FR-1251-OUTCOME一句纠正文案。真实complete已将坏结构/空候选写transient、retryable:true、sideEffect:none，并保parent工具完整settled回执；原projection版本1与尾模型/零交付条件仍严格，其他族no_evidence不变。三写集/公开合同不扩，未实测partial或模型计数，须后续实际完整账本及逐候选独评。不发现该规格澄清阻断；候选运行工具/fixture cleanup另审，不代签。",
+  "findings": []
+}

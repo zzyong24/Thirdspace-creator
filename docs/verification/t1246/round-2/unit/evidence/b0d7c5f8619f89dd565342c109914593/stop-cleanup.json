@@ -1,0 +1,43 @@
+{
+  "file": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/pg_ctl",
+  "args": [
+    "-D",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-THR0La/data",
+    "-w",
+    "-t",
+    "180",
+    "-m",
+    "fast",
+    "stop"
+  ],
+  "pid": 63554,
+  "identity": {
+    "pid": 86029,
+    "pgid": 86029,
+    "uid": 501,
+    "birth": "Mon Oct 12 05:11:41 2026",
+    "startedAt": 1791753101839
+  },
+  "startedAt": "2026-10-11T21:11:41.839Z",
+  "endedAt": "2026-10-11T21:11:42.096Z",
+  "elapsedMs": 257,
+  "budgetMs": 360000,
+  "deadlineAt": "2026-10-11T21:17:41.839Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "waiting for server to shut down.... done\nserver stopped\n",
+  "stderr": "",
+  "nonce": "b0d7c5f8619f89dd565342c109914593",
+  "exactRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-THR0La",
+  "postmasterPidAbsent": true,
+  "cleanupOwnedRoot": true
+}

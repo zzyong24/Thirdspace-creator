@@ -1,0 +1,9 @@
+{
+  "task": "T-1246",
+  "passed": true,
+  "bindingSha256": "7391c163398d7fe7f7b11fbcd51d5482da3005e07fef5aa9e2c974b028a6047c",
+  "fullRows": 343,
+  "readBytes": 12743239,
+  "scope": "only new pure admission static full byte check; no whole runtime admission",
+  "noCandidateExecution": true
+}

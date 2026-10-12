@@ -1,0 +1,1955 @@
+{
+  "task": "T-1251",
+  "candidateSha256": "fa4f5498f379fac868d4f3912c83e86b4556847a6e41e01342b310f9edc80fe2",
+  "evidence": "docs/verification/t1251/execution/whole-stage1-4fc0261d7b2741fab63e11cf238fe4a0",
+  "cases": 22,
+  "passed": 18,
+  "failed": 4,
+  "skipped": 0,
+  "actualChildExit": 1,
+  "elapsedMs": 73030,
+  "closed": true,
+  "groupRemaining": [],
+  "sourceUnchanged": true,
+  "ownedDirCleaned": true,
+  "failures": [
+    {
+      "ancestorTitles": [],
+      "fullName": "同一真实 Worker 内部结构化生成：badOutput",
+      "status": "failed",
+      "title": "同一真实 Worker 内部结构化生成：badOutput",
+      "duration": 1892.3040419999961,
+      "failureMessages": [
+        "AssertionError: expected 'partial' to be 'succeeded' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:133:24\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "meta": {},
+      "tags": []
+    },
+    {
+      "ancestorTitles": [],
+      "fullName": "同一真实 Worker 内部结构化生成：crashMixed",
+      "status": "failed",
+      "title": "同一真实 Worker 内部结构化生成：crashMixed",
+      "duration": 4499.006874999999,
+      "failureMessages": [
+        "AssertionError: expected [ { model: 'fixture', …(7) }, …(5) ] to have a length of 5 but got 6\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:141:20\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "meta": {},
+      "tags": []
+    },
+    {
+      "ancestorTitles": [],
+      "fullName": "同一真实 Worker 内部结构化生成：diagnosisEmpty",
+      "status": "failed",
+      "title": "同一真实 Worker 内部结构化生成：diagnosisEmpty",
+      "duration": 4530.969458000007,
+      "failureMessages": [
+        "AssertionError: expected 'partial' to be 'succeeded' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:133:24\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "meta": {},
+      "tags": []
+    },
+    {
+      "ancestorTitles": [],
+      "fullName": "真实enqueue从出生冻结有限结构化生成期限，原Worker到期不续期/重发/写正式候选",
+      "status": "failed",
+      "title": "真实enqueue从出生冻结有限结构化生成期限，原Worker到期不续期/重发/写正式候选",
+      "duration": 33.451416999989306,
+      "failureMessages": [
+        "AssertionError: expected { id: 'ai-task-finite-66', …(18) } to match object { id: 'ai-task-finite-66', …(3) }\n(17 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts:182:44\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ],
+      "meta": {},
+      "tags": []
+    }
+  ],
+  "capturedControlledTraces": [
+    {
+      "mode": "success",
+      "executionTaskId": "execution-task-b199ac20-d34d-4b88-b689-7837945831ab",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_6c367f21-7572-4f3e-9864-a03ddd740766",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-3/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:30:48.923Z",
+          "updatedAt": "2026-10-11T21:30:48.969Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_9eec61c4-d019-4bc8-8d1c-6978d8b0044d",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:c8f5469bfe132b31c7cc0571df963e397665d3b552a12a3231f4efef26188468",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:30:49.054Z",
+          "updatedAt": "2026-10-11T21:30:49.476Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_41492f0a-f978-4f59-aea6-4235fd3b8287",
+          "kind": "model",
+          "parentCallId": "call_9eec61c4-d019-4bc8-8d1c-6978d8b0044d",
+          "operationKey": "structured:call_9eec61c4-d019-4bc8-8d1c-6978d8b0044d:702ae368e9646735d2c209cce57fdd8fa35208a1e906f2f6aa53d47774b7b8a4/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:30:49.330Z",
+          "updatedAt": "2026-10-11T21:30:49.401Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_46df590f-4110-436f-8450-9086ca281ca5",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-3/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:30:49.538Z",
+          "updatedAt": "2026-10-11T21:30:49.604Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "cancel",
+      "executionTaskId": "execution-task-12abadb9-37d1-47ac-85e3-aeddae4747de",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        }
+      ],
+      "status": "cancelled",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_8b5b1bdc-e2ac-4f8f-b4f5-03bf50ac9bf5",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-6/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:30:50.522Z",
+          "updatedAt": "2026-10-11T21:30:50.572Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_e89e1bc1-f2a1-46dd-9905-4642336d805b",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:1d292fc87fd237fe90d80c24171fd46a192bc4090005c7ae2c72dd7e9c40138e",
+          "status": "unknown",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:30:50.652Z",
+          "updatedAt": "2026-10-11T21:30:51.277Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_c9492eb2-80d9-43ef-93a9-c474f60980fb",
+          "kind": "model",
+          "parentCallId": "call_e89e1bc1-f2a1-46dd-9905-4642336d805b",
+          "operationKey": "structured:call_e89e1bc1-f2a1-46dd-9905-4642336d805b:dfe0cd3a3a1a2ea6a9ae7ad4afacc52bda65a33d0d403506c73c93981d49b9a5/model/1",
+          "status": "unknown",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:30:50.898Z",
+          "updatedAt": "2026-10-11T21:30:51.268Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "reject401",
+      "executionTaskId": "execution-task-f8ee0f78-e547-438d-ad6f-ec938dc7fb37",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        }
+      ],
+      "status": "waiting_user",
+      "deadlineAt": null,
+      "lastErrorCode": "auth_401",
+      "calls": [
+        {
+          "id": "call_a0bf32f0-e441-4451-9270-b7c182a1ce0d",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-9/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:30:52.147Z",
+          "updatedAt": "2026-10-11T21:30:52.188Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_cebbe125-7f31-4fba-968b-7f695a4d1224",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:e6e663a4536e1e8021aef4b2d0af05af8db1678d5efd7f86bc5c337f0df4946f",
+          "status": "started",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:30:52.268Z",
+          "updatedAt": "2026-10-11T21:30:52.279Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_e7a6a470-1345-4627-9f34-06f5684fdac5",
+          "kind": "model",
+          "parentCallId": "call_cebbe125-7f31-4fba-968b-7f695a4d1224",
+          "operationKey": "structured:call_cebbe125-7f31-4fba-968b-7f695a4d1224:d8154f2ab1cb0af733e2129e5265482b6e737e3c098e69f7c4961a239c4bd006/model/1",
+          "status": "rejected",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:30:52.511Z",
+          "updatedAt": "2026-10-11T21:30:52.580Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "reject401resume",
+      "executionTaskId": "execution-task-4362fb57-5245-4a61-9f42-e0cc22c1b877",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_1bb8d3f6-a6b7-4d7c-ad21-1a2ba73c11d6",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-12/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:30:53.588Z",
+          "updatedAt": "2026-10-11T21:30:53.629Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_d51b322e-4f8c-4966-a2a7-a72c2cbbfb51",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:6a4fc7ed444bdf384a451e4b681f63bcc3637ec370d32744fc36a550b463f855",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:30:53.708Z",
+          "updatedAt": "2026-10-11T21:30:55.315Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_72f7f1cd-299f-4141-9f11-2c79e4f0feb7",
+          "kind": "model",
+          "parentCallId": "call_d51b322e-4f8c-4966-a2a7-a72c2cbbfb51",
+          "operationKey": "structured:call_d51b322e-4f8c-4966-a2a7-a72c2cbbfb51:7f262ea8743c72e8cc3195d80fe829a0b413cc6277747f39bf8630199e02be27/model/1",
+          "status": "rejected",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:30:53.950Z",
+          "updatedAt": "2026-10-11T21:30:54.020Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_08d64037-a537-4721-9dab-e2245bec0f6d",
+          "kind": "model",
+          "parentCallId": "call_d51b322e-4f8c-4966-a2a7-a72c2cbbfb51",
+          "operationKey": "structured:call_d51b322e-4f8c-4966-a2a7-a72c2cbbfb51:7f262ea8743c72e8cc3195d80fe829a0b413cc6277747f39bf8630199e02be27/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:30:55.158Z",
+          "updatedAt": "2026-10-11T21:30:55.246Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_b7cd565f-6a35-4bd8-bb65-f1e859efbfd0",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-12/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:30:55.566Z",
+          "updatedAt": "2026-10-11T21:30:55.628Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "reject429",
+      "executionTaskId": "execution-task-bf41eca0-a366-43bd-8cc4-e31c60f2e0e5",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_de20c06e-8dc3-4449-9601-9c19b03df48c",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-15/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:30:56.509Z",
+          "updatedAt": "2026-10-11T21:30:56.557Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_99ba2c5b-dc38-498b-9923-3a4c4413164f",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:9ab99a709cc1e24adbb392c9244b4926af65296a21b672d3384595075da1829a",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:30:56.648Z",
+          "updatedAt": "2026-10-11T21:31:00.832Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_f4dc6753-a0c6-4e8c-87ad-df2b27ae3e6f",
+          "kind": "model",
+          "parentCallId": "call_99ba2c5b-dc38-498b-9923-3a4c4413164f",
+          "operationKey": "structured:call_99ba2c5b-dc38-498b-9923-3a4c4413164f:fc78bcc65a10560c7e9b17ae26b4c577b9fcffa853db52ca7ff4b22cbbf1d565/model/1",
+          "status": "superseded",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:30:56.991Z",
+          "updatedAt": "2026-10-11T21:30:57.059Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_4a604cdf-466e-4f87-ba82-50e3704af21c",
+          "kind": "model",
+          "parentCallId": "call_99ba2c5b-dc38-498b-9923-3a4c4413164f",
+          "operationKey": "structured:call_99ba2c5b-dc38-498b-9923-3a4c4413164f:fc78bcc65a10560c7e9b17ae26b4c577b9fcffa853db52ca7ff4b22cbbf1d565/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:00.675Z",
+          "updatedAt": "2026-10-11T21:31:00.764Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_1b463767-2546-4959-bd2d-d06fe03ea2d9",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-15/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:01.084Z",
+          "updatedAt": "2026-10-11T21:31:01.150Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "reject429drop",
+      "executionTaskId": "execution-task-2665d033-14b5-49b5-93ec-a933479c2119",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_e4758140-d248-4f0a-9636-34cf69f7e4fb",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-18/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:02.044Z",
+          "updatedAt": "2026-10-11T21:31:02.084Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_fa94c136-750d-471d-825c-fb0d9d69e08a",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:344cb2fb422328463b45a28dda3ca6c56218f1a4a0b2605c67a5e0e8294f82b3",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:02.163Z",
+          "updatedAt": "2026-10-11T21:31:06.125Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_9477ee29-7749-43ef-9c0f-153fe2e8e9e3",
+          "kind": "model",
+          "parentCallId": "call_fa94c136-750d-471d-825c-fb0d9d69e08a",
+          "operationKey": "structured:call_fa94c136-750d-471d-825c-fb0d9d69e08a:8e3ac0c23d71de60b96f993f03b14225ab3274fb3549273dd3a0e7c1708d1b4f/model/1",
+          "status": "superseded",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:31:02.398Z",
+          "updatedAt": "2026-10-11T21:31:02.465Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_67b2b7c7-4762-405d-b94d-9aadc1c19d21",
+          "kind": "model",
+          "parentCallId": "call_fa94c136-750d-471d-825c-fb0d9d69e08a",
+          "operationKey": "structured:call_fa94c136-750d-471d-825c-fb0d9d69e08a:8e3ac0c23d71de60b96f993f03b14225ab3274fb3549273dd3a0e7c1708d1b4f/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:05.929Z",
+          "updatedAt": "2026-10-11T21:31:06.023Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_93637202-74e1-454c-84b9-2abbce6d01d3",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-18/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:06.377Z",
+          "updatedAt": "2026-10-11T21:31:06.444Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "reject400drop",
+      "executionTaskId": "execution-task-fbf70049-d081-4423-8ac0-648d9258800a",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        }
+      ],
+      "status": "failed",
+      "deadlineAt": null,
+      "lastErrorCode": "http_400",
+      "calls": [
+        {
+          "id": "call_78d1aaef-0400-404c-a73a-af7f4f392ea7",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-21/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:07.332Z",
+          "updatedAt": "2026-10-11T21:31:07.372Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_e54ab4d8-a9a3-4217-a412-a007aea9a501",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:934525db9e3732bef1b295d7a7dccb5f5d4622953d261acb06a2627263aa3d0a",
+          "status": "started",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:31:07.454Z",
+          "updatedAt": "2026-10-11T21:31:07.463Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_255bee06-5e9b-4cdf-9229-b2d692268506",
+          "kind": "model",
+          "parentCallId": "call_e54ab4d8-a9a3-4217-a412-a007aea9a501",
+          "operationKey": "structured:call_e54ab4d8-a9a3-4217-a412-a007aea9a501:7d16fbf7daabc53ae7f35c6d5d027a44f93a47f46d58e2e8cb6a2f4463596064/model/1",
+          "status": "rejected",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:31:07.700Z",
+          "updatedAt": "2026-10-11T21:31:07.768Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "crashAfterChild",
+      "executionTaskId": "execution-task-339ab68e-cc40-4818-ac31-c7d74cfb5501",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_b0163d3e-cb46-4340-994f-a716a70b5d0a",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-24/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:08.770Z",
+          "updatedAt": "2026-10-11T21:31:08.811Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_c1546447-ec7b-4aca-afde-071d1d217cc3",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:b3b4496c8450a481d6c61a795586a0c5aa10c81f7d0a64e0b392f2819d5def94",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:08.899Z",
+          "updatedAt": "2026-10-11T21:32:08.995Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_ee6fd542-9b69-4fa6-b27a-edf4c73e416f",
+          "kind": "model",
+          "parentCallId": "call_c1546447-ec7b-4aca-afde-071d1d217cc3",
+          "operationKey": "structured:call_c1546447-ec7b-4aca-afde-071d1d217cc3:d1157ef759e26fd6f6cd1939974927c53a499e6fdbb1df23ec994176d7b192e8/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:09.225Z",
+          "updatedAt": "2026-10-11T21:31:09.299Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_7e47ee60-3d60-4339-bc88-df87a38b5661",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-24/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:32:09.247Z",
+          "updatedAt": "2026-10-11T21:32:09.324Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "crashUnknownChild",
+      "executionTaskId": "execution-task-df56c320-4b73-4266-96c4-7077ab621e22",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "provider-receipt-dropped-before-settlement",
+          "executionTaskId": "execution-task-df56c320-4b73-4266-96c4-7077ab621e22"
+        }
+      ],
+      "status": "unknown_result",
+      "deadlineAt": null,
+      "lastErrorCode": "TOOL_REQUIRES_RECONCILIATION",
+      "calls": [
+        {
+          "id": "call_9619b145-4622-434a-b352-ac464d6318de",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-27/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:11.782Z",
+          "updatedAt": "2026-10-11T21:31:11.822Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_9fc7f065-5248-4c7d-bc9d-9689dc497708",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:ec0e82ed166ff4aad25f812e69fa974740f7f71b2862bcb3a00d8bbf4ce64b62",
+          "status": "unknown",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:31:11.901Z",
+          "updatedAt": "2026-10-11T21:31:12.270Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_b9500a58-eaf6-446a-b905-5ea62848a03f",
+          "kind": "model",
+          "parentCallId": "call_9fc7f065-5248-4c7d-bc9d-9689dc497708",
+          "operationKey": "structured:call_9fc7f065-5248-4c7d-bc9d-9689dc497708:3caa092ad9b2df53c6f9854b9d200b840f41a410cf71cbfd8fd1476fef153052/model/1",
+          "status": "started",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:31:12.138Z",
+          "updatedAt": "2026-10-11T21:31:12.198Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "crashCancel",
+      "executionTaskId": "execution-task-18f3d6b9-19c4-4b9a-976d-838b081e93e5",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        }
+      ],
+      "status": "cancelled",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_17791c53-fd81-4919-a428-2528b5909c05",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-30/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:13.166Z",
+          "updatedAt": "2026-10-11T21:31:13.208Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_7a3e87db-3e1e-4f6a-8451-96dcea8aae25",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:bc28d54a8ca6d22f5b4ed0fdfd23032c6726b25a4e1edcbef2f66448ccbed235",
+          "status": "started",
+          "totalTokens": null,
+          "createdAt": "2026-10-11T21:31:13.288Z",
+          "updatedAt": "2026-10-11T21:31:13.298Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_53dc6175-b6d2-45f4-b2bc-d0d5f40af1d3",
+          "kind": "model",
+          "parentCallId": "call_7a3e87db-3e1e-4f6a-8451-96dcea8aae25",
+          "operationKey": "structured:call_7a3e87db-3e1e-4f6a-8451-96dcea8aae25:c14e98d10064d97979000f9baca41b040893413217c94898a6d355f77ac94e0a/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:13.529Z",
+          "updatedAt": "2026-10-11T21:31:13.599Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "crashDeadline",
+      "executionTaskId": "execution-task-413e3f3a-bca1-45f2-bf25-51b1a6798cc7",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_3eaf46f4-a120-48c7-b6b3-43672300e14f",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-33/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:14.743Z",
+          "updatedAt": "2026-10-11T21:31:14.784Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_9f2cb582-f3d0-40a7-9be6-a381fcd21a06",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:fcf5848a6207547c87d0a1820d5694b1a0665ed0c1b1be494b92ef6b793fe694",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:14.864Z",
+          "updatedAt": "2026-10-11T21:32:14.900Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_afe633c6-1ebf-4472-a461-d6f932f2fe3b",
+          "kind": "model",
+          "parentCallId": "call_9f2cb582-f3d0-40a7-9be6-a381fcd21a06",
+          "operationKey": "structured:call_9f2cb582-f3d0-40a7-9be6-a381fcd21a06:3d6e957316d8123d7f067600eba5221eecebe14c444cb5b010b419e0bb2aed89/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:15.104Z",
+          "updatedAt": "2026-10-11T21:31:15.207Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_64c5569a-39e7-4c75-846e-31bb89ebe1a1",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-33/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:32:15.149Z",
+          "updatedAt": "2026-10-11T21:32:15.231Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "crashPauseResume",
+      "executionTaskId": "execution-task-5bd75d9e-763e-4438-85e3-a7528d0cbf2e",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_ba680746-970a-4fdd-aefb-d9b9f68e1299",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-36/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:17.695Z",
+          "updatedAt": "2026-10-11T21:31:17.736Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_0e6ea394-8e01-442a-a4cf-57c1cff5dc8a",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:76c5dcbb3147425d0838f0b2a0160cdcedb17c920abbea9b5cd8b22c383752f7",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:17.815Z",
+          "updatedAt": "2026-10-11T21:32:17.940Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_24adaa8c-695b-4af6-8aae-06cac1ae8ff0",
+          "kind": "model",
+          "parentCallId": "call_0e6ea394-8e01-442a-a4cf-57c1cff5dc8a",
+          "operationKey": "structured:call_0e6ea394-8e01-442a-a4cf-57c1cff5dc8a:daa8b8dc2d2c3720245f37f4b36d877a014f1ded0c4c00b70a0e62b23ea21b99/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:18.054Z",
+          "updatedAt": "2026-10-11T21:31:18.122Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_3034b4b8-2f16-4f99-b5bd-e1ad7d7b9327",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-36/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:32:18.189Z",
+          "updatedAt": "2026-10-11T21:32:18.268Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "settlementDrop",
+      "executionTaskId": "execution-task-85c364ef-b8d9-4bb5-a578-086bffbd58df",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_cb8b4d51-ea57-4eb0-9098-f019b3096752",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-39/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:20.651Z",
+          "updatedAt": "2026-10-11T21:31:20.692Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_03cf98bc-9bbc-4025-81c5-9284f859b6ce",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:eae0120421fc38476d38963aca5ecd9edc15c7aeefef5bf435f7c9abadbff273",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:20.773Z",
+          "updatedAt": "2026-10-11T21:31:21.515Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_2fca0bcf-5892-4585-957e-ff217650943f",
+          "kind": "model",
+          "parentCallId": "call_03cf98bc-9bbc-4025-81c5-9284f859b6ce",
+          "operationKey": "structured:call_03cf98bc-9bbc-4025-81c5-9284f859b6ce:235a02a8f48141f5ab1f7a18fe195446b1776de98199f56c4618c71bae206be8/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:21.159Z",
+          "updatedAt": "2026-10-11T21:31:21.301Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_5300c269-352b-492a-805f-188d9e464f29",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-39/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:21.588Z",
+          "updatedAt": "2026-10-11T21:31:21.667Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "badOutput",
+      "executionTaskId": "execution-task-9ab4dc82-75c0-404a-abde-a07e1c58b4f5",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 5,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "receiptObservation": {
+        "toolResultTexts": [
+          {
+            "callId": "call_6ec05eb1-0148-4147-83b8-057b155ee867",
+            "status": "settled",
+            "resultText": "{\"schemaVersion\":1,\"kind\":\"tool\",\"toolCallId\":\"node-0\",\"toolName\":\"topic_enrich\",\"output\":{\"status\":\"error\",\"summary\":\"模型未返回符合要求的候选，继续当前任务\",\"evidence\":[],\"error\":{\"code\":\"transient\",\"retryable\":true,\"recovery\":\"在当前 Agent loop 中调整生成策略并继续原任务\"},\"continuation\":null,\"sideEffect\":\"none\"}}"
+          }
+        ],
+        "formalResults": [
+          {
+            "id": "chat:ai-task-40fdb0c7-1e7d-4eb3-8e42-46e186f54855",
+            "executionCallId": "call_0333c98f-7c62-4c4f-bff0-5d4228b7d29c",
+            "aiTaskId": "ai-task-40fdb0c7-1e7d-4eb3-8e42-46e186f54855",
+            "resultType": "conversation_reply",
+            "artifactId": null,
+            "knowledgeItemId": null,
+            "assetId": null,
+            "resultData": {
+              "messageId": "chat:ai-msg-42",
+              "stopReason": "stop",
+              "actualEngine": "pi",
+              "completeness": "partial",
+              "checkpointRef": 3,
+              "conversationId": "ai-conv-41",
+              "sourceMessageId": "ai-msg-42"
+            }
+          }
+        ],
+        "businessStatus": "partial"
+      },
+      "status": "partial",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_67426945-7f72-4b25-865b-50eb8f6cef40",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-42/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:22.621Z",
+          "updatedAt": "2026-10-11T21:31:22.663Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_6ec05eb1-0148-4147-83b8-057b155ee867",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:33cef4f6c3f08537b365329918ab2ad0c35ca4fdbf0299273588d9854d58d3dd",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:22.746Z",
+          "updatedAt": "2026-10-11T21:31:23.443Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_9d19a41c-4921-4716-a476-51b4532a9364",
+          "kind": "model",
+          "parentCallId": "call_6ec05eb1-0148-4147-83b8-057b155ee867",
+          "operationKey": "structured:call_6ec05eb1-0148-4147-83b8-057b155ee867:4494b5b63875295e4acb34b83232f4f1e1c4de8cce13e27863a302898d717766/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:23.006Z",
+          "updatedAt": "2026-10-11T21:31:23.083Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_21fd34c7-631a-4487-8155-747f87072058",
+          "kind": "model",
+          "parentCallId": "call_6ec05eb1-0148-4147-83b8-057b155ee867",
+          "operationKey": "structured:call_6ec05eb1-0148-4147-83b8-057b155ee867:4494b5b63875295e4acb34b83232f4f1e1c4de8cce13e27863a302898d717766/model/2",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:23.160Z",
+          "updatedAt": "2026-10-11T21:31:23.232Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_686ee2f5-50dd-4caf-8df4-70a4b883f7d9",
+          "kind": "model",
+          "parentCallId": "call_6ec05eb1-0148-4147-83b8-057b155ee867",
+          "operationKey": "structured:call_6ec05eb1-0148-4147-83b8-057b155ee867:4494b5b63875295e4acb34b83232f4f1e1c4de8cce13e27863a302898d717766/model/3",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:23.301Z",
+          "updatedAt": "2026-10-11T21:31:23.373Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_0333c98f-7c62-4c4f-bff0-5d4228b7d29c",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-42/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:23.500Z",
+          "updatedAt": "2026-10-11T21:31:23.563Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "crashFallback",
+      "executionTaskId": "execution-task-ed9501dd-947d-4249-bf2a-ed937cfb8981",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_43110f0f-37d3-466e-a5d6-7c207fba8537",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-45/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:24.505Z",
+          "updatedAt": "2026-10-11T21:31:24.548Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_984ce1da-ffe7-464e-9dfb-14d5d3d5bcea",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:d432196dfff9312ed082f4a849a28c8860031b71a2462967478e7fcb9f199d5d",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:24.635Z",
+          "updatedAt": "2026-10-11T21:32:25.377Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_44ac535b-6ddd-46ac-9797-f1c4d5238df8",
+          "kind": "model",
+          "parentCallId": "call_984ce1da-ffe7-464e-9dfb-14d5d3d5bcea",
+          "operationKey": "structured:call_984ce1da-ffe7-464e-9dfb-14d5d3d5bcea:b10ea4d9529d05fe1de5b0f430a0a7feb85c327e0076f87f9b01a0633c421b1b/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:24.915Z",
+          "updatedAt": "2026-10-11T21:31:25.003Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_aa7ae8ea-167f-436a-b426-f24cd37b570f",
+          "kind": "model",
+          "parentCallId": "call_984ce1da-ffe7-464e-9dfb-14d5d3d5bcea",
+          "operationKey": "structured:call_984ce1da-ffe7-464e-9dfb-14d5d3d5bcea:b10ea4d9529d05fe1de5b0f430a0a7feb85c327e0076f87f9b01a0633c421b1b/model/2",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:32:25.114Z",
+          "updatedAt": "2026-10-11T21:32:25.237Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_27568c5f-71d7-4381-b714-b1378e5f199a",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-45/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:32:25.806Z",
+          "updatedAt": "2026-10-11T21:32:25.963Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "crashTwoNodes",
+      "executionTaskId": "execution-task-099ab81e-2fa3-4982-8f9b-59947ceaade5",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 5,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 6,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_84bfa3e9-c3b5-4362-a876-bf2fc7a40562",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-48/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:29.161Z",
+          "updatedAt": "2026-10-11T21:31:29.206Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_c2246196-abb9-489e-bae2-dc6e71539b0e",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:d290c7e4d7b3ee2eda3ebadc5534d5d15bd3224267b1b22e6d3a00911c3a04da",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:29.306Z",
+          "updatedAt": "2026-10-11T21:32:29.294Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_3765d862-eb44-460c-bf12-9b12ab9c39d1",
+          "kind": "model",
+          "parentCallId": "call_c2246196-abb9-489e-bae2-dc6e71539b0e",
+          "operationKey": "structured:call_c2246196-abb9-489e-bae2-dc6e71539b0e:1913feb94e0200b5ede9b336f34470e45ed797d42539ad1989dbd3bc054719f1/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:29.598Z",
+          "updatedAt": "2026-10-11T21:31:29.680Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_8afd96dc-22c6-42f7-a49d-c7fe8527a4b1",
+          "kind": "model",
+          "parentCallId": "call_c2246196-abb9-489e-bae2-dc6e71539b0e",
+          "operationKey": "structured:call_c2246196-abb9-489e-bae2-dc6e71539b0e:1913feb94e0200b5ede9b336f34470e45ed797d42539ad1989dbd3bc054719f1/model/2",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:29.765Z",
+          "updatedAt": "2026-10-11T21:31:29.847Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_fcac5e1f-88b8-4d74-82bc-fe7c4280246a",
+          "kind": "model",
+          "parentCallId": "call_c2246196-abb9-489e-bae2-dc6e71539b0e",
+          "operationKey": "structured:call_c2246196-abb9-489e-bae2-dc6e71539b0e:1913feb94e0200b5ede9b336f34470e45ed797d42539ad1989dbd3bc054719f1/model/3",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:32:29.109Z",
+          "updatedAt": "2026-10-11T21:32:29.215Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_ea3a7fd9-9e2e-4a81-984a-5400d44c6952",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:2eeda74af0b956a158e60bcdf2b6dbf43924a8902cc7530309a5e991ccbcc24f",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:32:29.611Z",
+          "updatedAt": "2026-10-11T21:32:30.000Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_1ad1233a-ec19-45b7-983b-cd4d3f453b9a",
+          "kind": "model",
+          "parentCallId": "call_ea3a7fd9-9e2e-4a81-984a-5400d44c6952",
+          "operationKey": "structured:call_ea3a7fd9-9e2e-4a81-984a-5400d44c6952:de0d4927b9f8857f150a6d8c724a21f0b0d88c1e0443bdd143116a7a3f4a8092/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:32:29.853Z",
+          "updatedAt": "2026-10-11T21:32:29.928Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_775d49f6-490c-4023-834a-f69276c3f76c",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-48/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:32:30.062Z",
+          "updatedAt": "2026-10-11T21:32:30.129Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "positioning",
+      "executionTaskId": "execution-task-16991468-9595-4421-8234-880301045860",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "positioning_generate"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "positioning_generate"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_393df4a7-2911-4e67-9ca7-c125883b1bec",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-51/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:33.492Z",
+          "updatedAt": "2026-10-11T21:31:33.534Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_babdf10f-23cb-44c1-91e1-4dfdbf0501b6",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:d5fb7453813d8286e00c43787f0a5f01687835f1412fe3981cc43bf643a916b7",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:33.622Z",
+          "updatedAt": "2026-10-11T21:31:34.032Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_cb4ded32-efa4-44ab-8486-8402fa2e8648",
+          "kind": "model",
+          "parentCallId": "call_babdf10f-23cb-44c1-91e1-4dfdbf0501b6",
+          "operationKey": "structured:call_babdf10f-23cb-44c1-91e1-4dfdbf0501b6:1b60755b94e7c994713c7ca6cf9c06a5400efc3e692f3e43b23c699e06f06ab2/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:33.878Z",
+          "updatedAt": "2026-10-11T21:31:33.959Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_e5619881-ef09-44d3-b581-5aca176ebe55",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-51/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:34.093Z",
+          "updatedAt": "2026-10-11T21:31:34.157Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "crashMixed",
+      "executionTaskId": "execution-task-874ca0bf-c4cb-412a-be1b-54f3b4398276",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich",
+            "script_hooks"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 5,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 6,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich",
+            "script_hooks"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_e39347ec-8178-4950-8633-49112d2a3088",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-54/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:35.146Z",
+          "updatedAt": "2026-10-11T21:31:35.191Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_1ae93592-c03f-47b9-be96-06900df27520",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:a921f5cc17df61a8a4e51f5b1432745b8cc567ef7f7b515aa8068fac17bcdc79",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:35.279Z",
+          "updatedAt": "2026-10-11T21:32:35.631Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_6b2aed67-617a-4a48-bd69-7550940923bd",
+          "kind": "model",
+          "parentCallId": "call_1ae93592-c03f-47b9-be96-06900df27520",
+          "operationKey": "structured:call_1ae93592-c03f-47b9-be96-06900df27520:a32322b340487ef861963c6717888fc7555211e20c49d7eac132755618f52de8/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:35.598Z",
+          "updatedAt": "2026-10-11T21:31:35.676Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_c40d3598-dbe0-4e79-81b3-ba924ab32dcb",
+          "kind": "model",
+          "parentCallId": "call_1ae93592-c03f-47b9-be96-06900df27520",
+          "operationKey": "structured:call_1ae93592-c03f-47b9-be96-06900df27520:a32322b340487ef861963c6717888fc7555211e20c49d7eac132755618f52de8/model/2",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:35.757Z",
+          "updatedAt": "2026-10-11T21:31:35.839Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_09450043-1acf-4d7a-ade0-deda23603f00",
+          "kind": "model",
+          "parentCallId": "call_1ae93592-c03f-47b9-be96-06900df27520",
+          "operationKey": "structured:call_1ae93592-c03f-47b9-be96-06900df27520:a32322b340487ef861963c6717888fc7555211e20c49d7eac132755618f52de8/model/3",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:32:35.452Z",
+          "updatedAt": "2026-10-11T21:32:35.551Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_7e1f4128-204c-4d16-8134-f3d4bbc84748",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:d5e7c5c23f572ac29b1e934536b0bb81368674d94e23ef2891c293db4520dbd9",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:32:35.965Z",
+          "updatedAt": "2026-10-11T21:32:36.587Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_8923ddef-766c-466c-9e92-f512db661bb9",
+          "kind": "model",
+          "parentCallId": "call_7e1f4128-204c-4d16-8134-f3d4bbc84748",
+          "operationKey": "hooks:call_7e1f4128-204c-4d16-8134-f3d4bbc84748:05fe72b182da1d556d4f43fe6d83d1eb1acfc203265ae0210e055f35b42699c1/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:32:36.310Z",
+          "updatedAt": "2026-10-11T21:32:36.500Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_42a7fc58-aa68-43f2-8235-a7cf263edb71",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-54/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:32:36.682Z",
+          "updatedAt": "2026-10-11T21:32:36.787Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "diagnosis",
+      "executionTaskId": "execution-task-7e170fb0-0ff7-4c85-b809-4ed8ee19d416",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "calibration_diagnose"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "calibration_diagnose"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_69be417c-888a-4664-85d5-0b1e45781e91",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-57/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:39.898Z",
+          "updatedAt": "2026-10-11T21:31:39.945Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_244e9003-308f-4baa-9e97-cddd15f9a86f",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:0f1fe014352127086fcaccdc3b9e724a755698bf51bd2c47b500631375990b53",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:40.032Z",
+          "updatedAt": "2026-10-11T21:31:40.526Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_099bcacb-d0cb-459b-b0ea-eb49570cd29a",
+          "kind": "model",
+          "parentCallId": "call_244e9003-308f-4baa-9e97-cddd15f9a86f",
+          "operationKey": "structured:call_244e9003-308f-4baa-9e97-cddd15f9a86f:4fe5163d9a5d280cdf0ff459e3c7d93674b36b2abca95b885daf1be4bb5ec71a/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:40.356Z",
+          "updatedAt": "2026-10-11T21:31:40.434Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_395a2145-7ef2-486f-9b1a-5055e390c107",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-57/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:40.596Z",
+          "updatedAt": "2026-10-11T21:31:40.685Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "crashDiagnosis",
+      "executionTaskId": "execution-task-ba86d022-da34-4452-bfc0-a06a6bc1b9c3",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "calibration_diagnose"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "calibration_diagnose"
+          ]
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_7d0179d4-ec78-4175-89d9-3a7636ae03e8",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-60/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:42.024Z",
+          "updatedAt": "2026-10-11T21:31:42.089Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_63834fda-2c1c-47c4-8a04-30d1dd3fc573",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:50f4b26078bb4acc36c04a5a4d7243a3b844e6dc4fff45b959c3c541331fd0a2",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:42.184Z",
+          "updatedAt": "2026-10-11T21:32:43.646Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_4f1a7db2-bdcb-46e6-85aa-41f2657f3263",
+          "kind": "model",
+          "parentCallId": "call_63834fda-2c1c-47c4-8a04-30d1dd3fc573",
+          "operationKey": "structured:call_63834fda-2c1c-47c4-8a04-30d1dd3fc573:7b38bd51534bdfdec56335b5a3f356ee958cb1661a8b385cf4c0f2f10f9450d5/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:42.576Z",
+          "updatedAt": "2026-10-11T21:31:42.700Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_aa61e00a-9735-4e63-a758-d5372e2fa738",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-60/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:32:44.404Z",
+          "updatedAt": "2026-10-11T21:32:44.697Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "diagnosisEmpty",
+      "executionTaskId": "execution-task-85381935-89cb-497a-992c-72231cf2c754",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "calibration_diagnose"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "calibration_diagnose"
+          ]
+        }
+      ],
+      "receiptObservation": {
+        "toolResultTexts": [
+          {
+            "callId": "call_d6dc0594-3d01-4c15-bd2e-b21e0010f252",
+            "status": "settled",
+            "resultText": "{\"schemaVersion\":1,\"kind\":\"tool\",\"toolCallId\":\"node-0\",\"toolName\":\"calibration_diagnose\",\"output\":{\"status\":\"error\",\"summary\":\"模型未返回符合要求的候选，继续当前任务\",\"evidence\":[],\"error\":{\"code\":\"transient\",\"retryable\":true,\"recovery\":\"在当前 Agent loop 中调整生成策略并继续原任务\"},\"continuation\":null,\"sideEffect\":\"none\"}}"
+          }
+        ],
+        "formalResults": [
+          {
+            "id": "chat:ai-task-d74cfb3a-506d-4ef5-abb1-c0626a83be7f",
+            "executionCallId": "call_b1be49fe-79cf-4e94-81d1-c8711e15fb10",
+            "aiTaskId": "ai-task-d74cfb3a-506d-4ef5-abb1-c0626a83be7f",
+            "resultType": "conversation_reply",
+            "artifactId": null,
+            "knowledgeItemId": null,
+            "assetId": null,
+            "resultData": {
+              "messageId": "chat:ai-msg-63",
+              "stopReason": "stop",
+              "actualEngine": "pi",
+              "completeness": "partial",
+              "checkpointRef": 3,
+              "conversationId": "ai-conv-62",
+              "sourceMessageId": "ai-msg-63"
+            }
+          }
+        ],
+        "businessStatus": "partial"
+      },
+      "status": "partial",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_1d388f4e-e88c-4cfa-a6a0-280970472b8f",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-63/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:49.606Z",
+          "updatedAt": "2026-10-11T21:31:49.692Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_d6dc0594-3d01-4c15-bd2e-b21e0010f252",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:07005f1f0986d4919ab4c2278b9a5c7a0cb57f3daf8acf93369f07b9b5757293",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:31:49.866Z",
+          "updatedAt": "2026-10-11T21:31:51.108Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_59f42e6d-bfb9-4a7b-bb6f-bb93895703d5",
+          "kind": "model",
+          "parentCallId": "call_d6dc0594-3d01-4c15-bd2e-b21e0010f252",
+          "operationKey": "structured:call_d6dc0594-3d01-4c15-bd2e-b21e0010f252:357ccc69a0f0dbed171126b8229894c72c21ef80c2190477ea280102851f5454/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:31:50.569Z",
+          "updatedAt": "2026-10-11T21:31:50.820Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_b1be49fe-79cf-4e94-81d1-c8711e15fb10",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-63/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:31:51.266Z",
+          "updatedAt": "2026-10-11T21:31:51.561Z",
+          "startedAttempt": 1
+        }
+      ]
+    }
+  ],
+  "rawLastMessagesNotCapturedInThisRun": true,
+  "finiteNeverReachedEnqueueHttpOrDeadline": true,
+  "cannotReplaceOriginalFirst9Failures": true,
+  "officialModelAndNativeAppNotVerified": true
+}

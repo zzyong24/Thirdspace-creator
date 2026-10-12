@@ -1,0 +1,87 @@
+{
+  "task": "T-1254",
+  "scope": "真实V9首次Node初始化失败，只读原始文件与独核证据核对",
+  "asOf": "2026-10-12T03:29:08.032380+00:00",
+  "nonce": "b559d0cf89accea8faf82f2c00370e9f",
+  "actualExitCode": 1,
+  "elapsedMs": 58346.031624999996,
+  "completedSteps": 0,
+  "declaredSteps": 25,
+  "firstChild": {
+    "pid": 89663,
+    "code": null,
+    "signal": "SIGABRT",
+    "elapsedMs": 274,
+    "processClosed": true,
+    "remainingOwnedGroupMembers": []
+  },
+  "probeOrTestsStarted": false,
+  "privateCandidateApplied": false,
+  "productCopied": false,
+  "diagnosisConfirmed": "实际标准输出fd1的fstat错误分支ABORT",
+  "diagnosisInference": "HOME内日志FD与child禁止HOME访问冲突；具体errno未观察，下一窄候选需实际验证",
+  "diagnosisSha256": "9f02bc91e38523c87aee83ee49d255e3258fec1857f7e52be40046432dec64de",
+  "rawFiles": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/child-environment-proof.json",
+      "size": 316,
+      "sha256": "104ec6a958193a06c805308c1ffd762bb08ce9a1f9afe76a2d5f4241ccb7ca75"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/frozen-entry-data-copy.json",
+      "size": 433,
+      "sha256": "1af40e04df4932c71c7eb69ee8b8b29689e2aa27dfdab675efcb4ea3e020dbef"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/owned-network-boundary-admission.json",
+      "size": 115,
+      "sha256": "2c17aad78da60b25c859413abb81dfa189208b9b1ed1ac837794269a782ff2f6"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/owned-network-boundary-command.json",
+      "size": 632,
+      "sha256": "985b83efaf5a831ccf3128d18916a662318da2a49344532331a5b89455450011"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/owned-network-boundary-exit.json",
+      "size": 1465,
+      "sha256": "cc30e93b0db5e727dabb852b35c6e79641cae67394b6d16d7bc14d49cd5b05b4"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/owned-network-boundary.log",
+      "size": 926,
+      "sha256": "37fb35212da0ce6a6c0c006bdefeb1d1fafc147d4c4fd64da8ad4765e8273204"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/owned-root.json",
+      "size": 236,
+      "sha256": "58ccc20c91e5188641a648d354c9ec2ef7a7b5703d87e8aeb4da2abab73d442e"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/review.json",
+      "size": 1737,
+      "sha256": "1d81dbec7e9e2403a2fa10854b8d0a861e6ae8fc49e91e9fdf591e1a899bf4ac"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/runner-error.json",
+      "size": 452,
+      "sha256": "9b79682e82c26a18d24e80888332f06b3f44d77418cd72134cc4c8df892b906c"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/source-after.json",
+      "size": 56320095,
+      "sha256": "ad5e055e1a728b215011ddf22afef0eda80e23fe72968a62da3dcec4311d184f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/source-before.json",
+      "size": 56319965,
+      "sha256": "90b44ff6456a7aef176bfc166b9edb298e27c84f142fb6a3e2b7914c0560f0f2"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/summary.json",
+      "size": 726,
+      "sha256": "b9db5642028db4cd98fe69d8e3715437c8f891fe27b1501d50c346973185c687"
+    }
+  ],
+  "historicalEvidenceUnchanged": true
+}

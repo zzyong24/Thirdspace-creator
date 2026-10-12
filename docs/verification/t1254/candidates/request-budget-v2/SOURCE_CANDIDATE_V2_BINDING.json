@@ -1,0 +1,54 @@
+{
+  "task": "T-1254",
+  "stage": "已正式SPEC PASS/start后的源码候选静态归档；无执行准入",
+  "spec": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1254-doocs-request-budget-and-source-closure.md",
+    "sha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad"
+  },
+  "sourceProducers": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget/SOURCE_CANDIDATE_PRODUCER_BINDING.json",
+    "sha256": "fbfcf39c5217db51c4ff660b9300ca61206365bddb2c95e66ef283684a74fcd9"
+  },
+  "independentCandidateReview": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_REQUEST_CANDIDATE_V2_RECHECK.json",
+    "sha256": "fa5104fe3ea02459baaacee872122dd0de6b039aea2570acca0c1158a56e2e21"
+  },
+  "candidateFiles": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget-v2/fetch-budget-candidate-v2.ts",
+      "sha256": "fe2393bbb03ccb9fd294a70bd6496d605c84cf05277b8c24a6d680e78cffd375"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget-v2/fetch-budget-candidate-v2.test.ts",
+      "sha256": "fed3d3b0bd928f26cfec2f7e216a263006fcd48d9f0234d3c6936e0f305f672e"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget-v2/fetch-budget-v1-to-v2.diff",
+      "sha256": "0314e1f7eb94333f92229e6203d05beb87c00da45b184891ae4a8925628a3d03"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget-v2/fetch-budget-test-v1-to-v2.diff",
+      "sha256": "26a38ba520a2d93fb5316f3cc14643c5ca83d63d48eed76d0963f5a32d5981ca"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget-v2/REQUEST_BUDGET_V2_SERIALIZATION_CANDIDATE.json",
+      "sha256": "0f95b03472d70f7b289531a039264d866584fbf65618514b51c72c8e6ab5affb"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget-v2/LOCAL_BOOTSTRAP_TOOL_INVENTORY.json",
+      "sha256": "1095781c0bedbc7f4c1236d5f7404f3d31f544a04fd4d07d6d486f5c33e5eb6d"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget-v2/original-to-v2-source.diff",
+      "sha256": "7846801817b0f53e22a027ac9c468e5f4a339c356bdfe51327ec355ef1fed55b"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/request-budget-v2/original-to-v2-test.diff",
+      "sha256": "833361933d315bb76544e8d7c8f9ffa06bc78a021bfd03522201434c0ab5351f"
+    }
+  ],
+  "newCases": 16,
+  "oldCandidatesKept": true,
+  "executed": false,
+  "appliedToSourceRootsOrProduction": false
+}

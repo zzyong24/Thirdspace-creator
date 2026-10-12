@@ -1,0 +1,27 @@
+{
+  "name": "LED-057",
+  "logSha256": "aabebc9ac11663096b9d6399a44811b7cef4d67ea5cbf45993b5a3453999591d",
+  "logBytes": 4931,
+  "vitestSummaryLines": [],
+  "rustSummaryLines": [
+    "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 243 filtered out; finished in 0.05s"
+  ],
+  "rustWindowsCaseLines": [
+    "test runtime_cleanup_tests::windows_runtime_指针拒绝目录穿越 ... ok",
+    "test runtime_cleanup_tests::windows_runtime_原子更新_current_不伪造跨版本_previous ... ok",
+    "test runtime_cleanup_tests::windows_后续启动复用已完成的隔离解压目录 ... ok",
+    "test runtime_cleanup_tests::windows_主动卸载使用_rust_清理深层_runtime ... ok",
+    "test runtime_cleanup_tests::windows_目录切换暂时拒绝访问时保留已解压目录供本次启动 ... ok",
+    "test runtime_cleanup_tests::windows_旧缓存清理只删_runtime_不碰_db_和_auth ... ok",
+    "test runtime_cleanup_tests::windows_传统完整_runtime_与分层_runtime_都可通过但混合残缺拒绝 ... ok",
+    "test runtime_cleanup_tests::windows_runtime_升级清理只保留_current ... ok",
+    "test runtime_cleanup_tests::windows_安装目录展开资源关键结构与入口哈希都必须通过 ... ok",
+    "test runtime_cleanup_tests::windows_安装期指针只解析安装目录内已校验_runtime ... ok",
+    "test runtime_cleanup_tests::windows_新安装_runtime_校验失败时保留旧_app_data_runtime ... ok",
+    "test runtime_cleanup_tests::windows_旧安装目录_runtime_迁到_app_data_后才删除旧副本 ... ok",
+    "test runtime_cleanup_tests::windows_旧安装目录缺指针时从唯一完整_runtime_恢复后迁移 ... ok",
+    "test runtime_cleanup_tests::windows_已有旧_app_data_runtime_时用新安装_runtime_安全替换 ... ok",
+    "test runtime_cleanup_tests::windows_旧安装目录缺指针且有多个完整_runtime_时保留旧目录走兜底 ... ok"
+  ],
+  "originalCommandExitOnly": true
+}

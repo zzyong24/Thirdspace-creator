@@ -1,0 +1,18 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "firstBuildExit": 101,
+  "firstTestBodies": 0,
+  "resourceReadyExit": 0,
+  "runtimeDeclared": 280,
+  "passed": 267,
+  "failed": 0,
+  "ignored": 13,
+  "durationSeconds": 134.02,
+  "nativeAppAcceptance": false,
+  "coverageGaps": [
+    "workbench IPC child --exact 前缀遗漏：父测试成功不能代签实际子测试覆盖；待集中修",
+    "mac cancellation Python机制探针依赖可用性需单独核；不可用时原条件返回不能签机制覆盖"
+  ],
+  "logs": "resource-ready.log",
+  "resourceProvenance": "resource-copy.json"
+}

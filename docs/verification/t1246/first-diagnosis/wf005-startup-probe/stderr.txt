@@ -1,0 +1,18 @@
+node:internal/modules/cjs/loader:2051
+    throw new ERR_INVALID_ARG_VALUE('filename', filenameOrURL, createRequireError);
+    ^
+
+TypeError [ERR_INVALID_ARG_VALUE]: The argument 'filename' must be a file URL object, file URL string, or absolute path string. Received undefined
+    at createRequire (node:internal/modules/cjs/loader:2051:11)
+    at Object.<anonymous> (/private/tmp/t1246-wf005-owned-8PI5Tb/execution.cjs:113208:54)
+    at Module._compile (node:internal/modules/cjs/loader:1829:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1969:10)
+    at Module.load (node:internal/modules/cjs/loader:1552:32)
+    at Module._load (node:internal/modules/cjs/loader:1354:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  code: 'ERR_INVALID_ARG_VALUE'
+}
+
+Node.js v25.9.0

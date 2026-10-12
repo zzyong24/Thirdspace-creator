@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "仅沿formal round1 CONCERNS的REV-001复核4066合同唯一族4改动，并实际读取reviewctl context changed-line42。实际root index.html已明确纳精确写集与图核验，必要外置限static内已审名单，其它根产物/bridge/CSP冻结，REV-001规格缺口关闭；未发现本行新问题。未修改/安装/构建/测试/浏览器/复制任何产品，未签实际交付或App通过。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-OUTPUT",
+        "quote": "所有HTML src/href、JS imports、CSS URL保持存在且本地"
+      },
+      "acceptance_anchor": {
+        "id": "AC-DELIVERY",
+        "quote": "所有产物导入/HTML/CSS本地归属、CSP、native manifest/source/patch与static新增精确manifest一致"
+      },
+      "where": "精确写集族4（SPEC:42），实际static入口frontend/public/reference-editors/doocs-md/index.html",
+      "failure_mode": "族4仅准native/与static/两个目录生成族，实际static根index.html不在其中；真实CSP及入口module/preload新hash引用都由根HTML消费。只复制目录生成族会留下旧HTML引用/旧预算链，更新根HTML则越当前写集，无法同时满足完整重建图与精确复制限制。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "frontend/public/reference-editors/doocs-md/index.html:3及module src/static hash；docs/features/t1254-doocs-request-budget-and-source-closure.md:32,42,50；docs/verification/t1254/INDEPENDENT_SPEC_SOURCE_BINDING.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review of exact20df0b3e",
+      "suggestion": "闭合实际唯一根HTML的授权与生成/图校验；必要外置脚本仍限static内实际清单双审。保持原CSP、其它根assets/favicon/bridge冻结，若实际构建出现其它根变化先列精确合同，不能自动扩大复制。",
+      "resolution_evidence": "SPEC-LINE:42:abe103b62248f721：唯一实际root index.html明确准入，完整静态图从该HTML出发；原CSP/local base保留，必要inline外置仅static内exact清单双审，其它root favicon/assets/notice和既有bridge冻结，未准变化需精确复评。当前实际root入口SHA仍原字节，未应用产品。",
+      "parent_id": ""
+    }
+  ]
+}

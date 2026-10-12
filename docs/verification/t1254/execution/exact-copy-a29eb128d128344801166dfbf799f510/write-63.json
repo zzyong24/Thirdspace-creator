@@ -1,0 +1,10 @@
+{
+  "path": "frontend/public/reference-editors/sources/doocs-md/request-budget-static-source.tar.gz",
+  "after": {
+    "sha256": "d63e3e278f135c47dfd4e7c290b91f9504b0a5ac874d548ce57ccbcebb0dc602",
+    "size": 943093,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

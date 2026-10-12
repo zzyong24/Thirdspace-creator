@@ -1,0 +1,12 @@
+{
+  "scope": "仅ROOT14aa准入两原body预算60k→3.6M",
+  "originalPath": "frontend/src/server/workbench-artifact-representation.test.ts",
+  "originalSha256": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+  "originalArchive": "docs/verification/t1250/implementation/representation-before-approved-two-case-budget.ts",
+  "originalArchiveSha256": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+  "afterSha256": "fe65915e0d07b2a14a310c9d763936bab3debfff5ecf1fd368e1941a57e53cda",
+  "candidateSha256": "fe65915e0d07b2a14a310c9d763936bab3debfff5ecf1fd368e1941a57e53cda",
+  "allOriginalBodyAssertionsByteInversePreserved": true,
+  "runtimeExecuted": false,
+  "sharedDistChanged": false
+}

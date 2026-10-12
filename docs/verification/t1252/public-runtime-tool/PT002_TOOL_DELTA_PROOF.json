@@ -1,0 +1,9 @@
+{
+  "scope": "纯差异；首actual0body失败保留，不修改source/预算/body",
+  "oldToolSha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9",
+  "newToolSha256": "7cb1b56120493449bbdf4a50702c54cf13480cbbed990b2859bd467f5125a3af",
+  "newConfigProof": "STATIC_CONFIG_AND_SHORT_SOCKET_PROOF.json",
+  "budgetUnchangedSha256": "6d69a3f2799c3a00730f72bcbe5a59d91eb94c9fad6a2313c6cd916a57a5c8e1",
+  "sourceCopyGeneratorUnchangedSha256": "2274e942f735e2c517e7dc635004a0694956a9ea69b85d611f4e07c221e05b18",
+  "generatedBodyUnchangedSha256": "5c4133785470cf5b838858f8745e4ad5edaf9614995b65542301b8e45e908e45"
+}

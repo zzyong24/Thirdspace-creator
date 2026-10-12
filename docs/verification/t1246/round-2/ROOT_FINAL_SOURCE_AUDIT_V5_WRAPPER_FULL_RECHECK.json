@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-12T09:56:39.708984+00:00",
+  "bindingSha256": "6cb967ac20cf00dc7b1978c9ff6634b1d5e87dc8554883632a4492858e8bf718",
+  "fullRows": 645,
+  "fullBytes": 652616004,
+  "errors": [],
+  "graphs": [
+    {
+      "files": 82,
+      "links": 37,
+      "edges": 51
+    },
+    {
+      "files": 4,
+      "links": 4,
+      "edges": 3
+    }
+  ],
+  "gitHistoricalRaw": 4,
+  "actualFirstExecutable": "/opt/homebrew/bin/git",
+  "wholeWrapperSourceRead": true,
+  "auditBodyExecuted": false,
+  "sourceReviewSHA": "68e0471ce13a6617d7176bf7a1422453ecf698dedabd4aa5e6199b974a10b6d2"
+}

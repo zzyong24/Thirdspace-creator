@@ -1,0 +1,23 @@
+{
+  "specSha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484",
+  "phase": "calibrated-whole25",
+  "scope": "original-owner-calibrated-fixtures-current-receipt",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "sourceSnapshotDigest": "c98e5efed906c4ed774206950fbc771a06817647367895c60b5b6d274745447b",
+  "toolDigest": "27810202f3de71d10a031ba84625dd33e85267ce2995b58b304a7b92227c45c5",
+  "sharedDistExclusive": true,
+  "approved": true,
+  "at": "2026-10-11T23:52:03.828736+00:00",
+  "toolSha256": "ebeeed71a63a85f05355bcf0ea1458ba69385a5e2e937fae8336b127e59be924",
+  "prepareSha256": "70f75b1b1fd6cee4d8923e88e3554c96c834a3804651ebdb2845fc9f31fbccf6",
+  "fullSealSha256": "bc1fd90598c1f450fad3f86f5bceb2e601041bc2d90a08ff11f2f3a806c0bf37",
+  "independentReviewSha256": "0fb985132d29f001a609b28b20f6f892e1868ae2c4750a717bbbc1b258892c06",
+  "rootPriorFullReadReviewSha256": "5a55b1a1d4d0a0c30bf8168e12cb71e0fe2a12291c2f9d318912aec9a8cb8b88",
+  "entryAndActualSourceGuardDeltaRead": true,
+  "actualSourceDrift": 0,
+  "original25And46NoSkipRequired": true,
+  "processReceiptAcceptanceRequiresClosedGroupZeroAndSignalsEmpty": true,
+  "originalFirstAndObservationsPreserved": true,
+  "noApp": true,
+  "noPG": true
+}

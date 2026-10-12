@@ -1,0 +1,102 @@
+{
+  "at": "2026-10-11T22:02:36.682595+00:00",
+  "task": "T1250",
+  "scope": "新cfg source main production lock subset private compilation; not public Node/App/Windows",
+  "toolSha256": "ef4c57a52001522217bec9dcbce490cdadc54bd38be3267753df2962d032fa50",
+  "bindingSha256": "c75261ca0d6ecfeadabf4a3593d4a199483d722eb408bc607a3f16d5e74bff4f",
+  "runRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3",
+  "test": {
+    "listed": 12,
+    "passed": 11,
+    "failed": 0,
+    "originalIgnored": 1,
+    "elapsedMs": 31970,
+    "testProcessExit": 0,
+    "stdioClosed": true
+  },
+  "binary": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/target/debug/deps/creatoros_workbench_test-4492fe5165c214f3",
+    "sha256": "b88eec4446f78c6bc3b2e94b936b1a91651b28dae4352eece12aaa135b06295d"
+  },
+  "inputs": {
+    "count": 328,
+    "drift": 0,
+    "otherGuards": {
+      "toolSame": true,
+      "nodeSame": true,
+      "parserSame": true,
+      "inventorySame": true,
+      "manifestSame": true,
+      "generatedLockSame": true
+    }
+  },
+  "productionLockSubset": {
+    "accepted": true,
+    "originalPackageCount": 708,
+    "actualPackageCount": 417,
+    "privateRootCount": 1,
+    "differences": [],
+    "differenceCount": 0,
+    "comparisonFields": [
+      "name",
+      "version",
+      "source",
+      "checksum"
+    ],
+    "productionSubsetConfirmed": true,
+    "noBuildPermissionOnMismatch": true
+  },
+  "cleanup": {
+    "at": "2026-10-11T21:59:05.139Z",
+    "budgetMs": 1800000,
+    "elapsedMs": 1065.5916660000075,
+    "signals": [],
+    "survivors": [],
+    "unknown": [],
+    "proofErrors": [],
+    "tempRootPreserved": true,
+    "targetRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/target",
+    "allPass": true
+  },
+  "status": "passed",
+  "receipts": [
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/start.json",
+      "sha256": "7abbba1d10287e81fca838fdff217d645f088c9358a162e5a6b8acd9726cec08"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/build-exit.json",
+      "sha256": "7e1aec1bf28aa2a8a38a0f9c7e42fb85a4a1e18a984984db62859b06f2ad4695"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/actual-list.json",
+      "sha256": "7cc64388506b6f64bd1f878e5f904f4012b0ae4501c124b3f510e749b02d0207"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/test-exit.json",
+      "sha256": "b2a87dd764130fbde25a73c265cdd4ff2ecf70ec3de7d989f951630546804dc7"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/test.log",
+      "sha256": "503a211791ed059f4d88e66ec39ef616204394d5f601f8666f92365d5579178e"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/cleanup.json",
+      "sha256": "cfd57c84bbf7ab18a55ab04a62a2c2f926817d3a9cd52bcde3e7722e1416f1df"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/final.json",
+      "sha256": "1cb56bb66bb8cf7014dfce30f8fc4f9d72151358132021b3b0860e7273497513"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/production-lock-subset-receipt.json",
+      "sha256": "d09bb56819b6e1f7e467c2d04245604486dfa4cd3117cb06ea7f9048e3827f48"
+    }
+  ],
+  "notProven": [
+    "public ignored fixture Node chain",
+    "Windows compilation/run",
+    "main App lifecycle",
+    "official model/browser semantics"
+  ]
+}

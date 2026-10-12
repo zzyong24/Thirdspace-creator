@@ -1,0 +1,10 @@
+{
+  "path": "reference-editors/doocs-md/native/native-delivery.json",
+  "after": {
+    "sha256": "33bbc9a6dd55d2a5f2b03f29828bd7ed37da9ee62dd3a15fa0f8915ae1b5ae43",
+    "size": 73012,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

@@ -83,6 +83,11 @@ function transform(file){
   edit(end,end,`${has&&!trailing?', ':''}timeout: ${floor}`, 'explicit-missing-timeout', consumer);
  }
  function walk(n){
+  if(['visual/__setup__.ts','visual/__teardown__.ts'].includes(rel)&&ts.isCallExpression(n)&&n.expression.getText(ast)==='resolve'&&n.arguments.some(a=>ts.isStringLiteral(a)&&a.text==='__artifacts__')){
+   const fingerprint=rel==='visual/__teardown__.ts'?', "baseline-fingerprint.json"':'';
+   add(n,`resolve(process.env.CREATOROS_T1246_RUN_DIR!, "visual-baseline"${fingerprint})`,'evidence-output-path',rel==='visual/__setup__.ts'?'globalSetup fingerprint OUTPUT only; original17 reference INPUT preserved':'globalTeardown paired fingerprint OUTPUT read; original baseline checks preserved');
+   return;
+  }
   if(ts.isPropertyAssignment(n)&&n.name.getText(ast)==='timeout'){
    const obj=n.parent;
    const fixture=ts.isObjectLiteralExpression(obj)&&obj.properties.some(p=>ts.isPropertyAssignment(p)&&p.name.getText(ast)==='scope'&&/worker/.test(p.initializer.getText(ast)));
@@ -97,6 +102,10 @@ function transform(file){
   if(ts.isPropertyAccessExpression(n)&&['process.env.CREATOROS_T1224_EVIDENCE_DIR','process.env.CREATOROS_T1070_EVIDENCE_DIR'].includes(n.getText(ast))){
    outputSuffixes.push('orchestrator/evidence');
    add(n,'resolve(process.env.CREATOROS_T1246_RUN_DIR!, "original-output", "orchestrator", "evidence")','evidence-output-path','env-based evidence writer output only');
+  }
+  if(ts.isStringLiteral(n)&&n.text.startsWith('../.codex-tmp/')){
+   const suffix=n.text.slice(3);outputSuffixes.push(suffix);
+   add(n,`(process.env.CREATOROS_T1246_RUN_DIR! + ${JSON.stringify('/original-output/'+suffix)})`,'evidence-output-path','actual screenshot historical .codex-tmp OUTPUT only');
   }
   if(ts.isStringLiteral(n)&&n.text.startsWith('../orchestrator/evidence/')){
    const suffix=n.text.slice(3);outputSuffixes.push(suffix);
@@ -150,7 +159,7 @@ function transform(file){
  const rec={file:rel,originalSha256:sha(Buffer.from(before)),generatedSha256:sha(Buffer.from(after)),originalBytes:Buffer.byteLength(before),generatedBytes:Buffer.byteLength(after),edits:edits.length,reconstruction:'original source byte-identical after removing only recorded edits'};fileRecords.push(rec);
  changes.push(...edits.map(e=>({file:rel,...e})));
 }
-for(const f of allFiles(src))if(/\.(ts|tsx)$/.test(f)&&/^(e2e|helpers|fixtures)\//.test(path.relative(src,f)))transform(f);
+for(const f of allFiles(src))if(/\.(ts|tsx)$/.test(f)&&(/^(e2e|helpers|fixtures)\//.test(path.relative(src,f))||['visual/__setup__.ts','visual/__teardown__.ts'].includes(path.relative(src,f))))transform(f);
 const allOriginal=allFiles(src).map(f=>({file:path.relative(src,f),sha256:sha(fs.readFileSync(f))}));
 const manifest={schemaVersion:1,task:'T-1246',description:'当前54原断言＋声明预算规范的隔离验收',preparedAt:new Date().toISOString(),sourceRoot:root,sourceCommit:cp.execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),candidateState:'not-frozen',sourceTreeDirty:!!cp.execFileSync('git',['status','--porcelain','--','frontend/tests','frontend/playwright.config.ts'],{cwd:root,encoding:'utf8'}).trim(),configOriginalSha256:sha(fs.readFileSync(path.join(root,'frontend/playwright.config.ts'))),generatedTestRoot:path.relative(root,dst),originalSpecCount:originalSpecs.length,originalSpecNames:originalSpecs.map(p=>path.basename(p)),allOriginalTestFiles:allOriginal,allGeneratedTestFiles:allFiles(dst).map(f=>({file:path.relative(dst,f),sha256:sha(fs.readFileSync(f))})),transformedFiles:fileRecords,changes,budgets,outputSuffixes:[...new Set(outputSuffixes)],unresolved,policy:{requestExpectActionNavigationCaptureMinMs:120000,testHookFixtureMinMs:180000,retries:0,trace:'on',screenshot:'on',selection:'e2e project complete 54 files and all parameterized cases',assertions:'unchanged',responses:'unchanged',dataOwnership:'unchanged',modelTimeoutInputs:'unchanged',sleepsIntervals:'unchanged',taskAbsoluteDeadline:'unchanged',noRuntimeMonkeypatch:true},globalTimeout:'0 = no separate shorter suite deadline; outer runner must be uncapped or derived from frozen --list actual case sum + startup/cleanup; do not use functions exec fixed wall cap',runtimeList:null,executionStarted:false};
 fs.writeFileSync(path.join(__dirname,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');

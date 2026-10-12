@@ -1,0 +1,128 @@
+{
+  "sourceCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "method": "static attribute scan; not compiled or run case count",
+  "rawAllFilesTestAttributes": 288,
+  "rawAllFilesIgnoreAttributes": 16,
+  "files": [
+    {
+      "path": "frontend/src-tauri/src/cli_access.rs",
+      "declaredTestAttributes": 10,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "7d63f2914da6542a1ad057524c0aedd2bd265c1c0082b8427f73c62bcf24e132"
+    },
+    {
+      "path": "frontend/src-tauri/src/entitlement_claim.rs",
+      "declaredTestAttributes": 14,
+      "declaredIgnoreAttributes": 1,
+      "sha256": "0bd651e285d234b79e16b14e20f15781a9aacdcdb4a76100298bad8cd787aa92"
+    },
+    {
+      "path": "frontend/src-tauri/src/sidecar_process_tests.rs",
+      "declaredTestAttributes": 12,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "cb8271fe17b900ecc0bfddef2483a2533f1a77feedb9a6abe2f7afda4a6af9e0"
+    },
+    {
+      "path": "frontend/src-tauri/src/product_identity.rs",
+      "declaredTestAttributes": 3,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "3582ae89168f94e2534c7b53212cb1fc7c58432f78aafd15102d54a269a02f2b"
+    },
+    {
+      "path": "frontend/src-tauri/src/lib.rs",
+      "declaredTestAttributes": 48,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29"
+    },
+    {
+      "path": "frontend/src-tauri/src/owned_devices.rs",
+      "declaredTestAttributes": 17,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "b4358d41e2f33a044568238d2d7d02b974ea7c14e192694e0bd1e789e18dbe36"
+    },
+    {
+      "path": "frontend/src-tauri/src/logging.rs",
+      "declaredTestAttributes": 30,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "2f31f93557c3177d50bb79e8caa9ae3f3bdf9b1d91a34e5862ad5b0687160196"
+    },
+    {
+      "path": "frontend/src-tauri/src/decoy_gate.rs",
+      "declaredTestAttributes": 3,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "e8554c9e60d9846b4b35981508c7c9eb3e2139da1c56e5fcf38c99c72bc24d74"
+    },
+    {
+      "path": "frontend/src-tauri/src/activation_reset.rs",
+      "declaredTestAttributes": 4,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "1bdc38fdf65d6b4c92aa0d62767bf701d208c9038a03c32fa96165791b0ed1e4"
+    },
+    {
+      "path": "frontend/src-tauri/src/owned_devices_http_lab.rs",
+      "declaredTestAttributes": 2,
+      "declaredIgnoreAttributes": 1,
+      "sha256": "dafa16fb56893e4d13d59262202dfc5c89ba04e7cd202e2af3f69569fbe40613"
+    },
+    {
+      "path": "frontend/src-tauri/src/license.rs",
+      "declaredTestAttributes": 71,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "baa9e9240b57d83d956e5375fe61877ce457735f1428e364224acc9efcd26243"
+    },
+    {
+      "path": "frontend/src-tauri/src/workspace_reset.rs",
+      "declaredTestAttributes": 5,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "feadd8108cd7aa34d09c13b03f679362310be54f8ba23416084c08ce53c77056"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "declaredTestAttributes": 13,
+      "declaredIgnoreAttributes": 3,
+      "sha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command.rs",
+      "declaredTestAttributes": 8,
+      "declaredIgnoreAttributes": 2,
+      "sha256": "5e7245ff479f13014ed854e42fab2b1432396941bd97bb1cf7dd6f121db4b626"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "declaredTestAttributes": 2,
+      "declaredIgnoreAttributes": 1,
+      "sha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/files.rs",
+      "declaredTestAttributes": 6,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "f7fd569c00ba2821511178d14ce88949c53e3ef87a7cb9f71df9d73e5d24d661"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/files_windows.rs",
+      "declaredTestAttributes": 3,
+      "declaredIgnoreAttributes": 0,
+      "sha256": "f1400bf8b7582f46b2cc871a816d9746390e9302bddbf11f098e4c4c52a1c2c9"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command_windows.rs",
+      "declaredTestAttributes": 10,
+      "declaredIgnoreAttributes": 2,
+      "sha256": "562a5151148533f3554ba90687c0efb42df4d2f5de537e64ce00c292bf41d768"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser.rs",
+      "declaredTestAttributes": 20,
+      "declaredIgnoreAttributes": 5,
+      "sha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "declaredTestAttributes": 7,
+      "declaredIgnoreAttributes": 1,
+      "sha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7"
+    }
+  ]
+}

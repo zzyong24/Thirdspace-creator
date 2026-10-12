@@ -1,3 +1,4 @@
+import {MIN_EXECUTION_TIMEOUT_MS} from '@creatoros/contract/timeout-policy';
 import {createHash,randomUUID} from 'node:crypto';
 import type {ElementHandle,Page,Response} from '@playwright/test';
 import type {CommentDiagnosisHost,CommentDiagnosisIdentity,CommentDiagnosisInput,CommentDiagnosisReport} from '@creatoros/backend/modules/analytics';
@@ -179,37 +180,57 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
  // 两层宿主截止共享私有身份；页面错误文本不能冒充宿主超时。
  const observationDeadline=Symbol('observation deadline');
  type Token={handle:ElementHandle<Element>;root:ElementHandle<Element>;fingerprint:string;intent:Intent};
- type Session={identity:CommentDiagnosisIdentity;report:Report;context?:SessionContext;page?:Page;focus:ElementHandle<Element>|null;tokens:Map<string,Token>;abort:AbortController;idle?:ReturnType<typeof setTimeout>;life?:ReturnType<typeof setTimeout>;tail:Promise<unknown>;history:Map<string,Report>;counts:Map<Intent,number>;bodyReads:number;bodyBytes:number};
+ type Session={identity:CommentDiagnosisIdentity;report:Report;context?:SessionContext;page?:Page;focus:ElementHandle<Element>|null;tokens:Map<string,Token>;abort:AbortController;active:number;idleExpiresAt?:number;idle?:ReturnType<typeof setTimeout>;life?:ReturnType<typeof setTimeout>;tail:Promise<unknown>;history:Map<string,Report>;counts:Map<Intent,number>;bodyReads:number;bodyBytes:number};
  const sessions=new Map<string,Session>();const occupied=new Map<string,string>();
  const ownerKey=(identity:CommentDiagnosisIdentity)=>JSON.stringify([identity.userId,identity.accountId]);
- const serial=<T>(s:Session,run:()=>Promise<T>):Promise<T>=>{const work=s.tail.then(run,run);s.tail=work.catch(()=>{});return work;};
+ const serial=<T>(s:Session,run:()=>Promise<T>):Promise<T>=>{
+  const active=async()=>{if(s.idle){clearTimeout(s.idle);s.idle=undefined;}s.active++;
+   try{return await run();}finally{s.active--;if(s.report.phase!=='closed'&&!s.abort.signal.aborted)touch(s);}
+  };
+  const work=s.tail.then(active,active);s.tail=work.catch(()=>{});return work;
+ };
  const invalidate=async(s:Session)=>{const tokens=[...s.tokens.values()];s.tokens.clear();await Promise.allSettled(tokens.flatMap(token=>[token.handle.dispose(),token.root.dispose()]));};
  const snapshot=(s:Session)=>clone(s.report);
+ const wait=<T>(work:Promise<T>,ms:number,signal?:AbortSignal):Promise<T>=>{
+  if(signal?.aborted)return Promise.reject(signal.reason);if(ms<=0)return Promise.reject(observationDeadline);
+  return new Promise<T>((resolve,reject)=>{
+   let done=false;const finish=(action:()=>void)=>{if(done)return;done=true;clearTimeout(timer);signal?.removeEventListener('abort',abort);action();};
+   const abort=()=>finish(()=>reject(signal?.reason));
+   const timer=setTimeout(()=>finish(()=>reject(observationDeadline)),ms);
+   signal?.addEventListener('abort',abort,{once:true});work.then(value=>finish(()=>resolve(value)),error=>finish(()=>reject(error)));
+  });
+ };
  const close=async(s:Session,expired=false)=>{
   if(s.idle)clearTimeout(s.idle);if(s.life)clearTimeout(s.life);
-  await invalidate(s);await s.focus?.dispose();s.focus=null;
-  try{await s.context?.close();s.abort.abort();s.report.status=expired?'expired':'closed';s.report.phase='closed';s.report.stopReason=expired?'session_expired':'none';s.report.allowedNext=[];s.report.ui=emptyUi();if(occupied.get(ownerKey(s.identity))===s.report.diagnosisId)occupied.delete(ownerKey(s.identity));}
+  // handle清理失败仍尝试真正关闭自有context；未得关闭回执时不释放占用。
+  await wait(Promise.allSettled([invalidate(s),s.focus?.dispose()]),MIN_EXECUTION_TIMEOUT_MS).catch(()=>{});s.focus=null;
+  try{await wait(Promise.resolve(s.context?.close()),MIN_EXECUTION_TIMEOUT_MS);s.abort.abort();s.report.status=expired?'expired':'closed';s.report.phase='closed';s.report.stopReason=expired?'session_expired':'none';s.report.allowedNext=[];s.report.ui=emptyUi();if(occupied.get(ownerKey(s.identity))===s.report.diagnosisId)occupied.delete(ownerKey(s.identity));}
   catch{s.report.status='unknown';s.report.stopReason='resource_stop_unconfirmed';s.report.allowedNext=[];throw Error('诊断浏览器尚未确认关闭');}
  };
- const touch=(s:Session)=>{if(s.idle)clearTimeout(s.idle);s.idle=setTimeout(()=>{s.abort.abort();void serial(s,()=>close(s,true)).catch(()=>{});},ports.idleMs??90_000);s.idle.unref?.();};
+ const touch=(s:Session)=>{if(s.idle)clearTimeout(s.idle);if(s.idleExpiresAt===undefined)s.idleExpiresAt=now()+(ports.idleMs??90_000);if(s.active||s.report.phase==='closed'||s.abort.signal.aborted)return;s.idle=setTimeout(()=>{s.abort.abort();void serial(s,()=>close(s,true)).catch(()=>{});},Math.max(0,s.idleExpiresAt-now()));s.idle.unref?.();};
  const acquire=async(s:Session)=>{
   await new Promise<void>((resolve,reject)=>{const abort=()=>reject(Error('诊断等待已取消'));s.abort.signal.addEventListener('abort',abort,{once:true});Promise.resolve().then(()=>{s.abort.signal.throwIfAborted();return ports.acquire();}).then(resolve,reject).finally(()=>s.abort.signal.removeEventListener('abort',abort));});
   s.abort.signal.throwIfAborted();
  };
- const inspect=async(s:Session)=>{
+ // 每次有限观察以原session期限封顶；嵌套inspect/投影共用同一次截止，不按partial活动续期。
+ const observationBudget=(s:Session)=>{s.abort.signal.throwIfAborted();const remaining=Date.parse(s.report.expiresAt)-now();if(remaining<=0)throw observationDeadline;return Math.min(MIN_EXECUTION_TIMEOUT_MS,remaining);};
+ const inspect=async(s:Session,deadlineAt=now()+observationBudget(s))=>{
   let timedOut=false,timer:ReturnType<typeof setTimeout>|undefined;
   const work=s.page!.evaluateHandle(inspectUi,{phase:s.report.phase,externalId:s.identity.externalId,focus:s.focus});
   void work.then(handle=>{if(timedOut)void handle.dispose().catch(()=>{});},()=>{});
-  try{return await Promise.race([work,new Promise<never>((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(observationDeadline);},1000);})]);}finally{if(timer)clearTimeout(timer);}
+  try{return await wait(Promise.race([work,new Promise<never>((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(observationDeadline);},Math.max(1,deadlineAt-now()));})]),Math.max(0,deadlineAt-now()),s.abort.signal);}catch(error){timedOut=true;throw error;}finally{if(timer)clearTimeout(timer);}
  };
  const observe=async(s:Session,allowActions=true)=>{
-  await invalidate(s);s.report.generation++;s.report.ui=emptyUi();s.report.allowedNext=[];
+  await wait(invalidate(s),observationBudget(s),s.abort.signal).catch(()=>{});s.report.generation++;s.report.ui=emptyUi();s.report.allowedNext=[];
+  if(s.abort.signal.aborted)return;
   if(!s.page)return;
   if(s.page.isClosed()){s.report.ui.observationFailure='page_closed';if(s.report.status!=='unknown'){s.report.status='unavailable';s.report.stopReason='navigation_unavailable';}return;}
+  const deadlineAt=now()+observationBudget(s);
   const tokens=new Map<string,Token>();let active=true,timer:ReturnType<typeof setTimeout>|undefined;
+  const aborted=()=>{active=false;};s.abort.signal.addEventListener('abort',aborted,{once:true});
   let stage:'evaluation_failed'|'projection_failed'='evaluation_failed';
   const work=async()=>{
-   const result=await inspect(s);
+   const result=await inspect(s,deadlineAt);
    stage='projection_failed';
    try{
     const data=await result.evaluate(value=>({ui:value.ui,entries:value.entries.map(entry=>({candidate:entry.candidate,fingerprint:entry.fingerprint}))}));
@@ -237,13 +258,13 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
     if(s.report.status!=='unknown'){s.report.status=s.report.allowedNext.length?'awaiting_selection':data.ui.status==='observed'?'observed':'unavailable';s.report.stopReason=!allowActions?'publication_changed':s.report.allowedNext.length?'none':'navigation_unavailable';}
    }finally{await result.dispose();}
   };
-  try{await Promise.race([work(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>{active=false;reject(observationDeadline);},1000);})]);}
+  try{await wait(Promise.race([work(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>{active=false;reject(observationDeadline);},Math.max(1,deadlineAt-now()));})]),Math.max(0,deadlineAt-now()),s.abort.signal);}
   catch(error){
    // 先冻结当下阶段事实，再清理；后续关闭/迟到promise不改变本次分类。
    const failure:NonNullable<Report['ui']['observationFailure']>=error===observationDeadline?'observation_deadline':s.page.isClosed()?'page_closed':stage;
    active=false;await Promise.allSettled([...tokens.values()].flatMap(token=>[token.handle.dispose(),token.root.dispose()]));tokens.clear();s.report.ui=emptyUi();s.report.ui.observationFailure=failure;s.report.allowedNext=[];if(s.report.status!=='unknown'){s.report.status='unavailable';s.report.stopReason='navigation_unavailable';}
   }
-  finally{if(timer)clearTimeout(timer);}
+  finally{if(timer)clearTimeout(timer);s.abort.signal.removeEventListener('abort',aborted);}
  };
  // 每阶段监听自然响应，返回前冻结；下一阶段不会接收上一窗口迟到的JSON。
  const windowFor=(s:Session)=>{
@@ -299,13 +320,13 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
   s.page!.on('request',onRequest);s.page!.on('response',onResponse);
   return async()=>{
    let timer:ReturnType<typeof setTimeout>|undefined;
-   await Promise.race([Promise.allSettled(pending),new Promise<void>(resolve=>{timer=setTimeout(resolve,500);})]);if(timer)clearTimeout(timer);
+   await Promise.race([Promise.allSettled(pending),new Promise<void>(resolve=>{timer=setTimeout(resolve,Math.max(0,Math.min(MIN_EXECUTION_TIMEOUT_MS,Date.parse(s.report.expiresAt)-now())));})]);if(timer)clearTimeout(timer);
    active=false;s.page!.off('request',onRequest);s.page!.off('response',onResponse);s.report.networkEvidence=clone(network);
   };
  };
  const runStage=async(s:Session,run:()=>Promise<void>,validate?:()=>Promise<boolean>)=>{
   const finish=windowFor(s);
-  try{await acquire(s);if(validate&&!await validate()){s.report.stopReason='observation_stale';return;}s.report.dispatched=true;await run();await s.page!.waitForTimeout(ports.settleMs??1000);s.abort.signal.throwIfAborted();if(new URL(s.page!.url()).origin!==ORIGIN)throw Error('unsafe origin');}
+  try{await wait(acquire(s),observationBudget(s),s.abort.signal);if(validate&&!await wait(validate(),observationBudget(s),s.abort.signal)){s.report.stopReason='observation_stale';return;}s.report.dispatched=true;await wait(run(),observationBudget(s),s.abort.signal);await wait(s.page!.waitForTimeout(ports.settleMs??1000),observationBudget(s),s.abort.signal);s.abort.signal.throwIfAborted();if(new URL(s.page!.url()).origin!==ORIGIN)throw Error('unsafe origin');}
   catch(error){s.report.status=s.report.dispatched?'unknown':'unavailable';s.report.stopReason=s.abort.signal.aborted?'deadline':(error as {name?:string})?.name==='DouyinCooldownActiveError'?'cooldown':'navigation_failed';}
   finally{await finish();}
  };
@@ -316,12 +337,12 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
    const existing=occupied.get(ownerKey(identity));if(existing){const result=blank(existing,now());result.publicationId=identity.publicationId;result.status='unavailable';result.stopReason='busy';return result;}
    for(const [oldId,old] of sessions){if(sessions.size<32)break;if(old.report.phase==='closed')sessions.delete(oldId);}
    const id=randomUUID(),report=blank(id,now());report.publicationId=identity.publicationId;report.phase='home';report.status='unavailable';report.stopReason='none';report.expiresAt=new Date(now()+(ports.lifeMs??300_000)).toISOString();
-   const s:Session={identity,report,focus:null,tokens:new Map(),abort:new AbortController(),tail:Promise.resolve(),history:new Map(),counts:new Map(),bodyReads:0,bodyBytes:0};sessions.set(id,s);occupied.set(ownerKey(identity),id);
+   const s:Session={identity,report,focus:null,tokens:new Map(),abort:new AbortController(),active:0,tail:Promise.resolve(),history:new Map(),counts:new Map(),bodyReads:0,bodyBytes:0};sessions.set(id,s);occupied.set(ownerKey(identity),id);
    s.life=setTimeout(()=>{s.abort.abort();void serial(s,()=>close(s,true)).catch(()=>{});},ports.lifeMs??300_000);s.life.unref?.();
    return serial(s,async()=>{
-    const checkout=setTimeout(()=>s.abort.abort(),ports.checkoutMs??5000);
-    try{s.context=await ports.open(identity,s.abort.signal);clearTimeout(checkout);s.page=await s.context.newPage();s.page.on('popup',popup=>{s.report.status='unknown';s.report.stopReason='unsafe_navigation';void popup.close().catch(()=>{});});s.page.on('download',download=>{s.report.status='unknown';s.report.stopReason='unsafe_navigation';void download.cancel().catch(()=>{});});
-     s.report.revision=1;await runStage(s,async()=>{await s.page!.goto(HOME,{waitUntil:'domcontentloaded',timeout:15_000});});
+    const checkout=setTimeout(()=>s.abort.abort(),Math.min(ports.checkoutMs??MIN_EXECUTION_TIMEOUT_MS,observationBudget(s)));
+    try{const opening=ports.open(identity,s.abort.signal);void opening.then(context=>{if(s.abort.signal.aborted)void context.close().catch(()=>{});},()=>{});s.context=await wait(opening,Math.min(ports.checkoutMs??MIN_EXECUTION_TIMEOUT_MS,observationBudget(s)),s.abort.signal);clearTimeout(checkout);s.abort.signal.throwIfAborted();s.page=await wait(s.context.newPage(),observationBudget(s),s.abort.signal);s.abort.signal.throwIfAborted();s.page.on('popup',popup=>{s.report.status='unknown';s.report.stopReason='unsafe_navigation';void popup.close().catch(()=>{});});s.page.on('download',download=>{s.report.status='unknown';s.report.stopReason='unsafe_navigation';void download.cancel().catch(()=>{});});
+     s.report.revision=1;await runStage(s,async()=>{await s.page!.goto(HOME,{waitUntil:'domcontentloaded',timeout:observationBudget(s)});});
      if(!s.report.dispatched){const reason=s.report.stopReason;await close(s);s.report.status='unavailable';s.report.stopReason=reason;}else{await observe(s);touch(s);}
     }catch{clearTimeout(checkout);s.report.status='unavailable';s.report.stopReason=s.abort.signal.aborted?'busy':'navigation_failed';const reason=s.report.stopReason;try{await close(s);s.report.status='unavailable';s.report.stopReason=reason;}catch{/* 已保留资源占用。 */}}
     return snapshot(s);
@@ -333,9 +354,9 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
    return serial(s,async()=>{
     if(input.action==='close'){try{await close(s);}catch{/* 返回unknown，不伪称已关闭。 */}return snapshot(s);}
     if(s.report.phase==='closed')return snapshot(s);
-    touch(s);const key=sha(JSON.stringify(input));const previous=s.history.get(key);if(input.action==='advance'&&previous)return clone(previous);
+    const key=sha(JSON.stringify(input));const previous=s.history.get(key);if(input.action==='advance'&&previous)return clone(previous);
     if(input.expectedRevision!==s.report.revision){const result=snapshot(s);result.stopReason='observation_stale';return result;}
-    if(input.action==='observe'){await observe(s,options?.allowActions!==false);return snapshot(s);}
+    if(input.action==='observe'){await observe(s,options?.allowActions!==false);s.idleExpiresAt=undefined;return snapshot(s);}
     const token=s.tokens.get(input.targetRef);
     if(s.report.status==='unknown'||input.observationId!==s.report.ui.observationId||!token||token.intent!==input.intent){const result=snapshot(s);result.stopReason='observation_stale';return result;}
     const limit=input.intent==='expand_navigation'?2:1;
@@ -348,10 +369,10 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
     };
     const valid=await revalidate();
     if(!valid){await invalidate(s);const result=snapshot(s);result.stopReason='observation_stale';return result;}
-    s.report.revision++;s.counts.set(input.intent,(s.counts.get(input.intent)??0)+1);s.report.dispatched=false;
+    s.idleExpiresAt=undefined;s.report.revision++;s.counts.set(input.intent,(s.counts.get(input.intent)??0)+1);s.report.dispatched=false;
     let focus:ElementHandle<Element>|null=null;
     if(input.intent==='expand_navigation'||input.intent==='open_work_picker'){const h=await token.handle.evaluateHandle(el=>document.getElementById(el.getAttribute('aria-controls')??''));focus=h.asElement() as ElementHandle<Element>|null;if(!focus)await h.dispose();}
-    await runStage(s,()=>token.handle.click({timeout:5000,noWaitAfter:true}),revalidate);
+    await runStage(s,()=>token.handle.click({timeout:Math.min(MIN_EXECUTION_TIMEOUT_MS,Math.max(1,Date.parse(s.report.expiresAt)-now())),noWaitAfter:true}),revalidate);
     await s.focus?.dispose();s.focus=focus;
     if(s.report.dispatched&&(s.report as Report).status!=='unknown')s.report.phase=input.intent==='expand_navigation'?'navigation':input.intent==='enter_comments'?'comments':input.intent==='open_work_picker'?'picker':'target';
     await observe(s);const result=snapshot(s);s.history.set(key,result);return result;

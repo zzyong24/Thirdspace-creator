@@ -1,0 +1,16 @@
+{
+  "pid": 75801,
+  "label": "test",
+  "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/creatoros_workbench_test-eff919631907b84d",
+  "args": [
+    "ipc::tests::t1250_",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "code": 101,
+  "signal": null,
+  "error": null,
+  "closeAt": "2026-10-11T21:06:45.481Z",
+  "stdioClosed": true,
+  "logClosedAt": "2026-10-11T21:06:45.481Z"
+}

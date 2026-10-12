@@ -1,0 +1,170 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "mode": "只读",
+  "sources": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/platform-account/account-group-manager.tsx",
+      "sha256": "1ce233432a8ef2fcec97c77a1379fc49853da616b01aa9cfe095a7c3a1809e19"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/platform-account/account-manager-page.tsx",
+      "sha256": "653400a2096fdd173f8bcfa2e04b33e9b34aa3533660d92d17fe1175f2ed5fa6"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/platform-account/account-manager-view.tsx",
+      "sha256": "131e740a16c27146a4f836cde15909a01c25c6829540e15eb6c361c00b3173ca"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/platform-account/account-manager-interactive-region.tsx",
+      "sha256": "a756a268166907b2b09025b72141bad9679a9450e19a0c9efaf65de046f9fab1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/platform-account/account-binding-panel.tsx",
+      "sha256": "eb3bab8297d784b9715c1d8bfdbcd9ec1564261712a5aa32a7e6c241bf1c6ee2"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/production/production-editor-entry.tsx",
+      "sha256": "9152774aa268f2c493523a7476053e293f6de331a88fb6965d61965daa135604"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/production/production-workbench.tsx",
+      "sha256": "627454cfbd3f369f10eb0ab2e2568598f4bde01003d9adc1b873bd01c8a96d89"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/reference-editors/video-reference-workbench.tsx",
+      "sha256": "03d99459de61735ddad47765666f25f71ff81fd166f2dec0e1a5be28a1390f63"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/positioning/positioning-center.tsx",
+      "sha256": "927983d78239582a849830f5a5a78cb9035672014ecffcf7c24ee320df396007"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/sidebar.tsx",
+      "sha256": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/account-switcher.tsx",
+      "sha256": "701fff5fbbb54378b9cdc8d9f695a649807cf6fb6ca1a0a873be5efe7d257aee"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/workspace-initialization.tsx",
+      "sha256": "a70c883b68a2c9e13aae29304d90205ac7821f7e3ee0aac68a5ccf3a84281b99"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/publishing-schedule-projection.ts",
+      "sha256": "156dc3f4225c114889b7ce778fdc5204da97a693ff3eef699d8423577cfc1584"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/query-services/query-services.service.ts",
+      "sha256": "ab01647a1eb9cb5a30099207d4d50639579be31543907ea204b38d7874fa1077"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/workspace-scope.ts",
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/video-decisions-worker.ts",
+      "sha256": "38a0a15299a9791bff92d8b070ead0e08571b4ccaf9a135f3853bc990d61f247"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/runtime/video-decisions-runner.ts",
+      "sha256": "e7f42f333aa898e9099b81cee0c66fa231238aebd3e68046f96e6df6a0152ed3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/worker-runtime.ts",
+      "sha256": "7057344bc467ae84521c610450f40c2f24e30cf607a2226663f1e118eaae350f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1022-account-group-workspace.md",
+      "sha256": "6bd95c85af7c09612acb36c3596cc43e5e48ed789b5284c7bc8f5d5c3e5ca29f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1159-current-wechat-native-report-integration.md",
+      "sha256": "b95d6954c52e5251f3b4b430ae6af2fb6e4a571c3839e0f9230ee33abae59073"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1161-preserve-wechat-account-management.md",
+      "sha256": "cde181175d0905ae6383b7a8fcd247c29adb98a9d7b2a878ec1d35b4d59fc5b4"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1062-consolidated-local-client-acceptance.md",
+      "sha256": "cfbaf9e80e6c8b005899c9be2f06d080e66cc119a14be381b721850a4fd36a1c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1053-native-editor-style-integration.md",
+      "sha256": "bae13034861b991988244a8c9203961e37471bbc49a69666ecc58ea84c916475"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md",
+      "sha256": "95911e86fb467094feff7b2bd997d1b9ce2bd2e1cbe9dedc4862517ae5f7bdea"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/superpowers/specs/2026-08-14-minimax-h3-storyboard-broll-integration.md",
+      "sha256": "2f20826ff7cdb2d6d0cc73da10623e9bc03a75153178c20eb38998dc2ee3d303"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1022-account-group-workspace/PAGE_SPEC.md",
+      "sha256": "d0cb8a19e96b42dae8f09dd94c67cd6567ac384c52cd9d36e44fd3fff583d483"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/group-workspace/group-workspace-filters.tsx",
+      "sha256": "4c4f0ea6546c2efcdc87592c7e4c5bc06bc32f430f951883acc7448768c5fa3a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/group-workspace/group-overview.tsx",
+      "sha256": "3b4b0331386c3af4a93cd796a348722b83361bc275e9a6be27e41162c833fabe"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/(creator)/daily-report/page.tsx",
+      "sha256": "67c65940bacfc5c64aab20578fb8376bae129581b4d989bc35dfd454157b1770"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/(creator)/publishing/page.tsx",
+      "sha256": "5e831d9d9843937e3649d6fa379efb8d87331076d99827fd413682ece1ee0813"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/daily-report/report-details.tsx",
+      "sha256": "ac57f13cfd75f0f2ce011f575d38f54567bfc560d725fd873ef6cd2632f9cacd"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/daily-report/daily-report-page.tsx",
+      "sha256": "20e791f29fea41dba5c116f42bf6f5ce6ccc080bfad3fea6491af7cc1252c7fb"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/application/queries/daily-report.ts",
+      "sha256": "c96cf130ffbb1c9d81c52547a21ff62de45003e15e13dce6361470d809207206"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/platform-work-catalog.spec.ts",
+      "sha256": "4affe819097d810612e0c38bb68b737648f85c085d2367d83d69126092a9fac1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/(creator)/accounts/works/page.tsx",
+      "sha256": "fa750bc21592955476a057496ddaa394c7426da76c3f7135a4f41073b124813b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/platform-account/platform-work-catalog.tsx",
+      "sha256": "3520d9a60248005e466727c1cc23ff03e0cf6644977f1bf50a60d73f86f577cf"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/platform-account/platform-work-catalog.test.tsx",
+      "sha256": "a6d074af5b8718b464f7a2cead5720c85e492842f39e2fb68942390ada1485c9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/contract/src/operations/platform-collection.ts",
+      "sha256": "6d77eacf587b7abe1710e75e5c99bd834e59a130d1aacc3aab8826433539f136"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/platform-collection/platform-collection.service.ts",
+      "sha256": "1c234861a4316a6bd6e9d375c6af4af43447b7c8f7131c5950d3d456a2f35ef9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/platform-collection/platform-collection.transport.ts",
+      "sha256": "bc4c854d56f02bf4acafb1a494a3f621dd0f8a9c9f551c5c6ec19a4a6083aff2"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "sha256": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76"
+    }
+  ]
+}

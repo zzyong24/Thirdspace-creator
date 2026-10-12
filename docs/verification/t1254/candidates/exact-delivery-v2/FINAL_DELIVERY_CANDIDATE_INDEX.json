@@ -1,0 +1,102 @@
+{
+  "task": "T-1254",
+  "scope": "DOOCS_COMPLETE_DELIVERY_CANDIDATE_READONLY_VALIDATION",
+  "noRuntimeYet": true,
+  "noProductionCopy": true,
+  "candidateRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v2/tree",
+  "inheritedDeadline": "2026-10-12T15:56:11.789Z",
+  "localSingleBirthBudgetMs": 19320000,
+  "stages": [
+    [
+      "static-complete-and-faults",
+      540000
+    ],
+    [
+      "native-all-four-verifier",
+      900000
+    ],
+    [
+      "build-entry-prepare-only",
+      4200000
+    ]
+  ],
+  "prepareMs": 3600000,
+  "afterMs": 3600000,
+  "eachHelperLifecycleMs": 2160000,
+  "manifestCounts": {
+    "writes": 73,
+    "deletes": 53,
+    "unchanged": 636,
+    "candidateFiles": 709
+  },
+  "fullInputRows": 143462,
+  "mirrorFiles": 1018,
+  "files": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v2/DELIVERY_EXACT_FILE_MANIFEST.json",
+      "sha256": "f4b9fae25cbf52268f87c35a160af3c068a5ec20791eeeb38e0f1da436f3ce32",
+      "size": 1201236
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v2/DELIVERY_VALIDATION_INPUTS.json",
+      "sha256": "258e219529aba56fb2283387b20d1b9048a319d87b1ee4cff9f76b0c312c33ca",
+      "size": 59666207
+    },
+    {
+      "file": "/tmp/t1254-readonly/run-owned-delivery-candidate-validation-v1.cjs",
+      "sha256": "a0134e67c2fd3c94bc2d2ae1f0e1d09ec2e2fee11cb29abcf4f994c4d94787ad",
+      "size": 12625
+    },
+    {
+      "file": "/tmp/t1254-readonly/validate-delivery-static-candidate-v1.mjs",
+      "sha256": "0e7860bb0b5cc0facf6e8d32a7041c2dc72e4875810348a3fb30d3f9394c2b3b",
+      "size": 5972
+    },
+    {
+      "file": "/tmp/t1254-readonly/prepare-delivery-validation-inputs-v1.py",
+      "sha256": "e69252b6bcc14ba9aa7b23231b257d66538ce5568376e09315c355fc107f3d8c",
+      "size": 4368
+    },
+    {
+      "file": "/tmp/t1254-readonly/prepare-exact-delivery-v2.py",
+      "sha256": "883b79f43b6611dcb7b2bc735781cb2e78adbdad169133602af6db4076528d64",
+      "size": 9668
+    },
+    {
+      "file": "/tmp/t1254-readonly/seal-exact-delivery-candidate-v2.py",
+      "sha256": "e13e2f72364fee573ec168ff87cd4eba40b713e08658c0f07a5499b39f2a719a",
+      "size": 3143
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v2/ALL_DELIVERY_METADATA_AND_THREE_SCRIPTS.diff",
+      "sha256": "417c2932add6d3e056990c3bcf61ffe112b09875017e9cd425fce0b31d83e68f",
+      "size": 579021
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v2/tree/frontend/scripts/build-doocs-request-budget.mjs",
+      "sha256": "460153610a087c92560f185bc77b3c571bd8bd1636cc0002940665cc13ad7441",
+      "size": 16964
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v2/tree/frontend/scripts/verify-doocs-static.mjs",
+      "sha256": "57875f61e4ab8356abe0a803d21ee93807ae355128ac4ea50e17166ba5151c49",
+      "size": 9599
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/candidates/exact-delivery-v2/tree/frontend/scripts/verify-native-editors.mjs",
+      "sha256": "aa452bfe9131f3f1b056f56bda6a286daa96b03ab4428857abbcb0793033edf0",
+      "size": 5538
+    }
+  ],
+  "originalVerifierHookOnly": true,
+  "actualV15OutputAndArchivesRemainFrozen": true,
+  "buildPrepareOnlyDoesNotClaimNewBuildExecution": true,
+  "productCopyRequiresSeparateExactRootAndPeerAdmission": true,
+  "readOnlyPrepareHistory": [
+    {
+      "exitCode": 1,
+      "reason": "two first readonly inventory attempts rejected noncanonical /tmp parent alias; no candidate/downloaded module or child executed; fullseal absent",
+      "fixed": "canonicalize parent path while preserving final symlink identity"
+    }
+  ]
+}

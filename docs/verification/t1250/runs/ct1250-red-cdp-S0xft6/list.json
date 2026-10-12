@@ -1,0 +1,6 @@
+[
+  {
+    "name": "T1250 真实控件active超过90秒不触发idle，结束后仍按原idle及life截止",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  }
+]

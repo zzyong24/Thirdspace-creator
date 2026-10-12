@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立核对宪法、当前SPEC、CLI/MCP→HTTP→公共服务实际消费者、固定Undici7.27.2安装API与Node25内置300秒默认、完整串行预算和原401/取消/回执边界。每dispatch私有Agent及入口单次绝对截止、body EOF、有限清理且不覆盖可信业务响应已闭合；旧历史无基数上限和外部MCP默认60秒如实保留。未发现规格阻断。尚未执行300秒试验、安装依赖、构建包或公共Rust链；不签实现与运行通过。",
+  "findings": []
+}

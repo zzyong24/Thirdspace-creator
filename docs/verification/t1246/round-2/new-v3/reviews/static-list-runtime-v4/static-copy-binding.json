@@ -1,0 +1,20 @@
+{
+  "purpose": "仅静态list/type；不属于私有runtime准入，不启动server/PG/browser/model",
+  "additionalTransforms": [
+    {
+      "path": "frontend/tests/e2e/settings-return.spec.ts",
+      "sourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "generatedSha256": "34956ddfbed3cfc9ccd79a4a2ed47c65bffc9b8a22b804c67d037c87a3b6204a",
+      "inverseExact": true,
+      "sourceAssertionsChanged": false
+    },
+    {
+      "path": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "sourceSha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e",
+      "generatedSha256": "51cbf6fc2b21ddf4ad3b3f138b95bebf5308ca253f23f6dc4d1131f06800e335",
+      "inverseExact": true,
+      "sourceAssertionsChanged": false
+    }
+  ],
+  "sharedDependencySymlink": "仅静态TypeScript/Playwright --list解析；正式runtime仍需完整私有dependency realpath闭包"
+}

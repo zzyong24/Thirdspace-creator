@@ -22,6 +22,7 @@ import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 
 import * as React from "react";
 import type {
+  WritingContext,
   WorkEditorTarget,
   WorkEditorCandidate,
   WorkCreationTarget,
@@ -166,6 +167,8 @@ export interface DraftChatRequest {
 export type FlushSaveFn = () => Promise<void>;
 
 interface DraftChatRequestContextValue {
+  readonly readWritingContext:(scopeKey:string,projectId:string)=>WritingContext|undefined;
+  readonly setWritingContext:(scopeKey:string,projectId:string,choice:WritingContext)=>void;
   readonly registerEditor: (port: DraftEditorPort) => () => void;
   readonly readEditorState: () => EditorState | null;
   readonly prepareEditorTurn: () => Promise<WorkEditorTarget | undefined>;
@@ -209,6 +212,9 @@ export function DraftChatRequestProvider({
 }: {
   readonly children: React.ReactNode;
 }) {
+  const writingChoices=React.useRef(new Map<string,WritingContext>());
+  const readWritingContext=React.useCallback((scopeKey:string,projectId:string)=>{const value=writingChoices.current.get(JSON.stringify([scopeKey,projectId]));return value?structuredClone(value):undefined;},[]);
+  const setWritingContext=React.useCallback((scopeKey:string,projectId:string,choice:WritingContext)=>{writingChoices.current.set(JSON.stringify([scopeKey,projectId]),structuredClone(choice));},[]);
   const [request, setRequest] = React.useState<DraftChatRequest | null>(null);
   // nonce 计数器放 ref:openChat 稳定(不随每次请求重建),自增值仍单调。
   const nonceRef = React.useRef(0);
@@ -359,6 +365,7 @@ export function DraftChatRequestProvider({
   );
   const value = React.useMemo<DraftChatRequestContextValue>(
     () => ({
+      readWritingContext,setWritingContext,
       request,
       openChat,
       registerFlush,
@@ -374,6 +381,7 @@ export function DraftChatRequestProvider({
       notifyEditorChanged,
     }),
     [
+      readWritingContext,setWritingContext,
       request,
       openChat,
       registerFlush,
@@ -407,6 +415,7 @@ export function useDraftChatRequest(): DraftChatRequestContextValue {
 }
 
 const NOOP_VALUE: DraftChatRequestContextValue = {
+  readWritingContext:()=>undefined,setWritingContext:()=>{},
   registerEditor: () => () => {},
   readEditorState: () => null,
   prepareEditorTurn: async () => undefined,

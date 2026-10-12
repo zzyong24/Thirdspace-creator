@@ -1,3 +1,5 @@
+import {createWorkCandidateAdoption,createWorkCandidateSourceService} from '@creatoros/backend/application/generation/work-candidate-adoption';
+import {createWorkWritingContext} from '@creatoros/backend/application/generation/work-writing-context';
 import {createKnowledgeGenerationService,createKnowledgeGenerationBusinessAdapters} from '@creatoros/backend/modules/ai-runtime';
 import {codexCapabilityReasonSchema,createExecutionRoute,codexExecutionSpec,frozenExecutionEngine,type CodexModelSpec,type executionModelSpecSchema} from '@creatoros/contract/execution-worker';
 import {readFrozenChatExecutionEngine} from '@creatoros/backend/modules/execution';
@@ -815,6 +817,7 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  resolveWritingContext?: (ctx:RequestContext,projectId:string,selection:import("@creatoros/contract").WritingContext)=>Promise<import("@creatoros/contract").ResolvedWritingContext>;
   readCreationTarget?: (ctx:RequestContext,target:WorkCreationTarget)=>Promise<WorkCreationTarget>;
   readEditorTarget?: (ctx:RequestContext,target:WorkEditorTarget)=>Promise<WorkEditorTarget>;
   workbenchHost?: ChatProductionCompositionDeps["workbenchHost"];
@@ -2941,7 +2944,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ),
     },
   };
-  const aiService = createAiService(aiOwnerDeps);
+  const aiService = createAiService({...aiOwnerDeps,readWorkCandidateSource:async(c,input)=>{const result=await workCandidateSource.read(c,input);return import("@creatoros/contract").then(m=>m.workCandidateSourceResult.parse(result));}});
   const runWithResolvedEffectiveSkills = async <T>(
     ctx: RequestContext,
     requiredSkillIds: readonly string[],
@@ -3123,7 +3126,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
   const articlesService = createArticlesService(db, articleOwnerPorts);
-  const articles = createArticlesTransport(() => articlesService);
+  const articles = createArticlesTransport(() => articlesService,(c,id,body)=>workCandidateAdoption.adopt(c,'article',id,body));
   const graphicOwnerPorts: import("@creatoros/backend/modules/graphic-posts").GraphicPostPeerPorts & {now:()=>string} = {
     resumeGeneration:(context,input)=>resumeModelExecution(context,{...input,taskType:"graphic.post-text"}),
     resolveConversionSource: (context,input):Promise<import("@creatoros/backend/modules/creative-results").FrozenConversionSource>=>
@@ -3193,7 +3196,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
   const graphicPostsService = createGraphicPostsService(db, graphicOwnerPorts);
-  const graphicPosts = createGraphicPostsTransport(() => graphicPostsService);
+  const graphicPosts = createGraphicPostsTransport(() => graphicPostsService,(c,id,body)=>workCandidateAdoption.adopt(c,'graphic',id,body));
   const articleTextResultsService = createArticleTextResultsService(db, {
     resumeGeneration:(context,input)=>resumeModelExecution(context,{...input,taskType:"wechat.article-text"}),
     articles: articlesService,
@@ -3433,6 +3436,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   }));
   articleOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
   graphicOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
+  const workCandidateSource=createWorkCandidateSourceService(db);
+  const workCandidateAdoption=createWorkCandidateAdoption(db,{source:workCandidateSource,articles:workArticlesFor,graphic:workGraphicFor,lockArtifact:(c,id,tx)=>workArtifactsFor(tx).getArtifact(c,id,true)});
+  const workWritingContext=createWorkWritingContext({assertProject:(c,id)=>projectsService.getProject(c,id),readDocument:articleOwnerPorts.resolveDocumentSource!,readCenter:c=>positioningService.readPositioningCenter(c),readStatement:(c,id)=>positioningService.getStatement(c,id)});
   const workCreationRoot=createWorkCreationRoot({compositions:workCompositionsFor(db),articles:articlesService,graphicPosts:graphicPostsService,script:projectScriptSource});
   const workEditorPorts:WorkEditorPorts={
     readArticle:(c,id)=>articlesService.getArticle(c,id),
@@ -6865,6 +6871,7 @@ FAVORITES_PROMOTE_PER_RUN
   const chatRuntime: ChatRuntime = {
     assistantSystem:assistantSystemRoot.preparation,
 
+    resolveWritingContext:(c,id,selection)=>workWritingContext.resolve(c,id,selection),
     readCreationTarget:async(c,target)=>(await workCreationRoot.read(c,target)).target,
     readEditorTarget:(c,target)=>workEditorCandidate.readTarget(c,target),
     runKnowledgeGeneration:knowledgeGeneration.runKnowledgeGeneration,

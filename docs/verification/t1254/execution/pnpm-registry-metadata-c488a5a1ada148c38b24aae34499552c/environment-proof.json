@@ -1,0 +1,15 @@
+{
+  "originalHomePreserved": true,
+  "originalCodexHomePreserved": true,
+  "nativePGAbsent": true,
+  "pgUrlAbsent": true,
+  "explicitEmptyUserConfig": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ/empty-user.npmrc",
+  "explicitEmptyGlobalConfig": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ/empty-global.npmrc",
+  "ownedCache": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ/npm-cache",
+  "ownedTmp": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ/tmp",
+  "requestTimeoutMs": 300000,
+  "fetchRetries": 0,
+  "ignoreScripts": true,
+  "registry": "https://registry.npmjs.org/",
+  "noCredentialValuesLogged": true
+}

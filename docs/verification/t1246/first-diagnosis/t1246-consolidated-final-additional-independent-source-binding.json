@@ -1,0 +1,2610 @@
+{
+  "schemaVersion": 1,
+  "purpose": "T1246最后追加契约独立来源复核，不是实施或测试PASS",
+  "actualModel": "unknown/inherited",
+  "specSHA256": "fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a",
+  "priorReviewedSpecSHA256": "b295cb6fc92b22433ee7415c12861a1c8b94fc3e842125d7bc99615d1256c875",
+  "frozenCandidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "currentHEAD": "533224f334c43cdb81a344424e420cad93784dd1",
+  "additionalPathCount": 71,
+  "additionalCurrentAndFrozenMatches": 71,
+  "additionalAlreadyApprovedChangedCount": 2,
+  "bodyCaseCount": 205,
+  "uniqueBodyCases": 205,
+  "groups": 46,
+  "historicalSourceBindingOccurrences": 169,
+  "historicalUniqueSourceFiles": 132,
+  "historicalFrozenMatches": 169,
+  "causalOrPolicyPending": [
+    "B044 授权模型未知可丢政策待独评",
+    "B045 两子何以未齐仍需原整文件真实trace",
+    "B046 前timeout后running无完整每任务trace"
+  ],
+  "sourceCount": 155,
+  "sourceBindings": [
+    {
+      "path": "ai-worker/src/capabilities/result-pages.ts",
+      "currentSHA256": "c7dc9c96d22cee2b34ff3dc1d6edd0a445fdfaf8aa6be76440002f2d2c157d3c",
+      "frozenSHA256": "c7dc9c96d22cee2b34ff3dc1d6edd0a445fdfaf8aa6be76440002f2d2c157d3c",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/execution/chat-text-node-worker.ts",
+      "currentSHA256": "224d6a3d353039f226dec3ba556685763f7010a7334d3c5ee83aa6e02a726806",
+      "frozenSHA256": "224d6a3d353039f226dec3ba556685763f7010a7334d3c5ee83aa6e02a726806",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/execution/chat-worker-run.ts",
+      "currentSHA256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434",
+      "frozenSHA256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/execution/durable-generation-model.ts",
+      "currentSHA256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff",
+      "frozenSHA256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/execution/generation-error.ts",
+      "currentSHA256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7",
+      "frozenSHA256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/execution/structured-business-schema.ts",
+      "currentSHA256": "8f829d7d8cc3fbf4ac06f60ef4a7172c1cd563cfb36701bebb761adbf80c46d0",
+      "frozenSHA256": "8f829d7d8cc3fbf4ac06f60ef4a7172c1cd563cfb36701bebb761adbf80c46d0",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/execution/structured-worker-generation.ts",
+      "currentSHA256": "bd931b33b775d569c4958d010a0dbfcef0b174577b2186fe6431dd6878b006af",
+      "frozenSHA256": "bd931b33b775d569c4958d010a0dbfcef0b174577b2186fe6431dd6878b006af",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/chat-pi-loop.ts",
+      "currentSHA256": "4f26ac95534c041bd042d9d43d24feff13d64092f837c4b1435640eb25aba001",
+      "frozenSHA256": "4f26ac95534c041bd042d9d43d24feff13d64092f837c4b1435640eb25aba001",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/runtime/pi-provider.ts",
+      "currentSHA256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "frozenSHA256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "ai-worker/src/runtime/provider-factory.ts",
+      "currentSHA256": "f83abd6c64796dd43e7000f98b12b71e5fd8c1a8ac94045944d3d13cdc1828af",
+      "frozenSHA256": "f83abd6c64796dd43e7000f98b12b71e5fd8c1a8ac94045944d3d13cdc1828af",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/drizzle/0114_legacy_shared_group_stamp.sql",
+      "currentSHA256": "5b57f73888f56a24e76e7d15558a1d42d3e7a26fa7e64fe88f1aaf9c0f6609d1",
+      "frozenSHA256": "5b57f73888f56a24e76e7d15558a1d42d3e7a26fa7e64fe88f1aaf9c0f6609d1",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/drizzle/0121_group_resource_grant_locks.sql",
+      "currentSHA256": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae",
+      "frozenSHA256": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/drizzle/0133_assistant_execution_engine.sql",
+      "currentSHA256": "0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6",
+      "frozenSHA256": "0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/drizzle/meta/_journal.json",
+      "currentSHA256": "641f9122d5efdc1f33ea31cda12f9df95f2537b1862582b7438afde0217f2bb0",
+      "frozenSHA256": "641f9122d5efdc1f33ea31cda12f9df95f2537b1862582b7438afde0217f2bb0",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "currentSHA256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35",
+      "frozenSHA256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/chat-generation-worker.test.ts",
+      "currentSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "frozenSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/chat-hooks-worker.test.ts",
+      "currentSHA256": "141cb1f32bde1c24b46eedb8a34731bdd07fb8af4d0194c6a0e6ec3855cdf4a4",
+      "frozenSHA256": "141cb1f32bde1c24b46eedb8a34731bdd07fb8af4d0194c6a0e6ec3855cdf4a4",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/chat-redfox-worker.test.ts",
+      "currentSHA256": "369d58133d3160a7f987e532d14f772535cf3459435721ad09187ea75bd11ab5",
+      "frozenSHA256": "369d58133d3160a7f987e532d14f772535cf3459435721ad09187ea75bd11ab5",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/chat-research-worker.test.ts",
+      "currentSHA256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+      "frozenSHA256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "currentSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "frozenSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/chat-script-patch-worker.test.ts",
+      "currentSHA256": "aa0b2fb423ff1807551c1580fb61d8cc903e766ee801f2770899ef3ef2c5d0fa",
+      "frozenSHA256": "aa0b2fb423ff1807551c1580fb61d8cc903e766ee801f2770899ef3ef2c5d0fa",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/chat-video-edit-worker.test.ts",
+      "currentSHA256": "383fc9df5829a126a4ad1001112116f3a7c741c17cde81c54e59af6e74061f97",
+      "frozenSHA256": "383fc9df5829a126a4ad1001112116f3a7c741c17cde81c54e59af6e74061f97",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/chat-work-editor-worker.test.ts",
+      "currentSHA256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+      "frozenSHA256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/copilot-worker.fork.test.ts",
+      "currentSHA256": "2290d5a213670844c2bc5e661ed5f6dc3748bd420472411acfdc6cf823559850",
+      "frozenSHA256": "2290d5a213670844c2bc5e661ed5f6dc3748bd420472411acfdc6cf823559850",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "currentSHA256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+      "frozenSHA256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/group-platform-facts.integration.test.ts",
+      "currentSHA256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+      "frozenSHA256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/research-material-adoption.test.ts",
+      "currentSHA256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+      "frozenSHA256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/structured-target-adoption.test.ts",
+      "currentSHA256": "3073b9ba8e447a315434d22e0e430caa4e201154883aac0fae7129d9f5bd9afd",
+      "frozenSHA256": "3073b9ba8e447a315434d22e0e430caa4e201154883aac0fae7129d9f5bd9afd",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "currentSHA256": "b53f2fbf0fe94481a99ce9a4181c457bf057063e09d7c573168db352944ddd48",
+      "frozenSHA256": "b53f2fbf0fe94481a99ce9a4181c457bf057063e09d7c573168db352944ddd48",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "currentSHA256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "frozenSHA256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/legacy-source-migration.test.ts",
+      "currentSHA256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "frozenSHA256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-browser-worker.integration.test.ts",
+      "currentSHA256": "371cb953b41e470152ff27142c6ca44b9e7e67ed72f6948a80e7d7c96b369b08",
+      "frozenSHA256": "371cb953b41e470152ff27142c6ca44b9e7e67ed72f6948a80e7d7c96b369b08",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-business-execution.service.test.ts",
+      "currentSHA256": "7c079a240a876f8bbf3c0b553256f1af21d469f588614da4422b1cf4055793b7",
+      "frozenSHA256": "7c079a240a876f8bbf3c0b553256f1af21d469f588614da4422b1cf4055793b7",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-business-execution.service.ts",
+      "currentSHA256": "168a966a2ba914e3a989b12bbe311062876055e09281a142d0b55a8b253c403b",
+      "frozenSHA256": "168a966a2ba914e3a989b12bbe311062876055e09281a142d0b55a8b253c403b",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+      "currentSHA256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+      "frozenSHA256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/assistant-operation-policy.ts",
+      "currentSHA256": "994c8977317616d3e139656b5dcaa8bf0e05078f85b3f12d11ad4570797be731",
+      "frozenSHA256": "994c8977317616d3e139656b5dcaa8bf0e05078f85b3f12d11ad4570797be731",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/browser-task-authorization.service.test.ts",
+      "currentSHA256": "abcfdbae1a6c30b6c9636fb8fedd82b9e44fe0379e60269dc60c1139f9dfd278",
+      "frozenSHA256": "abcfdbae1a6c30b6c9636fb8fedd82b9e44fe0379e60269dc60c1139f9dfd278",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "currentSHA256": "1829fe2e89c1373db0e09a43f39b913e65d5c82be19916dcdd778dcc8d6d4470",
+      "frozenSHA256": "1829fe2e89c1373db0e09a43f39b913e65d5c82be19916dcdd778dcc8d6d4470",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-host-input-error-recovery.test.ts",
+      "currentSHA256": "c68593fcba97a9d4aba103ca36b9e5eda062cceb1252d13201d876dc16f085b3",
+      "frozenSHA256": "c68593fcba97a9d4aba103ca36b9e5eda062cceb1252d13201d876dc16f085b3",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-host-tool-adapter.ts",
+      "currentSHA256": "4441e5677c4d6bb8fe7c3ce89b2737836f8f3026f334530b2f6283ebebf35a5a",
+      "frozenSHA256": "4441e5677c4d6bb8fe7c3ce89b2737836f8f3026f334530b2f6283ebebf35a5a",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-local-tool-host.test.ts",
+      "currentSHA256": "2ea6d37c50c1fae54ee0a0f5f13fb940564d7d41c322fefff71122776f0e8318",
+      "frozenSHA256": "2ea6d37c50c1fae54ee0a0f5f13fb940564d7d41c322fefff71122776f0e8318",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-research-preparation.test.ts",
+      "currentSHA256": "68cae10f3bae207da34baa8a1fdbc9bef4f63a3c75b46cf0c938b09bfb9c5837",
+      "frozenSHA256": "68cae10f3bae207da34baa8a1fdbc9bef4f63a3c75b46cf0c938b09bfb9c5837",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-research-preparation.ts",
+      "currentSHA256": "972d0c59dac5ce568c9d2be602b86d0d1d1349f62a02db7abacbf116d30ae3bd",
+      "frozenSHA256": "972d0c59dac5ce568c9d2be602b86d0d1d1349f62a02db7abacbf116d30ae3bd",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-script-draft-preparation.test.ts",
+      "currentSHA256": "3d914b47629716d3e18a674c933aed2ff3cc5f1784a65e555bec176da784c13f",
+      "frozenSHA256": "3d914b47629716d3e18a674c933aed2ff3cc5f1784a65e555bec176da784c13f",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-script-draft-preparation.ts",
+      "currentSHA256": "0409eef750dd03b6b07adfd76c2d9141d5772b0560e09e10a8e04601d0628b73",
+      "frozenSHA256": "0409eef750dd03b6b07adfd76c2d9141d5772b0560e09e10a8e04601d0628b73",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-errors.ts",
+      "currentSHA256": "1a729b3b08010953574bf147909bdbbf2e4ae833f1b15cdfa530ae87e77696e1",
+      "frozenSHA256": "1a729b3b08010953574bf147909bdbbf2e4ae833f1b15cdfa530ae87e77696e1",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "currentSHA256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+      "frozenSHA256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-video-edit-tool-host.test.ts",
+      "currentSHA256": "f9bffb38e5be09ead3c7183e12404ca9eeb3c140ce78624c0caa6b63f733ec16",
+      "frozenSHA256": "f9bffb38e5be09ead3c7183e12404ca9eeb3c140ce78624c0caa6b63f733ec16",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/review-context.ts",
+      "currentSHA256": "045b3ded96bc11a0c76637dbdb667f093cbe23ca897384f7bec311b13197d677",
+      "frozenSHA256": "045b3ded96bc11a0c76637dbdb667f093cbe23ca897384f7bec311b13197d677",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/review-facets.test.ts",
+      "currentSHA256": "a848907363c161d898d9cab811f36200e481b171aaf2ea032d715adfda37713a",
+      "frozenSHA256": "a848907363c161d898d9cab811f36200e481b171aaf2ea032d715adfda37713a",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/review-insights-injection.test.ts",
+      "currentSHA256": "0e1315f495dca87c7895a8e80b49b4f056296505186db42b4e5d1a19e4aecef7",
+      "frozenSHA256": "0e1315f495dca87c7895a8e80b49b4f056296505186db42b4e5d1a19e4aecef7",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/agentic-proposal-adoption.integration.test.ts",
+      "currentSHA256": "48b0219eb6e72048608ba49d387798c8f58e6b141cd89c6f1ff9a740fc202a00",
+      "frozenSHA256": "48b0219eb6e72048608ba49d387798c8f58e6b141cd89c6f1ff9a740fc202a00",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-task-commit.integration.test.ts",
+      "currentSHA256": "072f831be45324e4bc408c45bbbd8aca349bccf11836a7637da9d5b938ed5cbe",
+      "frozenSHA256": "072f831be45324e4bc408c45bbbd8aca349bccf11836a7637da9d5b938ed5cbe",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-task-commit.ts",
+      "currentSHA256": "540b2b40973f3e6c6ea3866b9404183a97b2098b537208ad82844d7268fb8dc4",
+      "frozenSHA256": "540b2b40973f3e6c6ea3866b9404183a97b2098b537208ad82844d7268fb8dc4",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-task-submission.service.test.ts",
+      "currentSHA256": "7bd107e9de2937bf6042faae112005d9f954adad0133d9dfb7468b5887e9b5d2",
+      "frozenSHA256": "7bd107e9de2937bf6042faae112005d9f954adad0133d9dfb7468b5887e9b5d2",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.contract.test.ts",
+      "currentSHA256": "564dc6733e231415562b17b9d7b9139355d8a5aaf28dba43291ebb5db5c9c637",
+      "frozenSHA256": "564dc6733e231415562b17b9d7b9139355d8a5aaf28dba43291ebb5db5c9c637",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.learnings-project-scope.integration.test.ts",
+      "currentSHA256": "4fa897fb7b22286dea1e997110a4bddd468c82c51dda40f05c0b62b75408741c",
+      "frozenSHA256": "4fa897fb7b22286dea1e997110a4bddd468c82c51dda40f05c0b62b75408741c",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "currentSHA256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "frozenSHA256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "currentSHA256": "a21dcc6cd25167caf7cec732681b84e37a72dd673f859bcc926a48c30a43f560",
+      "frozenSHA256": "b0f336496e9e58cbd0bc60f11997838b0374718173b587c5c54b907f5de7d756",
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.task-execution.integration.test.ts",
+      "currentSHA256": "d45a33b753d504ef195fd2e50d492f0c6c5285cbac5bdcf85db61d8e56d95f5a",
+      "frozenSHA256": "d45a33b753d504ef195fd2e50d492f0c6c5285cbac5bdcf85db61d8e56d95f5a",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-host-context.service.ts",
+      "currentSHA256": "ace427b8cad238fd56329424303919226fb745f6a64edf6469cc9001032f00a8",
+      "frozenSHA256": "ace427b8cad238fd56329424303919226fb745f6a64edf6469cc9001032f00a8",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-receipt-projection.test.ts",
+      "currentSHA256": "36955411c5d51fceb11ae68c2f40e0d1abb83dfef185516a7031c9f061004eb4",
+      "frozenSHA256": "36955411c5d51fceb11ae68c2f40e0d1abb83dfef185516a7031c9f061004eb4",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "currentSHA256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "frozenSHA256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-tool-result-page.ts",
+      "currentSHA256": "6dc7ed0fcbfb388414e70c0d364ac851f8ab4d5e8f122f1033ad972288e54b24",
+      "frozenSHA256": "6dc7ed0fcbfb388414e70c0d364ac851f8ab4d5e8f122f1033ad972288e54b24",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-completion.service.ts",
+      "currentSHA256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4",
+      "frozenSHA256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "currentSHA256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "frozenSHA256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/group-task-scope.integration.test.ts",
+      "currentSHA256": "177da560287eef8a007d9efdbd2ecaf47a86de738de7901fc6ab718cf3e0ee6a",
+      "frozenSHA256": "177da560287eef8a007d9efdbd2ecaf47a86de738de7901fc6ab718cf3e0ee6a",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/platform-adapt-execution.integration.test.ts",
+      "currentSHA256": "914c909614d3c12093e7334023a0c348cd6530551d30acb1ac7d637eb45e54af",
+      "frozenSHA256": "914c909614d3c12093e7334023a0c348cd6530551d30acb1ac7d637eb45e54af",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/script-draft-task-submission.integration.test.ts",
+      "currentSHA256": "18014d0a6efccdbf47fcb118267e200e497b6d2f93e3a832e3888a49c98c3e00",
+      "frozenSHA256": "18014d0a6efccdbf47fcb118267e200e497b6d2f93e3a832e3888a49c98c3e00",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/ai/work-creation-chat.integration.test.ts",
+      "currentSHA256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e",
+      "frozenSHA256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/analytics/analytics.acceptance.test.ts",
+      "currentSHA256": "7f3944e6667358cb550d59693befd145e9b74594dc2d5886d1b7b0842c819893",
+      "frozenSHA256": "7f3944e6667358cb550d59693befd145e9b74594dc2d5886d1b7b0842c819893",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/analytics/analytics.repository.ts",
+      "currentSHA256": "631ec714af3e62c72895a291e40d99c8d55bd49b2fca05e03d6687250a9ad295",
+      "frozenSHA256": "631ec714af3e62c72895a291e40d99c8d55bd49b2fca05e03d6687250a9ad295",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/analytics/analytics.transport.ts",
+      "currentSHA256": "28c1b1ed428b9b745437e24c0887daa42d5944726f945adeac0f51f4ccca9aac",
+      "frozenSHA256": "28c1b1ed428b9b745437e24c0887daa42d5944726f945adeac0f51f4ccca9aac",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.acceptance.test.ts",
+      "currentSHA256": "d20d23a958bbf98c15b6890d9aa59985bc89eafea108535b80843c516b28a976",
+      "frozenSHA256": "d20d23a958bbf98c15b6890d9aa59985bc89eafea108535b80843c516b28a976",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.legacy-media-backfill.test.ts",
+      "currentSHA256": "597de28bf4690403a4ba06a89058907a49e9b44bef932d173ff2c6e2d82b713c",
+      "frozenSHA256": "597de28bf4690403a4ba06a89058907a49e9b44bef932d173ff2c6e2d82b713c",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.service.ts",
+      "currentSHA256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b",
+      "frozenSHA256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/assets/media-root.ts",
+      "currentSHA256": "34ee040212323098a81e8f2b52ab12531e1caa3df6b89734d99b8e6a7b7ff293",
+      "frozenSHA256": "34ee040212323098a81e8f2b52ab12531e1caa3df6b89734d99b8e6a7b7ff293",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/creative-canvas/creative-canvas-series-reference.test.ts",
+      "currentSHA256": "9db7c2a5f05fbcb5f8f506a84ca55190dbf95812bfc9b4639514ddf4b4e7f3ae",
+      "frozenSHA256": "9db7c2a5f05fbcb5f8f506a84ca55190dbf95812bfc9b4639514ddf4b4e7f3ae",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+      "currentSHA256": "ef53e9bdae205f2be83fc8d272de6e1dc1a740283fcf624436c5ccacd4e212ff",
+      "frozenSHA256": "ef53e9bdae205f2be83fc8d272de6e1dc1a740283fcf624436c5ccacd4e212ff",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+      "currentSHA256": "169dce7d1fce78eb198f72a56697515984a6d6a073c8a7d995c9f4f1742ec65f",
+      "frozenSHA256": "169dce7d1fce78eb198f72a56697515984a6d6a073c8a7d995c9f4f1742ec65f",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-web-profile-wait.test.ts",
+      "currentSHA256": "7bbe75f93a8d4005e6fe9862bcebea331fcf931c308b60512ef2a677ca3d7f7a",
+      "frozenSHA256": "7bbe75f93a8d4005e6fe9862bcebea331fcf931c308b60512ef2a677ca3d7f7a",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-web-profile-wait.ts",
+      "currentSHA256": "61dab637d4757e6b0431bbc2091e5e083408804cff6c4822f60d06956c910ffc",
+      "frozenSHA256": "61dab637d4757e6b0431bbc2091e5e083408804cff6c4822f60d06956c910ffc",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-research.service.ts",
+      "currentSHA256": "9660652e5a7bf982712d76aa17f75d62a04c4e0387d8907f31cc69429ec27b2c",
+      "frozenSHA256": "9660652e5a7bf982712d76aa17f75d62a04c4e0387d8907f31cc69429ec27b2c",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-script-draft.service.ts",
+      "currentSHA256": "ca2fd5772f61377cd4cfca6372cf002e6916108a63b3982e01afd40c9ba8d006",
+      "frozenSHA256": "ca2fd5772f61377cd4cfca6372cf002e6916108a63b3982e01afd40c9ba8d006",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-text-node.service.ts",
+      "currentSHA256": "9c566881592905c537635a7ec09a8c8d8da84f44d15ad5706844ca80ea761ef7",
+      "frozenSHA256": "9c566881592905c537635a7ec09a8c8d8da84f44d15ad5706844ca80ea761ef7",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+      "currentSHA256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285",
+      "frozenSHA256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-provider-job.service.test.ts",
+      "currentSHA256": "ac6b8d56807976c5ce4ca954503fd0b29c0055c86076ce985c558740cd72fd27",
+      "frozenSHA256": "ac6b8d56807976c5ce4ca954503fd0b29c0055c86076ce985c558740cd72fd27",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "currentSHA256": "faca92020432da7084b2f3bb6500451759bcfa18324dd1c94c14af480eda9a36",
+      "frozenSHA256": "faca92020432da7084b2f3bb6500451759bcfa18324dd1c94c14af480eda9a36",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "currentSHA256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "frozenSHA256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+      "currentSHA256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8",
+      "frozenSHA256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-plan.service.ts",
+      "currentSHA256": "6fdc33a3357b933db85004f7e70d55685f7eebd32652f549084be893505864b7",
+      "frozenSHA256": "6fdc33a3357b933db85004f7e70d55685f7eebd32652f549084be893505864b7",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/execution/worker-supervisor.ts",
+      "currentSHA256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "frozenSHA256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence-workspace-scope.ts",
+      "currentSHA256": "eb55f2e976cfd441b9070a0b8a68cd37f5c13f7b8c9dc2a26c7d8c7a5f3c65ef",
+      "frozenSHA256": "eb55f2e976cfd441b9070a0b8a68cd37f5c13f7b8c9dc2a26c7d8c7a5f3c65ef",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence.service.ts",
+      "currentSHA256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d",
+      "frozenSHA256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge-proposal-adoption.service.test.ts",
+      "currentSHA256": "eadf4486eeb4fdfce5ecd09b80f7f9a47a26db8c11c4ed2fb5f50e73e4247790",
+      "frozenSHA256": "eadf4486eeb4fdfce5ecd09b80f7f9a47a26db8c11c4ed2fb5f50e73e4247790",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.db-schema.test.ts",
+      "currentSHA256": "499bb0e5f0156b26a743c1b6229ad539d07b359e8b4943baa1293b19f2bc467b",
+      "frozenSHA256": "499bb0e5f0156b26a743c1b6229ad539d07b359e8b4943baa1293b19f2bc467b",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.repository.integration.test.ts",
+      "currentSHA256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+      "frozenSHA256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/learnings/learning-adoption-key.integration.test.ts",
+      "currentSHA256": "39a1475a3a256835bd4f48ede70b45a738a648b351280583faa780aac9c014cc",
+      "frozenSHA256": "39a1475a3a256835bd4f48ede70b45a738a648b351280583faa780aac9c014cc",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/learnings/learnings-calibration-reflow.integration.test.ts",
+      "currentSHA256": "b6fe7627562442ff34fd148efb00fc7fb90f5a5246f0aa2499cf7a7f782f2706",
+      "frozenSHA256": "b6fe7627562442ff34fd148efb00fc7fb90f5a5246f0aa2499cf7a7f782f2706",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/learnings/learnings.acceptance.test.ts",
+      "currentSHA256": "204cfa0634888f080f4c275f9525a96e18b8875dde51870e5bcdc1f4ed700468",
+      "frozenSHA256": "204cfa0634888f080f4c275f9525a96e18b8875dde51870e5bcdc1f4ed700468",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/learnings/learnings.contract.test.ts",
+      "currentSHA256": "0f651494f746d9931fcf9f7031f0da31612331325a7d356687f08682ca2d4301",
+      "frozenSHA256": "0f651494f746d9931fcf9f7031f0da31612331325a7d356687f08682ca2d4301",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/learnings/learnings.repository.ts",
+      "currentSHA256": "c75f108cfbbc3506b9e73aabb3d220666a701a0e8635c3469d29cff9734fa8d7",
+      "frozenSHA256": "c75f108cfbbc3506b9e73aabb3d220666a701a0e8635c3469d29cff9734fa8d7",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/learnings/review-adoption-scope.integration.test.ts",
+      "currentSHA256": "6309534ac4da87b5812054560a5aeb86dc5bb061c9bc1dc4e271db9135760579",
+      "frozenSHA256": "6309534ac4da87b5812054560a5aeb86dc5bb061c9bc1dc4e271db9135760579",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.integration.test.ts",
+      "currentSHA256": "4d9ead0cb83b171e73369405514a756958a413b8c2dda7b83b472abdcdd035a1",
+      "frozenSHA256": "4d9ead0cb83b171e73369405514a756958a413b8c2dda7b83b472abdcdd035a1",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "currentSHA256": "f010077fdc6d08790417f53a64333aeb0f1e5da4f25d342696beebca23db040f",
+      "frozenSHA256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "currentEqualsFrozen": false,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": true,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-group.service.ts",
+      "currentSHA256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973",
+      "frozenSHA256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "currentSHA256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5",
+      "frozenSHA256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/platform-account/platform-account.service.test.ts",
+      "currentSHA256": "1c408630d69c0592a049f893aa6c1e9bac03dc6f0b8e37b8d9536bddb3e96b22",
+      "frozenSHA256": "1c408630d69c0592a049f893aa6c1e9bac03dc6f0b8e37b8d9536bddb3e96b22",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/platform-account/platform-account.service.ts",
+      "currentSHA256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599",
+      "frozenSHA256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "currentSHA256": "231627cc43e5ea9fae9e1acb451b40d8a5ab9b645af66ad8b449b823f1e6913d",
+      "frozenSHA256": "231627cc43e5ea9fae9e1acb451b40d8a5ab9b645af66ad8b449b823f1e6913d",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/production/production-precise-asr.integration.test.ts",
+      "currentSHA256": "bcd1adec028173a3affaed5e5d815aab9bdbb238dd681b07ba504320797a86d0",
+      "frozenSHA256": "bcd1adec028173a3affaed5e5d815aab9bdbb238dd681b07ba504320797a86d0",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/projects/data-foundation-prefer-real.integration.test.ts",
+      "currentSHA256": "25e9227870bdc256711f667d936063d7628334d293993e258d242ebc90cc0a0d",
+      "frozenSHA256": "25e9227870bdc256711f667d936063d7628334d293993e258d242ebc90cc0a0d",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-cover.integration.test.ts",
+      "currentSHA256": "c9e64623264b6c72fb85d8f88beebf9a68ec1cb427bba5eb0190047bfd2d4079",
+      "frozenSHA256": "c9e64623264b6c72fb85d8f88beebf9a68ec1cb427bba5eb0190047bfd2d4079",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-cover.service.ts",
+      "currentSHA256": "6e939583b6061fe1951a47081489d26746a667952c107cea4bdb58dd36d06a48",
+      "frozenSHA256": "51060870eeaa19ddace925c1b82889deffc91da9df160aee22b52d13ffc99f33",
+      "currentEqualsFrozen": false,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": true,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.repository.ts",
+      "currentSHA256": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+      "frozenSHA256": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.ts",
+      "currentSHA256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f",
+      "frozenSHA256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/reviews/reviews.acceptance.test.ts",
+      "currentSHA256": "2c33fd88e1073b80b9bcc5eb18b78ec1c5925005e2bbc21a682fb81cd46e9c35",
+      "frozenSHA256": "2c33fd88e1073b80b9bcc5eb18b78ec1c5925005e2bbc21a682fb81cd46e9c35",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/reviews/reviews.contract.test.ts",
+      "currentSHA256": "f22f3b624f1ae91ae39ff5ab743971d0be405d95f431388f256fc4ee342d902f",
+      "frozenSHA256": "f22f3b624f1ae91ae39ff5ab743971d0be405d95f431388f256fc4ee342d902f",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/reviews/reviews.repository.ts",
+      "currentSHA256": "65991dc254071dadb96f7af57813ddb0af25d6ca213531514b25f801eee7ea7c",
+      "frozenSHA256": "65991dc254071dadb96f7af57813ddb0af25d6ca213531514b25f801eee7ea7c",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/settings/settings.service.test.ts",
+      "currentSHA256": "9a4eb4fce360a6e191100435389f8dea17a5442fcadcd42349f6d5f2f58300e5",
+      "frozenSHA256": "9a4eb4fce360a6e191100435389f8dea17a5442fcadcd42349f6d5f2f58300e5",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/modules/settings/settings.service.ts",
+      "currentSHA256": "4c091de22bc6397adb8bed95ba5f3eb88c306a1efdf730c70d8152e182b39156",
+      "frozenSHA256": "4c091de22bc6397adb8bed95ba5f3eb88c306a1efdf730c70d8152e182b39156",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/schema/publishing.ts",
+      "currentSHA256": "08baeeb0ab28bfdc4aa6dead81fbeea0d1b3fb5fd266547c49974a42e97b4aaa",
+      "frozenSHA256": "08baeeb0ab28bfdc4aa6dead81fbeea0d1b3fb5fd266547c49974a42e97b4aaa",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "currentSHA256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "frozenSHA256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "currentSHA256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "frozenSHA256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "contract/src/assistant-operation-catalog.ts",
+      "currentSHA256": "453386418d356156c8e90beb2cd0cd2d347f52d6d75677037f7c29ef1706c058",
+      "frozenSHA256": "453386418d356156c8e90beb2cd0cd2d347f52d6d75677037f7c29ef1706c058",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "currentSHA256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586",
+      "frozenSHA256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "contract/src/resources/publication-cover.ts",
+      "currentSHA256": "bf6ffe2c3f79adb60d58626a532e35a8da6f1799f018ca2fe34dbf832ef44a7f",
+      "frozenSHA256": "bf6ffe2c3f79adb60d58626a532e35a8da6f1799f018ca2fe34dbf832ef44a7f",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "contract/src/resources/publishing.ts",
+      "currentSHA256": "fe655be8ea5511396d0ef6b38f4244df080304d58ec0e4712cede9a1df573fa9",
+      "frozenSHA256": "fe655be8ea5511396d0ef6b38f4244df080304d58ec0e4712cede9a1df573fa9",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "contract/src/timeout-policy.ts",
+      "currentSHA256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "frozenSHA256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/engineering/timeout-policy.md",
+      "currentSHA256": "94385308b37926c3f1b81cf3c8bf0533983025bfc539cac7c914770c112604cf",
+      "frozenSHA256": "94385308b37926c3f1b81cf3c8bf0533983025bfc539cac7c914770c112604cf",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/features/t1022-account-group-workspace.md",
+      "currentSHA256": "6bd95c85af7c09612acb36c3596cc43e5e48ed789b5284c7bc8f5d5c3e5ca29f",
+      "frozenSHA256": "6bd95c85af7c09612acb36c3596cc43e5e48ed789b5284c7bc8f5d5c3e5ca29f",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/features/t1023-agent-recovery-liveness.md",
+      "currentSHA256": "5ee3d880e6378fa24baaec19bce215b64a53fa7e8c6a8b8f72dab5944f5a9ea3",
+      "frozenSHA256": "5ee3d880e6378fa24baaec19bce215b64a53fa7e8c6a8b8f72dab5944f5a9ea3",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/features/t1024-chat-runtime-liveness.md",
+      "currentSHA256": "18884da5a95ff9d303254ddee572a1f690820ef4399ca2a1f8624cf5b86a1828",
+      "frozenSHA256": "18884da5a95ff9d303254ddee572a1f690820ef4399ca2a1f8624cf5b86a1828",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/features/t1026-agent-cli-acceptance.md",
+      "currentSHA256": "7fc7ce27ec1d6eddcd886c82d239b03197e1a4a30d32b16e55cea199bc8e513f",
+      "frozenSHA256": "7fc7ce27ec1d6eddcd886c82d239b03197e1a4a30d32b16e55cea199bc8e513f",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/features/t1085-chat-integration-fixture-calibration.md",
+      "currentSHA256": "2727868808d5992828fc13d3a6ee75502143124bf4ae187c13264f67a6f332c1",
+      "frozenSHA256": "2727868808d5992828fc13d3a6ee75502143124bf4ae187c13264f67a6f332c1",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/features/t1097-article-director-options-diagnosis.md",
+      "currentSHA256": "8221447156d8ae0194ab343cde1413a378e2fa18a552dbf869b576b5eb26b232",
+      "frozenSHA256": "ddbced00d0b990a3c3db02e2f759652b3715487ed8d2193ddd32ecdc65cfc58d",
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/features/t1238-codex-unified-text-image-engine.md",
+      "currentSHA256": "1c2f0e33bcedd10af9dd18d52b6e1d181fca314f59711eaa532b2693d6f2fbc7",
+      "frozenSHA256": "1c2f0e33bcedd10af9dd18d52b6e1d181fca314f59711eaa532b2693d6f2fbc7",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/verification/t1246/first-diagnosis/consolidated-final-additional-write-set.json",
+      "currentSHA256": "b43c86f9565d807eb67f09de8acd6633ea8c91ec82d3068e0974b8284a48aaea",
+      "frozenSHA256": null,
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/BACKEND_KNOWN_BODY_REPAIR_CONTRACT.md",
+      "currentSHA256": "4f5e121a12ade3d58aa00bb6f174733a544ea913ee98a28bac8cce6638456a42",
+      "frozenSHA256": null,
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/backend-body-diagnosis-final-closure.json",
+      "currentSHA256": "ec7576aca2d06b8e648b5647d3ea7cd86c4438071c38b1aa2b91b2a1b53697e8",
+      "frozenSHA256": null,
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "docs/verification/t1246/unit-first/backend-known-body-source-map.json",
+      "currentSHA256": "802fc9eb6152026970c473c72095f6a0d02b5e87a3f56881fa15d998a84be70e",
+      "frozenSHA256": null,
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/components/shell/app-shell.tsx",
+      "currentSHA256": "959c4f98a12475e1f70af202c6f15169578295f3e2da0f85a20d08f2eb7e59cc",
+      "frozenSHA256": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/components/shell/settings-return-context.tsx",
+      "currentSHA256": "2e9ce28e5c5443a14a6b7c0ea7517bac2c3544cabe65d6c0e723ae853b3e0910",
+      "frozenSHA256": null,
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/components/shell/shell.test.tsx",
+      "currentSHA256": "85232cb1b33f9874ff1133c388d20e017c6df1bee85cd6899c6e51ca168ab8a9",
+      "frozenSHA256": "85232cb1b33f9874ff1133c388d20e017c6df1bee85cd6899c6e51ca168ab8a9",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/components/shell/use-primary-navigation.ts",
+      "currentSHA256": "883d305ab5a78a676018b1e930de453b187e8a6d937a5236aba3908c6cabea17",
+      "frozenSHA256": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206",
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/features/assets/assets-page.test.tsx",
+      "currentSHA256": "1a652be1f338a570c91e821d2878fad4122cf972b893e36534fdfc739539d445",
+      "frozenSHA256": "1a652be1f338a570c91e821d2878fad4122cf972b893e36534fdfc739539d445",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/features/dashboard/dashboard-page.test.tsx",
+      "currentSHA256": "ea37a9d9fb18d7cff4d8495ac0eb0df1278bd3dcea79d27614f7d39f371a42c6",
+      "frozenSHA256": "ea37a9d9fb18d7cff4d8495ac0eb0df1278bd3dcea79d27614f7d39f371a42c6",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-page.test.tsx",
+      "currentSHA256": "658423c60b735154920c47bd9111bca0e4bd98501bcfa7abef106be92c4236bc",
+      "frozenSHA256": "658423c60b735154920c47bd9111bca0e4bd98501bcfa7abef106be92c4236bc",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/features/projects/projects-page.test.tsx",
+      "currentSHA256": "e062f7af00df43ea4351792f4329088e30ec6fa0e5e82eddbdaa9b91db21a881",
+      "frozenSHA256": "e062f7af00df43ea4351792f4329088e30ec6fa0e5e82eddbdaa9b91db21a881",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/features/publishing-center/publishing-center-page.test.tsx",
+      "currentSHA256": "c36f7462bfa4709453ded7faf5066a81311b9c67747e00387e339381ddb5cdc5",
+      "frozenSHA256": "c36f7462bfa4709453ded7faf5066a81311b9c67747e00387e339381ddb5cdc5",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/features/review/analytics-review-page.test.tsx",
+      "currentSHA256": "0c709578712adb6d7fd02f3bf877f4a0872ac1435749337a566a68280d679b70",
+      "frozenSHA256": "0c709578712adb6d7fd02f3bf877f4a0872ac1435749337a566a68280d679b70",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "currentSHA256": "893026157c99c6ac4ce73017166088b6f2eac3bee50c924cceefd632c4bcc32b",
+      "frozenSHA256": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "currentEqualsFrozen": false,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/src/features/settings/settings-page.test.tsx",
+      "currentSHA256": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "frozenSHA256": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "currentSHA256": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609",
+      "frozenSHA256": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": true,
+      "alreadyApprovedMutation": false,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "currentSHA256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "frozenSHA256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "currentEqualsFrozen": true,
+      "additionalDeclared": false,
+      "alreadyApprovedMutation": null,
+      "inspection": "只读契约与消费者复核；当前实现差异不代签implementation"
+    }
+  ],
+  "originalSourceChecks": [
+    {
+      "group": "B001",
+      "path": "backend/src/modules/publishing/publication-cover.integration.test.ts",
+      "recordedSHA256": "c9e64623264b6c72fb85d8f88beebf9a68ec1cb427bba5eb0190047bfd2d4079",
+      "actualFrozenSHA256": "c9e64623264b6c72fb85d8f88beebf9a68ec1cb427bba5eb0190047bfd2d4079",
+      "match": true
+    },
+    {
+      "group": "B001",
+      "path": "backend/src/modules/publishing/publication-cover.service.ts",
+      "recordedSHA256": "51060870eeaa19ddace925c1b82889deffc91da9df160aee22b52d13ffc99f33",
+      "actualFrozenSHA256": "51060870eeaa19ddace925c1b82889deffc91da9df160aee22b52d13ffc99f33",
+      "match": true
+    },
+    {
+      "group": "B001",
+      "path": "backend/src/schema/publishing.ts",
+      "recordedSHA256": "08baeeb0ab28bfdc4aa6dead81fbeea0d1b3fb5fd266547c49974a42e97b4aaa",
+      "actualFrozenSHA256": "08baeeb0ab28bfdc4aa6dead81fbeea0d1b3fb5fd266547c49974a42e97b4aaa",
+      "match": true
+    },
+    {
+      "group": "B001",
+      "path": "contract/src/resources/publication-cover.ts",
+      "recordedSHA256": "bf6ffe2c3f79adb60d58626a532e35a8da6f1799f018ca2fe34dbf832ef44a7f",
+      "actualFrozenSHA256": "bf6ffe2c3f79adb60d58626a532e35a8da6f1799f018ca2fe34dbf832ef44a7f",
+      "match": true
+    },
+    {
+      "group": "B001",
+      "path": "contract/src/resources/publishing.ts",
+      "recordedSHA256": "fe655be8ea5511396d0ef6b38f4244df080304d58ec0e4712cede9a1df573fa9",
+      "actualFrozenSHA256": "fe655be8ea5511396d0ef6b38f4244df080304d58ec0e4712cede9a1df573fa9",
+      "match": true
+    },
+    {
+      "group": "B002",
+      "path": "backend/src/modules/execution/execution-provider-job.service.test.ts",
+      "recordedSHA256": "ac6b8d56807976c5ce4ca954503fd0b29c0055c86076ce985c558740cd72fd27",
+      "actualFrozenSHA256": "ac6b8d56807976c5ce4ca954503fd0b29c0055c86076ce985c558740cd72fd27",
+      "match": true
+    },
+    {
+      "group": "B002",
+      "path": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "recordedSHA256": "faca92020432da7084b2f3bb6500451759bcfa18324dd1c94c14af480eda9a36",
+      "actualFrozenSHA256": "faca92020432da7084b2f3bb6500451759bcfa18324dd1c94c14af480eda9a36",
+      "match": true
+    },
+    {
+      "group": "B002",
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "recordedSHA256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "actualFrozenSHA256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "match": true
+    },
+    {
+      "group": "B003",
+      "path": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "recordedSHA256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35",
+      "actualFrozenSHA256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35",
+      "match": true
+    },
+    {
+      "group": "B003",
+      "path": "backend/src/modules/intelligence/intelligence.service.ts",
+      "recordedSHA256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d",
+      "actualFrozenSHA256": "9311ada59d258ee629ff76a2d2430116574b21f89493214e4a5c4310e14a792d",
+      "match": true
+    },
+    {
+      "group": "B003",
+      "path": "backend/src/modules/intelligence/intelligence-workspace-scope.ts",
+      "recordedSHA256": "eb55f2e976cfd441b9070a0b8a68cd37f5c13f7b8c9dc2a26c7d8c7a5f3c65ef",
+      "actualFrozenSHA256": "eb55f2e976cfd441b9070a0b8a68cd37f5c13f7b8c9dc2a26c7d8c7a5f3c65ef",
+      "match": true
+    },
+    {
+      "group": "B003",
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "recordedSHA256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5",
+      "actualFrozenSHA256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5",
+      "match": true
+    },
+    {
+      "group": "B004",
+      "path": "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "recordedSHA256": "231627cc43e5ea9fae9e1acb451b40d8a5ab9b645af66ad8b449b823f1e6913d",
+      "actualFrozenSHA256": "231627cc43e5ea9fae9e1acb451b40d8a5ab9b645af66ad8b449b823f1e6913d",
+      "match": true
+    },
+    {
+      "group": "B004",
+      "path": "backend/src/modules/production/production-precise-asr.integration.test.ts",
+      "recordedSHA256": "bcd1adec028173a3affaed5e5d815aab9bdbb238dd681b07ba504320797a86d0",
+      "actualFrozenSHA256": "bcd1adec028173a3affaed5e5d815aab9bdbb238dd681b07ba504320797a86d0",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/ai/ai-task-submission.service.test.ts",
+      "recordedSHA256": "7bd107e9de2937bf6042faae112005d9f954adad0133d9dfb7468b5887e9b5d2",
+      "actualFrozenSHA256": "7bd107e9de2937bf6042faae112005d9f954adad0133d9dfb7468b5887e9b5d2",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/ai/ai.task-execution.integration.test.ts",
+      "recordedSHA256": "d45a33b753d504ef195fd2e50d492f0c6c5285cbac5bdcf85db61d8e56d95f5a",
+      "actualFrozenSHA256": "d45a33b753d504ef195fd2e50d492f0c6c5285cbac5bdcf85db61d8e56d95f5a",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/ai/ai.learnings-project-scope.integration.test.ts",
+      "recordedSHA256": "4fa897fb7b22286dea1e997110a4bddd468c82c51dda40f05c0b62b75408741c",
+      "actualFrozenSHA256": "4fa897fb7b22286dea1e997110a4bddd468c82c51dda40f05c0b62b75408741c",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/reviews/reviews.contract.test.ts",
+      "recordedSHA256": "f22f3b624f1ae91ae39ff5ab743971d0be405d95f431388f256fc4ee342d902f",
+      "actualFrozenSHA256": "f22f3b624f1ae91ae39ff5ab743971d0be405d95f431388f256fc4ee342d902f",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/reviews/reviews.acceptance.test.ts",
+      "recordedSHA256": "2c33fd88e1073b80b9bcc5eb18b78ec1c5925005e2bbc21a682fb81cd46e9c35",
+      "actualFrozenSHA256": "2c33fd88e1073b80b9bcc5eb18b78ec1c5925005e2bbc21a682fb81cd46e9c35",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/learnings/learnings.contract.test.ts",
+      "recordedSHA256": "0f651494f746d9931fcf9f7031f0da31612331325a7d356687f08682ca2d4301",
+      "actualFrozenSHA256": "0f651494f746d9931fcf9f7031f0da31612331325a7d356687f08682ca2d4301",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/learnings/learnings.acceptance.test.ts",
+      "recordedSHA256": "204cfa0634888f080f4c275f9525a96e18b8875dde51870e5bcdc1f4ed700468",
+      "actualFrozenSHA256": "204cfa0634888f080f4c275f9525a96e18b8875dde51870e5bcdc1f4ed700468",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/learnings/learning-adoption-key.integration.test.ts",
+      "recordedSHA256": "39a1475a3a256835bd4f48ede70b45a738a648b351280583faa780aac9c014cc",
+      "actualFrozenSHA256": "39a1475a3a256835bd4f48ede70b45a738a648b351280583faa780aac9c014cc",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/learnings/review-adoption-scope.integration.test.ts",
+      "recordedSHA256": "6309534ac4da87b5812054560a5aeb86dc5bb061c9bc1dc4e271db9135760579",
+      "actualFrozenSHA256": "6309534ac4da87b5812054560a5aeb86dc5bb061c9bc1dc4e271db9135760579",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/learnings/learnings-calibration-reflow.integration.test.ts",
+      "recordedSHA256": "b6fe7627562442ff34fd148efb00fc7fb90f5a5246f0aa2499cf7a7f782f2706",
+      "actualFrozenSHA256": "b6fe7627562442ff34fd148efb00fc7fb90f5a5246f0aa2499cf7a7f782f2706",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/workspace-write.ts",
+      "recordedSHA256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "actualFrozenSHA256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/workspace-scope.ts",
+      "recordedSHA256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "actualFrozenSHA256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/reviews/reviews.repository.ts",
+      "recordedSHA256": "65991dc254071dadb96f7af57813ddb0af25d6ca213531514b25f801eee7ea7c",
+      "actualFrozenSHA256": "65991dc254071dadb96f7af57813ddb0af25d6ca213531514b25f801eee7ea7c",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/learnings/learnings.repository.ts",
+      "recordedSHA256": "c75f108cfbbc3506b9e73aabb3d220666a701a0e8635c3469d29cff9734fa8d7",
+      "actualFrozenSHA256": "c75f108cfbbc3506b9e73aabb3d220666a701a0e8635c3469d29cff9734fa8d7",
+      "match": true
+    },
+    {
+      "group": "B005",
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "recordedSHA256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "actualFrozenSHA256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/src/modules/knowledge/knowledge-proposal-adoption.service.test.ts",
+      "recordedSHA256": "eadf4486eeb4fdfce5ecd09b80f7f9a47a26db8c11c4ed2fb5f50e73e4247790",
+      "actualFrozenSHA256": "eadf4486eeb4fdfce5ecd09b80f7f9a47a26db8c11c4ed2fb5f50e73e4247790",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/src/modules/knowledge/knowledge.db-schema.test.ts",
+      "recordedSHA256": "499bb0e5f0156b26a743c1b6229ad539d07b359e8b4943baa1293b19f2bc467b",
+      "actualFrozenSHA256": "499bb0e5f0156b26a743c1b6229ad539d07b359e8b4943baa1293b19f2bc467b",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/src/modules/knowledge/knowledge.repository.integration.test.ts",
+      "recordedSHA256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+      "actualFrozenSHA256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/src/modules/ai/agentic-proposal-adoption.integration.test.ts",
+      "recordedSHA256": "48b0219eb6e72048608ba49d387798c8f58e6b141cd89c6f1ff9a740fc202a00",
+      "actualFrozenSHA256": "48b0219eb6e72048608ba49d387798c8f58e6b141cd89c6f1ff9a740fc202a00",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/src/integration/research-material-adoption.test.ts",
+      "recordedSHA256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+      "actualFrozenSHA256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/src/modules/ai-runtime/agentic-browser-worker.integration.test.ts",
+      "recordedSHA256": "371cb953b41e470152ff27142c6ca44b9e7e67ed72f6948a80e7d7c96b369b08",
+      "actualFrozenSHA256": "371cb953b41e470152ff27142c6ca44b9e7e67ed72f6948a80e7d7c96b369b08",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/drizzle/0114_legacy_shared_group_stamp.sql",
+      "recordedSHA256": "5b57f73888f56a24e76e7d15558a1d42d3e7a26fa7e64fe88f1aaf9c0f6609d1",
+      "actualFrozenSHA256": "5b57f73888f56a24e76e7d15558a1d42d3e7a26fa7e64fe88f1aaf9c0f6609d1",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/drizzle/0121_group_resource_grant_locks.sql",
+      "recordedSHA256": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae",
+      "actualFrozenSHA256": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae",
+      "match": true
+    },
+    {
+      "group": "B006",
+      "path": "backend/src/modules/platform-account/account-group.service.ts",
+      "recordedSHA256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973",
+      "actualFrozenSHA256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973",
+      "match": true
+    },
+    {
+      "group": "B007",
+      "path": "backend/src/modules/ai/ai-task-commit.integration.test.ts",
+      "recordedSHA256": "072f831be45324e4bc408c45bbbd8aca349bccf11836a7637da9d5b938ed5cbe",
+      "actualFrozenSHA256": "072f831be45324e4bc408c45bbbd8aca349bccf11836a7637da9d5b938ed5cbe",
+      "match": true
+    },
+    {
+      "group": "B007",
+      "path": "backend/src/modules/ai/script-draft-task-submission.integration.test.ts",
+      "recordedSHA256": "18014d0a6efccdbf47fcb118267e200e497b6d2f93e3a832e3888a49c98c3e00",
+      "actualFrozenSHA256": "18014d0a6efccdbf47fcb118267e200e497b6d2f93e3a832e3888a49c98c3e00",
+      "match": true
+    },
+    {
+      "group": "B007",
+      "path": "backend/src/modules/ai/ai-task-commit.ts",
+      "recordedSHA256": "540b2b40973f3e6c6ea3866b9404183a97b2098b537208ad82844d7268fb8dc4",
+      "actualFrozenSHA256": "540b2b40973f3e6c6ea3866b9404183a97b2098b537208ad82844d7268fb8dc4",
+      "match": true
+    },
+    {
+      "group": "B008",
+      "path": "backend/src/modules/knowledge/knowledge.repository.integration.test.ts",
+      "recordedSHA256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+      "actualFrozenSHA256": "fa136641fb36a5aa40279000f100e0a51cc90ff8c5962a50a4b9b8f80774d743",
+      "match": true
+    },
+    {
+      "group": "B008",
+      "path": "backend/drizzle/0121_group_resource_grant_locks.sql",
+      "recordedSHA256": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae",
+      "actualFrozenSHA256": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae",
+      "match": true
+    },
+    {
+      "group": "B009",
+      "path": "backend/src/legacy-source-migration.test.ts",
+      "recordedSHA256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "actualFrozenSHA256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "match": true
+    },
+    {
+      "group": "B009",
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "recordedSHA256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "actualFrozenSHA256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "match": true
+    },
+    {
+      "group": "B009",
+      "path": "backend/drizzle/meta/_journal.json",
+      "recordedSHA256": "641f9122d5efdc1f33ea31cda12f9df95f2537b1862582b7438afde0217f2bb0",
+      "actualFrozenSHA256": "641f9122d5efdc1f33ea31cda12f9df95f2537b1862582b7438afde0217f2bb0",
+      "match": true
+    },
+    {
+      "group": "B009",
+      "path": "backend/drizzle/0133_assistant_execution_engine.sql",
+      "recordedSHA256": "0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6",
+      "actualFrozenSHA256": "0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6",
+      "match": true
+    },
+    {
+      "group": "B010",
+      "path": "backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+      "recordedSHA256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8",
+      "actualFrozenSHA256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8",
+      "match": true
+    },
+    {
+      "group": "B010",
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "recordedSHA256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "actualFrozenSHA256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "match": true
+    },
+    {
+      "group": "B011",
+      "path": "backend/src/modules/settings/settings.service.test.ts",
+      "recordedSHA256": "9a4eb4fce360a6e191100435389f8dea17a5442fcadcd42349f6d5f2f58300e5",
+      "actualFrozenSHA256": "9a4eb4fce360a6e191100435389f8dea17a5442fcadcd42349f6d5f2f58300e5",
+      "match": true
+    },
+    {
+      "group": "B011",
+      "path": "backend/src/modules/assets/media-root.ts",
+      "recordedSHA256": "34ee040212323098a81e8f2b52ab12531e1caa3df6b89734d99b8e6a7b7ff293",
+      "actualFrozenSHA256": "34ee040212323098a81e8f2b52ab12531e1caa3df6b89734d99b8e6a7b7ff293",
+      "match": true
+    },
+    {
+      "group": "B011",
+      "path": "backend/src/modules/settings/settings.service.ts",
+      "recordedSHA256": "4c091de22bc6397adb8bed95ba5f3eb88c306a1efdf730c70d8152e182b39156",
+      "actualFrozenSHA256": "4c091de22bc6397adb8bed95ba5f3eb88c306a1efdf730c70d8152e182b39156",
+      "match": true
+    },
+    {
+      "group": "B012",
+      "path": "backend/src/modules/execution/chat-web-profile-wait.test.ts",
+      "recordedSHA256": "7bbe75f93a8d4005e6fe9862bcebea331fcf931c308b60512ef2a677ca3d7f7a",
+      "actualFrozenSHA256": "7bbe75f93a8d4005e6fe9862bcebea331fcf931c308b60512ef2a677ca3d7f7a",
+      "match": true
+    },
+    {
+      "group": "B012",
+      "path": "backend/src/modules/execution/chat-web-profile-wait.ts",
+      "recordedSHA256": "61dab637d4757e6b0431bbc2091e5e083408804cff6c4822f60d06956c910ffc",
+      "actualFrozenSHA256": "61dab637d4757e6b0431bbc2091e5e083408804cff6c4822f60d06956c910ffc",
+      "match": true
+    },
+    {
+      "group": "B012",
+      "path": "contract/src/timeout-policy.ts",
+      "recordedSHA256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "actualFrozenSHA256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "match": true
+    },
+    {
+      "group": "B013",
+      "path": "backend/src/modules/ai-runtime/review-facets.test.ts",
+      "recordedSHA256": "a848907363c161d898d9cab811f36200e481b171aaf2ea032d715adfda37713a",
+      "actualFrozenSHA256": "a848907363c161d898d9cab811f36200e481b171aaf2ea032d715adfda37713a",
+      "match": true
+    },
+    {
+      "group": "B013",
+      "path": "backend/src/modules/ai-runtime/review-insights-injection.test.ts",
+      "recordedSHA256": "0e1315f495dca87c7895a8e80b49b4f056296505186db42b4e5d1a19e4aecef7",
+      "actualFrozenSHA256": "0e1315f495dca87c7895a8e80b49b4f056296505186db42b4e5d1a19e4aecef7",
+      "match": true
+    },
+    {
+      "group": "B013",
+      "path": "backend/src/modules/ai-runtime/review-context.ts",
+      "recordedSHA256": "045b3ded96bc11a0c76637dbdb667f093cbe23ca897384f7bec311b13197d677",
+      "actualFrozenSHA256": "045b3ded96bc11a0c76637dbdb667f093cbe23ca897384f7bec311b13197d677",
+      "match": true
+    },
+    {
+      "group": "B014",
+      "path": "backend/src/modules/creative-canvas/creative-canvas-series-reference.test.ts",
+      "recordedSHA256": "9db7c2a5f05fbcb5f8f506a84ca55190dbf95812bfc9b4639514ddf4b4e7f3ae",
+      "actualFrozenSHA256": "9db7c2a5f05fbcb5f8f506a84ca55190dbf95812bfc9b4639514ddf4b4e7f3ae",
+      "match": true
+    },
+    {
+      "group": "B014",
+      "path": "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+      "recordedSHA256": "ef53e9bdae205f2be83fc8d272de6e1dc1a740283fcf624436c5ccacd4e212ff",
+      "actualFrozenSHA256": "ef53e9bdae205f2be83fc8d272de6e1dc1a740283fcf624436c5ccacd4e212ff",
+      "match": true
+    },
+    {
+      "group": "B015",
+      "path": "backend/src/integration/chat-generation-worker.test.ts",
+      "recordedSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "actualFrozenSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "match": true
+    },
+    {
+      "group": "B015",
+      "path": "backend/src/modules/execution/worker-supervisor.ts",
+      "recordedSHA256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "actualFrozenSHA256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "match": true
+    },
+    {
+      "group": "B016",
+      "path": "backend/src/modules/ai-runtime/chat-local-tool-host.test.ts",
+      "recordedSHA256": "2ea6d37c50c1fae54ee0a0f5f13fb940564d7d41c322fefff71122776f0e8318",
+      "actualFrozenSHA256": "2ea6d37c50c1fae54ee0a0f5f13fb940564d7d41c322fefff71122776f0e8318",
+      "match": true
+    },
+    {
+      "group": "B016",
+      "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "recordedSHA256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+      "actualFrozenSHA256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+      "match": true
+    },
+    {
+      "group": "B016",
+      "path": "backend/src/modules/ai-runtime/chat-host-tool-adapter.ts",
+      "recordedSHA256": "4441e5677c4d6bb8fe7c3ce89b2737836f8f3026f334530b2f6283ebebf35a5a",
+      "actualFrozenSHA256": "4441e5677c4d6bb8fe7c3ce89b2737836f8f3026f334530b2f6283ebebf35a5a",
+      "match": true
+    },
+    {
+      "group": "B016",
+      "path": "backend/src/modules/ai-runtime/chat-host-input-error-recovery.test.ts",
+      "recordedSHA256": "c68593fcba97a9d4aba103ca36b9e5eda062cceb1252d13201d876dc16f085b3",
+      "actualFrozenSHA256": "c68593fcba97a9d4aba103ca36b9e5eda062cceb1252d13201d876dc16f085b3",
+      "match": true
+    },
+    {
+      "group": "B017",
+      "path": "backend/src/integration/chat-hooks-worker.test.ts",
+      "recordedSHA256": "141cb1f32bde1c24b46eedb8a34731bdd07fb8af4d0194c6a0e6ec3855cdf4a4",
+      "actualFrozenSHA256": "141cb1f32bde1c24b46eedb8a34731bdd07fb8af4d0194c6a0e6ec3855cdf4a4",
+      "match": true
+    },
+    {
+      "group": "B017",
+      "path": "ai-worker/src/runtime/pi-provider.ts",
+      "recordedSHA256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "actualFrozenSHA256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "match": true
+    },
+    {
+      "group": "B017",
+      "path": "ai-worker/src/runtime/provider-factory.ts",
+      "recordedSHA256": "f83abd6c64796dd43e7000f98b12b71e5fd8c1a8ac94045944d3d13cdc1828af",
+      "actualFrozenSHA256": "f83abd6c64796dd43e7000f98b12b71e5fd8c1a8ac94045944d3d13cdc1828af",
+      "match": true
+    },
+    {
+      "group": "B017",
+      "path": "docs/features/t1085-chat-integration-fixture-calibration.md",
+      "recordedSHA256": "2727868808d5992828fc13d3a6ee75502143124bf4ae187c13264f67a6f332c1",
+      "actualFrozenSHA256": "2727868808d5992828fc13d3a6ee75502143124bf4ae187c13264f67a6f332c1",
+      "match": true
+    },
+    {
+      "group": "B018",
+      "path": "backend/src/integration/chat-generation-worker.test.ts",
+      "recordedSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "actualFrozenSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "match": true
+    },
+    {
+      "group": "B018",
+      "path": "ai-worker/src/runtime/pi-provider.ts",
+      "recordedSHA256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "actualFrozenSHA256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "match": true
+    },
+    {
+      "group": "B018",
+      "path": "ai-worker/src/runtime/provider-factory.ts",
+      "recordedSHA256": "f83abd6c64796dd43e7000f98b12b71e5fd8c1a8ac94045944d3d13cdc1828af",
+      "actualFrozenSHA256": "f83abd6c64796dd43e7000f98b12b71e5fd8c1a8ac94045944d3d13cdc1828af",
+      "match": true
+    },
+    {
+      "group": "B018",
+      "path": "ai-worker/src/execution/structured-business-schema.ts",
+      "recordedSHA256": "8f829d7d8cc3fbf4ac06f60ef4a7172c1cd563cfb36701bebb761adbf80c46d0",
+      "actualFrozenSHA256": "8f829d7d8cc3fbf4ac06f60ef4a7172c1cd563cfb36701bebb761adbf80c46d0",
+      "match": true
+    },
+    {
+      "group": "B018",
+      "path": "docs/features/t1085-chat-integration-fixture-calibration.md",
+      "recordedSHA256": "2727868808d5992828fc13d3a6ee75502143124bf4ae187c13264f67a6f332c1",
+      "actualFrozenSHA256": "2727868808d5992828fc13d3a6ee75502143124bf4ae187c13264f67a6f332c1",
+      "match": true
+    },
+    {
+      "group": "B019",
+      "path": "backend/src/integration/copilot-worker.fork.test.ts",
+      "recordedSHA256": "2290d5a213670844c2bc5e661ed5f6dc3748bd420472411acfdc6cf823559850",
+      "actualFrozenSHA256": "2290d5a213670844c2bc5e661ed5f6dc3748bd420472411acfdc6cf823559850",
+      "match": true
+    },
+    {
+      "group": "B019",
+      "path": "backend/src/modules/ai/ai.contract.test.ts",
+      "recordedSHA256": "564dc6733e231415562b17b9d7b9139355d8a5aaf28dba43291ebb5db5c9c637",
+      "actualFrozenSHA256": "564dc6733e231415562b17b9d7b9139355d8a5aaf28dba43291ebb5db5c9c637",
+      "match": true
+    },
+    {
+      "group": "B019",
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "recordedSHA256": "b0f336496e9e58cbd0bc60f11997838b0374718173b587c5c54b907f5de7d756",
+      "actualFrozenSHA256": "b0f336496e9e58cbd0bc60f11997838b0374718173b587c5c54b907f5de7d756",
+      "match": true
+    },
+    {
+      "group": "B019",
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "recordedSHA256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "actualFrozenSHA256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "match": true
+    },
+    {
+      "group": "B020",
+      "path": "backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "recordedSHA256": "b53f2fbf0fe94481a99ce9a4181c457bf057063e09d7c573168db352944ddd48",
+      "actualFrozenSHA256": "b53f2fbf0fe94481a99ce9a4181c457bf057063e09d7c573168db352944ddd48",
+      "match": true
+    },
+    {
+      "group": "B020",
+      "path": "backend/src/modules/ai/chat-host-context.service.ts",
+      "recordedSHA256": "ace427b8cad238fd56329424303919226fb745f6a64edf6469cc9001032f00a8",
+      "actualFrozenSHA256": "ace427b8cad238fd56329424303919226fb745f6a64edf6469cc9001032f00a8",
+      "match": true
+    },
+    {
+      "group": "B020",
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "recordedSHA256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "actualFrozenSHA256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "match": true
+    },
+    {
+      "group": "B021",
+      "path": "backend/src/integration/group-platform-facts.integration.test.ts",
+      "recordedSHA256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+      "actualFrozenSHA256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+      "match": true
+    },
+    {
+      "group": "B021",
+      "path": "backend/src/modules/projects/data-foundation-prefer-real.integration.test.ts",
+      "recordedSHA256": "25e9227870bdc256711f667d936063d7628334d293993e258d242ebc90cc0a0d",
+      "actualFrozenSHA256": "25e9227870bdc256711f667d936063d7628334d293993e258d242ebc90cc0a0d",
+      "match": true
+    },
+    {
+      "group": "B021",
+      "path": "backend/src/modules/analytics/analytics.repository.ts",
+      "recordedSHA256": "631ec714af3e62c72895a291e40d99c8d55bd49b2fca05e03d6687250a9ad295",
+      "actualFrozenSHA256": "631ec714af3e62c72895a291e40d99c8d55bd49b2fca05e03d6687250a9ad295",
+      "match": true
+    },
+    {
+      "group": "B022",
+      "path": "backend/src/integration/group-platform-facts.integration.test.ts",
+      "recordedSHA256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+      "actualFrozenSHA256": "5b464d184c669b760c84a0acbb722f05a14c7b03abbe2c56d0776aa7c449dc74",
+      "match": true
+    },
+    {
+      "group": "B022",
+      "path": "backend/src/modules/publishing/publishing.service.ts",
+      "recordedSHA256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f",
+      "actualFrozenSHA256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f",
+      "match": true
+    },
+    {
+      "group": "B022",
+      "path": "backend/src/modules/publishing/publishing.repository.ts",
+      "recordedSHA256": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+      "actualFrozenSHA256": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+      "match": true
+    },
+    {
+      "group": "B023",
+      "path": "backend/src/modules/analytics/analytics.acceptance.test.ts",
+      "recordedSHA256": "7f3944e6667358cb550d59693befd145e9b74594dc2d5886d1b7b0842c819893",
+      "actualFrozenSHA256": "7f3944e6667358cb550d59693befd145e9b74594dc2d5886d1b7b0842c819893",
+      "match": true
+    },
+    {
+      "group": "B023",
+      "path": "backend/src/modules/analytics/analytics.transport.ts",
+      "recordedSHA256": "28c1b1ed428b9b745437e24c0887daa42d5944726f945adeac0f51f4ccca9aac",
+      "actualFrozenSHA256": "28c1b1ed428b9b745437e24c0887daa42d5944726f945adeac0f51f4ccca9aac",
+      "match": true
+    },
+    {
+      "group": "B024",
+      "path": "backend/src/modules/ai/group-task-scope.integration.test.ts",
+      "recordedSHA256": "177da560287eef8a007d9efdbd2ecaf47a86de738de7901fc6ab718cf3e0ee6a",
+      "actualFrozenSHA256": "177da560287eef8a007d9efdbd2ecaf47a86de738de7901fc6ab718cf3e0ee6a",
+      "match": true
+    },
+    {
+      "group": "B024",
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "recordedSHA256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5",
+      "actualFrozenSHA256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5",
+      "match": true
+    },
+    {
+      "group": "B024",
+      "path": "backend/src/modules/intelligence/intelligence-workspace-scope.ts",
+      "recordedSHA256": "eb55f2e976cfd441b9070a0b8a68cd37f5c13f7b8c9dc2a26c7d8c7a5f3c65ef",
+      "actualFrozenSHA256": "eb55f2e976cfd441b9070a0b8a68cd37f5c13f7b8c9dc2a26c7d8c7a5f3c65ef",
+      "match": true
+    },
+    {
+      "group": "B025",
+      "path": "backend/src/modules/ai/platform-adapt-execution.integration.test.ts",
+      "recordedSHA256": "914c909614d3c12093e7334023a0c348cd6530551d30acb1ac7d637eb45e54af",
+      "actualFrozenSHA256": "914c909614d3c12093e7334023a0c348cd6530551d30acb1ac7d637eb45e54af",
+      "match": true
+    },
+    {
+      "group": "B025",
+      "path": "backend/src/modules/publishing/publishing.service.ts",
+      "recordedSHA256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f",
+      "actualFrozenSHA256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f",
+      "match": true
+    },
+    {
+      "group": "B026",
+      "path": "backend/src/modules/ai/work-creation-chat.integration.test.ts",
+      "recordedSHA256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e",
+      "actualFrozenSHA256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e",
+      "match": true
+    },
+    {
+      "group": "B026",
+      "path": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "recordedSHA256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "actualFrozenSHA256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "match": true
+    },
+    {
+      "group": "B026",
+      "path": "backend/src/modules/ai/chat-receipt-projection.test.ts",
+      "recordedSHA256": "36955411c5d51fceb11ae68c2f40e0d1abb83dfef185516a7031c9f061004eb4",
+      "actualFrozenSHA256": "36955411c5d51fceb11ae68c2f40e0d1abb83dfef185516a7031c9f061004eb4",
+      "match": true
+    },
+    {
+      "group": "B027",
+      "path": "backend/src/modules/ai-runtime/agentic-business-execution.service.test.ts",
+      "recordedSHA256": "7c079a240a876f8bbf3c0b553256f1af21d469f588614da4422b1cf4055793b7",
+      "actualFrozenSHA256": "7c079a240a876f8bbf3c0b553256f1af21d469f588614da4422b1cf4055793b7",
+      "match": true
+    },
+    {
+      "group": "B027",
+      "path": "backend/src/modules/ai-runtime/browser-task-authorization.service.test.ts",
+      "recordedSHA256": "abcfdbae1a6c30b6c9636fb8fedd82b9e44fe0379e60269dc60c1139f9dfd278",
+      "actualFrozenSHA256": "abcfdbae1a6c30b6c9636fb8fedd82b9e44fe0379e60269dc60c1139f9dfd278",
+      "match": true
+    },
+    {
+      "group": "B027",
+      "path": "backend/src/modules/ai-runtime/agentic-business-execution.service.ts",
+      "recordedSHA256": "168a966a2ba914e3a989b12bbe311062876055e09281a142d0b55a8b253c403b",
+      "actualFrozenSHA256": "168a966a2ba914e3a989b12bbe311062876055e09281a142d0b55a8b253c403b",
+      "match": true
+    },
+    {
+      "group": "B027",
+      "path": "contract/src/internal/execution-worker.ts",
+      "recordedSHA256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+      "actualFrozenSHA256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376",
+      "match": true
+    },
+    {
+      "group": "B027",
+      "path": "docs/features/t1023-agent-recovery-liveness.md",
+      "recordedSHA256": "5ee3d880e6378fa24baaec19bce215b64a53fa7e8c6a8b8f72dab5944f5a9ea3",
+      "actualFrozenSHA256": "5ee3d880e6378fa24baaec19bce215b64a53fa7e8c6a8b8f72dab5944f5a9ea3",
+      "match": true
+    },
+    {
+      "group": "B028",
+      "path": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "recordedSHA256": "1829fe2e89c1373db0e09a43f39b913e65d5c82be19916dcdd778dcc8d6d4470",
+      "actualFrozenSHA256": "1829fe2e89c1373db0e09a43f39b913e65d5c82be19916dcdd778dcc8d6d4470",
+      "match": true
+    },
+    {
+      "group": "B028",
+      "path": "contract/src/assistant-operation-catalog.ts",
+      "recordedSHA256": "453386418d356156c8e90beb2cd0cd2d347f52d6d75677037f7c29ef1706c058",
+      "actualFrozenSHA256": "453386418d356156c8e90beb2cd0cd2d347f52d6d75677037f7c29ef1706c058",
+      "match": true
+    },
+    {
+      "group": "B028",
+      "path": "backend/src/modules/ai-runtime/assistant-operation-policy.ts",
+      "recordedSHA256": "994c8977317616d3e139656b5dcaa8bf0e05078f85b3f12d11ad4570797be731",
+      "actualFrozenSHA256": "994c8977317616d3e139656b5dcaa8bf0e05078f85b3f12d11ad4570797be731",
+      "match": true
+    },
+    {
+      "group": "B029",
+      "path": "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+      "recordedSHA256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+      "actualFrozenSHA256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+      "match": true
+    },
+    {
+      "group": "B029",
+      "path": "ai-worker/src/capabilities/result-pages.ts",
+      "recordedSHA256": "c7dc9c96d22cee2b34ff3dc1d6edd0a445fdfaf8aa6be76440002f2d2c157d3c",
+      "actualFrozenSHA256": "c7dc9c96d22cee2b34ff3dc1d6edd0a445fdfaf8aa6be76440002f2d2c157d3c",
+      "match": true
+    },
+    {
+      "group": "B029",
+      "path": "backend/src/modules/ai/chat-tool-result-page.ts",
+      "recordedSHA256": "6dc7ed0fcbfb388414e70c0d364ac851f8ab4d5e8f122f1033ad972288e54b24",
+      "actualFrozenSHA256": "6dc7ed0fcbfb388414e70c0d364ac851f8ab4d5e8f122f1033ad972288e54b24",
+      "match": true
+    },
+    {
+      "group": "B030",
+      "path": "backend/src/modules/ai-runtime/chat-script-draft-preparation.test.ts",
+      "recordedSHA256": "3d914b47629716d3e18a674c933aed2ff3cc5f1784a65e555bec176da784c13f",
+      "actualFrozenSHA256": "3d914b47629716d3e18a674c933aed2ff3cc5f1784a65e555bec176da784c13f",
+      "match": true
+    },
+    {
+      "group": "B030",
+      "path": "backend/src/modules/ai-runtime/chat-script-draft-preparation.ts",
+      "recordedSHA256": "0409eef750dd03b6b07adfd76c2d9141d5772b0560e09e10a8e04601d0628b73",
+      "actualFrozenSHA256": "0409eef750dd03b6b07adfd76c2d9141d5772b0560e09e10a8e04601d0628b73",
+      "match": true
+    },
+    {
+      "group": "B031",
+      "path": "backend/src/modules/ai-runtime/chat-video-edit-tool-host.test.ts",
+      "recordedSHA256": "f9bffb38e5be09ead3c7183e12404ca9eeb3c140ce78624c0caa6b63f733ec16",
+      "actualFrozenSHA256": "f9bffb38e5be09ead3c7183e12404ca9eeb3c140ce78624c0caa6b63f733ec16",
+      "match": true
+    },
+    {
+      "group": "B031",
+      "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "recordedSHA256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+      "actualFrozenSHA256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+      "match": true
+    },
+    {
+      "group": "B031",
+      "path": "backend/src/modules/ai-runtime/chat-tool-errors.ts",
+      "recordedSHA256": "1a729b3b08010953574bf147909bdbbf2e4ae833f1b15cdfa530ae87e77696e1",
+      "actualFrozenSHA256": "1a729b3b08010953574bf147909bdbbf2e4ae833f1b15cdfa530ae87e77696e1",
+      "match": true
+    },
+    {
+      "group": "B032",
+      "path": "backend/src/modules/assets/assets.acceptance.test.ts",
+      "recordedSHA256": "d20d23a958bbf98c15b6890d9aa59985bc89eafea108535b80843c516b28a976",
+      "actualFrozenSHA256": "d20d23a958bbf98c15b6890d9aa59985bc89eafea108535b80843c516b28a976",
+      "match": true
+    },
+    {
+      "group": "B032",
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "recordedSHA256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "actualFrozenSHA256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "match": true
+    },
+    {
+      "group": "B033",
+      "path": "backend/src/modules/assets/assets.legacy-media-backfill.test.ts",
+      "recordedSHA256": "597de28bf4690403a4ba06a89058907a49e9b44bef932d173ff2c6e2d82b713c",
+      "actualFrozenSHA256": "597de28bf4690403a4ba06a89058907a49e9b44bef932d173ff2c6e2d82b713c",
+      "match": true
+    },
+    {
+      "group": "B033",
+      "path": "backend/src/modules/assets/assets.service.ts",
+      "recordedSHA256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b",
+      "actualFrozenSHA256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b",
+      "match": true
+    },
+    {
+      "group": "B033",
+      "path": "backend/src/workspace-scope.ts",
+      "recordedSHA256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "actualFrozenSHA256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "match": true
+    },
+    {
+      "group": "B034",
+      "path": "backend/src/modules/platform-account/platform-account.service.test.ts",
+      "recordedSHA256": "1c408630d69c0592a049f893aa6c1e9bac03dc6f0b8e37b8d9536bddb3e96b22",
+      "actualFrozenSHA256": "1c408630d69c0592a049f893aa6c1e9bac03dc6f0b8e37b8d9536bddb3e96b22",
+      "match": true
+    },
+    {
+      "group": "B034",
+      "path": "backend/src/modules/platform-account/platform-account.service.ts",
+      "recordedSHA256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599",
+      "actualFrozenSHA256": "ada9f6f2b51fe80baa4c6267fe7a4e13666f769185720c24652852395fb1a599",
+      "match": true
+    },
+    {
+      "group": "B035",
+      "path": "backend/src/modules/platform-account/account-binding.integration.test.ts",
+      "recordedSHA256": "4d9ead0cb83b171e73369405514a756958a413b8c2dda7b83b472abdcdd035a1",
+      "actualFrozenSHA256": "4d9ead0cb83b171e73369405514a756958a413b8c2dda7b83b472abdcdd035a1",
+      "match": true
+    },
+    {
+      "group": "B035",
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "recordedSHA256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "actualFrozenSHA256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "match": true
+    },
+    {
+      "group": "B035",
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "recordedSHA256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "actualFrozenSHA256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "match": true
+    },
+    {
+      "group": "B036",
+      "path": "backend/src/integration/chat-video-edit-worker.test.ts",
+      "recordedSHA256": "383fc9df5829a126a4ad1001112116f3a7c741c17cde81c54e59af6e74061f97",
+      "actualFrozenSHA256": "383fc9df5829a126a4ad1001112116f3a7c741c17cde81c54e59af6e74061f97",
+      "match": true
+    },
+    {
+      "group": "B036",
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "recordedSHA256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "actualFrozenSHA256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "match": true
+    },
+    {
+      "group": "B036",
+      "path": "backend/src/workspace-write.ts",
+      "recordedSHA256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "actualFrozenSHA256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "match": true
+    },
+    {
+      "group": "B037",
+      "path": "backend/src/integration/research-material-adoption.test.ts",
+      "recordedSHA256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+      "actualFrozenSHA256": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1",
+      "match": true
+    },
+    {
+      "group": "B037",
+      "path": "backend/src/integration/structured-target-adoption.test.ts",
+      "recordedSHA256": "3073b9ba8e447a315434d22e0e430caa4e201154883aac0fae7129d9f5bd9afd",
+      "actualFrozenSHA256": "3073b9ba8e447a315434d22e0e430caa4e201154883aac0fae7129d9f5bd9afd",
+      "match": true
+    },
+    {
+      "group": "B037",
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "recordedSHA256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "actualFrozenSHA256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "match": true
+    },
+    {
+      "group": "B037",
+      "path": "backend/src/workspace-write.ts",
+      "recordedSHA256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "actualFrozenSHA256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "match": true
+    },
+    {
+      "group": "B038",
+      "path": "backend/src/integration/chat-work-editor-worker.test.ts",
+      "recordedSHA256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+      "actualFrozenSHA256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e",
+      "match": true
+    },
+    {
+      "group": "B038",
+      "path": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "recordedSHA256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "actualFrozenSHA256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "match": true
+    },
+    {
+      "group": "B038",
+      "path": "backend/src/modules/ai/chat-receipt-projection.test.ts",
+      "recordedSHA256": "36955411c5d51fceb11ae68c2f40e0d1abb83dfef185516a7031c9f061004eb4",
+      "actualFrozenSHA256": "36955411c5d51fceb11ae68c2f40e0d1abb83dfef185516a7031c9f061004eb4",
+      "match": true
+    },
+    {
+      "group": "B039",
+      "path": "backend/src/integration/chat-redfox-worker.test.ts",
+      "recordedSHA256": "369d58133d3160a7f987e532d14f772535cf3459435721ad09187ea75bd11ab5",
+      "actualFrozenSHA256": "369d58133d3160a7f987e532d14f772535cf3459435721ad09187ea75bd11ab5",
+      "match": true
+    },
+    {
+      "group": "B039",
+      "path": "backend/src/integration/chat-research-worker.test.ts",
+      "recordedSHA256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+      "actualFrozenSHA256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+      "match": true
+    },
+    {
+      "group": "B039",
+      "path": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "recordedSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "actualFrozenSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "match": true
+    },
+    {
+      "group": "B039",
+      "path": "backend/src/integration/chat-script-patch-worker.test.ts",
+      "recordedSHA256": "aa0b2fb423ff1807551c1580fb61d8cc903e766ee801f2770899ef3ef2c5d0fa",
+      "actualFrozenSHA256": "aa0b2fb423ff1807551c1580fb61d8cc903e766ee801f2770899ef3ef2c5d0fa",
+      "match": true
+    },
+    {
+      "group": "B039",
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "recordedSHA256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "actualFrozenSHA256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "match": true
+    },
+    {
+      "group": "B039",
+      "path": "ai-worker/src/execution/chat-worker-run.ts",
+      "recordedSHA256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434",
+      "actualFrozenSHA256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434",
+      "match": true
+    },
+    {
+      "group": "B039",
+      "path": "backend/src/modules/ai/chat-turn-completion.service.ts",
+      "recordedSHA256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4",
+      "actualFrozenSHA256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4",
+      "match": true
+    },
+    {
+      "group": "B039",
+      "path": "backend/src/modules/execution/workbench-plan.service.ts",
+      "recordedSHA256": "6fdc33a3357b933db85004f7e70d55685f7eebd32652f549084be893505864b7",
+      "actualFrozenSHA256": "6fdc33a3357b933db85004f7e70d55685f7eebd32652f549084be893505864b7",
+      "match": true
+    },
+    {
+      "group": "B040",
+      "path": "backend/src/integration/chat-research-worker.test.ts",
+      "recordedSHA256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+      "actualFrozenSHA256": "9bdbc3035a633dd585fdf7180b049b4b9d1b1c1e1e4e256ce8aa3348527c0995",
+      "match": true
+    },
+    {
+      "group": "B040",
+      "path": "backend/src/modules/ai-runtime/chat-research-preparation.ts",
+      "recordedSHA256": "972d0c59dac5ce568c9d2be602b86d0d1d1349f62a02db7abacbf116d30ae3bd",
+      "actualFrozenSHA256": "972d0c59dac5ce568c9d2be602b86d0d1d1349f62a02db7abacbf116d30ae3bd",
+      "match": true
+    },
+    {
+      "group": "B040",
+      "path": "backend/src/modules/ai-runtime/chat-research-preparation.test.ts",
+      "recordedSHA256": "68cae10f3bae207da34baa8a1fdbc9bef4f63a3c75b46cf0c938b09bfb9c5837",
+      "actualFrozenSHA256": "68cae10f3bae207da34baa8a1fdbc9bef4f63a3c75b46cf0c938b09bfb9c5837",
+      "match": true
+    },
+    {
+      "group": "B040",
+      "path": "backend/src/modules/execution/execution-chat-research.service.ts",
+      "recordedSHA256": "9660652e5a7bf982712d76aa17f75d62a04c4e0387d8907f31cc69429ec27b2c",
+      "actualFrozenSHA256": "9660652e5a7bf982712d76aa17f75d62a04c4e0387d8907f31cc69429ec27b2c",
+      "match": true
+    },
+    {
+      "group": "B041",
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "recordedSHA256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+      "actualFrozenSHA256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+      "match": true
+    },
+    {
+      "group": "B041",
+      "path": "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+      "recordedSHA256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285",
+      "actualFrozenSHA256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285",
+      "match": true
+    },
+    {
+      "group": "B041",
+      "path": "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+      "recordedSHA256": "169dce7d1fce78eb198f72a56697515984a6d6a073c8a7d995c9f4f1742ec65f",
+      "actualFrozenSHA256": "169dce7d1fce78eb198f72a56697515984a6d6a073c8a7d995c9f4f1742ec65f",
+      "match": true
+    },
+    {
+      "group": "B041",
+      "path": "backend/src/modules/ai/chat-turn-completion.service.ts",
+      "recordedSHA256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4",
+      "actualFrozenSHA256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4",
+      "match": true
+    },
+    {
+      "group": "B042",
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "recordedSHA256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+      "actualFrozenSHA256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa",
+      "match": true
+    },
+    {
+      "group": "B042",
+      "path": "ai-worker/src/runtime/chat/chat-pi-loop.ts",
+      "recordedSHA256": "4f26ac95534c041bd042d9d43d24feff13d64092f837c4b1435640eb25aba001",
+      "actualFrozenSHA256": "4f26ac95534c041bd042d9d43d24feff13d64092f837c4b1435640eb25aba001",
+      "match": true
+    },
+    {
+      "group": "B043",
+      "path": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "recordedSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "actualFrozenSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "match": true
+    },
+    {
+      "group": "B043",
+      "path": "ai-worker/src/execution/chat-text-node-worker.ts",
+      "recordedSHA256": "224d6a3d353039f226dec3ba556685763f7010a7334d3c5ee83aa6e02a726806",
+      "actualFrozenSHA256": "224d6a3d353039f226dec3ba556685763f7010a7334d3c5ee83aa6e02a726806",
+      "match": true
+    },
+    {
+      "group": "B043",
+      "path": "ai-worker/src/execution/durable-generation-model.ts",
+      "recordedSHA256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff",
+      "actualFrozenSHA256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff",
+      "match": true
+    },
+    {
+      "group": "B043",
+      "path": "ai-worker/src/execution/generation-error.ts",
+      "recordedSHA256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7",
+      "actualFrozenSHA256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7",
+      "match": true
+    },
+    {
+      "group": "B043",
+      "path": "ai-worker/src/execution/structured-worker-generation.ts",
+      "recordedSHA256": "bd931b33b775d569c4958d010a0dbfcef0b174577b2186fe6431dd6878b006af",
+      "actualFrozenSHA256": "bd931b33b775d569c4958d010a0dbfcef0b174577b2186fe6431dd6878b006af",
+      "match": true
+    },
+    {
+      "group": "B043",
+      "path": "backend/src/modules/execution/execution-chat-text-node.service.ts",
+      "recordedSHA256": "9c566881592905c537635a7ec09a8c8d8da84f44d15ad5706844ca80ea761ef7",
+      "actualFrozenSHA256": "9c566881592905c537635a7ec09a8c8d8da84f44d15ad5706844ca80ea761ef7",
+      "match": true
+    },
+    {
+      "group": "B044",
+      "path": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "recordedSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "actualFrozenSHA256": "0e6f66590ca22723590d6abfb5008b7b412093fa97d0019e8fea41974dfaa02b",
+      "match": true
+    },
+    {
+      "group": "B044",
+      "path": "ai-worker/src/execution/chat-text-node-worker.ts",
+      "recordedSHA256": "224d6a3d353039f226dec3ba556685763f7010a7334d3c5ee83aa6e02a726806",
+      "actualFrozenSHA256": "224d6a3d353039f226dec3ba556685763f7010a7334d3c5ee83aa6e02a726806",
+      "match": true
+    },
+    {
+      "group": "B044",
+      "path": "ai-worker/src/execution/durable-generation-model.ts",
+      "recordedSHA256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff",
+      "actualFrozenSHA256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff",
+      "match": true
+    },
+    {
+      "group": "B044",
+      "path": "ai-worker/src/execution/generation-error.ts",
+      "recordedSHA256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7",
+      "actualFrozenSHA256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7",
+      "match": true
+    },
+    {
+      "group": "B044",
+      "path": "backend/src/modules/execution/execution-chat-script-draft.service.ts",
+      "recordedSHA256": "ca2fd5772f61377cd4cfca6372cf002e6916108a63b3982e01afd40c9ba8d006",
+      "actualFrozenSHA256": "ca2fd5772f61377cd4cfca6372cf002e6916108a63b3982e01afd40c9ba8d006",
+      "match": true
+    },
+    {
+      "group": "B045",
+      "path": "backend/src/integration/chat-generation-worker.test.ts",
+      "recordedSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "actualFrozenSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "match": true
+    },
+    {
+      "group": "B045",
+      "path": "ai-worker/src/runtime/pi-provider.ts",
+      "recordedSHA256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "actualFrozenSHA256": "773591591490f49f3c3b19fe8a97bc6520c1f9bef096b7d8f2bb913f55dc16b2",
+      "match": true
+    },
+    {
+      "group": "B045",
+      "path": "backend/src/modules/execution/worker-supervisor.ts",
+      "recordedSHA256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "actualFrozenSHA256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "match": true
+    },
+    {
+      "group": "B046",
+      "path": "backend/src/integration/chat-generation-worker.test.ts",
+      "recordedSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "actualFrozenSHA256": "b6432314b6c3f22b6b1fdf9292ab7481e6f13fe1122bbe2e47edcaa9d019c2af",
+      "match": true
+    },
+    {
+      "group": "B046",
+      "path": "backend/src/modules/execution/worker-supervisor.ts",
+      "recordedSHA256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "actualFrozenSHA256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "match": true
+    },
+    {
+      "group": "B046",
+      "path": "ai-worker/src/execution/structured-business-schema.ts",
+      "recordedSHA256": "8f829d7d8cc3fbf4ac06f60ef4a7172c1cd563cfb36701bebb761adbf80c46d0",
+      "actualFrozenSHA256": "8f829d7d8cc3fbf4ac06f60ef4a7172c1cd563cfb36701bebb761adbf80c46d0",
+      "match": true
+    }
+  ],
+  "errors": [],
+  "runtimeExecuted": false,
+  "productWritten": false,
+  "reviewScope": "合同准入；不解冻、不record控制面、不追签当前已批准实现、不签官方49/浏览器/App/整系统"
+}

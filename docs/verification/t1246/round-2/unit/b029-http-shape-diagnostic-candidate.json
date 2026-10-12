@@ -1,0 +1,38 @@
+{
+  "productChanged": false,
+  "testSourceChanged": false,
+  "testsExecuted": false,
+  "originalSource": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+  "originalSha256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+  "temporaryCandidate": "/tmp/t1246-unit/b029-http-shape-diagnostic.test.ts",
+  "candidateSha256": "498ca2d2e52455989ed8d0b1fb3bc214dfab07899b76c0df3d2a5cf06a0b264b",
+  "scope": "仅真实HTTP tool content脱敏shape观察，原extractToolData JSON.parse/三body/assert/采纳/requests不改；预计原截断FAIL仍保，不签修复",
+  "budget": "只60k正执行提高180k，original20/10/8 maxCalls和6/5/4 expectedRequests全部不变",
+  "knownLimits": "当前只可在原第三request前保first-window头闭合及分页标量形状；不产生后续窗口，不代签尾窗或全链。未见真实shape前无decoded fixture修法。",
+  "sourceBindings": [
+    {
+      "file": "ai-worker/src/runtime/agentic/pi-engine.ts",
+      "sha256": "dcf0e0625527c7e92be57d1511609480bf60945cbfa22440cd961782a4e79a77"
+    },
+    {
+      "file": "ai-worker/src/runtime/agentic/continuation.ts",
+      "sha256": "8b1ccb5d04d5433b24ccb64a1804f384d9f97f3b86f2e75c0ea45be38e2950c5"
+    },
+    {
+      "file": "ai-worker/src/execution/durable-pi-stream.ts",
+      "sha256": "eba966db87f38d3e1816d8f48318016bead97315a3fe55fc5ef6a3a198f38bbf"
+    },
+    {
+      "file": "ai-worker/src/execution/agentic-worker-run.ts",
+      "sha256": "671437a207fe8ad5fd42a43a7bd76baa31aa3d774877efed742aa7e5b9871277"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-research-evidence.service.ts",
+      "sha256": "62b154ae1ae7d92b99ed06929b7bb17d8c6ef1f3f22c24a160e9913309f8ecea"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/agentic-research-worker.fixture.ts",
+      "sha256": "43da10f1016a367a44b56a8e47e263d563918d101a07c4ff080e2d5962caa79b"
+    }
+  ]
+}

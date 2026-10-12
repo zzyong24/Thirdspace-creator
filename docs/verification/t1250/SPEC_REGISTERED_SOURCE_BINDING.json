@@ -1,0 +1,133 @@
+{
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "scope": "已登记最新SPEC只读来源绑定，非正式评审/实施PASS",
+  "writeSet": [
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "exists": true,
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "exists": true,
+      "sha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "exists": true,
+      "sha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "exists": true,
+      "sha256": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "exists": true,
+      "sha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.ts",
+      "exists": true,
+      "sha256": "5e020792798d29f08ccb85b1799a223f6239674f81f096259b84c859794cc2a3"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "exists": true,
+      "sha256": "af0ad5df4f281725c20cf3d4d9450de2cd45590730a4e72ac26b2195c0660e00"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "exists": true,
+      "sha256": "bcad3a9bb7cdbe57de165108d5ed4836c54e7ff58ab78e36113e1e0bee93d3b5"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "exists": true,
+      "sha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "exists": true,
+      "sha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "exists": true,
+      "sha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7"
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "exists": true,
+      "sha256": "25326430f1cef5b3ef6abdf7c54d89ce4787e5164cdad81d6430fe216c772d91"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "exists": true,
+      "sha256": "930bafd2538d1f2fe7aab03b5535ed182b3d12b580a2fad8463254760e7fa310"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "exists": true,
+      "sha256": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.test.ts",
+      "exists": true,
+      "sha256": "fc446fcb85924ceadf715e186f24b54eb03855da707f699ab827e1e49ff23abb"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.test.ts",
+      "exists": true,
+      "sha256": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab"
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "exists": true,
+      "sha256": "faecdb2955617fa23362cfeb82ceba82ec9db66c2a0c5946fb65d0cb0b51eac0"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.test.ts",
+      "exists": true,
+      "sha256": "a24837f2abda9f7a03ae0a95af2ebc804b76d63d5610c5151ace848d6b3d0b81"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "exists": true,
+      "sha256": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.test.ts",
+      "exists": true,
+      "sha256": "8dd2bee68dc566db777803ec81f8c233bfbb35278c04eb5d5393ffbf21d324e0"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "exists": true,
+      "sha256": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.test.ts",
+      "exists": true,
+      "sha256": "9871b6a64dfb86b06e6e8dc6c24e01a8922ad643f7ae02b302ee2d99adcfaf2d"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "exists": true,
+      "sha256": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008"
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "exists": true,
+      "sha256": "3013d2a308c81c68bbc6a1f23bc6676c78e54498b73af13a69a6152d2f902d66"
+    }
+  ],
+  "allExisting": true,
+  "dec": "SPEC末节DEC-1250候选供主会话正式记录；本次授权不伪更早确认",
+  "originalEvidence": "docs/verification/t1248/implementation/timeout-check-failures-binding.json",
+  "notChanged": "生产/test/tools/vendor/任务状态未改",
+  "previousBindingSha256": "c19e08211a162322fcfbbe5c51983a554a7ab5a143951c4100ca8bb6e61304a1",
+  "previousBinding": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/SPEC_CANDIDATE_SOURCE_BINDING.json",
+  "observedAt": "2026-10-11T20:41:26.556173+00:00"
+}

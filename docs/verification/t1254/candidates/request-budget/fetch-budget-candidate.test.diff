@@ -1,0 +1,93 @@
+--- packages/shared/src/utils/fetch.test.ts (原完整文件)
++++ /tmp/t1254-readonly/fetch-budget-candidate.test.ts
+@@ -100,3 +100,90 @@
+     expect((init?.headers as Record<string, string>)[`content-type`]).toBeUndefined()
+   })
+ })
++
++describe(`CreatorOS 独立请求预算`, () => {
++  afterEach(() => {
++    vi.restoreAllMocks()
++    vi.useRealTimers()
++    vi.unstubAllGlobals()
++  })
++
++  it.each([
++    [`默认`, undefined, 120_000],
++    [`null`, null, 120_000],
++    [`零`, 0, 120_000],
++    [`短值`, 30_000, 120_000],
++    [`较长`, 180_000, 180_000],
++    [`负数`, -1, 120_000],
++    [`NaN`, Number.NaN, 120_000],
++    [`Infinity`, Number.POSITIVE_INFINITY, 120_000],
++    [`非数字`, `180000`, 120_000],
++    [`超宿主单 timer 上界`, 2_147_483_647 + 120_000, 2_147_483_647 + 120_000],
++  ] as const)(`%s 保完整出生预算与单请求`, async (_name, timeout, expectedMs) => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const config = { url: `http://127.0.0.1:1/owned-budget-unit` }
++    Reflect.set(config, `timeout`, timeout)
++    let receivedSignal: AbortSignal | null = null
++    const readSignal = (): AbortSignal | null => receivedSignal
++    const mock = stubFetch((_url, init) => new Promise<Response>((_resolve, reject) => {
++      const signal = init?.signal
++      if (!signal)
++        throw new Error(`missing actual request signal`)
++      receivedSignal = signal
++      signal.addEventListener(`abort`, () => reject(new DOMException(`Aborted`, `AbortError`)), { once: true })
++    }))
++    const observed = fetch.request(config).then(value => ({ value, error: null }), error => ({ value: null, error }))
++    await vi.advanceTimersByTimeAsync(expectedMs - 1)
++    expect(readSignal()).not.toBeNull()
++    expect(readSignal()!.aborted).toBe(false)
++    expect(mock).toHaveBeenCalledTimes(1)
++    await vi.advanceTimersByTimeAsync(1)
++    const settled = await observed
++    expect(settled.error).toBeInstanceOf(DOMException)
++    expect(settled.error?.name).toBe(`AbortError`)
++    expect(readSignal()!.aborted).toBe(true)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++
++  it(`响应头之后仍以同出生预算监督完整 body`, async () => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    let actualSignal: AbortSignal | null = null
++    const readBodySignal = (): AbortSignal | null => actualSignal
++    const mock = stubFetch((_url, init) => {
++      const signal = init?.signal
++      if (!signal)
++        throw new Error(`missing actual request signal`)
++      actualSignal = signal
++      const response = jsonResponse({ ok: true })
++      vi.spyOn(response, `json`).mockImplementation(() => new Promise((_resolve, reject) => {
++        signal.addEventListener(`abort`, () => reject(new DOMException(`Body aborted`, `AbortError`)), { once: true })
++      }))
++      return response
++    })
++    const observed = fetch.get(`http://127.0.0.1:1/owned-body-unit`).then(value => ({ value, error: null }), error => ({ value: null, error }))
++    await vi.advanceTimersByTimeAsync(119_999)
++    expect(readBodySignal()).not.toBeNull()
++    expect(readBodySignal()!.aborted).toBe(false)
++    await vi.advanceTimersByTimeAsync(1)
++    expect((await observed).error?.name).toBe(`AbortError`)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++
++  it.each([`成功`, `HTTP错误`, `空响应`, `body读取错误`])(`%s finally 清理最后 timer`, async (mode) => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const mock = stubFetch(() => {
++      const response = mode === `空响应` ? new Response(``, { status: 200 }) : jsonResponse({ ok: true }, { status: mode === `HTTP错误` ? 503 : 200 })
++      if (mode === `body读取错误`)
++        vi.spyOn(response, `json`).mockRejectedValue(new Error(`owned body read failed`))
++      return response
++    })
++    if (mode === `成功`)
++      await expect(fetch.get(`http://127.0.0.1:1/owned-finally-unit`)).resolves.toEqual({ ok: true })
++    else
++      await expect(fetch.get(`http://127.0.0.1:1/owned-finally-unit`)).rejects.toBeInstanceOf(Error)
++    expect(mock).toHaveBeenCalledTimes(1)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
++})

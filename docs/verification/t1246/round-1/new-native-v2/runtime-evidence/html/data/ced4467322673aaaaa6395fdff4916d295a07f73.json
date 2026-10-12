@@ -1,0 +1,1415 @@
+{
+  "task": "T-1246",
+  "candidateCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "testId": "05d77e355062c9acafd9-cf9175ae94d765127f5b",
+  "titlePath": [
+    "e2e/integrated-dependent.spec.ts",
+    "INT-TEXT-RESEARCH / script.source_similarity：真实前置检查、原公开入口和任务读回"
+  ],
+  "caseId": "INT-TEXT-RESEARCH",
+  "generationKey": "script.source_similarity",
+  "boundary": "real-app＋official Codex；缺真实外部来源/ASR明确BLOCKED",
+  "status": "blocked",
+  "browserStepStatus": "blocked",
+  "acceptanceRequiresOriginalLedger": true,
+  "startedAt": "2026-10-11T15:52:42.296Z",
+  "endedAt": "2026-10-11T15:52:58.084Z",
+  "groupId": "grp-3812e00f-937",
+  "projectId": "project-3812e00f-941",
+  "taskIds": [],
+  "tasks": [],
+  "receipts": [
+    {
+      "time": "2026-10-11T15:52:42.501Z",
+      "id": "accountGroups.create",
+      "input": {
+        "body": {
+          "name": "整合验收-INT-TEXT-RESEARCH-t1246-4d6384d0-3d7f-41a6-9e0f-b2a2c3b35405",
+          "idempotencyKey": "t1246-ab9cc71e-c837-435b-a036-6dc4c9ce46e1"
+        }
+      },
+      "groupId": "",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "grp-3812e00f-937",
+          "userId": "user-3812e00f-1",
+          "name": "整合验收-INT-TEXT-RESEARCH-t1246-4d6384d0-3d7f-41a6-9e0f-b2a2c3b35405",
+          "status": "active",
+          "version": 1,
+          "createdAt": "2026-10-11T15:52:42.460Z",
+          "updatedAt": "2026-10-11T15:52:42.460Z",
+          "members": []
+        },
+        "meta": {
+          "requestId": "req-3812e00f-936"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:44.794Z",
+      "id": "settings.preferences.patch",
+      "input": {
+        "body": {
+          "assistantExecutionEngine": "codex"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-3812e00f-1",
+          "userId": "user-3812e00f-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-939"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:44.829Z",
+      "id": "projects.create",
+      "input": {
+        "body": {
+          "title": "整合真实项目-INT-TEXT-RESEARCH",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "project-3812e00f-941",
+          "userId": "user-3812e00f-1",
+          "title": "整合真实项目-INT-TEXT-RESEARCH",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "briefDetail": {
+            "targetPlatforms": []
+          },
+          "contentCategory": "",
+          "source": "manual",
+          "platformRef": {
+            "platform": "",
+            "externalId": ""
+          },
+          "creationMode": "guided",
+          "status": "active",
+          "currentStage": "brief",
+          "progressPct": 0,
+          "starred": false,
+          "startedAt": "2026-10-11T15:52:44.811Z",
+          "targetCompletedAt": null,
+          "completedAt": null,
+          "archivedAt": null,
+          "createdAt": "2026-10-11T15:52:44.811Z",
+          "updatedAt": "2026-10-11T15:52:44.811Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-940"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:44.921Z",
+      "id": "projects.outputs.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-941"
+        },
+        "body": {
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "clientRequestId": "t1246-8acb41be-9976-4c45-bf1b-bb7c17920cfc"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "output-3812e00f-953",
+          "projectId": "project-3812e00f-941",
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "targetPlatform": null,
+          "format": "",
+          "aspectRatio": "",
+          "targetDurationSeconds": 0,
+          "status": "drafting",
+          "contentRole": null,
+          "primaryAssetId": null,
+          "createdAt": "2026-10-11T15:52:44.908Z",
+          "updatedAt": "2026-10-11T15:52:44.908Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-952"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:44.955Z",
+      "id": "artifacts.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-941"
+        },
+        "body": {
+          "title": "原始测试文稿",
+          "artifactType": "output_script",
+          "stage": "script",
+          "contentOutputId": "output-3812e00f-953"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifact-3812e00f-960",
+          "projectId": "project-3812e00f-941",
+          "contentOutputId": "output-3812e00f-953",
+          "currentVersionId": "artifactversion-3812e00f-961",
+          "stage": "script",
+          "artifactType": "output_script",
+          "title": "原始测试文稿",
+          "status": "drafting",
+          "archivedAt": null,
+          "origin": null,
+          "createdAt": "2026-10-11T15:52:44.947Z",
+          "updatedAt": "2026-10-11T15:52:44.947Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-959"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:45.108Z",
+      "id": "artifacts.versions.create",
+      "input": {
+        "params": {
+          "artifactId": "artifact-3812e00f-960"
+        },
+        "body": {
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "heading": "桌面整理",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+              }
+            ]
+          }
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifactversion-3812e00f-964",
+          "artifactId": "artifact-3812e00f-960",
+          "versionNumber": 2,
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+                "heading": "桌面整理"
+              }
+            ]
+          },
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "createdByType": "user",
+          "aiTaskId": null,
+          "createdAt": "2026-10-11T15:52:45.100Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-963"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:52.241Z",
+      "id": "intelligence.items.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 100,
+          "sort": "newest"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": [],
+        "meta": {
+          "requestId": "req-3812e00f-988",
+          "page": 1,
+          "pageSize": 100,
+          "total": 0
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:52.285Z",
+      "id": "intelligence.sources.create",
+      "input": {
+        "body": {
+          "collectionId": null,
+          "type": "rss",
+          "config": {
+            "type": "rss",
+            "url": "https://www.w3.org/blog/news/feed/"
+          },
+          "displayName": "T1246公开W3C RSS来源",
+          "monitorEnabled": false,
+          "runInitial": true,
+          "idempotencyKey": "t1246-1385b226-e346-4d6f-bb53-2ac71c1ba127"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "source": {
+            "id": "intelligence-source-3812e00f-990",
+            "userId": "user-3812e00f-1",
+            "accountId": null,
+            "groupId": "grp-3812e00f-937",
+            "collectionId": null,
+            "type": "rss",
+            "platform": "web",
+            "displayName": "T1246公开W3C RSS来源",
+            "canonicalUrl": "https://www.w3.org/blog/news/feed/",
+            "externalKey": "9b1986319229d0c79b34c5bd880e34c9ee32bb649f1343aa2d378ea8ae5b5ade",
+            "browserSessionRef": null,
+            "collector": null,
+            "monitorEnabled": false,
+            "syncPolicy": {
+              "mode": "manual"
+            },
+            "extractionInstruction": null,
+            "status": "active",
+            "version": 1,
+            "lastRunAt": null,
+            "nextRunAt": null,
+            "createdAt": "2026-10-11T15:52:52.257Z",
+            "updatedAt": "2026-10-11T15:52:52.257Z"
+          },
+          "run": {
+            "id": "intelligence-run-3812e00f-992",
+            "userId": "user-3812e00f-1",
+            "accountId": null,
+            "groupId": "grp-3812e00f-937",
+            "sourceId": "intelligence-source-3812e00f-990",
+            "executionTaskId": "execution-task-3812e00f-991",
+            "trigger": "initial",
+            "status": "queued",
+            "checkpoint": null,
+            "startedAt": null,
+            "finishedAt": null,
+            "scannedCount": 0,
+            "newCount": 0,
+            "updatedCount": 0,
+            "skippedCount": 0,
+            "failedCount": 0,
+            "errorCode": null,
+            "errorSummary": null,
+            "nextAction": "none",
+            "createdAt": "2026-10-11T15:52:52.279Z"
+          },
+          "task": {
+            "id": "execution-task-3812e00f-991",
+            "userId": "user-3812e00f-1",
+            "accountId": null,
+            "groupId": "grp-3812e00f-937",
+            "groupVersion": 1,
+            "membershipVersion": null,
+            "kind": "source_sync",
+            "ownerType": "source",
+            "ownerId": "intelligence-source-3812e00f-990",
+            "status": "queued",
+            "retryAt": null,
+            "priority": 10,
+            "idempotencyKey": "t1246-1385b226-e346-4d6f-bb53-2ac71c1ba127:initial",
+            "checkpoint": null,
+            "leaseOwner": null,
+            "leaseExpiresAt": null,
+            "heartbeatAt": null,
+            "attempt": 0,
+            "maxAttempts": 3,
+            "errorCode": null,
+            "errorMessage": null,
+            "costEstimate": null,
+            "createdAt": "2026-10-11T15:52:52.272Z",
+            "updatedAt": "2026-10-11T15:52:52.272Z"
+          }
+        },
+        "meta": {
+          "requestId": "req-3812e00f-989"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:52.340Z",
+      "id": "intelligence.runs.get",
+      "input": {
+        "params": {
+          "runId": "intelligence-run-3812e00f-992"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "run": {
+            "id": "intelligence-run-3812e00f-992",
+            "userId": "user-3812e00f-1",
+            "accountId": null,
+            "groupId": "grp-3812e00f-937",
+            "sourceId": "intelligence-source-3812e00f-990",
+            "executionTaskId": "execution-task-3812e00f-991",
+            "trigger": "initial",
+            "status": "queued",
+            "checkpoint": null,
+            "startedAt": null,
+            "finishedAt": null,
+            "scannedCount": 0,
+            "newCount": 0,
+            "updatedCount": 0,
+            "skippedCount": 0,
+            "failedCount": 0,
+            "errorCode": null,
+            "errorSummary": null,
+            "nextAction": "none",
+            "createdAt": "2026-10-11T15:52:52.279Z"
+          },
+          "events": []
+        },
+        "meta": {
+          "requestId": "req-3812e00f-993"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:53.375Z",
+      "id": "intelligence.runs.get",
+      "input": {
+        "params": {
+          "runId": "intelligence-run-3812e00f-992"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "run": {
+            "id": "intelligence-run-3812e00f-992",
+            "userId": "user-3812e00f-1",
+            "accountId": null,
+            "groupId": "grp-3812e00f-937",
+            "sourceId": "intelligence-source-3812e00f-990",
+            "executionTaskId": "execution-task-3812e00f-991",
+            "trigger": "initial",
+            "status": "queued",
+            "checkpoint": null,
+            "startedAt": null,
+            "finishedAt": null,
+            "scannedCount": 0,
+            "newCount": 0,
+            "updatedCount": 0,
+            "skippedCount": 0,
+            "failedCount": 0,
+            "errorCode": null,
+            "errorSummary": null,
+            "nextAction": "none",
+            "createdAt": "2026-10-11T15:52:52.279Z"
+          },
+          "events": []
+        },
+        "meta": {
+          "requestId": "req-3812e00f-994"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:56.114Z",
+      "id": "intelligence.runs.get",
+      "input": {
+        "params": {
+          "runId": "intelligence-run-3812e00f-992"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "run": {
+            "id": "intelligence-run-3812e00f-992",
+            "userId": "user-3812e00f-1",
+            "accountId": null,
+            "groupId": "grp-3812e00f-937",
+            "sourceId": "intelligence-source-3812e00f-990",
+            "executionTaskId": "execution-task-3812e00f-991",
+            "trigger": "initial",
+            "status": "succeeded_with_items",
+            "checkpoint": null,
+            "startedAt": "2026-10-11T15:52:53.962Z",
+            "finishedAt": "2026-10-11T15:52:53.962Z",
+            "scannedCount": 25,
+            "newCount": 25,
+            "updatedCount": 0,
+            "skippedCount": 0,
+            "failedCount": 0,
+            "errorCode": null,
+            "errorSummary": null,
+            "nextAction": "none",
+            "createdAt": "2026-10-11T15:52:52.279Z"
+          },
+          "events": [
+            {
+              "id": "intelligence-run-event-3812e00f-1070",
+              "runId": "intelligence-run-3812e00f-992",
+              "step": "rss",
+              "status": "succeeded_with_items",
+              "occurredAt": "2026-10-11T15:52:53.964Z",
+              "itemRef": null,
+              "message": "已处理 25 条",
+              "safeDetails": {
+                "returnedCount": 25
+              }
+            }
+          ]
+        },
+        "meta": {
+          "requestId": "req-3812e00f-1071"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:56.608Z",
+      "id": "intelligence.items.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 100,
+          "sort": "newest",
+          "sourceId": "intelligence-source-3812e00f-990"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-998",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/w3c-issues-press-release-about-developing-verifiable-credential-barcodes/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "W3C issues press release about developing Verifiable Credential Barcodes",
+              "summary": "In a press release we present the concept of real-time revocation that is being developed in the W3C Verifiable Credentials Barcodes specification to protect physical documents.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-10-07T17:50:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-995",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/first-draft-notes-verifiable-credential-threat-models/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "First Draft Notes: Verifiable Credential Threat Models",
+              "summary": "The Verifiable Credentials Working Group has published a series of W3C Working Group Note Drafts for threat models.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-10-08T08:32:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1067",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/first-public-working-draft-character-model-for-the-world-wide-web-string-matching/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "First Public Working Draft: Character Model for the World Wide Web: String Matching",
+              "summary": "This document builds upon Character Model for the World Wide Web 1.0: Fundamentals to provide authors of specifications, software developers, and content developers a common reference on string identity matching on the World Wide Web and thereby increase interoperability.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-07-16T09:29:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1064",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/proposed-advancement-of-webauthn-3-to-w3c-recommendation/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Proposed Advancement of Web Authentication: An API for accessing Public Key Credentials Level 3 to W3C Recommendation",
+              "summary": "This specification defines an API enabling the creation and use of strong, attested, scoped, public key-based credentials by web applications, for the purpose of strongly authenticating users.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-07-20T15:16:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1061",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/w3c-invites-implementations-of-epub-3-4-epub-reading-systems-3-4-and-epub-accessibility-1-2/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "W3C Invites Implementations of EPUB 3.4, EPUB Reading Systems 3.4 and EPUB Accessibility 1.2",
+              "summary": "EPUB® 3 defines a distribution and interchange format for digital publications and documents. The EPUB format provides a means of representing, packaging, and encoding structured and semantically enhanced web content — including HTML, CSS, SVG, and other resources — for distribution in a single-file container.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-07-21T09:26:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1058",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/group-note-wcag-evaluation-methodology-wcag-em-2-0/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Group Note: WCAG Evaluation Methodology (WCAG-EM) 2.0",
+              "summary": "This document describes a methodology with a step-by-step process to evaluate how well digital products conform to Web Content Accessibility Guidelines (WCAG) 2.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-07-23T13:08:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1055",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/group-note-draft-epub-accessibility-1-2-explainer/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Group Note Draft: EPUB Accessibility 1.2 Explainer",
+              "summary": "The EPUB Accessibility 1.2 Explainer provides information on how to understand and evaluate the accessible publications conformance requirements of EPUB Accessibility 1.2 against reflowable EPUB publications.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-07-30T08:17:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1052",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/group-note-draft-verifiable-credentials-overview-v1-1/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Group Note Draft: Verifiable Credentials Overview v1.1",
+              "summary": "The family of W3C Recommendations for Verifiable Credentials, described in this overview document, provides a mechanism to express these sorts of credentials on the Web in a way that is cryptographically secure, privacy respecting, and machine-verifiable.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-07-30T08:20:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1049",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/w3c-invites-implementations-of-webtransport/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "W3C Invites Implementations of WebTransport",
+              "summary": "This document defines a set of ECMAScript APIs in WebIDL to allow data to be sent and received between a browser and server.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-07-30T08:25:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1046",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/group-note-further-aligning-w3cs-program-of-technical-work-with-human-rights/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Group Note: Further Aligning W3C's Program of Technical Work with Human Rights",
+              "summary": "In this document, the Advisory Board lists examples of how human rights and technical standards setting map to each other, points to existing W3C work in this area, and provides concrete proposals to further the alignment between the W3C’s technical work and human rights.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-08-04T09:16:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1043",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/w3c-invites-implementations-of-decentralized-identifier-resolution-did-resolution-v1/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "W3C invites implementations of Decentralized Identifier Resolution (DID Resolution) v1",
+              "summary": "This document describes the process of obtaining a DID document and accompanying metadata for a specific DID.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-08-06T09:16:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1040",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/updated-w3c-recommendation-aria-in-html/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Updated W3C Recommendation: ARIA in HTML",
+              "summary": "This specification defines the authoring rules (author conformance requirements) for the use of Accessible Rich Internet Applications (WAI-ARIA) 1.2 and Digital Publishing WAI-ARIA Module 1.1 attributes on [HTML] elements.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-08-11T15:19:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1037",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/group-note-draft-web-sustainability-guidelines-wsg-impact-ratings/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Group Note Draft: Web Sustainability Guidelines (WSG) Impact Ratings",
+              "summary": "This document describes the impact ratings provided alongside Web Sustainability Guidelines (WSG).",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-08-18T07:59:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1034",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/first-public-working-draft-the-profiles-vocabulary/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "First Public Working Draft: The Profiles Vocabulary",
+              "summary": "The Profiles Vocabulary is an RDF vocabulary created to allow the machine-readable description of profiles of specifications for information resources.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-08-20T05:44:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1031",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/patent-advisory-group-recommends-continuing-work-on-open-screen-application-protocol/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Patent Advisory Group recommends continuing work on Open Screen Application Protocol",
+              "summary": "W3C launches a Patent Advisory Group (PAG) to resolve issues in the event a patent has been disclosed that may be essential, but is not available under the W3C Royalty-Free licensing terms.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-08-24T13:19:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1028",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/web-authentication-an-api-for-accessing-public-key-credentials-level-3-is-now-a-w3c-recommendation/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Web Authentication: An API for accessing Public Key Credentials Level 3 is now a W3C Recommendation",
+              "summary": "This specification defines an API enabling the creation and use of strong, attested, scoped, public key-based credentials by web applications, for the purpose of strongly authenticating users.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-08-25T06:44:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1025",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/w3c-opens-2026-community-wide-survey/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "W3C opens 2026 community survey",
+              "summary": "W3C opens an 8-minute survey until 30 September and seeks community-wide input to get to know our community better, investigate needs, and understand how we can improve.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-09-04T10:29:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1022",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/first-public-working-draft-web-authentication-an-api-for-accessing-public-key-credentials-level-4/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "First Public Working Draft: Web Authentication: An API for accessing Public Key Credentials Level 4",
+              "summary": "This specification defines an API enabling the creation and use of strong, attested, scoped, public key-based credentials by web applications, for the purpose of strongly authenticating users.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-09-15T06:07:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1019",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/first-public-working-draft-shacl-1-2-inference-rules/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "First Public Working Draft: SHACL 1.2 Inference Rules",
+              "summary": "This document defines the Inference Rules support of the SHACL Shapes Constraint Language (SHACL).",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-09-17T09:39:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1016",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/authorized-translations-of-wcag-2-2-and-2-1-in-french-updated/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Authorized Translations of WCAG 2.2 and 2.1 in French updated",
+              "summary": "W3C has published the updated Authorized French Translations of Web Content Accessibility Guidelines (WCAG) 2.2 and 2.1.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-09-22T08:40:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1013",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/group-note-draft-verifiable-credentials-data-model-threat-model-v2-1/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Group Note Draft: Verifiable Credentials Data Model Threat Model v2.1",
+              "summary": "This document describes a threat model for the Verifiable Credentials Data Model specification.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-09-24T08:12:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1010",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/first-public-working-draft-bitstring-status-list-v1-1/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "First Public Working Draft: Bitstring Status List v1.1",
+              "summary": "This specification describes a privacy-preserving, space-efficient, and high-performance mechanism for publishing status information such as suspension or revocation of Verifiable Credentials through use of bitstrings.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-09-24T08:28:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1007",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/w3c-workshop-report-the-future-of-odrl/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "W3C Workshop Report: The Future of ODRL",
+              "summary": "W3C is pleased to announce the report from the W3C Workshop on the Future of ODRL, held in July 2026 in London, UK, and online.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-09-24T11:13:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1004",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/consortium-members-elect-board-of-directors/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Consortium Members elect Board of Directors",
+              "summary": "World Wide Web Consortium Members have elected seven individuals to the World Wide Web Consortium, Inc. Board of Directors",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-09-28T12:47:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          },
+          {
+            "item": {
+              "id": "intelligence-item-3812e00f-1001",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "type": "article",
+              "platform": "www.w3.org",
+              "externalId": null,
+              "canonicalUrl": "https://www.w3.org/news/2026/updated-candidate-recommendation-scalable-vector-graphics-svg-2/",
+              "authorId": null,
+              "authorName": "www.w3.org",
+              "title": "Updated Candidate Recommendation: Scalable Vector Graphics (SVG) 2",
+              "summary": "The SVG Working Group published Scalable Vector Graphics (SVG) 2 as a Candidate Recommendation Snapshot and invites implementations.",
+              "coverUrl": null,
+              "coverAssetId": null,
+              "publishedAt": "2026-10-06T10:21:00.000Z",
+              "durationMs": null,
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "availability": "available"
+            },
+            "latestMetric": null,
+            "sourceCount": 1,
+            "transcriptState": "not_extracted",
+            "topicState": "not_generated",
+            "progressState": "pending_transcript"
+          }
+        ],
+        "meta": {
+          "requestId": "req-3812e00f-1072",
+          "page": 1,
+          "pageSize": 100,
+          "total": 25
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:57.019Z",
+      "id": "intelligence.transcripts.uploadManual",
+      "input": {
+        "body": {
+          "itemId": "intelligence-item-3812e00f-998",
+          "inputMode": "paste",
+          "text": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "transcript": {
+            "itemId": "intelligence-item-3812e00f-998",
+            "status": "done",
+            "text": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+            "source": "manual",
+            "provider": null,
+            "model": null,
+            "language": null,
+            "executionTaskId": null,
+            "queuedAt": null,
+            "completedAt": "2026-10-11T15:52:56.966Z",
+            "errorCode": null
+          }
+        },
+        "meta": {
+          "requestId": "req-3812e00f-1073"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:52:57.935Z",
+      "id": "intelligence.items.get",
+      "input": {
+        "params": {
+          "itemId": "intelligence-item-3812e00f-998"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": {
+          "item": {
+            "id": "intelligence-item-3812e00f-998",
+            "userId": "user-3812e00f-1",
+            "accountId": null,
+            "groupId": "grp-3812e00f-937",
+            "type": "article",
+            "platform": "www.w3.org",
+            "externalId": null,
+            "canonicalUrl": "https://www.w3.org/news/2026/w3c-issues-press-release-about-developing-verifiable-credential-barcodes/",
+            "authorId": null,
+            "authorName": "www.w3.org",
+            "title": "W3C issues press release about developing Verifiable Credential Barcodes",
+            "summary": "In a press release we present the concept of real-time revocation that is being developed in the W3C Verifiable Credentials Barcodes specification to protect physical documents.",
+            "coverUrl": null,
+            "coverAssetId": null,
+            "publishedAt": "2026-10-07T17:50:00.000Z",
+            "durationMs": null,
+            "capturedAt": "2026-10-11T15:52:52.308Z",
+            "availability": "available"
+          },
+          "metrics": [],
+          "observations": [
+            {
+              "id": "intelligence-observation-3812e00f-999",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "itemId": "intelligence-item-3812e00f-998",
+              "sourceId": "intelligence-source-3812e00f-990",
+              "runId": "intelligence-run-3812e00f-992",
+              "externalRef": "bcd7083976c76ae8688f1fc6ea2ac8c0ffe239ca2fb0d348d18b6442630ff2cb",
+              "firstSeenAt": "2026-10-11T15:52:52.308Z",
+              "lastSeenAt": "2026-10-11T15:52:52.308Z",
+              "discoveryContext": {
+                "adapter": "rss"
+              }
+            }
+          ],
+          "snapshots": [
+            {
+              "id": "intelligence-snapshot-3812e00f-1000",
+              "userId": "user-3812e00f-1",
+              "accountId": null,
+              "groupId": "grp-3812e00f-937",
+              "sourceId": "intelligence-source-3812e00f-990",
+              "runId": "intelligence-run-3812e00f-992",
+              "itemId": "intelligence-item-3812e00f-998",
+              "capturedAt": "2026-10-11T15:52:52.308Z",
+              "finalUrl": "https://www.w3.org/news/2026/w3c-issues-press-release-about-developing-verifiable-credential-barcodes/",
+              "title": "W3C issues press release about developing Verifiable Credential Barcodes",
+              "contentHash": "d84863c3e69922bf90e4dd2c10d165f730130f392a8cd2d3ac600408c18d482e",
+              "safeExtract": "In a press release we present the concept of real-time revocation that is being developed in the W3C Verifiable Credentials Barcodes specification to protect physical documents.",
+              "storageRef": null,
+              "retentionUntil": null,
+              "privacyClass": "public"
+            }
+          ],
+          "transcript": {
+            "itemId": "intelligence-item-3812e00f-998",
+            "status": "done",
+            "text": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+            "source": "manual",
+            "provider": null,
+            "model": null,
+            "language": null,
+            "executionTaskId": null,
+            "queuedAt": null,
+            "completedAt": "2026-10-11T15:52:56.966Z",
+            "errorCode": null
+          },
+          "transforms": []
+        },
+        "meta": {
+          "requestId": "req-3812e00f-1074"
+        }
+      }
+    },
+    {
+      "id": "source-boundary",
+      "realPublicRss": true,
+      "manualTranscript": true,
+      "notCapturedOriginalVideoTranscript": true,
+      "itemId": "intelligence-item-3812e00f-998",
+      "snapshotIds": [
+        "intelligence-snapshot-3812e00f-1000"
+      ]
+    },
+    {
+      "time": "2026-10-11T15:52:58.010Z",
+      "id": "projects.intelligence.list",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-941"
+        }
+      },
+      "groupId": "grp-3812e00f-937",
+      "status": 200,
+      "body": {
+        "data": [],
+        "meta": {
+          "requestId": "req-3812e00f-1075"
+        }
+      }
+    }
+  ],
+  "captures": [
+    {
+      "label": "real-source-prerequisite-1366",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-dependent-I-d4ad5-imilarity：真实前置检查、原公开入口和任务读回-e2e/real-source-prerequisite-1366.png",
+      "url": "http://127.0.0.1:61347/intelligence",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "at": "2026-10-11T15:52:50.618Z"
+    },
+    {
+      "label": "real-source-prerequisite-390",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-dependent-I-d4ad5-imilarity：真实前置检查、原公开入口和任务读回-e2e/real-source-prerequisite-390.png",
+      "url": "http://127.0.0.1:61347/intelligence",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-10-11T15:52:52.211Z"
+    },
+    {
+      "label": "final-state",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-dependent-I-d4ad5-imilarity：真实前置检查、原公开入口和任务读回-e2e/final-state.png",
+      "url": "http://127.0.0.1:61347/intelligence",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-10-11T15:52:58.083Z"
+    }
+  ],
+  "events": [],
+  "independentBrowserModelProbes": 0,
+  "workerApiZero": "须独立对账原持久 ledger；此回执不代签",
+  "error": {
+    "name": "Error",
+    "message": "T1246_BLOCKED: 尚无本组真实来源reference和已完成script_candidate；相似度原sourceDigest只能由真实来源链派生",
+    "detail": {
+      "itemIds": [
+        "intelligence-item-3812e00f-998",
+        "intelligence-item-3812e00f-995",
+        "intelligence-item-3812e00f-1067",
+        "intelligence-item-3812e00f-1064",
+        "intelligence-item-3812e00f-1061",
+        "intelligence-item-3812e00f-1058",
+        "intelligence-item-3812e00f-1055",
+        "intelligence-item-3812e00f-1052",
+        "intelligence-item-3812e00f-1049",
+        "intelligence-item-3812e00f-1046",
+        "intelligence-item-3812e00f-1043",
+        "intelligence-item-3812e00f-1040",
+        "intelligence-item-3812e00f-1037",
+        "intelligence-item-3812e00f-1034",
+        "intelligence-item-3812e00f-1031",
+        "intelligence-item-3812e00f-1028",
+        "intelligence-item-3812e00f-1025",
+        "intelligence-item-3812e00f-1022",
+        "intelligence-item-3812e00f-1019",
+        "intelligence-item-3812e00f-1016",
+        "intelligence-item-3812e00f-1013",
+        "intelligence-item-3812e00f-1010",
+        "intelligence-item-3812e00f-1007",
+        "intelligence-item-3812e00f-1004",
+        "intelligence-item-3812e00f-1001"
+      ],
+      "references": []
+    }
+  }
+}

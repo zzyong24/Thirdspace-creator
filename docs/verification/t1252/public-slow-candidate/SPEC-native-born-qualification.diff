@@ -1,0 +1,8 @@
+--- /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1252-cli-http-consumer-budget-closure.md
++++ private-born-qualification-only
+@@ -86,3 +86,5 @@
+ ## 工具与数据安全
+ 
+ source准备/工具独评前不启动服务、模型、PG或浏览器。正式fixture只用fresh nonce/os.tmpdir标记、注册自有loopback端口与PID出生/UID/父链；新媒体/数据/auth/runtime专属，HOME/CODEX_HOME不重定义、不复制auth、不读取用户安装连接文件，设置loopback合成CLI token/handshake而非正式凭据。外网deny、禁止发布/付费/平台登录；源码原字节/必要新差异与全部stdio/log/result/cleanup前后SHA。HTTP probe只受控JSON/图bytes，不转发官方账户。所有只读对账仍backend service port或自有注册库，没有测试写DB伪unknown。
++
++AC-1252-PUBLIC 的新慢夹具资格（候选窄澄清，非产品变化）：原journal八HTTP及其reserve由出生createdAt冻结60秒的历史数据保持无delay、同原body/断言，不能把旧enqueue返回的null deadline冒为首次reserve后的真实事实。超过300秒公共Native覆盖另新增独立born-case：同backend enqueue与ledger在出生一次冻结严格有限完整派生预算，before-first-reserve与其后/最终直接读取原task deadline一致；不SQL续期，不改变旧case或生产任务策略。owned协议server仅第一次实际接到本任务CLI请求后固定队列310秒，原请求/header字节不变，之后才调用真实原POST/native；没有提前成功settle。这只签队列延迟＋真实公共Rust链，明确不签Native本身慢。新case保原scope/task/call/hash/claim、未知到原Native证明结算、同键/跨账号拒绝/费用/物理文件版本及不重复write，完整原八HTTP保护单独实际跑。真实Chromium慢阶段和包装CLI双协议各保自己的分母/边界。

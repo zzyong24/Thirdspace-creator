@@ -1,0 +1,32 @@
+{
+  "reviewedAt": "2026-10-11T20:27:56.880426+00:00",
+  "verdict": "PASS_TOOL_ONLY",
+  "mode": "FIXTURE_COMPAT_CANDIDATE_TEST",
+  "tools": [
+    {
+      "file": "/private/tmp/t1246-unit/run-b029-visible-window-candidate.cjs",
+      "sha256": "542d0b4654079db6a4844b1f854244a5816e9f781c18a9207d15b5d7ca105a69"
+    },
+    {
+      "file": "/tmp/t1246-unit/b029-visible-window-decoder-candidate.test.ts",
+      "sha256": "486d768344e043acec73d31de1475f930cb04e34b8f861c6031eb48672bebbed"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea"
+    }
+  ],
+  "sourceDigest": "b59b499d8c5f38e7c7590eca954113bf3c88a95538c4bf267146c7f9b64539eb",
+  "candidateSha256": "486d768344e043acec73d31de1475f930cb04e34b8f861c6031eb48672bebbed",
+  "beforeClosureSha256": "c8b675d01b1077a4dcbe13e41a30171f07b36d5947d6f921ce0bb2ac54b060d5",
+  "independentTestReview": "/tmp/t1246-b029-visible-window-independent-review.json",
+  "independentTestReviewSha256": "69d5b3b917b76d13014b77dae4583911ce0c00936f7c0c06cd751e06b78f2151",
+  "findings": [],
+  "scope": "仅private clone原三body actualHTTP可见窗口受控fixture候选测试；不落实原source、不变产品或期望",
+  "limits": [
+    "原三maxCalls20/10/8、expected6/5/4/fullsource/采用/CAS/终态断言全保",
+    "第一窗实证不代签第二窗，新的RED必须保",
+    "正预算2520s+cleanup360s+prepare720s=outer3600s不縮；新nonce source/tools严格同值"
+  ],
+  "rootRead": "实际全tmp decoder差异已核SEMANTIC_BOUNDARY_ALLOW、普通JSON不变、只visible head证据/同identity+tail分页safe整数与完整末尾、唯一marker+fullJSONfalse；runner仅换candidate/mode且534a原工具不覆盖。"
+}

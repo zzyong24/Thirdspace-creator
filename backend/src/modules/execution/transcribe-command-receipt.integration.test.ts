@@ -155,7 +155,11 @@ it('没有转写绑定的其它kind/mixed保main通用受理回执，同key回�
   expect(await tasks.command(ctx,{taskIds:ids,command:'cancel',idempotencyKey:'old-mixed'})).toEqual(result);
   expect(await Promise.all(ids.map(id=>snapshot(opened.db,id)))).toEqual(accepted);
   expect(await opened.db.select().from(executionControlReceipts)).toEqual(receipts);
-  for(const id of ids)expect((await snapshot(opened.db,id)).execution?.payload).toEqual({});
+  for(const id of ids){
+   const payload=(await snapshot(opened.db,id)).execution?.payload;
+   expect(payload).toEqual({executionRoute:{schemaVersion:1,engine:'pi',source:'preference',protocolKind:'pi'}});
+   expect(payload).not.toHaveProperty(FIELD);
+  }
  }finally{await opened.client.close();}
 },180000);
 it('同字符串用于另一个独立target不作全域冲突，原账号组版本变化不封死回放',async()=>{

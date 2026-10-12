@@ -1,0 +1,10 @@
+{
+  "phase": "types",
+  "allClean": true,
+  "caseComplete": true,
+  "sourceUnchanged": true,
+  "candidateCalibration": true,
+  "originalPositiveAssertionsKept": true,
+  "originalStimulusUnchanged": true,
+  "neverClaimFullSystem": true
+}

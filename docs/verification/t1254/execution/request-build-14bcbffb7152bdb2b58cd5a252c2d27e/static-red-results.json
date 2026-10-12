@@ -1,0 +1,42 @@
+{
+  "task": "T-1254",
+  "phase": "red",
+  "modulePath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/packages/shared/src/utils/fetch.ts",
+  "sourceSha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+  "records": [
+    {
+      "name": "原默认预算应容许31秒完整正文",
+      "delayMs": 31000,
+      "expected": "success",
+      "nonce": "7e7dac1546ae32d47b2a9ed33be241bf",
+      "endpoint": "http://127.0.0.1:55215/owned/7e7dac1546ae32d47b2a9ed33be241bf",
+      "requests": 1,
+      "elapsedMs": 30004.243958000003,
+      "setupElapsedMs": 6.916667000000004,
+      "setupBudgetMs": 120000,
+      "bodyReleaseElapsedMs": null,
+      "value": null,
+      "error": {
+        "name": "AbortError",
+        "message": "This operation was aborted"
+      },
+      "assertionError": {
+        "name": "AssertionError",
+        "message": "合法完整正文应成功\n+ actual - expected\n\n+ {\n+   message: 'This operation was aborted',\n+   name: 'AbortError'\n+ }\n- null\n"
+      },
+      "cleanupError": null,
+      "cleanupComplete": true,
+      "cleanupElapsedMs": 0.9082079999971029,
+      "cleanupBudgetMs": 120000,
+      "socketCloseEvents": 1,
+      "socketClosePromiseCount": 1,
+      "listenerClosed": true,
+      "remainingSockets": 0
+    }
+  ],
+  "expectedRed": true,
+  "passed": false,
+  "noGlobalFetchOverride": true,
+  "actualLoopback": true,
+  "noOfficialModelOrApp": true
+}

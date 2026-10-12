@@ -1,0 +1,87 @@
+{
+  "at": "2026-10-12T02:50:25.720769+00:00",
+  "sealSha256": "f98e3a9ab5b5a6a20d9f50f6b594635140eb0cfc2cb6b6575abe1318dc07a500",
+  "prepareSha256": "9e1ee181b70395a29180027630bbbaa439bbfcd8520eb93bd26ea9f02e4a892f",
+  "sourceSnapshotDigest": "cf988d91089628a370e285ce5cb651986fa57625e235f9aeb8d1d4568bf1fe2b",
+  "toolDigest": "0e00dc6da2640c46e03f3ac9723fcaa8d056a0048d99657d22ff00851c4e43fd",
+  "counts": {
+    "inputs": 1678,
+    "tools": 141101
+  },
+  "actualFileSHAAndSizeChecks": 135332,
+  "actualLinkChecks": 7447,
+  "actualBytesRead": 1800931891,
+  "elapsedMs": 20473.851999966428,
+  "drift": [],
+  "bothDigestsRecomputedSame": true,
+  "toolsArraysSameV7": true,
+  "sourceDelta": {
+    "added": [
+      {
+        "file": "/private/tmp/t1254-readonly/run-owned-doocs-request-and-build-v8.cjs",
+        "size": 26296,
+        "sha256": "93f04ea5212b8ad7709c57fe5181a9d279a0dc43f853a30de9ac95aa52083e9e"
+      },
+      {
+        "file": "/tmp/t1254-readonly/doocs-static-resource-checker-tests.mjs",
+        "size": 3603,
+        "sha256": "1780cb49d91095ff4e352d1fa83e7cd1f1d97e91dcb9a54a427cbd97275c0d7d"
+      }
+    ],
+    "removed": [
+      {
+        "file": "/private/tmp/t1254-readonly/run-owned-doocs-request-and-build-v7.cjs",
+        "size": 25675,
+        "sha256": "4b50bc0c7384ef37cb1d3e7aaea26dbc16bcbed59aba0edf1d99e1fb9d28dc7d"
+      }
+    ],
+    "changed": [
+      {
+        "old": {
+          "file": "/tmp/t1254-readonly/doocs-static-delivery-graph.mjs",
+          "size": 6797,
+          "sha256": "17dfcbdeb81aa9b394442d4d418aaea614efa4a65fc86cb1212f72f63de24756"
+        },
+        "new": {
+          "file": "/tmp/t1254-readonly/doocs-static-delivery-graph.mjs",
+          "size": 9788,
+          "sha256": "1dc7ff7bd193e56585d727c4ec0b3294f2704b9ad15a3e6aaba24fce09531b3b"
+        }
+      }
+    ]
+  },
+  "artifactsAllChecked": [
+    {
+      "path": "/tmp/t1254-readonly/run-owned-doocs-request-and-build-v8.cjs",
+      "sha256": "93f04ea5212b8ad7709c57fe5181a9d279a0dc43f853a30de9ac95aa52083e9e",
+      "size": 26296
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-real-request-lifecycle.mjs",
+      "sha256": "0253c58f324e4a25f0ad638cfe5fd12bae1c7622f4eef0cf2fbed7c59f9fd514",
+      "size": 4122
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-static-delivery-graph.mjs",
+      "sha256": "1dc7ff7bd193e56585d727c4ec0b3294f2704b9ad15a3e6aaba24fce09531b3b",
+      "size": 9788
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-static-resource-checker-tests.mjs",
+      "sha256": "1780cb49d91095ff4e352d1fa83e7cd1f1d97e91dcb9a54a427cbd97275c0d7d",
+      "size": 3603
+    },
+    {
+      "path": "/tmp/t1254-readonly/doocs-source-provenance.cjs",
+      "sha256": "0a3723582519915ed1cdb0d4f4cb6872321f96dab8052247ff32d7fe881674df",
+      "size": 4665
+    },
+    {
+      "path": "/tmp/t1254-readonly/REQUEST_BUILD_V8_PREPARE.json",
+      "sha256": "9e1ee181b70395a29180027630bbbaa439bbfcd8520eb93bd26ea9f02e4a892f",
+      "size": 56318229
+    }
+  ],
+  "firstHarnessFailure": "FULL_SEAL为index/prepare metadata而非inputs数组，首次KeyError inputs exit1；改只读seal.prepare指向真实JSON并先核SHA，不改任何工件",
+  "reviewerExecutedDependenciesOrTool": false
+}

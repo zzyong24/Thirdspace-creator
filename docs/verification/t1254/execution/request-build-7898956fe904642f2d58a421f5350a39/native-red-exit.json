@@ -1,0 +1,40 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-7898956fe904642f2d58a421f5350a39-9xSjBT/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/tmp/t1254-readonly/doocs-real-request-lifecycle.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.ts",
+    "red",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-7898956fe904642f2d58a421f5350a39-9xSjBT/reports/native-red-results.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-7898956fe904642f2d58a421f5350a39-9xSjBT/child-logs/native-red.log",
+  "pid": 4597,
+  "identity": {
+    "pid": 4597,
+    "pgid": 4597,
+    "uid": 501,
+    "birth": "Mon Oct 12 12:00:40 2026",
+    "startedAt": 1791777640343
+  },
+  "startedAt": "2026-10-12T04:00:40.343Z",
+  "endedAt": "2026-10-12T04:01:10.631Z",
+  "elapsedMs": 30288,
+  "budgetMs": 180000,
+  "deadlineAt": "2026-10-12T04:03:40.343Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 1,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

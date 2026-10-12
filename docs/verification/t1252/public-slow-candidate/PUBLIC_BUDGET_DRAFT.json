@@ -1,0 +1,167 @@
+{
+  "scope": "仅拟定私有验收工具预算；不是执行准入，不修改原任务期限",
+  "unit": "milliseconds",
+  "constants": {
+    "nativeRpc": 420000,
+    "cliNoAuthWhole": 8280000,
+    "positiveRequestOrObserve": 120000,
+    "hook": 180000,
+    "boundedProcessLifecycle": 2160000
+  },
+  "cases": [
+    {
+      "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+      "originalNativeHttpCount": 8,
+      "originalNativeTaskDefaultMs": 60000,
+      "mechanicalPrivateBodyMs": 80040000,
+      "derived": [
+        {
+          "label": "8个原CLI HTTP完整观察，包含各自dispatcher cleanup和原HTTP内Native receipt",
+          "count": 8,
+          "eachMs": 8280000
+        },
+        {
+          "label": "4个原fixture seeding/resume/conflict共17 Native file RPC，另automatic receipt1；HTTP receipt不在此重复当必须新增调用",
+          "count": 18,
+          "eachMs": 420000
+        },
+        {
+          "label": "4个fixture完整DB准备与账本/read/CAS余量，每份1200s非声称10条SQL",
+          "count": 4,
+          "eachMs": 1200000
+        },
+        {
+          "label": "native ready与automatic有限观察",
+          "count": 2,
+          "eachMs": 120000
+        },
+        {
+          "label": "CLI关闭与Rust done/文件清理",
+          "count": 2,
+          "eachMs": 120000
+        },
+        {
+          "label": "完整额外调度/断言/尾结算余量",
+          "count": 1,
+          "eachMs": 960000
+        }
+      ],
+      "fixtureDoneObserveMs": 80160000,
+      "bodyUnchanged": "只在新副本规范显式case60000、timer60000、两个waitFor10000；所有原8 HTTP/assert/task60k/metadata/CAS/权限/usage不动",
+      "deadlineMeaning": "测试观察更长不授权原60k任务超时继续；本例原正常快速公开对账不注入delay",
+      "actualDerivedMs": 80040000,
+      "draftClaimMatchesActualSum": true
+    },
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "caseMs": 36000000,
+      "birthTaskMs": 36000000,
+      "derivedMaxMs": 29470000,
+      "derived": [
+        {
+          "label": "3个CLI完整HTTP",
+          "count": 3,
+          "eachMs": 8280000
+        },
+        {
+          "label": "setup3seed+1真实写；HTTP内receipt由HTTP槽覆盖",
+          "count": 4,
+          "eachMs": 420000
+        },
+        {
+          "label": "原Rust ready",
+          "count": 1,
+          "eachMs": 120000
+        },
+        {
+          "label": "一份DB/setup余量，非SQL数量声明",
+          "count": 1,
+          "eachMs": 1200000
+        },
+        {
+          "label": "固定queue延迟额外保守覆盖，非新增任务期限",
+          "count": 1,
+          "eachMs": 310000
+        },
+        {
+          "label": "原samecall resume/CAS/前后行读",
+          "count": 4,
+          "eachMs": 120000
+        },
+        {
+          "label": "CLI与Rust done有限close",
+          "count": 2,
+          "eachMs": 120000
+        },
+        {
+          "label": "调度与尾断言余量",
+          "count": 1,
+          "eachMs": 600000
+        }
+      ],
+      "fixtureDoneObserveMs": 36120000,
+      "actualDerivedMs": 29470000,
+      "draftClaimMatchesActualSum": true
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "caseMs": 42000000,
+      "birthTaskMs": 36000000,
+      "derivedMaxMs": 35760000,
+      "derived": [
+        {
+          "label": "两格式及跨账号/错版本4个CLI完整HTTP",
+          "count": 4,
+          "eachMs": 8280000
+        },
+        {
+          "label": "controlled文件source/真实注册版本/DB准备余量，非真实Native IO声明",
+          "count": 1,
+          "eachMs": 1200000
+        },
+        {
+          "label": "两格式真实有效字节/MIME/hash解析",
+          "count": 2,
+          "eachMs": 120000
+        },
+        {
+          "label": "原同source/版本/原D读回",
+          "count": 4,
+          "eachMs": 120000
+        },
+        {
+          "label": "CLI close",
+          "count": 1,
+          "eachMs": 120000
+        },
+        {
+          "label": "尾断言与调度余量",
+          "count": 1,
+          "eachMs": 600000
+        }
+      ],
+      "slowStageMeaning": "真实launch/context/page各立即执行SDK并与110000ms私有延迟并行，保原每stage120000ms；每格式累计330000ms，真实PNG/PDF操作仍执行，原renderer完整1380000+240000ms在HTTP槽中",
+      "actualDerivedMs": 35760000,
+      "draftClaimMatchesActualSum": true
+    }
+  ],
+  "runnerPlan": {
+    "prepareMs": 240000,
+    "listMs": 240000,
+    "perFileAllHookMs": 360000,
+    "perBodyPoolStartTeardownReportMs": 480000,
+    "childBodyAndFullHooksMs": [
+      80880000,
+      36840000,
+      42840000
+    ],
+    "eachChildLifecycleMs": 2160000,
+    "childCountIncludingList": 4,
+    "lastSourceEvidenceMs": 600000,
+    "outerMarginMs": 120000,
+    "outerMs": 170400000,
+    "correctionRequiredBeforeSeal": "最终launcher用相同逐项sum严格验证全部safeInteger正数；actual list精确3名称，每case独立owned child和fresh内存DB，源码/installed/b88/私有副本全面绑定；draft不是准入",
+    "actualDerivedOuterMs": 170400000,
+    "earlierDraftOuterMs": 170520000
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "observedAt": "2026-10-11T16:42:22.092Z",
+  "sourceBindings": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/chromium-guard.test.ts",
+      "sha256": "64398cc8bd849301b479ab20bcf07ce2a8910f3be7199a2e5a707e1f264b3be6"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/ai-worker/src/runtime/browser/chromium-guard.ts",
+      "sha256": "1cd4ced2481f5f4b69b757fa077d1a502924554dff77d41bd257cb9f017eac9f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/douyin-throttle-integration.test.ts",
+      "sha256": "66b8db85d662fa454abe9cad102e2fb59d14a7aa8adcff2afd3bd6acdf0ccc49"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.ts",
+      "sha256": "1de2689b4e94ae71ebd23e28d1cfa25cbafa82179add78729e3c111d96af2a53"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/ui/creator-date-picker-antd.test.tsx",
+      "sha256": "bbe0e44635d260d02ede9cba06b7335dd6cab83c6656576a1e002d83a2a93078"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/ui/creator-date-picker-antd.tsx",
+      "sha256": "bc7631f31f773c278a7b8a5f845b6e154e6546d40f7f216138bdedf6977338e0"
+    }
+  ],
+  "readonly": true,
+  "noRepairsOrReruns": true
+}

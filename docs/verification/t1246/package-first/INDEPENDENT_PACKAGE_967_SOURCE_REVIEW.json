@@ -1,0 +1,88 @@
+{
+  "task": "T-1246",
+  "at": "2026-10-12T09:57:12.186584+00:00",
+  "status": "PACKAGE_967_SOURCE_STATIC_CONCERNS_ONE_BUDGET_FINDING_NO_RUNTIME",
+  "sourceIndexSha256": "96759b221d47da36afcd74695411933725ec161c8279c7c64be447c164ef8bfc",
+  "sourceRows": [
+    {
+      "file": "/private/tmp/t1246-package-final-source/run-owned-local-package-v1.cjs",
+      "sha256": "c72f84b692ca06fb0435bd0576b1a70ca8e244851303745150e3221c2eac57ef",
+      "size": 15418,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "file": "/private/tmp/t1246-package-final-source/verify-local-artifact-v1.cjs",
+      "sha256": "3482fadf977840cd386beef943db2bdbea0ad99466f97f84b27eb666f631d22f",
+      "size": 9857,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "file": "/private/tmp/t1246-package-final-source/seal-package-source-v1.py",
+      "sha256": "cda4957d4d8b79347ff6aeed38ba57bc78e039f2b3809ad07aa0922d15c41576",
+      "size": 5245,
+      "mode": 420,
+      "uid": 501
+    }
+  ],
+  "consumerCount": 37,
+  "all40SourceConsumerAndPreservedFirstDMGBytesModesUIDSame": true,
+  "originalBasic45Counts": {
+    "package-local": 12,
+    "desktop-release-workflow": 26,
+    "notarize": 4,
+    "tauri-signing-config": 3
+  },
+  "originalRetry2Means3AttemptsRetained": true,
+  "basicBudgetMs": 32760000,
+  "declaredTotalObservationMs": 75240000,
+  "original11WorkerDistAnd10PublicCopiesExact": true,
+  "workerDistNames": [
+    "execution-worker.cjs",
+    "agentic-worker.cjs",
+    "browser-runtime.cjs",
+    "intelligence-generation-worker.cjs",
+    "intelligence-transcript-worker.cjs",
+    "embedding-worker.cjs",
+    "flywheel-generation-worker.cjs",
+    "model-probe-worker.cjs",
+    "codex-status-worker.cjs",
+    "codex-acp.cjs",
+    "video-visual-review-worker.cjs"
+  ],
+  "publicCopyNames": [
+    "codex-acp.cjs",
+    "codex-status-worker.cjs",
+    "execution-worker.cjs",
+    "agentic-worker.cjs",
+    "intelligence-generation-worker.cjs",
+    "intelligence-transcript-worker.cjs",
+    "embedding-worker.cjs",
+    "flywheel-generation-worker.cjs",
+    "model-probe-worker.cjs",
+    "video-visual-review-worker.cjs"
+  ],
+  "artifactVerifierReviewedWithoutConfirmedFinding": true,
+  "artifactVerifierSHA": "3482fadf977840cd386beef943db2bdbea0ad99466f97f84b27eb666f631d22f",
+  "artifactBoundaries": [
+    "只读hdiutil mount与实际exact mount detach，不执行App或安装。",
+    "7.2M出生上限/6.6M工作窗保600k余量，清理三条120k独立命令槽。",
+    "ad-hoc明确非Developer ID/未公证，DMG和Downloads实际SHA、main/archive/attestation实际HEAD与10public相等才绿。"
+  ],
+  "findings": [
+    {
+      "id": "PKG-001",
+      "severity": "blocking-complete-serial-future-budget",
+      "source": "run-owned-local-package-v1.cjs execute()/child()/bindingGuard()",
+      "cause": "初始future仅三个child body+3LIFECYCLE+AFTER，之后每child又完整bindingGuard；完整guard至少cleanHead四个120k Git与sourceRows一个120k Git，再全source/deps/Pnpm/App/firstDMG读取。中段guard没有独立完整串行槽，child gate仅本child budget+LIFECYCLE+AFTER，没有余下child/guard/清理的完整future。初始完整准入之后第二guard消耗余量时，首child仍可能获准而整段已无完整槽。",
+      "minimumCorrection": "只改私有验收工具：封完整串行CLI+IO binding槽并纳全部TOTAL，每child前守该guard+当前及所有未来child、各LIFECYCLE、final AFTER的完整余量。保45/retry2、PACKAGE21.6M、VERIFY7.2M及原产品源脚本/断言；freshproducer/index。"
+    }
+  ],
+  "readBytes": 864808069,
+  "elapsedMs": 565.3892499394715,
+  "runtimePackageOrPrepareNotExecutedByReviewer": true,
+  "cleanHeadAndFreezeStillPending": true,
+  "nativeAppAcceptance": "用户暂不授权，未完成；不能安装或启动。",
+  "skill": "/Users/zyongzhu/Workbase/Thirdspace-creator/.agents/skills/packaging-creatoros-release/SKILL.md"
+}

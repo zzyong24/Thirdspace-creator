@@ -1,0 +1,15 @@
+{
+  "dmg": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "mountpoint": "/tmp/t1246-dmg-readonly-5dnwm_gb",
+  "readonly": true,
+  "appLaunched": false,
+  "startedAt": "2026-10-11T15:02:10.537507+00:00",
+  "attachExit": 0,
+  "innerCodesignExit": 0,
+  "bundleIdentifier": "cloud.aitongban.creatoros",
+  "version": "1.2.0",
+  "mainSha256": "0355f3e72099a411e261488054f07ed815fdba81d5e102390427d0356b056b6a",
+  "mainMatchesBuiltApp": true,
+  "detachExit": 0,
+  "endedAt": "2026-10-11T15:02:13.972356+00:00"
+}

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "at": "2026-10-11T23:38:58.578369+00:00",
+  "result": "PASS_RUNTIME_ADMISSION_CONTROLLED_BUNDLED_SLOW_HTTP_ONLY",
+  "toolSha256": "de048571a626864a14b2e590be84b5847bb87664c2ea1931e67d214f8e9d6642",
+  "bindingSha256": "e5d37451ddad1968a624894775c5f701b8f1ae86799b9da2dce0f635b5afb003",
+  "independentReviewSha256": "1a310a626d65a3e097a8cd91746b9570a449e81cd658c2731d55928b449f3c52",
+  "rootPriorFullReadReviewSha256": "0ec7584b437fe20198adad80e14bfc18a605cd1ca9b903419d740c9b406d58a1",
+  "actualInputCount": 212,
+  "actualInputDrift": 0,
+  "nodeAndBundleExact": true,
+  "firstTwoRedPreserved": true,
+  "noPublicBusinessOrNativeAppProof": true,
+  "runtimeExecuted": false,
+  "runtimeApproved": true
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "t1251-independent-observation-candidate/v1",
+  "status": "PASS_OBSERVATION_TEST_CANDIDATE_ONLY",
+  "findings": [],
+  "bindings": [
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.integration-stage1-finite-settlement.test.ts",
+      "sha256": "df9fa08bf2f68f14261f8ca8d3c620fe387ffb30e0863f376f8a1b0a7a4039a4"
+    },
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.integration-stage1-observation-only.test.ts",
+      "sha256": "f704798909430d7e3e1b0059977c807a74308301fe56e91344be429a71053fb0"
+    },
+    {
+      "path": "/tmp/t1251-candidate/integration-stage1-observation-only.diff",
+      "sha256": "1971a67feafa050fbe8b2df575d314499b2d1d0949b6275b65f8c741fcbbe07d"
+    },
+    {
+      "path": "/tmp/t1251-candidate/integration-stage1-observation-only-binding.json",
+      "sha256": "f0d44d32ca07485fa8c252e4fd1643d46878d4face90008f28d6723c1ca2dac2"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/chat-turn-submission.service.ts",
+      "sha256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/chat-turn-completion.service.ts",
+      "sha256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/chat-receipt-projection.ts",
+      "sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+      "sha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84"
+    }
+  ],
+  "actualDiff": "相对df9仅finally现有trace一行增加badOutput/diagnosisEmpty原真实tool resultText、同task payload aiTaskId正式结果与business status；22body、终态、刺激、计数、预算断言未改",
+  "facts": [
+    "原chat submission实际payload.aiTaskId与ownerId同原业务ID，追加查询绑定本例原executionTaskId",
+    "正式aiTaskResults由chat-turn-completion真实receipt投影；日志可观测完整resultData，不制造completion",
+    "只受控本地provider fixture，没有读modelInput/credential；清理之后仍用原db只读查询",
+    "原任何新失败和finally原AggregateError保留"
+  ],
+  "limits": [
+    "未应用/未build/未执行；不预签transient/retryable/none或partial实际结果",
+    "本候选仍原unknown HTTP刺激与所有原断言；不得把stage2刺激混在此签",
+    "后续whole需保存原完整JSON/日志，按当场回执决定修订"
+  ]
+}

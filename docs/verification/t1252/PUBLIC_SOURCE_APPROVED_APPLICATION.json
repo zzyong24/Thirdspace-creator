@@ -1,0 +1,16 @@
+{
+  "task": "T-1252",
+  "at": "2026-10-12T00:46:33.132156+00:00",
+  "approved": true,
+  "scope": "仅已批准原测试文件追加两公共慢链用例与新case cleanup；生产未变",
+  "source": "frontend/src/server/workbench-file-recovery.test.ts",
+  "beforeSha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c",
+  "afterSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+  "packetSha256": "82bc117fbb7f07a57747eaa8b1424d92b3d9ea84042c7de264f9191fb65e784a",
+  "independentSourceReviewSha256": "3f0179cd04b5d2d761e33181964f92b599895f8202e61edee17f49fc79434c4d",
+  "actualInputHashDrift": [],
+  "originalNative8BodyAndAssertionsUnchanged": true,
+  "runtimeExecuted": false,
+  "freshLiveToolBindingRequired": true,
+  "AppAcceptance": false
+}

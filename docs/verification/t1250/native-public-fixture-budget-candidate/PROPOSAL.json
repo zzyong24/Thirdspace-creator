@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-11T21:37:54.027114+00:00",
+  "implementationApplied": false,
+  "scope": "仅3原cfg(test)公共Rust夹具，不改生产IPC或任务deadline",
+  "env": "CREATOROS_TEST_WORKBENCH_FIXTURE_WAIT_MS",
+  "unit": "milliseconds",
+  "strictMinimumMs": 120000,
+  "beforeBindValidation": true,
+  "afterReadyFrozenOnlyOnce": true,
+  "sourceBindings": [
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "originalSha256": "96d2d4df08422c458b248328940e18308b4de45048c8086309545a9d6dc47cb7",
+      "candidateSha256": "46ace3fab56c8ed39ebd40e8826f4a00dde09d3d3f76e7b9a15419eaf84568a2"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "originalSha256": "7c1efaf57c165aea4f7bbe5c5ba0deb798b6e306dd50dfd38964bde9663f8471",
+      "candidateSha256": "5dc28fd769a1f60184f7e17146e1b94553ce2e0b9b644c516010de986eef5b21"
+    }
+  ],
+  "sourceOriginalUnchanged": true,
+  "derivedConsumerStatus": "由peer正在准备的真实Node公共工具列举/有效单case预算给出；未填猜测固定值，未执行新源",
+  "originalDefaults": [
+    {
+      "name": "journal",
+      "beforeMs": 90000,
+      "candidateDefaultMs": 120000
+    },
+    {
+      "name": "files",
+      "beforeMs": 120000,
+      "candidateDefaultMs": 120000
+    },
+    {
+      "name": "browser",
+      "beforeMs": 180000,
+      "candidateDefaultMs": 180000
+    }
+  ]
+}

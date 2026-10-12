@@ -1,0 +1,10 @@
+{
+  "names": [
+    "ipc::tests::t1250_authorized_frame_after_thirty_seconds_keeps_original_operation",
+    "ipc::tests::t1250_owned_bridge_stop_wakes_incomplete_frame_without_effect"
+  ],
+  "binary": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/76059dbc05089dbf518a9d59/target/debug/deps/creatoros_workbench_test-eff919631907b84d",
+  "binarySha256": "0fc64b65232d4c8cb1e54ddd762b68de453b8ccdaa68aa588cb7c8605437545a",
+  "filter": "ipc::tests::t1250_",
+  "ignoredRemainOriginal": true
+}

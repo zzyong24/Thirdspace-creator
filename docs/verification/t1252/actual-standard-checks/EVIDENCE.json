@@ -1,0 +1,84 @@
+{
+  "at": "2026-10-11T23:26:04.026333+00:00",
+  "scope": "actual standard mcp types, full8files116tests, scanner8 and original node25 packagedCLI build/smoke; not slowHTTP/publicRust/App",
+  "sourceRunRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50",
+  "rawFiles": [
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/actual-list.json",
+      "sha256": "0ee286aa4e4e8121de16eb00dab972242781a1bea2b7562e7ee09011df660c2f"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/actual-mcp-result.json",
+      "sha256": "e2eab3af26788d78eb34cc16197c3326e3e0dcafac80ac62240b724f6c2e367a"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/actual-package-cli-build-receipt.json",
+      "sha256": "2057e1238deb36292ca00414d6083b74422a5bd042ed30aa0a249dd1f92e1c0d"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/actual-package-cli-build.log",
+      "sha256": "599758a53c462477281ade3015842f04bfcc0d66d74dde8fa395ae75febb2da5"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/all-original-mcp-and-new-receipt.json",
+      "sha256": "03553c32c86f115af31957e5015166a1bc8cc038f803d710a27fc7e8e53c17ad"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/all-original-mcp-and-new.log",
+      "sha256": "3275411ff0252dedee8ca140aeea80f4b50b8cd8a9e2b2e4302752f06000a6e1"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/bundle.json",
+      "sha256": "1102a2661599e54217f10a147ec4524116cbaf018986de8e60fa1fbebe0230a7"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/creatoros.cjs",
+      "sha256": "84260be6df120ec18b9b91b17112cbee37fd1bba448205ccfbbd147646218caf"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/derived-budget.json",
+      "sha256": "1d72e73374fa95ce482b6a0fb824f8b0a0121aa1f0fb284767076154a3ee60f5"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/final.json",
+      "sha256": "bb9ef931e474eba5e86f5b36521c749ab8d51dd1f4d7253c278d1ace98ae185c"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/proper-mcp-types-receipt.json",
+      "sha256": "7be74827e60b62b569befa3e04f50d91709f6784f254698f7fc887e2490e290e"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/proper-mcp-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/start.json",
+      "sha256": "8549801f56e1b7334655daea66364205ff8e7b0f637ce76ca89d6e1c39f9cc07"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/whole-mcp-list-receipt.json",
+      "sha256": "e8762e52362c87218f56f71b4f21ff617e2fc5c665af474f321a15137368259b"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/whole-mcp-list.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/whole-original-scanner-and-new-receipt.json",
+      "sha256": "842534bd55023829cbbe4a807dcadd654fc8af7fc473856cdcfd9ec2f7d6dcc1"
+    },
+    {
+      "path": "docs/verification/t1252/actual-standard-checks/whole-original-scanner-and-new.log",
+      "sha256": "5f5b16e9df3bbaf0effc3d17f2d219ab89052f1749e3a5d615cb63d47ca3c577"
+    }
+  ],
+  "actualMcpPass": 116,
+  "actualMcpFail": 0,
+  "actualMcpSkip": 0,
+  "actualScannerPass": 8,
+  "actualScannerFail": 0,
+  "source210AfterSame": true,
+  "all5ChildrenClosedAndOwnedGroupZero": true,
+  "bundledCliSha256": "84260be6df120ec18b9b91b17112cbee37fd1bba448205ccfbbd147646218caf",
+  "overallElapsedMs": 16445.574708
+}

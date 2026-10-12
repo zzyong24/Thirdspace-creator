@@ -1,4 +1,5 @@
 import "server-only";
+import {MIN_EXECUTION_TIMEOUT_MS,completionWaitMs} from "@creatoros/contract/timeout-policy";
 import {mkdtemp,realpath,rm,stat} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {isAbsolute,join,sep} from "node:path";
@@ -76,56 +77,73 @@ export async function renderTrustedWorkbenchHtml(input:{html:string|Uint8Array;f
   throw new WorkbenchHtmlRenderError("INVALID_INPUT","只支持 PNG 或 PDF 导出");
  if(activeRenders>=MAX_CONCURRENT_RENDERS)
   throw new WorkbenchHtmlRenderError("RENDER_BUSY","同时进行的 HTML 导出过多");
- activeRenders++;
- try{return await renderHtmlWithinSlot(html,input.format);}
- finally{activeRenders--;}
+ activeRenders++;let released=false;const slot={retained:false,release:()=>{if(!released){released=true;activeRenders--;}}};
+ const deadlineAt=performance.now()+completionWaitMs(Array(11).fill(MIN_EXECUTION_TIMEOUT_MS),60_000);
+ try{return await renderHtmlWithinSlot(html,input.format,deadlineAt,slot);}
+ finally{if(!slot.retained)slot.release();}
 }
 
-async function renderHtmlWithinSlot(html:string,format:"png"|"pdf"):Promise<Buffer>{
- const {chromium}=await import("@playwright/test").catch(error=>{
+async function renderHtmlWithinSlot(html:string,format:"png"|"pdf",deadlineAt:number,slot:{retained:boolean;release():void}):Promise<Buffer>{
+ const remaining=()=>{const ms=deadlineAt-performance.now();if(ms<=0)throw new Error("Chromium 渲染期限耗尽");return ms;};
+ const step=<T>(operation:()=>Promise<T>)=>{remaining();return within(operation(),Math.min(MIN_EXECUTION_TIMEOUT_MS,remaining()));};
+ const {chromium}=await step(()=>import("@playwright/test")).catch(error=>{
   throw new WorkbenchHtmlRenderError("BROWSER_RUNTIME_UNAVAILABLE","Chromium 控制运行时不可用",error);
  });
- const executablePath=await chromiumExecutable(chromium).catch(error=>{
+ const executablePath=await step(()=>chromiumExecutable(chromium)).catch(error=>{
   if(error instanceof WorkbenchHtmlRenderError)throw error;
   throw new WorkbenchHtmlRenderError("BROWSER_RUNTIME_UNAVAILABLE","Chromium 路径检查失败",error);
  });
- const privateHome=await mkdtemp(join(tmpdir(),"creatoros-html-render-")).catch(error=>{
+ const privateDirectory=await step(()=>mkdtemp(join(tmpdir(),"creatoros-html-render-"))).catch(error=>{
   throw new WorkbenchHtmlRenderError("RENDER_FAILED","无法创建隔离浏览器目录",error);
  });
  let browser:Browser|undefined;
+ let output:Buffer|undefined,failure:unknown,launchPending=false;
+ const recordCleanup=(error:unknown)=>console.warn("T1250_RENDER_CLEANUP_UNCONFIRMED",{directory:privateDirectory,error:error instanceof Error?error.name:"unknown"});
+ const removeStoppedDirectory=async()=>{slot.retained=false;slot.release();await within(rm(privateDirectory,{recursive:true,force:true}),MIN_EXECUTION_TIMEOUT_MS);};
+ const stopOwnedBrowser=async(owned:Browser)=>{
+  // 观察到期不是物理停止：原 close 成功后仍保留同一收据的清理尾部，不重复关闭。
+  const stopping=Promise.resolve().then(()=>owned.close());
+  const cleaned=stopping.then(removeStoppedDirectory);
+  void cleaned.catch(recordCleanup);
+  try{await within(stopping,MIN_EXECUTION_TIMEOUT_MS);await cleaned;}catch(error){recordCleanup(error);}
+ };
  try{
-  browser=await chromium.launch({executablePath,headless:true,chromiumSandbox:process.platform==="darwin"||process.platform==="win32",
-   timeout:15_000,args:["--disable-background-networking","--disable-sync","--disable-extensions","--no-first-run"],
-   // 不把 sidecar 的模型密钥、会话票据或用户 HOME 传给浏览器子进程。
-   env:{PATH:process.env.PATH??"",HOME:privateHome,TMPDIR:privateHome,TEMP:privateHome,TMP:privateHome,
-    USERPROFILE:privateHome,APPDATA:privateHome,LOCALAPPDATA:privateHome,
+  remaining();slot.retained=true;launchPending=true;const launching=chromium.launch({executablePath,headless:true,chromiumSandbox:process.platform==="darwin"||process.platform==="win32",
+   timeout:MIN_EXECUTION_TIMEOUT_MS,args:["--disable-background-networking","--disable-sync","--disable-extensions","--no-first-run"],
+   // 仅保留系统 HOME/CODEX_HOME 原值；浏览器临时目录与缓存归本次调用，不透传模型或会话凭据。
+   env:{PATH:process.env.PATH??"",...(process.env.HOME?{HOME:process.env.HOME}:{}),...(process.env.CODEX_HOME?{CODEX_HOME:process.env.CODEX_HOME}:{}),TMPDIR:privateDirectory,TEMP:privateDirectory,TMP:privateDirectory,
+    USERPROFILE:privateDirectory,APPDATA:privateDirectory,LOCALAPPDATA:privateDirectory,
     SystemRoot:process.env.SystemRoot??"",WINDIR:process.env.WINDIR??"",LANG:process.env.LANG??"en_US.UTF-8"}});
-  const context=await browser.newContext({viewport:{width:1280,height:800},deviceScaleFactor:1,
-   javaScriptEnabled:false,serviceWorkers:"block",acceptDownloads:false,offline:true,permissions:[],reducedMotion:"reduce"});
-  const page=await context.newPage();
-  await context.route("**/*",async route=>{
+  let accepted=false,abandoned=false;void launching.then(async value=>{launchPending=false;if(!accepted&&abandoned)await stopOwnedBrowser(value);},()=>{launchPending=false;});
+  try{browser=await step(()=>launching);accepted=true;}catch(error){abandoned=true;throw error;}
+  const context=await step(()=>browser!.newContext({viewport:{width:1280,height:800},deviceScaleFactor:1,
+   javaScriptEnabled:false,serviceWorkers:"block",acceptDownloads:false,offline:true,permissions:[],reducedMotion:"reduce"}));
+  const page=await step(()=>context.newPage());
+  page.setDefaultTimeout(MIN_EXECUTION_TIMEOUT_MS);page.setDefaultNavigationTimeout(MIN_EXECUTION_TIMEOUT_MS);
+  await step(()=>context.route("**/*",async route=>{
    const request=route.request();
    if(request.url()===DOCUMENT_URL&&request.isNavigationRequest()&&request.frame()===page.mainFrame()){
     await route.fulfill({status:200,contentType:"text/html; charset=utf-8",headers:{"content-security-policy":RENDER_CSP},body:html});
    }else await route.abort("blockedbyclient");
-  });
-  const response=await page.goto(DOCUMENT_URL,{waitUntil:"load",timeout:15_000});
+  }));
+  const response=await step(()=>page.goto(DOCUMENT_URL,{waitUntil:"load",timeout:Math.min(MIN_EXECUTION_TIMEOUT_MS,remaining())}));
   if(!response||response.status()!==200)throw new Error("受控文档加载失败");
   const bytes=format==="png"
-   ?await page.screenshot({type:"png",fullPage:true,animations:"disabled",timeout:20_000})
-   :await within(page.pdf({format:"A4",printBackground:true}),20_000);
-  const output=Buffer.from(bytes);
+   ?await step(()=>page.screenshot({type:"png",fullPage:true,animations:"disabled",timeout:Math.min(MIN_EXECUTION_TIMEOUT_MS,remaining())}))
+   :await step(()=>page.pdf({format:"A4",printBackground:true}));
+  remaining();output=Buffer.from(bytes);
   const valid=format==="png"
    ?output.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))&&output.subarray(-8,-4).toString()==="IEND"
    :output.subarray(0,5).toString()==="%PDF-"&&/%%EOF\s*$/.test(output.subarray(-1024).toString());
   if(!valid||output.byteLength<64||output.byteLength>MAX_RESULT_BYTES)
    throw new Error("Chromium 未生成有效或可交付的文件字节");
-  return output;
- }catch(error){
-  if(error instanceof WorkbenchHtmlRenderError)throw error;
-  throw new WorkbenchHtmlRenderError("RENDER_FAILED","离线 HTML 渲染失败",error);
- }finally{
-  await browser?.close().catch(()=>{});
-  await rm(privateHome,{recursive:true,force:true}).catch(()=>{});
+ }catch(error){failure=error;}finally{
+  // 已验证字节可交付；未确认停止保留并发槽，清理错误留真实收据。
+  if(browser)await stopOwnedBrowser(browser);
+  else if(!launchPending){try{await removeStoppedDirectory();}catch(error){recordCleanup(error);}}
+
  }
+ if(failure instanceof WorkbenchHtmlRenderError)throw failure;
+ if(failure)throw new WorkbenchHtmlRenderError("RENDER_FAILED","离线 HTML 渲染失败",failure);
+ return output!;
 }

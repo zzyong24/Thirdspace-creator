@@ -1,0 +1,16 @@
+[
+  {
+    "file": "docs/verification/t1217/fixtures/historical-intelligence.service.ts",
+    "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1217/fixtures/historical-intelligence.service.ts",
+    "sha256": "aba25b0714313c0e22c5c21a59223a3262e0620c21b2193f1a8f3e8290cebd6c",
+    "bytes": 211647,
+    "exactBytesCopied": true
+  },
+  {
+    "file": "docs/verification/t1229/historical-generation-bridge.ts",
+    "source": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1229/historical-generation-bridge.ts",
+    "sha256": "702df82aa972de2ce65dd0886934ebfd8adc520bc82ecb0e1c29ef4fa0f411da",
+    "bytes": 16724,
+    "exactBytesCopied": true
+  }
+]

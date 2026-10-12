@@ -1,0 +1,341 @@
+{
+  "task": "T-1246",
+  "scope": "EXTERNAL_7391_ONLY_PURE",
+  "at": "2026-10-12T08:37:19.258983+00:00",
+  "status": "actual-pure-only-PASS",
+  "exactRootApprovalSha256": "752bed1c30022b6b2086be1832f7177b345b14eed8c77136593c38154c639b35",
+  "rootPureApprovalSha256": "49c8cdd4de84c454bedcb2538b2ff0cb02e771fb859de4767b76a1219cb82bf6",
+  "sourceBindingSha256": "7391c163398d7fe7f7b11fbcd51d5482da3005e07fef5aa9e2c974b028a6047c",
+  "pureEntrySha256": "dae6513613692a7ac7cd4549694610b5a17a74eb6600441779aabcca30e4cd0a",
+  "wrapperSha256": "f11cafb012273a6c3f0584f3df4f306e1d187cad4cc08349265c19f073472835",
+  "nonce": "7dd0492156b02ee92c531d89",
+  "wrapperActualEOF": 0,
+  "candidateExecutions": 1,
+  "actualChild": {
+    "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "args": [
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/budget-test.cjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "log": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/pure-child.log",
+    "pid": 92716,
+    "identity": {
+      "pid": 92716,
+      "pgid": 92716,
+      "uid": 501,
+      "birth": "Mon Oct 12 16:35:26 2026",
+      "startedAt": 1791794126906
+    },
+    "startedAt": "2026-10-12T08:35:26.906Z",
+    "endedAt": "2026-10-12T08:35:27.149Z",
+    "elapsedMs": 243,
+    "budgetMs": 120000,
+    "deadlineAt": "2026-10-12T08:37:26.906Z",
+    "budgetExhausted": false,
+    "termGraceMs": 180000,
+    "killGraceMs": 180000,
+    "signals": [],
+    "processClosed": true,
+    "remainingOwnedGroupMembers": [],
+    "persistentOwnedServer": false,
+    "outerAbort": false,
+    "code": 0,
+    "signal": null,
+    "spawnError": null,
+    "stdout": "",
+    "stderr": "",
+    "independentHelperLifecycleMs": 2160000,
+    "helperElapsedMs": 243.8749170000001,
+    "helperAggregateBudgetMs": 2280000,
+    "positiveElapsedMs": 108.41633300000012,
+    "observedAfterPositiveCloseMs": 134.64812499999994,
+    "actualPositiveClose": {
+      "pid": 92716,
+      "code": 0,
+      "signal": null,
+      "monotonicClosedAt": 1373.717208,
+      "positiveBirthMonotonic": 1265.300875,
+      "positiveDeadlineMonotonic": 121265.300875,
+      "stdioClosedFromActualCloseEvent": true
+    },
+    "actualDispatches": 1,
+    "logSha256": "ccf88584ce4068d815e2aab30aec04d39ea7d8bacc516caaeae535c48831ecc9",
+    "stdioClosedFromActualSuccessfulCloseEvent": true,
+    "logFdClosedBeforeHelperReturn": true
+  },
+  "positiveObservedClose": {
+    "pid": 92716,
+    "code": 0,
+    "signal": null,
+    "monotonicClosedAt": 1373.717208,
+    "positiveBirthMonotonic": 1265.300875,
+    "positiveDeadlineMonotonic": 121265.300875,
+    "stdioClosedFromActualCloseEvent": true
+  },
+  "actualFinalGroup": {
+    "pid": 92716,
+    "group": [],
+    "foreignSignals": 0
+  },
+  "actualBefore": {
+    "sourceRows": 343,
+    "sourceDrift": 0,
+    "nodeFiles": 82,
+    "nodeLinks": 37,
+    "nodeEdges": 51,
+    "nodeDrift": 0,
+    "nodeGraphSha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+    "actualNoCandidateVerifyOrCollectorInvoked": true
+  },
+  "actualAfter": {
+    "sourceRows": 343,
+    "sourceDrift": 0,
+    "nodeFiles": 82,
+    "nodeLinks": 37,
+    "nodeEdges": 51,
+    "nodeDrift": 0,
+    "nodeGraphSha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+    "actualNoCandidateVerifyOrCollectorInvoked": true
+  },
+  "wrapperElapsedMs": 2391.3128340000003,
+  "helperAggregateElapsedMs": 243.8749170000001,
+  "currentOriginalBudgetFieldsAllChecked": true,
+  "currentOriginalStartupMs": 2400000,
+  "currentOriginalOuterMs": 49182120000,
+  "previousArchivedOriginalStartupMs": 1800000,
+  "previousArchivedOriginalOuterMs": 49181520000,
+  "currentRevisedOriginalOuterMs": 49197000000,
+  "previousActualFAIL652PreservedSHA": "65266392ff9713c8e7ac38b8067e7f4c4958969223231fc5c3b4e1c03fa7b206",
+  "oldWrapperMissingAfterRemainsUnchanged": true,
+  "historicalOToolStdoutAbsentNoNewMetadataClaim": true,
+  "metadataResealPrepareVerifyListServicesBrowserOrProductCopyExecuted": false,
+  "App": false,
+  "Windows": false,
+  "privateOriginalFiles": [
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/PRE_DISPATCH.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/PRE_DISPATCH.json",
+      "sha256": "606f2128a2be29cd1a4766534b90ee182b03eaa82a55202329acdd3f3e163074",
+      "size": 1944
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/actual-child-receipt.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-child-receipt.json",
+      "sha256": "202e3f3068772f36655e7090bad3a550682b5ffce4dadfbf047707179b6a26e1",
+      "size": 1729
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/actual-final-group.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-final-group.json",
+      "sha256": "3c537ed24911f665f49799763bac2c9d0d17e2038ffbaadcd3f9dfc48a5199c2",
+      "size": 57
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/actual-final-process-snapshot.txt",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-final-process-snapshot.txt",
+      "sha256": "f15b4ffff956db7b8969e6dbad5e77fb5718f01f11a428bab4df9807f79712b8",
+      "size": 256968
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/actual-pure-result.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-pure-result.json",
+      "sha256": "4e3684f1e856ab48d933fb40a23561ddce6ab0829ae5f38003b1a954c9dd01ef",
+      "size": 4561
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/after-full-source-node-link-firstexists-raw.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/after-full-source-node-link-firstexists-raw.json",
+      "sha256": "dde145e3e670fc4d953aaa515e04980c2cd5c7fd257e22490dd963de93bf1950",
+      "size": 353798
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/after.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/after.json",
+      "sha256": "f6a141c10cd013e80c28bca5183c455ddb69a4a7f599633f87310b278d322354",
+      "size": 261
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/before-full-source-node-link-firstexists-raw.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/before-full-source-node-link-firstexists-raw.json",
+      "sha256": "d513b1920adfe0c25e950a1d7976d3f2f96d217365cc2d67b005bec16374edce",
+      "size": 353799
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/before.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/before.json",
+      "sha256": "f6a141c10cd013e80c28bca5183c455ddb69a4a7f599633f87310b278d322354",
+      "size": 261
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/dispatch-once.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/dispatch-once.json",
+      "sha256": "75dba7355a93f4e678d368f9b48f4f7c6d32b4952660dd8e2757eba5a1e5c2e2",
+      "size": 943
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/final.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/final.json",
+      "sha256": "e41e401d95896cad78806999f8240e4ee1f5130bad79d40bcf0551b399cb86e6",
+      "size": 3243
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/pure-child.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/pure-child.log",
+      "sha256": "ccf88584ce4068d815e2aab30aec04d39ea7d8bacc516caaeae535c48831ecc9",
+      "size": 3525
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/run-once.cjs",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/run-once.cjs",
+      "sha256": "f11cafb012273a6c3f0584f3df4f306e1d187cad4cc08349265c19f073472835",
+      "size": 10237
+    }
+  ],
+  "archiveFiles": [
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/DISPATCH_EXEC_RESULT.json",
+      "sha256": "3071a9ee4cfa44aa54ea42f3a327b8c846004ae9935c7cfeb16a7cc3c2cf0b4a",
+      "size": 456
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/ORIGINAL_NODE_DYLD_3BC9_GRAPH.json",
+      "sha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+      "size": 253472
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/PRE_DISPATCH.json",
+      "sha256": "606f2128a2be29cd1a4766534b90ee182b03eaa82a55202329acdd3f3e163074",
+      "size": 1944
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/PRE_NODE_EXACT_GUARD.json",
+      "sha256": "9627b2d250da1391e9979cd4c52e6ab1bce784066babf4bbef12c43f64fe9d6f",
+      "size": 411
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_2AA_TO_COMPLETE_LIFECYCLE_FORWARD.diff",
+      "sha256": "833dc839fb41ef183a5fb8258dff12064d3c3dfe1bea799648bc20a695959c31",
+      "size": 16205
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_FROM_PREVIOUS_FULL_FORWARD.diff",
+      "sha256": "b50f247e0381235a3e20426a174681616f9a3fc61c42c74bda3ce6f449562e80",
+      "size": 15977
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_LIFECYCLE_SOURCE_BINDING.json",
+      "sha256": "fe415b3b454bbd4e3f777b39ac5275d7ab6d2dbbcbb9908fd11ae3df683d58c5",
+      "size": 1520
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_LIFECYCLE_STATIC_PARSE.json",
+      "sha256": "a75f8cda6b13b6cb3c76b2bded4e45d822f9960838006fb2578aef86760ec4c3",
+      "size": 175
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_SOURCE_BINDING.json",
+      "sha256": "b3b62255406b1a4fc5bae14888b7152e41f3f7f1e00e564f86bcb034520f943c",
+      "size": 1571
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_STATIC_PARSE.json",
+      "sha256": "157a5b30d8d43ccfa6c97c9fad380ea1c42a12492cd8273baa1da5956ce30783",
+      "size": 311
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_TO_2AA_COMPLETE_LIFECYCLE_INVERSE.diff",
+      "sha256": "14c333383774216ddcd925cec07933e24a546e9b9b61e256e9bf88defa8c0707",
+      "size": 16205
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_TO_PREVIOUS_FULL_INVERSE.diff",
+      "sha256": "2595c0495da980ace0e767c2684cdf154752cae99b2b20b3e5fe684a45457a32",
+      "size": 15977
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/PRE_DISPATCH.json",
+      "sha256": "606f2128a2be29cd1a4766534b90ee182b03eaa82a55202329acdd3f3e163074",
+      "size": 1944
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-child-receipt.json",
+      "sha256": "202e3f3068772f36655e7090bad3a550682b5ffce4dadfbf047707179b6a26e1",
+      "size": 1729
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-final-group.json",
+      "sha256": "3c537ed24911f665f49799763bac2c9d0d17e2038ffbaadcd3f9dfc48a5199c2",
+      "size": 57
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-final-process-snapshot.txt",
+      "sha256": "f15b4ffff956db7b8969e6dbad5e77fb5718f01f11a428bab4df9807f79712b8",
+      "size": 256968
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/actual-pure-result.json",
+      "sha256": "4e3684f1e856ab48d933fb40a23561ddce6ab0829ae5f38003b1a954c9dd01ef",
+      "size": 4561
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/after-full-source-node-link-firstexists-raw.json",
+      "sha256": "dde145e3e670fc4d953aaa515e04980c2cd5c7fd257e22490dd963de93bf1950",
+      "size": 353798
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/after.json",
+      "sha256": "f6a141c10cd013e80c28bca5183c455ddb69a4a7f599633f87310b278d322354",
+      "size": 261
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/before-full-source-node-link-firstexists-raw.json",
+      "sha256": "d513b1920adfe0c25e950a1d7976d3f2f96d217365cc2d67b005bec16374edce",
+      "size": 353799
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/before.json",
+      "sha256": "f6a141c10cd013e80c28bca5183c455ddb69a4a7f599633f87310b278d322354",
+      "size": 261
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/dispatch-once.json",
+      "sha256": "75dba7355a93f4e678d368f9b48f4f7c6d32b4952660dd8e2757eba5a1e5c2e2",
+      "size": 943
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/final.json",
+      "sha256": "e41e401d95896cad78806999f8240e4ee1f5130bad79d40bcf0551b399cb86e6",
+      "size": 3243
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/pure-child.log",
+      "sha256": "ccf88584ce4068d815e2aab30aec04d39ea7d8bacc516caaeae535c48831ecc9",
+      "size": 3525
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/raw-private/run-once.cjs",
+      "sha256": "f11cafb012273a6c3f0584f3df4f306e1d187cad4cc08349265c19f073472835",
+      "size": 10237
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/run-once.cjs",
+      "sha256": "f11cafb012273a6c3f0584f3df4f306e1d187cad4cc08349265c19f073472835",
+      "size": 10237
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/wrapper-history/2aa33-helper-lifecycle-concern/WRAPPER_SOURCE_BINDING.json",
+      "sha256": "b3b62255406b1a4fc5bae14888b7152e41f3f7f1e00e564f86bcb034520f943c",
+      "size": 1571
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/wrapper-history/2aa33-helper-lifecycle-concern/WRAPPER_STATIC_PARSE.json",
+      "sha256": "157a5b30d8d43ccfa6c97c9fad380ea1c42a12492cd8273baa1da5956ce30783",
+      "size": 311
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/wrapper-history/2aa33-helper-lifecycle-concern/run-once.cjs",
+      "sha256": "2aa33d3c34dae41edbf85609c3852ae6ee8a0885bc6a9e84134eb407ad09e036",
+      "size": 9651
+    }
+  ]
+}

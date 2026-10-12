@@ -1,0 +1,20 @@
+{
+  "mode": "CANDIDATE_ONLY_NOT_APPLIED_OR_EXECUTED",
+  "originalFile": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+  "originalSha256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+  "observationCandidateSha256": "6cdebb6656e1fa9f253647481d4b475cdb710b23dcd5879b578c6a5beb80ea15",
+  "candidate": "/tmp/t1246-unit/b029-visible-window-decoder-candidate.test.ts",
+  "candidateSha256": "486d768344e043acec73d31de1475f930cb04e34b8f861c6031eb48672bebbed",
+  "narrowDiff": "/tmp/t1246-unit/b029-visible-window-decoder-candidate.diff",
+  "actualHttpEvidence": "docs/verification/t1246/round-2/unit/b029-http-shape-actual-summary.json",
+  "assertionsAndBudgets": "原三body maxCalls20/10/8, expectedRequests6/5/4, fullsnapshot首尾/CAS/采纳/asserts原样；仅原JSON.parse fixture transport适配成实际可见窗口解码；已有诊断180s和nonce输出保持",
+  "realVisibility": "观察三族真实HTTP:闭合evidence[] text12000+唯一身份+tail offset0/nextOffset12000/totalLength14745；不从数据库补正文/身份，不改变Pi clip/production/pager/call预算",
+  "unresolved": "只首窗已证；候选未执行。若低预算实际partial不可采纳，仍保原失败并另独评，不改原successadopt断言或终态。",
+  "priorCandidateSha256": "6ca205057cd81a8a4bc540dd67baa8e132d9fa6bc1ef884b9eff58e888f116a5",
+  "rootNarrowSupplements": [
+    "SEMANTIC_BOUNDARY_ALLOW纯HTTP协议fixture，非创作选择",
+    "separator唯一；额外expect真实clip分支wholeJsonParseable false",
+    "offset/total/end/next安全整数非负且next<=total；末页end==total，拒缺文"
+  ],
+  "testsExecuted": false
+}

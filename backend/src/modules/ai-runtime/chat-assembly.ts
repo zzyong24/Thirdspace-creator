@@ -41,6 +41,7 @@ export interface ChatAssembly {
     forcedToolSequence?: string[];
 }
 export type ChatAssemblyPreparation = ChatAssembly & {
+    resolvedWritingContext?:import("@creatoros/contract").ResolvedWritingContext;
     capability: string;
     researchContext?: ChatResearchContext;
     structuredContext?: ChatStructuredContext;
@@ -48,6 +49,7 @@ export type ChatAssemblyPreparation = ChatAssembly & {
 };
 /** 准备上下文与真实工具，不取得主模型凭据；工具执行迁移仍由各真实端口承担。 */
 export async function prepareChatAssembly(ctx: RequestContext, chatContext: ChatContext, deps: AssembleChatDeps, mediaRoute: CopilotMediaRoute | null = null, options: {
+    resolvedWritingContext?:import("@creatoros/contract").ResolvedWritingContext;
     positioningScratch?: boolean;
     verbatimSources?: readonly VerbatimSource[];
     latestUserInstruction?: string;
@@ -71,6 +73,11 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
       if(canonicalJson(workCreationTarget.parse(actual))!==canonicalJson(target))throw new Error('确认脚本或作品组合在准备期间变化');
       chatContext.creationTarget=structuredClone(actual);
     }
+    const writingSelection=chatContext.editorTarget?.owner==='wechat_article'?chatContext.editorTarget.writingContext:chatContext.creationTarget?.writingContext;
+    const resolved=options.resolvedWritingContext??(writingSelection?await deps.resolveWritingContext?.(ctx,chatContext.projectId!,writingSelection):undefined);
+    if(writingSelection&&!resolved)throw new Error('写作选择缺少真实只读解析端口');
+    if(resolved){const {validateResolvedWritingContext}=await import('../../application/generation/work-writing-context');validateResolvedWritingContext(resolved);if(resolved.projectId!==chatContext.projectId||canonicalJson(resolved.selection)!==canonicalJson(writingSelection))throw new Error('写作资料与目标不符');}
+    options.toolDefinitionOptions={...options.toolDefinitionOptions,workWritingContext:Boolean(writingSelection)};
     // 1) 页面层:surface → 基础 skill。
     const skillId = resolveSkillForSurface(chatContext.surface);
     // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
@@ -262,13 +269,16 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     const context = await assembleCreativeContext(ctx, {
         projectId: chatContext.projectId ?? null,
         topic: chatContext.selection?.label?.trim() ?? "",
-        excludePositioning: options.positioningScratch && chatContext.surface === "positioning",
+        excludePositioning: Boolean(resolved)||options.positioningScratch && chatContext.surface === "positioning",
         excludeAccounts: options.positioningScratch && chatContext.surface === "positioning",
-        excludeHistoricalCreatorContext: options.positioningScratch && chatContext.surface === "positioning",
+        excludeHistoricalCreatorContext: Boolean(resolved)||options.positioningScratch && chatContext.surface === "positioning",
     }, deps);
+    if(resolved){context.positioningBrief=resolved.brand?.guidance??'';context.userMaterialHardBrief='';context.userMaterialRefBrief='';}
     const searchConfigured = Boolean(deps.searchWeb);
     const toolDeps = createChatAssemblyToolDeps(ctx, chatContext, deps, { mediaRoute, forcedMaterialKind, creatorOsGuideSnapshot, verbatimSources: options.verbatimSources, latestUserInstruction: options.latestUserInstruction, searchConfigured });
-    const prototypes=buildChatTools(toolWhitelist,{...toolDeps,skillLibrary,assistantSystem:deps.assistantSystem});
+    const prototypes=buildChatTools(toolWhitelist,{...toolDeps,skillLibrary,assistantSystem:deps.assistantSystem,
+      ...(resolved?{readWorkEditor:async(input:any)=>({...await toolDeps.readWorkEditor!(input),resolvedWritingContext:structuredClone(resolved)}),readWorkCreation:async(input:any)=>({...await toolDeps.readWorkCreation!(input),resolvedWritingContext:structuredClone(resolved)})}:{}),
+    });
     const actualDefinitions=(await prepareChatToolDefinitions(prototypes,options.toolDefinitionOptions)).definitions;
     const tools=selectAssistantTools(options.executionEngine??"pi",prototypes,actualDefinitions);
     toolWhitelist=Object.keys(tools);
@@ -283,6 +293,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 只要宿主装配了 searchWeb 端口，就是真联网；失败时诚实失败，不回落模型记忆。
     // 宿主只声明真实能力与执行边界；业务方法由冻结Skill按需加载。
     const honestyBlock = [
+        ...(resolved?['本轮写作身份与参考资料只来自work.read的resolvedWritingContext。brand为null表示中性写作，不能改用全局当前品牌。只引用sourceMaterials实际所选文件，未选择的项目文档不自动作为写作资料。sourceMaterials的truncated=true表示仅提供原文前60000个UTF16字符，请在读回后说明资料被截断，勿声称读了全文。']:[]),
         ...(chatContext.editorTarget?['当前编辑器目标已保存并经原owner核验；先work.editor.read读取选区与原始前值，按明确UTF16范围/真实ID/native ticks提出typed_patch。宿主保完整未改字段；返回候选不表示已采纳。']:[]),
         ...(chatContext.creationTarget?['用户已确认当前保存脚本并明确新建文章和图文。先work.creation.read，再由当前引擎联合创作完整同源article和graphic候选，一次work.creation.propose。没有自动视频、TTS或子模型任务。']:[]),
         "【执行边界】",
@@ -455,6 +466,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
                 : undefined;
     return {
         skillId,
+        ...(resolved?{resolvedWritingContext:structuredClone(resolved)}:{}),
         system,
         tools,
         capability: skillCapability,

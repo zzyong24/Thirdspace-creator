@@ -1,0 +1,85 @@
+{
+  "at": "2026-10-11T21:15:18.237Z",
+  "toolSha256": "ec31eb00b6b91a2e5c23458774b369964befe948eb353a2db10d6fd09242229a",
+  "testSourceSha256": "900d141cb8bf78d74f58afe3df327cd653abb3b8673443336ba86543e9277b46",
+  "cases": [
+    {
+      "id": "direct-original-spawn",
+      "expected": true,
+      "actual": true,
+      "status": "passed"
+    },
+    {
+      "id": "direct-wrapper-birth-reused",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "direct-wrapper-uid-changed",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "direct-original-wrapper-missing",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "direct-spawn-already-exited",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "direct-unrecorded-spawn",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "descendant-original-parent",
+      "expected": true,
+      "actual": true,
+      "status": "passed"
+    },
+    {
+      "id": "descendant-parent-pid-reused",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "descendant-parent-uid-changed",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "descendant-parent-missing",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "descendant-parent-never-owned",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    },
+    {
+      "id": "descendant-candidate-foreign-uid",
+      "expected": false,
+      "actual": false,
+      "status": "passed"
+    }
+  ],
+  "total": 12,
+  "passed": 12,
+  "subprocessesStarted": 0,
+  "signalsSent": 0,
+  "rustExecuted": false,
+  "noRuntimeApproval": true
+}

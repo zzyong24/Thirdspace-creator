@@ -1,0 +1,7 @@
+{
+  "kind": "ROOT-read-only-evidence-checker-schema-error",
+  "runtimeExecuted": false,
+  "error": "iteration over actual output inventories included noProductionCopy boolean",
+  "correctSchema": "native and static groups contain files; noProductionCopy is a separate flag",
+  "actualInputsChanged": false
+}

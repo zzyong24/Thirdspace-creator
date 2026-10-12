@@ -1,0 +1,20 @@
+{
+  "kind": "future-only-source-audit-runtime-arguments-not-executed",
+  "scriptPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audit-fresh-applied-v3/audit-source.cjs",
+  "scriptSha256": "162557019cfc099019e46263753b0375e31c3abdb62587f3f6da5c73c86d3e2b",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "newOutputMustBe": "docs/verification/t1246/round-2/final-source-audits/<fresh-unique-stage-source-audit>.json",
+  "env": {
+    "CREATOROS_FINAL_SOURCE_AUDIT_SOURCE_ROOT": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "CREATOROS_FINAL_SOURCE_AUDIT_DELIVERY_APPLIED_RECEIPT": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/ROOT_EXACT_COPY_AND_STAGE_COMPLETE.json",
+    "CREATOROS_FINAL_SOURCE_AUDIT_COPY_RECEIPT_SHA256": "94838ee358d4991786e7c639f6fd522cc81f5164d966dd0523aa13dc746dedc9",
+    "CREATOROS_FINAL_SOURCE_AUDIT_T1254_SPEC_SHA256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+    "CREATOROS_FINAL_SOURCE_AUDIT_REVIEWED": "requires-peer-and-ROOT-exact-admission-before-setting-1"
+  },
+  "rootAllProductStageProof": "docs/verification/t1246/round-2/ROOT_ALL_APPROVED_PRODUCT_STAGING_READONLY_CHECK.json",
+  "rootAllProductStageProofSha256": "0f97cca21668bad6461cfc06cfc9237740bd8b58aafffc7df7f625f0d67a277f",
+  "prior275Plus100StagingProof": "docs/verification/t1246/round-2/unit/ROOT_EXACT_PARTIAL_SOURCE_STAGING_FOR_FULL_GIT_INVENTORY.json",
+  "priorStagingProofSha256": "69222bccabfb1cb6fab1d81ad9a10aacc6f96fbb375851398dce070de583f74e",
+  "auditBodyOrGitNotExecuted": true,
+  "HEADStill533NotQueriedByCandidate": true
+}

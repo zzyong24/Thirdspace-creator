@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-11T23:19:07.942982+00:00",
+  "path": "mcp-server/tests/group-mcp-context.test.ts",
+  "beforeSha256": "08fd68d8a7f7a2c6a9ca8f0c4ec3c7a16e3420f9cb37473057a89a985a7689cb",
+  "afterSha256": "6ee63607265ad23baa39188338c515093e1f5eda0a3988fd0c2efcd1d62b88ba",
+  "onlyChange": "line30 new SDKcancel explicit timeout180000→420000; line47 fake-clock case remains180000",
+  "inverseSameOriginalBytes": true,
+  "bodyAndAssertionsUnchanged": true,
+  "rootAuthorization": "ST001 explicit-case declaration only"
+}

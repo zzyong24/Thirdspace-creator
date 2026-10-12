@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-12T04:36:09.538116+00:00",
+  "fixedParserNode": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeEntrySha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "rows": [
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+      "sha256": "8ac60e9ab2af43b0355f6c5b1624af783e9a1d0ceb7275a055016df0863c22c3",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-final-syntax-_aqyl32b/complete-run.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/driver-types.cjs",
+      "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-final-syntax-_aqyl32b/driver-types.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/launch.cjs",
+      "sha256": "afebd49f175d8c6b3a00f26d49065178da99ff652f6ad75b9252ddba7eeac692",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-final-syntax-_aqyl32b/launch.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+      "sha256": "68179eda393991c16c2f5cec238637581120628f5d43bfe49d0a958ee89f9394",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-final-syntax-_aqyl32b/prepare-runtime.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/runtime-dyld.cjs",
+      "sha256": "09962bc804feb2b609d5185bcc1963caf213203d77603773e68bf0a73b9e7fb4",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-final-syntax-_aqyl32b/runtime-dyld.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/seal.cjs",
+      "sha256": "85bdd7c62036d30385eff03c7f3620ba723b602786a0c4713131853141765464",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-final-syntax-_aqyl32b/seal.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "syntax-parser-only-no-candidate-body-or-import-execution",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "sha256": "174240548c992d4904a0fe1ac13246225192fe8a70280846f8303773bfa07471",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-source-v2-final-syntax-_aqyl32b/verify-binding.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "candidateCodeNeverEvaluated": true,
+  "ownedMetadataTypesListBodiesNeverExecuted": true,
+  "noService": true,
+  "noBrowser": true,
+  "noSQL": true,
+  "oldPureChecksNotRerunForNewDynamicConsumer": true
+}

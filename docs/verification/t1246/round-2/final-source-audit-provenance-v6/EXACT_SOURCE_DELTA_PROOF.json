@@ -1,0 +1,11 @@
+{
+  "oldV5AuditSHA": "6564c1f87e26e779fcffa63380424165f78b0a4a421c93da58deb0f20c6c5b0d",
+  "newV6AuditSHA": "aba8421736eddeb1d3062e2528a3749185d14954865470c2d694adf0a61b04b3",
+  "sameSpecAdapter8f8": true,
+  "exactFourConsumerChanges": true,
+  "fullForwardSHA": "60a2104ee11bc1c394f58b1dc606b1c7a55f8750d25d8d338fcc909c2d84e90a",
+  "fullInverseSHA": "578f680f5e641d72ef95b06c4984d0d68ad6af286587746a2e78bec910c544f0",
+  "allOriginalGuardsAnd3MBudgetUnchanged": true,
+  "actualOldFAIL969Preserved": true,
+  "newAuditOrPureTestsExecuted": false
+}

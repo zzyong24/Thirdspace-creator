@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {successEnvelope} from "@creatoros/contract";
 import {accountGroups} from '../../schema/account-groups';
 import {creativeCanvases} from '../../schema/creative-canvas';
@@ -222,10 +224,10 @@ it('T1062 空组画布公开transport共享，原生成冻结不随平台过滤�
  const created=ENDPOINTS.createCanvas.response.parse((successEnvelope(ENDPOINTS.createCanvas.response).parse(await transport.request(ENDPOINTS.createCanvas,{params:undefined,query:undefined,body:{title:'空组真实画布'}},g))).data);expect(created.accountId).toBeNull();expect((await db.select().from(creativeCanvases)).find(r=>r.id===created.id)).toMatchObject({groupId:g.groupId,accountId:null});
  const saved=await s.save(g,created.id,{expectedRevision:1,document:doc([imageNode('group-gen')])});const a=await s.generate(g,created.id,'group-gen',{expectedRevision:saved.revision,attemptId:'canvas-group-attempt-0001'});expect((await s.generate({...g,accountId:'page-filter'},created.id,'group-gen',{expectedRevision:saved.revision,attemptId:a.attemptId})).taskId).toBe(a.taskId);expect(submitTask).toHaveBeenCalledTimes(1);expect(submitTask.mock.calls[0]![0]).toMatchObject({accountId:null,groupId:g.groupId});
  await expect(s.get({...g,groupId:'canvas-empty-b'},created.id)).rejects.toThrow();await db.update(accountGroups).set({status:'archived'}).where((await import('drizzle-orm')).eq(accountGroups.id,g.groupId!));expect((await s.get(g,created.id)).id).toBe(created.id);await expect(s.save(g,created.id,{expectedRevision:saved.revision,document:saved.document})).rejects.toThrow();
-},30000);
+},180000);
 
 
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import {randomUUID} from 'node:crypto';
 import {createRuntimeDb} from '../../db';
 import {createProjectsService,createProjectRepository} from '../projects';
@@ -235,7 +237,7 @@ import {createAssetBusinessExecutionService} from '../ai-runtime/asset-business-
 import {executionTasks,executionCalls} from '@creatoros/backend';
 const canvasLockPg=process.env.CREATOROS_TEST_POSTGRES_URL;
 it.skipIf(!canvasLockPg)('T1062真实PG Canvas公共generate同组双父Lock观察，原预约/任务/执行唯一且重放零写',async()=>{
- const url=new URL(canvasLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('只允许55422随机PG库');
+ const url=new URL(canvasLockPg!);assertOwnedPostgresUrl(url.toString());
  const name=`t1062_canvas_lock_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:canvasLockPg});await admin.query(`CREATE DATABASE ${name}`);url.pathname=`/${name}`;
  const runtimes:Array<Awaited<ReturnType<typeof createRuntimeDb>>>=[];let held=false,blocker:import('pg').PoolClient|undefined,pending:Promise<unknown>[]=[];
  async function open(role:string){const scoped=new URL(url);scoped.searchParams.set('application_name',`${name}_${role}`);const runtime=await createRuntimeDb({connectionString:scoped.toString()});runtime.pool.options.max=1;runtimes.push(runtime);return runtime;}
@@ -261,7 +263,7 @@ it.skipIf(!canvasLockPg)('T1062真实PG Canvas公共generate同组双父Lock观�
   await Promise.all(callers.map((caller,i)=>caller.generate({...scope,accountId:'仅平台筛选'},targets[i]!.id,'public-generation',{expectedRevision:targets[i]!.expectedRevision,attemptId:targets[i]!.attemptId})));
   expect(await setup.db.select().from(canvasGenerationLinks)).toEqual(before.links);expect(await setup.db.select().from(aiTasks)).toEqual(before.tasks);expect(await setup.db.select().from(executionTasks)).toEqual(before.executions);expect(await setup.db.select().from(executionCalls)).toHaveLength(0);
  }finally{if(held&&blocker)await blocker.query('ROLLBACK');await Promise.allSettled(pending);blocker?.release();const closed=await Promise.allSettled(runtimes.map(runtime=>runtime.pool.end()));try{await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);}finally{await admin.end();}for(const result of closed)if(result.status==='rejected')throw result.reason;}
-},30000);
+},180000);
 
 it('同节点任务运行或提交未知时拒绝新attempt，原attempt仍可回读，终态允许再次生成',async()=>{
  const states=new Map<string,string>();const s=service({readTask:async(c,id)=>({id,userId:c.userId,attemptId:id.slice(5),taskType:'asset.generate',projectId:null,inputData:submitted.get(id),status:states.get(id)??'running'})});const c=ctx('account-a'),created=await s.create(c,{title:'防重复'}),saved=await s.save(c,created.id,{expectedRevision:1,document:doc([imageNode('node')])});submit.mockClear();

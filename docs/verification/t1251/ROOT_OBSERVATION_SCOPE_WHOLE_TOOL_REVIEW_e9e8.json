@@ -1,0 +1,19 @@
+{
+  "specSha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84",
+  "phase": "whole-stage1",
+  "scope": "original-source-generation-whole-phase",
+  "sourceSnapshotDigest": "4f8be2f869b9572f700e95651f5cf73c42fbde095b01392db4d1a494e82a6581",
+  "toolDigest": "450378ff934e3737a3c2cd44d570890b921422caf779eaf7e52f0d44ae700a52",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "runtimeDistExclusive": true,
+  "approved": true,
+  "reviewer": "root",
+  "reviewedAt": "2026-10-11T21:48:24.113033+00:00",
+  "candidateWholeSha256": "02bcd783fdbca849e903b660a81c067855b67df9e4f33798bd20cbdf74879f86",
+  "constraints": [
+    "only同case真实requests变量到共同作用域，实际19/3首次ReferenceError完整留",
+    "完整22不retry/select；finite本轮初次实际成功不冒原21或旧分母",
+    "最后HTTP消息须本轮当场取证，保父子settled事实/模型次数守恒/0新重发",
+    "源/工具闭合/closed/group0；不签官方模型/App"
+  ]
+}

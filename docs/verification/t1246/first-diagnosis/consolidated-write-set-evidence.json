@@ -1,0 +1,2168 @@
+{
+  "task": "T-1246",
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "recordedAt": "2026-10-12T00:48:08.378898+08:00",
+  "scope": "首轮失败与精确源写集证据映射；不替代SPEC，不授权改写全部文件，不是修复或复测PASS",
+  "backend": "first still running; final files not declared",
+  "types": "first not yet completed",
+  "settingsReturn": "unknown causal mechanism; diagnosis only, product path not admitted",
+  "article": "formal reviewed SPEC pending; additional crosslayer write_set not admitted",
+  "testSourceCount": 69,
+  "batchCaseCounts": {
+    "frontend": 158,
+    "worker": 25,
+    "contract": 43,
+    "browser": 39
+  },
+  "frozenSourceBytesVerified": true,
+  "testSources": [
+    {
+      "path": "ai-worker/src/execution/acpx-notification-drain.test.ts",
+      "frozenSHA256": "8ad8fa784cc628cb8181c90124713c62401e3c21d155345a905660cb4350ae01",
+      "bytes": 3837,
+      "batchCases": {
+        "worker": [
+          {
+            "caseId": "T1246-WF-01",
+            "title": "复用真实客户端和上游 stdio fixture：结算等待客户端通知尾队列，不漏最终正文"
+          }
+        ]
+      }
+    },
+    {
+      "path": "ai-worker/src/execution/chat-research-browser.integration.test.ts",
+      "frozenSHA256": "718023580edb1a4ff2a960e9a1757c9336f0e64f0f8439228a5802221a96baaa",
+      "bytes": 2777,
+      "batchCases": {
+        "worker": [
+          {
+            "caseId": "T1246-WF-02",
+            "title": "真实浏览器解析搜索页并切换空来源，结果沿聊天观察协议结算"
+          }
+        ]
+      }
+    },
+    {
+      "path": "ai-worker/src/execution/durable-pi-http.integration.test.ts",
+      "frozenSHA256": "fbd8e1f07597476de9fce221917186fa59495ac9559937d51057658b97c781a7",
+      "bytes": 8616,
+      "batchCases": {
+        "worker": [
+          {
+            "caseId": "T1246-WF-03",
+            "title": "真实Pi HTTP兼容：'openai-completions' HTTP 429保留可信拒绝，不由SDK重试"
+          },
+          {
+            "caseId": "T1246-WF-04",
+            "title": "真实Pi HTTP兼容：'openai-completions' HTTP 503保留可信拒绝，不由SDK重试"
+          },
+          {
+            "caseId": "T1246-WF-05",
+            "title": "真实Pi HTTP兼容：'openai-completions' truncated没有明确HTTP拒绝，保持unknown"
+          },
+          {
+            "caseId": "T1246-WF-06",
+            "title": "真实Pi HTTP兼容：'openai-completions' disconnect没有明确HTTP拒绝，保持unknown"
+          },
+          {
+            "caseId": "T1246-WF-07",
+            "title": "真实Pi HTTP兼容：'openai-completions' 带status字段的普通异常不是可信HTTP拒绝"
+          },
+          {
+            "caseId": "T1246-WF-08",
+            "title": "真实Pi HTTP兼容：'openai-responses' HTTP 429保留可信拒绝，不由SDK重试"
+          },
+          {
+            "caseId": "T1246-WF-09",
+            "title": "真实Pi HTTP兼容：'openai-responses' HTTP 503保留可信拒绝，不由SDK重试"
+          },
+          {
+            "caseId": "T1246-WF-10",
+            "title": "真实Pi HTTP兼容：'openai-responses' truncated没有明确HTTP拒绝，保持unknown"
+          },
+          {
+            "caseId": "T1246-WF-11",
+            "title": "真实Pi HTTP兼容：'openai-responses' disconnect没有明确HTTP拒绝，保持unknown"
+          },
+          {
+            "caseId": "T1246-WF-12",
+            "title": "真实Pi HTTP兼容：'openai-responses' 带status字段的普通异常不是可信HTTP拒绝"
+          },
+          {
+            "caseId": "T1246-WF-13",
+            "title": "真实Pi HTTP兼容：'anthropic-messages' HTTP 429保留可信拒绝，不由SDK重试"
+          },
+          {
+            "caseId": "T1246-WF-14",
+            "title": "真实Pi HTTP兼容：'anthropic-messages' HTTP 503保留可信拒绝，不由SDK重试"
+          },
+          {
+            "caseId": "T1246-WF-15",
+            "title": "真实Pi HTTP兼容：'anthropic-messages' truncated没有明确HTTP拒绝，保持unknown"
+          },
+          {
+            "caseId": "T1246-WF-16",
+            "title": "真实Pi HTTP兼容：'anthropic-messages' disconnect没有明确HTTP拒绝，保持unknown"
+          },
+          {
+            "caseId": "T1246-WF-17",
+            "title": "真实Pi HTTP兼容：'anthropic-messages' 带status字段的普通异常不是可信HTTP拒绝"
+          }
+        ]
+      }
+    },
+    {
+      "path": "ai-worker/src/execution/generation-replay.test.ts",
+      "frozenSHA256": "8395f5206c2878d70d3b966606930da782e7d90d3c7bdbf76eccba0d5b400a79",
+      "bytes": 8664,
+      "batchCases": {
+        "worker": [
+          {
+            "caseId": "T1246-WF-18",
+            "title": "仅已确认坏输出可投影为节点失败，未知、篡改和多余回执仍拒绝"
+          }
+        ]
+      }
+    },
+    {
+      "path": "ai-worker/src/execution/intelligence-worker-bundle.test.ts",
+      "frozenSHA256": "e38254b3c645c5bd1563d9947d424a25cc829ff093d45901a594af4ba36acc7d",
+      "bytes": 5452,
+      "batchCases": {
+        "worker": [
+          {
+            "caseId": "T1246-WF-19",
+            "title": "CJS 安装入口 openai_chat / execution 初始化 Pi 并到预留端口；禁止开始收费调用"
+          },
+          {
+            "caseId": "T1246-WF-20",
+            "title": "CJS 安装入口 anthropic / execution 初始化 Pi 并到预留端口；禁止开始收费调用"
+          },
+          {
+            "caseId": "T1246-WF-21",
+            "title": "CJS 安装入口 openai_responses / execution 初始化 Pi 并到预留端口；禁止开始收费调用"
+          }
+        ]
+      }
+    },
+    {
+      "path": "ai-worker/src/execution/research-worker-tools.test.ts",
+      "frozenSHA256": "4d78fbdab961cdf1634eb026de05168b7f3c048fa4f1234620216c35bde5ae19",
+      "bytes": 15036,
+      "batchCases": {
+        "worker": [
+          {
+            "caseId": "T1246-WF-22",
+            "title": "原始搜索只访问指定引擎，保留结果且不触发宿主结算或会话"
+          },
+          {
+            "caseId": "T1246-WF-23",
+            "title": "原始搜索空结果不私自切引擎，导航错误保留供上层选择备用来源"
+          }
+        ]
+      }
+    },
+    {
+      "path": "ai-worker/src/prompt/director-methods.test.ts",
+      "frozenSHA256": "589e53ef24aae68d784cf57d60d7734b7109a2031f1895e2befa3f5afaf76e16",
+      "bytes": 2654,
+      "batchCases": {
+        "worker": [
+          {
+            "caseId": "T1246-WF-24",
+            "title": "T-944 编导方法实际装配边界 intelligence.topic-adapted-draft 实际可见三种目的与独立表现形式方法"
+          }
+        ]
+      }
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "frozenSHA256": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0",
+      "bytes": 12578,
+      "batchCases": {
+        "worker": [
+          {
+            "caseId": "T1246-WF-25",
+            "title": "本地 Whisper 取消与资源归属 普通推理失败后复用 worker，崩溃后重建且忽略旧 exit"
+          }
+        ]
+      }
+    },
+    {
+      "path": "contract/tests/endpoint-bootstrap.test.mjs",
+      "frozenSHA256": "d789ae86ae7344452ebdbd7e554658f808ed81840c8628ad48496a71e83aea2e",
+      "bytes": 2957,
+      "batchCases": {
+        "contract": [
+          {
+            "caseId": "contract module initialization from every real entry initializes index.ts before the public registry",
+            "title": "initializes index.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes endpoints.ts before the public registry",
+            "title": "initializes endpoints.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/account-groups.ts before the public registry",
+            "title": "initializes operations/account-groups.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/ai.ts before the public registry",
+            "title": "initializes operations/ai.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/analytics.ts before the public registry",
+            "title": "initializes operations/analytics.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/articles.ts before the public registry",
+            "title": "initializes operations/articles.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/artifacts.ts before the public registry",
+            "title": "initializes operations/artifacts.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/assets.ts before the public registry",
+            "title": "initializes operations/assets.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/auth.ts before the public registry",
+            "title": "initializes operations/auth.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/benchmark.ts before the public registry",
+            "title": "initializes operations/benchmark.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/calibration.ts before the public registry",
+            "title": "initializes operations/calibration.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/candidate.ts before the public registry",
+            "title": "initializes operations/candidate.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/content-calendar.ts before the public registry",
+            "title": "initializes operations/content-calendar.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/creative-canvas.ts before the public registry",
+            "title": "initializes operations/creative-canvas.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/creative-results.ts before the public registry",
+            "title": "initializes operations/creative-results.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/execution.ts before the public registry",
+            "title": "initializes operations/execution.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/favorites-folder.ts before the public registry",
+            "title": "initializes operations/favorites-folder.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/graphic-posts.ts before the public registry",
+            "title": "initializes operations/graphic-posts.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/ingestion.ts before the public registry",
+            "title": "initializes operations/ingestion.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/intelligence.ts before the public registry",
+            "title": "initializes operations/intelligence.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/knowledge.ts before the public registry",
+            "title": "initializes operations/knowledge.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/learnings.ts before the public registry",
+            "title": "initializes operations/learnings.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/material-links.ts before the public registry",
+            "title": "initializes operations/material-links.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/notifications.ts before the public registry",
+            "title": "initializes operations/notifications.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/pages.ts before the public registry",
+            "title": "initializes operations/pages.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/platform-accounts.ts before the public registry",
+            "title": "initializes operations/platform-accounts.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/platform-collection.ts before the public registry",
+            "title": "initializes operations/platform-collection.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/positioning.ts before the public registry",
+            "title": "initializes operations/positioning.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/production.ts before the public registry",
+            "title": "initializes operations/production.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/projects.ts before the public registry",
+            "title": "initializes operations/projects.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/publishing.ts before the public registry",
+            "title": "initializes operations/publishing.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/review-gate.ts before the public registry",
+            "title": "initializes operations/review-gate.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/reviews.ts before the public registry",
+            "title": "initializes operations/reviews.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/scheduling.ts before the public registry",
+            "title": "initializes operations/scheduling.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/search.ts before the public registry",
+            "title": "initializes operations/search.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/settings.ts before the public registry",
+            "title": "initializes operations/settings.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/taxonomy.ts before the public registry",
+            "title": "initializes operations/taxonomy.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/topic-attribution.ts before the public registry",
+            "title": "initializes operations/topic-attribution.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/trend-source.ts before the public registry",
+            "title": "initializes operations/trend-source.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/visual-templates.ts before the public registry",
+            "title": "initializes operations/visual-templates.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/work-compositions.ts before the public registry",
+            "title": "initializes operations/work-compositions.ts before the public registry"
+          },
+          {
+            "caseId": "contract module initialization from every real entry initializes operations/work-sources.ts before the public registry",
+            "title": "initializes operations/work-sources.ts before the public registry"
+          }
+        ]
+      }
+    },
+    {
+      "path": "contract/tests/registry.test.ts",
+      "frozenSHA256": "a26b8120063bded2b489ca198564a5ddbcbee9ec7d8ab73aacc8be913cd94d7d",
+      "bytes": 25449,
+      "batchCases": {
+        "contract": [
+          {
+            "caseId": "endpoint registry registers no routes outside SPEC §13",
+            "title": "registers no routes outside SPEC §13"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/app/(creator)/layout.guard.test.tsx",
+      "frozenSHA256": "645a23af709ed99362179c7d9d34a38b0ddfa26b54bdeae91819919eb5bba155",
+      "bytes": 11749,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-018",
+            "title": "(creator) layout — [T-348] 0 号引导守卫 0 号 + per-account 页(/projects)→ 守卫,渲染绑定引导(不渲 children)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试按T1022合法空组创作前置，保未选组/无资格态与真实权限拒绝；不能恢复强制平台号门"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/app/api/v1/auth/auth-routes.test.ts",
+      "frozenSHA256": "fc7f4e2c415ac345584a04b17a10b36cbf507946593801c519e6a75c512fc42a",
+      "bytes": 7443,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-152",
+            "title": "GET /api/v1/auth/me without a cookie → 200 直通本机主用户(T-046 单机免登录)",
+            "classification": "fixture固定canonical身份不匹配本例真实最早用户",
+            "preservedAssertions": "仅该测试隔离本例用户fixture并通过同真实getLocalUser核主用户（或合法fresh库明确建立）；保无/garbagecookie本机直通/logout撤销，不改产品单机用户选择/T046"
+          },
+          {
+            "caseId": "FF158-153",
+            "title": "GET /api/v1/auth/me with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径)",
+            "classification": "fixture固定canonical身份不匹配本例真实最早用户",
+            "preservedAssertions": "仅该测试隔离本例用户fixture并通过同真实getLocalUser核主用户（或合法fresh库明确建立）；保无/garbagecookie本机直通/logout撤销，不改产品单机用户选择/T046"
+          },
+          {
+            "caseId": "FF158-154",
+            "title": "POST /api/v1/auth/logout clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401)",
+            "classification": "fixture固定canonical身份不匹配本例真实最早用户",
+            "preservedAssertions": "仅该测试隔离本例用户fixture并通过同真实getLocalUser核主用户（或合法fresh库明确建立）；保无/garbagecookie本机直通/logout撤销，不改产品单机用户选择/T046"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/app/api/v1/local/reset-workspace/route.test.ts",
+      "frozenSHA256": "070b63c49329af2a48fc6befa3e0bc5778dd329d73bec92ad9888e5449f20875",
+      "bytes": 4688,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-155",
+            "title": "POST /api/v1/local/reset-workspace 全对 → 200 {ok,pending} + reset-pending.json 真实落盘(内容含请求时间)",
+            "classification": "reset测试仅stubDB_DIR与ownedAPP_DATA_DIR优先级冲突",
+            "preservedAssertions": "仅该测试显式隔离所有实际dir变量：legacy分支APP_DATA_DIR空，新壳优先分支本例ownedapp；无目录例清两者。保三重保护/真实marker/no实际reset/幂等；不改产品优先级、不猜HOME，绝不动用户根。T332新壳兼容合同"
+          },
+          {
+            "caseId": "FF158-156",
+            "title": "POST /api/v1/local/reset-workspace 确认词带前后空白 → 容忍通过(输入框提交常带空格)",
+            "classification": "reset测试仅stubDB_DIR与ownedAPP_DATA_DIR优先级冲突",
+            "preservedAssertions": "仅该测试显式隔离所有实际dir变量：legacy分支APP_DATA_DIR空，新壳优先分支本例ownedapp；无目录例清两者。保三重保护/真实marker/no实际reset/幂等；不改产品优先级、不猜HOME，绝不动用户根。T332新壳兼容合同"
+          },
+          {
+            "caseId": "FF158-157",
+            "title": "POST /api/v1/local/reset-workspace 重复请求 → 幂等覆盖写,仍 200",
+            "classification": "reset测试仅stubDB_DIR与ownedAPP_DATA_DIR优先级冲突",
+            "preservedAssertions": "仅该测试显式隔离所有实际dir变量：legacy分支APP_DATA_DIR空，新壳优先分支本例ownedapp；无目录例清两者。保三重保护/真实marker/no实际reset/幂等；不改产品优先级、不猜HOME，绝不动用户根。T332新壳兼容合同"
+          },
+          {
+            "caseId": "FF158-158",
+            "title": "POST /api/v1/local/reset-workspace 桌面态但 CREATOROS_DB_DIR 未注入 → 500(不猜路径)",
+            "classification": "reset测试仅stubDB_DIR与ownedAPP_DATA_DIR优先级冲突",
+            "preservedAssertions": "仅该测试显式隔离所有实际dir变量：legacy分支APP_DATA_DIR空，新壳优先分支本例ownedapp；无目录例清两者。保三重保护/真实marker/no实际reset/幂等；不改产品优先级、不猜HOME，绝不动用户根。T332新壳兼容合同"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/components/overlays/new-project-dialog.prefill.test.tsx",
+      "frozenSHA256": "31d3d42b299befabf402343e1b22e609f44608f22ea0502e0209b81f726a0008",
+      "bytes": 2869,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-019",
+            "title": "NewProjectDialog × 偏好默认创作模式 (T-247) 偏好 defaultCreationMode=flexible → 表单预选 AI 协作创作",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "T1050正文5/28已明确删除新建时画幅与创作模式。仅该测试改真实多选/旧数据兼容默认不提交模式；不恢复退役selector/偏好请求，保失败不崩和创建选择"
+          },
+          {
+            "caseId": "FF158-020",
+            "title": "NewProjectDialog × 偏好默认创作模式 (T-247) 偏好读失败 → 保持内置默认 guided,不报错",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "T1050正文5/28已明确删除新建时画幅与创作模式。仅该测试改真实多选/旧数据兼容默认不提交模式；不恢复退役selector/偏好请求，保失败不崩和创建选择"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/components/shell/zero-account-guidance.test.tsx",
+      "frozenSHA256": "2125077db72bf5a39c6ae17d56181dd72df0170ceb7da17aed6bd6565b9c85a6",
+      "bytes": 2420,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-021",
+            "title": "ZeroAccountGuidance 渲染绑定引导 + /accounts 深链",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试按T1022空组创作指导核真实按钮/链接，保平台绑定的明确可选能力，非全局绑定才能创作"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/components/ui/creator-date-picker-antd.test.tsx",
+      "frozenSHA256": "bbe0e44635d260d02ede9cba06b7335dd6cab83c6656576a1e002d83a2a93078",
+      "bytes": 3732,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-031",
+            "title": "真实中文Ant日历 空字符串代表未选日期，以北京时间当天作为面板锚点，不渲染 Invalid Date",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试冻结本例北京时间或读取同冻结锚点；保空值无InvalidDate、日期格式/跨UTC边界，不改产品当前日期"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.test.tsx",
+      "frozenSHA256": "ebd11cf898eb5d8ece2771e8634dcaac69973d1aacc3ca2972b863dda33aa783",
+      "bytes": 26943,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-022",
+            "title": "公众号文章工作台 衍生稿不重复页头小字，正文与段落标题跟脚本使用同一字号",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-023",
+            "title": "公众号文章工作台 Brief 缺失时仍可手写和生成通用候选",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-024",
+            "title": "公众号文章工作台 生成结果只作为候选展示，明确采纳后才写入",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-025",
+            "title": "公众号文章工作台 默认继承当前账号品牌版本，也能改选中性写作",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-026",
+            "title": "公众号文章工作台 只把显式勾选的项目文档精确文件版本交给模型",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-027",
+            "title": "公众号文章工作台 候选事实采纳前显示旧清单与将替换的新清单",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-028",
+            "title": "公众号文章工作台 手工修改衍生稿正文仍保留稳定段落、来源和 NoteRelay 版式",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-029",
+            "title": "首次沿用脚本标题简介标签，主生成入口直接可见且不默认覆盖已填元数据",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-030",
+            "title": "已有稿生成后标题与摘要默认不被重写",
+            "classification": "确认退役按钮第一失败；业务后置未到，不代替T1097新增范围",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-diagnosis-card.test.tsx",
+      "frozenSHA256": "086c4cf03c38c2d83b5819f5c7879188a5c443a2aeef67eb808768a97116097f",
+      "bytes": 8292,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-032",
+            "title": "ChatDiagnosisCard(盲预测确认卡,T-103a) 诚实:取不到 draft(如没配模型 confirm 空)→ 置 error 态,不假装锁成功",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试核实际error/原任务/锁次数0，而非字面旧copy；不得借文本校准签真正confirm成功；原盲预测确认门/unknown合同"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/projects/publication-result-actions.test.tsx",
+      "frozenSHA256": "e6d79cda51993379b128eecbe8c23e6ab61679cba553a01ce1bcf35d23391e41",
+      "bytes": 11693,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-033",
+            "title": "发布内容卡片 image 空候选可渲染，不出现假生成按钮",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-034",
+            "title": "发布内容卡片 video 空候选可渲染，不出现假生成按钮",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-035",
+            "title": "发布内容卡片 真实发布封面候选预览后按 expectedAbsent 首次采纳",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-036",
+            "title": "发布内容卡片 已有发布修订使用当前 revisionId，dirty 禁用",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-037",
+            "title": "发布内容卡片 同平台重复发布记录时禁用封面生成和采纳",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-038",
+            "title": "发布标签候选刷新与编辑保护 queued 空值随后成功时呈现真实可编辑候选",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-039",
+            "title": "发布标签候选刷新与编辑保护 刷新保留用户修改和主动清空，迟到的旧候选不污染较新编辑",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-040",
+            "title": "发布标签候选刷新与编辑保护 已采纳结果缺少候选值时指向正式稿，不误报采纳未生效",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-041",
+            "title": "发布标签候选刷新与编辑保护 结构化错误 'VERSION_CONFLICT'/409 给出实际恢复动作并保留编辑",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-042",
+            "title": "发布标签候选刷新与编辑保护 结构化错误 'ConflictError'/400 给出实际恢复动作并保留编辑",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-043",
+            "title": "发布标签候选刷新与编辑保护 结构化错误 null/409 给出实际恢复动作并保留编辑",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          },
+          {
+            "caseId": "FF158-044",
+            "title": "发布标签候选刷新与编辑保护 结构化错误 'SOURCE_UNAVAILABLE'/409 给出实际恢复动作并保留编辑",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试用本例合法group/account冻结客户端或受控真实dispatch，mock精确同ID响应；保expectedAbsent/revisionId/dirty/重复记录拒绝、迟到与主动清空、可预览才采纳。不得改产品回全局client或跳过scope；T1022/T1238/原封面CAS"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/projects/quick-create-work.test.tsx",
+      "frozenSHA256": "ba3f8276c5c1f5316c624f792eb7224e14e39f80c1e5edabc7b5df56c25c27e5",
+      "bytes": 4357,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-045",
+            "title": "T-1050 直接创作入口 三类多选创建真实作品，进入主脚本，不启动其他形式的模型",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试接冻结transport/真实scope；保多选根脚本、原projectID不重建/逐output原幂等key/源正文，不改路由目的或生产资格；T1050/1051/T1022"
+          },
+          {
+            "caseId": "FF158-046",
+            "title": "T-1050 直接创作入口 图文和视频部分失败保留成功作品，重试后进入主脚本并保留选定来源",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试接冻结transport/真实scope；保多选根脚本、原projectID不重建/逐output原幂等key/源正文，不改路由目的或生产资格；T1050/1051/T1022"
+          },
+          {
+            "caseId": "FF158-047",
+            "title": "T-1050 直接创作入口 来源正文进入主脚本项目的真实简介，不提前生成其他形式",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试接冻结transport/真实scope；保多选根脚本、原projectID不重建/逐output原幂等key/源正文，不改路由目的或生产资格；T1050/1051/T1022"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/projects/work-editing-recovery.test.tsx",
+      "frozenSHA256": "a744b940e39fce83fa3978688009479934856b5b90feb6e25bc49213c050eace",
+      "bytes": 18427,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-048",
+            "title": "图片先建立真实项目引用，重复配图不写入，保存完整精确文件",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试走实际控件，保项目引用成功才追加精确file、失败保正文不连图、去重。不以只按钮存在代签真实资源link；原朋友圈编辑/素材确认合同"
+          },
+          {
+            "caseId": "FF158-049",
+            "title": "项目引用失败保留正文且不加入未连接图片",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试走实际控件，保项目引用成功才追加精确file、失败保正文不连图、去重。不以只按钮存在代签真实资源link；原朋友圈编辑/素材确认合同"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+      "frozenSHA256": "58916cb4c38b4e1acd3c8f87259e0ff12bff7e1f0a95b3bc6ae83c5b43bbfe92",
+      "bytes": 7859,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-148",
+            "title": "实际原生 ESM 挂载原公众号主题；精确图片交付且不修改应用DOM或原型",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试传完整合法project/output/sourceVersion/group或account，保所有原DOM/独立实例/原分页/导出断言，保像素fixture明确限制，不改native门/不称真实PNG像素PASS；T1022真实editor根"
+          },
+          {
+            "caseId": "FF158-149",
+            "title": "原分页/页序、尺寸与稳定图片 key 保留；React控件可通过原生句柄导航和改版式",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试传完整合法project/output/sourceVersion/group或account，保所有原DOM/独立实例/原分页/导出断言，保像素fixture明确限制，不改native门/不称真实PNG像素PASS；T1022真实editor根"
+          },
+          {
+            "caseId": "FF158-150",
+            "title": "两个原生实例交付独立；未知版式不破坏旧稿，卸载取消旧请求且不执行Markdown HTML",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试传完整合法project/output/sourceVersion/group或account，保所有原DOM/独立实例/原分页/导出断言，保像素fixture明确限制，不改native门/不称真实PNG像素PASS；T1022真实editor根"
+          },
+          {
+            "caseId": "FF158-151",
+            "title": "原PNG/ZIP逐页管线保留；像素捕获明确使用夹具，未验证真实PNG像素",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试传完整合法project/output/sourceVersion/group或account，保所有原DOM/独立实例/原分页/导出断言，保像素fixture明确限制，不改native门/不称真实PNG像素PASS；T1022真实editor根"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/settings/check-update-card.test.tsx",
+      "frozenSHA256": "a6bfeacdc1101fa5b92dcfdbea8dba566ef13a5ff4e2c3335639f325d1707619",
+      "bytes": 10387,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-050",
+            "title": "CheckUpdateCard — 桌面态 显当前版本 + 「检查更新」按钮",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补符合原上报contract的空/关闭状态及真实engine preference读；保更新无开放跳转、授权撤销不挡公开更新、web空态。不关产品reporting以修测试"
+          },
+          {
+            "caseId": "FF158-051",
+            "title": "CheckUpdateCard — 桌面态 [T-729] 有新版 → 下载入口固定为当前包下载页",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补符合原上报contract的空/关闭状态及真实engine preference读；保更新无开放跳转、授权撤销不挡公开更新、web空态。不关产品reporting以修测试"
+          },
+          {
+            "caseId": "FF158-052",
+            "title": "CheckUpdateCard — 桌面态 [T-459] mock 结果夹带任意 downloadUrl 也不形成开放跳转",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补符合原上报contract的空/关闭状态及真实engine preference读；保更新无开放跳转、授权撤销不挡公开更新、web空态。不关产品reporting以修测试"
+          },
+          {
+            "caseId": "FF158-053",
+            "title": "CheckUpdateCard — 桌面态 [T-871] 不再渲染常驻产品官网入口或官网引导文案",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补符合原上报contract的空/关闭状态及真实engine preference读；保更新无开放跳转、授权撤销不挡公开更新、web空态。不关产品reporting以修测试"
+          },
+          {
+            "caseId": "FF158-054",
+            "title": "CheckUpdateCard — 桌面态 点检查 → 已最新 → 「已是最新版」",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补符合原上报contract的空/关闭状态及真实engine preference读；保更新无开放跳转、授权撤销不挡公开更新、web空态。不关产品reporting以修测试"
+          },
+          {
+            "caseId": "FF158-055",
+            "title": "CheckUpdateCard — 桌面态 [T-412] 点检查 → 失败 → 人话错误态,不崩",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补符合原上报contract的空/关闭状态及真实engine preference读；保更新无开放跳转、授权撤销不挡公开更新、web空态。不关产品reporting以修测试"
+          },
+          {
+            "caseId": "FF158-056",
+            "title": "CheckUpdateCard — 与授权状态解耦 买断码 revoked 也不禁用公开官网更新检查",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补符合原上报contract的空/关闭状态及真实engine preference读；保更新无开放跳转、授权撤销不挡公开更新、web空态。不关产品reporting以修测试"
+          },
+          {
+            "caseId": "FF158-057",
+            "title": "CheckUpdateCard — web 态 非桌面 → 桌面端专属空态,无检查入口",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补符合原上报contract的空/关闭状态及真实engine preference读；保更新无开放跳转、授权撤销不挡公开更新、web空态。不关产品reporting以修测试"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/settings/identity-section.test.tsx",
+      "frozenSHA256": "2018a4f89ed7cd533a12a6f18888bfb6b2475a9bcdd55f4cdf5bbe28ecf5b453",
+      "bytes": 8968,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-058",
+            "title": "Settings identity section (Task 12) renders timezone + locale chips from the injected identity",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补完整薄client mock/engine读，不变真实PATCH昵称、injectedidentity/refresh断言"
+          },
+          {
+            "caseId": "FF158-059",
+            "title": "Settings identity section (Task 12) populates the nickname input from the injected identity; [T-356①] 邮箱行已下架",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补完整薄client mock/engine读，不变真实PATCH昵称、injectedidentity/refresh断言"
+          },
+          {
+            "caseId": "FF158-060",
+            "title": "Settings identity section (Task 12) renders the nickname input editable(真持久 PATCH /me)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补完整薄client mock/engine读，不变真实PATCH昵称、injectedidentity/refresh断言"
+          },
+          {
+            "caseId": "FF158-061",
+            "title": "Settings identity section (Task 12) saving an edited nickname calls patchProfile({ displayName }) then refresh",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补完整薄client mock/engine读，不变真实PATCH昵称、injectedidentity/refresh断言"
+          },
+          {
+            "caseId": "FF158-062",
+            "title": "Settings identity section (Task 12) binds the account card to the injected `identity` (settings.get read)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补完整薄client mock/engine读，不变真实PATCH昵称、injectedidentity/refresh断言"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "frozenSHA256": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "bytes": 84918,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-063",
+            "title": "[T-1236] 模型探针会话与配置生命周期 同值保存回显后保留真实'ok'，不改结果分类",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-064",
+            "title": "[T-1236] 模型探针会话与配置生命周期 同值保存回显后保留真实'fail'，不改结果分类",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-065",
+            "title": "[T-1236] 模型探针会话与配置生命周期 同值保存回显后保留真实'warn'，不改结果分类",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-066",
+            "title": "[T-1236] 模型探针会话与配置生命周期 未知请求异常保真实失败原因且不自动重发",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-067",
+            "title": "[T-1236] 模型探针会话与配置生命周期 保存失败保真实原因、probe0、没有虚构连通",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-068",
+            "title": "[T-1236] 模型探针会话与配置生命周期 保存回显早于beforeTest返回也继续同次probe",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-069",
+            "title": "[T-1236] 模型探针会话与配置生命周期 hidden分类不取消同scope会话，返回可见真实结果",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-070",
+            "title": "[T-1236] 模型探针会话与配置生命周期 group-only切组拒绝旧true结果（account都null）",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-071",
+            "title": "[T-1236] 模型探针会话与配置生命周期 group-only切组拒绝旧false结果（account都null）",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-072",
+            "title": "[T-1236] 模型探针会话与配置生命周期 切账号拒绝迟到结果",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-073",
+            "title": "[T-1236] 模型探针会话与配置生命周期 真正卸载后旧结果不落在重新打开的Dialog",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-074",
+            "title": "[T-1236] 模型探针会话与配置生命周期 外部配置不同仍按原key重置表单并拒绝旧结果",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-075",
+            "title": "[T-1236] 模型探针会话与配置生命周期 用户编辑model-name-input后旧反馈失效",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-076",
+            "title": "[T-1236] 模型探针会话与配置生命周期 用户编辑model-secret-input后旧反馈失效",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-077",
+            "title": "[T-1236] 模型探针会话与配置生命周期 用户编辑model-provider-input后旧反馈失效",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-078",
+            "title": "[T-1236] 模型探针会话与配置生命周期 用户编辑model-base-url-input后旧反馈失效",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-079",
+            "title": "[T-1236] 模型探针会话与配置生命周期 用户编辑model-temperature-input后旧反馈失效",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-080",
+            "title": "[T-1236] 模型探针会话与配置生命周期 双击pending按钮只有一次保存与probe",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-081",
+            "title": "[T-1236] 模型探针会话与配置生命周期 保存pending时group改变，完成保存后不向新scope发probe",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-082",
+            "title": "[T-1236] 模型探针会话与配置生命周期 空密钥仅保存保原值且probe0",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-083",
+            "title": "[T-1236] 模型探针会话与配置生命周期 保存pending时切组，旧保存失败不归新scope表单",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-084",
+            "title": "[T-1236] 模型探针会话与配置生命周期 无广播的实际group变化也拒绝迟到probe",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-085",
+            "title": "[T-1236] 模型探针会话与配置生命周期 旧finally不会清新scope的正在测试或写入旧结果",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-086",
+            "title": "[T-1236] 模型探针会话与配置生命周期 当前authority变受管时旧本地结果不可回写",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-087",
+            "title": "[T-1236] 模型探针会话与配置生命周期 完成后真实PUT回显仍保原结果",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-088",
+            "title": "[T-1236] 模型探针会话与配置生命周期 预设编辑使旧配置结果失效",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-089",
+            "title": "[T-1236] 模型探针会话与配置生命周期 接口协议编辑使旧探针结果失效",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-090",
+            "title": "[T-1236] 模型探针会话与配置生命周期 实际scope ABA后旧保存仍不refresh、不probe",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-091",
+            "title": "[T-1236] 模型探针会话与配置生命周期 实际scope ABA后旧probe也不能恢复连通结果",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-092",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-733] 本地文本模型状态 本地文本模型未配置时仍显示真实可操作状态",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-093",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-733] 本地文本模型状态 渠道接管时即使本地已有密钥也仍显示渠道状态",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-094",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-645] 用户自行填写的模型访问密钥按 service 保存且不展示技术服务名",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-095",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-679] 受管权益缺少语音路由时提示重新同步，不回退为用户填写 ASR Key",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-096",
+            "title": "Settings island wiring (needs-backend → op + refresh) saving the model form PUTs the whole default config (provider/model/baseUrl/format/secret/temperature)",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-097",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-501] 默认收起不常用字段，主路径只要求预设、模型与密钥",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-098",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-325] 默认(空 baseUrl + anthropic)回显 Anthropic 官方预设,模型候选=claude 家族",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-099",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-471] 接口格式下拉提供 OpenAI Responses",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-100",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-325] 已保存配置按 baseUrl/apiFormat 回显匹配预设(DeepSeek),匹配不到显示自定义",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-101",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-325] 手改接口地址 → 预设高亮与模型候选按 baseUrl 重算(匹配→切,乱填→自定义)",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-102",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-325] 选预设填 baseUrl/接口格式 + 切模型候选;仍可自由输入模型,保存带回填字段",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-103",
+            "title": "Settings island wiring (needs-backend → op + refresh) [T-645] 普通设置只展示文本、ASR、生图和生视频模型",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-104",
+            "title": "Settings island wiring (needs-backend → op + refresh) 文生图 provider 候选含 openai；文生视频不暴露受管服务品牌",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-105",
+            "title": "Settings island wiring (needs-backend → op + refresh) saving the 文生图 form PUTs the image.generate capability (provider/model/baseUrl/secret, no apiFormat/temperature)",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-106",
+            "title": "Settings island wiring (needs-backend → op + refresh) reads back a configured multimodal row + masks the secret (hasSecret badge, blank secret omitted on re-save)",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-107",
+            "title": "Settings island wiring (needs-backend → op + refresh) ASR 与文本模型同属重点配置区，并明确云端建议、本地可用",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-108",
+            "title": "Settings island wiring (needs-backend → op + refresh) renders the 逐字稿(audio) card without regressing the image/video cards",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-109",
+            "title": "Settings island wiring (needs-backend → op + refresh) omits the secret when left blank (a re-save keeps the stored key)",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-110",
+            "title": "SettingsDialog — ?highlight 深链定位 highlight=text-model → 滚动到文本模型配置卡并加高亮 ring",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-111",
+            "title": "Settings 测试连接 (T-377) [T-1236] 真实保存回显替换表单时，同次pending探针结果仍在当前按钮旁",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-112",
+            "title": "Settings 测试连接 (T-377) [T-501] 主模型卡点「保存并测试」→ 先保存当前表单，再测试同一份配置",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-113",
+            "title": "Settings 测试连接 (T-377) 文生图卡测试失败 → ✗ 失败带真实原因(区分「未配置」vs「配置了但调用失败」由 host 侧分类)",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          },
+          {
+            "caseId": "FF158-114",
+            "title": "Settings 测试连接 (T-377) ASR 未配置时中性说明使用本地 Whisper，不显示失败",
+            "classification": "缺完整preferences真实mock/ready；部分copy及disabled后置需再次合同核对",
+            "preservedAssertions": "仅该测试及其fixture先补真实完整get/patch preferences默认Pi/显式Codex、逐例awaitready和错误/加载覆盖；保T1236所有同scope/ABA/单probe/Pi历史数据，与T1238Codex无独立文本/图片配置要求。明确ASR按需文案、服务列表差异须在首前置通过后再按获批合同核，不删下游"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/assets.persistence-client.test.ts",
+      "frozenSHA256": "bf9efb76a9f928e5a69da19a8ce2cbc99a3b5b0e60f138f406991636cf372fd3",
+      "bytes": 9573,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-115",
+            "title": "assets ops registered in the composite transport the 11 assets op ids are persistence-backed (not the mock)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试完整owned上传/project/output引用；registry逐ID映射真实视觉模板/fileDownload/files等原资源合同后精确freeze16，不仅改数，保无ctx非mock/多租户/用料反查"
+          },
+          {
+            "caseId": "FF158-116",
+            "title": "assets ops registered in the composite transport assets.usage.list returns the 用料链 edges referencing the asset (用料反查)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试完整owned上传/project/output引用；registry逐ID映射真实视觉模板/fileDownload/files等原资源合同后精确freeze16，不仅改数，保无ctx非mock/多租户/用料反查"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/content-calendar.persistence-client.test.ts",
+      "frozenSHA256": "61f767a3f0eb4b5ba66f3cd67f20008aa98157b882086ecca406673522de25e8",
+      "bytes": 4801,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-117",
+            "title": "content-calendar ops registered in the composite transport the 8 calendar op ids are persistence-backed (not the mock)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试逐新组op核T1022并保完整原账号op/无ctx/非法scope/实际transport；不删新增组op"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts",
+      "frozenSHA256": "45abee8a414db68f9694d3af1f0e29772ff51a9597cc165d318d428da2300686",
+      "bytes": 7676,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-118",
+            "title": "数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜底 优先读真:种入 imported 真项目后,最近发布让 fixture 让位、只出真实导入作品",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试public真实account/group/导入作品，不让fixture冒充可信account；保真数据优先与绝不回假canonical数据。T1022/数据底座"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts",
+      "frozenSHA256": "a4427b419b85f78afff2fcc86aaa1ef85d3eb2d0ecd6ec9c9c0908df8cfb6885",
+      "bytes": 5232,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-119",
+            "title": "knowledge ops registered in the composite transport knowledge.create round-trips: the new item is then listable",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试真实publicworkspace/知识条目；保创建→列表/无越权/真实空，不放松资源scope触发器。T1022/T1239知识owner"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+      "frozenSHA256": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242",
+      "bytes": 17481,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-120",
+            "title": "T1069 xiaohongshu公开持久任务绑定入口、状态回读和真实组成员连通",
+            "classification": "确认同binding产品缺口；公开正例未成功",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-121",
+            "title": "T1069 kuaishou公开持久任务绑定入口、状态回读和真实组成员连通",
+            "classification": "确认同binding产品缺口；公开正例未成功",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-122",
+            "title": "T1110 wechatOfficial真实装配的公开扫码任务保存身份与成员，不被缺bind能力拒绝",
+            "classification": "确认同binding产品缺口；公开正例未成功",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-123",
+            "title": "T1110 wechatVideo真实装配的公开扫码任务保存身份与成员，不被缺bind能力拒绝",
+            "classification": "确认同binding产品缺口；公开正例未成功",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/platform-account.persistence-client.test.ts",
+      "frozenSHA256": "347588e5ce867019d130a49a60f8a5cd64389829e5a1065aabb67855361627da",
+      "bytes": 4945,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-124",
+            "title": "platform-account ops registered in the composite transport the 6 account op ids are persistence-backed (not the mock)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试精确原7IDs/无ctx与真实handler，原contract endpoint-bootstrap404总数另报告；不删合法readiness"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/publication-cover-bytes.persistence-client.test.ts",
+      "frozenSHA256": "11b22a934369949ed2570c17409d113224e6523e2cc6e18a03bf36d1b8f888cf",
+      "bytes": 5809,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-125",
+            "title": "公共作品封面绑定实际文件，原文本保存保留pair，文件不可读零保存，同请求恢复与解除闭合",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试建真实account/group/project/output再接真实file；保bytes/MIME/hash/不可读0save/同请求恢复/解除pair，不松权限"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/publishing.persistence-client.test.ts",
+      "frozenSHA256": "2d7895cf662bfc27ef00f45b2c8750674f13128fcf1392bd5e5cc370bd73cc7c",
+      "bytes": 7707,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-126",
+            "title": "publishing ops registered in the composite transport the 6 publishing op ids are persistence-backed (not the mock)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试真实owned父链、逐ID核原visualNotes export合同后精确freeze；保外部key幂等、原revision/发布transition。不提前签真实发布"
+          },
+          {
+            "caseId": "FF158-127",
+            "title": "publishing ops registered in the composite transport create → list → revise → transition(published) round-trips over the shared store",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试真实owned父链、逐ID核原visualNotes export合同后精确freeze；保外部key幂等、原revision/发布transition。不提前签真实发布"
+          },
+          {
+            "caseId": "FF158-128",
+            "title": "publishing ops registered in the composite transport outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试真实owned父链、逐ID核原visualNotes export合同后精确freeze；保外部key幂等、原revision/发布transition。不提前签真实发布"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/query-services.contract.test.ts",
+      "frozenSHA256": "64eaf2d6fbff99041f40ab59ec4c8d00de2aca0da6573471a0016855f3cad9a1",
+      "bytes": 20991,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-129",
+            "title": "query-services ops registered in the composite transport the 3 page-read op ids are persistence-backed (reject without ctx)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试逐新增op核T1022/T1199真实服务/无ctx，不盲数5或删新增服务"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/search-indexing.persistence-client.test.ts",
+      "frozenSHA256": "e97df3faa9e4fbdd1864b09925758f0c4cd8d7e1aa820cde80095873890c1bf6",
+      "bytes": 7791,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-130",
+            "title": "实体 create/update/delete 写搜索索引(全局搜索可用) 4. knowledge.create 后,pages.search.get 立刻命中 knowledge tab(await 消竞态)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试真实public根及发布作品，不直写伪parent；保await消竞态/搜索tab精确命中/跨租户不可见"
+          },
+          {
+            "caseId": "FF158-131",
+            "title": "实体 create/update/delete 写搜索索引(全局搜索可用) 5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐)",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试真实public根及发布作品，不直写伪parent；保await消竞态/搜索tab精确命中/跨租户不可见"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/chat-task-submission.integration.test.ts",
+      "frozenSHA256": "55350e1cc89623996b6b891d5b1788b4d1eddfe60569d8b56534e3b388d90832",
+      "bytes": 23814,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-004",
+            "title": "真实 'review.script' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+            "classification": "明确合同漂移；空正文真实partial",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-005",
+            "title": "真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+            "classification": "明确合同漂移；空正文真实partial",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+      "frozenSHA256": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8",
+      "bytes": 15192,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-133",
+            "title": "生产公共链在PGlite事务外预留宿主租约，新账号真实登记并完成目录采用",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-134",
+            "title": "已有真实账号采用新登录态，保留ID并清除旧备份且不重复成员",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-135",
+            "title": "取消等待真实浏览器停止与宿主租约释放，清理后才确认cancelled",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-136",
+            "title": "等待目标租约期间组可更新，随后清理已持预租约而不自我等待",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-137",
+            "title": "重启没有内存Map时依据持久run与采用marker恢复旧目录，再确认中断失败",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-138",
+            "title": "目标租约等待期间取消会释放预留资源，只清理本run且保留原账号目录",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-139",
+            "title": "T1110 xiaohongshu真实目录、宿主租约与账号组事务闭环",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-140",
+            "title": "T1110 kuaishou真实目录、宿主租约与账号组事务闭环",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-141",
+            "title": "T1110 wechatOfficial真实目录、宿主租约与账号组事务闭环",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-142",
+            "title": "T1110 wechatVideo真实目录、宿主租约与账号组事务闭环",
+            "classification": "确认产品leaf严格payload冲突；7快速正例/恢复早拒，3外层超时仅声明行",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/ingestion/chromium-guard.test.ts",
+      "frozenSHA256": "64398cc8bd849301b479ab20bcf07ce2a8910f3be7199a2e5a707e1f264b3be6",
+      "bytes": 9215,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-143",
+            "title": "guardedLaunch 超时/失败诚实 launch 超时 → BrowserLaunchError 人话报错,迟到的 context 被顺手关掉",
+            "classification": "测试20ms被默认370k拒，outer180k先终止",
+            "preservedAssertions": "仅该测试使用独立受控timer推进公共实际370k，或外层完整>=该串行/cleanup，保晚context实际close/占用队列/人话错误。不得production降20ms。LED053/原浏览器shutdown门"
+          },
+          {
+            "caseId": "FF158-144",
+            "title": "guardedLaunch 超时/失败诚实 超时错误文案是人话(含「请重试」)",
+            "classification": "测试20ms被默认370k拒，outer180k先终止",
+            "preservedAssertions": "仅该测试使用独立受控timer推进公共实际370k，或外层完整>=该串行/cleanup，保晚context实际close/占用队列/人话错误。不得production降20ms。LED053/原浏览器shutdown门"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "frozenSHA256": "3d9380877c76c39da124dc646575aa91244de0e25e81886b70d412caf1cd3779",
+      "bytes": 7811,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-145",
+            "title": "真实runCliCommand→HTTP正式dispatch→SQL幂等账本→Chromium：同key只点一次、跨账号隔离、失效作品可关闭、进程后pending不重派",
+            "classification": "测试composite缺publications.get正式CLI preflight；实际UnsupportedOperationError",
+            "preservedAssertions": "仅该测试把同真实publishing读transport并入公共装配，使用原owned事实行；保impact拒绝、跨号、SQL同key一次/丢回执unknown、作品失效仍close、真实Chromium观察隐私。不得绕CLI preflight或虚构浏览器已执行；评论诊断原公共合同"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-throttle-integration.test.ts",
+      "frozenSHA256": "66b8db85d662fa454abe9cad102e2fb59d14a7aa8adcff2afd3bd6acdf0ccc49",
+      "bytes": 28005,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-146",
+            "title": "[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center [gate-F6 错误映射] download 超时 + 有「暂无数据」toast → report('content-error')(图集不退避)",
+            "classification": "测试FakePage真实等待clamp后内层超过outer；下游未到",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          },
+          {
+            "caseId": "FF158-147",
+            "title": "[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center [T-176 错误映射] download 超时 + 无 toast → report('content-error')(导出 DOM 脆弱,不再退避)",
+            "classification": "测试FakePage真实等待clamp后内层超过outer；下游未到",
+            "preservedAssertions": "见四族FF001-004最终补充；保持原结果与未到下游限制"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/intelligence/share-import-runner.test.ts",
+      "frozenSHA256": "dc3bd0192199a68a6b96d0c6ce017417d3c1b224b218b239f2bbf7425fdb9ab1",
+      "bytes": 8578,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-132",
+            "title": "[T-482] 单条分享导入持久任务 普通分享明确向领域层传 false，不能被 host 自动升级为转写",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试补原claim同attempt/owner运行态与heartbeat（同族前例已齐），保transcribeAfterImport:false、原任务/fence/control；不删生产轮询或默认升级转录。T482/continuous控制"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+      "frozenSHA256": "cfa9e53e4ed52a6a0708f997a840e7740504bfd1daa28846e54a7bb4f1bd084b",
+      "bytes": 42697,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-006",
+            "title": "已登记账号只选account创建项目/全局会话和两种稿件，原RETURNING与严格group owner均可读取",
+            "classification": "3旧schema装配不兼容当前0133；1CHAT_RUNTIME_UNAVAILABLE原因未确定",
+            "preservedAssertions": "仅该测试先维护真正旧schema构造/原104账本，再沿当前真实migrator升级后启当前消费者，不能让当前repository在104schema创建新引擎偏好；保0130旧归属/原receipt/source深等与新增0133 lineage。第一例需保子进程stderr/exit/加载诊断，当前不能与WF005私有bundle自动同因。T1089旧归属/T1238迁移"
+          },
+          {
+            "caseId": "FF158-007",
+            "title": "104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放",
+            "classification": "3旧schema装配不兼容当前0133；1CHAT_RUNTIME_UNAVAILABLE原因未确定",
+            "preservedAssertions": "仅该测试先维护真正旧schema构造/原104账本，再沿当前真实migrator升级后启当前消费者，不能让当前repository在104schema创建新引擎偏好；保0130旧归属/原receipt/source深等与新增0133 lineage。第一例需保子进程stderr/exit/加载诊断，当前不能与WF005私有bundle自动同因。T1089旧归属/T1238迁移"
+          },
+          {
+            "caseId": "FF158-008",
+            "title": "104→0130 canonical-null-conversation 原冻结/完整子进程Worker/已结算回执/原completion与同source重放",
+            "classification": "3旧schema装配不兼容当前0133；1CHAT_RUNTIME_UNAVAILABLE原因未确定",
+            "preservedAssertions": "仅该测试先维护真正旧schema构造/原104账本，再沿当前真实migrator升级后启当前消费者，不能让当前repository在104schema创建新引擎偏好；保0130旧归属/原receipt/source深等与新增0133 lineage。第一例需保子进程stderr/exit/加载诊断，当前不能与WF005私有bundle自动同因。T1089旧归属/T1238迁移"
+          },
+          {
+            "caseId": "FF158-009",
+            "title": "104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放",
+            "classification": "3旧schema装配不兼容当前0133；1CHAT_RUNTIME_UNAVAILABLE原因未确定",
+            "preservedAssertions": "仅该测试先维护真正旧schema构造/原104账本，再沿当前真实migrator升级后启当前消费者，不能让当前repository在104schema创建新引擎偏好；保0130旧归属/原receipt/source深等与新增0133 lineage。第一例需保子进程stderr/exit/加载诊断，当前不能与WF005私有bundle自动同因。T1089旧归属/T1238迁移"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/persistence-client.favorites-diagnostics.test.ts",
+      "frozenSHA256": "c63ba22bbe95bedef67adee7bd3aa983d2e5b985f65cd90df1c9a45733956cd8",
+      "bytes": 1904,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-010",
+            "title": "[T-536] 内容雷达收藏同步诊断接线 同步指定收藏来源时下传 requestId/采集账号，不让诊断字段为空",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试核当前函数/真实装配行为，保requestId/collectorAccountId、精确旧夹名→真实ID/FOLDER_MISSING、无secret。禁止删这条边界；T536/当前持续控制signal"
+          },
+          {
+            "caseId": "FF158-011",
+            "title": "[T-536] 内容雷达收藏同步诊断接线 兼容旧来源保存的收藏夹名称，先解析真实 collects_id 再抓作品",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试核当前函数/真实装配行为，保requestId/collectorAccountId、精确旧夹名→真实ID/FOLDER_MISSING、无secret。禁止删这条边界；T536/当前持续控制signal"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/platform-worker-entry.integration.test.ts",
+      "frozenSHA256": "2632c48cb0fe6cca31f318add3f8a78a99ef44a8151352a460cf771154da3045",
+      "bytes": 7275,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-012",
+            "title": "生产多平台创建入口 publish.platform_adapt 公共transport创建后由真实Worker生成，公共回读完成并可采纳",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试通过原公共fixture建立真实account/group/project/output再发同工具；不关闭ownership；T1022组与真实发布账号"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/review-insights-worker-entry.integration.test.ts",
+      "frozenSHA256": "17e0ea70278efd1da071515b722a84af061fe1ead1804eb6705b91d8383d534b",
+      "bytes": 7305,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-013",
+            "title": "生产复盘 Worker 入口与采纳 真实复盘 lostReceipt=false invalid=false",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试建立真实帐号/组/作品与数据快照；保各case模型回执、lostReceipt/invalid、采纳前零写，不签尚未到达分支；T1022复盘事实归属"
+          },
+          {
+            "caseId": "FF158-014",
+            "title": "生产复盘 Worker 入口与采纳 真实复盘 lostReceipt=true invalid=false",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试建立真实帐号/组/作品与数据快照；保各case模型回执、lostReceipt/invalid、采纳前零写，不签尚未到达分支；T1022复盘事实归属"
+          },
+          {
+            "caseId": "FF158-015",
+            "title": "生产复盘 Worker 入口与采纳 真实复盘 lostReceipt=false invalid=true",
+            "classification": "最小写集与证据限制见补充报告逐族表；装配/范围前置失败不代签下游",
+            "preservedAssertions": "仅该测试建立真实帐号/组/作品与数据快照；保各case模型回执、lostReceipt/invalid、采纳前零写，不签尚未到达分支；T1022复盘事实归属"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/server/script-worker-entry.integration.test.ts",
+      "frozenSHA256": "9be37e3ba4e797d9af0b7efbb79e28eb1fea6d954b0c75bc85d438491d095314",
+      "bytes": 10671,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-016",
+            "title": "script.draft真实Worker入口：malformed",
+            "classification": "retry旧复制入口禁止重置预算；malformed第三模型请求未确定",
+            "preservedAssertions": "retry最小该测试使用正式原execution resume、保原task/attempt/budget，不复刻新任务。malformed先核第三请求内容/format repair冻结预算，当前只count不足签合法修复/产品重复调用；不得直接<=3洗绿。T1238原ID未知只读/TLED053预算"
+          },
+          {
+            "caseId": "FF158-017",
+            "title": "script.draft真实Worker入口：retry",
+            "classification": "retry旧复制入口禁止重置预算；malformed第三模型请求未确定",
+            "preservedAssertions": "retry最小该测试使用正式原execution resume、保原task/attempt/budget，不复刻新任务。malformed先核第三请求内容/format repair冻结预算，当前只count不足签合法修复/产品重复调用；不得直接<=3洗绿。T1238原ID未知只读/TLED053预算"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/test/function-key-invariant.test.ts",
+      "frozenSHA256": "4def088daa3fba0f548a74446b0245df50ba34019c026f139dc54defa9135de0",
+      "bytes": 3130,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-001",
+            "title": "[T-265] functionKey ↔ ALL_CHAT_TOOL_NAMES 不变量(死链防复发) 每个前端 functionKey 字面量都 ∈ ALL_CHAT_TOOL_NAMES(否则 forcedTool 命不中 = 死链)",
+            "classification": "root独立确认真实alias消费；不空allowlist",
+            "preservedAssertions": "只该测试：保持穷尽扫描，两个alias走真实工具定义/序列及冻结kind校验，不塞进ALL_CHAT_TOOL_NAMES或空allowlist；T265/T1238。来源证据由root归档"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/src/test/icons.test.ts",
+      "frozenSHA256": "d0b0930c2f182de4f3bb16cfc5023a3964d1ca85fb13078ba6df3e13fc5c3cc0",
+      "bytes": 2650,
+      "batchCases": {
+        "frontend": [
+          {
+            "caseId": "FF158-002",
+            "title": "CreatorOS semantic icons provides every approved semantic key from a frozen mapping",
+            "classification": "root独立确认获批新增映射",
+            "preservedAssertions": "只该测试精确扩已批准映射，保完整freeze/local metadata，不用length宽松比较"
+          },
+          {
+            "caseId": "FF158-003",
+            "title": "CreatorOS platform icons provides frozen deterministic local platform metadata",
+            "classification": "root独立确认获批新增映射",
+            "preservedAssertions": "只该测试精确扩已批准映射，保完整freeze/local metadata，不用length宽松比较"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/ai-copilot.spec.ts",
+      "frozenSHA256": "d48625c8fde48cc8b17a0919eba7a2be98b776e2e1f2cb14c9bb9f87aa7838cf",
+      "bytes": 3407,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "398e1e2dd9ad70ed36f5-fcf91ee232c21f1ceebf",
+            "title": "opens the centered dialog from any page via ?copilot=open",
+            "classification": "已确认原合同漂移",
+            "firstCause": "BC001：T354已退役dashboard次区；真实弹窗打开，首断言仍找退役slot。",
+            "minimumOrInvestigation": "frontend/tests/e2e/ai-copilot.spec.ts"
+          },
+          {
+            "caseId": "398e1e2dd9ad70ed36f5-1f5c45fadccdf95473d0",
+            "title": "submit button does not post a real network request",
+            "classification": "已确认原合同漂移",
+            "firstCause": "BC002：T1024/T1026真实持久聊天已替代submit无POST；实际7个POST含/api/chat。",
+            "minimumOrInvestigation": "frontend/tests/e2e/ai-copilot.spec.ts"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/ai-reliability-recovery.spec.ts",
+      "frozenSHA256": "d45f2d894a833baa06fc300f579597dcb8f6f6005c57e283f8e20be7bc93a5b1",
+      "bytes": 6848,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "78c95fd594dd575ec449-d42c1ed4c6ebb279cf35",
+            "title": "视频决策失败可见、终态停轮询，重新运行显式携带来源任务",
+            "classification": "待定位",
+            "firstCause": "原无效SRT任务真实终态failed，测试硬等cancelled；尚未核该任务原receipt及取消来源，不能改期望洗绿。",
+            "minimumOrInvestigation": "frontend/tests/e2e/ai-reliability-recovery.spec.ts；backend/src/modules/execution/execution-video.service.ts（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/all-routes.spec.ts",
+      "frozenSHA256": "f6056f25cd6d1eb29846260b0544c10dcfea83bb8011a59f3729de99d69d4b4a",
+      "bytes": 2036,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "66d28c9c49bf28775f51-234ab65402bd8d1f3b8d",
+            "title": "route project-overview (/projects/ai-native-browser) renders with single shell and correct active state",
+            "classification": "已确认原合同漂移",
+            "firstCause": "T075真实project root已统一project-workspace顶栏，shell-router与对应测试一致。",
+            "minimumOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts"
+          },
+          {
+            "caseId": "66d28c9c49bf28775f51-a9d66ebd122c84407a70",
+            "title": "route analytics-review (/projects/ai-native-browser/review) renders with single shell and correct active state",
+            "classification": "前置与产品责任待区分",
+            "firstCause": "BA004：旧fixture slug无选组/账号首载，readReviewHistory真实AccountRequiredError；未验合法纯组复盘。",
+            "minimumOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts；frontend/src/app/(creator)/projects/[projectId]/review/page.tsx（条件性调查）"
+          },
+          {
+            "caseId": "66d28c9c49bf28775f51-5839d001c13f1e01acb5",
+            "title": "route experience (/experience) renders with single shell and correct active state",
+            "classification": "已确认原合同漂移",
+            "firstCause": "T118c/T1239经验独立页已退役，真实redirect /knowledge。",
+            "minimumOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts"
+          },
+          {
+            "caseId": "66d28c9c49bf28775f51-f186a8ca4c212fd720d3",
+            "title": "route search (/search) renders with single shell and correct active state",
+            "classification": "已确认原合同漂移",
+            "firstCause": "sidebar PRIMARY_NAV明确/search无独立主nav项；原所有路由必须一条aria-current假设不成立。",
+            "minimumOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts"
+          },
+          {
+            "caseId": "66d28c9c49bf28775f51-d79ab2f37da89909c2fc",
+            "title": "route settings (/settings) renders with single shell and correct active state",
+            "classification": "待定位",
+            "firstCause": "settings实际aria-current为0；须结合本地弹层背景路由核其当前nav合同，不能统一所有页都改0。",
+            "minimumOrInvestigation": "frontend/tests/fixtures/routes.ts；frontend/tests/e2e/all-routes.spec.ts；frontend/src/components/shell/use-primary-navigation.ts（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/app-shell.spec.ts",
+      "frozenSHA256": "b4f525af6bf0e90914ba32284356d989f604fe0897d0633e2541339694286d0b",
+      "bytes": 7202,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "826b944a90800335c80d-29f41b2bbed70474183c",
+            "title": "lists the seven approved primary nav items",
+            "classification": "已确认原合同漂移",
+            "firstCause": "真实PRIMARY_NAV已有13入口，含定位/雷达/选题/画布/自动化，T118c经验入口已移除；旧七项清单过时。",
+            "minimumOrInvestigation": "frontend/tests/e2e/app-shell.spec.ts"
+          },
+          {
+            "caseId": "826b944a90800335c80d-9f1ba789128856c63381",
+            "title": "focus order: sidebar -> top header -> page content",
+            "classification": "测试观察范围不足，产品顺序仍待核",
+            "firstCause": "原12次Tab上限少于现13主nav链接，首轮未进入header；尚未证明实际焦点顺序错误。",
+            "minimumOrInvestigation": "frontend/tests/e2e/app-shell.spec.ts"
+          },
+          {
+            "caseId": "826b944a90800335c80d-4077f0e7e007a8275809",
+            "title": "applies shared page spacing tokens in the browser",
+            "classification": "待定位",
+            "firstCause": "实际firstElementChild gap normal；dashboard真实main仍gap-section-gap。应先核app-page-content首子是否初始化boundary/内容容器。",
+            "minimumOrInvestigation": "frontend/tests/e2e/app-shell.spec.ts；frontend/src/features/dashboard/dashboard-page.tsx（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/automations-group-media-jobs.spec.ts",
+      "frozenSHA256": "17c8beeeee88f9583d3c1f59aa2ec389ca5fabd87a07479bb3cad0a8837df0c7",
+      "bytes": 10893,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "8cf1aa680fa498b7616c-970fa63bd6a10887733c",
+            "title": "切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同",
+            "classification": "测试竞争＋已确认产品风险",
+            "firstCause": "BA001：真实GET仍发旧legacy Cookie，菜单为目标新组而正文0jobs；尚未进行切B/回A。",
+            "minimumOrInvestigation": "frontend/tests/e2e/automations-group-media-jobs.spec.ts；frontend/src/components/shell/account-switcher.tsx；frontend/src/components/shell/workspace-initialization.tsx；对应初始化/切组tests"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+      "frozenSHA256": "748976450dc39d1f59991c79a624775cd993ffc6cd5e57b36c27cb635cf0e1a7",
+      "bytes": 23536,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+            "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+            "classification": "测试竞争＋已确认产品风险",
+            "firstCause": "BA001同根：实际GET旧组，正文@t1022-1；未到runNow。",
+            "minimumOrInvestigation": "frontend/tests/e2e/automations-run-now-public.spec.ts；同上一行产品两文件与tests"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/experience.spec.ts",
+      "frozenSHA256": "ae77c80bbdadd145848df806a69cad9af65d01062ac51b72f5d39314faa3fc4e",
+      "bytes": 4628,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "b64559fc4465ec32f46c-c9e4a01ada78a3a6ab2c",
+            "title": "renders the adjudication workbench on the /experience route",
+            "classification": "已确认原合同漂移",
+            "firstCause": "同T118c/T1239真实redirect导致知识页标题；原经验裁决页退役。",
+            "minimumOrInvestigation": "frontend/tests/e2e/experience.spec.ts"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/group-skill-customization.spec.ts",
+      "frozenSHA256": "ad9f7f6cd052467698bacda10daa3c421cc0d215a327bda498cca3bc3f1d6b80",
+      "bytes": 80088,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "41050249d47ab09b44f8-452e9ace5f8248c451ed",
+            "title": "空账号组通过设置页定制官方 Skill 的首写入口可用",
+            "classification": "已确认fixture前置漂移",
+            "firstCause": "BA002：原活跃合法迁移组已存在；创建两新组不代表自动选中新组，首断言未到Skill编辑。",
+            "minimumOrInvestigation": "frontend/tests/e2e/group-skill-customization.spec.ts"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/media-root-isolation.spec.ts",
+      "frozenSHA256": "cb063f9b66416e3d927c9df9ec73b89c60a279ff2b5eac8f57224c908d7bf717",
+      "bytes": 10727,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "37c0a50c9e3744722adf-720e6f026bb155ed6457",
+            "title": "T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根",
+            "classification": "已确认验收工具前置",
+            "firstCause": "BA003：本轮/tmp数据根不满足os.tmpdir真实父路径＋creatoros-playwright-*前缀；未上传。",
+            "minimumOrInvestigation": "docs/verification/t1246/driver运行根生成消费者"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts",
+      "frozenSHA256": "96bf68efbb7c2d805f98c08f1562df746a4a228d22f7d33bea19bfb479bb4421",
+      "bytes": 5934,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "d9613b8836b17a7105de-3b722d27bb7db20a75f4",
+            "title": "重新打开后真实回到首页，并保留新号/已有作品两条连续路径",
+            "classification": "已确认账号组合同漂移",
+            "firstCause": "onboarding-steps.ts:168组模式真实标题将平台账号加入账号组；旧测试还硬等单账号绑定抖音标题。",
+            "minimumOrInvestigation": "frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/platform-work-catalog.spec.ts",
+      "frozenSHA256": "4affe819097d810612e0c38bb68b737648f85c085d2367d83d69126092a9fac1",
+      "bytes": 7480,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "ff88aeb912d54d19c019-07fb539b46563c1a126c",
+            "title": "平台作品页按当前账号显示真实空目录和待核验能力",
+            "classification": "待定位",
+            "firstCause": "旧platform-capability-overview在/accounts不见；真实新组管理页面与旧能力组件仍存在，未核批准IA/实际入口。",
+            "minimumOrInvestigation": "frontend/tests/e2e/platform-work-catalog.spec.ts；frontend/src/features/platform-account/account-group-manager.tsx（调查）"
+          },
+          {
+            "caseId": "ff88aeb912d54d19c019-cfdcf5687c7b5f5352b8",
+            "title": "本地账号完成多平台目标项目与发布草稿，账号归属隔离",
+            "classification": "待定位",
+            "firstCause": "第二平台项目真实创建API成功但页面标题未见；fixture只写account Cookie/LS，未冻结/清除旧group，疑作用域分裂尚无trace定因。",
+            "minimumOrInvestigation": "frontend/tests/e2e/platform-work-catalog.spec.ts；shell范围相关源（调查）"
+          },
+          {
+            "caseId": "ff88aeb912d54d19c019-9d7913f6044d65d5c8a4",
+            "title": "账号页绑定成功后可直接切换到对应的小红书与快手作品页",
+            "classification": "待定位",
+            "firstCause": "旧bind-xiaohongshu-scan测试id不见；新组管理真实扫码能力按钮需核原接入/批准入口。",
+            "minimumOrInvestigation": "frontend/tests/e2e/platform-work-catalog.spec.ts；frontend/src/features/platform-account/account-group-manager.tsx（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/production-broll-remove.spec.ts",
+      "frozenSHA256": "cbc30cfd36b44e68d41986e0ffda4a34c808398788092c11eafe40aacfdeb1cb",
+      "bytes": 8108,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "90d32f0826f75e4378df-34912ade6a99810c4747",
+            "title": "已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧素材",
+            "classification": "待定位",
+            "firstCause": "已确认分镜notice未呈现；production源码仍有该slot，不能归为退役。",
+            "minimumOrInvestigation": "frontend/tests/e2e/production-broll-remove.spec.ts；frontend/src/features/production/production-workbench.tsx（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/publishing-center.spec.ts",
+      "frozenSHA256": "94e6a7bc49a7a6671ab24539b4d2b8be2576436b80c506e3f9a110ada299782f",
+      "bytes": 3872,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "4f3e74964b66d244a3b5-d02911a1d5be5b1c6704",
+            "title": "真实项目排期出现在 70/30 日历视图，旧重复列表已移除",
+            "classification": "待定位",
+            "firstCause": "已排期项目日历month=2099-12无entry；尚未核同project排期、scope、目标月时区/真实视图筛选。",
+            "minimumOrInvestigation": "frontend/tests/e2e/publishing-center.spec.ts；frontend/src/features/publishing（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/recent-data-safety.spec.ts",
+      "frozenSHA256": "15a0a75156f3b43707a61efd407a940c01a5e8063443e2cba46b5810791cc679",
+      "bytes": 8204,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "8e7a9a57a62b196b6936-eead317e609b857c2ca4",
+            "title": "已有定位进入从零前采时，正式母版和历史始终可见，搜索默认国内中文",
+            "classification": "待定位",
+            "firstCause": "原已创建定位母版未在真实positioning页显示，当前只见Copilot起点；旧新账号scope及母版归属未对账。",
+            "minimumOrInvestigation": "frontend/tests/e2e/recent-data-safety.spec.ts；frontend/src/features/positioning（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/search.spec.ts",
+      "frozenSHA256": "1ed7b0550aad02e6140f266d36d7a254acc000b1d02e861265bbd4d6ec93acd0",
+      "bytes": 3972,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "f4a36a9939d689d57a9d-16a12204dc96e9f901a5",
+            "title": "renders the global search structure on the /search route",
+            "classification": "待定位",
+            "firstCause": "真实project-result-section节点空grid隐藏；无本例公开搜索数据准备，不能凭标题判产品检索失败。",
+            "minimumOrInvestigation": "frontend/tests/e2e/search.spec.ts；frontend/src/features/search/search-page.tsx（调查）"
+          },
+          {
+            "caseId": "f4a36a9939d689d57a9d-45aa1522353ea5990897",
+            "title": "URL ?q=... is reflected in the search input value",
+            "classification": "已确认原合同漂移",
+            "firstCause": "T051 2d退役重复page-input，真实查询字段在TopHeader HeaderGlobalSearch，源文件明确该消费者。",
+            "minimumOrInvestigation": "frontend/tests/e2e/search.spec.ts"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/semantic-material-generation.spec.ts",
+      "frozenSHA256": "068897604ef89a38ae3b88809d86ae84d60be198dac40e7b2e350e9804378d78",
+      "bytes": 6401,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "ab4ba88af7a7cf4851d3-7777bc4d99ffaf6b4a45",
+            "title": "图片按确认稿需要预填多个候选，视频默认预填一个候选，点击不自动发送",
+            "classification": "待定位",
+            "firstCause": "本例大屏图/视频预填已到；1024宽侧栏打开AI助手入口缺，源码仍有该入口，可能侧栏折叠/响应式定位。",
+            "minimumOrInvestigation": "frontend/tests/e2e/semantic-material-generation.spec.ts；frontend/src/components/shell/sidebar.tsx（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/settings.spec.ts",
+      "frozenSHA256": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "bytes": 23553,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "87418b536bb3b16b9965-9d167bbc2a2b29b9bb07",
+            "title": "renders the settings structure on the /settings route",
+            "classification": "待定位，真实返回风险",
+            "firstCause": "设置关闭后真实URL为about:blank，等/accounts失败；handleOpenChange history.length>1→router.back，需核本地开弹窗是否push历史。",
+            "minimumOrInvestigation": "frontend/tests/e2e/settings.spec.ts；frontend/src/features/settings/settings-interactive-region.tsx；frontend/src/components/shell/use-primary-navigation.ts（调查）"
+          },
+          {
+            "caseId": "87418b536bb3b16b9965-1daf9239c5bf49000f59",
+            "title": "[T-1232] 外观主题与密度按本地消费者持久并返回刷新",
+            "classification": "待定位，真实返回风险",
+            "firstCause": "同设置关闭about:blank断点，外观持久验证尚未到刷新回读。",
+            "minimumOrInvestigation": "同上一行"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "frozenSHA256": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609",
+      "bytes": 73284,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "a8c4891f095c8a8e2a8e-78c06f6ccaa7f5fd8b4e",
+            "title": "纯组无平台账号仍可通过真实创建弹层创建项目、保存画布和打开原生剪辑",
+            "classification": "已确认验收工具前置",
+            "firstCause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+            "minimumOrInvestigation": "docs/verification/t1246/driver运行根生成消费者"
+          },
+          {
+            "caseId": "a8c4891f095c8a8e2a8e-4a616b4b5d877c355ca2",
+            "title": "同组多个账号/平台筛选保留dirty和真实native实例，公共保存始终冻结组根",
+            "classification": "已确认验收工具前置",
+            "firstCause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+            "minimumOrInvestigation": "docs/verification/t1246/driver运行根生成消费者"
+          },
+          {
+            "caseId": "a8c4891f095c8a8e2a8e-ca78d653a89a51c55966",
+            "title": "跨组时取消真实在途素材响应，旧组晚到结果不能回写或继续保存",
+            "classification": "已确认验收工具前置",
+            "firstCause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+            "minimumOrInvestigation": "docs/verification/t1246/driver运行根生成消费者"
+          },
+          {
+            "caseId": "a8c4891f095c8a8e2a8e-408b513e0317a7efece3",
+            "title": "真实迁组历史画布保留account出处，group归属可读写；错误组读回明确结束loading",
+            "classification": "已确认验收工具前置",
+            "firstCause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+            "minimumOrInvestigation": "docs/verification/t1246/driver运行根生成消费者"
+          },
+          {
+            "caseId": "a8c4891f095c8a8e2a8e-d6ac7f086c19a59f1b17",
+            "title": "真实默认ASR与原生原声：普通AAC完整自然播放、单独核对、明确采用与保存刷新",
+            "classification": "已确认验收工具前置",
+            "firstCause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+            "minimumOrInvestigation": "docs/verification/t1246/driver运行根生成消费者"
+          },
+          {
+            "caseId": "a8c4891f095c8a8e2a8e-6dc193773c32133c3858",
+            "title": "真实默认ASR与原生原声：非零视频起点仅此项手工降级，原工程仍可保存",
+            "classification": "已确认验收工具前置",
+            "firstCause": "BA003：assertPrivateRuntime在beforeEach拒绝目录，未进入功能body；两ASR例另需真实离线cache/admission。",
+            "minimumOrInvestigation": "docs/verification/t1246/driver运行根生成消费者"
+          },
+          {
+            "caseId": "a8c4891f095c8a8e2a8e-e6085f74588844d59da3",
+            "title": "真实首载RSC一直未交付：有界超时后显式整页重试，同B根可创建保存回读",
+            "classification": "已确认预算观察缺口，产品终态待核",
+            "firstCause": "旧注释说15s，但实际WORKSPACE_INITIALIZATION_TIMEOUT_MS=120000；外层error观察也120000无独立余量，本轮未看到error。",
+            "minimumOrInvestigation": "frontend/tests/e2e/t1062-group-native-rough.spec.ts"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/t1070-director-editor.spec.ts",
+      "frozenSHA256": "f05eb72d068cc2768d799fe715441c3a02db329380418dcb60d4f4929f836757",
+      "bytes": 10653,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "e350765340916b502f9a-1807c0969f844b2c0026",
+            "title": "真实文章保存、指定版本刷新、同项目编导窄屏打开、NoteRelay HTML交付",
+            "classification": "已确认本轮driver回归DR006",
+            "firstCause": "prepare输出迁移为resolve(...)但原test只import join；真实保存后evidence()ReferenceError。",
+            "minimumOrInvestigation": "docs/verification/t1246/driver/prepare-browser-driver.cjs"
+          },
+          {
+            "caseId": "e350765340916b502f9a-3a87c779b994624d42ef",
+            "title": "真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片入口与历史保留",
+            "classification": "已确认本轮driver回归DR006",
+            "firstCause": "与上一行同evidence()，真实图文保存后证据阶段失败；下游未代签。",
+            "minimumOrInvestigation": "同上一行"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+      "frozenSHA256": "df40efd73678a1d7d36d251ebe17164a5d57f9affde00d7b9396f0e0c554a200",
+      "bytes": 8568,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "10645feaadfc4eb9725d-37a520db61507269907f",
+            "title": "T1159 两微信账号从组成员进入真实0报告，刷新返回与身份拒绝",
+            "classification": "待定位",
+            "firstCause": "组内成员只选当前活动组才显示微信报告链接；本例注入组cookie/LS后链接缺，尚未读实际当前组选中/成员sameID。",
+            "minimumOrInvestigation": "frontend/tests/e2e/t1159-wechat-native-report.spec.ts；frontend/src/features/platform-account/account-group-manager.tsx（调查）"
+          }
+        ]
+      }
+    },
+    {
+      "path": "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+      "frozenSHA256": "e95cf6934602f5be9f388310a8b553b869d97ee93359b213e68fe5962cb97e94",
+      "bytes": 18860,
+      "batchCases": {
+        "browser": [
+          {
+            "caseId": "bf4a1cd0b0748cf23b48-209b5f7d65fc4e79a89e",
+            "title": "公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读",
+            "classification": "已确认旧入口漂移，独立Pi链未验",
+            "firstCause": "T1097/DEC3671移除旧根据脚本扩写按钮；本例在articles.candidates.generate响应观察120s停止，trace没有该POST/模型call。",
+            "minimumOrInvestigation": "frontend/tests/e2e/wechat-article-workbench.spec.ts；frontend/src/features/article/article-workbench.test.tsx（已有unit同根）"
+          }
+        ]
+      }
+    }
+  ],
+  "confirmedProductConsumers": [
+    {
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "frozenSHA256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "status": "confirmed-causal-source; requires amended SPEC and independent review before mutation"
+    },
+    {
+      "path": "frontend/src/components/shell/account-switcher.tsx",
+      "frozenSHA256": "701fff5fbbb54378b9cdc8d9f695a649807cf6fb6ca1a0a873be5efe7d257aee",
+      "status": "confirmed-causal-source; requires amended SPEC and independent review before mutation"
+    },
+    {
+      "path": "frontend/src/components/shell/workspace-initialization.tsx",
+      "frozenSHA256": "a70c883b68a2c9e13aae29304d90205ac7821f7e3ee0aac68a5ccf3a84281b99",
+      "status": "confirmed-causal-source; requires amended SPEC and independent review before mutation"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "frozenSHA256": "1ce233432a8ef2fcec97c77a1379fc49853da616b01aa9cfe095a7c3a1809e19",
+      "status": "confirmed-causal-source; requires amended SPEC and independent review before mutation"
+    },
+    {
+      "path": "frontend/src/fixtures/selectors/copilot.ts",
+      "frozenSHA256": "ea73a54c463b6d22bfedbe100339caebf16c9b5efb197d3a931115339f98be85",
+      "status": "confirmed-causal-source; requires amended SPEC and independent review before mutation"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "frozenSHA256": "f0359d37a6a4d85ada788920ac4eb36a11dce20aedd09916a44885abc59ec87e",
+      "status": "confirmed-causal-source; requires amended SPEC and independent review before mutation"
+    }
+  ],
+  "firstResultsUnmodified": true,
+  "productAndOriginalAssertionsChanged": false
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "t1253-root-unknown-spec-clarification-review/v1",
+  "reviewedAt": "2026-10-11T23:02:52.051941+00:00",
+  "approved": true,
+  "scope": "既有Pi纯模型候选恢复许可窄澄清，原三测试/生产写集不变",
+  "originalSpecSha256": "093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19",
+  "candidateSha256": "b132114ba0b561dc362b9f10d2cb5471a12206a35ef6377bfa3324859661059c",
+  "independentReviewSha256": "50550661d1b4aa7b619916ab4c4d9d8781f6853f1d967f7e96da87c34d983136",
+  "independentBindingSha256": "1ae01788d7f644ca84ddcb2aab8ad4e4d2301dda09e7127e962350132c179ccc",
+  "actualInputsChecked": 26,
+  "actualSnapshotsRead": 11,
+  "actualRawReceiptsRead": 7,
+  "rootConsumersReread": [
+    "model-call-recovery",
+    "persistent-task rowlock and pending validation",
+    "execution-chat-text-node reserve",
+    "ledger budget and same operation input"
+  ],
+  "newProductionOrStimulusChange": false,
+  "productTablesZeroNotYetObserved": true,
+  "allowedAction": "两树归档原093b后精确apply b132并正式reviewctl recheck、追加DEC既有许可归属。之后每份精确断言候选需独立审查才应用/运行。",
+  "runtimeAuthorized": false,
+  "findings": []
+}

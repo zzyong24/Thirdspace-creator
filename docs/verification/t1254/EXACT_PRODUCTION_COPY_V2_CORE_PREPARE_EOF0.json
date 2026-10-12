@@ -1,0 +1,41 @@
+{
+  "task": "T-1254",
+  "actualSession": 57629,
+  "actualNaturalExecEOF": true,
+  "actualExitCode": 0,
+  "result": {
+    "task": "T-1254",
+    "scope": "DOOCS_COMPLETE_DELIVERY_EXACT_PRODUCTION_COPY",
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "runnerSha256": "e2e1e742a384f1d222a60ad143f5e36b88c27272119eaa1a65c7ae72b2a70f9f",
+    "manifestSha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd",
+    "postprocessProofSha256": "1137e5f28faed37ac1a98279f8dfedc482a0afa31cd9ee186477222a36552767",
+    "fullInputSha256": "9b8ba2a32370272ed0897aa98a40ef177e47eb8dcacb8142025aba818681c68e",
+    "inheritedDeadline": "2026-10-12T13:12:37.651Z",
+    "writes": 73,
+    "deletes": 53,
+    "unchanged": 636,
+    "prepareOnly": true,
+    "noProductCopy": true
+  },
+  "rawFiles": [
+    {
+      "file": "/private/tmp/t1254-readonly/EXACT_PRODUCTION_COPY_V2_CORE_PREPARE.stdout.json",
+      "sha256": "e25993717a49dd341ccebf1c89c9333c2c60825bf545e567b7fdfb724cd00e1e",
+      "size": 632,
+      "mode": 420,
+      "uid": 501,
+      "inode": 352442622
+    },
+    {
+      "file": "/private/tmp/t1254-readonly/EXACT_PRODUCTION_COPY_V2_CORE_PREPARE.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "mode": 420,
+      "uid": 501,
+      "inode": 352442623
+    }
+  ],
+  "noProductCopy": true,
+  "observedUTC": "2026-10-12T08:49:18.956896+00:00"
+}

@@ -1,4 +1,4 @@
-import {workEditorTarget,workCreationTarget} from "@creatoros/contract";
+import {resolvedWritingContext,workEditorTarget,workCreationTarget} from "@creatoros/contract";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { workerSkillSnapshotSchema, scriptHooksContextSchema } from "@creatoros/contract/execution-worker";
@@ -10,6 +10,7 @@ export const chatStructuredContextSchema=z.object({positioningBrief:z.string(),a
 export const chatStructuredGenerationSchema=z.object({version:z.literal(1),maxOutputTokens:z.number().int().positive().max(65536)}).strict();
 export const chatHostContextSchema = z.object({
   schemaVersion: z.literal(1),
+  resolvedWritingContext:resolvedWritingContext.optional(),
   chatContext: z.object({
     surface: id, functionKey: z.string().optional(), webReadUrl: z.string().optional(), projectId: id.nullable().optional(),
     selection: z.object({kind:id,ids:z.array(id),label:z.string().optional(),artifactId:id.optional(),outputId:id.optional(),versionId:id.optional(),sectionIndex:z.number().int().nonnegative().optional(),excerpt:z.string().optional()}).strict().optional(),
@@ -41,6 +42,9 @@ export function validateChatHostContext(raw:unknown,owner:Owner):ChatHostContext
   if(value.skillSnapshot.userId!==owner.userId || value.skillSnapshot.accountId!==(owner.accountId??null) || (value.skillSnapshot.groupId??null)!==(owner.groupId??null) || (value.chatContext.projectId??null)!==owner.projectId) throw new ConflictError("宿主上下文归属不符");
   if(value.chatContext.editorTarget&&value.chatContext.editorTarget.projectId!==owner.projectId||value.chatContext.creationTarget&&value.chatContext.creationTarget.projectId!==owner.projectId)throw new ConflictError("作品目标与聊天项目不符");
   if(value.chatContext.editorTarget&&value.chatContext.creationTarget)throw new ConflictError("同一轮只能冻结一种作品目标");
+  const selection=value.chatContext.editorTarget?.owner==='wechat_article'?value.chatContext.editorTarget.writingContext:value.chatContext.creationTarget?.writingContext;
+  if(Boolean(selection)!==Boolean(value.resolvedWritingContext))throw new ConflictError('写作资料冻结与选择缺失');
+  if(value.resolvedWritingContext){const {digest,...body}=value.resolvedWritingContext;if(value.resolvedWritingContext.projectId!==owner.projectId||canonicalJson(value.resolvedWritingContext.selection)!==canonicalJson(selection)||digest!==`sha256:${createHash('sha256').update(canonicalJson(body)).digest('hex')}`||body.brand&&body.brand.guidance!==canonicalJson({oneLiner:body.brand.oneLiner,...body.brand.masterSnapshot}))throw new ConflictError('写作资料冻结与目标或摘要不符');}
   return value;
 }
 export function readChatHostContextPair(raw:unknown,digest:unknown,owner:Owner):ChatHostContext|null {

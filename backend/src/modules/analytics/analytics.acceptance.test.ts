@@ -166,8 +166,11 @@ describe("analytics acceptance (SPEC §22)", () => {
     expect(projA.total).toBe(0);
   });
 
-  it("registers the two owned ops into the module op-id list", () => {
+  it("registers the seven approved owned ops into the module op-id list", () => {
     expect([...ANALYTICS_OP_IDS].sort()).toEqual([
+      "analytics.comments.diagnose",
+      "analytics.comments.failures.list",
+      "analytics.comments.retry",
       "analytics.projects.get",
       "analytics.publications.get",
       "analytics.traffic.get",

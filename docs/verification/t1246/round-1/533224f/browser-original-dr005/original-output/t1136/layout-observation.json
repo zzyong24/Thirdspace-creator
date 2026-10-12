@@ -1,0 +1,211 @@
+{
+  "surface": "browser",
+  "mode": "non-fixture",
+  "input": "fresh public synthetic group/project/accounts",
+  "viewports": [
+    {
+      "name": "calendar-long-1366",
+      "url": "http://127.0.0.1:61346/publishing",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 1366,
+        "left": 459,
+        "right": 907,
+        "width": 448,
+        "scrollWidth": 448,
+        "clientWidth": 448,
+        "maxWidth": "448px",
+        "gridTemplateColumns": "416px",
+        "controls": [
+          {
+            "label": "共享项目",
+            "left": 475,
+            "right": 891,
+            "width": 416
+          },
+          {
+            "label": "创作日期",
+            "left": 475,
+            "right": 891,
+            "width": 416
+          },
+          {
+            "label": "发布目标（可选）",
+            "left": 475,
+            "right": 891,
+            "width": 416
+          },
+          {
+            "label": "取消",
+            "left": 755,
+            "right": 805,
+            "width": 50
+          },
+          {
+            "label": "保存计划",
+            "left": 813,
+            "right": 891,
+            "width": 78
+          }
+        ]
+      },
+      "text": "安排创作日期\n\n计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。\n\n共享项目\n选择项目\n发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划\n创作日期\n选择日期\n发布目标（可选）\n稍后选择平台账号\n微信公众号 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_\n小红书 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_2\n取消\n保存计划\n关闭"
+    },
+    {
+      "name": "calendar-long-900",
+      "url": "http://127.0.0.1:61346/publishing",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 900,
+        "left": 226,
+        "right": 674,
+        "width": 448,
+        "scrollWidth": 448,
+        "clientWidth": 448,
+        "maxWidth": "448px",
+        "gridTemplateColumns": "416px",
+        "controls": [
+          {
+            "label": "共享项目",
+            "left": 242,
+            "right": 658,
+            "width": 416
+          },
+          {
+            "label": "创作日期",
+            "left": 242,
+            "right": 658,
+            "width": 416
+          },
+          {
+            "label": "发布目标（可选）",
+            "left": 242,
+            "right": 658,
+            "width": 416
+          },
+          {
+            "label": "取消",
+            "left": 522,
+            "right": 572,
+            "width": 50
+          },
+          {
+            "label": "保存计划",
+            "left": 580,
+            "right": 658,
+            "width": 78
+          }
+        ]
+      },
+      "text": "安排创作日期\n\n计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。\n\n共享项目\n选择项目\n发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划\n创作日期\n选择日期\n发布目标（可选）\n稍后选择平台账号\n微信公众号 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_\n小红书 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_2\n取消\n保存计划\n关闭"
+    },
+    {
+      "name": "calendar-long-390",
+      "url": "http://127.0.0.1:61346/publishing",
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "dimensions": {
+        "viewport": 390,
+        "left": 16,
+        "right": 374,
+        "width": 358,
+        "scrollWidth": 358,
+        "clientWidth": 358,
+        "maxWidth": "calc(100% - 32px)",
+        "gridTemplateColumns": "326px",
+        "controls": [
+          {
+            "label": "共享项目",
+            "left": 32,
+            "right": 358,
+            "width": 326
+          },
+          {
+            "label": "创作日期",
+            "left": 32,
+            "right": 358,
+            "width": 326
+          },
+          {
+            "label": "发布目标（可选）",
+            "left": 32,
+            "right": 358,
+            "width": 326
+          },
+          {
+            "label": "取消",
+            "left": 32,
+            "right": 358,
+            "width": 326
+          },
+          {
+            "label": "保存计划",
+            "left": 32,
+            "right": 358,
+            "width": 326
+          }
+        ]
+      },
+      "text": "安排创作日期\n\n计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。\n\n共享项目\n选择项目\n发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划\n创作日期\n选择日期\n发布目标（可选）\n稍后选择平台账号\n微信公众号 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_\n小红书 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_2\n取消\n保存计划\n关闭"
+    },
+    {
+      "name": "calendar-long-683",
+      "url": "http://127.0.0.1:61346/publishing",
+      "viewport": {
+        "width": 683,
+        "height": 450
+      },
+      "dimensions": {
+        "viewport": 683,
+        "left": 117.5,
+        "right": 565.5,
+        "width": 448,
+        "scrollWidth": 448,
+        "clientWidth": 448,
+        "maxWidth": "448px",
+        "gridTemplateColumns": "416px",
+        "controls": [
+          {
+            "label": "共享项目",
+            "left": 133.5,
+            "right": 549.5,
+            "width": 416
+          },
+          {
+            "label": "创作日期",
+            "left": 133.5,
+            "right": 549.5,
+            "width": 416
+          },
+          {
+            "label": "发布目标（可选）",
+            "left": 133.5,
+            "right": 549.5,
+            "width": 416
+          },
+          {
+            "label": "取消",
+            "left": 413.5,
+            "right": 463.5,
+            "width": 50
+          },
+          {
+            "label": "保存计划",
+            "left": 471.5,
+            "right": 549.5,
+            "width": 78
+          }
+        ]
+      },
+      "text": "安排创作日期\n\n计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。\n\n共享项目\n选择项目\n发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划发布策略复盘与内容创作计划\n创作日期\n选择日期\n发布目标（可选）\n稍后选择平台账号\n微信公众号 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_\n小红书 · @calendar_creator_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_long_unbroken_platform_identity_2\n取消\n保存计划\n关闭"
+    }
+  ]
+}

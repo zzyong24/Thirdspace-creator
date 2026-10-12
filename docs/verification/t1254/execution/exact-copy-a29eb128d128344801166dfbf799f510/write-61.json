@@ -1,0 +1,10 @@
+{
+  "path": "frontend/public/reference-editors/sources/doocs-md/native-source.tar.gz",
+  "after": {
+    "sha256": "e93e5fe4da962637fa6eb5612b8bf8fad8c0d42d53b6af8d31dda4dc9cc159fe",
+    "size": 972650,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

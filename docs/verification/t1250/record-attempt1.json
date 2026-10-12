@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-11T20:46:37.477749+00:00",
+  "bothExitCode": 1,
+  "output": "constitution 不存在: PRODUCT_CONSTITUTION.md",
+  "reason": "参数误用了不存在的根文件；需沿当前既有评审实际constitution路径，不补PASS"
+}

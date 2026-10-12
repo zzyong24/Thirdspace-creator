@@ -1,0 +1,20 @@
+{
+  "task": "T-1251",
+  "phase": "whole-stage1",
+  "nonce": "4fc0261d7b2741fab63e11cf238fe4a0",
+  "startedAt": "2026-10-11T21:30:38.631Z",
+  "deadlineAt": "2026-10-12T01:36:38.631Z",
+  "elapsedMs": 74047.443209,
+  "totalBudgetMs": 14760000,
+  "outerBudgetExhausted": false,
+  "exitCode": 1,
+  "ownedDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1251-generation-4fc0261d7b2741fab63e11cf238fe4a0-dhij9u",
+  "cleaned": true,
+  "ownedRootRetained": false,
+  "cleanupElapsedMs": 592.2593749999942,
+  "cleanupBudgetMs": 900000,
+  "noPG": true,
+  "noApp": true,
+  "retry": 0,
+  "firstEvidencePreserved": true
+}

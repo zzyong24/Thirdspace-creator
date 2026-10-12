@@ -65,7 +65,8 @@ describe("content-calendar ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(CONTENT_CALENDAR_OP_IDS).toHaveLength(8);
+    // T1246：逐ID核真实视觉模板/组日历/视觉导出/组概览与日报所有者；保原无ctx逐项拒绝。
+    expect(CONTENT_CALENDAR_OP_IDS).toEqual(["group.calendar.list", "group.calendar.entries.create", "calendar.entries.target", "group.cadence.get", "group.cadence.upsert", "group.cadence.attainment", "accounts.calendar.list", "accounts.calendar.entries.create", "calendar.entries.update", "calendar.entries.transition", "calendar.entries.delete", "accounts.cadence.get", "accounts.cadence.upsert", "accounts.cadence.attainment"]);
   });
 
   it("entries.create round-trips: the new entry is then listable in window", async () => {

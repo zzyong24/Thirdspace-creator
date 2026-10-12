@@ -1,0 +1,220 @@
+{
+  "at": "2026-10-11T21:46:45.809063+00:00",
+  "scope": "只读实际public callback及内部消费者；没有new tool预算/PASS或运行",
+  "siteInventorySHA": "89a8d1061f2ca7598a8876d484448e4d769f4b8f377b0f0f6af8ffb0976baf13",
+  "baseRPCms": {
+    "native": 420000,
+    "browser": 425000
+  },
+  "native": {
+    "statusLoopMaximum": 100,
+    "invokeMaximumIncludingLoop": 114,
+    "knownPreNativeRejections": 2,
+    "directNativeRPCUpper": 112,
+    "twoSmallRegisteredArtifacts": {
+      "count": 2,
+      "eachRpc": 3,
+      "order": [
+        "stat",
+        "read(<128000 bytes)",
+        "stat"
+      ]
+    },
+    "workerActualProtocol": {
+      "models": 3,
+      "toolRPC": 4,
+      "order": [
+        "files.write(1)",
+        "artifact.register(stat/read/stat)"
+      ]
+    },
+    "totalNativeRpcUpper": 122,
+    "nativeSerialRPCms": 51240000,
+    "renderCount": 4,
+    "eachRenderPhaseMs": 1020000,
+    "eachRenderCleanupMs": 240000,
+    "renderSerialMs": 5040000,
+    "statusLoopSleepUpperMs": 5000,
+    "rpcAndRenderSubtotalMs": 56285000,
+    "subtotalIsNotCompleteCaseBudget": true,
+    "stillNeeded": [
+      "原fixture内真实Worker build/private prepare预算",
+      "3次PiHTTP模型及固定worker剩余deadline/lease/排队",
+      "fresh DB/ledger/Blob/CLI/FS/PDF parse有限phase",
+      "node拥有状态watcher的清理确认",
+      "before/after hook与done前failure cleanup完整余量"
+    ],
+    "notes": [
+      "114包含100循环替代1site，不改变原100次或原终态断言",
+      "6直接artifact.read/拒绝只读既存blob/账本，不误算为3次Native RPC",
+      "command_run原timeoutMs是原进程执行值，不能拿IPC/fixture等待延长它",
+      "RPC122是原当前成功body最大路径，上层hook/数据库/Worker/渲染未知不能在此冒填0"
+    ],
+    "nonLoopInvokeSites": 14,
+    "invokeSitesIncludingStatusLoopSite": 15
+  },
+  "journal": {
+    "fixtures": [
+      {
+        "name": "original paused",
+        "seedWrites": 3,
+        "interruptedCommittedWrite": 1
+      },
+      {
+        "name": "automatic unknown",
+        "seedWrites": 3,
+        "interruptedCommittedWrite": 1
+      },
+      {
+        "name": "predispatch false",
+        "seedWrites": 3,
+        "resumeWrite": 1
+      },
+      {
+        "name": "predispatch conflict",
+        "seedWrites": 3,
+        "concurrentWrite": 1,
+        "resumeConflictWrite": 1
+      }
+    ],
+    "writeRPCBeforeDoneUpper": 17,
+    "firstPublicReceiptReads": 1,
+    "automaticReceiptSettlementReads": 1,
+    "successfulPathRpcUpper": 19,
+    "successfulPathRpcSerialMs": 7980000,
+    "cliHttpCallsBeforeDone": 5,
+    "cliHttpCallsAfterDone": 3,
+    "originalCLIExactRequestsAssert": 8,
+    "automaticObserverNeedsCompleteCallbackTail": true,
+    "notes": [
+      "缺--apply拒绝不会发HTTP，保request counter断言",
+      "自动coordinator可能重试只读unknown，不能把成功路径2次receipt当全部重试上界；工具须单独声明observer与最后420k callback tail",
+      "done在原公开重复reconcile/resume和最终文件读前写，因此不把after-done业务计入Rustwait必要值，但整Nodecase仍必须覆盖"
+    ]
+  },
+  "browserHostCompositeRpc": {
+    "ordinaryAcceptedDispatch": 2,
+    "closeAcceptedMaximum": 6,
+    "closeStopProofAttempts": 4,
+    "closeIntervalTailMs": 600,
+    "busyRecoveryOpenMaximum": 7,
+    "recoverStoppedProfileRPCMaximum": 3,
+    "recoverStoppedProfileCompleteMs": 1695000,
+    "existingSessionWrongLaneRejectedBeforeRpc": true,
+    "notes": [
+      "所有合法dispatch admission.acquire都会resolveProfile再真正action，不能只算open带lookup",
+      "close最多4次真实新stop_proof；不删原释放物理租约assert",
+      "busy open最多初lookup+catchlookup+2种恢复lookup+cleanup+reacquirelookup+open",
+      "原signal可能先终止；测试正signal也需覆盖完整host串行，不能只有socket425k"
+    ]
+  },
+  "browserCases": [
+    {
+      "line": 402,
+      "name": "interrupted attempt two",
+      "hosts": 2,
+      "directProfileLookup": 1,
+      "ordinaryDispatch": 3,
+      "closeDispatch": 1,
+      "acceptedDispatchUpper": 4,
+      "normalRpcUpper": 13,
+      "possibleRecoverExtraRpc": 5,
+      "wrongOldLaneStatusRejectedBeforeRpc": true
+    },
+    {
+      "line": 453,
+      "name": "Node/DB leases real Chromium",
+      "hosts": 1,
+      "ordinaryDispatch": 3,
+      "closeDispatch": 1,
+      "normalRpcUpper": 12
+    },
+    {
+      "line": 527,
+      "name": "restart old DB lease",
+      "hosts": 2,
+      "directProfileLookup": 1,
+      "ordinaryDispatch": 1,
+      "closeDispatch": 1,
+      "normalRpcUpper": 9,
+      "oldProfileRecoveryExtraRpcUpper": 5
+    },
+    {
+      "line": 580,
+      "name": "two accounts cancellation",
+      "hosts": 1,
+      "parallelProfileLookup": 2,
+      "parallelOpenDispatch": 2,
+      "ordinaryDispatch": 2,
+      "closeDispatch": 1,
+      "foreignLaneRejectedRpc": 0,
+      "acceptedActionRpcUpper": 16,
+      "parallelGroupsMustPreserveRatherThanSerialInvented": true,
+      "cancellationReconcileCompleteMs": 1695000
+    },
+    {
+      "line": 649,
+      "name": "legacy real Playwright handoff",
+      "hosts": 1,
+      "directProfileLookup": 1,
+      "failedBusyOpen": 1,
+      "successfulOpen": 1,
+      "closeDispatch": 1,
+      "normalRpcUpper": 11,
+      "failedRecoveryExtraRpcUpper": 0,
+      "needsLegacyLaunchAndPageBudget": true,
+      "originalLegacyScenarioNoRecoverableWorkerLease": true
+    }
+  ],
+  "pending": "peer工具实际路径/正signal/HTTP观察/worker初始预算与derived有效body字段未prepare，本表不能代完整tool预算签字",
+  "sourceBindings": [
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "sha256": "047ada903a4ac6229517722168202a31f5c982b84fd00a2e824af5255a2f077b"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "sha256": "89df7926d81f68b8b6dbca54b8b773fd846dc5ab6f7536545144af4bc0e89f01"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "sha256": "5b39a3848dfd22996e0ca8837a68ece88ffbb00d1dbdd12fa881abd30b6e6b2f"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "sha256": "2f2638540072fc79da7d650bc779fee028c557fbc21f03b7e542a8e89f108571"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "sha256": "620a03ac625a1f0e5c407f9d9facf4f89c835a2265cd290497b5930919807b55"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "sha256": "b73e216561b9c4001a0d804ea688e0fda7cfa5473976ea874e65be82d85737fc"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-browser-admission.service.ts",
+      "sha256": "0c983f46a3f5d7f143acfe09b3105c8ead916119f714765f5b2349d8864f51e4"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-browser-profile-lease.service.ts",
+      "sha256": "151c9a325ddcda253582176c5dc80b0c801ffb415856625f5b91079be9938873"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "sha256": "1a5613702ab81e92cc4a33d437d9aa78c58c6f318dd5c2ae838e63887bcb892b"
+    },
+    {
+      "path": "mcp-server/tests/helpers/loopback-cli.ts",
+      "sha256": "396da24a2758d789d5f97ae2d21ef3c49c139be9d7b1d8364a124479419e1617"
+    }
+  ]
+}

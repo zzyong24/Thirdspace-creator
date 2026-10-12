@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-12T01:21:42.398679+00:00",
+  "prepareSha256": "5bc0fb1aa9f0b9dde03728bffbe5097f81866c0be27497867efe79317b6a225b",
+  "toolSha256": "ea91ed2a64b40795862b53849c72336e2421cd5e80645ae091f3a7422d736017",
+  "sourceSnapshotDigest": "84920eda80fb1befc1aec8968484117e2dc17994ec493c799f0efe6a7c61a802",
+  "toolDigest": "07f421a8ef8dbabd0d860056fb31869b499dc76efc40fdc6a529aeb2763e6265",
+  "actualSourceInputs": 1656,
+  "actualImplementationInputs": 461,
+  "bytesHashed": 63262651,
+  "shaSizeDrift": [],
+  "scope": "T1254_TWO_ORIGINAL_SOURCE_FROZEN_LOCK_IGNORE_SCRIPTS_INSTALL_ONLY",
+  "runtimeApproved": false
+}

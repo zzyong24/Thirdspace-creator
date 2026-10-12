@@ -1,0 +1,59 @@
+{
+  "nonce": "b76860261e08f6c832bbff6f45fe25ca",
+  "out": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH",
+  "startedAt": "2026-10-12T11:03:19.759Z",
+  "endedAt": "2026-10-12T11:06:48.936Z",
+  "totalMs": 37920000,
+  "elapsedMs": 209175.366209,
+  "budgets": {
+    "prepare": 3600000,
+    "led018": 22800000,
+    "led057": 3600000,
+    "lifecycle018": 2160000,
+    "lifecycle057": 2160000,
+    "after": 3600000,
+    "total": 37920000
+  },
+  "records": [
+    {
+      "name": "LED-018",
+      "code": 0,
+      "signal": null,
+      "budgetExhausted": false,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "identity": {
+        "pid": 53015,
+        "pgid": 53015,
+        "uid": 501,
+        "birth": "Mon Oct 12 19:03:20 2026",
+        "startedAt": 1791803000958
+      },
+      "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/LED-018.log"
+    },
+    {
+      "name": "LED-057",
+      "code": 0,
+      "signal": null,
+      "budgetExhausted": false,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "identity": {
+        "pid": 56010,
+        "pgid": 56010,
+        "uid": 501,
+        "birth": "Mon Oct 12 19:05:36 2026",
+        "startedAt": 1791803136610
+      },
+      "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/LED-057.log"
+    }
+  ],
+  "sourceBeforeCount": 3837,
+  "sourceAfterCount": 3837,
+  "sourceAfterMatches": true,
+  "error": null,
+  "noApp": true,
+  "noInstall": true,
+  "noPublish": true,
+  "oldIgnoreLeafMissingPreserved": true
+}

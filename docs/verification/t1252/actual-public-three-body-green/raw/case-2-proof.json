@@ -1,0 +1,15 @@
+{
+  "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+  "budget": {
+    "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+    "bodyMs": 42000000,
+    "minimumDerivedMs": 35760000,
+    "childMs": 42840000,
+    "fixtureDoneMs": null
+  },
+  "actualPassed": 1,
+  "actualFailed": 0,
+  "allOtherFilteredCasesNotPassed": true,
+  "resultSha256": "49a33e34a01265f96ed23944442ffe56c1fff24199a6c9a1770ba16da3c3c2a1",
+  "originalTaskDeadlineMs": 36000000
+}

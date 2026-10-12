@@ -1,0 +1,27 @@
+{
+  "nonce": "cfed5064871630c5fb64c62949a89fa8",
+  "markerPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3/owner.json",
+  "marker": {
+    "version": 1,
+    "task": "T-1246",
+    "nonce": "cfed5064871630c5fb64c62949a89fa8",
+    "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3",
+    "dataDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3/data",
+    "registryDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3/databases",
+    "uid": 501,
+    "pid": 87486,
+    "startedUnix": 1791753308,
+    "processBirth": "Mon Oct 12 05:15:08 2026",
+    "postgresBinary": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/postgres",
+    "port": 53415,
+    "adminRole": "t1246_cfed50648716",
+    "managementDatabase": "postgres"
+  },
+  "urls": {
+    "adminUrl": "postgresql://t1246_cfed50648716@127.0.0.1:53415/postgres",
+    "testUrl": "postgresql://t1246_cfed50648716@127.0.0.1:53415/creatoros_test_cfed50648716"
+  },
+  "nativeFlagAbsent": true,
+  "pgServiceAbsent": true,
+  "firstPortNotReused": true
+}

@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-12T07:29:30.261590+00:00",
+  "type": "independent-readonly-post-failure-audit-not-wrapper-original-after",
+  "bindingSha256": "27cf7abc90b0a2cdb295e59a8a744178ccfc2ba7180125dc86a06ae983d80092",
+  "sourceRows": 215,
+  "sourceDrift": [],
+  "nodeFiles": 82,
+  "nodeLinks": 37,
+  "nodeEdges": 51,
+  "nodeDrift": [],
+  "nodeGraphSha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+  "actualPsCode": 0,
+  "actualOwnedGroup": 66912,
+  "actualRemainingGroupMembers": [],
+  "signals": [],
+  "originalWrapperAfterMissing": true,
+  "actualPureResultStillFAIL": true
+}

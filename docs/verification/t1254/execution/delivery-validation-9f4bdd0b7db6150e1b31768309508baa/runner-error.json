@@ -1,0 +1,4 @@
+{
+  "message": "PREPARED_OWNER_PATH",
+  "stack": "Error: PREPARED_OWNER_PATH\n    at main (/private/tmp/t1254-readonly/run-owned-delivery-candidate-validation-v2.cjs:29:187)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+}

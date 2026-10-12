@@ -4,10 +4,10 @@ import {ResourceGrantsPanel} from "./resource-grants-panel";
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { AccountGroupResource, GroupMemberResource, GroupTransferPreview, ENDPOINTS } from "@creatoros/contract";
+import { ENDPOINTS, requestListWithMeta, type AccountGroupResource, type GroupMemberResource, type GroupTransferPreview } from "@creatoros/contract";
 import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
 import { client } from "@/lib/contract-client";
-import { readCurrentGroupId, writeCurrentGroupId } from "@/lib/http-transport";
+import { createHttpTransport, readCurrentGroupId, writeCurrentGroupId } from "@/lib/http-transport";
 import { notifyAccountsChanged, useAccountsChanged } from "@/lib/account-events";
 import { beginForegroundActivity, hasForegroundActivity } from "@/lib/foreground-activity";
 import { SectionCard } from "@/components/project/section-card";
@@ -60,7 +60,22 @@ export function AccountGroupManager({initialGroups=[],initialAccounts=[]}:{initi
    do {
      reloadWanted.current=false;const epoch=readEpoch.current;
      try {
-       const [readGroups,readAccounts]=await Promise.all([client.listAccountGroups({params:undefined,query:{page:1,pageSize:100,includeArchived:true},body:undefined}),client.listAccounts({params:undefined,query:{page:1,pageSize:100},body:undefined})]);
+       const readAllGroups=async()=>{
+         const all:AccountGroupResource[]=[],transport=createHttpTransport();
+         for(let page=1;;page++){
+           if(!alive.current||epoch!==readEpoch.current)return null;
+           const result=await requestListWithMeta(transport,ENDPOINTS.listAccountGroups,{params:undefined,query:{page,pageSize:100,includeArchived:true},body:undefined});
+           if(!alive.current||epoch!==readEpoch.current)return null;
+           if(result.meta.page!==page||result.meta.pageSize!==100)throw new Error("账号组分页未按请求返回，请重新读取。");
+           // SEMANTIC_BOUNDARY_ALLOW: 只核对分页真实ID，防重复或过期回读，不选择创作内容。
+           const ids=new Set(all.map(group=>group.id));
+           if(result.data.some(group=>ids.has(group.id))||new Set(result.data.map(group=>group.id)).size!==result.data.length)throw new Error("账号组分页重复，请重新读取。");
+           all.push(...result.data);
+           if(all.length===result.meta.total)return all;
+           if(all.length>result.meta.total||result.data.length===0)throw new Error("账号组列表未完整返回，请重新读取。");
+         }
+       };
+       const [readGroups,readAccounts]=await Promise.all([readAllGroups(),client.listAccounts({params:undefined,query:{page:1,pageSize:100},body:undefined})]);
        if(!alive.current||epoch!==readEpoch.current)continue;
        if(!Array.isArray(readGroups)||!Array.isArray(readAccounts))throw new Error("账号组与平台账号未返回有效列表，请重新读取。");
        const all=readGroups as unknown as AccountGroupResource[];
@@ -126,8 +141,8 @@ export function AccountGroupManager({initialGroups=[],initialAccounts=[]}:{initi
      </div></SectionCard>
      <SectionCard title="组内平台账号" description="同平台可以登记多个账号，发布时选择具体目标。"><ul className="flex flex-col gap-3" data-testid="account-list">
       {!members.length&&<li data-testid="account-empty-state" className="text-sm text-muted-foreground">这个账号组还没有平台账号，可以先创建内容。</li>}
-      {members.map(member=><li key={member.id} className="rounded-control border border-border p-3"><div className="flex min-w-0 items-start justify-between gap-3"><div className="min-w-0"><p className="break-words text-sm font-medium">{member.accountHandle}</p><p className="mt-1 text-xs text-muted-foreground">{platformName(member.platform)} · {member.status==="archived"?"已隐藏":accounts.find(account=>account.id===member.accountId)?.externalAccountId?"平台身份已读取，登录与采集以任务记录为准":"身份未验证 · 未自动采集"}</p></div><div className="flex shrink-0 flex-col items-end gap-2">{selected.id===currentId&&member.status==='active'&&(member.platform==='wechatOfficial'||member.platform==='wechatVideo')?<Link className="text-sm text-brand hover:underline" href={`/accounts/works?accountId=${encodeURIComponent(member.accountId)}`} aria-label={`查看${member.accountHandle}的数据`}>查看数据 →</Link>:null}{member.platform==='wechatOfficial'||member.platform==='wechatVideo'?null:<Button variant="outline" size="sm" disabled={busy||!editable} onClick={event=>openTransfer(member,event.currentTarget)}>转组</Button>}</div></div>
-       <details className="mt-2"><summary className="cursor-pointer text-xs text-muted-foreground">账号管理与能力</summary><p className="mt-2 text-xs text-muted-foreground">扫码、采集和发布能力见下方平台能力；登记账号不会验证登录身份。</p>{member.platform==='wechatOfficial'||member.platform==='wechatVideo'?<Button variant="outline" size="sm" disabled={busy||!editable} onClick={event=>openTransfer(member,event.currentTarget)}>转组</Button>:null}{accounts.find(account=>account.id===member.accountId)&&<ul className="mt-2"><AccountRow account={accounts.find(account=>account.id===member.accountId)!} isOnlyAccount={accounts.filter(account=>account.status==="active").length===1}/></ul>}{member.status==="archived"&&<Button variant="outline" size="sm" disabled={busy||!editable} onClick={()=>void mutate(()=>client.updateAccount({params:{accountId:member.accountId},query:undefined,body:{status:"active"}}),"账号已恢复。")}>恢复平台账号</Button>}</details>
+      {members.map(member=><li key={member.id} className="rounded-control border border-border p-3"><div className="flex min-w-0 items-start justify-between gap-3"><div className="min-w-0"><p className="break-words text-sm font-medium">{member.accountHandle}</p><p className="mt-1 text-xs text-muted-foreground">{platformName(member.platform)} · {member.status==="archived"?"已隐藏":accounts.find(account=>account.id===member.accountId)?.externalAccountId?"平台身份已读取，登录与采集以任务记录为准":"身份未验证 · 未自动采集"}</p></div><div className="flex shrink-0 flex-col items-end gap-2">{selected.id===currentId&&editable&&member.status==='active'?<Link className="text-sm text-brand hover:underline" href={`/accounts/works?accountId=${encodeURIComponent(member.accountId)}`} aria-label={`查看${member.accountHandle}的数据`}>查看数据 →</Link>:null}</div></div>
+       <details className="mt-2"><summary className="cursor-pointer text-xs text-muted-foreground">账号管理与能力</summary><p className="mt-2 text-xs text-muted-foreground">扫码、采集和发布能力见下方平台能力；登记账号不会验证登录身份。</p><Button variant="outline" size="sm" disabled={busy||!editable} onClick={event=>openTransfer(member,event.currentTarget)}>转组</Button>{accounts.find(account=>account.id===member.accountId)&&<ul className="mt-2"><AccountRow account={accounts.find(account=>account.id===member.accountId)!} isOnlyAccount={accounts.filter(account=>account.status==="active").length===1}/></ul>}{member.status==="archived"&&<Button variant="outline" size="sm" disabled={busy||!editable} onClick={()=>void mutate(()=>client.updateAccount({params:{accountId:member.accountId},query:undefined,body:{status:"active"}}),"账号已恢复。")}>恢复平台账号</Button>}</details>
       </li>)}
      </ul></SectionCard>
      <SectionCard title="平台能力" description="能力来自当前已装配的服务。可用不代表账号已登录，采集结果以真实任务为准。">

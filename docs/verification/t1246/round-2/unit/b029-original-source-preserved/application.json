@@ -1,0 +1,9 @@
+{
+  "scope": "exact approved fixture only after PG27/78 cleanup",
+  "originalSha256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+  "candidateSha256": "0a6bbc9d52f059426d832da2459db44b4c77ff56ffaadd71484758f68c11e191",
+  "afterSha256": "0a6bbc9d52f059426d832da2459db44b4c77ff56ffaadd71484758f68c11e191",
+  "originalBytesPreserved": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b029-original-source-preserved/agentic-research-worker.integration.test.ts",
+  "privateThreePassDoesNotReplaceOriginalWhole": true,
+  "priorFirstAndThreeRedsRetained": true
+}

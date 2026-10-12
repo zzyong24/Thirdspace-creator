@@ -1,0 +1,63 @@
+{
+  "proof": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/evidence/tool-group-56d3c5a7942a6951636949ff7bcdd8c3",
+  "loadedRuntimeSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "nonce": "56d3c5a7942a6951636949ff7bcdd8c3",
+  "recordedAt": "2026-10-11T18:49:28.717Z",
+  "actualNodeGroupAndGrandchild": true,
+  "unownedSelfSignalRefused": true,
+  "actualSignals": [
+    {
+      "signal": "SIGTERM",
+      "at": "2026-10-11T18:46:28.268Z",
+      "alreadyExited": false,
+      "members": [
+        {
+          "pid": 2780,
+          "pgid": 2780,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:46:27 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>console.log('TERM_IGNORED'));const cp=require('node:child_process');const child=cp.spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)\"],{stdio:'ignore'});console.log(JSON.stringify({parent:process.pid,grandchild:child.pid}));setInterval(()=>{},1000);"
+        },
+        {
+          "pid": 2784,
+          "pgid": 2780,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:46:27 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>{});setInterval(()=>{},1000)"
+        }
+      ]
+    },
+    {
+      "signal": "SIGKILL",
+      "at": "2026-10-11T18:49:28.432Z",
+      "alreadyExited": false,
+      "members": [
+        {
+          "pid": 2780,
+          "pgid": 2780,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:46:27 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>console.log('TERM_IGNORED'));const cp=require('node:child_process');const child=cp.spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)\"],{stdio:'ignore'});console.log(JSON.stringify({parent:process.pid,grandchild:child.pid}));setInterval(()=>{},1000);"
+        },
+        {
+          "pid": 2784,
+          "pgid": 2780,
+          "uid": 501,
+          "birth": "Mon Oct 12 02:46:27 2026",
+          "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node -e process.on('SIGTERM',()=>{});setInterval(()=>{},1000)"
+        }
+      ]
+    }
+  ],
+  "processClosed": true,
+  "remainingMembers": [],
+  "innerBudgetMs": 180000,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "elapsedMs": 181011,
+  "pgModuleLoaded": false,
+  "sqlCalls": 0,
+  "pgCliCalls": 0,
+  "scope": "真实隔离Node父+孙进程忽略TERM→本次组KILL并退出；未启动PG/业务Worker/App",
+  "pass": true
+}

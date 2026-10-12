@@ -7,7 +7,7 @@ export const ARTICLE_OP_IDS = [
   "articles.candidates.generate", "articles.candidates.get", "articles.candidates.adopt",
 ] as const;
 
-export function createArticlesTransport(serviceFor: (ctx: RequestContext) => ArticlesService): Transport {
+export function createArticlesTransport(serviceFor: (ctx: RequestContext) => ArticlesService, assisted?: (ctx:RequestContext,outputId:string,body:unknown)=>Promise<unknown>): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
       if (!ctx) throw new AuthenticationError();
@@ -19,7 +19,7 @@ export function createArticlesTransport(serviceFor: (ctx: RequestContext) => Art
       switch (endpoint.id) {
         case "articles.get": return {data: await service.getArticle(ctx, params.outputId ?? ""), meta};
         case "articles.versions.get": return {data: await service.getVersion(ctx, params.outputId ?? "", params.versionId ?? ""), meta};
-        case "articles.versions.create": return {data: await service.createVersion(ctx, params.outputId ?? "", {
+        case "articles.versions.create": if(body.adoptionMode==='assistant'){if(!assisted)throw new Error('候选采纳服务尚未装配');return {data:await assisted(ctx,params.outputId??'',body),meta};} return {data: await service.createVersion(ctx, params.outputId ?? "", {
           expectedCurrentVersionId: String(body.expectedCurrentVersionId ?? ""),
           document: body.document as Parameters<ArticlesService["createVersion"]>[2]["document"],
           clientRequestId: String(body.clientRequestId ?? ""),

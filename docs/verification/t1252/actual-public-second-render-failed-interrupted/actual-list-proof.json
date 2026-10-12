@@ -1,0 +1,41 @@
+{
+  "actual": [
+    {
+      "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+      "file": "/private/tmp/t1252p-QTwUuo/public-native-render.test.ts"
+    },
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "file": "/private/tmp/t1252p-QTwUuo/public-native-render.test.ts"
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "file": "/private/tmp/t1252p-QTwUuo/public-native-render.test.ts"
+    }
+  ],
+  "expected": [
+    {
+      "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+      "bodyMs": 80040000,
+      "minimumDerivedMs": 80040000,
+      "childMs": 80880000,
+      "fixtureDoneMs": 80160000
+    },
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "bodyMs": 36000000,
+      "minimumDerivedMs": 29470000,
+      "childMs": 36840000,
+      "fixtureDoneMs": 36120000
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "bodyMs": 42000000,
+      "minimumDerivedMs": 35760000,
+      "childMs": 42840000,
+      "fixtureDoneMs": null
+    }
+  ],
+  "originalNativeIncluded": true,
+  "notAllOtherFilteredRecoveryCasesPass": true
+}

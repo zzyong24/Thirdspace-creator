@@ -1,0 +1,552 @@
+{
+  "task": "T-1251",
+  "evidence": "docs/verification/t1251/execution/whole-stage1-95103e8e94b4990e2b8a9da2fd9f0847",
+  "actualCounts": {
+    "numTotalTests": 22,
+    "numPassedTests": 22,
+    "numFailedTests": 0,
+    "numPendingTests": 0
+  },
+  "childExitCode": 0,
+  "elapsedMs": 63313.15754199999,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "sourceDigest": "4f8be2f869b9572f700e95651f5cf73c42fbde095b01392db4d1a494e82a6581",
+  "sourceUnchanged": true,
+  "ownedRootCleaned": true,
+  "actualTraceCount": 21,
+  "actualPartialMixedTraces": [
+    {
+      "mode": "badOutput",
+      "executionTaskId": "execution-task-c38c1567-abe6-4d50-8ac7-2d382d6196d5",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 5,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich"
+          ]
+        }
+      ],
+      "receiptObservation": {
+        "toolResultTexts": [
+          {
+            "callId": "call_743070fc-234f-4061-a66c-3912e478a4ac",
+            "status": "settled",
+            "resultText": "{\"schemaVersion\":1,\"kind\":\"tool\",\"toolCallId\":\"node-0\",\"toolName\":\"topic_enrich\",\"output\":{\"status\":\"error\",\"summary\":\"模型未返回符合要求的候选，继续当前任务\",\"evidence\":[],\"error\":{\"code\":\"transient\",\"retryable\":true,\"recovery\":\"在当前 Agent loop 中调整生成策略并继续原任务\"},\"continuation\":null,\"sideEffect\":\"none\"}}"
+          }
+        ],
+        "formalResults": [
+          {
+            "id": "chat:ai-task-13007e41-aa6a-4bbe-bc50-d4c9478abaf4",
+            "executionCallId": "call_50181968-240e-4a98-8796-76edc02415c9",
+            "aiTaskId": "ai-task-13007e41-aa6a-4bbe-bc50-d4c9478abaf4",
+            "resultType": "conversation_reply",
+            "artifactId": null,
+            "knowledgeItemId": null,
+            "assetId": null,
+            "resultData": {
+              "messageId": "chat:ai-msg-42",
+              "stopReason": "stop",
+              "actualEngine": "pi",
+              "completeness": "partial",
+              "checkpointRef": 3,
+              "conversationId": "ai-conv-41",
+              "sourceMessageId": "ai-msg-42"
+            }
+          }
+        ],
+        "businessStatus": "partial"
+      },
+      "lastHttpMessages": [
+        {
+          "role": "system",
+          "content": "生成开场候选"
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "生成开场"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "node-0",
+              "type": "function",
+              "function": {
+                "name": "topic_enrich",
+                "arguments": "{\"title\":\"真实主题\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "[原工具调用 ID: call_743070fc-234f-4061-a66c-3912e478a4ac；完成计划步骤时引用此 operationRef。]\n{\"status\":\"error\",\"summary\":\"模型未返回符合要求的候选，继续当前任务\",\"evidence\":[],\"error\":{\"code\":\"transient\",\"retryable\":true,\"recovery\":\"在当前 Agent loop 中调整生成策略并继续原任务\"},\"continuation\":null,\"sideEffect\":\"none\"}",
+          "tool_call_id": "node-0"
+        }
+      ],
+      "status": "partial",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_b9e861b9-7c6d-41d3-9199-c09ad055c842",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-42/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:49:25.779Z",
+          "updatedAt": "2026-10-11T21:49:25.822Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_743070fc-234f-4061-a66c-3912e478a4ac",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:9ee52e2dc5d26c0322f8d888e437f1ffa0900cbb5c92f93771e5df6c697f3632",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:49:25.903Z",
+          "updatedAt": "2026-10-11T21:49:26.539Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_597b5721-eae8-4eec-a9a0-285f565f61a5",
+          "kind": "model",
+          "parentCallId": "call_743070fc-234f-4061-a66c-3912e478a4ac",
+          "operationKey": "structured:call_743070fc-234f-4061-a66c-3912e478a4ac:ddb08a9f04e933e85c78c0949a4cb0f100cf117e35a9b70d178e8b29402096a4/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:49:26.138Z",
+          "updatedAt": "2026-10-11T21:49:26.204Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_982be4bd-c4c9-4775-9cf3-3a2afdd8dc08",
+          "kind": "model",
+          "parentCallId": "call_743070fc-234f-4061-a66c-3912e478a4ac",
+          "operationKey": "structured:call_743070fc-234f-4061-a66c-3912e478a4ac:ddb08a9f04e933e85c78c0949a4cb0f100cf117e35a9b70d178e8b29402096a4/model/2",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:49:26.272Z",
+          "updatedAt": "2026-10-11T21:49:26.341Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_eda1c496-df14-4262-92d7-fb6ea39b35fc",
+          "kind": "model",
+          "parentCallId": "call_743070fc-234f-4061-a66c-3912e478a4ac",
+          "operationKey": "structured:call_743070fc-234f-4061-a66c-3912e478a4ac:ddb08a9f04e933e85c78c0949a4cb0f100cf117e35a9b70d178e8b29402096a4/model/3",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:49:26.409Z",
+          "updatedAt": "2026-10-11T21:49:26.475Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_50181968-240e-4a98-8796-76edc02415c9",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-42/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:49:26.595Z",
+          "updatedAt": "2026-10-11T21:49:26.654Z",
+          "startedAttempt": 1
+        }
+      ]
+    },
+    {
+      "mode": "crashMixed",
+      "executionTaskId": "execution-task-4094c391-9ea2-4d2f-96c0-47a646648180",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich",
+            "script_hooks"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 4,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 5,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 6,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "topic_enrich",
+            "script_hooks"
+          ]
+        }
+      ],
+      "lastHttpMessages": [
+        {
+          "role": "system",
+          "content": "生成开场候选"
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "生成开场"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "node-0",
+              "type": "function",
+              "function": {
+                "name": "topic_enrich",
+                "arguments": "{\"title\":\"真实主题\"}"
+              }
+            },
+            {
+              "id": "node-1",
+              "type": "function",
+              "function": {
+                "name": "script_hooks",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "[原工具调用 ID: call_188224f6-6f8b-437f-8051-f01bf6629a8b；完成计划步骤时引用此 operationRef。]\n{\"status\":\"ok\",\"summary\":\"生成候选已完成，等待用户采纳\",\"evidence\":[],\"data\":{\"kind\":\"topic.card\",\"card\":{\"oneLiner\":\"真实选题卡\",\"targetAudience\":\"\",\"audiencePain\":\"\",\"coreConflict\":\"\",\"hook\":\"\",\"contentStructure\":[],\"format\":\"\",\"materialBasis\":\"\",\"riskNote\":\"\",\"proposal\":\"\",\"audiencePainScore\":null,\"materialScore\":null,\"productionDifficulty\":null},\"candidateId\":\"candidate\"},\"error\":null,\"continuation\":null,\"sideEffect\":\"proposal\"}",
+          "tool_call_id": "node-0"
+        },
+        {
+          "role": "tool",
+          "content": "[原工具调用 ID: call_59bf47ec-3178-4797-ab5b-954a2326fbc3；完成计划步骤时引用此 operationRef。]\n{\"status\":\"ok\",\"summary\":\"开场候选已生成\",\"evidence\":[],\"data\":{\"kind\":\"script.hooks\",\"items\":[{\"text\":\"真实开场卡\",\"angle\":\"场景\"}]},\"error\":null,\"continuation\":null,\"sideEffect\":\"proposal\"}",
+          "tool_call_id": "node-1"
+        }
+      ],
+      "status": "succeeded",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_d2fc111d-e17a-4529-9ca8-48f5cd5b70cb",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-54/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:49:35.797Z",
+          "updatedAt": "2026-10-11T21:49:35.839Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_188224f6-6f8b-437f-8051-f01bf6629a8b",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:a4fcfa6cb9e07cea7f536a86dd8ae77de8260dd48e741c8b2499f5e08e34e8d3",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:49:35.920Z",
+          "updatedAt": "2026-10-11T21:50:36.284Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_df8911e2-e819-451a-82b7-e5442d10aa6a",
+          "kind": "model",
+          "parentCallId": "call_188224f6-6f8b-437f-8051-f01bf6629a8b",
+          "operationKey": "structured:call_188224f6-6f8b-437f-8051-f01bf6629a8b:e2d5cba1e8655c345c7c368229034cf1530b0ff9cac68b031aff0c30511c9ac3/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:49:36.157Z",
+          "updatedAt": "2026-10-11T21:49:36.274Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_c4d4caa3-3a4b-4ee3-a9b4-0afd06180cc3",
+          "kind": "model",
+          "parentCallId": "call_188224f6-6f8b-437f-8051-f01bf6629a8b",
+          "operationKey": "structured:call_188224f6-6f8b-437f-8051-f01bf6629a8b:e2d5cba1e8655c345c7c368229034cf1530b0ff9cac68b031aff0c30511c9ac3/model/2",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:49:36.343Z",
+          "updatedAt": "2026-10-11T21:49:36.410Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_ec100d73-48d6-4a05-b853-99efb41af068",
+          "kind": "model",
+          "parentCallId": "call_188224f6-6f8b-437f-8051-f01bf6629a8b",
+          "operationKey": "structured:call_188224f6-6f8b-437f-8051-f01bf6629a8b:e2d5cba1e8655c345c7c368229034cf1530b0ff9cac68b031aff0c30511c9ac3/model/3",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:50:36.132Z",
+          "updatedAt": "2026-10-11T21:50:36.215Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_59bf47ec-3178-4797-ab5b-954a2326fbc3",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:f13990f446b6f7ecb833b32dc7c3e2fcc9dfb436058cb8042216224314886da0",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:50:36.560Z",
+          "updatedAt": "2026-10-11T21:50:36.838Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_b7cbf519-d1d4-4535-81a6-a5d61fafb690",
+          "kind": "model",
+          "parentCallId": "call_59bf47ec-3178-4797-ab5b-954a2326fbc3",
+          "operationKey": "hooks:call_59bf47ec-3178-4797-ab5b-954a2326fbc3:9dd906c5709223eae193331da44b5e2c28fca59fe24031d9d2c811e08de03646/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:50:36.700Z",
+          "updatedAt": "2026-10-11T21:50:36.773Z",
+          "startedAttempt": 2
+        },
+        {
+          "id": "call_3e333d11-c3de-4f02-919d-88a202fba1d9",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-54/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:50:36.896Z",
+          "updatedAt": "2026-10-11T21:50:36.958Z",
+          "startedAttempt": 2
+        }
+      ]
+    },
+    {
+      "mode": "diagnosisEmpty",
+      "executionTaskId": "execution-task-a72c2d6b-92ab-47fb-a78d-a0c91f238edb",
+      "fixtureTrace": [
+        {
+          "type": "http",
+          "index": 1,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "calibration_diagnose"
+          ]
+        },
+        {
+          "type": "http",
+          "index": 2,
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": []
+        },
+        {
+          "type": "http",
+          "index": 3,
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "calibration_diagnose"
+          ]
+        }
+      ],
+      "receiptObservation": {
+        "toolResultTexts": [
+          {
+            "callId": "call_0ad883cc-2e10-4770-99a1-4f851c5b720c",
+            "status": "settled",
+            "resultText": "{\"schemaVersion\":1,\"kind\":\"tool\",\"toolCallId\":\"node-0\",\"toolName\":\"calibration_diagnose\",\"output\":{\"status\":\"error\",\"summary\":\"模型未返回符合要求的候选，继续当前任务\",\"evidence\":[],\"error\":{\"code\":\"transient\",\"retryable\":true,\"recovery\":\"在当前 Agent loop 中调整生成策略并继续原任务\"},\"continuation\":null,\"sideEffect\":\"none\"}}"
+          }
+        ],
+        "formalResults": [
+          {
+            "id": "chat:ai-task-1b7f49fb-4b0d-4d5e-baeb-6bdb68d80c7c",
+            "executionCallId": "call_3aca591c-7556-4e83-9346-be59a59c5401",
+            "aiTaskId": "ai-task-1b7f49fb-4b0d-4d5e-baeb-6bdb68d80c7c",
+            "resultType": "conversation_reply",
+            "artifactId": null,
+            "knowledgeItemId": null,
+            "assetId": null,
+            "resultData": {
+              "messageId": "chat:ai-msg-63",
+              "stopReason": "stop",
+              "actualEngine": "pi",
+              "completeness": "partial",
+              "checkpointRef": 3,
+              "conversationId": "ai-conv-62",
+              "sourceMessageId": "ai-msg-63"
+            }
+          }
+        ],
+        "businessStatus": "partial"
+      },
+      "lastHttpMessages": [
+        {
+          "role": "system",
+          "content": "生成开场候选"
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "生成开场"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "node-0",
+              "type": "function",
+              "function": {
+                "name": "calibration_diagnose",
+                "arguments": "{\"title\":\"真实主题\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "[原工具调用 ID: call_0ad883cc-2e10-4770-99a1-4f851c5b720c；完成计划步骤时引用此 operationRef。]\n{\"status\":\"error\",\"summary\":\"模型未返回符合要求的候选，继续当前任务\",\"evidence\":[],\"error\":{\"code\":\"transient\",\"retryable\":true,\"recovery\":\"在当前 Agent loop 中调整生成策略并继续原任务\"},\"continuation\":null,\"sideEffect\":\"none\"}",
+          "tool_call_id": "node-0"
+        }
+      ],
+      "status": "partial",
+      "deadlineAt": null,
+      "lastErrorCode": null,
+      "calls": [
+        {
+          "id": "call_780fae13-bdb6-4b7a-9931-fbe6061bccfc",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-63/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:49:43.991Z",
+          "updatedAt": "2026-10-11T21:49:44.031Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_0ad883cc-2e10-4770-99a1-4f851c5b720c",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:eddc3fb87e61624ef021ef90151070915c7800611dcc1ebfda497901e672bd46",
+          "status": "settled",
+          "totalTokens": 0,
+          "createdAt": "2026-10-11T21:49:44.107Z",
+          "updatedAt": "2026-10-11T21:49:44.476Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_fa9f9a6b-cee0-4070-a247-748c497ff614",
+          "kind": "model",
+          "parentCallId": "call_0ad883cc-2e10-4770-99a1-4f851c5b720c",
+          "operationKey": "structured:call_0ad883cc-2e10-4770-99a1-4f851c5b720c:a8f6b79f3aa16a1b5782dba215218c556a010d31843d1f52c125345fc2d56f27/model/1",
+          "status": "settled",
+          "totalTokens": 7,
+          "createdAt": "2026-10-11T21:49:44.339Z",
+          "updatedAt": "2026-10-11T21:49:44.408Z",
+          "startedAttempt": 1
+        },
+        {
+          "id": "call_3aca591c-7556-4e83-9346-be59a59c5401",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-63/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "createdAt": "2026-10-11T21:49:44.532Z",
+          "updatedAt": "2026-10-11T21:49:44.591Z",
+          "startedAttempt": 1
+        }
+      ]
+    }
+  ],
+  "finiteDeadlineCase": {
+    "status": "passed",
+    "scope": "真实合法generic model.structured owner/enqueue/Worker/HTTP1，从出生冻结180s期限；测试注入clock跨原截止、任务failed EXECUTION_DEADLINE，原callunknown/no receipt，无重发/正式候选，原ID/budget/deadline及业务owner保持。",
+    "notClaimed": "不是finite chat.submit公开入口，不是AI业务正式成功，不是官方账户模型/native App E2E。"
+  },
+  "previousFailuresPreserved": [
+    "WHOLE22_FIRST_ACTUAL.json (18PASS4FAIL)",
+    "WHOLE22_STAGE3_SECOND_ACTUAL.json (19PASS3FAIL)"
+  ],
+  "doNotAddOverlappingRuns": true,
+  "scope": "受控模型HTTP协议、真实独立Worker和PGlite消费者。官方模型/已安装App/全系统未验。",
+  "vitestChildElapsedMs": 62669,
+  "wrapperElapsedMs": 63313.15754199999,
+  "elapsedMsMeaning": "outer wrapper includes setup/source proof/test/source-after/cleanup; child elapsed records exact Vitest process life"
+}

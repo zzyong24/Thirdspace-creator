@@ -1,0 +1,17 @@
+{
+  "phase": "orphan",
+  "code": 0,
+  "elapsedMs": 1843.380417,
+  "totalMs": 7680000,
+  "expired": false,
+  "cancelled": false,
+  "recordsClosed": true,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-final-gate-9805bed09feb385052a49514a5f48e64-QsBec1",
+  "ownedRootRemoved": true,
+  "cleanupError": null,
+  "cleanupElapsedMs": 1.0098339999999553,
+  "sourceAndGateNonzeroNeverHidden": true,
+  "noApp": true,
+  "noPG": true,
+  "noPublish": true
+}

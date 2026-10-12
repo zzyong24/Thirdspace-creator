@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-11T23:37:00.785707+00:00",
+  "kind": "STATIC_CONSUMER_CORRECTION_NOT_PRODUCT_DEFECT",
+  "earlierWrongClaim": "original journal task deadline null from enqueue resource",
+  "actualConsumer": "execution-call-ledger.service.ts80–104 freezes configured budget60000 from original createdAt and stores it on firstreserve; original f.task enqueue object can be stale, fresh f.readTask hasactual deadline",
+  "sourceSha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a",
+  "originalTestSha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c",
+  "original8NoDelayAndBudget60000Unchanged": true,
+  "newBornFixtureOnly": "finite36000000 budget at enqueue plus same ledger config from birth; no DB patch or renewal",
+  "runtimeObservedHere": false
+}

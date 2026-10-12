@@ -1,0 +1,499 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：success
+[structured-node] template=topic.enrich status=error durationMs=30 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：success
+[structured-node] template=topic.enrich status=ok durationMs=9 path=text_compat modelCalls=1 inputTokens=4 outputTokens=3
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：success
+T1246_B045_B046_TRACE {"mode":"success","executionTaskId":"execution-task-3425e450-e4af-4b23-bfa0-6e402235a3a1","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]}],"status":"succeeded","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_272b9192-d9c7-4eca-a260-7cedfdc0344a","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-3/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:47.563Z","updatedAt":"2026-10-11T20:17:47.608Z","startedAttempt":1},{"id":"call_3eac5894-c926-4039-9415-6aa325e768f9","kind":"tool","parentCallId":null,"operationKey":"tool:c381b550f0cda6e08b60b46d5780e07e4afd69edd2ec5e465760bcd42652a50a","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:17:47.694Z","updatedAt":"2026-10-11T20:17:48.118Z","startedAttempt":1},{"id":"call_f904df92-a92b-4910-b1b7-60b4645d4d48","kind":"model","parentCallId":"call_3eac5894-c926-4039-9415-6aa325e768f9","operationKey":"structured:call_3eac5894-c926-4039-9415-6aa325e768f9:66d2899b0ec371aa1c44fc7e1e3c028d9cee82bc06699c3c4c1283b6c2f40345/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:17:47.973Z","updatedAt":"2026-10-11T20:17:48.043Z","startedAttempt":1},{"id":"call_6ba8d9dd-6d11-4d8d-9181-1b496f167352","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-3/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:48.181Z","updatedAt":"2026-10-11T20:17:48.246Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：cancel
+[structured-node] template=topic.enrich status=error durationMs=5 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：cancel
+T1246_B045_B046_TRACE {"mode":"cancel","executionTaskId":"execution-task-d4acd91c-698c-4eed-ac8b-42bb2b2a5043","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"cancelled","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_acf7e29b-586b-4cba-8c19-472536610ad8","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-6/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:49.135Z","updatedAt":"2026-10-11T20:17:49.178Z","startedAttempt":1},{"id":"call_3776c978-cecb-4bc2-91a0-a806828c9488","kind":"tool","parentCallId":null,"operationKey":"tool:065638a45422b435bbd3541b01d0318a63dcf27a20a91338ccb0c427766a9841","status":"unknown","totalTokens":null,"createdAt":"2026-10-11T20:17:49.259Z","updatedAt":"2026-10-11T20:17:49.894Z","startedAttempt":1},{"id":"call_85d1fe5f-f7fd-43c6-98f3-8d64c3ff08c0","kind":"model","parentCallId":"call_3776c978-cecb-4bc2-91a0-a806828c9488","operationKey":"structured:call_3776c978-cecb-4bc2-91a0-a806828c9488:405d8568200fe64c75439140d7a3b9ebca28c63209f9a08a92343365a7efd713/model/1","status":"unknown","totalTokens":null,"createdAt":"2026-10-11T20:17:49.506Z","updatedAt":"2026-10-11T20:17:49.878Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401
+[execution-worker-port] task=execution-task-ec8996cf-6bc4-4893-9061-de3fe78b674e port=completeChatGeneration category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401
+[execution-worker-port] task=execution-task-ec8996cf-6bc4-4893-9061-de3fe78b674e port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401
+T1246_B045_B046_TRACE {"mode":"reject401","executionTaskId":"execution-task-ec8996cf-6bc4-4893-9061-de3fe78b674e","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"waiting_user","deadlineAt":null,"lastErrorCode":"auth_401","calls":[{"id":"call_75affd45-4734-4921-9b29-b4e0eeba585b","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-9/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:50.786Z","updatedAt":"2026-10-11T20:17:50.828Z","startedAttempt":1},{"id":"call_78971f15-feda-46cf-94c8-dfa721bd15e9","kind":"tool","parentCallId":null,"operationKey":"tool:d22149a21337eb3d4e38f4701e8257b9d8df7d8e84fb1a7a15562b838954e52a","status":"started","totalTokens":null,"createdAt":"2026-10-11T20:17:50.907Z","updatedAt":"2026-10-11T20:17:50.917Z","startedAttempt":1},{"id":"call_d6905780-0f4f-4e75-bf8a-9e27b5b0f64e","kind":"model","parentCallId":"call_78971f15-feda-46cf-94c8-dfa721bd15e9","operationKey":"structured:call_78971f15-feda-46cf-94c8-dfa721bd15e9:9adcaeee272042f27840615284ba7df292c0178d2714a38655301dac82d1407c/model/1","status":"rejected","totalTokens":null,"createdAt":"2026-10-11T20:17:51.151Z","updatedAt":"2026-10-11T20:17:51.224Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401resume
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401resume
+[execution-worker-port] task=execution-task-9ea56ecc-1769-4d3f-a025-edeaa78eb87e port=completeChatGeneration category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401resume
+[execution-worker-port] task=execution-task-9ea56ecc-1769-4d3f-a025-edeaa78eb87e port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401resume
+[structured-node] template=topic.enrich status=error durationMs=7 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401resume
+[structured-node] template=topic.enrich status=ok durationMs=6 path=text_compat modelCalls=1 inputTokens=4 outputTokens=3
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401resume
+T1246_B045_B046_TRACE {"mode":"reject401resume","executionTaskId":"execution-task-9ea56ecc-1769-4d3f-a025-edeaa78eb87e","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":4,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]}],"status":"succeeded","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_758ef527-ffe0-402a-b863-bb342455e4dd","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-12/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:52.617Z","updatedAt":"2026-10-11T20:17:52.659Z","startedAttempt":1},{"id":"call_68910bc2-2c79-4226-a78b-392cca4ba6e0","kind":"tool","parentCallId":null,"operationKey":"tool:08c3ce2aad5e4ab0e555fc87e529f0f44e4275687016b950bea40c93313d4646","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:17:52.738Z","updatedAt":"2026-10-11T20:17:54.380Z","startedAttempt":2},{"id":"call_0b18162a-aa0a-44d0-b06f-81810e69e1bb","kind":"model","parentCallId":"call_68910bc2-2c79-4226-a78b-392cca4ba6e0","operationKey":"structured:call_68910bc2-2c79-4226-a78b-392cca4ba6e0:0406ebf66da3b40f6f62829db6a59a8894ceb27ad9ccc3f4c89bc7e084a4ca6e/model/1","status":"rejected","totalTokens":null,"createdAt":"2026-10-11T20:17:52.983Z","updatedAt":"2026-10-11T20:17:53.056Z","startedAttempt":1},{"id":"call_95cfc6cc-23ca-47bf-a32b-5c6fa4b0a95c","kind":"model","parentCallId":"call_68910bc2-2c79-4226-a78b-392cca4ba6e0","operationKey":"structured:call_68910bc2-2c79-4226-a78b-392cca4ba6e0:0406ebf66da3b40f6f62829db6a59a8894ceb27ad9ccc3f4c89bc7e084a4ca6e/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:17:54.224Z","updatedAt":"2026-10-11T20:17:54.312Z","startedAttempt":2},{"id":"call_3a818d2a-0423-42f7-868c-ffd87da347b3","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-12/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:54.634Z","updatedAt":"2026-10-11T20:17:54.698Z","startedAttempt":2}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429
+[execution-worker-port] task=execution-task-d29f7d84-cd19-482d-9fdc-873affa7a692 port=completeChatGeneration category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429
+T1246_B045_B046_TRACE {"mode":"reject429","executionTaskId":"execution-task-d29f7d84-cd19-482d-9fdc-873affa7a692","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"unknown_result","deadlineAt":null,"lastErrorCode":"TOOL_REQUIRES_RECONCILIATION","calls":[{"id":"call_009d1f5b-b2f8-45bf-b27a-d8ba894c4cfc","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-15/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:55.605Z","updatedAt":"2026-10-11T20:17:55.648Z","startedAttempt":1},{"id":"call_566e66c0-c5fa-45da-a85e-764e0cb280db","kind":"tool","parentCallId":null,"operationKey":"tool:1d0beaf1165585467c8e95773c4714f7f058de806f06a8422627424038112b71","status":"unknown","totalTokens":null,"createdAt":"2026-10-11T20:17:55.726Z","updatedAt":"2026-10-11T20:17:56.101Z","startedAttempt":1},{"id":"call_c1c04921-c3b9-46ca-9c19-f14ce4a0d2e1","kind":"model","parentCallId":"call_566e66c0-c5fa-45da-a85e-764e0cb280db","operationKey":"structured:call_566e66c0-c5fa-45da-a85e-764e0cb280db:2ad7ec356c7205f091c051ad6affa3ec40ead8e50e50682d700fa19ace8ec9f4/model/1","status":"superseded","totalTokens":null,"createdAt":"2026-10-11T20:17:55.969Z","updatedAt":"2026-10-11T20:17:56.036Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429drop
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429drop
+[execution-worker-port] task=execution-task-788db4ad-3047-46d6-8e43-de521efd07fb port=completeChatGeneration category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429drop
+T1246_B045_B046_TRACE {"mode":"reject429drop","executionTaskId":"execution-task-788db4ad-3047-46d6-8e43-de521efd07fb","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"unknown_result","deadlineAt":null,"lastErrorCode":"TOOL_REQUIRES_RECONCILIATION","calls":[{"id":"call_2f1e58e9-24bd-4349-a0b2-7fb02700398a","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-18/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:57.011Z","updatedAt":"2026-10-11T20:17:57.054Z","startedAttempt":1},{"id":"call_a81a4657-abae-4cf8-a017-2b3bb7697ac4","kind":"tool","parentCallId":null,"operationKey":"tool:9ec41eeeb6218f11c39315eaa32fa3d4ef9e57322cada14f9d46bb128d943d52","status":"unknown","totalTokens":null,"createdAt":"2026-10-11T20:17:57.136Z","updatedAt":"2026-10-11T20:17:57.514Z","startedAttempt":1},{"id":"call_5e375107-4c77-463c-ab6f-f19c98d11781","kind":"model","parentCallId":"call_a81a4657-abae-4cf8-a017-2b3bb7697ac4","operationKey":"structured:call_a81a4657-abae-4cf8-a017-2b3bb7697ac4:18265f3d7c68c475a764691151e312bff8f201db9f4f3b78fe1bbb401b23a522/model/1","status":"superseded","totalTokens":null,"createdAt":"2026-10-11T20:17:57.376Z","updatedAt":"2026-10-11T20:17:57.445Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject400drop
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject400drop
+[execution-worker-port] task=execution-task-17d5e204-2cf3-4b7a-93bf-9de4c2ab2884 port=completeChatGeneration category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject400drop
+[execution-worker-port] task=execution-task-17d5e204-2cf3-4b7a-93bf-9de4c2ab2884 port=failChatGeneration category=Error code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject400drop
+[execution-worker-port] task=execution-task-17d5e204-2cf3-4b7a-93bf-9de4c2ab2884 port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject400drop
+T1246_B045_B046_TRACE {"mode":"reject400drop","executionTaskId":"execution-task-17d5e204-2cf3-4b7a-93bf-9de4c2ab2884","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"failed","deadlineAt":null,"lastErrorCode":"http_400","calls":[{"id":"call_f9cdde9b-2ee0-4916-a1b8-74747fb859ae","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-21/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:58.425Z","updatedAt":"2026-10-11T20:17:58.466Z","startedAttempt":1},{"id":"call_6485efd6-17ad-47bb-924d-da5bf99e7cd8","kind":"tool","parentCallId":null,"operationKey":"tool:46a4cbeff018bb1a9de2e7b2e7d44a7d85317ad14e20370c6ccb37db38dbf2ae","status":"started","totalTokens":null,"createdAt":"2026-10-11T20:17:58.545Z","updatedAt":"2026-10-11T20:17:58.554Z","startedAttempt":1},{"id":"call_63e9ad62-605c-4a09-8fdb-4bd94adc3932","kind":"model","parentCallId":"call_6485efd6-17ad-47bb-924d-da5bf99e7cd8","operationKey":"structured:call_6485efd6-17ad-47bb-924d-da5bf99e7cd8:11d2c4291ae1f0af98101fe8b362115bb9190baa1ef5e9cb6fa126484d919f75/model/1","status":"rejected","totalTokens":null,"createdAt":"2026-10-11T20:17:58.789Z","updatedAt":"2026-10-11T20:17:58.862Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashAfterChild
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashAfterChild
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashAfterChild
+[structured-node] template=topic.enrich status=ok durationMs=6 path=text_compat modelCalls=1 inputTokens=4 outputTokens=3
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashAfterChild
+T1246_B045_B046_TRACE {"mode":"crashAfterChild","executionTaskId":"execution-task-4efc1dee-6a01-4065-be1b-59fe87c3fc0d","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]}],"status":"succeeded","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_69d41da2-de3e-495c-9dc8-d7d2e23e2712","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-24/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:17:59.881Z","updatedAt":"2026-10-11T20:17:59.923Z","startedAttempt":1},{"id":"call_d1c11005-85c6-486c-9488-2690cf3c280f","kind":"tool","parentCallId":null,"operationKey":"tool:c8ce5666b151e82b1a9487efa368d911b073400988e1004a9ab673d6124f9562","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:18:00.002Z","updatedAt":"2026-10-11T20:19:00.700Z","startedAttempt":2},{"id":"call_a49a2b29-9077-40ae-b895-8e81b9e7501f","kind":"model","parentCallId":"call_d1c11005-85c6-486c-9488-2690cf3c280f","operationKey":"structured:call_d1c11005-85c6-486c-9488-2690cf3c280f:c58ac78ff0b2ada9d2830f925733395872b13cad23b3fb3d9f8b12ab771bcbee/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:00.245Z","updatedAt":"2026-10-11T20:18:00.312Z","startedAttempt":1},{"id":"call_1e92efcb-6924-454a-a2bd-c78ab84fa706","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-24/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:19:00.966Z","updatedAt":"2026-10-11T20:19:01.050Z","startedAttempt":2}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashUnknownChild
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashUnknownChild
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashUnknownChild
+[execution-worker-port] task=execution-task-2e225dc0-0c12-4ae8-b27c-7fd932ccd590 port=completeChatGeneration category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashUnknownChild
+T1246_B045_B046_TRACE {"mode":"crashUnknownChild","executionTaskId":"execution-task-2e225dc0-0c12-4ae8-b27c-7fd932ccd590","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"unknown_result","deadlineAt":null,"lastErrorCode":"MODEL_RESULT_UNKNOWN","calls":[{"id":"call_2518e2f5-c36f-4d99-b5f0-bd0234b99753","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-27/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:03.467Z","updatedAt":"2026-10-11T20:18:03.508Z","startedAttempt":1},{"id":"call_e7913b25-386d-4d03-80bf-f7d5f2b9cb08","kind":"tool","parentCallId":null,"operationKey":"tool:88dfdcb2239125b41f46947a4eb2ca09630204155d57917c966636e936ba3bef","status":"started","totalTokens":null,"createdAt":"2026-10-11T20:18:03.588Z","updatedAt":"2026-10-11T20:19:03.406Z","startedAttempt":2},{"id":"call_68732709-654e-4d9b-957f-60240f10cdcf","kind":"model","parentCallId":"call_e7913b25-386d-4d03-80bf-f7d5f2b9cb08","operationKey":"structured:call_e7913b25-386d-4d03-80bf-f7d5f2b9cb08:9bbfe3679178d330153e1dbc418f8c293adaa7feead38d476ff34e3ef8b106fb/model/1","status":"superseded","totalTokens":null,"createdAt":"2026-10-11T20:18:03.825Z","updatedAt":"2026-10-11T20:19:02.613Z","startedAttempt":1},{"id":"call_442c7471-4219-4224-9e24-4b98fd93a5d8","kind":"model","parentCallId":"call_e7913b25-386d-4d03-80bf-f7d5f2b9cb08","operationKey":"structured:call_e7913b25-386d-4d03-80bf-f7d5f2b9cb08:9bbfe3679178d330153e1dbc418f8c293adaa7feead38d476ff34e3ef8b106fb/model/1","status":"unknown","totalTokens":null,"createdAt":"2026-10-11T20:19:03.626Z","updatedAt":"2026-10-11T20:19:03.709Z","startedAttempt":2}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashCancel
+[structured-node] template=topic.enrich status=error durationMs=5 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashCancel
+T1246_B045_B046_TRACE {"mode":"crashCancel","executionTaskId":"execution-task-91905f36-4b03-408a-98ab-c347b9e51f98","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"cancelled","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_72e14dd9-6e92-41a6-8e0f-43dd6056f6e5","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-30/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:06.237Z","updatedAt":"2026-10-11T20:18:06.279Z","startedAttempt":1},{"id":"call_0f07a25f-9bbf-4ab6-8023-9fd1c1586cf0","kind":"tool","parentCallId":null,"operationKey":"tool:a3205908dc93638fb6d64298a8e9a186abcce3fff0017ce41e034b1288aba616","status":"started","totalTokens":null,"createdAt":"2026-10-11T20:18:06.361Z","updatedAt":"2026-10-11T20:18:06.371Z","startedAttempt":1},{"id":"call_fc00092e-3c1f-40e1-a2f4-d11e0122407b","kind":"model","parentCallId":"call_0f07a25f-9bbf-4ab6-8023-9fd1c1586cf0","operationKey":"structured:call_0f07a25f-9bbf-4ab6-8023-9fd1c1586cf0:c94e2b23fb8208188272a56f8a38a258827df1fd979481578f9d6b56f8a55cd8/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:06.603Z","updatedAt":"2026-10-11T20:18:06.674Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDeadline
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDeadline
+T1246_B045_B046_TRACE {"mode":"crashDeadline","executionTaskId":"execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"running","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_b7d8a5b0-acb9-42fc-b043-a7ca96de332b","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-33/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:07.771Z","updatedAt":"2026-10-11T20:18:07.814Z","startedAttempt":1},{"id":"call_2c308eea-845f-413c-983b-956eead79f7b","kind":"tool","parentCallId":null,"operationKey":"tool:a4c496611e0ffc9789450ef5e7bbd845160263e5b818f4ad2d0833d3da302e08","status":"started","totalTokens":null,"createdAt":"2026-10-11T20:18:07.891Z","updatedAt":"2026-10-11T20:18:07.901Z","startedAttempt":1},{"id":"call_1010f899-3a83-4e6b-9d6d-a920f0151a5c","kind":"model","parentCallId":"call_2c308eea-845f-413c-983b-956eead79f7b","operationKey":"structured:call_2c308eea-845f-413c-983b-956eead79f7b:7cb6fd78512cc70bfed5ef7ce2cee2de6cdcf4f52f0f01c372a4ead655f78e32/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:08.127Z","updatedAt":"2026-10-11T20:18:08.197Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashPauseResume
+[structured-node] template=topic.enrich status=error durationMs=5 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashPauseResume
+[execution-worker-port] task=execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886 port=resolveModelCredential category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashPauseResume
+[execution-worker-port] task=execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886 port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashPauseResume
+[structured-node] template=topic.enrich status=error durationMs=5 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashPauseResume
+[structured-node] template=topic.enrich status=ok durationMs=5 path=text_compat modelCalls=1 inputTokens=4 outputTokens=3
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashPauseResume
+T1246_B045_B046_TRACE {"mode":"crashPauseResume","executionTaskId":"execution-task-e50225ac-a0a9-49b2-a6c4-d030ae15ff57","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]}],"status":"succeeded","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_9d633ff8-6683-4d29-9d91-cae948069020","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-36/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:09.290Z","updatedAt":"2026-10-11T20:18:09.332Z","startedAttempt":1},{"id":"call_0c25a9ff-682d-410d-8ef9-506a425485d0","kind":"tool","parentCallId":null,"operationKey":"tool:b9c246a9276a6da1065c2823d3549991d15df6bed713e16bb5e3f969f77d00e9","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:18:09.411Z","updatedAt":"2026-10-11T20:19:09.617Z","startedAttempt":2},{"id":"call_0e51854a-44c2-40c0-b426-70193500839f","kind":"model","parentCallId":"call_0c25a9ff-682d-410d-8ef9-506a425485d0","operationKey":"structured:call_0c25a9ff-682d-410d-8ef9-506a425485d0:84a1e4815c2403aa2ecdbe1343bf9ba09600fad1e95b11aacfbb898e6ce2232a/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:09.660Z","updatedAt":"2026-10-11T20:18:09.729Z","startedAttempt":1},{"id":"call_0be010a1-560a-4e4f-afce-e5810417d971","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-36/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:19:09.877Z","updatedAt":"2026-10-11T20:19:10.019Z","startedAttempt":2}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：settlementDrop
+[structured-node] template=topic.enrich status=error durationMs=5 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：settlementDrop
+[execution-worker-port] task=execution-task-4219e692-d1e7-4648-8140-a2d900304f46 port=settleChatGenerationModel category=Error code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：settlementDrop
+[structured-node] template=topic.enrich status=ok durationMs=6 path=text_compat modelCalls=1 inputTokens=4 outputTokens=3
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：settlementDrop
+T1246_B045_B046_TRACE {"mode":"settlementDrop","executionTaskId":"execution-task-4219e692-d1e7-4648-8140-a2d900304f46","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]}],"status":"succeeded","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_d0b0ed4b-9068-44c2-8f57-6897b9ae95f5","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-39/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:12.449Z","updatedAt":"2026-10-11T20:18:12.490Z","startedAttempt":1},{"id":"call_368d7425-e0ca-4036-ba0a-bc1f41d31800","kind":"tool","parentCallId":null,"operationKey":"tool:c8d0c1fe144df0f1c6b6eeebdd81171a454738b9911d863a0f966055ba507804","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:18:12.567Z","updatedAt":"2026-10-11T20:18:12.945Z","startedAttempt":1},{"id":"call_0211d50d-3497-49e2-a8c5-b12c1552e05a","kind":"model","parentCallId":"call_368d7425-e0ca-4036-ba0a-bc1f41d31800","operationKey":"structured:call_368d7425-e0ca-4036-ba0a-bc1f41d31800:97ce84ac1a0ab682a1b747bbb781c6f8a02676c2067c39f1501dce54ef81c9d1/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:12.807Z","updatedAt":"2026-10-11T20:18:12.875Z","startedAttempt":1},{"id":"call_9974afb6-d2e9-4dbe-bdf9-8574b785a86d","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-39/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:13.000Z","updatedAt":"2026-10-11T20:18:13.065Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich status=error durationMs=5 path=text_compat modelCalls=2 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich recovery=format remaining=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_compat modelCalls=3 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich recovery=format remaining=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+[structured-node] template=topic.enrich status=error durationMs=8 path=text_compat modelCalls=3 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+T1246_B045_B046_TRACE {"mode":"badOutput","executionTaskId":"execution-task-69e78d49-ad36-46ce-a37a-e91ab31ffbbc","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":4,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":5,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]}],"status":"partial","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_160f9818-7c04-4973-8f67-35606bb2964b","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-42/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:13.964Z","updatedAt":"2026-10-11T20:18:14.006Z","startedAttempt":1},{"id":"call_12600535-9696-4680-8d54-136a576a669d","kind":"tool","parentCallId":null,"operationKey":"tool:5d7e2bb60adc7da8f92b42e658922756fb5962dce0aec31f29ce7e128fa903b3","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:18:14.086Z","updatedAt":"2026-10-11T20:18:14.734Z","startedAttempt":1},{"id":"call_0b9acea9-0334-43b2-bcd0-5c87b769a468","kind":"model","parentCallId":"call_12600535-9696-4680-8d54-136a576a669d","operationKey":"structured:call_12600535-9696-4680-8d54-136a576a669d:d01bac9f7e55f03817aaf8b89deef6388246e23342b2650e07194530f34d600d/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:14.328Z","updatedAt":"2026-10-11T20:18:14.397Z","startedAttempt":1},{"id":"call_0e42f44c-63ca-47cf-8b38-e18de63abaa7","kind":"model","parentCallId":"call_12600535-9696-4680-8d54-136a576a669d","operationKey":"structured:call_12600535-9696-4680-8d54-136a576a669d:d01bac9f7e55f03817aaf8b89deef6388246e23342b2650e07194530f34d600d/model/2","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:14.464Z","updatedAt":"2026-10-11T20:18:14.531Z","startedAttempt":1},{"id":"call_d5d1d9b2-8670-433e-9de8-5efed193f024","kind":"model","parentCallId":"call_12600535-9696-4680-8d54-136a576a669d","operationKey":"structured:call_12600535-9696-4680-8d54-136a576a669d:d01bac9f7e55f03817aaf8b89deef6388246e23342b2650e07194530f34d600d/model/3","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:14.599Z","updatedAt":"2026-10-11T20:18:14.668Z","startedAttempt":1},{"id":"call_560ffa90-59df-4643-b693-88f317c798dd","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-42/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:14.791Z","updatedAt":"2026-10-11T20:18:14.855Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashFallback
+[structured-node] template=topic.enrich status=error durationMs=6 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashFallback
+[structured-node] template=topic.enrich status=error durationMs=6 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashFallback
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashFallback
+[structured-node] template=topic.enrich status=error durationMs=6 path=text_fallback modelCalls=2 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashFallback
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashFallback
+[structured-node] template=topic.enrich status=ok durationMs=17 path=text_fallback modelCalls=2 inputTokens=8 outputTokens=6
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashFallback
+T1246_B045_B046_TRACE {"mode":"crashFallback","executionTaskId":"execution-task-38fe60e0-1e95-4308-a0d5-731a5d0757ac","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":4,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]}],"status":"succeeded","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_5e2a27e9-9a83-44d6-b264-a1e574311310","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-45/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:15.755Z","updatedAt":"2026-10-11T20:18:15.797Z","startedAttempt":1},{"id":"call_203616a0-ba07-417f-8aef-032048bd3620","kind":"tool","parentCallId":null,"operationKey":"tool:ed4ef013c8d4145e3cb7e558e11c0f0dee1560b0ee7a011ed1af29bff172c54d","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:18:15.876Z","updatedAt":"2026-10-11T20:19:16.358Z","startedAttempt":2},{"id":"call_5c25a5a4-d217-42ef-9354-9d995d9b3e4e","kind":"model","parentCallId":"call_203616a0-ba07-417f-8aef-032048bd3620","operationKey":"structured:call_203616a0-ba07-417f-8aef-032048bd3620:0876564423c336d41bb66ca1529e296cd10a5936ade1f79e67156a1a683020c3/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:16.121Z","updatedAt":"2026-10-11T20:18:16.195Z","startedAttempt":1},{"id":"call_d9e72e1e-4ea9-424a-983e-19c56fd0fea5","kind":"model","parentCallId":"call_203616a0-ba07-417f-8aef-032048bd3620","operationKey":"structured:call_203616a0-ba07-417f-8aef-032048bd3620:0876564423c336d41bb66ca1529e296cd10a5936ade1f79e67156a1a683020c3/model/2","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:19:15.992Z","updatedAt":"2026-10-11T20:19:16.100Z","startedAttempt":2},{"id":"call_e7ef4ca9-7997-4275-87ce-94a9e4379d23","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-45/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:19:16.791Z","updatedAt":"2026-10-11T20:19:16.861Z","startedAttempt":2}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+[structured-node] template=topic.enrich status=error durationMs=5 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：positioning
+[execution-worker-port] task=execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886 port=resolveModelCredential category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：positioning
+[execution-worker-port] task=execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886 port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：positioning
+[structured-node] template=positioning.generate status=error durationMs=10 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：positioning
+T1246_B045_B046_TRACE {"mode":"positioning","executionTaskId":"execution-task-5f18da6b-7b9e-4fac-992b-943e24113070","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["positioning_generate"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]}],"status":"running","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_d342064c-22e3-4fcf-a550-324b2dcef6c7","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-51/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:27:19.440Z","updatedAt":"2026-10-11T20:27:19.482Z","startedAttempt":1},{"id":"call_bb7a5d11-c258-4a67-ab78-b24ea7456122","kind":"tool","parentCallId":null,"operationKey":"tool:cab56749ee419d3c32526acfa1970a87820e13ee31e25a4352a44fe8a8026fc1","status":"started","totalTokens":null,"createdAt":"2026-10-11T20:27:19.565Z","updatedAt":"2026-10-11T20:27:19.575Z","startedAttempt":1},{"id":"call_432c4a1d-63d4-445b-ad47-1da47d8ee11b","kind":"model","parentCallId":"call_bb7a5d11-c258-4a67-ab78-b24ea7456122","operationKey":"structured:call_bb7a5d11-c258-4a67-ab78-b24ea7456122:34b66baddf91fdfe1c441677ef87364d8d20f6d892a4c4043170db315b6f8b20/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:27:19.817Z","updatedAt":"2026-10-11T20:27:19.885Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich status=error durationMs=12 path=text_fallback modelCalls=2 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich status=error durationMs=13 path=text_fallback modelCalls=3 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich status=error durationMs=9 path=text_fallback modelCalls=3 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich status=error durationMs=6 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich status=error durationMs=8 path=text_fallback modelCalls=2 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich status=error durationMs=7 path=text_fallback modelCalls=3 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=1
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich recovery=format remaining=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich status=error durationMs=7 path=text_fallback modelCalls=3 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+[structured-node] template=topic.enrich status=error durationMs=6 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+T1246_B045_B046_TRACE {"mode":"crashTwoNodes","executionTaskId":"execution-task-60fa2bee-21bc-4e4d-be93-155c431f2cf2","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":4,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":5,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":6,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":7,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":8,"rootRequest":true,"stream":true,"toolNames":["topic_enrich"]}],"status":"partial","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_1ed49b49-b57c-4fe4-aea1-00931d6395f6","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-48/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:18:19.259Z","updatedAt":"2026-10-11T20:18:19.299Z","startedAttempt":1},{"id":"call_34f612c1-ba48-4752-8386-e5d1d915ae02","kind":"tool","parentCallId":null,"operationKey":"tool:15d9faee583b458c9ff65cb7e0efc6debaff2664a30bc2d590c38b5007395327","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:18:19.379Z","updatedAt":"2026-10-11T20:27:21.072Z","startedAttempt":1},{"id":"call_e88bc17c-3199-4c42-ad46-2576679a87b5","kind":"model","parentCallId":"call_34f612c1-ba48-4752-8386-e5d1d915ae02","operationKey":"structured:call_34f612c1-ba48-4752-8386-e5d1d915ae02:68795c88a051acad30681b7cf4aecb77f4ca48195a24c6c0512b25287a890bd6/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:18:19.618Z","updatedAt":"2026-10-11T20:18:19.687Z","startedAttempt":1},{"id":"call_dbe7336f-109e-41b3-8513-5d7901a6ef58","kind":"model","parentCallId":"call_34f612c1-ba48-4752-8386-e5d1d915ae02","operationKey":"structured:call_34f612c1-ba48-4752-8386-e5d1d915ae02:68795c88a051acad30681b7cf4aecb77f4ca48195a24c6c0512b25287a890bd6/model/2","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:27:20.475Z","updatedAt":"2026-10-11T20:27:20.720Z","startedAttempt":1},{"id":"call_03dc011c-7cc6-4753-9f74-7c8a7bbb77a2","kind":"model","parentCallId":"call_34f612c1-ba48-4752-8386-e5d1d915ae02","operationKey":"structured:call_34f612c1-ba48-4752-8386-e5d1d915ae02:68795c88a051acad30681b7cf4aecb77f4ca48195a24c6c0512b25287a890bd6/model/3","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:27:20.854Z","updatedAt":"2026-10-11T20:27:20.970Z","startedAttempt":1},{"id":"call_5365ae24-9884-44a7-92ee-8b7626fb1745","kind":"tool","parentCallId":null,"operationKey":"tool:1a39f8fd141875b779926c91d7f819eb438e1f10710ec78e88225874f396d818","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:27:21.232Z","updatedAt":"2026-10-11T20:27:22.072Z","startedAttempt":1},{"id":"call_16d759ec-e264-4779-bf68-6ed00518834a","kind":"model","parentCallId":"call_5365ae24-9884-44a7-92ee-8b7626fb1745","operationKey":"structured:call_5365ae24-9884-44a7-92ee-8b7626fb1745:7c6eee806e3b612444198150368acf8e60b83078445ea6a4fd7692827c904d38/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:27:21.564Z","updatedAt":"2026-10-11T20:27:21.672Z","startedAttempt":1},{"id":"call_9ec36fd4-ac29-416f-91df-8bfcb3407427","kind":"model","parentCallId":"call_5365ae24-9884-44a7-92ee-8b7626fb1745","operationKey":"structured:call_5365ae24-9884-44a7-92ee-8b7626fb1745:7c6eee806e3b612444198150368acf8e60b83078445ea6a4fd7692827c904d38/model/2","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:27:21.755Z","updatedAt":"2026-10-11T20:27:21.857Z","startedAttempt":1},{"id":"call_a01c1706-30b3-411d-b796-8e88b193e8a9","kind":"model","parentCallId":"call_5365ae24-9884-44a7-92ee-8b7626fb1745","operationKey":"structured:call_5365ae24-9884-44a7-92ee-8b7626fb1745:7c6eee806e3b612444198150368acf8e60b83078445ea6a4fd7692827c904d38/model/3","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:27:21.931Z","updatedAt":"2026-10-11T20:27:22.005Z","startedAttempt":1},{"id":"call_314fc452-3628-492f-bb5a-29f6b8bfd2a6","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-48/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:27:22.145Z","updatedAt":"2026-10-11T20:27:22.575Z","startedAttempt":1}]}
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosis
+[execution-worker-port] task=execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886 port=resolveModelCredential category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosis
+[execution-worker-port] task=execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886 port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosis
+[execution-worker-port] task=execution-task-5f18da6b-7b9e-4fac-992b-943e24113070 port=resolveModelCredential category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosis
+[execution-worker-port] task=execution-task-5f18da6b-7b9e-4fac-992b-943e24113070 port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosis
+[structured-node] template=calibration.diagnose status=error durationMs=11 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosis
+[structured-node] template=calibration.diagnose status=ok durationMs=8 path=text_compat modelCalls=1 inputTokens=4 outputTokens=3
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosis
+T1246_B045_B046_TRACE {"mode":"diagnosis","executionTaskId":"execution-task-052d3c52-344d-4857-84c3-242345a618c3","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["calibration_diagnose"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":true,"stream":true,"toolNames":["calibration_diagnose"]}],"status":"succeeded","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_380b85ca-1481-45be-91a0-8e0ba357aefe","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-57/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:36:21.453Z","updatedAt":"2026-10-11T20:36:21.499Z","startedAttempt":1},{"id":"call_d5e69b9b-6dae-4b0d-8b04-062e2e3a7345","kind":"tool","parentCallId":null,"operationKey":"tool:aa7888e038923f710626da42acab7253d85a6097de53fc1c4911e5233f24ad03","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:36:21.586Z","updatedAt":"2026-10-11T20:36:21.991Z","startedAttempt":1},{"id":"call_39b6ef61-3bf0-4f6f-8a33-e146095ebc6e","kind":"model","parentCallId":"call_d5e69b9b-6dae-4b0d-8b04-062e2e3a7345","operationKey":"structured:call_d5e69b9b-6dae-4b0d-8b04-062e2e3a7345:a40469f04fdca2ddc502c7b183ca975aea64008e50829c5d304abf355af4b879/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:36:21.845Z","updatedAt":"2026-10-11T20:36:21.918Z","startedAttempt":1},{"id":"call_d7610cf4-e271-4866-852b-3b52c4f63fd2","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-57/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:36:22.054Z","updatedAt":"2026-10-11T20:36:22.133Z","startedAttempt":1}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+[structured-node] template=calibration.diagnose status=error durationMs=10 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+[execution-worker-port] task=execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886 port=resolveModelCredential category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+[execution-worker-port] task=execution-task-98cc2e4a-7c34-4f93-9028-2a8e41273886 port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+[execution-worker-port] task=execution-task-5f18da6b-7b9e-4fac-992b-943e24113070 port=resolveModelCredential category=ConflictError code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+[execution-worker-port] task=execution-task-5f18da6b-7b9e-4fac-992b-943e24113070 port=commitResult category=ConflictError code=HOST_PORT_REJECTED
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+[structured-node] template=calibration.diagnose status=error durationMs=7 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+[structured-node] template=calibration.diagnose status=ok durationMs=6 path=text_compat modelCalls=1 inputTokens=4 outputTokens=3
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+T1246_B045_B046_TRACE {"mode":"crashDiagnosis","executionTaskId":"execution-task-f57c8a07-5dc1-4f17-8002-7e26a51d47c0","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["calibration_diagnose"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":true,"stream":true,"toolNames":["calibration_diagnose"]}],"status":"succeeded","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_9900e8dd-d549-4539-88b7-3de729fca975","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-60/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:36:23.062Z","updatedAt":"2026-10-11T20:36:23.104Z","startedAttempt":1},{"id":"call_042af058-7d04-47f3-aac9-10cc308f91fd","kind":"tool","parentCallId":null,"operationKey":"tool:44c0af4e885431296d5f0bb2d547bfd9a6aedf6eb48abf994913053399711a76","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:36:23.189Z","updatedAt":"2026-10-11T20:37:23.444Z","startedAttempt":2},{"id":"call_6952228e-472f-4808-87da-2e2887c9ebec","kind":"model","parentCallId":"call_042af058-7d04-47f3-aac9-10cc308f91fd","operationKey":"structured:call_042af058-7d04-47f3-aac9-10cc308f91fd:232eb32034eb63808ea63c0dcd7dba9ccd1d8d9b295a997d11e91d89ca06a7af/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:36:23.450Z","updatedAt":"2026-10-11T20:36:23.524Z","startedAttempt":1},{"id":"call_5f697e62-6d96-4fe7-b77d-fead8fd4b1b6","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-60/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:37:23.704Z","updatedAt":"2026-10-11T20:37:23.780Z","startedAttempt":2}]}
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosisEmpty
+[structured-node] template=calibration.diagnose status=error durationMs=7 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosisEmpty
+[structured-node] template=calibration.diagnose status=ok durationMs=7 path=text_compat modelCalls=1 inputTokens=4 outputTokens=3
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosisEmpty
+T1246_B045_B046_TRACE {"mode":"diagnosisEmpty","executionTaskId":"execution-task-cedfd445-5a96-4b62-9278-2fd518954e32","fixtureTrace":[{"type":"http","index":1,"rootRequest":true,"stream":true,"toolNames":["calibration_diagnose"]},{"type":"http","index":2,"rootRequest":false,"stream":true,"toolNames":[]},{"type":"http","index":3,"rootRequest":true,"stream":true,"toolNames":["calibration_diagnose"]}],"status":"partial","deadlineAt":null,"lastErrorCode":null,"calls":[{"id":"call_de55e585-a6a0-4f66-9315-5800fb831123","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-63/model/1","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:36:26.245Z","updatedAt":"2026-10-11T20:36:26.286Z","startedAttempt":1},{"id":"call_0b437caf-591a-456a-9f32-4ace00164c03","kind":"tool","parentCallId":null,"operationKey":"tool:35749af495c2357a590b4087d9f56d0cf3791a9ffaaafe7010a2e032058d74e4","status":"settled","totalTokens":0,"createdAt":"2026-10-11T20:36:26.366Z","updatedAt":"2026-10-11T20:36:26.752Z","startedAttempt":1},{"id":"call_d7ff977d-37e3-4c88-96cb-1227c65cac73","kind":"model","parentCallId":"call_0b437caf-591a-456a-9f32-4ace00164c03","operationKey":"structured:call_0b437caf-591a-456a-9f32-4ace00164c03:9bd826b2f4ac79abc4089c9d3e1432481cd6963c3b630df9404c6dc0efcad935/model/1","status":"settled","totalTokens":7,"createdAt":"2026-10-11T20:36:26.612Z","updatedAt":"2026-10-11T20:36:26.683Z","startedAttempt":1},{"id":"call_ddd7c879-6d6c-4a9a-bce2-a411a3f499b3","kind":"model","parentCallId":null,"operationKey":"chat:ai-msg-63/model/2","status":"settled","totalTokens":5,"createdAt":"2026-10-11T20:36:26.807Z","updatedAt":"2026-10-11T20:36:26.869Z","startedAttempt":1}]}
+
+ ❯ src/integration/chat-generation-worker.test.ts (21 tests | 9 failed) 1125111ms
+   ✓ 同一真实 Worker 内部结构化生成：success  1665ms
+   ✓ 同一真实 Worker 内部结构化生成：cancel  1639ms
+   ✓ 同一真实 Worker 内部结构化生成：reject401  1451ms
+   ✓ 同一真实 Worker 内部结构化生成：reject401resume  3361ms
+   × 同一真实 Worker 内部结构化生成：reject429 1419ms
+   × 同一真实 Worker 内部结构化生成：reject429drop 1413ms
+   ✓ 同一真实 Worker 内部结构化生成：reject400drop  1448ms
+   ✓ 同一真实 Worker 内部结构化生成：crashAfterChild  3590ms
+   × 同一真实 Worker 内部结构化生成：crashUnknownChild 2706ms
+   ✓ 同一真实 Worker 内部结构化生成：crashCancel  1603ms
+   × 同一真实 Worker 内部结构化生成：crashDeadline 1512ms
+   ✓ 同一真实 Worker 内部结构化生成：crashPauseResume  3159ms
+   ✓ 同一真实 Worker 内部结构化生成：settlementDrop  1519ms
+   × 同一真实 Worker 内部结构化生成：badOutput 1791ms
+   ✓ 同一真实 Worker 内部结构化生成：crashFallback  3517ms
+   × 同一真实 Worker 内部结构化生成：crashTwoNodes 540003ms
+   × 同一真实 Worker 内部结构化生成：positioning 1743ms
+   × 同一真实 Worker 内部结构化生成：crashMixed 540004ms
+   ✓ 同一真实 Worker 内部结构化生成：diagnosis  2007ms
+   ✓ 同一真实 Worker 内部结构化生成：crashDiagnosis  3209ms
+   × 同一真实 Worker 内部结构化生成：diagnosisEmpty 1520ms
+stderr | src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：http429
+[ai-model-stream] output=false class=Error reason=http_429 status=429 message="429: {\"message\":\"[REDACTED] rate limit\"}"
+
+stderr | src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：http429
+GenerationFailure [Error]: http_429
+    at generationFailure (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/generation-error.ts:28:40)
+    at wrapStream (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-stream-model.ts:166:27)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Object.doStream (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:14101:27)
+    at execute (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8008:26)
+    at runWithTracingChannelSpan (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4084:12)
+    at executeLanguageModelCall (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4292:14)
+    at streamLanguageModelCall (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8006:7)
+    at _retryWithExponentialBackoff (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:2690:12)
+    at streamStep (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:9280:15) {
+  outcome: 'retry_wait',
+  errorCode: 'http_429',
+  retryAfterMs: 1000
+}
+
+ ✓ src/integration/durable-chat-tool-ledger.test.ts (8 tests) 25070ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：completed  4259ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：unknown  2736ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：approval  2955ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：denied  2844ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：empty  2677ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：length  3561ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：http429  2700ms
+   ✓ 真实聊天 Worker 回合绑定账本并恢复：repeat  3338ms
+ ✓ src/integration/t1026-tool-result-read.integration.test.ts (2 tests) 4618ms
+stdout | src/modules/ai/ai.contract.test.ts > ai contract (each op validates against its DTO) > ai.tasks.confirm → aiTaskResource (succeeded)
+[ai-task-runner] taskId=ai-task-101 taskType=script.rewrite status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/modules/ai/ai.contract.test.ts > ai contract (each op validates against its DTO) > ai.tasks.cancel → aiTaskResource (cancelled)
+[ai-task-runner] taskId=ai-task-1 taskType=script.rewrite status=cancelled finishReason=null usage=null candidateCount=0
+
+ ✓ src/modules/ai/ai.contract.test.ts (8 tests) 22304ms
+     ✓ ai.conversations.create → aiConversationResource  3782ms
+     ✓ ai.conversations.list → aiConversationResource[] (each item validates)  2559ms
+     ✓ ai.conversations.messages.create → aiMessageResource  2599ms
+     ✓ ai.conversations.messages.list → aiMessageResource[] (list envelope)  2572ms
+     ✓ ai.tasks.create → aiTaskResource (queued)  3002ms
+     ✓ ai.tasks.confirm → aiTaskResource (succeeded)  2564ms
+     ✓ ai.tasks.cancel → aiTaskResource (cancelled)  2555ms
+     ✓ no ctx → AuthenticationError  2669ms
+ ✓ src/integration/copilot-worker.fork.test.ts (3 tests) 16027ms
+   ✓ 公开入口保存后恢复真实fork，success重复唤醒不重复调用或伪造回复  4117ms
+   ✓ 公开入口保存后恢复真实fork，auth重复唤醒不重复调用或伪造回复  3066ms
+   ✓ 公开入口保存后恢复真实fork，retry重复唤醒不重复调用或伪造回复  4014ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429drop
+AssertionError: expected 'unknown_result' to be 'retry_wait' // Object.is equality
+
+Expected: "retry_wait"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-generation-worker.test.ts:109:28
+    107|   if(mode.startsWith("reject")){
+    108|    const [stopped]=await db.select().from(executionTasks).where(eq(exe…
+    109|    expect(stopped?.status).toBe(mode.startsWith("reject401")?"waiting_…
+       |                            ^
+    110|    const before=await db.select().from(executionCalls).where(eq(execut…
+    111|    expect(before.find(call=>call.kind==="tool")).toMatchObject({status…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashUnknownChild
+AssertionError: expected [ { model: 'fixture', …(7) }, …(2) ] to have a length of 2 but got 3
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ src/integration/chat-generation-worker.test.ts:122:21
+    120|   if(["crashUnknownChild","crashCancel","crashDeadline"].includes(mode…
+    121|    expect(task?.status).toBe(mode==="crashUnknownChild"?"unknown_resul…
+    122|    expect(requests).toHaveLength(2);return;
+       |                     ^
+    123|   }
+    124|   if(mode==="cancel"){
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDeadline
+RangeError: Invalid time value
+ ❯ now src/integration/chat-generation-worker.test.ts:35:155
+     33|  const diagnosis=mode==="diagnosis" || mode==="crashDiagnosis" || mode…
+     34|  const name=diagnosis?"calibration.diagnose":mode==="positioning"?"pos…
+     35|  const ctx={userId:"hooks-worker-u",accountId:`hooks-worker-a-${++seq}…
+       |                                                                                                                                                           ^
+     36|  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.acc…
+     37|  const conversation=await repo.createConversation({title:"开场",projectI…
+ ❯ Object.recoverExpiredLeases src/modules/execution/persistent-task.service.ts:954:21
+ ❯ src/modules/execution/model-worker-dispatcher.ts:470:19
+ ❯ Object.drainOnce src/modules/execution/model-worker-dispatcher.ts:572:5
+ ❯ src/integration/chat-generation-worker.test.ts:99:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosisEmpty
+AssertionError: expected 'partial' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "partial"
+
+ ❯ src/integration/chat-generation-worker.test.ts:129:24
+    127|    expect(calls.find(call=>call.parentCallId)).toMatchObject({status:"…
+    128|   }
+    129|   expect(task?.status).toBe("succeeded");
+       |                        ^
+    130|   if(mode==="badOutput" || mode==="diagnosisEmpty"){
+    131|    const rows=await db.select().from(executionCalls).where(eq(executio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+Error: Test timed out in 540000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/integration/chat-generation-worker.test.ts:27:324
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：positioning
+AssertionError: expected 'running' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "running"
+
+ ❯ src/integration/chat-generation-worker.test.ts:129:24
+    127|    expect(calls.find(call=>call.parentCallId)).toMatchObject({status:"…
+    128|   }
+    129|   expect(task?.status).toBe("succeeded");
+       |                        ^
+    130|   if(mode==="badOutput" || mode==="diagnosisEmpty"){
+    131|    const rows=await db.select().from(executionCalls).where(eq(executio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  9 failed | 33 passed (42)
+   Start at  04:17:37
+   Duration  1203.75s (transform 3.48s, setup 0ms, import 9.72s, tests 1193.13s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1.json

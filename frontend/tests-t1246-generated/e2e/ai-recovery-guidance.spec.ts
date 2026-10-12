@@ -138,7 +138,7 @@ test("E2E-T913-01 模型未配置时直接打开模型配置", async ({ page, ba
     "AC-AI-COPY-SAFE",
   ]);
   await card.screenshot({
-    path: resolve(process.cwd(), "../.codex-tmp/t913-model-recovery.png"),
+    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/.codex-tmp/t913-model-recovery.png")),
   timeout: 120000});
 
   await settings.click();
@@ -183,7 +183,7 @@ test("E2E-T913-02 定位缺失时直达定位中心", async ({ page, baseURL }) 
     "AC-AI-COPY-SAFE",
   ]);
   await card.screenshot({
-    path: resolve(process.cwd(), "../.codex-tmp/t913-positioning-recovery-compact.png"),
+    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/.codex-tmp/t913-positioning-recovery-compact.png")),
   timeout: 120000});
 
   await positioning.click();

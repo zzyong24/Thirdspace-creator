@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "actualResult": "FAIL",
+  "actualWrapperEOF": 1,
+  "actualChildCode": 1,
+  "all16RawAnd7PrivateOriginalsFullyRechecked": true,
+  "evidenceSha256": "65266392ff9713c8e7ac38b8067e7f4c4958969223231fc5c3b4e1c03fa7b206",
+  "originalAfterMissingKept": true,
+  "independentAuditNotBackfilledIntoWrapper": true,
+  "sourceRootCause": "old pending JSON startup1.8M differs from actual original verifier consumer2.4M"
+}

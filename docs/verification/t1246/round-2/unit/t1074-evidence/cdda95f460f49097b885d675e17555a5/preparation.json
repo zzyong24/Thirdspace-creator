@@ -1,0 +1,19 @@
+{
+  "task": "T-1246",
+  "nonce": "cdda95f460f49097b885d675e17555a5",
+  "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-msCvpB",
+  "dataDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-msCvpB/data",
+  "registryDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-msCvpB/databases",
+  "port": 60146,
+  "adminRole": "t1246_cdda95f460f4",
+  "database": "creatoros_test_cdda95f460f4",
+  "binaries": {
+    "initdb": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/initdb",
+    "pg_ctl": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/pg_ctl",
+    "postgres": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/postgres"
+  },
+  "uid": 501,
+  "workspace": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "startedAt": "2026-10-11T19:43:38.874Z",
+  "nativeFlagAbsent": true
+}

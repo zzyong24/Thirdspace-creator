@@ -1,0 +1,50 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-12T00:49:13.018619+00:00",
+  "result": "PASS_TOOL_LIVE_BINDING_NARROW_RECHECK_ONLY",
+  "priorReview": {
+    "path": "docs/verification/t1252/INDEPENDENT_PUBLIC_THREE_BODY_TOOL_REVIEW.json",
+    "sha256": "9496bbd85de9dea85b0a34ad3b1cf399f1ac4f3de8143d4f236075dbff278b69"
+  },
+  "toolSha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9",
+  "bindingSha256": "5d62c13de340a088e612d657b422298c0026a4ad37d813d4c459c2ab884e0714",
+  "actualLiveSourceDelta": [
+    {
+      "group": "inputs",
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "before": {
+        "path": "frontend/src/server/workbench-file-recovery.test.ts",
+        "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c"
+      },
+      "after": {
+        "path": "frontend/src/server/workbench-file-recovery.test.ts",
+        "sha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d"
+      },
+      "actual": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d"
+    }
+  ],
+  "exactUnchanged": [
+    "tool32468",
+    "budget170.4M",
+    "copy/generated/inverse",
+    "2206其它源码条目",
+    "111831 installed implementation/link全部array",
+    "337 Chromium发布文件array",
+    "Node/b88/exact filter",
+    "3cases/80.04M+36M+42M/WAIT80.16M+36.12M"
+  ],
+  "proof": {
+    "path": "docs/verification/t1252/public-runtime-tool/LIVE_SOURCE_RESEAL.json",
+    "sha256": "8c0c16b740835416e070fd4891e0e6762072e8bedebe76b903c81fd154f6509c",
+    "producerActualFullPrepareElapsedMs": 15720.744917,
+    "peerPreviousFullStreamBytes": 2466725682,
+    "actualDeltaHashChecked": true
+  },
+  "findings": [],
+  "limits": [
+    "本轮只核新source delta及全部arrays恰一个差异，不伪称又运行第二次fullstream；ROOT fullhash/生产者freshprepare证据和原peer7201保留",
+    "可交ROOT对精确live5d62 binding另准实际collect/3body，任何非零/取消/expired/源漂移/unclosed保原结果且不代未跑body通过",
+    "本轮未运行Vitest/list/HTTP/Native/Chromium/App/模型，不签任何公共用例绿"
+  ],
+  "runtimePermissionByReviewer": false
+}

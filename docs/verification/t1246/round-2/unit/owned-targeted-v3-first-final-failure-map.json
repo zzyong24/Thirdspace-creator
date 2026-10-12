@@ -1,0 +1,72 @@
+{
+  "actualFiles": 27,
+  "passedFiles": 24,
+  "failedFiles": 3,
+  "cases": 509,
+  "passedCases": 504,
+  "failedCases": 5,
+  "skippedCases": 0,
+  "exitCode": 1,
+  "elapsedVitestMs": 1981170,
+  "sourceBeforeAfterDigest": "a51998165d48eb5faba557ae650c1c5a772beac863829e0d6e994fa9e05a67bd",
+  "ownedCleanup": "stop-cleanup.json exit0 / postmasterPidAbsent true / cleanupOwnedRoot true",
+  "failureCases": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/legacy-scheduled-job-migration.test.ts",
+      "fullName": "T1209旧105库补尾，新作业和legacy共享作业沿原公共运行合同，旧执行冻结值不动",
+      "failureMessages": [
+        "AssertionError: expected [ 1791043200004, 1791043200005, …(1) ] to deeply equal [ 1791043200004, 1791043200005 ]\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/legacy-scheduled-job-migration.test.ts:141:201\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "fullName": "正常104升级仅修复可证明三来源NULL，所有内容/父归属/历史回执保真且双启不重放",
+      "failureMessages": [
+        "AssertionError: expected [ Array(108) ] to have a length of 107 but got 108\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts:70:80\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "fullName": "0130SQL身份及当前107尾精确追加，旧104 journal及历史迁移固定不漂移",
+      "failureMessages": [
+        "AssertionError: expected [ …(108) ] to have a length of 107 but got 108\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts:105:26\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "fullName": "review-output / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "failureMessages": [
+        "Error: STACK_TRACE_ERROR\n    at task (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1784:27)\n    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1817:16)\n    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:28)\n    at chain (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts:28:16\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at VitestModuleEvaluator._runInlinedModule (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/module-evaluator.js:206:4)\n    at VitestModuleRunner.directRequest (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/module-runner.js:1259:59)\n    at VitestModuleRunner.cachedRequest (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/module-runner.js:1166:73)\n    at VitestModuleRunner.import (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/module-runner.js:1120:10)"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "fullName": "review-output / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "failureMessages": [
+        "AssertionError: expected false to be true // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts:67:20\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    }
+  ],
+  "currentSourceBinding": [
+    {
+      "path": "backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "sha256": "5a4360548e8d02e579bf182e77331a9629f86331d09fd9eda529be0a69a0f30a"
+    },
+    {
+      "path": "backend/src/modules/projects/projects.repository.ts",
+      "sha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "backend/src/modules/reviews/reviews.service.ts",
+      "sha256": "0bcc661cd9b83991ab520c3c2461e977da5cdf2ffb20fd3af56afed14ef1e12d"
+    },
+    {
+      "path": "backend/src/legacy-source-migration.test.ts",
+      "sha256": "00a072eb3aa63a7957109cd7342cb51e59b6137942fdc30dbbfbe5e84b3d2b07"
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "sha256": "fbc925c14f717e572b094d5cb356a69f9d5a91965deaf8a639e4e01a315a4278"
+    }
+  ]
+}

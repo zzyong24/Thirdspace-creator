@@ -1,0 +1,9 @@
+{
+  "recordedAt": "2026-10-11T20:18:46.324074+00:00",
+  "actualToolOutput": "AssertionError [ERR_ASSERTION]: missing-birth; actual:false expected:true",
+  "reason": "纯metadata negative检测到expected/marker/actual birth都缺失仍可比较通过；随后补非空birth/strict字段门",
+  "scope": "纯Node spy；没有实际Client/连接/PG/SQL/模型/浏览器",
+  "historicalSourceSha": "当场失败前未记录，不能补拍历史精确SHA",
+  "subsequentActualReceipt": "pg-preconnect-negatives-result.json",
+  "originalToolOutput": "仍在本次工具会话，未覆盖"
+}

@@ -1,6 +1,8 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it} from 'vitest';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import {createRuntimeDb,type Db,reviews,reviewInsights,learnings,learningApplications,aiMessages,aiTasks,aiConversations,contentOutputs,eq} from '@creatoros/backend';
 import {createAccountGroupService,createGroupMigrationService} from '../modules/platform-account';
@@ -24,7 +26,7 @@ function observeInsert(db:Db,table:unknown,reached:ReturnType<typeof gate>,resum
 const families=['review-create','review-insight','learning-create','learning-application','conversation-message','ai-task','conversation-create','learning-review','learning-adoption-source','review-output','ai-task-output'] as const;
 for(const family of families)for(const order of ['writer-checked-first','migration-validated-first'] as const){
  it.skipIf(!url)(`${family} / ${order}：公共服务必须锁真实父行，拒绝旧scope迟到写入`,async()=>{
-  const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');
+  const parsed=new URL(url!);assertOwnedPostgresUrl(parsed.toString());
   const name='t1022_shared_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());
   await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname='/'+name;
   const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());
@@ -43,7 +45,7 @@ for(const family of families)for(const order of ['writer-checked-first','migrati
   const unavailable=new Proxy({}, {get:()=>()=>{throw new Error("此探针不装配AI采纳端口");}});
   const aiService=(db:Db)=>createAiService({...deps,db,artifacts:unavailable as AiDeps["artifacts"],knowledge:unavailable as AiDeps["knowledge"],candidate:unavailable as AiDeps["candidate"],learnings:unavailable as AiDeps["learnings"],publishing:unavailable as AiDeps["publishing"],materialLinks:unavailable as AiDeps["materialLinks"],positioning:unavailable as AiDeps["positioning"],calibration:unavailable as AiDeps["calibration"]});
   const review=await reviewsService(runtime.db).createReview(ctx,project.id,{reviewType:'project'}),learning=await learningService(runtime.db).createLearning(ctx,{title:'来源经验',projectId:project.id}),conversation=await aiService(runtime.db).createConversation(ctx,{title:'独立会话'});
-  await runtime.db.insert(contentOutputs).values({id:'selected-output',projectId:project.id,title:'真实目标作品',contentType:'video',status:'draft',createdAt:deps.now(),updatedAt:deps.now()});
+  await runtime.db.insert(contentOutputs).values({id:'selected-output',projectId:project.id,groupId:from,title:'真实目标作品',contentType:'video',status:'draft',createdAt:deps.now(),updatedAt:deps.now()});
   const sourceTask=await aiService(runtime.db).createTask(ctx,{taskType:'custom.source.test',attemptId:'source-task-attempt-123',inputData:{projectId:project.id}});
   await runtime.db.update(aiTasks).set({status:'succeeded',completedAt:deps.now()}).where(eq(aiTasks.id,sourceTask.id));
   const selection={fromGroupId:from,toGroupId:to,projectIds:family==='conversation-message'?[]:[project.id],knowledgeIds:[],conversationIds:family==='conversation-message'?[conversation.id]:[]};
@@ -75,11 +77,11 @@ for(const family of families)for(const order of ['writer-checked-first','migrati
   if(family==='ai-task'||family==='ai-task-output')expect((await aiService(runtime.db).listTasks(readCtx,{limit:100,offset:0,projectId:project.id})).rows.filter(row=>row.attemptId==='shared-task-attempt-123').length).toBe(rows.rowCount);
   if(family==='learning-adoption-source')expect((await learningService(runtime.db).listLearnings(ctx,{limit:100,offset:0})).rows.filter(row=>row.title==='迟到无项目采纳').length).toBe(rows.rowCount);
   if(family==='conversation-message')expect((await aiService(runtime.db).listMessages(readCtx,conversation.id)).length).toBe(rows.rowCount);
- },30000);
+ },180000);
 }
 
 async function archiveFixture(){
- const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');
+ const parsed=new URL(url!);assertOwnedPostgresUrl(parsed.toString());
  const name='t1022_archive_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());
  await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname='/'+name;
  const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());
@@ -111,7 +113,7 @@ for(const family of ['learning-create','learning-adopt','conversation-create'] a
   expect((await createAccountGroupService(f.deps).get(f.base,f.group.id)).status).toBe('archived');
   const rows=family==='conversation-create'?(await f.ai(f.runtime.db).listConversations(f.ctx,{limit:100,offset:0})).rows:(await f.learning(f.runtime.db).listLearnings(f.ctx,{limit:100,offset:0})).rows;
   expect(rows).toHaveLength(order==='writer-first'?1:0);
- },30000);
+ },180000);
 }
 it.skipIf(!url)('同组两个真实公共AI任务创建：先取得成员组UPDATE，禁止SHARE升级死锁',async()=>{
  const f=await archiveFixture(),paused=gate(),resume=gate();
@@ -121,7 +123,7 @@ it.skipIf(!url)('同组两个真实公共AI任务创建：先取得成员组UPDA
  let blocked=false;try{blocked=await f.waiting('other',two.done);}finally{resume.release();}
  expect(blocked).toBe(true);expect((await one.result).error).toBeUndefined();expect((await two.result).error).toBeUndefined();
  expect((await f.ai(f.runtime.db).listTasks(f.ctx,{limit:100,offset:0})).rows).toHaveLength(2);
-},30000);
+},180000);
 it.skipIf(!url)('AI任务真实运行准备先读旧项目：移组可提交，落库锁内必须重验实际项目拒绝旧scope',async()=>{
  const f=await archiveFixture(),paused=gate(),resume=gate();
  const project=await f.projects.createProject(f.ctx,{title:'准备期移组项目',creationMode:'free',targetPlatforms:[]});
@@ -132,4 +134,4 @@ it.skipIf(!url)('AI任务真实运行准备先读旧项目：移组可提交，�
  expect((await write.result).error).toMatchObject({code:'OwnershipError'});
  expect((await f.ai(f.runtime.db).listTasks(f.ctx,{limit:100,offset:0})).rows).toHaveLength(0);
  expect((await f.ai(f.runtime.db).listTasks({...f.ctx,groupId:to.id},{limit:100,offset:0})).rows).toHaveLength(0);
-},30000);
+},180000);

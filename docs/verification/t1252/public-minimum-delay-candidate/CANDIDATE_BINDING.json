@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-12T02:15:23.971693+00:00",
+  "originalSourceSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+  "candidateSourceSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+  "scope": "只改新增公共render受控延迟真正消费者，原断言/全部57例/原120s阶段/出生期限/SDK/生产不变",
+  "minimumMs": 110000,
+  "minimumAtBornOnce": true,
+  "doesNotRenewOriginalDeadline": true,
+  "maximumOwnedPhaseMs": 120000,
+  "usesGlobalTimerReplacement": false,
+  "executionStatus": "仅候选，未apply、未执行",
+  "staticTestStatus": "尚未验证",
+  "diffSha256": "95446335f5b74f2bc66ca0fb8057c69781e17862bb48d0da16068e602cc85c55",
+  "basis": "真实case2失败109999.8515 < 110000；实际Node25 timers原源只insert timeout，不保证performance.now最小值；官方Timers文档精确时间不保证",
+  "officialReference": "https://nodejs.org/api/timers.html#timers_settimeout_callback_delay_args",
+  "unchangedAssertions": "toBeGreaterThanOrEqual(110000)、>300000、sourceHash/MIME/PNG/PDF/原ID/原D/跨组404/版本/4HTTP/2launch全部保留"
+}

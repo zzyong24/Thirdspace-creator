@@ -1,0 +1,63 @@
+{
+  "task": "T-1246",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T07:06:58.716578+00:00",
+  "status": "CONCERNS",
+  "bindingSha256": "5d36f89c6dd3421fed8829ac4e6e09df701becc4b1b1ee68cf5125180abcbdc5",
+  "exactFullByteProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/INDEPENDENT_EXTERNAL_5D36_FULL_BYTE_AND_INVERSE_RECHECK.json",
+    "sha256": "5b230e47c0fe34d6ea1f7b8f89585c0c255eeffde0142372d823d46e7a0ed133",
+    "actualReadRows": 203,
+    "drift": [],
+    "forwardInverseAllContextAndFullReconstructionExact": true
+  },
+  "scope": "六私有prepare/verify/launch及同代外层整单source-only复审",
+  "findings": [
+    {
+      "id": "FG-METADATA-INPUT-SCHEMA",
+      "continuedFrom": "FG-METADATA-INPUT",
+      "status": "CONCERNS",
+      "fact": "新tool/prepare-metadata-input.cjs给originalBuilderProducer/Closure写file+sha256，tool/common.cjs也读取r.file；但tool/discover-joint-pairs.py和tool/prepare-joint-dyld.py结尾仍读取r['path']，两个实际consumer不匹配，执行到此必KeyError。",
+      "required": "仅两个同代Python原builder输入消费者path→file，仍严格原8bac/3bc9 SHA守卫；重新parser/forwardinverse/完整binding。不改a738/旧9/29b3。",
+      "actualRuntimeFailureObserved": false
+    }
+  ],
+  "completedSourceReview": {
+    "allSix": "两完整verify/prepare全文，原两launch已全文并完整所有新diff与机械全字重建；Next/ledger/body/SQL/protocol/Pi原函数正文保持。",
+    "allExternal": "common/reseal/run/supervisor/input producer及actualOTool新代码、diff全文；owned-dyld和discovery除明确待修schema外当前原字节。",
+    "FG-INNER-EXISTING": "已闭合source候选：内部2Git×120k+sourceIO900k S1.14M，runtime另900k R2.04M；Next实际ready420k+R，ledger实际boundedClosure保base1.2M/1.8M+R；entry R/S/R5.22M、finalS/R3.18M、3cleanup7.2M均完整future。",
+    "FG-PREPARE-FUTURE": "已闭合source候选：原3.6M非verify容量保留+S/R/S/R6.36M=9.96M，内部prepareDeadline与外层prepareMs同纯推导；clone360/checkout360/3Git120/newFFmpeg240保持、sourceRoot真实定位、按序positive与剩IO的同一出生future，无原9应用。",
+    "FG-SOURCE-RAW": "已闭合source候选：sourceDynamicEvidence按actual metadata唯一file+arch完整raw/code/close/FD/receipt等SHA核，并把raw/upstream/input/discovery producer/builder图纳joint库存，每verify重核；owned raw保持。",
+    "FG-SUPERVISOR-POSITIVE-DEADLINE": "已闭合source候选：真实close callback monotonic记录，一出生deadline equality/late/null都exhausted，非nullcode0不能洗晚完成；cleanup2.16M另记，原UID/birth/group语义保。",
+    "FG-METADATA-INPUT": "browserRoots与原builder路径/SHA已补但上述file/path消费者仍不一致，故不签PASS。"
+  },
+  "budgetPureSourceReview": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/budget-test.cjs",
+    "sha256": "c6a959c118a82d7dcbad8a7319f636e56454d652c438a54ccd07b7eb1f3b3c1c",
+    "reviewerExecuted": false,
+    "eligibleForRootNarrowPureTestAdmission": true,
+    "reason": "只读两封存JSON，调用两verifier纯budget/requireFutureSlot与supervisor纯positiveDeadlineExhausted；导入模块不调用verify/Git/collector/helper/SDK/services，不调用supervise或prepare。",
+    "requiredFacts": [
+      "按该精确203 binding/两manifest SHA调用",
+      "至少120k正执行及独立完整helper清理槽",
+      "实际code/closed/log/group原始回执保存",
+      "不得把pure pass代metadata/prepare/浏览器准入"
+    ]
+  },
+  "parseFacts": {
+    "actualCurrentParserCount": 15,
+    "allCurrentInputAndRawSHARechecked": true,
+    "moduleOrPureBodiesNotExecuted": true,
+    "firstOriginalRevisedRunnerSyntaxFailurePreserved": true
+  },
+  "unchanged": [
+    "原a738/9/29b3 SHA仍同，170/103/7/1/first100/配置/SQL/原模型语义不改",
+    "唯一protocol私有CJS新inode/marker仍原严格，official/pi/original不替换",
+    "headless/fullChrome/helpers/ffmpeg联合闭包真实future根保持",
+    "任何实际新HEAD/11Worker/DMG/sourcearchive/delivery/scope/rawjoint/实际ownedcopy仍pending"
+  ],
+  "noRuntimeAdmission": true,
+  "reviewerExecutedCandidateOrParserOrPureOrCollector": false,
+  "reviewerAppliedProduction": false,
+  "AppAcceptanceComplete": false
+}

@@ -1,0 +1,85 @@
+{
+  "scope": "T1250新selected body imports/分支静态准入证据，未运行",
+  "decision": "仅hosts/cdp/render的red/green移除dist；ai-worker/src真实barrel进口保全；regression/public/recovery均仍保dist",
+  "facts": [
+    {
+      "path": "ai-worker/package.json",
+      "consumer": "exports(.)→src/index.ts，backend静态barrel→AI Worker源入口实际存在，不能全删ai-worker/src"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "consumer": "顶部import execFileSync/spawn仅函数对象；原145 Rust、273 build及300 Worker均在原realMacFiles body，新T1250只host私有file/command injection，未调用真实Worker"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "consumer": "原372/457 Rust及667动态profile Worker仅各原body；新T1250仅public persistent/profile服务→Node真实Unix socket受控cleanup"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.test.ts",
+      "consumer": "顶部真实createDb/backend lease/artifact服务+新两dispatch，并无任何Worker build/entry"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "consumer": "原68/69 Worker shared browser仅原互斥body动态import；新active仅真实Chromium context+原host"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "consumer": "顶层runCliCommand依赖mcp-server/src，补全此真实imports；无Worker entry/build"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.test.ts",
+      "consumer": "新body真实chromium/render/pngjs/PDFParse；无Worker entry/build"
+    }
+  ],
+  "guard": "CLI只T1250 testNamePattern；实际list完整case名称/路径及预算仍落盘；3原host新body，CDP1，render1。回归必须另review包含dist",
+  "bindings": [
+    {
+      "path": "docs/verification/t1250/tools/run-focused.cjs",
+      "sha256": "9ed9d747a44ccf947a837486e8b17b9f1d93cdd20ef0f555ef261eb5798eb5e2"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "ai-worker/package.json",
+      "sha256": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460"
+    },
+    {
+      "path": "backend/src/index.ts",
+      "sha256": "8884a768915859ebde749fbb95eb31c209a81b604d08b81ed1791f998bbf816b"
+    },
+    {
+      "path": "ai-worker/src/index.ts",
+      "sha256": "f8514ebf3b4a71aee7b9c70676948b77a8c79f33ba455304e9bca13c0b6d5b50"
+    },
+    {
+      "path": "ai-worker/package.json",
+      "sha256": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "sha256": "3c3aeca161343d9f0ecb7be46b7454681dad5b9bfc52ec9d816f0706cac9bfe5"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.test.ts",
+      "sha256": "7b9a4b358c7089fd76c29e9cb7a032a4d16b90259fb71e9766915271f98adfff"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "sha256": "f796821cfe3fb4d9ff2303be2a685aab54689d57bf3dec38aedcb90ea66cdb01"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "sha256": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.test.ts",
+      "sha256": "b45d3845975b80ff17795d2f67a0e20f3b5f14817dfed158ff4d4a6002aff4ab"
+    }
+  ]
+}

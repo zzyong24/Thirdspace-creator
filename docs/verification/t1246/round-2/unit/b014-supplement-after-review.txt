@@ -1,0 +1,13 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+ ✓ src/modules/creative-canvas/creative-canvas-series-reference.test.ts (2 tests) 6288ms
+   ✓ 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本  3713ms
+   ✓ 精确参考端口若返回别的file，生成不能换图  2574ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  02:45:07
+   Duration  7.76s (transform 784ms, setup 0ms, import 1.31s, tests 6.29s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b014-supplement-after-review.json

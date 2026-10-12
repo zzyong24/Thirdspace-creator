@@ -1,0 +1,433 @@
+{
+  "kind": "RED_TEST_PLAN_ONLY_NO_EXECUTION",
+  "specPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1250-positive-timeout-consumer-closure.md",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "sourceChecks": [
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "expected": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "current": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "expected": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "current": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "expected": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "current": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "expected": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866",
+      "current": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "expected": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "current": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.ts",
+      "expected": "5e020792798d29f08ccb85b1799a223f6239674f81f096259b84c859794cc2a3",
+      "current": "5e020792798d29f08ccb85b1799a223f6239674f81f096259b84c859794cc2a3",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "expected": "af0ad5df4f281725c20cf3d4d9450de2cd45590730a4e72ac26b2195c0660e00",
+      "current": "af0ad5df4f281725c20cf3d4d9450de2cd45590730a4e72ac26b2195c0660e00",
+      "unchanged": true
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "expected": "bcad3a9bb7cdbe57de165108d5ed4836c54e7ff58ab78e36113e1e0bee93d3b5",
+      "current": "bcad3a9bb7cdbe57de165108d5ed4836c54e7ff58ab78e36113e1e0bee93d3b5",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "expected": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "current": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "expected": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "current": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "expected": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "current": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "unchanged": true
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "expected": "25326430f1cef5b3ef6abdf7c54d89ce4787e5164cdad81d6430fe216c772d91",
+      "current": "25326430f1cef5b3ef6abdf7c54d89ce4787e5164cdad81d6430fe216c772d91",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "expected": "930bafd2538d1f2fe7aab03b5535ed182b3d12b580a2fad8463254760e7fa310",
+      "current": "930bafd2538d1f2fe7aab03b5535ed182b3d12b580a2fad8463254760e7fa310",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "expected": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa",
+      "current": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.test.ts",
+      "expected": "fc446fcb85924ceadf715e186f24b54eb03855da707f699ab827e1e49ff23abb",
+      "current": "fc446fcb85924ceadf715e186f24b54eb03855da707f699ab827e1e49ff23abb",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.test.ts",
+      "expected": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+      "current": "53a03d81331dd6f778dcd8d261acc76bd895ce817c35630531c72c621ca85eab",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "expected": "faecdb2955617fa23362cfeb82ceba82ec9db66c2a0c5946fb65d0cb0b51eac0",
+      "current": "faecdb2955617fa23362cfeb82ceba82ec9db66c2a0c5946fb65d0cb0b51eac0",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.test.ts",
+      "expected": "a24837f2abda9f7a03ae0a95af2ebc804b76d63d5610c5151ace848d6b3d0b81",
+      "current": "a24837f2abda9f7a03ae0a95af2ebc804b76d63d5610c5151ace848d6b3d0b81",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "expected": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a",
+      "current": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.test.ts",
+      "expected": "8dd2bee68dc566db777803ec81f8c233bfbb35278c04eb5d5393ffbf21d324e0",
+      "current": "8dd2bee68dc566db777803ec81f8c233bfbb35278c04eb5d5393ffbf21d324e0",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "expected": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2",
+      "current": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.test.ts",
+      "expected": "9871b6a64dfb86b06e6e8dc6c24e01a8922ad643f7ae02b302ee2d99adcfaf2d",
+      "current": "9871b6a64dfb86b06e6e8dc6c24e01a8922ad643f7ae02b302ee2d99adcfaf2d",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "expected": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008",
+      "current": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008",
+      "unchanged": true
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "expected": "3013d2a308c81c68bbc6a1f23bc6676c78e54498b73af13a69a6152d2f902d66",
+      "current": "3013d2a308c81c68bbc6a1f23bc6676c78e54498b73af13a69a6152d2f902d66",
+      "unchanged": true
+    }
+  ],
+  "all24Unchanged": true,
+  "readonlyDependencies": [
+    {
+      "path": "contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71"
+    },
+    {
+      "path": "frontend/vitest.config.ts",
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "sha256": "faecdb2955617fa23362cfeb82ceba82ec9db66c2a0c5946fb65d0cb0b51eac0"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.ts",
+      "sha256": "8347d45f00a32841a62dd65490f557282b998b431a5dc1562ffd431c62db886f"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.ts",
+      "sha256": "7adff0dc79e3d3bba9b0b67f2be47f0b8fb112947414b4ae9390c9ffc053f60e"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "sha256": "1a894b9ec1d6a63c9ad0036756e01351f0d05020e2d5d4480035c4e244415e04"
+    },
+    {
+      "path": "backend/src/modules/analytics/analytics.transport.ts",
+      "sha256": "28c1b1ed428b9b745437e24c0887daa42d5944726f945adeac0f51f4ccca9aac"
+    },
+    {
+      "path": "backend/src/modules/analytics/comment-diagnosis.service.ts",
+      "sha256": "bf01c7cb94944f6530204d747f0cd8efaadd13fbaa6cdfe988c6a9e038b46680"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-public.transport.ts",
+      "sha256": "5275d186348b44c2cc88ab62153d8179a4fae67ff7c13b61ec8fc20c7ac27ef3"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-public.service.ts",
+      "sha256": "f9401f1beb4286178a0fb88c1f5f6004f4ac04eac501dea1cfb4723d4870b6a8"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-artifact.service.ts",
+      "sha256": "7432eeec20b49549695197b3ef1527c0ca867dab22bb100707dd2c471ad64acf"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/mod.rs",
+      "sha256": "c8ecef697def879cb1937510679155ff03add7d3c14b24e9f2790766238b3f5e"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.toml",
+      "sha256": "48b53dc32c591b2ff41f40f38605c542ec34b844e45b624147a2d9b7f5f5f688"
+    },
+    {
+      "path": "frontend/src-tauri/Cargo.toml",
+      "sha256": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser.rs",
+      "sha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/command.rs",
+      "sha256": "5e7245ff479f13014ed854e42fab2b1432396941bd97bb1cf7dd6f121db4b626"
+    },
+    {
+      "path": "ai-worker/scripts/build.mjs",
+      "sha256": "8ab8b672e2c73e5085fc91522d4ca13568159313bdaec4e53027f6cdba763ae8"
+    },
+    {
+      "path": "tools/timeout-policy/verify.mjs",
+      "sha256": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae"
+    }
+  ],
+  "cases": [
+    {
+      "planCaseId": "R01",
+      "testPath": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "target": "inspect/observe共享观察期限",
+      "controlledInput": "真实page对象方法包装延迟35秒；inspect延迟结束后继续真实jsonValue/投影，不伪造返回DOM。另受控时钟让内层临近观察deadline完成且投影需要尾轮。",
+      "expectedOriginalFailureNotObserved": "原inspect/observe各1秒先结束，或独立等值outer在投影前截断。",
+      "preservedAssertions": "保原privacy/句柄dispose/节点上限；迟到不发布token。"
+    },
+    {
+      "planCaseId": "R02",
+      "testPath": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "target": "active与idle分离",
+      "controlledInput": "原host.start后真实原token advance，在受控挂起owned页面操作期间推进单调时钟到90秒后，再完成；另闲置推进90秒。",
+      "expectedOriginalFailureNotObserved": "原touch在active开始重启90秒idle，active仍在执行便触发expire。",
+      "preservedAssertions": "active不能闲置过期；真正idle仍90秒；busy/坏revision/重复key不延原300秒life。"
+    },
+    {
+      "planCaseId": "R03",
+      "testPath": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+      "target": "原life和取消、late handle",
+      "controlledInput": "共享原start expiresAt推进至300秒/提前abort；控制owned checkout和evaluateHandle迟到resolve并核dispose/动作数。",
+      "expectedOriginalFailureNotObserved": "现1秒可提前挡住目标分支；须先记录真实首次失败，不把非目标环境错称命中。",
+      "preservedAssertions": "原expiresAt不变；cancel即时；点击至多1；late句柄dispose且无新token；close失败原占用不释放。"
+    },
+    {
+      "planCaseId": "R04",
+      "testPath": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "target": "正式CLI→HTTP→SQL账本→Chromium慢路径",
+      "controlledInput": "沿原runCliCommand实际dispatch/service/本轮PGlite/本地路由，分别慢checkout35秒、慢导航35秒、慢observe35秒，单动作引用原issued targetRef。",
+      "expectedOriginalFailureNotObserved": "原checkout5秒/goto15秒/observe1秒，合法公共操作失败。",
+      "preservedAssertions": "同revision同key回放点击1；跨account拒；本地外网0；不签真实抖音站点。"
+    },
+    {
+      "planCaseId": "R05",
+      "testPath": "frontend/src/server/workbench-artifact-render.test.ts",
+      "target": "真实Chromium PNG/PDF正槽",
+      "controlledInput": "拦截本轮真实受控document route的fulfill35秒；PNG/PDF仍由真实Chromium产出。另用SDK调用参数spy核launch/setup/goto/output显式正预算。",
+      "expectedOriginalFailureNotObserved": "原goto15秒失败；PDF原within20秒或PNG20秒参数不合规。",
+      "preservedAssertions": "PNG真实像素/尾标、PDF解析正文、20MiB、并发2/第3busy、文件泄漏与网络0全保。"
+    },
+    {
+      "planCaseId": "R06",
+      "testPath": "frontend/src/server/workbench-artifact-render.test.ts",
+      "target": "完整render serial/close及迟到",
+      "controlledInput": "受控时钟令setup/launch/goto/output/close分段完成，实际SDK浏览器close观察；出槽后迟到PNG/PDF不得返回。",
+      "expectedOriginalFailureNotObserved": "原无完整wallclock/controller、close/rm吞错或有限窗口遗漏；需记录实际错误。",
+      "preservedAssertions": "不能把连接关闭视为文件回滚；未知停机证据保留、临时目录归属与busy计数正确。"
+    },
+    {
+      "planCaseId": "R07",
+      "testPath": "frontend/src/server/workbench-artifact-representation.test.ts",
+      "target": "四种representation旧成功",
+      "controlledInput": "保原两个真实Chromium四format body原样，只扩足case/cleanup预算并增加受控慢document。",
+      "expectedOriginalFailureNotObserved": "原body60秒未覆盖完整链（静态预算断言）；慢document仍原15秒cutoff。",
+      "preservedAssertions": "sourceHash/hash/诊断降级、SVG像素、PDF文字、原script禁用及外网0不减。"
+    },
+    {
+      "planCaseId": "R08",
+      "testPath": "frontend/src/server/workbench-public.integration.test.ts",
+      "target": "公开registered版本导出",
+      "controlledInput": "在本轮owned PGlite公共prepare/host原真实文件register→settled artifact service→compositeTransport原render endpoint，真实离线Chromium慢document35秒。",
+      "expectedOriginalFailureNotObserved": "原render短goto失败；若public fixture资格先失败独立记前置错误，不能代签超时RED。",
+      "preservedAssertions": "同task/artifact/version/source hash及结果hash/PNG/PDF有效；foreign仍拒；不能fake registered DB行或模型/turn。"
+    },
+    {
+      "planCaseId": "R09",
+      "testPath": "frontend/src/server/workbench-native-client.test.ts",
+      "target": "原Node Unix socket慢回执",
+      "controlledInput": "原本轮Unix socket server在接到原请求后35秒返回同operationId真实编码帧；连续partial bytes保持活动但越过本轮已冻结wallclock。",
+      "expectedOriginalFailureNotObserved": "原10秒idle超时拒绝合法35秒；partial bytes可无限续活动计时。",
+      "preservedAssertions": "同ref/operation/request不变；绝对deadline不续；原error/unknown分类保。"
+    },
+    {
+      "planCaseId": "R10",
+      "testPath": "frontend/src/server/workbench-native-client.test.ts",
+      "target": "socket取消前后dispatch",
+      "controlledInput": "已abort control调用原client，及确认owned socket收到原frame后abort；保原sameoperation只读receipt恢复。",
+      "expectedOriginalFailureNotObserved": "当前client无control参数且不能即时退出pending socket。",
+      "preservedAssertions": "before connect native effect0；after frame unknown、write/command1次，original lease再次核验、监听器和本轮socket退出。"
+    },
+    {
+      "planCaseId": "R11",
+      "testPath": "frontend/src/server/workbench-native-host.test.ts",
+      "target": "host原signal穿透",
+      "controlledInput": "真实dispatch→原native port spy并在pending owned socket时取消，核第四私有control参数；保前三个原ref/id/action完整深等。",
+      "expectedOriginalFailureNotObserved": "当前host只调用前后check，native请求期间不接收signal。",
+      "preservedAssertions": "原command_run.timeoutMs字节不改；query/cancel仍原task目标ID；unknown/跨fence/Windows拒命令保。"
+    },
+    {
+      "planCaseId": "R12",
+      "testPath": "frontend/src/server/workbench-artifact-host.test.ts",
+      "target": "artifact并行call-local signal",
+      "controlledInput": "两任务并行dispatch→原长期readTaskFile callback→stat/read/finalstat真实port；A取消、B继续，核每个原scope/id/action和自身signal。",
+      "expectedOriginalFailureNotObserved": "当前file端口三参数且signal未进callback。",
+      "preservedAssertions": "不扩backend artifact service；可本host调用局部AsyncLocalStorage/等价封装，不能共享mutable currentSignal；取消A不能串B；CAS/claim/receipt不减。"
+    },
+    {
+      "planCaseId": "R13",
+      "testPath": "frontend/src/server/workbench-browser-client.test.ts",
+      "target": "browser RPC absolute deadline",
+      "controlledInput": "本轮Unix socket35秒有效回复/partial byte drip；受控时钟模拟读帧+原响应+回执尾轮超出只活动计时。",
+      "expectedOriginalFailureNotObserved": "现125秒socket活动计时可随partial bytes重置，无墙钟截止。",
+      "preservedAssertions": "原reply operationId/MAX_REQUEST/MAX_REPLY、cancel/dispatched判断与未知不重发保。"
+    },
+    {
+      "planCaseId": "R14",
+      "testPath": "frontend/src/server/workbench-browser-host.test.ts",
+      "target": "恢复两mode完整serial及stop proof",
+      "controlledInput": "真实backend旧lease+本轮socket先primary不匹配后anonymous匹配，每lookup/cleanup受控35秒；伪stop proof各族保原negative。",
+      "expectedOriginalFailureNotObserved": "原location10秒/cleanup15秒截断；单等值outer不足两lookup+cleanup。",
+      "preservedAssertions": "只有原profile/lease/ref/fence及原owner lanes真实已停后release1；wrong/unknown/inflight/process/pending均release0；复核新holder时不释放。"
+    },
+    {
+      "planCaseId": "R15",
+      "testPath": "frontend/src/server/workbench-file-recovery.test.ts",
+      "target": "backend已有control→named readonly receipt",
+      "controlledInput": "真实原unknown call/recovery snapshot调用reconcile(control)，待readReceipt本轮socket悬挂时abort，核原query与同一signal。",
+      "expectedOriginalFailureNotObserved": "readReceipt目前只有query，取消只能在I/O后check。",
+      "preservedAssertions": "后端这个RED及修须等root全量source锁释放；原claim/binding/digest/CAS/paused不wake及read-only原operation1次保。"
+    },
+    {
+      "planCaseId": "R16",
+      "testPath": "frontend/src-tauri/src/workbench/ipc.rs",
+      "target": "Unix Rust framing/response正槽",
+      "controlledInput": "在本模块cfg(test)以原PID-bound serve_one/真实owned Unix stream测试逐段读写；对实际deadline验证常量/累计remaining，追加35秒慢受控协议。",
+      "expectedOriginalFailureNotObserved": "原read/write各10秒，合法慢帧或响应失败。",
+      "preservedAssertions": "peer PID/MAX_REQUEST、task文件许可/原prepared/committed receipt不减；不启动主App。"
+    },
+    {
+      "planCaseId": "R17",
+      "testPath": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "target": "Rust browser framing及stop proof",
+      "controlledInput": "本模块纯协议test调用现有owned bridge fixture，原browser cleanup/stop proof与原lease冻结引用。",
+      "expectedOriginalFailureNotObserved": "read10秒；Node外层不足协议串行时先结束。",
+      "preservedAssertions": "不得通过dummy stopProof替代原Rust状态；实际profile/lane/inflight/process negative全保；mainApp0。"
+    },
+    {
+      "planCaseId": "R18",
+      "testPath": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "target": "Windows named pipe IO",
+      "controlledInput": "cfg(test)原OVERLAPPED路径deadline/CancelIoEx/完成回收；Windows runner实际owned pipe慢帧取消。",
+      "expectedOriginalFailureNotObserved": "原IO_TIMEOUT_MS10000；必须Windows实际失败才记该平台RED。",
+      "preservedAssertions": "Mac静态/纯共享计算测试不能签Windows IO运行；无Windows时NOT-RUN。"
+    },
+    {
+      "planCaseId": "R19",
+      "testPath": "tools/timeout-policy/check.test.mjs",
+      "target": "10vendor与idle精确分类",
+      "controlledInput": "真实绑定vendor片段/同名不同scope数值函数、已证明UI关闭链、requestIdleCallback调度；完整checker同时拒短fetch/socket/page/Promise reject/非UI destroy及变形未知。",
+      "expectedOriginalFailureNotObserved": "原flat map误判Axios函数/timeout调度/动画；所有现有检测case仍必须保。",
+      "preservedAssertions": "不按vendor目录排除、不按名字idle/注释泛豁免；未知timeout仍报。"
+    },
+    {
+      "planCaseId": "R20",
+      "testPath": "frontend/src/server/workbench-native-host.test.ts",
+      "target": "真实Rust→Node→host公开能力慢回执",
+      "controlledInput": "受控纯Rust owned fixture为原文件commit真实产生receipt，延迟回复35秒；原backend lease/host读取原file、注册版本和blob/export，原receipt recovery完成对账。",
+      "expectedOriginalFailureNotObserved": "原Node/Rust10秒中任一端会切合法慢帧；权限/前置不全单记BLOCKED而非模型错误。",
+      "preservedAssertions": "只本地fixture、不official模型、不App；原native call一次、原task/operation/hash/fence；worker构建必须独占/私有并另外源绑定。"
+    }
+  ],
+  "actualNewTestsExecuted": 0,
+  "actualNewCaseCount": null,
+  "actualSharedBuilds": 0,
+  "actualPublicCalls": 0,
+  "runtimePermission": false,
+  "blockingWindowsRuntime": "需实际Windows runner；当前静态不代签",
+  "backendWriterWindow": "root释放whole source绑定后才写唯一named readReceipt signal点及其RED",
+  "standardFrontendTypecheck": "必须原标准全库存运行；四历史错误保留，不签全局green",
+  "budgets": {
+    "positiveSlotMs": 120000,
+    "fixtureDelayMs": 35000,
+    "renderSerialProposalMs": 780000,
+    "recoverySerialProposalMs": 780000,
+    "nodeRpcProposalMs": 420000,
+    "rustBuildSlotMs": 1200000,
+    "workerBuildSlotMs": 1200000,
+    "buildReportReserveMs": 120000,
+    "fixtureStartupMs": 120000,
+    "fixtureStopMs": 120000,
+    "gracePerCompositeMs": 60000,
+    "runnerTimerSegmentMs": 60000,
+    "finalBudgetPermission": "上述组合为测试方案上限样例，必须由最终真实实现phase数量/原更长值/收集cases与hooks重算，不能凭这份方案签runtime。"
+  },
+  "nativeReadonlyInputs": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-readonly-review.md",
+      "sha256": "beeee34b54517fa60c7423ca61e395a4bfc1c339a317f7f21a371433486e8fe9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-readonly-source-binding.json",
+      "sha256": "854764ec52ec915c28aa5bf46e294f7a5ed9adcf3b00c11a5dd80a63c3e03282"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-readonly-after.json",
+      "sha256": "b465f3a512b22172439b47cb7159969832199914d6f95bd49675ebe8c7e44b53"
+    }
+  ],
+  "nativePrivateLifecycleRequirements": [
+    "read_until/write_all/partial block均共享Instant整帧deadline；不能只set_timeout120",
+    "已有owned bridge stop私有传入serve/framing；不完整request到期execute0",
+    "browser busy/unauthorized/error响应早于serve常规timeout，须同有界writer",
+    "Windows CancelIoEx后栈OVERLAPPED真实completion drain保持，不能有限wait返回free活buffer；未确认completion不能签bounded cleanup",
+    "Windows成功后trailing read属于cleanup，共享原remaining或另声明清理槽，不续新正执行"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "originalSHA": "162557019cfc099019e46263753b0375e31c3abdb62587f3f6da5c73c86d3e2b",
+  "candidateSHA": "6564c1f87e26e779fcffa63380424165f78b0a4a421c93da58deb0f20c6c5b0d",
+  "fourLiteralConsumerChangesOnly": true,
+  "fullForwardSha256": "76ddca65dbef2f1c1757cfc6e1a0f7d1674e034475d50cf5ba6eb4d4c9566904",
+  "fullInverseSha256": "0d0004d32945cda360397c797d8c4c99e07e1bda7f0d7b9fda7ff5ada54be1fc",
+  "mechanicalWholeSourceEquals": true,
+  "originalCheckSpecExactUnchanged": true,
+  "fullAllROOTSGuardExactUnchanged": true,
+  "originalPartialModified": false,
+  "moduleOrAuditExecuted": false
+}

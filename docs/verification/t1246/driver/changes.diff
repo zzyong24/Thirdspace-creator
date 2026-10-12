@@ -75,7 +75,7 @@ index 624eed50d..a2e92be89 100644
 +// T-1246 copied-source declaration: original assertions unchanged.
 +test.describe.configure({ timeout: 25140000 });
 diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-recovery-guidance.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts
-index 12cc43f35..4fc5d0f74 100644
+index 12cc43f35..7bc11a0e2 100644
 --- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-recovery-guidance.spec.ts
 +++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts
 @@ -9,7 +9,7 @@ const CURRENT_ACCOUNT_COOKIE = "creatoros_current_account";
@@ -96,20 +96,24 @@ index 12cc43f35..4fc5d0f74 100644
    expect(response.ok()).toBe(true);
    const payload = (await response.json()) as { data: { id: string } };
    await page.context().addCookies([
-@@ -139,7 +139,7 @@ test("E2E-T913-01 模型未配置时直接打开模型配置", async ({ page, ba
+@@ -138,8 +138,8 @@ test("E2E-T913-01 模型未配置时直接打开模型配置", async ({ page, ba
+     "AC-AI-COPY-SAFE",
    ]);
    await card.screenshot({
-     path: resolve(process.cwd(), "../.codex-tmp/t913-model-recovery.png"),
+-    path: resolve(process.cwd(), "../.codex-tmp/t913-model-recovery.png"),
 -  });
++    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/.codex-tmp/t913-model-recovery.png")),
 +  timeout: 120000});
  
    await settings.click();
    await expect(page).toHaveURL(/\/settings\?highlight=text-model/);
-@@ -184,7 +184,7 @@ test("E2E-T913-02 定位缺失时直达定位中心", async ({ page, baseURL })
+@@ -183,8 +183,8 @@ test("E2E-T913-02 定位缺失时直达定位中心", async ({ page, baseURL })
+     "AC-AI-COPY-SAFE",
    ]);
    await card.screenshot({
-     path: resolve(process.cwd(), "../.codex-tmp/t913-positioning-recovery-compact.png"),
+-    path: resolve(process.cwd(), "../.codex-tmp/t913-positioning-recovery-compact.png"),
 -  });
++    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/.codex-tmp/t913-positioning-recovery-compact.png")),
 +  timeout: 120000});
  
    await positioning.click();
@@ -122,7 +126,7 @@ index 12cc43f35..4fc5d0f74 100644
 +// T-1246 copied-source declaration: original assertions unchanged.
 +test.describe.configure({ timeout: 24180000 });
 diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-reliability-recovery.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts
-index cb182ecb7..14c2876ff 100644
+index cb182ecb7..b79daf1af 100644
 --- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-reliability-recovery.spec.ts
 +++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts
 @@ -31,7 +31,7 @@ async function dispatch<T>(
@@ -152,20 +156,24 @@ index cb182ecb7..14c2876ff 100644
    );
    await expect(page.locator('[data-slot="decisions-error"]')).not.toContainText(
      /sk-[A-Za-z0-9_-]{6,}|Bearer\s+\S+/i,
-@@ -188,7 +188,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+@@ -187,8 +187,8 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+   await expect(page.locator('[data-slot="copy-decision-error"]')).toBeVisible();
    await expect(button).toHaveText("继续上次分场");
    await page.locator('[data-slot="production-decisions"]').screenshot({
-     path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-regular.png"),
+-    path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-regular.png"),
 -  });
++    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/.codex-tmp/t806-direct-error-regular.png")),
 +  timeout: 120000});
    expect(createBodies[0]?.retryOfTaskId).toBeUndefined();
  
    const terminalGetCount = taskGetCount;
-@@ -209,8 +209,11 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+@@ -208,9 +208,12 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+   await page.setViewportSize({ width: 1024, height: 768 });
    await expect(button).toBeVisible();
    await page.locator('[data-slot="production-decisions"]').screenshot({
-     path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-compact.png"),
+-    path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-compact.png"),
 -  });
++    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/.codex-tmp/t806-direct-error-compact.png")),
 +  timeout: 120000});
    await button.click();
    await expect.poll(() => createBodies.length).toBe(2);
@@ -2125,3 +2133,35 @@ index 6ab0c5d23..974c0e5ce 100644
    ],
  });
  
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/visual/__setup__.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/visual/__setup__.ts
+index 841ab84a1..015ab84e0 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/visual/__setup__.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/visual/__setup__.ts
+@@ -11,7 +11,7 @@ const REFERENCE_BASELINES_DIR = resolve(
+   "__screenshots__",
+   "reference-images",
+ );
+-const ARTIFACT_DIR = resolve(HERE, "tests", "visual", "__artifacts__");
++const ARTIFACT_DIR = resolve(process.env.CREATOROS_T1246_RUN_DIR!, "visual-baseline");
+ const FINGERPRINT_PATH = resolve(
+   ARTIFACT_DIR,
+   "baseline-fingerprint.json",
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/visual/__teardown__.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/visual/__teardown__.ts
+index c5a85287e..8b93ae935 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/visual/__teardown__.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/visual/__teardown__.ts
+@@ -14,13 +14,7 @@ const REFERENCE_BASELINES_DIR = resolve(
+   "__screenshots__",
+   "reference-images",
+ );
+-const FINGERPRINT_PATH = resolve(
+-  HERE,
+-  "tests",
+-  "visual",
+-  "__artifacts__",
+-  "baseline-fingerprint.json",
+-);
++const FINGERPRINT_PATH = resolve(process.env.CREATOROS_T1246_RUN_DIR!, "visual-baseline", "baseline-fingerprint.json");
+ 
+ export default async function globalTeardown() {
+   const before = JSON.parse(

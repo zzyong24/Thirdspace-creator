@@ -1,0 +1,13 @@
+{
+  "oldSha256": "fa4f5498f379fac868d4f3912c83e86b4556847a6e41e01342b310f9edc80fe2",
+  "newSha256": "04de9f2dea309594fc8f9db46fa8b7ccbec9644bcdc45d73f549877e7f19ae24",
+  "originalPreserved": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1251/stage3-original-source-preserved/backend/src/integration/chat-generation-worker.test.ts",
+  "exactCandidateBytes": true,
+  "previousActual22": "docs/verification/t1251/execution/whole-stage1-4fc0261d7b2741fab63e11cf238fe4a0",
+  "firstCount": {
+    "total": 22,
+    "passed": 18,
+    "failed": 4
+  },
+  "notExecutedYet": true
+}

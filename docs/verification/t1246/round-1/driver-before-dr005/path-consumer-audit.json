@@ -1,0 +1,3574 @@
+{
+  "description": "Full E2E/helpers/fixtures FS and screenshot actual consumer inventory; lineages plus manifest recorded source/output rewrites, never generic regex-only declaration",
+  "rows": [
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "tree": "original",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "argument": "resolve(visibleCopyPath, \"..\")",
+      "lineage": [
+        {
+          "binding": "visibleCopyPath",
+          "initializer": "resolve(\n  process.cwd(),\n  \"../orchestrator/evidence/T-1023-visible-copy.json\",\n)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "tree": "original",
+      "line": 29,
+      "consumer": "writeFileSync",
+      "argument": "visibleCopyPath",
+      "lineage": [
+        {
+          "binding": "visibleCopyPath",
+          "initializer": "resolve(\n  process.cwd(),\n  \"../orchestrator/evidence/T-1023-visible-copy.json\",\n)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "tree": "generated",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "argument": "resolve(visibleCopyPath, \"..\")",
+      "lineage": [
+        {
+          "binding": "visibleCopyPath",
+          "initializer": "resolve(\n  process.cwd(),\n  (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/orchestrator/evidence/T-1023-visible-copy.json\"),\n)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "tree": "generated",
+      "line": 29,
+      "consumer": "writeFileSync",
+      "argument": "visibleCopyPath",
+      "lineage": [
+        {
+          "binding": "visibleCopyPath",
+          "initializer": "resolve(\n  process.cwd(),\n  (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/orchestrator/evidence/T-1023-visible-copy.json\"),\n)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "tree": "original",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "argument": "resolve(visibleCopyPath, \"..\")",
+      "lineage": [
+        {
+          "binding": "visibleCopyPath",
+          "initializer": "resolve(\n  process.cwd(),\n  \"../orchestrator/evidence/T-913-visible-copy.json\",\n)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "tree": "original",
+      "line": 29,
+      "consumer": "writeFileSync",
+      "argument": "visibleCopyPath",
+      "lineage": [
+        {
+          "binding": "visibleCopyPath",
+          "initializer": "resolve(\n  process.cwd(),\n  \"../orchestrator/evidence/T-913-visible-copy.json\",\n)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "tree": "original",
+      "line": 140,
+      "consumer": "card.screenshot",
+      "argument": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t913-model-recovery.png\"),\n  }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "tree": "original",
+      "line": 185,
+      "consumer": "card.screenshot",
+      "argument": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t913-positioning-recovery-compact.png\"),\n  }",
+      "lineage": [
+        {
+          "binding": "positioning",
+          "initializer": "card.locator('[data-slot=\"copilot-error-positioning-link\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "tree": "generated",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "argument": "resolve(visibleCopyPath, \"..\")",
+      "lineage": [
+        {
+          "binding": "visibleCopyPath",
+          "initializer": "resolve(\n  process.cwd(),\n  (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/orchestrator/evidence/T-913-visible-copy.json\"),\n)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "tree": "generated",
+      "line": 29,
+      "consumer": "writeFileSync",
+      "argument": "visibleCopyPath",
+      "lineage": [
+        {
+          "binding": "visibleCopyPath",
+          "initializer": "resolve(\n  process.cwd(),\n  (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/orchestrator/evidence/T-913-visible-copy.json\"),\n)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "tree": "generated",
+      "line": 140,
+      "consumer": "card.screenshot",
+      "argument": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t913-model-recovery.png\"),\n  timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "tree": "generated",
+      "line": 185,
+      "consumer": "card.screenshot",
+      "argument": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t913-positioning-recovery-compact.png\"),\n  timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "positioning",
+          "initializer": "card.locator('[data-slot=\"copilot-error-positioning-link\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "tree": "original",
+      "line": 189,
+      "consumer": "page.locator('[data-slot=\"production-decisions\"]').screenshot",
+      "argument": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t806-direct-error-regular.png\"),\n  }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "tree": "original",
+      "line": 210,
+      "consumer": "page.locator('[data-slot=\"production-decisions\"]').screenshot",
+      "argument": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t806-direct-error-compact.png\"),\n  }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "tree": "generated",
+      "line": 189,
+      "consumer": "page.locator('[data-slot=\"production-decisions\"]').screenshot",
+      "argument": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t806-direct-error-regular.png\"),\n  timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "tree": "generated",
+      "line": 210,
+      "consumer": "page.locator('[data-slot=\"production-decisions\"]').screenshot",
+      "argument": "{\n    path: resolve(process.cwd(), \"../.codex-tmp/t806-direct-error-compact.png\"),\n  timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "tree": "original",
+      "line": 88,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "tree": "original",
+      "line": 103,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-641-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "tree": "generated",
+      "line": 88,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "tree": "generated",
+      "line": 103,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-641-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "tree": "original",
+      "line": 236,
+      "consumer": "page.screenshot",
+      "argument": "{ path, fullPage: true, timeout: 120_000, animations: \"disabled\", caret: \"hide\" }",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "testInfo.outputPath(fileName)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "tree": "generated",
+      "line": 236,
+      "consumer": "page.screenshot",
+      "argument": "{ path, fullPage: true, timeout: 120_000, animations: \"disabled\", caret: \"hide\" }",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "testInfo.outputPath(fileName)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "original",
+      "line": 131,
+      "consumer": "page.screenshot",
+      "argument": "{path:file,fullPage:true,timeout:REQUEST_MS}",
+      "lineage": [
+        {
+          "binding": "REQUEST_MS",
+          "initializer": "120_000"
+        },
+        {
+          "binding": "file",
+          "initializer": "info.outputPath(`${name}.png`)"
+        },
+        {
+          "binding": "path",
+          "initializer": "info.outputPath(\"t1245-responsive-geometry.json\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "original",
+      "line": 225,
+      "consumer": "writeFile",
+      "argument": "path",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "info.outputPath(\"t1245-responsive-geometry.json\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "original",
+      "line": 318,
+      "consumer": "page.screenshot",
+      "argument": "{ path: desktopPath, fullPage: true }",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "info.outputPath(\"t1245-responsive-geometry.json\")"
+        },
+        {
+          "binding": "desktopPath",
+          "initializer": "testInfo.outputPath(\"run-now-auth-wait-desktop.png\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "original",
+      "line": 327,
+      "consumer": "page.screenshot",
+      "argument": "{ path: narrowPath, fullPage: true }",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "info.outputPath(\"t1245-responsive-geometry.json\")"
+        },
+        {
+          "binding": "narrowPath",
+          "initializer": "testInfo.outputPath(\"run-now-auth-wait-narrow-after-reload.png\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "original",
+      "line": 352,
+      "consumer": "writeFile",
+      "argument": "evidencePath",
+      "lineage": [
+        {
+          "binding": "evidencePath",
+          "initializer": "testInfo.outputPath(\"public-original-task-auth-wait.json\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "generated",
+      "line": 131,
+      "consumer": "page.screenshot",
+      "argument": "{path:file,fullPage:true,timeout:REQUEST_MS}",
+      "lineage": [
+        {
+          "binding": "REQUEST_MS",
+          "initializer": "120_000"
+        },
+        {
+          "binding": "file",
+          "initializer": "info.outputPath(`${name}.png`)"
+        },
+        {
+          "binding": "path",
+          "initializer": "info.outputPath(\"t1245-responsive-geometry.json\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "generated",
+      "line": 225,
+      "consumer": "writeFile",
+      "argument": "path",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "info.outputPath(\"t1245-responsive-geometry.json\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "generated",
+      "line": 318,
+      "consumer": "page.screenshot",
+      "argument": "{ path: desktopPath, fullPage: true , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "info.outputPath(\"t1245-responsive-geometry.json\")"
+        },
+        {
+          "binding": "desktopPath",
+          "initializer": "testInfo.outputPath(\"run-now-auth-wait-desktop.png\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "generated",
+      "line": 327,
+      "consumer": "page.screenshot",
+      "argument": "{ path: narrowPath, fullPage: true , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "info.outputPath(\"t1245-responsive-geometry.json\")"
+        },
+        {
+          "binding": "narrowPath",
+          "initializer": "testInfo.outputPath(\"run-now-auth-wait-narrow-after-reload.png\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "tree": "generated",
+      "line": 352,
+      "consumer": "writeFile",
+      "argument": "evidencePath",
+      "lineage": [
+        {
+          "binding": "evidencePath",
+          "initializer": "testInfo.outputPath(\"public-original-task-auth-wait.json\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "tree": "original",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "tree": "original",
+      "line": 33,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, `${TASK_ID}-visible-copy.json`)",
+      "lineage": [
+        {
+          "binding": "TASK_ID",
+          "initializer": "\"T-664\""
+        },
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "tree": "generated",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "tree": "generated",
+      "line": 33,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, `${TASK_ID}-visible-copy.json`)",
+      "lineage": [
+        {
+          "binding": "TASK_ID",
+          "initializer": "\"T-664\""
+        },
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "original",
+      "line": 402,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "configuredEvidenceDir\n    ? resolve(repoRoot, configuredEvidenceDir)\n    : resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "original",
+      "line": 407,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "configuredEvidenceDir\n    ? resolve(repoRoot, configuredEvidenceDir)\n    : resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "original",
+      "line": 851,
+      "consumer": "page.screenshot",
+      "argument": "{\n      path: info.outputPath(\"radar-ready-1536x1024.png\"),\n      fullPage: false,\n    }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "original",
+      "line": 926,
+      "consumer": "page.screenshot",
+      "argument": "{\n      path: info.outputPath(\"project-created-1024x720.png\"),\n      fullPage: false,\n    }",
+      "lineage": [
+        {
+          "binding": "created",
+          "initializer": "Math.floor(Date.now() / 1000)"
+        },
+        {
+          "binding": "project",
+          "initializer": "ENDPOINTS.getProject.response.parse(input)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "original",
+      "line": 1071,
+      "consumer": "page.screenshot",
+      "argument": "{\n      path: info.outputPath(\"project-reloaded-1024x720.png\"),\n      fullPage: false,\n    }",
+      "lineage": [
+        {
+          "binding": "project",
+          "initializer": "ENDPOINTS.getProject.response.parse(input)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "generated",
+      "line": 402,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "configuredEvidenceDir\n    ? resolve(repoRoot, configuredEvidenceDir)\n    : resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "generated",
+      "line": 407,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "configuredEvidenceDir\n    ? resolve(repoRoot, configuredEvidenceDir)\n    : resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "generated",
+      "line": 851,
+      "consumer": "page.screenshot",
+      "argument": "{\n      path: info.outputPath(\"radar-ready-1536x1024.png\"),\n      fullPage: false,\n    timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "generated",
+      "line": 926,
+      "consumer": "page.screenshot",
+      "argument": "{\n      path: info.outputPath(\"project-created-1024x720.png\"),\n      fullPage: false,\n    timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "created",
+          "initializer": "Math.floor(Date.now() / 1000)"
+        },
+        {
+          "binding": "project",
+          "initializer": "ENDPOINTS.getProject.response.parse(input)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "tree": "generated",
+      "line": 1071,
+      "consumer": "page.screenshot",
+      "argument": "{\n      path: info.outputPath(\"project-reloaded-1024x720.png\"),\n      fullPage: false,\n    timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "project",
+          "initializer": "ENDPOINTS.getProject.response.parse(input)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "tree": "original",
+      "line": 125,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "tree": "original",
+      "line": 140,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-642-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "tree": "generated",
+      "line": 125,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "tree": "generated",
+      "line": 140,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-642-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 28,
+      "consumer": "readFileSync",
+      "argument": "path",
+      "lineage": [],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 254,
+      "consumer": "page.locator('#materials').screenshot",
+      "argument": "{path:testInfo.outputPath(\"project-materials-after.png\")}",
+      "lineage": [
+        {
+          "binding": "project",
+          "initializer": "await dispatch(page,\"projects.create\",{params:undefined,query:undefined,body:{title:\"结果采纳作品\",brief:\"\"}},{groupId:account.groupId})"
+        },
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 261,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-empty-after.png\")}",
+      "lineage": [
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 265,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-narrow-after.png\")}",
+      "lineage": [
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 276,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-assets-after.png\")}",
+      "lineage": [
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 287,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-upload-1024.png\")}",
+      "lineage": [
+        {
+          "binding": "upload",
+          "initializer": "gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 289,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-upload-1536.png\")}",
+      "lineage": [
+        {
+          "binding": "upload",
+          "initializer": "gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 307,
+      "consumer": "writeFileSync",
+      "argument": "testInfo.outputPath(\"t1220-upload-result.json\")",
+      "lineage": [
+        {
+          "binding": "upload",
+          "initializer": "gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})"
+        },
+        {
+          "binding": "result",
+          "initializer": "page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 360,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-result-actions-after.png\")}",
+      "lineage": [
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        },
+        {
+          "binding": "result",
+          "initializer": "page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 440,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-running.png')}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 446,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1108-interrupted-save.png')}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 446,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1117-error-normal.png')}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 448,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1117-error-narrow.png')}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 465,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1108-legacy-normal.png')}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 466,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1108-legacy-narrow.png')}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 478,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1117-preview-normal.png')}",
+      "lineage": [
+        {
+          "binding": "preview",
+          "initializer": "await dispatch(page,\"accountGroups.members.previewTransfer\",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 485,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1117-preview-narrow.png')}",
+      "lineage": [
+        {
+          "binding": "preview",
+          "initializer": "await dispatch(page,\"accountGroups.members.previewTransfer\",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 493,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),'../docs/verification/t1117/visible-copy.json')",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 494,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),'../docs/verification/t1108/visible-copy.json')",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 496,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-regenerate.png')}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 499,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-gallery.png')}",
+      "lineage": [
+        {
+          "binding": "gallery",
+          "initializer": "page.getByRole('complementary',{name:'当前账号素材'})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 502,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-canvas-narrow.png')}",
+      "lineage": [
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 505,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),'../docs/verification/t1101/canvas-copy.json')",
+      "lineage": [
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 514,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true}",
+      "lineage": [
+        {
+          "binding": "table",
+          "initializer": "page.getByRole('table',{name:'各平台能力'})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 515,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-qr-dialog.png')}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 518,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "original",
+      "line": 519,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),'../docs/verification/t1101/binding-copy.json')",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 28,
+      "consumer": "readFileSync",
+      "argument": "path",
+      "lineage": [],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 254,
+      "consumer": "page.locator('#materials').screenshot",
+      "argument": "{path:testInfo.outputPath(\"project-materials-after.png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "project",
+          "initializer": "await dispatch(page,\"projects.create\",{params:undefined,query:undefined,body:{title:\"结果采纳作品\",brief:\"\"}},{groupId:account.groupId})"
+        },
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 261,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-empty-after.png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 265,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-narrow-after.png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 276,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-assets-after.png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 287,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-upload-1024.png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "upload",
+          "initializer": "gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 289,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-upload-1536.png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "upload",
+          "initializer": "gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 307,
+      "consumer": "writeFileSync",
+      "argument": "testInfo.outputPath(\"t1220-upload-result.json\")",
+      "lineage": [
+        {
+          "binding": "upload",
+          "initializer": "gallery.getByRole(\"link\",{name:\"去素材中心上传\",exact:true})"
+        },
+        {
+          "binding": "result",
+          "initializer": "page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 360,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath(\"canvas-result-actions-after.png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "after",
+          "initializer": "await page.request.post(\"/api/v1/dispatch\",{headers:{\"content-type\":\"application/json\",\"x-group-id\":account.groupId},data:{id:\"canvas.get\",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000})"
+        },
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        },
+        {
+          "binding": "result",
+          "initializer": "page.getByTestId(\"canvas-node\").filter({hasText:\"主视觉\"})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 440,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-running.png'), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 446,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1108-interrupted-save.png'), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 446,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1117-error-normal.png'), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 448,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1117-error-narrow.png'), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 465,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1108-legacy-normal.png'), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 466,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1108-legacy-narrow.png'), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 478,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1117-preview-normal.png'), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "preview",
+          "initializer": "await dispatch(page,\"accountGroups.members.previewTransfer\",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 485,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1117-preview-narrow.png'), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "preview",
+          "initializer": "await dispatch(page,\"accountGroups.members.previewTransfer\",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 493,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1117/visible-copy.json\"))",
+      "lineage": [
+        {
+          "binding": "original",
+          "initializer": "await dispatch(page,\"canvas.create\",{body:{title:\"已有创作\"}},{groupId:account.groupId})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 494,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1108/visible-copy.json\"))",
+      "lineage": [
+        {
+          "binding": "original",
+          "initializer": "await dispatch(page,\"canvas.create\",{body:{title:\"已有创作\"}},{groupId:account.groupId})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 496,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-regenerate.png'), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 499,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-gallery.png'), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "gallery",
+          "initializer": "page.getByRole('complementary',{name:'当前账号素材'})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 502,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-canvas-narrow.png'), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 505,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1101/canvas-copy.json\"))",
+      "lineage": [
+        {
+          "binding": "canvas",
+          "initializer": "await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope)"
+        },
+        {
+          "binding": "original",
+          "initializer": "await dispatch(page,\"canvas.create\",{body:{title:\"已有创作\"}},{groupId:account.groupId})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 514,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true, timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "table",
+          "initializer": "page.getByRole('table',{name:'各平台能力'})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 515,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-qr-dialog.png'), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 518,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true, timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "tree": "generated",
+      "line": 519,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1101/binding-copy.json\"))",
+      "lineage": [
+        {
+          "binding": "original",
+          "initializer": "await dispatch(page,\"canvas.create\",{body:{title:\"已有创作\"}},{groupId:account.groupId})"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "original",
+      "line": 57,
+      "consumer": "readFileSync",
+      "argument": "resolve(repoRoot, \"output/content-samples/ai-copy-eval-loop/motion-preview.mp4\")",
+      "lineage": [
+        {
+          "binding": "repoRoot",
+          "initializer": "resolve(process.cwd(), \"..\")"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "original",
+      "line": 172,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"video-preview-desktop.png\"), timeout: 120_000 }",
+      "lineage": [
+        {
+          "binding": "video",
+          "initializer": "dialog.locator('video[data-preview-type=\"video\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "original",
+      "line": 208,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"video-preview-after-playback.png\"), timeout: 120_000 }",
+      "lineage": [
+        {
+          "binding": "video",
+          "initializer": "dialog.locator('video[data-preview-type=\"video\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "original",
+      "line": 239,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"video-preview-compact-after-reload.png\"), timeout: 120_000 }",
+      "lineage": [
+        {
+          "binding": "video",
+          "initializer": "dialog.locator('video[data-preview-type=\"video\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "original",
+      "line": 243,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "info.outputPath(\"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "original",
+      "line": 258,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-853-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "info.outputPath(\"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "generated",
+      "line": 57,
+      "consumer": "readFileSync",
+      "argument": "resolve(repoRoot, \"output/content-samples/ai-copy-eval-loop/motion-preview.mp4\")",
+      "lineage": [
+        {
+          "binding": "repoRoot",
+          "initializer": "resolve(process.cwd(), \"..\")"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "generated",
+      "line": 172,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"video-preview-desktop.png\"), timeout: 120_000 }",
+      "lineage": [
+        {
+          "binding": "video",
+          "initializer": "dialog.locator('video[data-preview-type=\"video\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "generated",
+      "line": 208,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"video-preview-after-playback.png\"), timeout: 120_000 }",
+      "lineage": [
+        {
+          "binding": "video",
+          "initializer": "dialog.locator('video[data-preview-type=\"video\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "generated",
+      "line": 239,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"video-preview-compact-after-reload.png\"), timeout: 120_000 }",
+      "lineage": [
+        {
+          "binding": "video",
+          "initializer": "dialog.locator('video[data-preview-type=\"video\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "generated",
+      "line": 243,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "info.outputPath(\"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "tree": "generated",
+      "line": 258,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-853-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "info.outputPath(\"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/group-skill-customization.spec.ts",
+      "tree": "original",
+      "line": 119,
+      "consumer": "page.screenshot",
+      "argument": "{ path, animations: \"disabled\", caret: \"hide\" }",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "testInfo.outputPath(name)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/group-skill-customization.spec.ts",
+      "tree": "generated",
+      "line": 119,
+      "consumer": "page.screenshot",
+      "argument": "{ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "testInfo.outputPath(name)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "tree": "original",
+      "line": 43,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: resolve(evidence, checkpoint + \".png\"),\n    fullPage: true,\n    style: \"nextjs-portal{visibility:hidden}\",\n  }",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(process.cwd(), \"../docs/verification/t1075\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "tree": "original",
+      "line": 655,
+      "consumer": "mkdirSync",
+      "argument": "evidence",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(process.cwd(), \"../docs/verification/t1075\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "tree": "original",
+      "line": 659,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence, \"visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(process.cwd(), \"../docs/verification/t1075\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "tree": "original",
+      "line": 673,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence, \"journey-observations.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(process.cwd(), \"../docs/verification/t1075\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "tree": "generated",
+      "line": 43,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: resolve(evidence, checkpoint + \".png\"),\n    fullPage: true,\n    style: \"nextjs-portal{visibility:hidden}\",\n  timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1075\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "tree": "generated",
+      "line": 655,
+      "consumer": "mkdirSync",
+      "argument": "evidence",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1075\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "tree": "generated",
+      "line": 659,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence, \"visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1075\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "tree": "generated",
+      "line": 673,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence, \"journey-observations.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1075\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "tree": "original",
+      "line": 173,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-a-uploaded-asset.png\"), fullPage: true }",
+      "lineage": [
+        {
+          "binding": "uploaded",
+          "initializer": "ENDPOINTS.completeUpload.response.parse((await dispatch<unknown>(page, \"assets.uploads.complete\", {\n    params: { uploadId: started.uploadId },\n    body: { name: fileName },\n  }, groupA.id)).data)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "tree": "original",
+      "line": 193,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-b-cannot-see-group-a-asset.png\"), fullPage: true }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "tree": "generated",
+      "line": 173,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-a-uploaded-asset.png\"), fullPage: true , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "uploaded",
+          "initializer": "ENDPOINTS.completeUpload.response.parse((await dispatch<unknown>(page, \"assets.uploads.complete\", {\n    params: { uploadId: started.uploadId },\n    body: { name: fileName },\n  }, groupA.id)).data)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "tree": "generated",
+      "line": 193,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-b-cannot-see-group-a-asset.png\"), fullPage: true , timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "tree": "original",
+      "line": 31,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "tree": "original",
+      "line": 36,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "tree": "generated",
+      "line": 31,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "tree": "generated",
+      "line": 36,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/production-broll-remove.spec.ts",
+      "tree": "original",
+      "line": 53,
+      "consumer": "readFileSync",
+      "argument": "resolve(\n      process.cwd(),\n      \"../output/content-samples/ai-copy-eval-loop/motion-preview.mp4\",\n    )",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "await dispatch<{ id: string }>(\n    page,\n    \"projects.outputs.create\",\n    {\n      params: { projectId: project.id },\n      query: undefined,\n      body: { title: \"主视频\", contentRole: \"conversion\" },\n    },\n    account.id,\n  )"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/production-broll-remove.spec.ts",
+      "tree": "generated",
+      "line": 53,
+      "consumer": "readFileSync",
+      "argument": "resolve(\n      process.cwd(),\n      \"../output/content-samples/ai-copy-eval-loop/motion-preview.mp4\",\n    )",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "await dispatch<{ id: string }>(\n    page,\n    \"projects.outputs.create\",\n    {\n      params: { projectId: project.id },\n      query: undefined,\n      body: { title: \"主视频\", contentRole: \"conversion\" },\n    },\n    account.id,\n  )"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/production-empty-workbench.spec.ts",
+      "tree": "original",
+      "line": 82,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: info.outputPath(\"no-video-output-workbench.png\"),\n    fullPage: true,\n  }",
+      "lineage": [
+        {
+          "binding": "workbench",
+          "initializer": "page.locator('[data-slot=\"production-uploads\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/production-empty-workbench.spec.ts",
+      "tree": "generated",
+      "line": 82,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: info.outputPath(\"no-video-output-workbench.png\"),\n    fullPage: true,\n  timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "workbench",
+          "initializer": "page.locator('[data-slot=\"production-uploads\"]')"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "tree": "original",
+      "line": 199,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "tree": "original",
+      "line": 214,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-849-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "tree": "generated",
+      "line": 199,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "tree": "generated",
+      "line": 214,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-849-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "tree": "original",
+      "line": 58,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "tree": "original",
+      "line": 63,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "tree": "generated",
+      "line": 58,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "tree": "generated",
+      "line": 63,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, `${taskId}-visible-copy.json`)",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "tree": "original",
+      "line": 171,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path,\n    fullPage: false,\n    animations: \"disabled\",\n    caret: \"hide\",\n    timeout: REQUEST_TIMEOUT_MS,\n  }",
+      "lineage": [
+        {
+          "binding": "REQUEST_TIMEOUT_MS",
+          "initializer": "120_000"
+        },
+        {
+          "binding": "path",
+          "initializer": "testInfo.outputPath(name)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "tree": "generated",
+      "line": 171,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path,\n    fullPage: false,\n    animations: \"disabled\",\n    caret: \"hide\",\n    timeout: REQUEST_TIMEOUT_MS,\n  }",
+      "lineage": [
+        {
+          "binding": "REQUEST_TIMEOUT_MS",
+          "initializer": "120_000"
+        },
+        {
+          "binding": "path",
+          "initializer": "testInfo.outputPath(name)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "tree": "original",
+      "line": 161,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "tree": "original",
+      "line": 176,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-854-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(repoRoot, \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "tree": "generated",
+      "line": 161,
+      "consumer": "mkdirSync",
+      "argument": "evidenceDir",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "tree": "generated",
+      "line": 176,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidenceDir, \"T-854-visible-copy.json\")",
+      "lineage": [
+        {
+          "binding": "evidenceDir",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "tree": "original",
+      "line": 131,
+      "consumer": "mkdirSync",
+      "argument": "directory",
+      "lineage": [
+        {
+          "binding": "directory",
+          "initializer": "resolve(process.cwd(), \"..\", \"docs/verification/t1237/browser-3925/visible-copy\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "tree": "original",
+      "line": 133,
+      "consumer": "page.screenshot",
+      "argument": "{ path, animations: \"disabled\", caret: \"hide\" }",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "resolve(directory, `${name}.png`)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "tree": "generated",
+      "line": 131,
+      "consumer": "mkdirSync",
+      "argument": "directory",
+      "lineage": [
+        {
+          "binding": "directory",
+          "initializer": "resolve(process.cwd(), \"..\", (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1237/browser-3925/visible-copy\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "tree": "generated",
+      "line": 133,
+      "consumer": "page.screenshot",
+      "argument": "{ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "resolve(directory, `${name}.png`)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "tree": "original",
+      "line": 80,
+      "consumer": "mkdirSync",
+      "argument": "directory",
+      "lineage": [
+        {
+          "binding": "directory",
+          "initializer": "resolve(process.cwd(), \"..\", \"docs/verification/t1232/browser-3921/visible-copy\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "tree": "original",
+      "line": 89,
+      "consumer": "page.screenshot",
+      "argument": "{ path, animations: \"disabled\", caret: \"hide\" }",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "resolve(directory, `${info.testId}-${checkpoint}-${viewport.width}.png`)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "tree": "generated",
+      "line": 80,
+      "consumer": "mkdirSync",
+      "argument": "directory",
+      "lineage": [
+        {
+          "binding": "directory",
+          "initializer": "resolve(process.cwd(), \"..\", (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1232/browser-3921/visible-copy\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "tree": "generated",
+      "line": 89,
+      "consumer": "page.screenshot",
+      "argument": "{ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "resolve(directory, `${info.testId}-${checkpoint}-${viewport.width}.png`)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "tree": "original",
+      "line": 27,
+      "consumer": "panel.screenshot",
+      "argument": "{path:testInfo.outputPath(\"t1105-resource-normal.png\")}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "tree": "original",
+      "line": 45,
+      "consumer": "panel.screenshot",
+      "argument": "{path:testInfo.outputPath(\"t1105-resource-error.png\")}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "tree": "original",
+      "line": 50,
+      "consumer": "panel.screenshot",
+      "argument": "{path:testInfo.outputPath(\"t1105-resource-narrow.png\")}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "tree": "original",
+      "line": 52,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),\"../docs/verification/t1105/resource-copy.json\")",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "tree": "generated",
+      "line": 27,
+      "consumer": "panel.screenshot",
+      "argument": "{path:testInfo.outputPath(\"t1105-resource-normal.png\"), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "tree": "generated",
+      "line": 45,
+      "consumer": "panel.screenshot",
+      "argument": "{path:testInfo.outputPath(\"t1105-resource-error.png\"), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "tree": "generated",
+      "line": 50,
+      "consumer": "panel.screenshot",
+      "argument": "{path:testInfo.outputPath(\"t1105-resource-narrow.png\"), timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "tree": "generated",
+      "line": 52,
+      "consumer": "writeFileSync",
+      "argument": "resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1105/resource-copy.json\"))",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "original",
+      "line": 117,
+      "consumer": "readFileSync",
+      "argument": "join(FIXTURE_ROOT, fixture.name)",
+      "lineage": [
+        {
+          "binding": "FIXTURE_ROOT",
+          "initializer": "'/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp'"
+        },
+        {
+          "binding": "fixture",
+          "initializer": "MEDIA[kind]"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "original",
+      "line": 323,
+      "consumer": "readFileSync",
+      "argument": "join(FIXTURE_ROOT, 'manifest.json')",
+      "lineage": [
+        {
+          "binding": "FIXTURE_ROOT",
+          "initializer": "'/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp'"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "original",
+      "line": 326,
+      "consumer": "readFileSync",
+      "argument": "join(FIXTURE_ROOT, file.name)",
+      "lineage": [
+        {
+          "binding": "FIXTURE_ROOT",
+          "initializer": "'/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp'"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "original",
+      "line": 337,
+      "consumer": "readFileSync",
+      "argument": "admission",
+      "lineage": [
+        {
+          "binding": "admission",
+          "initializer": "process.env.CREATOROS_T1062_E2E_LOCAL_ASR_ADMISSION"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "original",
+      "line": 344,
+      "consumer": "readFileSync",
+      "argument": "path",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "\"/projects\""
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "original",
+      "line": 350,
+      "consumer": "page.screenshot",
+      "argument": "{ path: testInfo.outputPath(name), fullPage: true }",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "\"/projects\""
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "generated",
+      "line": 117,
+      "consumer": "readFileSync",
+      "argument": "join(FIXTURE_ROOT, fixture.name)",
+      "lineage": [
+        {
+          "binding": "FIXTURE_ROOT",
+          "initializer": "'/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp'"
+        },
+        {
+          "binding": "fixture",
+          "initializer": "MEDIA[kind]"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "generated",
+      "line": 323,
+      "consumer": "readFileSync",
+      "argument": "join(FIXTURE_ROOT, 'manifest.json')",
+      "lineage": [
+        {
+          "binding": "FIXTURE_ROOT",
+          "initializer": "'/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp'"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "generated",
+      "line": 326,
+      "consumer": "readFileSync",
+      "argument": "join(FIXTURE_ROOT, file.name)",
+      "lineage": [
+        {
+          "binding": "FIXTURE_ROOT",
+          "initializer": "'/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp'"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "generated",
+      "line": 337,
+      "consumer": "readFileSync",
+      "argument": "admission",
+      "lineage": [
+        {
+          "binding": "admission",
+          "initializer": "process.env.CREATOROS_T1062_E2E_LOCAL_ASR_ADMISSION"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "generated",
+      "line": 344,
+      "consumer": "readFileSync",
+      "argument": "path",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "\"/projects\""
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "tree": "generated",
+      "line": 350,
+      "consumer": "page.screenshot",
+      "argument": "{ path: testInfo.outputPath(name), fullPage: true , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "path",
+          "initializer": "\"/projects\""
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "tree": "original",
+      "line": 34,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('picker-1366.png'),fullPage:true}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "tree": "original",
+      "line": 35,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('picker-1024.png'),fullPage:true}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "tree": "original",
+      "line": 40,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('picker-683x450-reflow.png'),fullPage:true}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "tree": "generated",
+      "line": 34,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('picker-1366.png'),fullPage:true, timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "tree": "generated",
+      "line": 35,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('picker-1024.png'),fullPage:true, timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "tree": "generated",
+      "line": 40,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('picker-683x450-reflow.png'),fullPage:true, timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "tree": "original",
+      "line": 14,
+      "consumer": "readFileSync",
+      "argument": "resolve(process.cwd(),'../output/content-samples/ai-copy-eval-loop/motion-preview.mp4')",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "await dispatch<{id:string}>(page,'projects.outputs.create',{params:{projectId:project.id},body:{title:'中性视频',contentType:'video',clientRequestId:fresh()}},group.id)"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "tree": "original",
+      "line": 41,
+      "consumer": "page.screenshot",
+      "argument": "{path:info.outputPath('video-tab-restored.png'),fullPage:true}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "tree": "generated",
+      "line": 14,
+      "consumer": "readFileSync",
+      "argument": "resolve(process.cwd(),'../output/content-samples/ai-copy-eval-loop/motion-preview.mp4')",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "await dispatch<{id:string}>(page,'projects.outputs.create',{params:{projectId:project.id},body:{title:'中性视频',contentType:'video',clientRequestId:fresh()}},group.id)"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "tree": "generated",
+      "line": 41,
+      "consumer": "page.screenshot",
+      "argument": "{path:info.outputPath('video-tab-restored.png'),fullPage:true, timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "original",
+      "line": 77,
+      "consumer": "mkdirSync",
+      "argument": "directory",
+      "lineage": [
+        {
+          "binding": "directory",
+          "initializer": "process.env.CREATOROS_T1070_EVIDENCE_DIR"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "original",
+      "line": 151,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: evidence(info, \"article-after-desktop.png\"),\n    fullPage: true,\n  }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "original",
+      "line": 161,
+      "consumer": "readFileSync",
+      "argument": "html",
+      "lineage": [
+        {
+          "binding": "html",
+          "initializer": "evidence(info, \"article-real-export.html\")"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "original",
+      "line": 169,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: evidence(info, \"article-director-narrow.png\"),\n    fullPage: true,\n  }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "original",
+      "line": 271,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: evidence(info, \"graphic-after-desktop.png\"),\n    fullPage: true,\n  }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "original",
+      "line": 280,
+      "consumer": "readFileSync",
+      "argument": "archive",
+      "lineage": [
+        {
+          "binding": "archive",
+          "initializer": "evidence(info, \"graphic-real-pages.zip\")"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "original",
+      "line": 292,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: evidence(info, \"graphic-director-narrow.png\"),\n    fullPage: true,\n  }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "generated",
+      "line": 77,
+      "consumer": "mkdirSync",
+      "argument": "directory",
+      "lineage": [
+        {
+          "binding": "directory",
+          "initializer": "resolve(process.env.CREATOROS_T1246_RUN_DIR!, \"original-output\", \"orchestrator\", \"evidence\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "generated",
+      "line": 151,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: evidence(info, \"article-after-desktop.png\"),\n    fullPage: true,\n  timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "generated",
+      "line": 161,
+      "consumer": "readFileSync",
+      "argument": "html",
+      "lineage": [
+        {
+          "binding": "html",
+          "initializer": "evidence(info, \"article-real-export.html\")"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "generated",
+      "line": 169,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: evidence(info, \"article-director-narrow.png\"),\n    fullPage: true,\n  timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "generated",
+      "line": 271,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: evidence(info, \"graphic-after-desktop.png\"),\n    fullPage: true,\n  timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "generated",
+      "line": 280,
+      "consumer": "readFileSync",
+      "argument": "archive",
+      "lineage": [
+        {
+          "binding": "archive",
+          "initializer": "evidence(info, \"graphic-real-pages.zip\")"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "tree": "generated",
+      "line": 292,
+      "consumer": "page.screenshot",
+      "argument": "{\n    path: evidence(info, \"graphic-director-narrow.png\"),\n    fullPage: true,\n  timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "original",
+      "line": 73,
+      "consumer": "mkdirSync",
+      "argument": "resolve(evidence,\"screenshots\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1136\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "original",
+      "line": 74,
+      "consumer": "page.screenshot",
+      "argument": "{path:resolve(evidence,\"screenshots\",name+\".png\")}",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1136\")"
+        },
+        {
+          "binding": "name",
+          "initializer": "\"本地弹窗预览图.png\""
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "original",
+      "line": 91,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"layout-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1136\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "original",
+      "line": 141,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"public-write-read-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1136\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "original",
+      "line": 174,
+      "consumer": "readFileSync",
+      "argument": "resolve(\"public/douyin-icon.png\")",
+      "lineage": [],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "original",
+      "line": 208,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"shared-consumer-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1136\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "generated",
+      "line": 73,
+      "consumer": "mkdirSync",
+      "argument": "resolve(evidence,\"screenshots\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "generated",
+      "line": 74,
+      "consumer": "page.screenshot",
+      "argument": "{path:resolve(evidence,\"screenshots\",name+\".png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+        },
+        {
+          "binding": "name",
+          "initializer": "\"本地弹窗预览图.png\""
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "generated",
+      "line": 91,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"layout-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "generated",
+      "line": 141,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"public-write-read-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "generated",
+      "line": 174,
+      "consumer": "readFileSync",
+      "argument": "resolve(\"public/douyin-icon.png\")",
+      "lineage": [],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "tree": "generated",
+      "line": 208,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"shared-consumer-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1136\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "original",
+      "line": 20,
+      "consumer": "readFileSync",
+      "argument": "resolve(\"public/visual-templates\",file)",
+      "lineage": [],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "original",
+      "line": 69,
+      "consumer": "mkdirSync",
+      "argument": "evidence",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1140\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "original",
+      "line": 69,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"failed-paint-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1140\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "original",
+      "line": 82,
+      "consumer": "mkdirSync",
+      "argument": "resolve(evidence,\"screenshots\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1140\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "original",
+      "line": 82,
+      "consumer": "page.screenshot",
+      "argument": "{path:resolve(evidence,\"screenshots\",name+\".png\")}",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1140\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "original",
+      "line": 111,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"layout-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1140\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "original",
+      "line": 148,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"public-write-read-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve(\"../docs/verification/t1140\")"
+        },
+        {
+          "binding": "read",
+          "initializer": "page.waitForResponse(response=>response.request().method()===\"POST\"&&response.url().endsWith(\"/api/v1/dispatch\")&&response.request().postDataJSON()?.id===\"assets.search\",wait)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "generated",
+      "line": 20,
+      "consumer": "readFileSync",
+      "argument": "resolve(\"public/visual-templates\",file)",
+      "lineage": [],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "generated",
+      "line": 69,
+      "consumer": "mkdirSync",
+      "argument": "evidence",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "generated",
+      "line": 69,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"failed-paint-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "generated",
+      "line": 82,
+      "consumer": "mkdirSync",
+      "argument": "resolve(evidence,\"screenshots\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "generated",
+      "line": 82,
+      "consumer": "page.screenshot",
+      "argument": "{path:resolve(evidence,\"screenshots\",name+\".png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "generated",
+      "line": 111,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"layout-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "tree": "generated",
+      "line": 148,
+      "consumer": "writeFileSync",
+      "argument": "resolve(evidence,\"public-write-read-observation.json\")",
+      "lineage": [
+        {
+          "binding": "evidence",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1140\"))"
+        },
+        {
+          "binding": "read",
+          "initializer": "page.waitForResponse(response=>response.request().method()===\"POST\"&&response.url().endsWith(\"/api/v1/dispatch\")&&response.request().postDataJSON()?.id===\"assets.search\",wait)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "original",
+      "line": 15,
+      "consumer": "readFileSync",
+      "argument": "resolve(\"public/visual-templates\",file)",
+      "lineage": [
+        {
+          "binding": "templates",
+          "initializer": "page.getByRole(\"complementary\",{name:\"案例与收藏\",exact:true})"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "original",
+      "line": 45,
+      "consumer": "mkdirSync",
+      "argument": "resolve(dir,\"screenshots\")",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve(\"../docs/verification/t1149\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "original",
+      "line": 45,
+      "consumer": "page.screenshot",
+      "argument": "{path:resolve(dir,\"screenshots\",name+\".png\")}",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve(\"../docs/verification/t1149\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "original",
+      "line": 66,
+      "consumer": "mkdirSync",
+      "argument": "dir",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve(\"../docs/verification/t1149\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "original",
+      "line": 66,
+      "consumer": "writeFileSync",
+      "argument": "resolve(dir,\"aspect-public-observation.json\")",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve(\"../docs/verification/t1149\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "original",
+      "line": 83,
+      "consumer": "writeFileSync",
+      "argument": "resolve(dir,\"capability-public-observation.json\")",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve(\"../docs/verification/t1149\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "generated",
+      "line": 15,
+      "consumer": "readFileSync",
+      "argument": "resolve(\"public/visual-templates\",file)",
+      "lineage": [
+        {
+          "binding": "templates",
+          "initializer": "page.getByRole(\"complementary\",{name:\"案例与收藏\",exact:true})"
+        }
+      ],
+      "inputOrOutput": "input preserved"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "generated",
+      "line": 45,
+      "consumer": "mkdirSync",
+      "argument": "resolve(dir,\"screenshots\")",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "generated",
+      "line": 45,
+      "consumer": "page.screenshot",
+      "argument": "{path:resolve(dir,\"screenshots\",name+\".png\"), timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "generated",
+      "line": 66,
+      "consumer": "mkdirSync",
+      "argument": "dir",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "generated",
+      "line": 66,
+      "consumer": "writeFileSync",
+      "argument": "resolve(dir,\"aspect-public-observation.json\")",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "tree": "generated",
+      "line": 83,
+      "consumer": "writeFileSync",
+      "argument": "resolve(dir,\"capability-public-observation.json\")",
+      "lineage": [
+        {
+          "binding": "dir",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1149\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "tree": "original",
+      "line": 26,
+      "consumer": "mkdirSync",
+      "argument": "resolve(output, \"screenshots\")",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "resolve(\"../docs/verification/t1159\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "tree": "original",
+      "line": 67,
+      "consumer": "page.screenshot",
+      "argument": "{ path: resolve(output, \"screenshots\", `${name}.png`) }",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "resolve(\"../docs/verification/t1159\")"
+        },
+        {
+          "binding": "name",
+          "initializer": "`${account.platform}-identity-required`"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "tree": "original",
+      "line": 90,
+      "consumer": "page.screenshot",
+      "argument": "{ path: resolve(output, \"screenshots\", `${name}.png`) }",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "resolve(\"../docs/verification/t1159\")"
+        },
+        {
+          "binding": "name",
+          "initializer": "`${account.platform}-identity-required`"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "tree": "original",
+      "line": 96,
+      "consumer": "writeFileSync",
+      "argument": "resolve(output, \"public-read-observation.json\")",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "resolve(\"../docs/verification/t1159\")"
+        },
+        {
+          "binding": "read",
+          "initializer": "() => dispatch<{ items: unknown[]; total: number; nextCursor: string | null }>(page, \"platforms.reports.list\", { params: { accountId: account.id }, query: { pageSize: 20, cursor: null } }, group.id, account.id)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "tree": "generated",
+      "line": 26,
+      "consumer": "mkdirSync",
+      "argument": "resolve(output, \"screenshots\")",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1159\"))"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "tree": "generated",
+      "line": 67,
+      "consumer": "page.screenshot",
+      "argument": "{ path: resolve(output, \"screenshots\", `${name}.png`) , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1159\"))"
+        },
+        {
+          "binding": "name",
+          "initializer": "`${account.platform}-identity-required`"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "tree": "generated",
+      "line": 90,
+      "consumer": "page.screenshot",
+      "argument": "{ path: resolve(output, \"screenshots\", `${name}.png`) , timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1159\"))"
+        },
+        {
+          "binding": "name",
+          "initializer": "`${account.platform}-identity-required`"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "tree": "generated",
+      "line": 96,
+      "consumer": "writeFileSync",
+      "argument": "resolve(output, \"public-read-observation.json\")",
+      "lineage": [
+        {
+          "binding": "output",
+          "initializer": "resolve((process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1159\"))"
+        },
+        {
+          "binding": "read",
+          "initializer": "() => dispatch<{ items: unknown[]; total: number; nextCursor: string | null }>(page, \"platforms.reports.list\", { params: { accountId: account.id }, query: { pageSize: 20, cursor: null } }, group.id, account.id)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "tree": "original",
+      "line": 34,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t954-review-empty-desktop.png'),fullPage:true}",
+      "lineage": [
+        {
+          "binding": "review",
+          "initializer": "page.getByRole('button',{name:'帮我复盘'}).first()"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "tree": "original",
+      "line": 38,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t954-review-empty-narrow.png'),fullPage:true}",
+      "lineage": [
+        {
+          "binding": "review",
+          "initializer": "page.getByRole('button',{name:'帮我复盘'}).first()"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "tree": "generated",
+      "line": 34,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t954-review-empty-desktop.png'),fullPage:true, timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "review",
+          "initializer": "page.getByRole('button',{name:'帮我复盘'}).first()"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "tree": "generated",
+      "line": 38,
+      "consumer": "page.screenshot",
+      "argument": "{path:testInfo.outputPath('t954-review-empty-narrow.png'),fullPage:true, timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "review",
+          "initializer": "page.getByRole('button',{name:'帮我复盘'}).first()"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "tree": "original",
+      "line": 110,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-a-initial.png\"), fullPage: true }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "tree": "original",
+      "line": 116,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-b-after-switch.png\"), fullPage: true }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "tree": "original",
+      "line": 125,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-a-return-reload.png\"), fullPage: true }",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "tree": "generated",
+      "line": 110,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-a-initial.png\"), fullPage: true , timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "tree": "generated",
+      "line": 116,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-b-after-switch.png\"), fullPage: true , timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "tree": "generated",
+      "line": 125,
+      "consumer": "page.screenshot",
+      "argument": "{ path: info.outputPath(\"group-a-return-reload.png\"), fullPage: true , timeout: 120000}",
+      "lineage": [],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "tree": "original",
+      "line": 50,
+      "consumer": "mkdirSync",
+      "argument": "screenshotRoot",
+      "lineage": [
+        {
+          "binding": "screenshotRoot",
+          "initializer": "resolve(verificationRoot, \"screenshots\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "tree": "original",
+      "line": 66,
+      "consumer": "capturedPage.screenshot",
+      "argument": "{\n        path: screenshotPath,\n        animations: \"disabled\",\n        caret: \"hide\",\n      }",
+      "lineage": [
+        {
+          "binding": "screenshotPath",
+          "initializer": "resolve(screenshotRoot, screenshotName)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "tree": "original",
+      "line": 107,
+      "consumer": "appendFileSync",
+      "argument": "scenarioIndexPath",
+      "lineage": [
+        {
+          "binding": "scenarioIndexPath",
+          "initializer": "resolve(verificationRoot, \"scenario-index.ndjson\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "tree": "generated",
+      "line": 51,
+      "consumer": "mkdirSync",
+      "argument": "screenshotRoot",
+      "lineage": [
+        {
+          "binding": "screenshotRoot",
+          "initializer": "resolve(verificationRoot, \"screenshots\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "tree": "generated",
+      "line": 67,
+      "consumer": "capturedPage.screenshot",
+      "argument": "{\n        path: screenshotPath,\n        animations: \"disabled\",\n        caret: \"hide\",\n      timeout: 120000}",
+      "lineage": [
+        {
+          "binding": "screenshotPath",
+          "initializer": "resolve(screenshotRoot, screenshotName)"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "tree": "generated",
+      "line": 108,
+      "consumer": "appendFileSync",
+      "argument": "scenarioIndexPath",
+      "lineage": [
+        {
+          "binding": "scenarioIndexPath",
+          "initializer": "resolve(verificationRoot, \"scenario-index.ndjson\")"
+        }
+      ],
+      "inputOrOutput": "evidence output or its directory; testInfo.outputPath/global evidence roots classified"
+    }
+  ]
+}

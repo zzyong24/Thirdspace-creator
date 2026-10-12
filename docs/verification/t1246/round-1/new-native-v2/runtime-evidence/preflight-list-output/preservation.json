@@ -1,0 +1,6 @@
+{
+  "source": "/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/results.json",
+  "archived": "/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/preflight-list-output/runtime-list-v2-results.json",
+  "sha256": "9ec50332fa7ddd2c965de6f6be50f0cdeddbce0b2e0f1c6eb4bb66a10672f9b0",
+  "note": "当前23:35 --list元数据，仅保留list，真实新批次23:46已起，尚无真实case总报告；不将list当body执行"
+}

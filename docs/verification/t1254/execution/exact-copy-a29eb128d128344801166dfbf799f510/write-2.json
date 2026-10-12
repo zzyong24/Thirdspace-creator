@@ -1,0 +1,10 @@
+{
+  "path": "frontend/public/reference-editors/doocs-md/native/SHA256.json",
+  "after": {
+    "sha256": "9e0d25d94e52946f5d66c2a42c17c310297e6d4c9ffe026034d1cd92f521959a",
+    "size": 43503,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

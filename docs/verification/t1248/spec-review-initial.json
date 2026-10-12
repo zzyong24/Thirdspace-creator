@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "FAIL。首轮原a060877完整合同独评有1项blocker REV-001（原SR001）：正式采纳版本门消费者未闭合。原真实评审事实保留，未运行产品测试或实施；这是迟归档的当时发现，不是补拍红测。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "blocker",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-1248-RECOVER",
+        "quote": "- FR-1248-RECOVER：上述已知旧 action 定义与既有 read v1/v2 的严格组合可恢复原任务；不修改 frozen/modelInput、工具定义、旧 hash、task/call/tool ID、预算、deadline、已结算回执或领域数据。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1248-ADOPTION",
+        "quote": "- AC-1248-ADOPTION：真实 backend root/host候选原task/call/tool与digest seal、原effect/ack、用户采纳与同receipt重放/跨scope拒绝通过；兼容不产生模型或自动正式写入。保现行当前偏好候选真实采用回归。"
+      },
+      "where": "backend/src/application/chat/assistant-system-root.ts:225-229；backend/src/modules/ai/chat-proposal-source.service.ts:50-58、73-75；原SPEC第35行",
+      "failure_mode": "SR001：旧冻结system.action.propose候选虽能经旧字段子集parse，正式来源服务仍只持当前工具version/schema；原Pi binding和最终version/parameterSchema门会拒绝旧8d426…定义。原三路径写集排除root/source，无法兑现旧候选正式采纳。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/verification/t1248/INDEPENDENT_SPEC_REVIEW.json（原a060877独立只读评审及source SHA）；root静态tools与source真实version/schema门直接源码证据，未执行测试。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:35:a46b311b0ee1ee32",
+      "suggestion": "闭合可信完整catalog→root/source采用版本选择，在真实冻结/会话/history/host证明后通过代码内固定原型建立同一版本Pi binding/decode/reused及最终version/schema门；精确补root/source及必要测试写集，保所有原身份/claim/外部turn/digest/permission/receipt/CAS门，验旧/当前preferences候选host→seal→ledger→root采用/重放/跨scope拒绝。不得信任务自报schema或删除版本门。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

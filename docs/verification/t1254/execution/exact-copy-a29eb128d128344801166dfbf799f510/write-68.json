@@ -1,0 +1,10 @@
+{
+  "path": "reference-editors/doocs-md/native/README.md",
+  "after": {
+    "sha256": "04799b49cfb4ff50c1242242e70dac0492b7bfadb696c73c5aed47e29b7dbe51",
+    "size": 6797,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

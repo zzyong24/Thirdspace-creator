@@ -1,0 +1,46 @@
+{
+  "schema": "t1253-independent-http-permission-observation-review/v1",
+  "scope": "PASS_OBSERVATION_CANDIDATE_ONLY",
+  "bindingSha256": "fe359f8023634b5ef2b73a211a32f00ecf96da2814608a6540c2432bbae4bf72",
+  "rows": [
+    {
+      "file": "backend/src/integration/chat-hooks-worker.test.ts",
+      "beforeSha256": "fb2dfb542eccb91c45747dd5c0320d0823d78e8f93e3daf2d2045df8e0c4db0f",
+      "candidateFile": "/tmp/t1253-candidate/hooks-http-permission-observation-only.test.ts",
+      "candidateSha256": "f9fe46310f1f18a5185a4bc56c84cf3906bb27e13f8c734ee0e35fd722d72bc0",
+      "originalExpectStatementsUnchanged": true,
+      "resDestroyCountUnchanged": true,
+      "modeListAndBudgetUnchanged": true,
+      "actualBefore": "fb2dfb542eccb91c45747dd5c0320d0823d78e8f93e3daf2d2045df8e0c4db0f",
+      "actualCandidate": "f9fe46310f1f18a5185a4bc56c84cf3906bb27e13f8c734ee0e35fd722d72bc0",
+      "expectASTEqual": true,
+      "expectASTCount": 70
+    },
+    {
+      "file": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "beforeSha256": "ba8f2a344a8c5f042f0fd45e89047772663e364830d8435e04af11cde7904d75",
+      "candidateFile": "/tmp/t1253-candidate/draft-http-permission-observation-only.test.ts",
+      "candidateSha256": "44be1b5c2e3834bcc957aa6330a5d3065f8f985a7d480bcc95b65347a525ddd0",
+      "originalExpectStatementsUnchanged": true,
+      "resDestroyCountUnchanged": true,
+      "modeListAndBudgetUnchanged": true,
+      "actualBefore": "ba8f2a344a8c5f042f0fd45e89047772663e364830d8435e04af11cde7904d75",
+      "actualCandidate": "44be1b5c2e3834bcc957aa6330a5d3065f8f985a7d480bcc95b65347a525ddd0",
+      "expectASTEqual": true,
+      "expectASTCount": 48
+    }
+  ],
+  "findings": [],
+  "readOnlyFieldsVerifiedAgainstActualSchema": true,
+  "exactOriginalUnknownStimulusAndExpectationPreserved": true,
+  "newHttpObservationFailureDoesNotChangeReply": true,
+  "observationsAwaitedAndErrorsAggregatedWithPrimary": true,
+  "runtimeExecuted": false,
+  "toolBudgetReviewPendingNew23220000Candidate": true,
+  "notProven": [
+    "第三child实际对应哪些未知/新call",
+    "Pi原允许政策与当前frozen属主预算是否许可第三call",
+    "原whole25通过",
+    "调用或App通过"
+  ]
+}

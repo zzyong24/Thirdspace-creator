@@ -1,0 +1,222 @@
+{
+  "sourceCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "logSha256": "2d9c6fe4783e5052d76d3d9251673ac39129be31285c6dddae7ad43acc7e3c07",
+  "result": "actual first round FAIL; no tests rerun",
+  "caseIds": [
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes index.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes endpoints.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/account-groups.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/ai.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/analytics.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/articles.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/artifacts.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/assets.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/auth.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/benchmark.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/calibration.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/candidate.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/content-calendar.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/creative-canvas.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/creative-results.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/execution.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/favorites-folder.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/graphic-posts.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/ingestion.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/intelligence.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/knowledge.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/learnings.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/material-links.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/notifications.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/pages.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/platform-accounts.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/platform-collection.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/positioning.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/production.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/projects.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/publishing.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/review-gate.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/reviews.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/scheduling.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/search.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/settings.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/taxonomy.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/topic-attribution.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/trend-source.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/visual-templates.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/work-compositions.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "endpoint-bootstrap.test.mjs",
+      "caseId": "contract module initialization from every real entry initializes operations/work-sources.ts before the public registry",
+      "status": "failed"
+    },
+    {
+      "file": "registry.test.ts",
+      "caseId": "endpoint registry registers no routes outside SPEC §13",
+      "status": "failed"
+    }
+  ]
+}

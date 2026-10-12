@@ -1,0 +1,17 @@
+{
+  "task": "T-1254",
+  "stage": "私有新增预算单元草稿，不执行，不代真实loopback慢链",
+  "originalSha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe",
+  "candidate": "/tmp/t1254-readonly/fetch-budget-candidate.test.ts",
+  "candidateSha256": "32a4dac647a9bcd4709b9737576c99ebb222b81a13faa19c242e71bcdccb5909",
+  "diff": "/tmp/t1254-readonly/fetch-budget-candidate.test.diff",
+  "diffSha256": "1cf0242194be484905502d9dbd4a6ebe70bff68f38749aeb5235c3a769d60d97",
+  "originalBytesPrefixExact": true,
+  "sameCandidateBytesForBothRoots": true,
+  "originalAssertionsChanged": false,
+  "newCases": 15,
+  "retry": 0,
+  "positiveTimeoutMs": 180000,
+  "fakeTimersEvidenceOnly": true,
+  "realSlowRequestPending": true
+}

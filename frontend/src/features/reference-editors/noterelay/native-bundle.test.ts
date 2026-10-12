@@ -14,7 +14,7 @@ async function host(source=readFileSync('public/reference-editors/noterelay/nati
  const code=await transform(source,{format:'iife',globalName:'NoteRelayNative'});w.eval(code.code);
  const shadow=w.document.querySelector('#host')!.attachShadow({mode:'open'}),container=w.document.createElement('div');shadow.append(container);
  const signal=new w.AbortController(),changed:unknown[]=[];
- const runtime=await (w as any).NoteRelayNative.mount(container,{owner:{accountId:'account',outputId:'output',sourceVersionId:'version'},theme,portalContainer:container,signal:signal.signal,onChanged:(v:unknown)=>changed.push(v),onError:()=>{}});
+ const runtime=await (w as any).NoteRelayNative.mount(container,{owner:{accountId:'account',projectId:'project',outputId:'output',sourceVersionId:'version'},theme,portalContainer:container,signal:signal.signal,onChanged:(v:unknown)=>changed.push(v),onError:()=>{}});
  return {w,shadow,container,runtime,signal,changed,before,close:async()=>{await runtime.dispose();dom.window.close();}};
 }
 async function blobText(w:any,blob:Blob){return new Promise<string>((resolve,reject)=>{const reader=new w.FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsText(blob);});}

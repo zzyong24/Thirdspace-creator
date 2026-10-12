@@ -171,6 +171,10 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
   activeBrandProfile?: { id: string; versionNumber: number; oneLiner: string } | null;
 }) {
   const scope=useCreationScope(),articleClient=useCreationClient() as unknown as ArticleClient,workspaceOwner=creationScopeKey(scope);
+  const chat=useDraftChatRequest();
+  const initialWritingChoice=React.useRef(chat.readWritingContext(workspaceOwner,projectId));
+  const [brandVersion,setBrandVersion]=React.useState(initialWritingChoice.current?.brandProfileVersionId??activeBrandProfile?.id??null);
+  const sourceVersionChoices=React.useRef(initialWritingChoice.current?.sourceAssets??[]);
   const [outputs, setOutputs] = React.useState(initialOutputs);
   const [outputId, setOutputId] = React.useState(initialOutputId
     ? initialOutputs.some(output => output.id === initialOutputId) ? initialOutputId : ""
@@ -182,9 +186,9 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
   const [candidate, setCandidate] = React.useState<Candidate | null>(null);
   const [pendingTaskId, setPendingTaskId] = React.useState<string | null>(null);
   const [partialTask, setPartialTask] = React.useState(false);
-  const [useBrandProfile, setUseBrandProfile] = React.useState(Boolean(activeBrandProfile));
+  const [useBrandProfile, setUseBrandProfile] = React.useState(initialWritingChoice.current?initialWritingChoice.current.brandProfileVersionId!==null:Boolean(activeBrandProfile));
   const [sourceAssets, setSourceAssets] = React.useState<SourceAsset[]>([]);
-  const [selectedSourceIds, setSelectedSourceIds] = React.useState<string[]>([]);
+  const [selectedSourceIds, setSelectedSourceIds] = React.useState<string[]>(initialWritingChoice.current?.sourceAssets.map(s=>s.assetId)??[]);
   const [sourceRefresh, setSourceRefresh] = React.useState(0);
   const [sourceLoading, setSourceLoading] = React.useState(false);
   const [sourceError, setSourceError] = React.useState<string | null>(null);
@@ -206,7 +210,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
   React.useEffect(()=>{mountedRef.current=true;return()=>{mountedRef.current=false;};},[]);
   const draftRef = React.useRef(draft);
   React.useLayoutEffect(() => { stateRef.current = state; draftRef.current = draft; }, [state,draft]);
-  const chat=useDraftChatRequest(),generationRef=React.useRef(0),targetRef=React.useRef<WorkEditorTarget|null>(null),portRef=React.useRef<DraftEditorPort|null>(null),savePromiseRef=React.useRef<Promise<boolean>|null>(null);
+  const generationRef=React.useRef(0),targetRef=React.useRef<WorkEditorTarget|null>(null),portRef=React.useRef<DraftEditorPort|null>(null),savePromiseRef=React.useRef<Promise<boolean>|null>(null);
   const selectionRef=React.useRef<any>({kind:"article",sectionIds:[]});
   const selectionPromise=React.useRef<Promise<void>|null>(null);
   const setDraft=React.useCallback((value:React.SetStateAction<ArticleDocument | null>)=>{const next=typeof value==='function'?value(draftRef.current):value;if(editorCanonical(next)!==editorCanonical(draftRef.current)){generationRef.current++;draftRef.current=next;const {textRange,...selection}=selectionRef.current;selectionRef.current=selection;chat.notifyEditorChanged();}setDraftState(next);},[chat.notifyEditorChanged]);
@@ -334,6 +338,8 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     return () => { active = false; if (timer) clearTimeout(timer); };
   }, [outputId, pendingTaskId]);
 
+  const writingChoice=()=>({schemaVersion:1 as const,brandProfileVersionId:useBrandProfile?brandVersion:null,sourceAssets:selectedSourceIds.map(id=>sourceVersionChoices.current.find(s=>s.assetId===id)??(()=>{const asset=sourceAssets.find(s=>s.id===id);if(!asset?.currentFileId)throw Error('所选资料的原文件版本不可用，请明确重新选择');return {assetId:id,assetFileId:asset.currentFileId};})())});
+  React.useEffect(()=>{chat.setWritingContext(workspaceOwner,projectId,writingChoice());},[workspaceOwner,projectId,useBrandProfile,brandVersion,selectedSourceIds,sourceAssets,chat.setWritingContext]);
   React.useLayoutEffect(()=>{portRef.current={readState:()=>({target:targetRef.current,outputId:stateRef.current?.outputId,generation:generationRef.current,dirty:Boolean(stateRef.current&&draftRef.current&&editorCanonical(draftRef.current)!==editorCanonical(stateRef.current.current))}),prepareForTurn:async()=>{
    if(selectionPromise.current)await selectionPromise.current;
    if(savePromiseRef.current)await savePromiseRef.current;
@@ -342,7 +348,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
    const current=stateRef.current!;const latest=await articleClient.getArticle({params:{outputId:current.outputId},query:undefined,body:undefined});
    const exact=await articleClient.getArticleVersion({params:{outputId:current.outputId,versionId:latest.currentVersionId},query:undefined,body:undefined});
    if(latest.currentVersionId!==current.currentVersionId||editorCanonical(exact.document)!==editorCanonical(latest.current)||editorCanonical(draftRef.current)!==editorCanonical(exact.document))throw Error("当前作品已改变，请核对保存版本后重试。");
-   const target:WorkEditorTarget={schemaVersion:1,projectId,outputId:latest.outputId,owner:"wechat_article",contentType:"article",savedBase:{kind:"artifact",artifactId:latest.artifactId,versionId:latest.currentVersionId},documentDigest:await editorDigest(exact.document),selection:selectionRef.current};targetRef.current=target;return target;
+   const target:WorkEditorTarget={schemaVersion:1,projectId,outputId:latest.outputId,owner:"wechat_article",writingContext:writingChoice(),contentType:"article",savedBase:{kind:"artifact",artifactId:latest.artifactId,versionId:latest.currentVersionId},documentDigest:await editorDigest(exact.document),selection:selectionRef.current};targetRef.current=target;return target;
   },previewCandidate:async()=>null,adoptCandidate:async(result:EditorSaveCandidate,requestId:string)=>{
    const initial=stateRef.current;if(!initial||initial.outputId!==editorCandidateOutputId(result))throw Error("当前作品已改变。");
    const frozen=editorCanonical(draftRef.current),generation=generationRef.current;
@@ -588,8 +594,9 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
       <p className="mt-1 text-muted-foreground">生成前选择本次使用的身份。手写内容不受此选项影响。</p>
       <label className="mt-3 flex items-start gap-2"><input type="radio" name="article-brand" checked={!useBrandProfile}
         onChange={() => setUseBrandProfile(false)} /><span>中性写作方法</span></label>
+      {useBrandProfile&&brandVersion&&brandVersion!==activeBrandProfile?.id&&<p role="status" className="mt-2 text-muted-foreground">保留原选择的身份版本；当前品牌已变化，请明确改选当前版本或中性写作后再开始新一轮。已提交任务仍读取原冻结版本。</p>}
       {activeBrandProfile ? <label className="mt-2 flex items-start gap-2"><input type="radio" name="article-brand"
-        checked={useBrandProfile} onChange={() => setUseBrandProfile(true)} />
+        checked={useBrandProfile&&brandVersion===activeBrandProfile.id} onChange={() => {setBrandVersion(activeBrandProfile.id);setUseBrandProfile(true);}} />
         <span>使用当前账号品牌版本 v{activeBrandProfile.versionNumber}<br />
           <span className="text-muted-foreground">{activeBrandProfile.oneLiner}</span></span></label>
         : <p className="mt-2 text-muted-foreground">当前账号尚无可用品牌版本，将使用中性写作方法。</p>}
@@ -597,16 +604,15 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     {state && <section className="rounded-xl border p-4 text-sm">
       <div className="flex items-center justify-between gap-3"><h2 className="font-medium">本次生成的参考资料</h2>
         <Button size="sm" variant="outline" onClick={() => setSourceRefresh((value) => value + 1)}>刷新项目资料</Button></div>
-      <p className="mt-1 text-muted-foreground">项目资料会自动作为来源。勾选的项目文档按当前文件版本提供给模型；不勾选也能生成候选。</p>
+      <p className="mt-1 text-muted-foreground">只将勾选的项目文档按明确文件版本提供给模型；不勾选也能生成候选。</p>
       {sourceLoading && <p className="mt-2 text-muted-foreground">正在读取项目资料…</p>}
       {sourceError && <p role="alert" className="mt-2 text-red-700">{sourceError}</p>}
       {!sourceLoading && !sourceError && !sourceAssets.length && <p className="mt-2 text-muted-foreground">
         当前项目没有已关联且完成文字抽取的文档。<Link className="underline" href="/assets">去素材中心添加资料</Link>
       </p>}
       {sourceAssets.map((asset) => <label key={asset.id} className="mt-2 flex items-start gap-2 rounded-md border p-2">
-        <input type="checkbox" checked={selectedSourceIds.includes(asset.id)} onChange={(event) => setSelectedSourceIds(
-          event.target.checked ? [...selectedSourceIds, asset.id] : selectedSourceIds.filter((id) => id !== asset.id))} />
-        <span><strong>{asset.name}</strong><br /><span className="text-xs text-muted-foreground">已保存的文档资料</span></span>
+        <input type="checkbox" checked={selectedSourceIds.includes(asset.id)} onChange={(event) => {sourceVersionChoices.current=sourceVersionChoices.current.filter(s=>s.assetId!==asset.id);if(event.target.checked)sourceVersionChoices.current.push({assetId:asset.id,assetFileId:asset.currentFileId});setSelectedSourceIds(event.target.checked?[...selectedSourceIds,asset.id]:selectedSourceIds.filter(id=>id!==asset.id));}} />
+        <span><strong>{asset.name}</strong><br /><span className="text-xs text-muted-foreground">已保存的文档资料{selectedSourceIds.includes(asset.id)&&sourceVersionChoices.current.find(s=>s.assetId===asset.id)?.assetFileId!==asset.currentFileId?" · 保留原选择的文件版本，重新勾选才使用更新版本":""}</span></span>
       </label>)}
     </section>}
 

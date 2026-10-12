@@ -1,0 +1,26 @@
+{
+  "names": [
+    "ipc::tests::accepted_socket_waits_for_the_authorized_child_to_finish_writing",
+    "ipc::tests::authenticated_peer_can_write_read_and_cannot_escape_task",
+    "ipc::tests::authorized_child_probe",
+    "ipc::tests::different_real_process_is_rejected_even_with_socket_path",
+    "ipc::tests::exact_spawned_child_can_connect",
+    "ipc::tests::external_node_file_journal_fixture",
+    "ipc::tests::external_node_files_host_fixture",
+    "ipc::tests::file_journal_rejects_same_operation_with_changed_request_before_writing",
+    "ipc::tests::file_journal_replay_does_not_overwrite_a_later_version",
+    "ipc::tests::file_journal_replays_original_operation_after_host_restart",
+    "ipc::tests::private_socket_runs_a_real_packaged_node_task_script",
+    "ipc::tests::private_socket_runs_reads_and_cancels_mac_process_for_same_task_only",
+    "ipc::tests::t1250_authorized_frame_after_thirty_seconds_keeps_original_operation",
+    "ipc::tests::t1250_backpressured_reply_uses_one_deadline",
+    "ipc::tests::t1250_cancel_wakes_owned_reply_without_claiming_write_rollback",
+    "ipc::tests::t1250_owned_bridge_stop_wakes_incomplete_frame_without_effect",
+    "ipc::tests::t1250_partial_frame_activity_does_not_renew_frozen_deadline",
+    "ipc::tests::unauthorized_child_probe"
+  ],
+  "binary": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/0c40c3baa69dda6cc9366459/target/debug/deps/creatoros_workbench_test-eff919631907b84d",
+  "binarySha256": "26ca87fb9349cd9a3a67b57c06e65b52a05e903c7ad348edd33f84192f7f0eca",
+  "filter": "ipc::tests",
+  "ignoredRemainOriginal": true
+}

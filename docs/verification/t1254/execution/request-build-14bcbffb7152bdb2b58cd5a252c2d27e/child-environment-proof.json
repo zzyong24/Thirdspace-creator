@@ -1,0 +1,7 @@
+{
+  "originalHomeAndCodexHomePreserved": true,
+  "noInheritedCredentials": true,
+  "childOnlyNoTCCChange": true,
+  "network": "OS localhost-only direction rules; actual tested listener/URL127.0.0.1; IPv6 not separately tested",
+  "profileSha256": "accb790923fc838b704219f456c22df40867a4d3ae5e1b533e9bdb041350a379"
+}

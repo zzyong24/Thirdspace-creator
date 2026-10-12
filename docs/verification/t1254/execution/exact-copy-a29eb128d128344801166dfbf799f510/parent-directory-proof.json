@@ -1,0 +1,100 @@
+{
+  "rows": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606165
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606163
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606132
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348605877
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348592577
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/native",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606177
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/native/chunks",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606184
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/static/css",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606580
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/static",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606579
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/doocs-md/static/js",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606592
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/sources/doocs-md",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606957
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/public/reference-editors/sources",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348606953
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348607006
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/reference-editors/doocs-md/native",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348610141
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/reference-editors/doocs-md",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348610140
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/reference-editors",
+      "uid": 501,
+      "mode": 493,
+      "inode": 348610138
+    }
+  ]
+}

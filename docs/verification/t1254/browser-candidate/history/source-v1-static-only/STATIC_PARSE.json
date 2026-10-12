@@ -1,0 +1,12 @@
+{
+  "kind": "static-parser-only-not-list-not-types-not-runtime",
+  "source": "docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+  "sha256": "014a276cb46db9c217516367626d869112aa94162f8b309743a8c46012fce9ba",
+  "parseDiagnostics": [],
+  "declaredWidths": [
+    1366,
+    390
+  ],
+  "modelExecution": false,
+  "App": false
+}

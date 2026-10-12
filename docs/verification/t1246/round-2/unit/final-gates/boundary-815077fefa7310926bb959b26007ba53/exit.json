@@ -1,0 +1,34 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "orchestrator/process/boundary-scan.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-815077fefa7310926bb959b26007ba53/gate.log",
+  "pid": 36168,
+  "identity": {
+    "pid": 36168,
+    "pgid": 36168,
+    "uid": 501,
+    "birth": "Mon Oct 12 07:30:57 2026",
+    "startedAt": 1791761457023
+  },
+  "startedAt": "2026-10-11T23:30:57.023Z",
+  "endedAt": "2026-10-11T23:30:57.372Z",
+  "elapsedMs": 349,
+  "budgetMs": 1200000,
+  "deadlineAt": "2026-10-11T23:50:57.023Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

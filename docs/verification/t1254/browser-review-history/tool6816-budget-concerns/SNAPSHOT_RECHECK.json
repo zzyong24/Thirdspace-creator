@@ -1,0 +1,248 @@
+{
+  "bindingSha256": "681683c6aceaf17dddd90f26df9a1ea26b558d8f1295c3a4e685c3fdba0535c4",
+  "rows": [
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/INHERITED_PROVENANCE.json",
+      "expectedSha256": "1ce36489006ee2149738587686502cf939e45f2f38bcc0789849161e914f2e58",
+      "actualSha256": "1ce36489006ee2149738587686502cf939e45f2f38bcc0789849161e914f2e58",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/LAUNCH_FROM_V3.diff",
+      "expectedSha256": "f6834a0933175eaf94f7fc3d56d421abbcc1738154889eed7050eb4888fd00ac",
+      "actualSha256": "f6834a0933175eaf94f7fc3d56d421abbcc1738154889eed7050eb4888fd00ac",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/PENDING_INPUTS.json",
+      "expectedSha256": "204d59cd56d92c06bf4f7063b83a023fe836fd064bc05bb4a4a479382b368e48",
+      "actualSha256": "204d59cd56d92c06bf4f7063b83a023fe836fd064bc05bb4a4a479382b368e48",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/PREPARE_FROM_V3.diff",
+      "expectedSha256": "29d30b720ddfcb14de7c6a1d02cac49804d738b48674a0ef7d9bcf1b6a302367",
+      "actualSha256": "29d30b720ddfcb14de7c6a1d02cac49804d738b48674a0ef7d9bcf1b6a302367",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/README.md",
+      "expectedSha256": "f679005abfb1e5aba637aa95954d366566e0a6466e2a8ab467d9acd14783defa",
+      "actualSha256": "f679005abfb1e5aba637aa95954d366566e0a6466e2a8ab467d9acd14783defa",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/SOURCE_V2_DELTA_PROOF.json",
+      "expectedSha256": "e222e1766d211a396813037ad6d2d9227fea1c8f3a31e0c39fa581bbbeba3edd",
+      "actualSha256": "e222e1766d211a396813037ad6d2d9227fea1c8f3a31e0c39fa581bbbeba3edd",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/TOOL_31C_TO_SOURCE_V2.diff",
+      "expectedSha256": "c0eac95c21e74fa9e448804753edd3552bdee83c12e136c42c546a6e0d1de9d2",
+      "actualSha256": "c0eac95c21e74fa9e448804753edd3552bdee83c12e136c42c546a6e0d1de9d2",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/FINAL_STATIC_PARSE_RESULT.json",
+      "expectedSha256": "0b8a08dec55c24cb665e503b66e7dd21ee938e0d98469673d390e6efafb6923b",
+      "actualSha256": "0b8a08dec55c24cb665e503b66e7dd21ee938e0d98469673d390e6efafb6923b",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/SOURCE_V2_SYNTAX_PRE_GIT_HISTORY.json",
+      "expectedSha256": "68777a403194d5ab0aaa0ed16b33397b1c44b17911d7e87a24ef8b3f859941dd",
+      "actualSha256": "68777a403194d5ab0aaa0ed16b33397b1c44b17911d7e87a24ef8b3f859941dd",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/SOURCE_V2_SYNTAX_RESULT.json",
+      "expectedSha256": "cc582228a66950edbd57f3998a1a160351b11afee2949ece79a864c59fcfda6c",
+      "actualSha256": "cc582228a66950edbd57f3998a1a160351b11afee2949ece79a864c59fcfda6c",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/STATIC_RESULT.json",
+      "expectedSha256": "80f5b21575f7565036dbfc4973febe1d3c1fb07b95dd0e38dda84ffae7a5d67b",
+      "actualSha256": "80f5b21575f7565036dbfc4973febe1d3c1fb07b95dd0e38dda84ffae7a5d67b",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/budget-result.json",
+      "expectedSha256": "3ba874e99925c9da6d86a7e9f2db4a6d56076b3aaae93f55a6f67b9cef29cff1",
+      "actualSha256": "3ba874e99925c9da6d86a7e9f2db4a6d56076b3aaae93f55a6f67b9cef29cff1",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/budget.cjs",
+      "expectedSha256": "8092ed140ed90f0493eceaf2dd9f190e3c0ac03f5a67eb9926c07b6c52a77616",
+      "actualSha256": "8092ed140ed90f0493eceaf2dd9f190e3c0ac03f5a67eb9926c07b6c52a77616",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/dynamic-priority-result.json",
+      "expectedSha256": "15b89671c0dbcce459cb2c576abcc03a9d79ef307c2ca9e5e93dea3c474a280e",
+      "actualSha256": "15b89671c0dbcce459cb2c576abcc03a9d79ef307c2ca9e5e93dea3c474a280e",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/dynamic-priority.cjs",
+      "expectedSha256": "687fc6efa4e133dacf9d2f2c8d4fd21ac4598d6ab6f8f8b85bfea8f844a6eb19",
+      "actualSha256": "687fc6efa4e133dacf9d2f2c8d4fd21ac4598d6ab6f8f8b85bfea8f844a6eb19",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/history-before-final-tool/STATIC_RESULT.json",
+      "expectedSha256": "fa306bee1187cebe1c12c530d789fb36dc727bb066bf250979de99b69a762d1f",
+      "actualSha256": "fa306bee1187cebe1c12c530d789fb36dc727bb066bf250979de99b69a762d1f",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/history-before-final-tool/budget-result.json",
+      "expectedSha256": "6360d922eb3c306b8e183c52e75a764b813acd5b74aedc561039289b65985f97",
+      "actualSha256": "6360d922eb3c306b8e183c52e75a764b813acd5b74aedc561039289b65985f97",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/history-before-final-tool/pg-preconnect-result.json",
+      "expectedSha256": "ec3bae6bbcb228c7c8b986f54865003e24ebfca1c3727faca7f24c0f1ad16af4",
+      "actualSha256": "ec3bae6bbcb228c7c8b986f54865003e24ebfca1c3727faca7f24c0f1ad16af4",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/pg-preconnect-result.json",
+      "expectedSha256": "9cc23214e9c86dab2ec5a85748f4b5eb0a81f31e46bc0c6c73bfd7309bd9556d",
+      "actualSha256": "9cc23214e9c86dab2ec5a85748f4b5eb0a81f31e46bc0c6c73bfd7309bd9556d",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/pg-preconnect.cjs",
+      "expectedSha256": "b6886ff18555a85489d1b1be38511b384e5a333170b08c5cfd645b8e038d3711",
+      "actualSha256": "b6886ff18555a85489d1b1be38511b384e5a333170b08c5cfd645b8e038d3711",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/source-types-result.json",
+      "expectedSha256": "632b316392180ebc2c33d32c371f3e900b743d8ddbf096735e7bea5482a5d9fa",
+      "actualSha256": "632b316392180ebc2c33d32c371f3e900b743d8ddbf096735e7bea5482a5d9fa",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/source-types.cjs",
+      "expectedSha256": "0dc275174a45bf34e64337501d5d6ee66d88e5a97ddaf2b02322561324d9d433",
+      "actualSha256": "0dc275174a45bf34e64337501d5d6ee66d88e5a97ddaf2b02322561324d9d433",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+      "expectedSha256": "8ac60e9ab2af43b0355f6c5b1624af783e9a1d0ceb7275a055016df0863c22c3",
+      "actualSha256": "8ac60e9ab2af43b0355f6c5b1624af783e9a1d0ceb7275a055016df0863c22c3",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/driver-types.cjs",
+      "expectedSha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "actualSha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/launch.cjs",
+      "expectedSha256": "afebd49f175d8c6b3a00f26d49065178da99ff652f6ad75b9252ddba7eeac692",
+      "actualSha256": "afebd49f175d8c6b3a00f26d49065178da99ff652f6ad75b9252ddba7eeac692",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/playwright.config.ts",
+      "expectedSha256": "7077666eaae6cbf1ffc01017b0f64b0aa71832d5e1d9fcd7f0bd04b44b9e8b69",
+      "actualSha256": "7077666eaae6cbf1ffc01017b0f64b0aa71832d5e1d9fcd7f0bd04b44b9e8b69",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+      "expectedSha256": "68179eda393991c16c2f5cec238637581120628f5d43bfe49d0a958ee89f9394",
+      "actualSha256": "68179eda393991c16c2f5cec238637581120628f5d43bfe49d0a958ee89f9394",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/runtime-dyld.cjs",
+      "expectedSha256": "09962bc804feb2b609d5185bcc1963caf213203d77603773e68bf0a73b9e7fb4",
+      "actualSha256": "09962bc804feb2b609d5185bcc1963caf213203d77603773e68bf0a73b9e7fb4",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/seal.cjs",
+      "expectedSha256": "85bdd7c62036d30385eff03c7f3620ba723b602786a0c4713131853141765464",
+      "actualSha256": "85bdd7c62036d30385eff03c7f3620ba723b602786a0c4713131853141765464",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "expectedSha256": "174240548c992d4904a0fe1ac13246225192fe8a70280846f8303773bfa07471",
+      "actualSha256": "174240548c992d4904a0fe1ac13246225192fe8a70280846f8303773bfa07471",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "expectedSha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+      "actualSha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/SOURCE_V2_BINDING.json",
+      "expectedSha256": "74e21edf5b2803b2dbd5f885233c40363a3a8d5dc0d339d12f5293e9895acbcc",
+      "actualSha256": "74e21edf5b2803b2dbd5f885233c40363a3a8d5dc0d339d12f5293e9895acbcc",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_BROWSER_SOURCE_V2_REVIEW.json",
+      "expectedSha256": "44f627a6ed04215c104fb83c47c4c79880116db0c9eb4921a8e0d126347f7683",
+      "actualSha256": "44f627a6ed04215c104fb83c47c4c79880116db0c9eb4921a8e0d126347f7683",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_BROWSER_TOOL_31C_FIRST_CONCERNS.json",
+      "expectedSha256": "230881f0489ff292a13749c822c83523912a9f70f58ebe2506fb62e9c7079e27",
+      "actualSha256": "230881f0489ff292a13749c822c83523912a9f70f58ebe2506fb62e9c7079e27",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1254-doocs-request-budget-and-source-closure.md",
+      "expectedSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+      "actualSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+      "same": true
+    },
+    {
+      "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "expectedSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+      "actualSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+      "same": true
+    },
+    {
+      "source": "/private/tmp/t1254-browser-dyld-7l0dxkzf/CURRENT_READONLY_BINDING.json",
+      "expectedSha256": "25e3bade794bb3e5da1a5d4ea6f9a642628604e6c9c4b8f8820fc008ca57f15d",
+      "actualSha256": "25e3bade794bb3e5da1a5d4ea6f9a642628604e6c9c4b8f8820fc008ca57f15d",
+      "same": true
+    },
+    {
+      "source": "/private/tmp/t1254-browser-dyld-7l0dxkzf/BROWSER_DYLD_CLOSURE_CURRENT.json",
+      "expectedSha256": "074af906fd38110e7c2e1dd9d8caf151a6e3e18d50f76ad6961ed0ccc5cc7110",
+      "actualSha256": "074af906fd38110e7c2e1dd9d8caf151a6e3e18d50f76ad6961ed0ccc5cc7110",
+      "same": true
+    },
+    {
+      "source": "/private/tmp/t1254-browser-dyld-7l0dxkzf/prepare-browser-dyld-closure.py",
+      "expectedSha256": "258b4a1dde102fcad8cc6354e8040882227680b99bbc0fa61033c29810caf324",
+      "actualSha256": "258b4a1dde102fcad8cc6354e8040882227680b99bbc0fa61033c29810caf324",
+      "same": true
+    },
+    {
+      "source": "/private/tmp/t1254-browser-dyld-7l0dxkzf/PRODUCER_FROM_BUILDER_V10_FINAL.diff",
+      "expectedSha256": "a4eb6016a94dad7d4c077159bb8d47febf37123c17424bd6fc72f2625167eade",
+      "actualSha256": "a4eb6016a94dad7d4c077159bb8d47febf37123c17424bd6fc72f2625167eade",
+      "same": true
+    }
+  ],
+  "drift": [],
+  "sourceOnly": true,
+  "noRuntime": true
+}

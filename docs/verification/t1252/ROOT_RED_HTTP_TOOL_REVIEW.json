@@ -1,0 +1,59 @@
+{
+  "approved": true,
+  "at": "2026-10-11T22:30:51.251166+00:00",
+  "fullLaunchProtocolAnd12NegativeCasesActuallyRead": true,
+  "toolSha256": "29a6b68a15117dbdbbf2f50cbb9df51ba94c862e738fcd14bf3497d8bf110e75",
+  "bindingSha256": "e671cfbc72c1936406b01d71bfa77d666055be4ceaba6895d4f3beadccd984b9",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "inputChecks": [
+    {
+      "path": "docs/features/t1252-cli-http-consumer-budget-closure.md",
+      "sha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402"
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/launch.cjs",
+      "sha256": "29a6b68a15117dbdbbf2f50cbb9df51ba94c862e738fcd14bf3497d8bf110e75"
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/ownership-negatives.cjs",
+      "sha256": "266f308c38e2675f26c156e1ff9aefd56e7fc6b6fa66706eaae3bbd15653d5aa"
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/protocol-red.cjs",
+      "sha256": "885ff7ca6d06c4b9dcd579e08421cc8f839752e7aaecdce64e43e07a2aaf842c"
+    },
+    {
+      "path": "mcp-server/package.json",
+      "sha256": "2ab421c76f3977b43e052699fefec3000816475eb78c26c80cd110dc38df0c3b"
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "sha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4"
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "sha256": "4e679f48074de96a2c1badd3ef5a3950ca32fb8c3bd9de3dca12c39768ccf532"
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "sha256": "360e4531b26e7fe540bcca5efbfe08f12ba38a2b48bfb1d660a2527e1085f957"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6"
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "sha256": "6ef4e5c873fcd5ac2719a220454ba3ed33be78394b63d3fd7cba5140aaddff13"
+    }
+  ],
+  "actualDrift": 0,
+  "scope": "两原Node25 global fetch协议真实>300秒RED；0 business/model/App/PG",
+  "entryAbsoluteOuterMs": 3240000,
+  "perChildCaseMs": 780000,
+  "cleanupMs": 1200000,
+  "sourceLockFreezeUntilTwoProtocolEOF": true,
+  "stdoutAndLogAndOwnedCloseProofRequired": true,
+  "noHTTPExecutedByRootReviewer": true,
+  "notImplementationPass": true
+}

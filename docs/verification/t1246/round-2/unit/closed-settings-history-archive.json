@@ -1,0 +1,22 @@
+{
+  "reason": "独立历史设置完整原例已EOF；保留其源码与原运行证据，避免临时复制品进入产品typegen与打包",
+  "archive": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-closed-settings-history-archive-8sbug4xj/tests-t1246-settings-history-full",
+  "files": [
+    {
+      "path": "e2e/settings.spec.ts",
+      "sha256": "6d012f7c3657f43da6030f8014c2b0fb7b9aba52403abf16f77450a428a63969",
+      "bytes": 23727
+    },
+    {
+      "path": "helpers/network-policy.ts",
+      "sha256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+      "bytes": 873
+    },
+    {
+      "path": "helpers/test-environment.ts",
+      "sha256": "8e74f4a4801d8dc38704bbda31abfbaaa9edd1739cd6207cec7981f261bc1d56",
+      "bytes": 7740
+    }
+  ],
+  "deletedOnlyOwnedExactThree": true
+}

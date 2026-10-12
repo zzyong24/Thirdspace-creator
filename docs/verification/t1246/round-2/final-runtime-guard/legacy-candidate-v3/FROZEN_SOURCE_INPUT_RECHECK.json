@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-12T07:44:58.418410+00:00",
+  "prior27cfBindingSHA": "27cf7abc90b0a2cdb295e59a8a744178ccfc2ba7180125dc86a06ae983d80092",
+  "priorFrozen215Drift": 0,
+  "a738AndDoocs29bUnchanged": true,
+  "original9AndB994Unchanged": true,
+  "actualFailure652FilesUnchanged": true,
+  "sourceCodeChangedExactly": [
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/budget-test.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/reseal.cjs"
+  ],
+  "priorCopiedCodeBytesUnchanged": 28,
+  "currentExternalRows": 236,
+  "currentExternalSHAAndSizeDrift": 0
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "exitCode": 0,
+  "outerTimedOut": false,
+  "outerMs": 900000,
+  "cleanupMs": 120000,
+  "durationMs": 18716,
+  "pid": 99090,
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend",
+  "buildRequestMs": 120000,
+  "hookMs": 180000,
+  "caseMs": 180000,
+  "cases": 2
+}

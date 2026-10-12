@@ -1,0 +1,6 @@
+{
+  "note": "wholefirst original full files were not byte-archived; actual patch text recorded, production file restored from that actual tool patch and compared to wholefirst recorded SHA; not an original archive",
+  "originalWholeFirstRecordedSHA": "599d8ca89232ef7214afc3d2dc2fa939d14de9cc3beac4dbdff34520b2e7061f",
+  "restoredFromActualToolPatchSHA": "599d8ca89232ef7214afc3d2dc2fa939d14de9cc3beac4dbdff34520b2e7061f",
+  "matches": true
+}

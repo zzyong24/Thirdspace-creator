@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-11T23:05:21.578994+00:00",
+  "toolSha256": "3c36d5535e53ca9566976b95950efa992564d869326d0470be66b096ca598fca",
+  "bindingSha256": "be6a0c4bf732e03249e35e3b2203f54dc12301e3de631f45dbea6e397fa03738",
+  "syntaxActualExit": 0,
+  "pureNegativeActualExit": 0,
+  "installOrListOrTestOrBuildExecuted": false,
+  "inputs": 207,
+  "fullOriginalMcpFileInventory": [
+    "mcp-server/tests/cli-artifacts.test.ts",
+    "mcp-server/tests/cli.test.ts",
+    "mcp-server/tests/connection.test.ts",
+    "mcp-server/tests/dispatch.test.ts",
+    "mcp-server/tests/group-context.test.ts",
+    "mcp-server/tests/group-mcp-context.test.ts",
+    "mcp-server/tests/server-discovery.test.ts",
+    "mcp-server/tests/tools.test.ts"
+  ]
+}

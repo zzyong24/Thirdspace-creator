@@ -1,0 +1,22 @@
+{
+  "reviewedAt": "2026-10-11T20:13:34.042101+00:00",
+  "verdict": "PASS_SPEC_AND_EXACT_CANDIDATE_ONLY",
+  "independentReview": "INDEPENDENT_SPEC_ORDER_RECHECK_V2.json",
+  "specSha256": "a815e5da23ef92579ae722ba9bd4227259d0bb9d14960d6c9dffa626395195de",
+  "candidateBindings": [
+    {
+      "file": "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+      "sha256": "512966ceab46ef91bfa39ba8081b9a05af3671c0854fe4136e40b6c4dc144049"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts",
+      "sha256": "1ec1beb1eaeb8895600f6079e020cdabab4fb86c47af238d9173ab217147c89c"
+    },
+    {
+      "file": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "sha256": "44c031cac341b9b1c0e8986d3bd363fd7eec9c69d806a7d91affa39eeb853c59"
+    }
+  ],
+  "findings": [],
+  "assessment": "root实际读取固定matcher/真实公共采用stored反转owner0以及unknown-only/non-system正负源码；合法whitelist次序逐完整原型核验，scope先核，原digest/旧候选/read能力门保持；未知子集拒绝前移不会执行owner。真实旧失败保留；最终whole5/legacy4/PG仍待执行，不签实现Gate。"
+}

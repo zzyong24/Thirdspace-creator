@@ -1,0 +1,10 @@
+{
+  "path": "frontend/public/reference-editors/doocs-md/index.html",
+  "after": {
+    "sha256": "c0be4acb626c66fff914878d8baaa35549db73ac9937f9a125c052dbf5946b77",
+    "size": 13944,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

@@ -1,0 +1,12 @@
+{
+  "recordedAt": "2026-10-11T18:11:25.665281+00:00",
+  "exitCode": 0,
+  "tests": 41,
+  "passed": 41,
+  "failed": 0,
+  "originalTestBodiesUnchanged": true,
+  "reportSha256": "5a778dd3be7ba9c9dd0e50ff1b012660bdbf95978ce77dd75a7dd6c9302d5fc1",
+  "positiveTestAndHookBudgetMs": 180000,
+  "independentOuterLauncher": "本次未附加独立外层启动器，不能作为完整超时策略验收证据",
+  "AppAcceptance": false
+}

@@ -1,0 +1,67 @@
+{
+  "at": "2026-10-12T03:42:30.392688+00:00",
+  "fixedNode": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeEntrySha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "rows": [
+    {
+      "kind": "node-syntax-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+      "sha256": "616e3a24977145b652d96be699f39caa8d3806e575864cd80a2157950b6f79cc",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-static-final-jbkdujzc/complete-run.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/driver-types.cjs",
+      "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-static-final-jbkdujzc/driver-types.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/launch.cjs",
+      "sha256": "3ff3543ecd214340cc530ee4a2e8e9d1090b4e9cb6e2fc4b6d1a4344afb8af42",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-static-final-jbkdujzc/launch.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+      "sha256": "23c5bfe8636ce2d03282430737e2b5101946b0b4bd6276a1d5eaf1f92f031193",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-static-final-jbkdujzc/prepare-runtime.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/seal.cjs",
+      "sha256": "06f6b8a6792c789db6eca43613c943e2e71952df6581f6d2be238a00ab0b9775",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-static-final-jbkdujzc/seal.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "sha256": "5a78a7b3f4fada4421bc544d2fd1f04673dfd45a06f09b6e07b476fb9be4fb51",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-static-final-jbkdujzc/verify-binding.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "semantic-two-source-files-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/source-types.cjs",
+      "sha256": "0dc275174a45bf34e64337501d5d6ee66d88e5a97ddaf2b02322561324d9d433",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-static-final-jbkdujzc/source-types.log",
+      "logSha256": "4bc22f9dafbb27a448bda729827a379b9f5e5a098291685a18198ea0cd3b0e4c"
+    }
+  ],
+  "noService": true,
+  "noBrowser": true,
+  "noSQL": true,
+  "runtimeTypesListBodiesPending": true
+}

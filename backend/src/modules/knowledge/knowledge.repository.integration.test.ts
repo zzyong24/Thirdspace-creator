@@ -1,3 +1,4 @@
+import {platformAccounts as originalAccounts,type Db as OwnedFixtureDb} from "@creatoros/backend";
 import {createAccountGroupService} from "../platform-account/account-group.service";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
@@ -39,6 +40,8 @@ let repo: KnowledgeRepository;
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  await seedOwnedKnowledgeAccount(db,A,ACC_A);
+  await seedOwnedKnowledgeAccount(db,B,ACC_B);
   repo = createKnowledgeRepository(db, deterministicDeps());
 });
 
@@ -184,6 +187,7 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
   it("accountId scopes reads strictly within a user (A 号知识 B 号不可见)", async () => {
     const ACC_1 = "account-1";
     const ACC_2 = "account-2";
+    for(const account of [ACC_1,ACC_2])await seedOwnedKnowledgeAccount(db,A,account);
     // 同一 user A,分别以两个号 create(号维度随调用透传)。
     const k1 = await repo.create(A, ACC_1, { title: "号1 笔记" });
     const k2 = await repo.create(A, ACC_2, { title: "号2 笔记" });
@@ -211,6 +215,7 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
 
   // [T-332 S2 · ISO-06 例外口] 组合根种子巡检:user 级跨号读 + 跨号标题修复。
   it("listAllAccountsSystem / renameTitleSystem are user-level (跨号可见/可改,仅系统巡检用)", async () => {
+    for(const account of ["account-1","account-2"])await seedOwnedKnowledgeAccount(db,A,account);
     const k1 = await repo.create(A, "account-1", { title: "号1 笔记" });
     const k2 = await repo.create(A, "account-2", { title: "号2 笔记" });
     await repo.create(B, ACC_B, { title: "别人的" });
@@ -260,10 +265,12 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
   });
 
   it("usedCount = materialLinks(entity_type='knowledge') 反查计数;无用料 = 0", async () => {
-    const { materialLinks } = await import("@creatoros/backend");
+    const { materialLinks,assets } = await import("@creatoros/backend");
     await seedStatsProjects([["proj-1",A,ACC_A],["proj-2",A,ACC_A],["proj-9",B,ACC_B]]);
     const used = await repo.create(A, ACC_A, { title: "被用两次" });
     const unused = await repo.create(A, ACC_A, { title: "没被用" });
+    const bUsed=await repo.create(B,ACC_B,{title:"B真实干扰知识"});
+    await db.insert(assets).values({id:used.id,userId:A,accountId:ACC_A,groupId:`grp_legacy_${ACC_A}`,assetType:"image",name:"同ID真实素材干扰",createdAt:NOW,updatedAt:NOW});
     await db.insert(materialLinks).values([
       {
         id: "ml-1",
@@ -312,7 +319,7 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
         projectId: "proj-9",
         contentOutputId: null,
         entityType: "knowledge",
-        entityId: used.id,
+        entityId: bUsed.id,
         role: "reference",
         stage: "research",
         addedByType: "user",
@@ -418,3 +425,9 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
     expect((await repo.get(A, ACC_A, hit.id)).usedInPublished).toBe(true);
   });
 });
+
+async function seedOwnedKnowledgeAccount(db:OwnedFixtureDb,userId:string,accountId:string){
+ const stamp="2026-06-21T00:00:00.000Z";
+ await db.insert(originalAccounts).values({id:accountId,userId,platform:'douyin',accountHandle:accountId,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing();
+ await createAccountGroupService({db,now:()=>stamp,nextId:prefix=>`${prefix}-${accountId}-fixture`}).ensureLegacyGroups({userId,requestId:'original-knowledge-fixture',source:'user'});
+}

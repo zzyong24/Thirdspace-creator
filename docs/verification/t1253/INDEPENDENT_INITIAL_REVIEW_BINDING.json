@@ -1,0 +1,107 @@
+{
+  "task": "T-1253",
+  "scope": "独立只读规格首评；不record、不start、不修改生产/原断言",
+  "spec": {
+    "file": "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+    "sha256": "093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19"
+  },
+  "constitution": {
+    "file": "docs/产品定位.md",
+    "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+  },
+  "specReviewPrompt": {
+    "file": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/spec-reviewer.md",
+    "sha256": "2b6b78c945d95c06c1d5da76d5ed45e66c1fc19049c41d571be48d7e56800cfb"
+  },
+  "authorBinding": {
+    "file": "docs/verification/t1253/SPEC_CANDIDATE_SOURCE_BINDING.json",
+    "sha256": "8e4837c3136898925798b2eddbcc9d26e28a670917ba18b7b8f2c1e52d413ec4"
+  },
+  "confirmedBindings": [
+    {
+      "file": "backend/src/integration/chat-hooks-worker.test.ts",
+      "sha256": "007547ed8ae028996af31b4c873af19f74e323b19d194a3214c2871f50889415"
+    },
+    {
+      "file": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "sha256": "98ae5f6c0a071832a2309be7b13f6621f93831e4bea2d51acd62087320a2dca4"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "sha256": "0d758bfa7ce0bbae6b16aeb9db39e3e3c5bd4c1decdd3c1dc8a9ea8fc061752e"
+    },
+    {
+      "file": "ai-worker/src/execution/chat-text-node-worker.ts",
+      "sha256": "5d42306ef1bf139d70858495ed30b42a81c9ac5d9eb79bade3bfa9bd38117526"
+    },
+    {
+      "file": "ai-worker/src/execution/durable-generation-model.ts",
+      "sha256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff"
+    },
+    {
+      "file": "ai-worker/src/execution/generation-error.ts",
+      "sha256": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7"
+    },
+    {
+      "file": "ai-worker/src/execution/worker-runtime.ts",
+      "sha256": "7057344bc467ae84521c610450f40c2f24e30cf607a2226663f1e118eaae350f"
+    },
+    {
+      "file": "ai-worker/src/execution/chat-worker-run.ts",
+      "sha256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-chat-text-node.service.ts",
+      "sha256": "9c566881592905c537635a7ec09a8c8d8da84f44d15ad5706844ca80ea761ef7"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-chat-script-draft.service.ts",
+      "sha256": "ca2fd5772f61377cd4cfca6372cf002e6916108a63b3982e01afd40c9ba8d006"
+    },
+    {
+      "file": "backend/src/modules/execution/chat-generation-recovery.ts",
+      "sha256": "5dc872fa71297d23c85c767983cae1e60ce4d89fb1b9d1fce41f18112d13f69c"
+    }
+  ],
+  "actualEvidenceBindings": [
+    {
+      "file": "docs/verification/t1246/round-2/unit/owner-final-evidence/worker-nine-f01a9beb4c293b63a659c3ebbb45e323/summary.json",
+      "sha256": "3911145f9a1ccc15e43a313887384409e7b006775fa9edf2813f6402b5441c5d"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/owner-final-evidence/worker-nine-f01a9beb4c293b63a659c3ebbb45e323/exit.json",
+      "sha256": "5ac421335f2377ff72afe8a7390fcb74d7370ac2f0e9bbb8f3a8eacaa5ad3614"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/owner-final-evidence/worker-nine-f01a9beb4c293b63a659c3ebbb45e323/result.json",
+      "sha256": "e576f6a91a7b63141c80c4b15bafe37aa0e1b0b37f2fcec33a1d806efc7e99fe"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/owner-final-evidence/worker-nine-f01a9beb4c293b63a659c3ebbb45e323/source-before.json",
+      "sha256": "89060a1f57a0fab69599344ffc0541bd7908f8eaa0fb9f653845f4a8d8aebfce"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/owner-final-evidence/worker-nine-f01a9beb4c293b63a659c3ebbb45e323/source-after.json",
+      "sha256": "7c312b48bfc797e5163838bb8237b4e9fa530d446f62f9d9bfd28815ac5f22df"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/unit/owner-final-evidence/worker-nine-f01a9beb4c293b63a659c3ebbb45e323/observed-results.json",
+      "sha256": "5937ae4626ca06792a104431dc000e085788579d1545394be6ae964a3d31b681"
+    }
+  ],
+  "observedResultCounts": {
+    "numTotalTests": 46,
+    "numPassedTests": 38,
+    "numFailedTests": 8,
+    "numPendingTests": 0
+  },
+  "candidateExecutionsByReviewer": 0,
+  "findings": [],
+  "reviewerModelIdentifier": "unknown/inherited",
+  "modelIdentityVerifiedByTool": false,
+  "independence": "当前root作者外的只读子Agent；未声称cross-family/model",
+  "packet": {
+    "file": "docs/verification/t1253/spec-review-initial.json",
+    "sha256": "3559300884278286de836130dbb17765d409e2415f2335deebdfc6fdbb589adf"
+  }
+}

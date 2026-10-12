@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-12T03:12:31.077001+00:00",
+  "prepareSha256": "ce76d855c831d73a6f1cc37618e0f0219ca8a0309516b22bcf47fd619c18e7f3",
+  "toolSha256": "2ce5215e244e9ca00e71ca8b31b15f18754819952ea5df760da0edc8598da41a",
+  "sourceSnapshotDigest": "405ba19e2bdff70a84ac91a6842878dd1b114a322eca6fda98b8c32526a6d279",
+  "toolDigest": "0e00dc6da2640c46e03f3ac9723fcaa8d056a0048d99657d22ff00851c4e43fd",
+  "sourceInputs": 1684,
+  "actualImplementationInputs": 141101,
+  "bytesHashed": 1857258242,
+  "linksChecked": 7447,
+  "elapsedSeconds": 18.87539870897308,
+  "drift": [],
+  "runtimeApproved": false
+}

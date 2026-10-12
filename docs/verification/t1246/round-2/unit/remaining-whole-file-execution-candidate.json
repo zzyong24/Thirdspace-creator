@@ -1,0 +1,90 @@
+{
+  "scope": "已批原完整文件，不filter、不改assert、不减少205body46组原分母",
+  "testsExecuted": false,
+  "retry": 0,
+  "fixtureDb": "PGlite/本轮隔离数据目录，不借其他任务PG；遇owned guard原拒绝记真实环境失败",
+  "batches": {
+    "own-adoption-requested-whole-attempt2": [
+      {
+        "file": "backend/src/modules/knowledge/knowledge-proposal-adoption.service.test.ts",
+        "sha256": "40f09fc5e8903268ff726dec909a4bf7eaa0777e0ed6e01732569a65ee433991"
+      },
+      {
+        "file": "backend/src/modules/knowledge/knowledge.db-schema.test.ts",
+        "sha256": "6c1467932b9e6d8dfb29c87d2b0d0b4a4994e9dacffb2ca4872fff83da52e8dc"
+      },
+      {
+        "file": "backend/src/modules/knowledge/knowledge.repository.integration.test.ts",
+        "sha256": "220983d758ebc8f81919171adb39ce585c69fbd2f3f8a93622b1f54ccc0c2efa"
+      },
+      {
+        "file": "backend/src/modules/ai/agentic-proposal-adoption.integration.test.ts",
+        "sha256": "1a1fa88fae3c715c8aa5ec93783fb98b89940ccc316e110474423b44f6b6e18c"
+      },
+      {
+        "file": "backend/src/integration/research-material-adoption.test.ts",
+        "sha256": "37a6141c7e836154fa467f71cbe693d299b0549c09ac9536c932e2205aae1753"
+      },
+      {
+        "file": "backend/src/modules/ai-runtime/agentic-browser-worker.integration.test.ts",
+        "sha256": "90c01621c19fdab72d3b51b3b9651dc768c14eea316baaebff5168d8d0f3a038"
+      },
+      {
+        "file": "backend/src/modules/ai/ai-task-commit.integration.test.ts",
+        "sha256": "de197636fd7b3fe9beb161256cca5bb1e60628c9354f99f7776ff9d67201a471"
+      },
+      {
+        "file": "backend/src/modules/ai/script-draft-task-submission.integration.test.ts",
+        "sha256": "37e7b195d5bfadaadd41d7eb1ebb91621fe8c758eeb3f10231b7bd9e16a2d488"
+      },
+      {
+        "file": "backend/src/integration/structured-target-adoption.test.ts",
+        "sha256": "87c04308e5bf7cf8614567376f9ac277e4b63c4c8498e5c769bff24cf77c6ac3"
+      }
+    ],
+    "own-worker-remaining-whole-attempt1": [
+      {
+        "file": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+        "sha256": "0d758bfa7ce0bbae6b16aeb9db39e3e3c5bd4c1decdd3c1dc8a9ea8fc061752e"
+      },
+      {
+        "file": "backend/src/integration/chat-hooks-worker.test.ts",
+        "sha256": "007547ed8ae028996af31b4c873af19f74e323b19d194a3214c2871f50889415"
+      },
+      {
+        "file": "backend/src/modules/ai/platform-adapt-execution.integration.test.ts",
+        "sha256": "e15ebbf756c85da5d938c232c9cb289a3f7d50c19391a50245bae45f3b7067e0"
+      },
+      {
+        "file": "backend/src/integration/chat-video-edit-worker.test.ts",
+        "sha256": "8e2262f6e0555ea2b2d44fa0f637ac808088596bf9260da09fe5689c9a911924"
+      },
+      {
+        "file": "backend/src/integration/chat-redfox-worker.test.ts",
+        "sha256": "7e6ebbd9b5f0fac2f8daf6d29d730fc23f41b6585ea09f13a3d7aa0cb2b5fe46"
+      },
+      {
+        "file": "backend/src/integration/chat-research-worker.test.ts",
+        "sha256": "ac652d65b060fb853e500a59e18dbe0d6f2d811a61aa39610c9fdc13f9caac8f"
+      },
+      {
+        "file": "backend/src/integration/chat-script-draft-worker.test.ts",
+        "sha256": "98ae5f6c0a071832a2309be7b13f6621f93831e4bea2d51acd62087320a2dca4"
+      },
+      {
+        "file": "backend/src/integration/chat-script-patch-worker.test.ts",
+        "sha256": "365f8eb01230083ddbc5c6eb9af6a8f885b6468a6142d04cba8cd1e5f443f17b"
+      },
+      {
+        "file": "backend/src/modules/ai-runtime/chat-research-preparation.test.ts",
+        "sha256": "68cae10f3bae207da34baa8a1fdbc9bef4f63a3c75b46cf0c938b09bfb9c5837"
+      }
+    ]
+  },
+  "notes": [
+    "B019 fork+ai.contract已在whole5，不重复膨胀数",
+    "B040 preparation与researchworker完整同时覆盖",
+    "每批独立8h外层覆盖原长test/hook/本次进程组清理，不与其他批build并发",
+    "PG27/compat78使用各自freshnonce正式review，不用此无PGrunner代签"
+  ]
+}

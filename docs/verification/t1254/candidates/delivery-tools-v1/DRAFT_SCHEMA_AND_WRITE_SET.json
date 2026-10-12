@@ -1,0 +1,27 @@
+{
+  "status": "SOURCE_DRAFT_ONLY_NOT_REVIEWED_NOT_EXECUTED_NOT_APPLIED",
+  "schema": {
+    "static": {
+      "deliveryMode": "static",
+      "entrySha256": "FILL_ACTUAL_NEW_INDEX_SHA",
+      "preservedCsp": "FILL_ACTUAL_SAME_OLD_CSP",
+      "bundleFiles": "EXACT_ALL_STATIC_RELATIVE_FILE_SHA_MAP",
+      "frozenRootFiles": "EXACT_ORIGINAL_FAVICON_AND_ASSETS_SHA_MAP",
+      "sourceArchive": "sources/doocs-md/request-budget-static-source.tar.gz",
+      "sourceArchiveSha256": "FILL_ACTUAL_NEW_FULL_SOURCE_SHA",
+      "patch": "sources/doocs-md/request-budget-static-patches.diff",
+      "patchSha256": "FILL_ACTUAL_REAL_COMBINED_PATCH_SHA",
+      "fixedBaseArchive": "FILL_EXISTING_A7_SERVED_ARCHIVE_PATH",
+      "fixedBaseSha256": "KEEP_ORIGINAL_A7_HASH"
+    }
+  },
+  "plannedWrites": [
+    "frontend/scripts/verify-doocs-static.mjs",
+    "frontend/scripts/verify-native-editors.mjs",
+    "frontend/scripts/build-doocs-request-budget.mjs"
+  ],
+  "unchangedOtherNativeEditors": true,
+  "noPackageMutation": true,
+  "noSourceGraphMutation": true,
+  "noV13InputMutation": true
+}

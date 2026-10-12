@@ -1,0 +1,10 @@
+{
+  "path": "frontend/scripts/verify-native-editors.mjs",
+  "after": {
+    "sha256": "aa452bfe9131f3f1b056f56bda6a286daa96b03ab4428857abbcb0793033edf0",
+    "size": 5538,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

@@ -1,0 +1,29 @@
+{
+  "whitelistedEnvironmentKeys": [
+    "CI",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "NPM_CONFIG_CACHE",
+    "NPM_CONFIG_GLOBALCONFIG",
+    "NPM_CONFIG_USERCONFIG",
+    "PATH",
+    "TMPDIR",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "npm_config_cache",
+    "npm_config_globalconfig",
+    "npm_config_userconfig"
+  ],
+  "originalHomePreserved": true,
+  "originalCodexHomePreserved": true,
+  "noInheritedCredentials": true,
+  "ownUserGlobalConfigBothCases": true,
+  "configFlagSupportNotAssumed": true,
+  "restriction": "child-only macOS sandbox denies all network and all file read/write below original HOME; no TCC/authorization changes",
+  "profileSha256": "46d488e77349e2f39939587fa280941cbce2ef27f4045ef45bbb75ca4f706d2b",
+  "networkDeniedByChildProfile": true,
+  "userHomeDeniedByChildProfile": true,
+  "noWrapperDownload": true
+}

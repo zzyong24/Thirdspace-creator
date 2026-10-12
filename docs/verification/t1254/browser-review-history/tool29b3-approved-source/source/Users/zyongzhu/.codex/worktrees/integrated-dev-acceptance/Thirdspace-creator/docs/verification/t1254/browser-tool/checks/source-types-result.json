@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-12T03:42:30.355Z",
+  "kind": "proper-semantic-source-candidate-and-config",
+  "explicitPackageResolution": {
+    "@playwright/test": [
+      "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/@playwright/test"
+    ]
+  },
+  "files": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "sha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/playwright.config.ts",
+      "sha256": "7077666eaae6cbf1ffc01017b0f64b0aa71832d5e1d9fcd7f0bd04b44b9e8b69"
+    }
+  ],
+  "compilerVersion": "5.9.3",
+  "diagnostics": [],
+  "frontendGlobalTypesNotClaimed": true,
+  "ownedCopyTypesListBodiesStillPending": true,
+  "noOutputEmission": true,
+  "noService": true,
+  "noBrowser": true
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "已确认窄三路径与宪法/原实际九红一致。可信GenerationFailure实例/cause在叶catch保留、complete回读优先及普通未知fallback闭合；原21mode/同任务串行spy隔离、continuous无deadline不伪改、未知刺激和partial/HTTP/tokens逐候选独评明确，未提前认可计数或finite公共链实测。当前未发现阻断规格的矛盾；新增叶test路径尚不存在，实施时新建；实际模型/PG/Worker测试均未运行，正式record与解冻由主会话完成。",
+  "findings": []
+}

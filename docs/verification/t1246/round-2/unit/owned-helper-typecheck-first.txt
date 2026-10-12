@@ -1,0 +1,16 @@
+src/modules/ai/work-candidate-source.service.test.ts(106,139): error TS2322: Type '{ adoptionMode: "assistant"; expectedCurrentVersionId: string; assistantSource: { taskId: string; callId: string; toolCallId: string; candidateDigest: string; }; fieldSelection: never[]; policyVersion: number; clientRequestId: string; factSelection: { ...; }; }' is not assignable to type '{ factSelection: { mode: "keep"; } | { mode: "replace"; expectedBeforeDigest: string; proposedFactsDigest: string; }; adoptionMode: "assistant"; expectedCurrentVersionId: string; assistantSource: { ...; }; fieldSelection: ("title" | ... 1 more ... | "tags")[]; policyVersion: 1; clientRequestId: string; } | { ...; }'.
+  Type '{ adoptionMode: "assistant"; expectedCurrentVersionId: string; assistantSource: { taskId: string; callId: string; toolCallId: string; candidateDigest: string; }; fieldSelection: never[]; policyVersion: number; clientRequestId: string; factSelection: { ...; }; }' is not assignable to type '{ factSelection: { mode: "keep"; } | { mode: "replace"; expectedBeforeDigest: string; proposedFactsDigest: string; }; adoptionMode: "assistant"; expectedCurrentVersionId: string; assistantSource: { ...; }; fieldSelection: ("title" | ... 1 more ... | "tags")[]; policyVersion: 1; clientRequestId: string; }'.
+    Types of property 'policyVersion' are incompatible.
+      Type 'number' is not assignable to type '1'.
+src/modules/ai/work-candidate-source.service.test.ts(107,143): error TS2322: Type '{ adoptionMode: "assistant"; expectedCurrentVersionId: string; assistantSource: { taskId: string; callId: string; toolCallId: string; candidateDigest: string; }; fieldSelection: never[]; policyVersion: number; clientRequestId: string; }' is not assignable to type '{ adoptionMode: "assistant"; expectedCurrentVersionId: string; assistantSource: { taskId: string; callId: string; toolCallId: string; candidateDigest: string; }; fieldSelection: ("title" | "summary" | "tags")[]; policyVersion: 1; clientRequestId: string; } | { ...; }'.
+  Type '{ adoptionMode: "assistant"; expectedCurrentVersionId: string; assistantSource: { taskId: string; callId: string; toolCallId: string; candidateDigest: string; }; fieldSelection: never[]; policyVersion: number; clientRequestId: string; }' is not assignable to type '{ adoptionMode: "assistant"; expectedCurrentVersionId: string; assistantSource: { taskId: string; callId: string; toolCallId: string; candidateDigest: string; }; fieldSelection: ("title" | "summary" | "tags")[]; policyVersion: 1; clientRequestId: string; }'.
+    Types of property 'policyVersion' are incompatible.
+      Type 'number' is not assignable to type '1'.
+src/test-fixtures/owned-postgres.test.ts(8,53): error TS2353: Object literal may only specify known properties, and 'retry' does not exist in type 'Partial<RuntimeConfig>'.
+src/test-fixtures/owned-postgres.ts(74,124): error TS18047: 'match' is possibly 'null'.
+src/test-fixtures/owned-postgres.ts(74,134): error TS18047: 'match' is possibly 'null'.
+src/test-fixtures/owned-postgres.ts(75,8): error TS18047: 'match' is possibly 'null'.
+src/test-fixtures/owned-postgres.ts(76,8): error TS18047: 'match' is possibly 'null'.
+undefined
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

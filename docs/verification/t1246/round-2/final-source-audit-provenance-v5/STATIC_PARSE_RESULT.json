@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-12T09:27:39.384854+00:00",
+  "privateLogRoot": "/private/tmp/t1246-fa001-source-parse-4ijejfgr",
+  "results": [
+    {
+      "file": "audit-source.cjs",
+      "sha256": "6564c1f87e26e779fcffa63380424165f78b0a4a421c93da58deb0f20c6c5b0d",
+      "command": [
+        "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "--check",
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audit-provenance-v4/audit-source.cjs"
+      ],
+      "timeoutMs": 120000,
+      "exit": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "onlyParserNotModuleExecuted": true
+    },
+    {
+      "file": "spec-provenance-adapter.cjs",
+      "sha256": "e0001be43fd03ac478fa3220ee347ae7df5bc33969749cd4f208c7cb882e0c1b",
+      "command": [
+        "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "--check",
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audit-provenance-v4/spec-provenance-adapter.cjs"
+      ],
+      "timeoutMs": 120000,
+      "exit": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "onlyParserNotModuleExecuted": true
+    }
+  ],
+  "auditBodyOrGitExecuted": false
+}

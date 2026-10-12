@@ -1,0 +1,33 @@
+{
+  "seedGenerated": true,
+  "packages": 708,
+  "originalMainRoot": [
+    "creatoros-desktop",
+    "1.2.0",
+    null,
+    null
+  ],
+  "privateRoot": [
+    "creatoros-workbench-test",
+    "0.0.0",
+    null,
+    null
+  ],
+  "directDependencyReferences": [
+    "base64 0.22.1",
+    "libc",
+    "nomi-browser",
+    "nomi-browser-engine",
+    "nomifun-browser-platform",
+    "rand 0.8.6",
+    "serde",
+    "serde_json",
+    "sha2",
+    "tokio",
+    "unicode-normalization",
+    "url",
+    "windows-sys 0.61.2"
+  ],
+  "nonRootPackagesExactlyPreserved": true,
+  "notProductionLock": true
+}

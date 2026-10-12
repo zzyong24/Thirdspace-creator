@@ -1,0 +1,100 @@
+{
+  "task": "T-1249",
+  "reviewer": "/root/codex_route_inventory",
+  "actualModel": "unknown/inherited",
+  "reviewedAt": "2026-10-11T19:42:44.197616+00:00",
+  "sourceBindings": [
+    {
+      "path": "docs/features/t1249-durable-chat-current-receipts.md",
+      "currentSha256": "627e62fa21b4a46e672b99ba3ac647437c03294f2b65fa004abdc60c093f7339",
+      "frozen533Sha256": null
+    },
+    {
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "currentSha256": "ca5efd4f88333f3769db9e526e3b448f8a4cf9558ee4d5dd317f680e5efc3f77",
+      "frozen533Sha256": "e098efe8d5a6c3420eb0c6c9d78bf1a8fecc47eb5c59c6014e57e8b1f2a512fa"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+      "currentSha256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285",
+      "frozen533Sha256": "bfeb3a25672ca16753c77fe5f4fbeac4f29ac6066bff9ea2d5c166ff60b21285"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+      "currentSha256": "6945e336881cec418c36593642baf51ff5d50acb6e29bbab612d20d3f0ee8aec",
+      "frozen533Sha256": "6945e336881cec418c36593642baf51ff5d50acb6e29bbab612d20d3f0ee8aec"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-checkpoint.service.ts",
+      "currentSha256": "fccafb9872cae58a293d6883d20b649eb33914860a5c5a349666593200cf29ae",
+      "frozen533Sha256": "fccafb9872cae58a293d6883d20b649eb33914860a5c5a349666593200cf29ae"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+      "currentSha256": "169dce7d1fce78eb198f72a56697515984a6d6a073c8a7d995c9f4f1742ec65f",
+      "frozen533Sha256": "169dce7d1fce78eb198f72a56697515984a6d6a073c8a7d995c9f4f1742ec65f"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "currentSha256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495",
+      "frozen533Sha256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-completion.service.ts",
+      "currentSha256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4",
+      "frozen533Sha256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "currentSha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "frozen533Sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44"
+    },
+    {
+      "path": "ai-worker/src/execution/chat-worker-run.ts",
+      "currentSha256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434",
+      "frozen533Sha256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "currentSha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586",
+      "frozen533Sha256": "546517d0cbb683665a7183b04c9976193c841fc9202feb11170cfdd80d6d3376"
+    },
+    {
+      "path": "docs/features/t1026-agent-cli-acceptance.md",
+      "currentSha256": "7fc7ce27ec1d6eddcd886c82d239b03197e1a4a30d32b16e55cea199bc8e513f",
+      "frozen533Sha256": "7fc7ce27ec1d6eddcd886c82d239b03197e1a4a30d32b16e55cea199bc8e513f"
+    },
+    {
+      "path": "docs/features/t1246-integrated-dev-package-acceptance.md",
+      "currentSha256": "fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a",
+      "frozen533Sha256": "8a4e5ed7ace44905c885410f02e9d1475d49383ff854856342bdea62b8416635"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/durable-chat-port-first.json",
+      "currentSha256": "5197e27a143da525d65f84707e7595fb3f413319cdac345d68d07e403282e2fc",
+      "frozen533Sha256": null
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/durable-chat-port-first.txt",
+      "currentSha256": "def136dc4b15a3ce52b93117e8e809fe9bda5f65f747ec4121b8eb36867207ca",
+      "frozen533Sha256": null
+    },
+    {
+      "path": "/tmp/t1246-unit/durable-projection-candidate.diff",
+      "currentSha256": "f1fecf8eec2f0fdc3970c39312d07981e354790fa5a1fccfa8f0e0a8874f6851",
+      "kind": "未写正式测试的候选；只读独评"
+    },
+    {
+      "path": "/tmp/t1246-unit/durable-projection-candidate.test.ts",
+      "currentSha256": "50cf523285a5bdf5efcd37342f5b7aef61c2a8747dea9c57bef0b6b87ea6158f",
+      "kind": "未写正式测试的候选；只读独评"
+    }
+  ],
+  "firstReceipt": {
+    "total": 8,
+    "passed": 3,
+    "failed": 5,
+    "preserved": true
+  },
+  "executedDuringReview": false
+}

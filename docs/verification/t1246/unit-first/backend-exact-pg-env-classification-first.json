@@ -1,0 +1,1392 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "originalFailedCases": 400,
+  "exactFrozenGuardLineCases": 191,
+  "actualSocketGuardCases": 4,
+  "exactEnvCases": 195,
+  "unsupportedEnvRows": [],
+  "missedGuardRows": [],
+  "actualEnvFileCount": 26,
+  "scopeBoundary": "195个真实URL或Socket前置拒绝，25个原guard文件加migration-convergence；另intelligence-source文件collection缺失未到PG。T1074本轮50028锁观察与其他业务/fixture红不在此类。",
+  "guardRows": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/group-upgrade-postgres.integration.test.ts",
+      "title": "隔离PostgreSQL完整dump能恢复所有旧ID并校验升级记录数",
+      "line": 7,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('此测试只允许显式隔离测试服务器55422');",
+      "first": "Error: 此测试只允许显式隔离测试服务器55422"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-scheduled-job-migration.test.ts",
+      "title": "T1209真实PG转组先持锁，正常迁移退让后重读；未来私有作业v2、旧历史不改",
+      "line": 146,
+      "source": "const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离PG');",
+      "first": "Error: 只允许55422隔离PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-scheduled-job-migration.test.ts",
+      "title": "T1209真实PG迁移先持锁，转组真实等待；提交后原服务转组v2且重开幂等",
+      "line": 146,
+      "source": "const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离PG');",
+      "first": "Error: 只允许55422隔离PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG原article owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG原graphic owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG旧来源ROW EXCLUSIVE阻新DDL时，异常回滚释放组锁，新提交来源被最终重采",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG显式归组持真实组/父/来源行锁时，0130退让后沿最新父归属保真",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG错误DDL-first锁序与原article服务形成实际40P01（诊断反例）",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG错误DDL-first锁序与原graphic服务形成实际40P01（诊断反例）",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG错误DDL-first锁序与原group-migration服务形成实际40P01（诊断反例）",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG原membership freeze后转组完成，0130重采真实历史并保持旧NULL来源",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG0130成功轮持锁时，原项目INSERT被阻止；回滚诊断后正常迁移含真实新父",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG来源行锁冲突整轮释放；原事务提交后正常迁移重新盖章",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG整轮退让中取消，旧数据与104账本保持；再次正常升级可完成",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG两原归组服务反向参数a-first，与0130竞争仍正确串行",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "title": "真实PG两原归组服务反向参数b-first，与0130竞争仍正确串行",
+      "line": 116,
+      "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');",
+      "first": "Error: 仅允许独立55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calendar stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calendar migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calendar writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calibration-output stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calibration-output migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calibration-output writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calibration-publication stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calibration-publication migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "calibration-publication writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-create stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-create migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-create writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-imported stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-imported migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-imported writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-register stale-read：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-register migration-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "title": "publication-register writer-first：真实公共服务锁住实际父链并拒绝过期scope/digest",
+      "line": 38,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');",
+      "first": "Error: 仅允许显式隔离55422测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration root writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration root archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration bump writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration bump archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration prediction writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration prediction archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration draft-prediction writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration draft-prediction archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration lock writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration lock archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration result writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration result archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration suggestion writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration suggestion archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration adopt writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration adopt archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration dismiss writer-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "calibration dismiss archive-first：真实归档与公共写入串行且无半成品",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "两个真实公共版本递增等待同一rubric锁，连续编号且指针指向最新完整版本",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "title": "公共初始化首版失败全部回滚，重试返回完整量表",
+      "line": 31,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');",
+      "first": "Error: 只允许显式55422隔离测试"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识revision：写入先持锁，归组重验",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识revision：归组先持锁，旧组写入拒绝",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识archive：写入先持锁，归组重验",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识archive：归组先持锁，旧组写入拒绝",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识rename：写入先持锁，归组重验",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识rename：归组先持锁，旧组写入拒绝",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识relation-source：写入先持锁，归组重验",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识relation-source：归组先持锁，旧组写入拒绝",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识relation-target：写入先持锁，归组重验",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "title": "知识relation-target：归组先持锁，旧组写入拒绝",
+      "line": 23,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "apply先校验：真实公共项目patch必须等待，不能把旧scope编辑搬入目标组",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "项目patch先持锁：apply等待真实提交后必须重建digest拒绝过期预览",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "undo先校验：其他真实项目的新grant消费等待撤销，不能在撤销后留有效引用",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "grant消费先持真实SHARE锁：undo等待commit后重验ledger，必须拒绝撤销",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "项目已开始移组：旧ctx的无scope output公共写入等锁后必须拒绝",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "项目已开始移组：旧ctx的无scope stage公共写入等锁后必须拒绝",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "项目已开始移组：旧ctx的无scope task公共写入等锁后必须拒绝",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "项目已开始移组：旧ctx的无scope activity公共写入等锁后必须拒绝",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "无scope output公共写入先持锁：移组等提交后必须拒绝旧digest",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "无scope stage公共写入先持锁：移组等提交后必须拒绝旧digest",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "无scope task公共写入先持锁：移组等提交后必须拒绝旧digest",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "title": "无scope activity公共写入先持锁：移组等提交后必须拒绝旧digest",
+      "line": 21,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');",
+      "first": "Error: 只允许显式隔离55422测试服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "title": "新建先锁组：归档真实等待，commit后root/7阶段/平台/活动一起可读",
+      "line": 32,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "title": "归档先锁组：新建真实等待，归档commit后拒绝且四族均无残行",
+      "line": 32,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "title": "project_stages真实INSERT异常：整个公共createProject事务回滚且可以重新创建",
+      "line": 32,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "title": "project_target_platforms真实INSERT异常：整个公共createProject事务回滚且可以重新创建",
+      "line": 32,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "title": "project_activities真实INSERT异常：整个公共createProject事务回滚且可以重新创建",
+      "line": 32,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "title": "真实旧账号scope仍可完整创建，不把legacy账号隐式扩大成组scope",
+      "line": 32,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "title": "归档组合法采集历史导入仍完整写入，用户伪造imported不能放行",
+      "line": 32,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "revision writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "revision migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "cover writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "cover migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "schedule writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "schedule migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "publish writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "publish migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "visibility writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "visibility migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "platform-status writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "platform-status migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "import-heal writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "import-heal migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "adopt-draft writer-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "adopt-draft migration-first：已有publication公共写入锁住真实父链且版本指针原子",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "采集metadata沿原冻结事实组：账号已转出且组已归档仍可补封面、可见性、审核状态",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "title": "真实孤儿publication可补采平台metadata并重锚到用户选择的真实新稿件，不造假parent",
+      "line": 34,
+      "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');",
+      "first": "Error: 仅允许显式55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+      "title": "postgres T1213 当前租约写进度、旧fence/错误run/ctx/父停止拒绝，终态仍成功",
+      "line": 31,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+      "first": "Error: 仅允许 55422 隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+      "title": "postgres 默认节流真实装配self子阶段依次落原run，ai终态清lease后仍成功",
+      "line": 31,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+      "first": "Error: 仅允许 55422 隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+      "title": "postgres immediate 旧report经真实runner装配在新fence/旧心跳前不能反写",
+      "line": 31,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+      "first": "Error: 仅允许 55422 隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+      "title": "postgres queued 旧report经真实runner装配在新fence/旧心跳前不能反写",
+      "line": 31,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+      "first": "Error: 仅允许 55422 隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+      "title": "postgres 父pause立即拒绝旧进度且不改变原控制或已有快照",
+      "line": 31,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+      "first": "Error: 仅允许 55422 隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+      "title": "postgres 父cancel立即拒绝旧进度且不改变原控制或已有快照",
+      "line": 31,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+      "first": "Error: 仅允许 55422 隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "title": "postgres self.metrics 真实组公共调度→冻结 Skill→父子绑定→消费→原运行终态",
+      "line": 28,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+      "first": "Error: 仅允许 55422 隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "title": "postgres comments 真实组公共调度→冻结 Skill→父子绑定→消费→原运行终态",
+      "line": 28,
+      "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');",
+      "first": "Error: 仅允许 55422 隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "review-create / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "review-create / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "review-insight / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "review-insight / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "learning-create / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "learning-create / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "learning-application / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "learning-application / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "conversation-message / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "conversation-message / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "ai-task / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "ai-task / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "conversation-create / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "conversation-create / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "learning-review / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "learning-review / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "learning-adoption-source / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "learning-adoption-source / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "review-output / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "review-output / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "ai-task-output / writer-checked-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "ai-task-output / migration-validated-first：公共服务必须锁真实父行，拒绝旧scope迟到写入",
+      "line": 27,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "无parent learning-create / writer-first：组归档与公共创建使用同一真实组锁",
+      "line": 82,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "无parent learning-create / archive-first：组归档与公共创建使用同一真实组锁",
+      "line": 82,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "无parent learning-adopt / writer-first：组归档与公共创建使用同一真实组锁",
+      "line": 82,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "无parent learning-adopt / archive-first：组归档与公共创建使用同一真实组锁",
+      "line": 82,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "无parent conversation-create / writer-first：组归档与公共创建使用同一真实组锁",
+      "line": 82,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "无parent conversation-create / archive-first：组归档与公共创建使用同一真实组锁",
+      "line": 82,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "同组两个真实公共AI任务创建：先取得成员组UPDATE，禁止SHARE升级死锁",
+      "line": 82,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "title": "AI任务真实运行准备先读旧项目：移组可提交，落库锁内必须重验实际项目拒绝旧scope",
+      "line": 82,
+      "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');",
+      "first": "Error: 只允许隔离55422 PG"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "账号组内同类私有任务查询只复用当前实际账号，组总列表仍完整",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "共享选题和雷达任务不需要假账号，私有指标任务仍要求实际账号",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档组仅真实私有系统任务后台创建可行，普通job/shared job拒绝",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档组私有collector沿实际job创建AI task并交接执行，普通AI拒绝",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "转组只重绑未来私有job，历史run和共享选题留原组",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档私有automation入队验证实际job/current member，伪造组/号和共享topic拒绝",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "私有collector创建先持实际账号/member锁：转组真实等待后拒绝，不移动在途task",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "转组先持实际账号/member锁：旧版本collector创建真实等待后拒绝，新版本可执行",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "未来job更新失败导致转组membership与job冻结归属整事务回滚",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "转组后历史run依原冻结组可读，新组不吞旧组历史，跨用户拒绝",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "手动登记的昵称和externalID不能伪装成真实绑定回执，跨用户查询也拒绝",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "实际future job能力不匹配时后台归档通道拒绝其它平台账号",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "真实自动化driver可认领无账号的组共享topic.daily，payload保留真实scope",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "真实自动化driver可认领无账号的组共享intelligence.sync，payload保留真实scope",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "真实自动化driver在归档组只认领活跃真实号的私有collector，冻结payload不取当前页面组",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档组真实公共trigger通过AI admission、run intent和execution交接，保留原实际账号scope",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档后普通写稿和source_sync的既有排队任务不能获得persistent执行权",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档后普通已认领任务的新动作lease admission拒绝，已有结算仍可settle",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "旧AI执行公开入口在归档后拒绝普通claim与新的模型调用，不写调用账本",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档后self.metrics真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档后self.traffic真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档后comments真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档后self.detail真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档claim读取实际job/member/AI映射，missing-job伪造冻结事实不能授予采集豁免",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档claim读取实际job/member/AI映射，other-account-job伪造冻结事实不能授予采集豁免",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档claim读取实际job/member/AI映射，wrong-membership伪造冻结事实不能授予采集豁免",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "归档claim读取实际job/member/AI映射，spoofed-owner伪造冻结事实不能授予采集豁免",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "普通AI模型账本在归档前已启动的调用可结算，归档后新reserve/start拒绝",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "T1101真实PG kuaishou后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "title": "T1101真实PG xiaohongshu后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证",
+      "line": 16,
+      "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');",
+      "first": "Error: 只允许55422隔离服务器"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "title": "T1062真实PG重建根/父/任务锁顺序 archive-first",
+      "line": 134,
+      "source": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;",
+      "first": "Error: 仅隔离PG服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "title": "T1062真实PG重建根/父/任务锁顺序 completion-first",
+      "line": 134,
+      "source": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;",
+      "first": "Error: 仅隔离PG服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "title": "T1062真实PG重建根/父/任务锁顺序 migration-first",
+      "line": 134,
+      "source": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;",
+      "first": "Error: 仅隔离PG服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "title": "T1062真实PG重建根/父/任务锁顺序 completion-first-migration",
+      "line": 134,
+      "source": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;",
+      "first": "Error: 仅隔离PG服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/application/generation/work-review-root.test.ts",
+      "title": "T1062真实PG原审核root→actualAi(tx)同组双父Lock观察及两个阶段原回执恢复",
+      "line": 108,
+      "source": "const url=new URL(reviewLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+      "first": "Error: 仅55422随机PG库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/articles/articles.integration.test.ts",
+      "title": "T1062 真实PG项目归档先提交，公共保存等待父锁后零写",
+      "line": 797,
+      "source": "const url=new URL(isolatedPgUrl!);if(url.hostname!==\"127.0.0.1\"||url.port!==\"55422\")throw Error(\"只允许隔离PG服务\");",
+      "first": "Error: 只允许隔离PG服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "title": "真实PG迁移先校验：作品版本公共子项写等待并在旧scope拒绝",
+      "line": 26,
+      "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+      "first": "Error: 只允许55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "title": "真实PG公共作品版本子项写先提交：迁移等待后重验digest拒绝过期预览",
+      "line": 26,
+      "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+      "first": "Error: 只允许55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "title": "T1062真实PG Canvas公共generate同组双父Lock观察，原预约/任务/执行唯一且重放零写",
+      "line": 238,
+      "source": "const url=new URL(canvasLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('只允许55422随机PG库');",
+      "first": "Error: 只允许55422随机PG库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "title": "T1062真实PG素材 prepare 同组不同父并发且原回执重放零新增，legacy=false",
+      "line": 85,
+      "source": "const url=new URL(assetLockPg);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅允许 localhost55422 随机库');",
+      "first": "Error: 仅允许 localhost55422 随机库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "title": "T1062真实PG素材 prepare 同组不同父并发且原回执重放零新增，legacy=true",
+      "line": 85,
+      "source": "const url=new URL(assetLockPg);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅允许 localhost55422 随机库');",
+      "first": "Error: 仅允许 localhost55422 随机库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "title": "T1062真实PG账号 transfer 先持账号/member 等组，素材 prepare 不反向持组等账号",
+      "line": 85,
+      "source": "const url=new URL(assetLockPg);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅允许 localhost55422 随机库');",
+      "first": "Error: 仅允许 localhost55422 随机库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "title": "T1062 真实PG项目归档先提交，公共保存等待父锁后零写",
+      "line": 330,
+      "source": "const url=new URL(isolatedPgUrl!);if(url.hostname!==\"127.0.0.1\"||url.port!==\"55422\")throw Error(\"只允许隔离PG服务\");",
+      "first": "Error: 只允许隔离PG服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "title": "真实PG迁移先校验：用料链公共子项写等待并在旧scope拒绝",
+      "line": 33,
+      "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+      "first": "Error: 只允许55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "title": "真实PG公共用料链子项写先提交：迁移等待后重验digest拒绝过期预览",
+      "line": 33,
+      "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+      "first": "Error: 只允许55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/moments/moments-model.integration.test.ts",
+      "title": "T1062真实PG Moments generate同组不同真实父两路Lock，唯一任务/候选/执行及回放零新增",
+      "line": 97,
+      "source": "const url=new URL(momentsLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+      "first": "Error: 仅55422随机PG库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "title": "T1062真实PG同组不同父Source并发预约/attach沿原AI创建端口，无SHARE升级互等",
+      "line": 140,
+      "source": "const url=new URL(sourcePgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');",
+      "first": "Error: 仅隔离PG服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "title": "T1062真实PG粗剪公共reserve同组双真实父两路Lock、原冻结/回执/任务/执行重放不增费",
+      "line": 130,
+      "source": "const url=new URL(roughLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+      "first": "Error: 仅55422随机PG库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "title": "T1062真实PG粗剪公共attach同组双真实父两路Lock、原冻结/回执/任务/执行重放不增费",
+      "line": 130,
+      "source": "const url=new URL(roughLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+      "first": "Error: 仅55422随机PG库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "title": "T1062真实PG粗剪公共readFrozenTask同组双真实父两路Lock、原冻结/回执/任务/执行重放不增费",
+      "line": 130,
+      "source": "const url=new URL(roughLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');",
+      "first": "Error: 仅55422随机PG库"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "title": "真实PG迁移先校验：制作分段公共子项写等待并在旧scope拒绝",
+      "line": 26,
+      "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+      "first": "Error: 只允许55422隔离测试服务"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "title": "真实PG公共制作分段子项写先提交：迁移等待后重验digest拒绝过期预览",
+      "line": 26,
+      "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');",
+      "first": "Error: 只允许55422隔离测试服务"
+    }
+  ],
+  "socketRows": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts",
+      "sha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "title": "真实隔离PostgreSQL fresh双启/完整恢复/冻结历史/相同catalog",
+      "duration": 8.110166000005847,
+      "classification": "ENV_actual_owned_instance_rejected_or_unowned_socket_denied",
+      "failureMessages": [
+        "Error: T1246_ENV_NOT_OWNED_PG: 本轮不拥有127.0.0.1:55422，真实连接前拒绝；这是环境前置阻断，不是产品失败\n    at Socket.t1246GuardedConnect [as connect] (/private/tmp/t1246-unit/deny-legacy-postgres.cjs:18:19)\n    at Connection.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/connection.js:44:17)\n    at Client._connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:176:11)\n    at Client.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:229:12)\n    at BoundPool.newClient (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:266:12)\n    at BoundPool.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:235:10)\n    at BoundPool.query (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:449:10)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts:109:160\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts",
+      "sha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "title": "真实隔离PostgreSQL root双启/完整恢复/冻结历史/相同catalog",
+      "duration": 1.7242909999986296,
+      "classification": "ENV_actual_owned_instance_rejected_or_unowned_socket_denied",
+      "failureMessages": [
+        "Error: T1246_ENV_NOT_OWNED_PG: 本轮不拥有127.0.0.1:55422，真实连接前拒绝；这是环境前置阻断，不是产品失败\n    at Socket.t1246GuardedConnect [as connect] (/private/tmp/t1246-unit/deny-legacy-postgres.cjs:18:19)\n    at Connection.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/connection.js:44:17)\n    at Client._connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:176:11)\n    at Client.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:229:12)\n    at BoundPool.newClient (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:266:12)\n    at BoundPool.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:235:10)\n    at BoundPool.query (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:449:10)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts:109:160\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts",
+      "sha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "title": "真实隔离PostgreSQL diagnostic双启/完整恢复/冻结历史/相同catalog",
+      "duration": 1.7177499999961583,
+      "classification": "ENV_actual_owned_instance_rejected_or_unowned_socket_denied",
+      "failureMessages": [
+        "Error: T1246_ENV_NOT_OWNED_PG: 本轮不拥有127.0.0.1:55422，真实连接前拒绝；这是环境前置阻断，不是产品失败\n    at Socket.t1246GuardedConnect [as connect] (/private/tmp/t1246-unit/deny-legacy-postgres.cjs:18:19)\n    at Connection.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/connection.js:44:17)\n    at Client._connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:176:11)\n    at Client.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:229:12)\n    at BoundPool.newClient (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:266:12)\n    at BoundPool.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:235:10)\n    at BoundPool.query (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:449:10)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts:109:160\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts",
+      "sha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "title": "真实隔离PostgreSQL canvas双启/完整恢复/冻结历史/相同catalog",
+      "duration": 1.20808300000499,
+      "classification": "ENV_actual_owned_instance_rejected_or_unowned_socket_denied",
+      "failureMessages": [
+        "Error: T1246_ENV_NOT_OWNED_PG: 本轮不拥有127.0.0.1:55422，真实连接前拒绝；这是环境前置阻断，不是产品失败\n    at Socket.t1246GuardedConnect [as connect] (/private/tmp/t1246-unit/deny-legacy-postgres.cjs:18:19)\n    at Connection.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/connection.js:44:17)\n    at Client._connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:176:11)\n    at Client.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:229:12)\n    at BoundPool.newClient (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:266:12)\n    at BoundPool.connect (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:235:10)\n    at BoundPool.query (/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:449:10)\n    at /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts:109:160\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),{fork}=require('node:child_process');
+const evidence='/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/package-worker-first';
+if(fs.existsSync(evidence))throw Error('禁止覆盖首轮');fs.mkdirSync(evidence,{recursive:true});
+const binding=JSON.parse(fs.readFileSync('/tmp/t1246-packaged-worker-selected-binding.json','utf8'));
+if(binding.errors.length||binding.selectedCount!==680)throw Error('实际包绑定未通过');
+const sidecar=binding.expandedRoot,entry=path.join(sidecar,'frontend/runtime/execution-worker.cjs'),node=path.join(sidecar,'server.app/Contents/MacOS/creatoros-server');
+const sha=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+for(const p of [entry,node]){const rel=path.relative(sidecar,p),row=binding.files.find(x=>x.path===rel);if(!row||sha(p)!==row.sha256)throw Error('包字节漂移:'+rel);}
+const owned=fs.mkdtempSync(path.join(os.tmpdir(),'t1246-packaged-worker-owned-'));
+const roots=Object.fromEntries(['app','db','media','browser','workbench','auth','backups','tmp'].map(k=>[k,path.join(owned,k)]));Object.values(roots).forEach(p=>fs.mkdirSync(p));
+const preload=path.join(owned,'deny-fetch.cjs');fs.writeFileSync(preload,"globalThis.fetch=async()=>{throw Error('T1246_STARTUP_ONLY_FETCH_DENIED')};\n");
+const env={PATH:'/usr/bin:/bin',HOME:os.homedir(),LANG:'en_US.UTF-8',NODE_ENV:'test',CI:'1',TMPDIR:roots.tmp,NODE_OPTIONS:'--require '+preload,CREATOROS_APP_DATA_DIR:roots.app,CREATOROS_DB_DIR:roots.db,CREATOROS_MEDIA_ROOT:roots.media,CREATOROS_BROWSER_POOL_DIR:roots.browser,CREATOROS_WORKBENCH_ROOT:roots.workbench,CREATOROS_DOUYIN_AUTH_DIR:path.join(roots.auth,'douyin'),CREATOROS_WEB_AUTH_DIR:path.join(roots.auth,'web'),CREATOROS_DATABASE_BACKUP_DIR:roots.backups};
+const result={task:'T-1246',candidate:'533224f334c43cdb81a344424e420cad93784dd1',kind:'actual-packaged-worker-startup-only',entry,node,entrySha256:sha(entry),nodeSha256:sha(node),archiveSha256:binding.sha256,tarMembersMatched:680,packagedWorkerCount:10,preloadSha256:sha(preload),environmentKeys:Object.keys(env),taskMessagesSent:0,nativeAppAcceptance:false,modelGenerationAcceptance:false,observationMs:120000,cleanupMs:120000,startedAt:new Date().toISOString(),messages:[],reason:'pending'};
+let stdout='',stderr='',closed=false,cleanupTimer;
+const save=()=>fs.writeFileSync(path.join(evidence,'result.json'),JSON.stringify(result,null,2)+'\n');save();
+const child=fork(entry,[],{execPath:node,cwd:path.join(sidecar,'frontend'),env,stdio:['ignore','pipe','pipe','ipc']});result.pid=child.pid;save();
+child.stdout.on('data',x=>stdout+=x.toString());child.stderr.on('data',x=>stderr+=x.toString());
+const stop=reason=>{if(closed||cleanupTimer)return;result.reason=reason;save();if(child.connected)child.disconnect();else child.kill('SIGTERM');cleanupTimer=setTimeout(()=>{result.cleanupEscalation='owned_child_SIGKILL';child.kill('SIGKILL')},120000)};
+const observation=setTimeout(()=>stop('startup_observation_timeout'),120000);
+const outer=setTimeout(()=>{result.outerTimeout=true;child.kill('SIGKILL')},300000);
+child.on('message',m=>{result.messages.push({type:m?.type,protocolVersion:m?.protocolVersion,capabilities:m?.capabilities});if(m?.type==='ready')stop('ready_received')});
+child.on('error',e=>{result.spawnError=e.message});
+child.on('close',(code,signal)=>{closed=true;clearTimeout(observation);clearTimeout(cleanupTimer);clearTimeout(outer);fs.writeFileSync(path.join(evidence,'stdout.txt'),stdout);fs.writeFileSync(path.join(evidence,'stderr.txt'),stderr);Object.assign(result,{exitCode:code,signal,endedAt:new Date().toISOString(),elapsedMs:Date.now()-Date.parse(result.startedAt),reason:result.reason==='pending'?'early_exit':result.reason,status:result.reason==='ready_received'&&code===0?'PASS_STARTUP_ONLY':'FAIL_STARTUP_ONLY'});fs.rmSync(owned,{recursive:true,force:true});result.ownedTemporaryRuntimeCleaned=true;save();console.log(JSON.stringify({status:result.status,reason:result.reason,exitCode:code,elapsedMs:result.elapsedMs,evidence}));process.exitCode=result.status==='PASS_STARTUP_ONLY'?0:1});

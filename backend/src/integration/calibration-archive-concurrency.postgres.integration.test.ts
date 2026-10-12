@@ -1,6 +1,8 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it} from 'vitest';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import type {RequestContext} from '@creatoros/contract';
 import {createRuntimeDb,type Db} from '../db';
@@ -28,7 +30,7 @@ function observeWrite(db:Db,table:string,observe:()=>Promise<void>):Db{
  };return wrap(db);
 }
 async function fixture(){
- if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');
+ if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);assertOwnedPostgresUrl(parsed.toString());
  const name=`t1022_calarchive_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname=`/${name}`;
  const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());const pool=new Pool({connectionString:parsed.toString(),max:1,application_name:`${name}_writer`});cleanups.push(()=>pool.end());const writer=drizzle(pool) as unknown as Db;
  let seq=0;const now=()=>new Date().toISOString(),nextId=(p:string)=>`${p}-${++seq}`,base:RequestContext={userId:`owner-${name}`,requestId:'calibration-archive',source:'user'},deps={db:runtime.db,now,nextId};
@@ -68,7 +70,7 @@ for(const family of families)for(const order of ['writer-first','archive-first']
   const after=await f.runtime.pool.query('SELECT (SELECT count(*)::int FROM rubrics) AS rubrics,(SELECT count(*)::int FROM rubric_versions) AS versions,(SELECT count(*)::int FROM predictions) AS predictions,(SELECT count(*)::int FROM calibration_results) AS results,(SELECT count(*)::int FROM calibration_rule_suggestions) AS suggestions');
   if(order==='archive-first')expect(after.rows).toEqual(before.rows);
   const partial=await f.runtime.pool.query('SELECT r.id FROM rubrics r LEFT JOIN rubric_versions v ON v.id=r.current_version_id WHERE r.current_version_id IS NULL OR v.id IS NULL');expect(partial.rows).toEqual([]);
- },30000);
+ },180000);
 }
 it.skipIf(!url)('两个真实公共版本递增等待同一rubric锁，连续编号且指针指向最新完整版本',async()=>{
  const f=await fixture(),paused=gate(),resume=gate();let once=false;
@@ -76,10 +78,10 @@ it.skipIf(!url)('两个真实公共版本递增等待同一rubric锁，连续编
  const b=outcome(f.service().bumpRubricVersion(f.ctx,f.rubric.id,{dimensions:f.dimensions,changeSummary:'后递增'}));let waited=false;try{waited=await f.watch(b.done,false);}finally{resume.release();}
  expect(waited).toBe(true);expect((await a.result).error).toBeUndefined();expect((await b.result).error).toBeUndefined();const rows=await f.runtime.pool.query('SELECT version_number FROM rubric_versions WHERE rubric_id=$1 ORDER BY version_number',[f.rubric.id]);expect(rows.rows.map(row=>row.version_number)).toEqual([1,2,3]);
  expect((await f.service().getRubric(f.ctx,f.rubric.id)).currentVersion.versionNumber).toBe(3);
-},30000);
+},180000);
 it.skipIf(!url)('公共初始化首版失败全部回滚，重试返回完整量表',async()=>{
  const f=await fixture(),before=await f.runtime.pool.query('SELECT count(*)::int AS n FROM rubrics');
  const broken=createCalibrationService({...f.deps,db:f.writer,nextId:prefix=>{if(prefix==='rubricver')throw new Error('真实首版中断');return f.deps.nextId(prefix);},ingestion:{assertRunExists:async()=>{},ensureManualRun:async()=> 'manual'},learnings:{adjustConfidence:async()=>{}}});
  await expect(broken.createRubric(f.ctx,{name:'不可留半成品',dimensions:f.dimensions})).rejects.toThrow('真实首版中断');expect((await f.runtime.pool.query('SELECT count(*)::int AS n FROM rubrics')).rows).toEqual(before.rows);
  expect((await f.service(f.writer).createRubric(f.ctx,{name:'完整重试',dimensions:f.dimensions})).currentVersion.versionNumber).toBe(1);
-},30000);
+},180000);

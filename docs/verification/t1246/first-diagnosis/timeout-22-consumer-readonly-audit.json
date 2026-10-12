@@ -1,0 +1,434 @@
+{
+  "schema": "readonly-timeout-consumer-audit/v1",
+  "scope": "实际22命中只读归因，不是源码/运行/功能PASS",
+  "counts": {
+    "actualHits": 22,
+    "vendorFalsePositive": 10,
+    "idleTTLWithOverlapRisk": 1,
+    "positiveExecutionOrFiniteObservation": 11
+  },
+  "actualEvidence": [
+    {
+      "path": "/tmp/t1248-calibration/timeout-verify.log",
+      "sha256": "7d7f892efdb9ec73e870a149de487882baa632062a218227b3503aeff9b69e4f"
+    },
+    {
+      "path": "/tmp/t1248-calibration/timeout-verify-receipt.json",
+      "sha256": "8e2a4eb66116de43afbf97f94e3df6c863555eb7bec206f6320e71140f582037"
+    },
+    {
+      "path": "/tmp/t1248-calibration/timeout-check-failures-binding.json",
+      "sha256": "642a0faccb545d3a873294b8d195d3d32011919005a669a156c0c8643eeffed2"
+    }
+  ],
+  "rows": [
+    {
+      "id": "TP22-01",
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js",
+      "line": 10081,
+      "kind": "timeout",
+      "valueMs": 400,
+      "source": "timeout: 400",
+      "sha256": "d95348207c70e7067e2111e70831323b054063a72f1fff28006875b320eb3e00",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_IDLE_SCHEDULING",
+      "consumer": "CodeMirror后台解析ViewPlugin：requestIdleCallback调度最迟执行400ms；不是终止工作。",
+      "minimalProposal": "不改vendor；门只按API真实语义识别idle调度。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-02",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-codemirror-CzoyEQLj.js",
+      "line": 11,
+      "kind": "timeout",
+      "valueMs": 400,
+      "source": "timeout:400",
+      "sha256": "2459be44482e57531dc4be8d0d51275d8025d27d51048cff14664d6444576536",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_IDLE_SCHEDULING",
+      "consumer": "同上minified CodeMirror后台解析调度。",
+      "minimalProposal": "不改vendor；与native counterpart同消费者登记。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-03",
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "line": 12,
+      "kind": "timeout",
+      "valueMs": 2000,
+      "source": "timeout:2e3",
+      "sha256": "5b601c49f654a23b1d116180ba47145edbe71129c9173e274d389956c26e5315",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_IDLE_SCHEDULING",
+      "consumer": "组件mounted时requestIdleCallback(()=>a(),{timeout:2e3})，fallback setTimeout600ms；推迟布局/编辑器初始化。",
+      "minimalProposal": "不改vendor；该timeout仅回调调度deadline。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-04",
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 63,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.popper&&!this.popperStatus&&(this.popper.popper.style.display=\"none\",this.popper.destroy(),this.popper=null),this.popperStatus=!1},300)",
+      "sha256": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_UI_UNMOUNT_DELAY",
+      "consumer": "popover hide之后300ms销毁popper节点，非业务等待。",
+      "minimalProposal": "不改vendor；只识别此已绑定的UI卸载消费者，不忽略所有destroy timer。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-05",
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 92,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.destroy(),this.onRemove()},300)",
+      "sha256": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_UI_UNMOUNT_DELAY",
+      "consumer": "ImagePreview close设置visible=false，300ms后destroy/onRemove。",
+      "minimalProposal": "不改vendor；保动画时序。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-06",
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 92,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.closing=!1,this.destroy()},300)",
+      "sha256": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_UI_UNMOUNT_DELAY",
+      "consumer": "确认弹层remove设置closing=true，300ms后closing=false/destroy。",
+      "minimalProposal": "不改vendor；保动画时序。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-07",
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 38974,
+      "kind": "timeout",
+      "valueMs": 1,
+      "source": "timeout: y",
+      "sha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "matchesActualVerifierBinding": true,
+      "classification": "SCANNER_IDENTIFIER_SHADOWING",
+      "consumer": "Axios mergeConfig u.timeout=y；y为合并策略函数，值不是1ms。静态numeric按全文件同名Map查绑定，忽略词法scope导致错误解析。",
+      "minimalProposal": "只修扫描器词法绑定/函数不可当数值；保timeout真正静态数值扫描。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-08",
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 53491,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n          this.popper && !this.popperStatus && (this.popper.popper.style.display = \"none\", this.popper.destroy(), this.popper = null), this.popperStatus = !1;\n        }, 300)",
+      "sha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_UI_UNMOUNT_DELAY",
+      "consumer": "popover hide销毁与minified行63同族。",
+      "minimalProposal": "不改vendor。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-09",
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 59840,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n            this.destroy(), this.onRemove();\n          }, 300)",
+      "sha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_UI_UNMOUNT_DELAY",
+      "consumer": "ImagePreview close销毁与minified行92同族。",
+      "minimalProposal": "不改vendor。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-10",
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 60642,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n            this.closing = !1, this.destroy();\n          }, 300)",
+      "sha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "matchesActualVerifierBinding": true,
+      "classification": "VENDOR_UI_UNMOUNT_DELAY",
+      "consumer": "确认弹层remove销毁与minified行92同族。",
+      "minimalProposal": "不改vendor。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-11",
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 194,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 90000,
+      "source": "setTimeout(()=>{s.abort.abort();void serial(s,()=>close(s,true)).catch(()=>{});},ports.idleMs??90_000)",
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "matchesActualVerifierBinding": true,
+      "classification": "SESSION_IDLE_TTL_WITH_ACTIVE_OVERLAP",
+      "consumer": "T1027固定90秒idle TTL；touch在step开始挂timer，timer abort整个session且排队close，所以长active动作会被误作idle中止。",
+      "minimalProposal": "不将TTL改120秒；active期间暂停idle，真正闲置后重挂，固定5分钟life不续期。需独评生命周期规则。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-12",
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 203,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{timedOut=true;reject(observationDeadline);},1000)",
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_FINITE_OBSERVATION",
+      "consumer": "inspect Promise.race evaluateHandle vs1秒reject，迟到handle dispose；有限DOM结果观察。",
+      "minimalProposal": "以受原session绝对deadline约束的>=120秒正观察槽；保晚到dispose/原DOM隐私限额。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-13",
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 240,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{active=false;reject(observationDeadline);},1000)",
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_FINITE_OBSERVATION_OUTER",
+      "consumer": "observe整段work包1秒，内部先inspect1秒再jsonValue/property/handle/dispose；相等外层反杀内层。",
+      "minimalProposal": "完整共享绝对deadline或外层覆盖内层与全部串行/清理，不再独立同值竞速。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-14",
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 322,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 5000,
+      "source": "setTimeout(()=>s.abort.abort(),ports.checkoutMs??5000)",
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_PROFILE_CHECKOUT",
+      "consumer": "start ports.open借真实exclusive profile，5秒到即session abort；queue/busy分类。",
+      "minimalProposal": "checkout正预算>=120秒，但原life剩余先耗尽立即停；保signal取消队列与busy/停止证明。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-15",
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 324,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000",
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_NAVIGATION",
+      "consumer": "start HOME goto domcontentloaded15秒；runStage记录dispatched后导航错误unknown。",
+      "minimalProposal": "显式受同session deadline的正导航预算；不新增重试/平台请求。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-16",
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 354,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout:5000",
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_PAGE_ACTION",
+      "consumer": "advance重验真实token后单click5秒noWaitAfter；再observe。",
+      "minimalProposal": "共享原剩余期限，保action count/CAS/unknown/同key不重点击。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-17",
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 98,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000",
+      "sha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_BROWSER_LAUNCH",
+      "consumer": "离线HTML导出chromium.launch15秒，非已有真实browser lease。",
+      "minimalProposal": ">=120秒启动槽；完整导出outer覆盖launch+setup+goto+output+cleanup。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-18",
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 112,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000",
+      "sha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_DOCUMENT_LOAD",
+      "consumer": "受控render.invalid唯一document goto load15秒；所有其他网络拒绝。",
+      "minimalProposal": ">=120秒加载槽；保offline/JSdisabled/CSP/唯一资源白名单。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-19",
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 115,
+      "kind": "timeout",
+      "valueMs": 20000,
+      "source": "timeout:20_000",
+      "sha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_OUTPUT_WAIT",
+      "consumer": "PNG screenshot20秒；同分支PDF within(page.pdf,20000)为漏扫20秒消费者。",
+      "minimalProposal": "PNG/PDF均>=120秒；PDF超时真实关闭owned browser，迟到输出不采纳。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-20",
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "line": 168,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)",
+      "sha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_RECOVERY_LOOKUP",
+      "consumer": "recoverStoppedProfile两种mode串行，每个profile_location socket由10秒AbortSignal截断（socket自身125秒）。",
+      "minimalProposal": "每次正读取>=120秒，明确2次串行+cleanup+DB结算的outer；保持物理profile精确摘要。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-21",
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "line": 180,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "AbortSignal.timeout(15_000)",
+      "sha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_RECOVERY_CLEANUP",
+      "consumer": "recoverStoppedProfile发原scope action cleanup（不是仅stop_proof），15秒abort；Rust清理bound owner lanes再取OS/hub停止证明。",
+      "minimalProposal": ">=120秒恢复/清理观察槽；正等待与用户取消分开，超时只保占用不释放/重放。",
+      "runtimeVerifiedByThisAudit": false
+    },
+    {
+      "id": "TP22-22",
+      "file": "frontend/src/server/workbench-native-client.ts",
+      "line": 47,
+      "kind": "request timer",
+      "valueMs": 10000,
+      "source": "socket.setTimeout(10_000)",
+      "sha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "matchesActualVerifierBinding": true,
+      "classification": "POSITIVE_NATIVE_RPC_IDLE_TIMER",
+      "consumer": "send socket.setTimeout10秒在无活动时终止真实file/command/recovery请求；发送后保NATIVE_RESULT_UNKNOWN；数据活动会重置idle timer。",
+      "minimalProposal": "请求>=120秒并有完整absolute request bound，host signal即时消费；Rust10秒IO和Windows counterpart必须一起核闭包，不重发原operation。",
+      "runtimeVerifiedByThisAudit": false
+    }
+  ],
+  "relatedSourceBindings": {
+    "tools/timeout-policy/check.mjs": {
+      "sha256": "25326430f1cef5b3ef6abdf7c54d89ce4787e5164cdad81d6430fe216c772d91"
+    },
+    "tools/timeout-policy/check.test.mjs": {
+      "sha256": "3013d2a308c81c68bbc6a1f23bc6676c78e54498b73af13a69a6152d2f902d66"
+    },
+    "tools/timeout-policy/verify.mjs": {
+      "sha256": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae"
+    },
+    "docs/features/t1066-timeout-policy.md": {
+      "sha256": "323d092d8e75167b287500d8d628a5528ecf2bf062fa81d476cb9751e1e463af"
+    },
+    "docs/engineering/timeout-policy.md": {
+      "sha256": "94385308b37926c3f1b81cf3c8bf0533983025bfc539cac7c914770c112604cf"
+    },
+    "docs/features/t1027-comment-collection-evidence.md": {
+      "sha256": "0a6ce0894d05096fd8a50b1dc4a5502516dfb2cb5ef9ef6dca1eda85992fd60f"
+    },
+    "BACKLOG.md": {
+      "sha256": "d699e837ba51a37d5efeeae3b4090cdd4af5e8e8bfb500cac200593ba980045d"
+    },
+    "BACKLOG-details.md": {
+      "sha256": "b204c37c14112750b1d83ff71c5327cc84e6525ae94aabbeb4013f99b5b88b42"
+    },
+    "docs/verification/t1080/timeout-static-dispositions-corrected.json": {
+      "sha256": "db02159a9a75bd0d7e80d85c58f34e4935f8e455d240fd959708ab6da3135db3"
+    },
+    "frontend/src/server/workbench-artifact-representation.ts": {
+      "sha256": "8347d45f00a32841a62dd65490f557282b998b431a5dc1562ffd431c62db886f"
+    },
+    "frontend/src/server/workbench-artifact-render.test.ts": {
+      "sha256": "fc446fcb85924ceadf715e186f24b54eb03855da707f699ab827e1e49ff23abb"
+    },
+    "frontend/src/server/workbench-browser-client.ts": {
+      "sha256": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866"
+    },
+    "frontend/src/server/workbench-native-host.ts": {
+      "sha256": "5e020792798d29f08ccb85b1799a223f6239674f81f096259b84c859794cc2a3"
+    },
+    "frontend/src/server/workbench-file-recovery.ts": {
+      "sha256": "7adff0dc79e3d3bba9b0b67f2be47f0b8fb112947414b4ae9390c9ffc053f60e"
+    },
+    "frontend/src/server/workbench-artifact-host.ts": {
+      "sha256": "af0ad5df4f281725c20cf3d4d9450de2cd45590730a4e72ac26b2195c0660e00"
+    },
+    "frontend/src/server/persistence-client.ts": {
+      "sha256": "1a894b9ec1d6a63c9ad0036756e01351f0d05020e2d5d4480035c4e244415e04"
+    },
+    "frontend/src/server/ingestion/douyin-cdp.ts": {
+      "sha256": "1de2689b4e94ae71ebd23e28d1cfa25cbafa82179add78729e3c111d96af2a53"
+    },
+    "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts": {
+      "sha256": "930bafd2538d1f2fe7aab03b5535ed182b3d12b580a2fad8463254760e7fa310"
+    },
+    "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts": {
+      "sha256": "1c0acb0aad67c11e14b9c0e68299c523f218e57b19b0cabd5175a699113a26fa"
+    },
+    "backend/src/modules/analytics/comment-diagnosis.service.ts": {
+      "sha256": "bf01c7cb94944f6530204d747f0cd8efaadd13fbaa6cdfe988c6a9e038b46680"
+    },
+    "backend/src/modules/analytics/analytics.transport.ts": {
+      "sha256": "28c1b1ed428b9b745437e24c0887daa42d5944726f945adeac0f51f4ccca9aac"
+    },
+    "backend/src/modules/execution/workbench-public.transport.ts": {
+      "sha256": "5275d186348b44c2cc88ab62153d8179a4fae67ff7c13b61ec8fc20c7ac27ef3"
+    },
+    "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts": {
+      "sha256": "ba1068dfdc06ccdfab81c2d2d65d8f2ba89f8b5653e1640c9c7b35aba6a75edb"
+    },
+    "contract/src/operations/workbench.ts": {
+      "sha256": "10940f09cf7c76b1473776c366e307fa5225a15e920b9079362ce5c04d9aaeda"
+    },
+    "contract/src/operations/analytics.ts": {
+      "sha256": "6be3f8ffa69b9c2fe28fa595c629070720c2b6cd6945b1f3c62855e1c3c42fcd"
+    },
+    "frontend/src-tauri/src/workbench/ipc.rs": {
+      "sha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a"
+    },
+    "frontend/src-tauri/src/workbench/ipc_windows.rs": {
+      "sha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d"
+    },
+    "frontend/src-tauri/src/workbench/browser_ipc.rs": {
+      "sha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7"
+    },
+    "frontend/src-tauri/src/workbench/browser.rs": {
+      "sha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e"
+    },
+    "frontend/src-tauri/src/workbench/command.rs": {
+      "sha256": "5e7245ff479f13014ed854e42fab2b1432396941bd97bb1cf7dd6f121db4b626"
+    }
+  },
+  "scopeDecision": "LED053/T1066已授权两分钟原则和共享原期限；T1081目前仅待办根因登记、没有精确独评SPEC；T1027又明确1秒观察/5分钟固定life/90秒idle，当前T1246无这4产品预算改动写集。应由parent新增/补T1081窄SPEC并独评，再实施扫描门分类与公共消费者闭包。",
+  "notRun": [
+    "不重跑verify",
+    "不执行浏览器/官方模型/PG/原生App",
+    "未改产品/测试/扫描器",
+    "原两次22FAIL保持",
+    "T1248原3PGskip仍未验"
+  ]
+}

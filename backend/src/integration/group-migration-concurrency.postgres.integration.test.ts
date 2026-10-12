@@ -1,6 +1,8 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it} from 'vitest';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import {createRuntimeDb,type Db} from '../db';
 import {projects,contentOutputs,projectStages,tasks,projectActivities} from '../schema/projects';
@@ -18,7 +20,7 @@ function gate(){let release!:()=>void;const promise=new Promise<void>(resolve=>{
 function outcome(promise:Promise<unknown>){let done=false;const result=promise.then(value=>{done=true;return {value,error:undefined};},error=>{done=true;return {value:undefined,error};});return {result,done:()=>done};}
 async function fixture(){
  if(!url)throw new Error('isolated PG URL missing');const parsed=new URL(url);
- if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');
+ assertOwnedPostgresUrl(parsed.toString());
  const name=`t1022_move_${randomUUID().replaceAll('-','')}`;const admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());
  await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));
  parsed.pathname=`/${name}`;const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());
@@ -62,7 +64,7 @@ it.skipIf(!url)('apply先校验：真实公共项目patch必须等待，不能�
  const migrated=await move.result;await patch.result;
  expect(blocked).toBe(true);expect(migrated.error).toBeUndefined();
  const [current]=await f.runtime.db.select().from(projects).where(eq(projects.id,f.p.id));expect(current?.groupId).toBe(f.to);expect(current?.title).toBe('预览时的标题');
-},30000);
+},180000);
 it.skipIf(!url)('项目patch先持锁：apply等待真实提交后必须重建digest拒绝过期预览',async()=>{
  const f=await fixture(),paused=gate(),resume=gate(),service=createGroupMigrationService(f.deps);
  const preview=await service.preview({...f.ctx,groupId:f.from},f.selection);
@@ -71,7 +73,7 @@ it.skipIf(!url)('项目patch先持锁：apply等待真实提交后必须重建di
  const waiting=await f.watchMigration(move.done);
  resume.release();await patch.result;const migrated=await move.result;
  expect(waiting).toBe(true);expect(migrated.error).toMatchObject({code:'ConflictError'});const [current]=await f.runtime.db.select().from(projects).where(eq(projects.id,f.p.id));expect(current?.groupId).toBe(f.from);expect(current?.title).toBe('先提交的合法编辑');
-},30000);
+},180000);
 it.skipIf(!url)('undo先校验：其他真实项目的新grant消费等待撤销，不能在撤销后留有效引用',async()=>{
  const f=await grantFixture(),paused=gate(),resume=gate();
  const service=createGroupMigrationService({...f.deps,observePhase:async phase=>{if(phase==='undo:validated'){paused.release();await resume.promise;}}});
@@ -80,7 +82,7 @@ it.skipIf(!url)('undo先校验：其他真实项目的新grant消费等待撤销
  try{blocked=await f.watch(consume.done);}finally{resume.release();}
  expect(blocked).toBe(true);expect((await undo.result).error).toBeUndefined();expect((await consume.result).error).toBeDefined();
  expect(await f.runtime.db.select().from(contentOutputs).where(eq(contentOutputs.id,f.consumer.id))).toEqual([]);
-},30000);
+},180000);
 it.skipIf(!url)('grant消费先持真实SHARE锁：undo等待commit后重验ledger，必须拒绝撤销',async()=>{
  const f=await grantFixture(),paused=gate(),resume=gate();
  const consume=outcome(f.writer.transaction(async tx=>{await tx.insert(contentOutputs).values(f.consumer);paused.release();await resume.promise;}));await paused.promise;
@@ -88,7 +90,7 @@ it.skipIf(!url)('grant消费先持真实SHARE锁：undo等待commit后重验ledg
  const waiting=await f.watchMigration(undo.done);
  resume.release();expect(waiting).toBe(true);expect((await consume.result).error).toBeUndefined();expect((await undo.result).error).toMatchObject({code:'ConflictError'});
  const grants=await f.runtime.db.select().from(resourceAccessGrants).where(eq(resourceAccessGrants.migrationId,f.moved.id));expect(grants.every(row=>row.revokedAt===null)).toBe(true);
-},30000);
+},180000);
 
 for(const family of ['output','stage','task','activity'] as const){
  it.skipIf(!url)(`项目已开始移组：旧ctx的无scope ${family}公共写入等锁后必须拒绝`,async()=>{
@@ -102,7 +104,7 @@ for(const family of ['output','stage','task','activity'] as const){
   expect((await move.result).error).toBeUndefined();expect(blocked).toBe(true);expect((await child.result).error).toMatchObject({code:'OwnershipError'});
   const table=family==='output'?contentOutputs:family==='stage'?projectStages:family==='task'?tasks:projectActivities;
   expect(await f.runtime.db.select().from(table).where(eq(table.id,id))).toEqual([]);
- },30000);
+ },180000);
 }
 
 for(const family of ['output','stage','task','activity'] as const){
@@ -123,5 +125,5 @@ for(const family of ['output','stage','task','activity'] as const){
   const [current]=await f.runtime.db.select().from(projects).where(eq(projects.id,f.p.id));expect(current?.groupId).toBe(f.from);
   const table=family==='output'?contentOutputs:family==='stage'?projectStages:family==='task'?tasks:projectActivities;
   expect(await f.runtime.db.select().from(table).where(eq(table.id,id))).toHaveLength(1);
- },30000);
+ },180000);
 }

@@ -20,17 +20,18 @@ test.describe("经验裁决台 page", () => {
     page,
   }) => {
     await page.goto("/experience");
+    await expect(page).toHaveURL(/\/knowledge$/);
 
     // Header in global mode with the page title.
     const header = page.locator('[data-slot="app-top-header"]');
     await expect(header).toHaveAttribute("data-mode", "global");
     const heading = page.locator('[data-slot="header-page-heading"]');
-    await expect(heading).toContainText("经验沉淀");
+    await expect(heading).toContainText("知识库");
 
     // The Experience nav item is the active page in the sidebar.
     const nav = page.getByRole("navigation", { name: "主要导航" });
     const active = nav.locator('[aria-current="page"]');
-    await expect(active).toHaveAttribute("href", "/experience");
+    await expect(active).toHaveAttribute("href", "/knowledge");
 
     // Contextual card variant is `assistant` (D-003).
     const assistant = page.locator(
@@ -44,58 +45,18 @@ test.describe("经验裁决台 page", () => {
     await expect(page.locator('[data-slot="app-top-header"]')).toHaveCount(1);
 
     // The page-internal main region exists exactly once.
-    const main = page.locator('main[data-page="experience"]');
+    const main = page.locator('main[data-page="knowledge"]');
     await expect(main).toHaveCount(1);
 
-    // 3 truth summary cards in spec order.
-    const summary = main.locator('[data-slot="experience-summary-cards"]');
-    await expect(summary).toBeVisible();
-    await expect(summary.locator('[data-slot="summary-card"]')).toHaveCount(3);
-    await expect(
-      summary.locator('[data-summary-id="exp-candidates"]'),
-    ).toContainText("待裁决");
-    await expect(
-      summary.locator('[data-summary-id="exp-validated"]'),
-    ).toContainText("已验证");
-    await expect(
-      summary.locator('[data-summary-id="exp-reflowed"]'),
-    ).toContainText("已回流校准");
-
-    // Two-column workbench: 裁决队列 + 已验证库 (with the discarded fold).
-    const workbench = main.locator('[data-slot="experience-workbench"]');
-    await expect(workbench).toBeVisible();
-    await expect(
-      workbench.locator('[data-slot="learning-queue"]'),
-    ).toBeVisible();
-    await expect(
-      workbench.locator('[data-slot="validated-library"]'),
-    ).toBeVisible();
-    await expect(
-      workbench.locator('[data-slot="discarded-section"]'),
-    ).toBeVisible();
-
-    // Honest queue: either real candidate cards or the empty-state copy —
-    // never fixture rows.
-    const queue = workbench.locator('[data-slot="learning-queue"]');
-    const candidateCount = await queue
-      .locator('[data-slot="candidate-card"]')
-      .count();
-    if (candidateCount === 0) {
-      await expect(
-        queue.locator('[data-slot="learning-queue-empty"]'),
-      ).toContainText("还没有待确认的经验");
-    } else {
-      const firstCard = queue.locator('[data-slot="candidate-card"]').first();
-      await expect(
-        firstCard.locator('[data-slot="learning-adopt"]'),
-      ).toBeVisible();
-      await expect(
-        firstCard.locator('[data-slot="learning-discard"]'),
-      ).toBeVisible();
-      await expect(
-        firstCard.locator('[data-slot="learning-edit"]'),
-      ).toBeVisible();
-    }
+    // T118b/T119 已批准 /experience 并入知识库，裁决留在复盘；这里是只读资料和经验入口。
+    await expect(main).toHaveAttribute("data-page-state", /^(default|empty)$/);
+    await expect(main.locator('[data-slot="experience-summary-cards"]')).toHaveCount(0);
+    await expect(main.locator('[data-slot="learning-queue"]')).toHaveCount(0);
+    await expect(main.locator('[data-slot="learning-adopt"], [data-slot="learning-discard"], [data-slot="learning-edit"]')).toHaveCount(0);
+    const captureTools = main.locator('[data-slot="knowledge-capture-tools"]');
+    await expect(captureTools).toBeVisible();
+    await captureTools.locator("summary").click();
+    await expect(main.getByRole("textbox", { name: "粘贴文本或 URL，也可拖入 PDF、DOCX、Markdown 或 TXT 文件" })).toBeVisible();
 
     // 快速记录 form retired → Copilot capture deep-link instead.
     await expect(
@@ -106,5 +67,11 @@ test.describe("经验裁决台 page", () => {
     const href = (await capture.getAttribute("href")) ?? "";
     expect(href).toContain("copilot=open");
     expect(href).toContain("surface=experience");
+    const submissions: string[] = [];
+    page.on("request", (request) => { if (request.method() === "POST" && new URL(request.url()).pathname === "/api/chat") submissions.push(request.url()); });
+    await capture.click();
+    await expect(page.getByRole("dialog", { name: "AI 助手" })).toBeVisible();
+    await expect(page.locator('[data-slot="prompt-input"]')).toHaveValue("记一条经验:");
+    expect(submissions).toEqual([]);
   });
 });

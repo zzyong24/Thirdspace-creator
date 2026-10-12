@@ -1,0 +1,37 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "tools/timeout-policy/verify.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1247/full-gate-attempt1.log",
+  "pid": 6830,
+  "identity": {
+    "pid": 6830,
+    "pgid": 6830,
+    "uid": 501,
+    "birth": "Mon Oct 12 03:19:26 2026",
+    "startedAt": 1791746366811
+  },
+  "startedAt": "2026-10-11T19:19:26.811Z",
+  "endedAt": "2026-10-11T19:19:58.864Z",
+  "elapsedMs": 32053,
+  "budgetMs": 96000000,
+  "deadlineAt": "2026-10-12T21:59:26.811Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 1,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": "",
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1247-full-gate-WV2tF1",
+  "outerStartedAt": "2026-10-11T19:19:26.810Z",
+  "outerBudgetMs": 96360000
+}

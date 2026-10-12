@@ -1,0 +1,9 @@
+{
+  "priorReviewSha256": "437d305046098e5196dc5429c7dd6d7c20d3f949f2b13679639b884cf2b9c045",
+  "priorVerdictPreserved": true,
+  "currentRuntimeApproval": false,
+  "status": "superseded_pending_DR009_repair",
+  "reason": "补充独评发现launcher主进程PGlite waitReady/query/close缺正预算；outer只stop children无法保证自身ledger await EOF，必须改owned有限readonly child并严格真实close后重新评。此前工具静态review不准启动。",
+  "noRuntimeStarted": true,
+  "firstEvidenceUnchanged": true
+}

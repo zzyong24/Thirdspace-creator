@@ -1,0 +1,23 @@
+{
+  "approved": true,
+  "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "phase": "regression",
+  "group": "hosts",
+  "toolSha256": "f71d3a25d4bf8c13288f3a077545a8a7c97efd7a999bf9b6259fee6e88fd4a28",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "selectedInputDigest": "1578b93351049884e5633ccef92e37ab2083e1832b289d204e173fa6265e337e",
+  "budgetInventoryDigest": "a7c8ffe15faa21d7b72f5698c8a1684c909d503a4ec2a78b3b4561d0f88a8ddb",
+  "entryAbsoluteOuterMs": 306480000,
+  "preparationBudgetMs": 120000,
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "independentReviewSha256": "b43828dc5fc0f102eb1d5311754234a44dd50109b6b05017d4b792e2ed843eba",
+  "rootV8FullRead": true,
+  "rootV8PacketSha256": "26616b94c0ac2de3bb7918a4d9fc245b57f07b44750d13f2d16106cb45694b9c",
+  "actualSelectedInputDrift": 0,
+  "sharedDistExclusive": true,
+  "originalQualifiedSkippedSixNeverPassed": true,
+  "at": "2026-10-11T23:43:24.607860+00:00"
+}

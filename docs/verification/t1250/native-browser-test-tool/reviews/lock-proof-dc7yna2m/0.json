@@ -1,0 +1,16 @@
+{
+  "accepted": true,
+  "originalPackageCount": 3,
+  "actualPackageCount": 4,
+  "privateRootCount": 1,
+  "differences": [],
+  "differenceCount": 0,
+  "comparisonFields": [
+    "name",
+    "version",
+    "source",
+    "checksum"
+  ],
+  "productionSubsetConfirmed": true,
+  "noBuildPermissionOnMismatch": true
+}

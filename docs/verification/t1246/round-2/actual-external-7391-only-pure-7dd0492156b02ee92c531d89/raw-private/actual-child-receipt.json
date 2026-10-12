@@ -1,0 +1,52 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/budget-test.cjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/pure-child.log",
+  "pid": 92716,
+  "identity": {
+    "pid": 92716,
+    "pgid": 92716,
+    "uid": 501,
+    "birth": "Mon Oct 12 16:35:26 2026",
+    "startedAt": 1791794126906
+  },
+  "startedAt": "2026-10-12T08:35:26.906Z",
+  "endedAt": "2026-10-12T08:35:27.149Z",
+  "elapsedMs": 243,
+  "budgetMs": 120000,
+  "deadlineAt": "2026-10-12T08:37:26.906Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": "",
+  "independentHelperLifecycleMs": 2160000,
+  "helperElapsedMs": 243.8749170000001,
+  "helperAggregateBudgetMs": 2280000,
+  "positiveElapsedMs": 108.41633300000012,
+  "observedAfterPositiveCloseMs": 134.64812499999994,
+  "actualPositiveClose": {
+    "pid": 92716,
+    "code": 0,
+    "signal": null,
+    "monotonicClosedAt": 1373.717208,
+    "positiveBirthMonotonic": 1265.300875,
+    "positiveDeadlineMonotonic": 121265.300875,
+    "stdioClosedFromActualCloseEvent": true
+  },
+  "actualDispatches": 1,
+  "logSha256": "ccf88584ce4068d815e2aab30aec04d39ea7d8bacc516caaeae535c48831ecc9",
+  "stdioClosedFromActualSuccessfulCloseEvent": true,
+  "logFdClosedBeforeHelperReturn": true
+}

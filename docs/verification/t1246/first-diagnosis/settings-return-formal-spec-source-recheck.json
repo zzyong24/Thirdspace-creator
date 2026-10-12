@@ -1,0 +1,213 @@
+{
+  "mode": "readonly-settings-contract-review",
+  "specSHA256": "8b2dee08aee0e07b856efb185715eb3cf639e04636955b8662946e8be4fb1ad2",
+  "proposalSHA256": "126e0aa304dbf90b66285e3f2d49041cc7ffbf9bad521984ff4c0c193ecae0bc",
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "existingCount": 23,
+  "allSame": true,
+  "existing": [
+    {
+      "path": "frontend/src/components/shell/app-shell.tsx",
+      "role": "proposed-product-change",
+      "old": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "candidate": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "current": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "same": true
+    },
+    {
+      "path": "frontend/src/components/shell/use-primary-navigation.ts",
+      "role": "proposed-product-change",
+      "old": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206",
+      "candidate": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206",
+      "current": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206",
+      "same": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "role": "proposed-product-change",
+      "old": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "candidate": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "current": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "same": true
+    },
+    {
+      "path": "frontend/src/components/shell/app-shell.test.tsx",
+      "role": "proposed-existing-test-change",
+      "old": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873",
+      "candidate": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873",
+      "current": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873",
+      "same": true
+    },
+    {
+      "path": "frontend/src/components/shell/use-primary-navigation.test.tsx",
+      "role": "proposed-existing-test-change",
+      "old": "6d3f1623676d894bf04209d842e2889ecff7382ff60c57920548eda96433971e",
+      "candidate": "6d3f1623676d894bf04209d842e2889ecff7382ff60c57920548eda96433971e",
+      "current": "6d3f1623676d894bf04209d842e2889ecff7382ff60c57920548eda96433971e",
+      "same": true
+    },
+    {
+      "path": "frontend/src/app/(creator)/shell-router.tsx",
+      "role": "read-run-only",
+      "old": "a57e9da3d474ff111a9fc400452521d34d544f302c337e5642470b221bf1f3fa",
+      "candidate": "a57e9da3d474ff111a9fc400452521d34d544f302c337e5642470b221bf1f3fa",
+      "current": "a57e9da3d474ff111a9fc400452521d34d544f302c337e5642470b221bf1f3fa",
+      "same": true
+    },
+    {
+      "path": "frontend/src/app/(creator)/layout.tsx",
+      "role": "read-run-only",
+      "old": "ffc7a4d064740cb10979d0f750f164dc5ebd8bc9b73cb0d73f8fd9a840e13b93",
+      "candidate": "ffc7a4d064740cb10979d0f750f164dc5ebd8bc9b73cb0d73f8fd9a840e13b93",
+      "current": "ffc7a4d064740cb10979d0f750f164dc5ebd8bc9b73cb0d73f8fd9a840e13b93",
+      "same": true
+    },
+    {
+      "path": "frontend/src/components/shell/sidebar.tsx",
+      "role": "read-run-only",
+      "old": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9",
+      "candidate": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9",
+      "current": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9",
+      "same": true
+    },
+    {
+      "path": "frontend/src/components/overlays/overlay-controller.tsx",
+      "role": "read-run-only",
+      "old": "c671d1aafae649dbc043c729de32366a793e84ac1c3e235ad41a183883345d2f",
+      "candidate": "c671d1aafae649dbc043c729de32366a793e84ac1c3e235ad41a183883345d2f",
+      "current": "c671d1aafae649dbc043c729de32366a793e84ac1c3e235ad41a183883345d2f",
+      "same": true
+    },
+    {
+      "path": "frontend/src/components/overlays/new-project-dialog.tsx",
+      "role": "read-run-only",
+      "old": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "candidate": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "current": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "same": true
+    },
+    {
+      "path": "frontend/src/lib/copilot-navigation.ts",
+      "role": "read-run-only",
+      "old": "a57e558e27c706a9edeceaf9ab8d0dc1c7be80294bfc4b09b3f931983611efcd",
+      "candidate": "a57e558e27c706a9edeceaf9ab8d0dc1c7be80294bfc4b09b3f931983611efcd",
+      "current": "a57e558e27c706a9edeceaf9ab8d0dc1c7be80294bfc4b09b3f931983611efcd",
+      "same": true
+    },
+    {
+      "path": "frontend/src/lib/copilot-navigation.test.ts",
+      "role": "read-run-only",
+      "old": "2b73e57eef244cc07c807e55e926de0a1f88fb6a8dc079357308ff43f0130000",
+      "candidate": "2b73e57eef244cc07c807e55e926de0a1f88fb6a8dc079357308ff43f0130000",
+      "current": "2b73e57eef244cc07c807e55e926de0a1f88fb6a8dc079357308ff43f0130000",
+      "same": true
+    },
+    {
+      "path": "frontend/src/lib/creation-workspace-scope.ts",
+      "role": "read-run-only",
+      "old": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "candidate": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "current": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "same": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-host.tsx",
+      "role": "read-run-only",
+      "old": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18",
+      "candidate": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18",
+      "current": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18",
+      "same": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-host.test.tsx",
+      "role": "read-run-only",
+      "old": "4b4c7472124acb183b4f15d2ed41beee794125646ce79b31d77b19ce0a97f706",
+      "candidate": "4b4c7472124acb183b4f15d2ed41beee794125646ce79b31d77b19ce0a97f706",
+      "current": "4b4c7472124acb183b4f15d2ed41beee794125646ce79b31d77b19ce0a97f706",
+      "same": true
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-registry.ts",
+      "role": "read-run-only",
+      "old": "dd6d47a2ce4b38d3b26a4231d88408884b76d1188f472660b0b3c89427425010",
+      "candidate": "dd6d47a2ce4b38d3b26a4231d88408884b76d1188f472660b0b3c89427425010",
+      "current": "dd6d47a2ce4b38d3b26a4231d88408884b76d1188f472660b0b3c89427425010",
+      "same": true
+    },
+    {
+      "path": "frontend/src/components/ui/dialog.tsx",
+      "role": "read-run-only",
+      "old": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "candidate": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "current": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "same": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "role": "read-run-only",
+      "old": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "candidate": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "current": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "same": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-page.test.tsx",
+      "role": "read-run-only",
+      "old": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "candidate": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "current": "7f1fd5281bc07202566b31c9743d45a875988b848691e3a4b3b64b9e2d715681",
+      "same": true
+    },
+    {
+      "path": "frontend/tests/e2e/settings.spec.ts",
+      "role": "read-run-only",
+      "old": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "candidate": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "current": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "same": true
+    },
+    {
+      "path": "frontend/tests/e2e/settings-responsive-layout.spec.ts",
+      "role": "read-run-only",
+      "old": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "candidate": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "current": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "same": true
+    },
+    {
+      "path": "frontend/tests/e2e/overlay-routing.spec.ts",
+      "role": "read-run-only",
+      "old": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "candidate": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "current": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "same": true
+    },
+    {
+      "path": "frontend/src/components/overlays/overlay-routing.test.tsx",
+      "role": "read-run-only",
+      "old": "41a2ae0e40669c537a52223c61dd74add756f99691ea241c6062cb6ea2458c54",
+      "candidate": "41a2ae0e40669c537a52223c61dd74add756f99691ea241c6062cb6ea2458c54",
+      "current": "41a2ae0e40669c537a52223c61dd74add756f99691ea241c6062cb6ea2458c54",
+      "same": true
+    }
+  ],
+  "proposedAbsent": [
+    {
+      "path": "frontend/src/components/shell/settings-return-context.tsx",
+      "absent": true
+    },
+    {
+      "path": "frontend/src/components/shell/settings-return-context.test.tsx",
+      "absent": true
+    },
+    {
+      "path": "frontend/src/features/settings/settings-dialog-return.test.tsx",
+      "absent": true
+    },
+    {
+      "path": "frontend/tests/e2e/settings-return.spec.ts",
+      "absent": true
+    }
+  ],
+  "runtimeExecuted": false
+}

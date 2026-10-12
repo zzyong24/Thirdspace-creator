@@ -1,0 +1,31 @@
+{
+  "sourceManifestPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/manifest.json",
+  "sourceManifestSha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+  "originalActualVerifierPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+  "originalActualVerifierSha256": "e159718f4d3ef197612e67ed33d1843ebffb8a362b5b4ec091df06ade390dbe6",
+  "sealedOldRunnerBudget": {
+    "bodyCount": 170,
+    "fileCount": 54,
+    "serialBodySumMs": 24219180000,
+    "separatePerBodyFixtureHookAllowanceMs": 24280380000,
+    "globalSetupTeardownAllowanceMs": 240000,
+    "workerProjectCleanupSlotMs": 672840000,
+    "startupFullSlotsMs": 1800000,
+    "commandListMs": 480000,
+    "readonlyLedgerSlotMs": 1200000,
+    "cleanupFullMs": 4800000,
+    "marginMs": 600000,
+    "outerMs": 49181520000,
+    "monotonicSegmentsMaxMs": 60000,
+    "notPersistentDeadlineInput": true
+  },
+  "sealedOldLiteralFormulaMs": 49181520000,
+  "currentActualOriginalVerifierStartupLiteralMs": 2400000,
+  "currentActualFormulaMs": 49182120000,
+  "wrongExpectedInPureTestMs": 49181520000,
+  "actualObservedAssertionMs": 49182120000,
+  "differenceMs": 600000,
+  "rootCause": "old pending manifest runnerBudget1.8M versus original actual verifier startup2.4M; pure literal matches old pending JSON but not current consumer",
+  "futureResealNeedsActualCurrentFormulaRunnerBudget": true,
+  "sourceOnlyNoSecondPureExecution": true
+}

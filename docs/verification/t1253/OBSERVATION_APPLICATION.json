@@ -1,0 +1,22 @@
+{
+  "specSha256": "093bbe2ef67ab4c94ad073243edf55dca90c678b5a2b1aa40443d8b406cd8f19",
+  "exactApplied": [
+    {
+      "file": "backend/src/integration/chat-hooks-worker.test.ts",
+      "beforeSha256": "007547ed8ae028996af31b4c873af19f74e323b19d194a3214c2871f50889415",
+      "afterSha256": "fb2dfb542eccb91c45747dd5c0320d0823d78e8f93e3daf2d2045df8e0c4db0f",
+      "preserved": "docs/verification/t1253/original-source-preserved/backend/src/integration/chat-hooks-worker.test.ts"
+    },
+    {
+      "file": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "beforeSha256": "98ae5f6c0a071832a2309be7b13f6621f93831e4bea2d51acd62087320a2dca4",
+      "afterSha256": "ba8f2a344a8c5f042f0fd45e89047772663e364830d8435e04af11cde7904d75",
+      "preserved": "docs/verification/t1253/original-source-preserved/backend/src/integration/chat-script-draft-worker.test.ts"
+    }
+  ],
+  "portsOriginalUnchanged": true,
+  "expectAstUnchanged": 118,
+  "resDestroyUnchanged": true,
+  "notExecutedYet": true,
+  "first8FailuresPreserved": "docs/verification/t1246/round-2/unit/owner-final-evidence/worker-nine-f01a9beb4c293b63a659c3ebbb45e323"
+}

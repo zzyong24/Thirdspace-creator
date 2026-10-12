@@ -1,0 +1,178 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（legacy-text）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（pcm-word）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（pcm-segment）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（pcm-probe-limit）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（aac-word）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（pcm-nonintegral）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（lost-audio）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（missing-source）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（canonical-aac-word）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（canonical-aac-outside-video）
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:68:434)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:221:21
+    at materializeInputs (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts:217:20)
+    at Object.createTask (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:69:521)
+    at attach (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:83:396)
+    at Object.prepare [as prepareEditorSource] (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-sources.ts:89:7)
+    at Object.request (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production.transport.ts:145:71)
+    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts:71:90
+    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+ ❯ src/modules/production/production-precise-asr.integration.test.ts (11 tests | 1 failed) 38833ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（legacy-text）  5080ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（pcm-word）  3451ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（pcm-segment）  3253ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（pcm-probe-limit）  3179ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（aac-word）  3261ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（pcm-nonintegral）  3153ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（lost-audio）  3690ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（missing-source）  3270ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（canonical-aac-word）  4043ms
+   × 原公开Source/受管抽音/原durable provider/get/adopt完整precision（canonical-aac-offset） 2831ms
+   ✓ 原公开Source/受管抽音/原durable provider/get/adopt完整precision（canonical-aac-outside-video）  3621ms
+ ❯ src/modules/production/production-precise-asr-mapping.test.ts (7 tests | 1 failed) 2533ms
+   ✓ 实际native PCM MOV全部source/output帧证明音轨偏移；整数samples严格映射，不量化 286ms
+   ✓ 实际AAC旧输入和真实PCM帧gap保原全文能力，首PTS/rate不能升级verified  573ms
+   ✓ 合法实际PCM MOV全帧ffprobe输出超过精度预算，回退原MP3全文；损坏原身份和取消仍失败  328ms
+   ✓ 固定普通AAC完整音频v2/strict roundtrip/双域实际词边界；末端不钉、不双扣priming  643ms
+   × 固定偏移AAC仍走原全文；canonical精度预算不足不反杀全文 3ms
+   ✓ R6.1完整输出计数机械区间：整除唯一值、floor/ceil与大整数乘法精确 0ms
+   ✓ R6.1随包工具同固定AAC：实际full-output receipt/count严格缺失伪造和flush/WAV/PCM矛盾均拒绝  700ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-precise-asr-mapping.test.ts > 固定偏移AAC仍走原全文；canonical精度预算不足不反杀全文
+Error: 缺少固定偏移AAC
+ ❯ canonicalAacFixture src/modules/production/production-precise-asr-mapping.test.ts:20:15
+
+ ❯ src/modules/production/production-precise-asr-mapping.test.ts:80:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/production/production-precise-asr.integration.test.ts > 原公开Source/受管抽音/原durable provider/get/adopt完整precision（canonical-aac-offset）
+Error: 缺少原固定AAC
+ ❯ src/modules/production/production-precise-asr.integration.test.ts:36:152
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 16 passed (18)
+   Start at  03:32:23
+   Duration  45.64s (transform 2.66s, setup 0ms, import 3.92s, tests 41.37s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b004-canonical-normal-first.json

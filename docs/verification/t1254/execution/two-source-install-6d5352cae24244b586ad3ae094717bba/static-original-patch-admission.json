@@ -1,0 +1,8 @@
+{
+  "remainingMs": 17459201.023208,
+  "requiredMs": 15660000,
+  "positiveMs": 180000,
+  "futurePositiveMs": 7200000,
+  "remainingLifecycleMs": 6480000,
+  "reportCleanupMs": 1800000
+}

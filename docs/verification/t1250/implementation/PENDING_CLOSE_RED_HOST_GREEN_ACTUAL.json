@@ -1,0 +1,31 @@
+{
+  "status": "真实独立阶段收据，不签整任务通过",
+  "rendererOriginalArchive": "docs/verification/t1250/implementation/render-before-pending-close-tail.ts",
+  "rendererSha256": "82cd5670f997139db477adec4a05a703e349eab28da00ccee3427a512d5d02b0",
+  "runs": [
+    {
+      "run": "docs/verification/t1250/runs/ct1250-red-render-ZS9ZnZ",
+      "testsSha256": "54fdcc402e09dfc6b5834e4f1c3a21bb6c0bdfbfc45418d591a1dc85733b86ba",
+      "resultSha256": "4d2c7b4896d95827ac26291e3cb0540aa8a15f47fb2863df6af9a0e14df89724",
+      "passed": 3,
+      "failed": 1,
+      "filteredOrPending": 7,
+      "sourceInputUnchanged": true,
+      "closed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "run": "docs/verification/t1250/runs/ct1250-green-hosts-LuMJjJ",
+      "testsSha256": "9072bffa00744f4b84aa9ab03836285a9d5760162e39a5715660d7d466b8b06d",
+      "resultSha256": "a26311dddcc3de7fc8029b62547c3a6cd66570feb6d4cbe0b0307c8d9e38f7fc",
+      "passed": 3,
+      "failed": 0,
+      "filteredOrPending": 33,
+      "sourceInputUnchanged": true,
+      "closed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "publicStrictContextPreparationCorrection": "新未执行public体仅显式userId/accountId，无requestId/source；transport保持原ctx",
+  "cdp": "正在实际运行，未签结果"
+}

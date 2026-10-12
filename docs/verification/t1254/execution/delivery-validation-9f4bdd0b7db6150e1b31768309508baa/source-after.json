@@ -1,0 +1,12 @@
+{
+  "inputSha256": "cb1233c8e03c5bbc3abbfe3316b25c507fc602c1053cd1cda1bc4ad462d663c7",
+  "runnerSha256": "dc6eb3a0632dddce4e7a8751fe2b79b04c4af92fba3fc650b325d98646047737",
+  "manifestSha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd",
+  "rows": 143462,
+  "scope": "DOOCS_COMPLETE_DELIVERY_CANDIDATE_READONLY_VALIDATION",
+  "task": "T-1254",
+  "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "inheritedDeadline": "2026-10-12T15:56:11.789Z",
+  "totalBudgetMs": 19320000,
+  "boundInputsUnchanged": true
+}

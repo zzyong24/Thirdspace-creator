@@ -1,0 +1,39 @@
+it('T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节',async()=>{
+ const {createPersistentTaskService,createWorkbenchArtifactReadService,createWorkbenchPublicService,createWorkbenchPublicStreamService}=await import('@creatoros/backend/modules/execution');
+ const {createWorkbenchArtifactHost}=await import('./workbench-artifact-host'),{createWorkbenchArtifactRepresentation}=await import('./workbench-artifact-representation');
+ const {chromium}=await import('@playwright/test'),{PNG}=await import('pngjs'),{PDFParse}=await import('pdf-parse');
+ const nonce=randomUUID(),owner={userId:`public-render-${nonce}`,accountId:`public-render-account-${nonce}`,requestId:nonce,source:'user' as const};
+ const bornBudget={maxCalls:20,maxTokens:100000,deadlineMs:36000000},tasks=createPersistentTaskService(db);
+ const task=await tasks.enqueue(owner,{kind:'ai_task',ownerType:'ai_task',ownerId:nonce,idempotencyKey:nonce,executionBudget:bornBudget,payload:{}});
+ const readOriginalTask=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]!;
+ const born=await readOriginalTask();expect(born.deadlineAt).toBeTruthy();const originalDeadline=born.deadlineAt!;expect(Date.parse(originalDeadline)-Date.parse(born.createdAt)).toBe(bornBudget.deadlineMs);
+ const claim=(await tasks.claimTask({taskId:task.id,workerId:`render-owner-${nonce}`}))!;expect((await readOriginalTask()).deadlineAt).toBe(originalDeadline);
+ const bytes=Buffer.from('<style>body{margin:0;background:#df2828}</style><h1>Owned slow public original report</h1>'),objects=new Map<string,Uint8Array>(),digest=(v:Uint8Array)=>createHash('sha256').update(v).digest('hex');
+ // 与原T1250公共35s用例相同的controlled file source/blobs；实际注册/版本事务与Chromium均真实，非模型生成。
+ const blobs={submit:async(_ctx:unknown,input:{operationId:string;bytes:Uint8Array})=>{const hash=digest(input.bytes);objects.set(`${input.operationId}:${hash}`,new Uint8Array(input.bytes));return {hash,size:input.bytes.byteLength};},read:async(_ctx:unknown,input:{operationId:string;hash:string})=>{const value=objects.get(`${input.operationId}:${input.hash}`);if(!value)throw Error('MISSING_OWNED_BLOB');return new Uint8Array(value);}};
+ const host=createWorkbenchArtifactHost(db,{platform:'darwin',desktop:true,socketPath:'private-controlled-file-source.sock',blobs,filePort:async(_ref,_operationId,action)=>{if(action.kind==='stat')return {isDirectory:false,size:bytes.length,version:1};if(action.kind==='read')return {contentBase64:bytes.subarray(action.offset,action.offset+action.limit).toString('base64'),total:bytes.length,version:1};throw Error('UNEXPECTED_FILE_ACTION');}})!;
+ const registered=await host.dispatch({context:{userId:owner.userId,accountId:owner.accountId,taskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,leaseId:`render-owner-${nonce}`,operationId:nonce},invocation:{name:'artifact.register',schemaVersion:1,input:{path:'owned/report.html',mime:'text/html'}}},{signal:new AbortController().signal,onProgress:()=>{}});
+ expect(registered.status).toBe('succeeded');if(registered.status!=='succeeded')throw Error(JSON.stringify(registered));const metadata=JSON.parse(registered.content.find(part=>part.type==='text')!.text) as {artifactId:string;version:number;hash:string};expect(metadata).toMatchObject({version:1,hash:digest(bytes)});
+ const artifacts=createWorkbenchArtifactReadService(db,{blobs});shared.transport=createWorkbenchPublicTransport({tasks:createWorkbenchPublicService(db),stream:createWorkbenchPublicStreamService(db),artifacts,capabilities:()=>({}),render:(ctx,taskId,artifactId,version,format)=>createWorkbenchArtifactRepresentation(artifacts,ctx,taskId,artifactId,version,format),reconcile:async()=>{throw Error('NO_FILE_RECONCILE_IN_RENDER_CASE');}});shared.ctx=owner;
+ shared.gateway=createCliInvocationService({db,masterKey:Buffer.alloc(32,7),now:()=>new Date().toISOString(),nextId:()=>randomUUID()});
+ const stages:Array<{kind:string;elapsedMs:number}>=[],timers=new Set<ReturnType<typeof setTimeout>>();
+ const stage=async<T,>(kind:string,work:()=>Promise<T>):Promise<T>=>{const start=performance.now();let timer:ReturnType<typeof setTimeout>|undefined;try{const delay=new Promise<void>(resolve=>{timer=setTimeout(resolve,110000);timers.add(timer);});const [value]=await Promise.all([work(),delay]);stages.push({kind,elapsedMs:performance.now()-start});return value;}finally{if(timer){clearTimeout(timer);timers.delete(timer);}}};
+ // 原真实SDK立即开始，与固定110s延迟并行；每stage仍在原120s独立phase内，不把120sSDK与110s串行相加。
+ const launch=chromium.launch.bind(chromium),spy=vi.spyOn(chromium,'launch').mockImplementation(async options=>{const browser=await stage('launch',()=>launch(options)),newContext=browser.newContext.bind(browser);vi.spyOn(browser,'newContext').mockImplementation(async options=>{const context=await stage('context',()=>newContext(options)),newPage=context.newPage.bind(context);vi.spyOn(context,'newPage').mockImplementation(()=>stage('page',()=>newPage()));return context;});return browser;});
+ const cli=await startLoopbackCliFixture({post:POST,accessToken:'owned-slow-render'});
+ try{
+  for(const format of ['png','pdf'] as const){
+   const input={params:{taskId:task.id,artifactId:metadata.artifactId,version:1},query:{format}},started=performance.now(),envelope=await cli.run(['call','workbench.artifacts.render','--input',JSON.stringify(input),'--account',owner.accountId]) as {data:unknown};
+   const result=ENDPOINTS.renderWorkbenchArtifact.response.parse(envelope.data),output=Buffer.from(result.data,'base64');
+   expect(performance.now()-started).toBeGreaterThan(300000);expect(result).toMatchObject({sourceHash:metadata.hash,metadata:{artifactId:metadata.artifactId,version:1,hash:metadata.hash},size:output.length,hash:digest(output),mime:format==='png'?'image/png':'application/pdf'});
+   if(format==='png'){const png=PNG.sync.read(output);expect([...png.data.subarray(0,4)]).toEqual([223,40,40,255]);}else{const parser=new PDFParse({data:output});try{expect((await parser.getText()).text).toContain('Owned slow public original report');}finally{await parser.destroy();}}
+   expect((await readOriginalTask()).deadlineAt).toBe(originalDeadline);
+  }
+  expect(stages.map(s=>s.kind)).toEqual(['launch','context','page','launch','context','page']);for(const observed of stages)expect(observed.elapsedMs).toBeGreaterThanOrEqual(110000);
+  expect((await artifacts.readAll(owner,task.id,metadata.artifactId,1)).bytes).toEqual(new Uint8Array(bytes));
+  const args=['call','workbench.artifacts.render','--input',JSON.stringify({params:{taskId:task.id,artifactId:metadata.artifactId,version:1},query:{format:'png'}}),'--account',owner.accountId];
+  const foreign=[...args];foreign[5]='foreign-owned-render-account';await expect(cli.run(foreign)).rejects.toMatchObject({status:404});
+  const wrongVersion=[...args];wrongVersion[3]=JSON.stringify({params:{taskId:task.id,artifactId:metadata.artifactId,version:2},query:{format:'png'}});await expect(cli.run(wrongVersion)).rejects.toThrow();
+  expect(cli.requests()).toBe(4);expect(spy).toHaveBeenCalledTimes(2);expect((await readOriginalTask()).deadlineAt).toBe(originalDeadline);
+ }finally{spy.mockRestore();for(const timer of timers)clearTimeout(timer);await cli.close();}
+},42000000);

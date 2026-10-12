@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "bindingSHA": "0190d05186bb71138e543526cf7ec77dfcae83148f622b3611b3df087fc0f3b7",
+  "rows": 531,
+  "rootFullV4HelperAndAuditDeltaRead": true,
+  "v5OneLiteralLengthChangeExact": true,
+  "staticActualFourBudgetLines": [
+    {
+      "file": "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "before": "}, 60000);",
+      "after": "}, 180000);",
+      "oldStaticConditionRejectsLegitimateDelta": true,
+      "fixedPreservesExactPrefix": true
+    },
+    {
+      "file": "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "before": "} }, 60000);",
+      "after": "} }, 180000);",
+      "oldStaticConditionRejectsLegitimateDelta": true,
+      "fixedPreservesExactPrefix": true
+    },
+    {
+      "file": "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "before": "},60000);",
+      "after": "},180000);",
+      "oldStaticConditionRejectsLegitimateDelta": true,
+      "fixedPreservesExactPrefix": true
+    },
+    {
+      "file": "backend/src/modules/production/production-precise-asr.integration.test.ts",
+      "before": "},60000);",
+      "after": "},720000);",
+      "oldStaticConditionRejectsLegitimateDelta": true,
+      "fixedPreservesExactPrefix": true
+    }
+  ],
+  "noCandidateHelperOrAuditExecuted": true
+}

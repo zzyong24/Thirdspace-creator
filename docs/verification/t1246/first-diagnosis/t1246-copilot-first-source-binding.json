@@ -1,0 +1,49 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/BACKLOG-archive.md",
+      "sha256": "addfecf9ba4a082a6c28698dafd15e3f36b34424e22571b69f74ae81a1013096"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/orchestrator/DECISION_LOG.md",
+      "sha256": "81ef2fdd855b011e87bfa51835627c49678fc9143ddf8f423769fc89a62f50c0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1238-codex-unified-text-image-engine.md",
+      "sha256": "1c2f0e33bcedd10af9dd18d52b6e1d181fca314f59711eaa532b2693d6f2fbc7"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1024-chat-runtime-liveness.md",
+      "sha256": "18884da5a95ff9d303254ddee572a1f690820ef4399ca2a1f8624cf5b86a1828"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1026-copilot-sdk-boundary.md",
+      "sha256": "695e0f2c81fe75796083db0ae0d92212e6f5730a4a3a7daf5c1a89773efc6ce7"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-copilot.spec.ts",
+      "sha256": "d48625c8fde48cc8b17a0919eba7a2be98b776e2e1f2cb14c9bb9f87aa7838cf"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts",
+      "sha256": "cdf7f36aae60583dad3321c480d0fb6a1ea22fd5ede4768bb32da6a3958f8878"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "f0359d37a6a4d85ada788920ac4eb36a11dce20aedd09916a44885abc59ec87e"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "fafd6d5bd345d53607b1b0a8aeedc9d9ada88171918dfa4cb04fe05fa6ecfe01"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/fixtures/selectors/copilot.ts",
+      "sha256": "ea73a54c463b6d22bfedbe100339caebf16c9b5efb197d3a931115339f98be85"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-assembly.ts",
+      "sha256": "dc35a2c20d031e79e1c2e09dec8a8f9156cac42003a6c41b534981490f693985"
+    }
+  ]
+}

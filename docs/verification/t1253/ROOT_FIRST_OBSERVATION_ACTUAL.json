@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-11T22:37:56.444437+00:00",
+  "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1253/execution/observation-whole25-936861b3079dc6f7c610d656dad8d7fb",
+  "observed": {
+    "phase": "observation-whole25",
+    "total": 25,
+    "passed": 17,
+    "failed": 8,
+    "skip": 0,
+    "files": [
+      {
+        "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+        "status": "failed",
+        "assertions": 14
+      },
+      {
+        "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+        "status": "failed",
+        "assertions": 8
+      },
+      {
+        "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+        "status": "failed",
+        "assertions": 3
+      }
+    ],
+    "allClean": false,
+    "caseComplete": true,
+    "sourceUnchanged": true,
+    "observationOnly": true,
+    "originalAssertionsUnchanged": true,
+    "originalStimulusUnchanged": true,
+    "neverClaimFullSystem": true
+  },
+  "childElapsedMs": 62919,
+  "wrapperElapsedMs": 63795.446041999996,
+  "exitCode": 1,
+  "processClosed": true,
+  "ownedGroupRemaining": 0,
+  "ownedRootCleaned": true,
+  "originalFailuresPreserved": true,
+  "fourFullObservationRowsActuallyRead": true,
+  "permissionFieldsNotCapturedThisFirstRound": [
+    "task.retryOfCallId",
+    "task.attempt",
+    "frozenEngine",
+    "call.inputDigest",
+    "call.reservedTokens",
+    "call.providerJob",
+    "call.resultRef"
+  ],
+  "historicalPiPolicy": "docs/features/t1022-nonblocking-agent-recovery.md:39",
+  "notIndependentProofOfRetryPermissionYet": true,
+  "helperWorstCaseLifecycleBudgetGapDiscoveredAfterEOF": true,
+  "futureToolsMustReservePerChild2160000MsLifecycle": true,
+  "doNotRetroactivelyClaimFullBudgetClosure": true,
+  "logSha256": "80d2d07e882e4ff663b957157e4a0887114fd84fefc351f769e977bf7d9f41a0"
+}

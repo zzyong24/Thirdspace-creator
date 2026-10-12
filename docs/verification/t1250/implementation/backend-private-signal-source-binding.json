@@ -1,0 +1,12 @@
+{
+  "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/workbench-file-recovery.service.ts",
+  "beforeSha256": "bcad3a9bb7cdbe57de165108d5ed4836c54e7ff58ab78e36113e1e0bee93d3b5",
+  "afterSha256": "1a5613702ab81e92cc4a33d437d9aa78c58c6f318dd5c2ae838e63887bcb892b",
+  "changes": [
+    "仅私有readReceipt第二optional AbortSignal类型",
+    "原control.signal传到同原query readonly端口"
+  ],
+  "publicSchemaChanged": false,
+  "newBackendTestsOrOtherBackendSourceChanged": false,
+  "testsExecutedForThisPoint": false
+}

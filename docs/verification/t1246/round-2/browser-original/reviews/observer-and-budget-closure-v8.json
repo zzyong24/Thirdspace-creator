@@ -1,0 +1,1094 @@
+{
+  "currentValidatorSha256": "499da034dadfa5c570750984e0a9589773d60d0bd10cc85d7f726b19c44e9a1d",
+  "at": "2026-10-11T20:10:17.283Z",
+  "observerMinMs": 300000,
+  "observers": [
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/ai-copilot.spec.ts",
+      "line": 86,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300_000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "844f38a0a77d3c424993fa749bf9402fd537c682185283e3bea4b1be9bd5a267"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/ai-copilot.spec.ts",
+      "line": 89,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300_000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "844f38a0a77d3c424993fa749bf9402fd537c682185283e3bea4b1be9bd5a267"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/ai-nonblocking-recovery.spec.ts",
+      "line": 83,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "2a9d68d17fe423efa0787def232bddf4f9c39171e1438bfc1caeaad6decc205a"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/ai-recovery-guidance.spec.ts",
+      "line": 92,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/ai-recovery-guidance.spec.ts",
+      "line": 243,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/ai-reliability-recovery.spec.ts",
+      "line": 226,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e5899edc568ec835cba009540550995316a4da01d6d2b5c3cf818228effa05fa"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/assets.spec.ts",
+      "line": 112,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/assets.spec.ts",
+      "line": 113,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "line": 65,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "line": 67,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "line": 107,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "line": 113,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "line": 118,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "line": 122,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "line": 139,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-group-media-jobs.spec.ts",
+      "line": 143,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-run-now-public.spec.ts",
+      "line": 142,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-run-now-public.spec.ts",
+      "line": 253,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-run-now-public.spec.ts",
+      "line": 254,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-run-now-public.spec.ts",
+      "line": 262,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/automations-run-now-public.spec.ts",
+      "line": 284,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/channel-public-links.spec.ts",
+      "line": 58,
+      "consumer": "page.waitForRequest",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "4871c33511849543061482a52e7a84f826f91bf476f298f197ead91b68eceee9"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/content-radar-one-click-project.spec.ts",
+      "line": 641,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/content-radar-one-click-project.spec.ts",
+      "line": 687,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/content-radar-one-click-project.spec.ts",
+      "line": 795,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/content-radar-one-click-project.spec.ts",
+      "line": 868,
+      "consumer": "page.waitForRequest",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 94,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 113,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 133,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 170,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 183,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 186,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 190,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 233,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 239,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 242,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/creative-canvas.spec.ts",
+      "line": 243,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/draft-ammo-media-preview.spec.ts",
+      "line": 163,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/draft-ammo-media-preview.spec.ts",
+      "line": 164,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/draft-ammo-media-preview.spec.ts",
+      "line": 190,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/draft-ammo-media-preview.spec.ts",
+      "line": 191,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 78,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 498,
+      "consumer": "page\n    .waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 719,
+      "consumer": "page\n      .waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1000,
+      "consumer": "page\n      .waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1075,
+      "consumer": "pageTwo.page\n      .waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1422,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1423,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1465,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1466,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1488,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1489,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1575,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1705,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/group-skill-customization.spec.ts",
+      "line": 1788,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/media-root-isolation.spec.ts",
+      "line": 60,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/media-root-isolation.spec.ts",
+      "line": 72,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/media-root-isolation.spec.ts",
+      "line": 73,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/settings.spec.ts",
+      "line": 61,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "Math.max((REQUEST_BUDGET), id === \"settings.models.test\" ? 420000 : 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e543dc995ae65d48aadc860b105ffcb67a0b66725df1fdebd5d7f0d9c4f02e9f"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1062-group-native-rough.spec.ts",
+      "line": 42,
+      "consumer": "page.waitForRequest",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1062-group-native-rough.spec.ts",
+      "line": 81,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1062-group-native-rough.spec.ts",
+      "line": 149,
+      "consumer": "expect.poll",
+      "timeoutExpression": "480_000",
+      "lowerBoundMs": 480000,
+      "pass": true,
+      "sha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1062-group-native-rough.spec.ts",
+      "line": 624,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1062-group-native-rough.spec.ts",
+      "line": 893,
+      "consumer": "page.waitForRequest",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1069-asset-picker.spec.ts",
+      "line": 34,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1069-asset-picker.spec.ts",
+      "line": 38,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 189,
+      "consumer": "expect.poll",
+      "timeoutExpression": "Math.max(wait.timeout ?? 0, 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 190,
+      "consumer": "expect.poll",
+      "timeoutExpression": "Math.max(wait.timeout ?? 0, 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 193,
+      "consumer": "expect.poll",
+      "timeoutExpression": "Math.max(wait.timeout ?? 0, 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1140-picker-low-height.spec.ts",
+      "line": 27,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "Math.max(wait.timeout ?? 0, 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1140-picker-low-height.spec.ts",
+      "line": 68,
+      "consumer": "expect.poll",
+      "timeoutExpression": "Math.max(wait.timeout ?? 0, 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1140-picker-low-height.spec.ts",
+      "line": 93,
+      "consumer": "expect.poll",
+      "timeoutExpression": "Math.max(wait.timeout ?? 0, 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1140-picker-low-height.spec.ts",
+      "line": 121,
+      "consumer": "expect.poll",
+      "timeoutExpression": "Math.max(wait.timeout ?? 0, 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t1159-wechat-native-report.spec.ts",
+      "line": 75,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "Math.max(wait.timeout ?? 0, 300000)",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "e7a5943264ad9de3fc407e5031440b6a6af42a0bf586d4365306f914ac8f86f8"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t954-director-review.spec.ts",
+      "line": 24,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "9d307ca8dd0dae8dd15bb384dc6f6946dd09cc3632f73fd2d8786a7c4f0023ba"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/t954-director-review.spec.ts",
+      "line": 41,
+      "consumer": "page.waitForRequest",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "9d307ca8dd0dae8dd15bb384dc6f6946dd09cc3632f73fd2d8786a7c4f0023ba"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/web-material-read-save.spec.ts",
+      "line": 203,
+      "consumer": "targetPage.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "564a3bb64a074497e83496426744d691252c31e737362e8b368ec2c09ebea417"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/web-material-read-save.spec.ts",
+      "line": 254,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "564a3bb64a074497e83496426744d691252c31e737362e8b368ec2c09ebea417"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/wechat-article-workbench.spec.ts",
+      "line": 177,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "707c2b3d39522ad5cd2134822c4407aa59588ca5728eb21fd7c8ecf3c4b86ed2"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/zz-account-isolation.spec.ts",
+      "line": 61,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78"
+    },
+    {
+      "scope": "original",
+      "file": "frontend/tests-t1246-round2-original/e2e/zz-account-isolation.spec.ts",
+      "line": 62,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "line": 78,
+      "consumer": "this.page.waitForResponse",
+      "timeoutExpression": "UI_OPERATION",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 15,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 35,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 13,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 28,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 34,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 35,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 36,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 55,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8"
+    },
+    {
+      "scope": "v3",
+      "file": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 57,
+      "consumer": "expect.poll",
+      "timeoutExpression": "OBSERVE",
+      "lowerBoundMs": 1980000,
+      "pass": true,
+      "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8"
+    },
+    {
+      "scope": "additional-readonly",
+      "file": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "line": 44,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300_000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e"
+    },
+    {
+      "scope": "additional-readonly",
+      "file": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "line": 53,
+      "consumer": "page.waitForResponse",
+      "timeoutExpression": "420_000",
+      "lowerBoundMs": 420000,
+      "pass": true,
+      "sha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e"
+    },
+    {
+      "scope": "additional-readonly",
+      "file": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "line": 65,
+      "consumer": "expect.poll",
+      "timeoutExpression": "300_000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e"
+    },
+    {
+      "scope": "additional-readonly",
+      "file": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "line": 81,
+      "consumer": "page.waitForRequest",
+      "timeoutExpression": "300_000",
+      "lowerBoundMs": 300000,
+      "pass": true,
+      "sha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e"
+    }
+  ],
+  "observerCount": 95,
+  "originalNamedWaitWrapped": [
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "start": 14666,
+      "end": 14670,
+      "original": "wait",
+      "replacement": "{ ...wait, timeout: Math.max(wait.timeout ?? 0, 300000) }",
+      "kind": "declared-observer-timeout-floor",
+      "consumer": "expect.poll original wait options preserved; observer covers action120s + HTTP120s + margin60s",
+      "line": 189,
+      "context": "\n await expect.poll(()=>large.evaluate((node:HTMLImageElement)=>node.complete&&node.naturalWidth>0),wait).toBe(true);\n await expect.poll(()=>preview.getByRole(\"img\").evaluate((node:HTMLImageElement)=>node"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "start": 14802,
+      "end": 14806,
+      "original": "wait",
+      "replacement": "{ ...wait, timeout: Math.max(wait.timeout ?? 0, 300000) }",
+      "kind": "declared-observer-timeout-floor",
+      "consumer": "expect.poll original wait options preserved; observer covers action120s + HTTP120s + margin60s",
+      "line": 190,
+      "context": "(()=>preview.getByRole(\"img\").evaluate((node:HTMLImageElement)=>node.complete&&node.naturalWidth>0),wait).toBe(true);\n for(const vp of [{width:1366,height:900},{width:900,height:900},{width:683,height:450"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "start": 15227,
+      "end": 15231,
+      "original": "wait",
+      "replacement": "{ ...wait, timeout: Math.max(wait.timeout ?? 0, 300000) }",
+      "kind": "declared-observer-timeout-floor",
+      "consumer": "expect.poll original wait options preserved; observer covers action120s + HTTP120s + margin60s",
+      "line": 196,
+      "context": "m&&box.x>=15&&box.x+box.width<=vp.width-15&&confirm.y>=0&&confirm.y+confirm.height<=vp.height);\n  },wait).toBe(true);\n  const box=await dialog.boundingBox();expect(box).not.toBeNull();\n  expect(box!.x).to"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "start": 2604,
+      "end": 2608,
+      "original": "wait",
+      "replacement": "{ ...wait, timeout: Math.max(wait.timeout ?? 0, 300000) }",
+      "kind": "declared-observer-timeout-floor",
+      "consumer": "page.waitForResponse original wait options preserved; observer covers action120s + HTTP120s + margin60s",
+      "line": 27,
+      "context": "esponse.url().endsWith(\"/api/v1/dispatch\")&&response.request().postDataJSON()?.id===\"assets.search\",wait);\n await trigger.click(wait);const response=await read;if(!readFailure)expect(response.ok()).toBe(t"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "start": 7177,
+      "end": 7181,
+      "original": "wait",
+      "replacement": "{ ...wait, timeout: Math.max(wait.timeout ?? 0, 300000) }",
+      "kind": "declared-observer-timeout-floor",
+      "consumer": "expect.poll original wait options preserved; observer covers action120s + HTTP120s + margin60s",
+      "line": 68,
+      "context": "bserved=await paint(image);return observed.loaded&&observed.objectFit===\"contain\"&&observed.whole;},wait).toBe(true);}\n catch(error){mkdirSync(evidence,{recursive:true});writeFileSync(resolve(evidence,\"fa"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "start": 9581,
+      "end": 9585,
+      "original": "wait",
+      "replacement": "{ ...wait, timeout: Math.max(wait.timeout ?? 0, 300000) }",
+      "kind": "declared-observer-timeout-floor",
+      "consumer": "expect.poll original wait options preserved; observer covers action120s + HTTP120s + margin60s",
+      "line": 93,
+      "context": "etByAltText(\"画布图片素材\",{exact:true});\n  await expect.poll(async()=> (await boundaries(dialog)).inside,wait).toBe(true);\n  let thumbnail;\n  if(vp.width>=640){thumbnail=await whole(thumb.getByRole(\"img\"));awa"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "start": 12616,
+      "end": 12620,
+      "original": "wait",
+      "replacement": "{ ...wait, timeout: Math.max(wait.timeout ?? 0, 300000) }",
+      "kind": "declared-observer-timeout-floor",
+      "consumer": "expect.poll original wait options preserved; observer covers action120s + HTTP120s + margin60s",
+      "line": 121,
+      "context": "ument.nodes.some(n=>n.referenceAssetId===s.second.id&&n.referenceFileId===s.second.currentFileId);},wait).toBe(true);\n const saved=await s.get();expect(saved.revision).toBeGreaterThan(before.revision);con"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "start": 5902,
+      "end": 5906,
+      "original": "wait",
+      "replacement": "{ ...wait, timeout: Math.max(wait.timeout ?? 0, 300000) }",
+      "kind": "declared-observer-timeout-floor",
+      "consumer": "page.waitForResponse original wait options preserved; observer covers action120s + HTTP120s + margin60s",
+      "line": 75,
+      "context": "ith(\"/api/v1/dispatch\") && response.request().postDataJSON()?.id === \"platforms.collections.start\", wait);\n    await panel.getByRole(\"button\", { name: \"同步数据\", exact: true }).click(wait);\n    const respons"
+    }
+  ],
+  "budgetChecks": [
+    {
+      "name": "missing",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "name": "NaN",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "name": "zero",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "name": "short",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "name": "missing-body",
+      "refusedBeforeRuntime": true
+    },
+    {
+      "name": "bad-file",
+      "refusedBeforeRuntime": true
+    }
+  ],
+  "derivedRunnerBudget": {
+    "bodyCount": 170,
+    "fileCount": 54,
+    "serialBodySumMs": 24219180000,
+    "separatePerBodyFixtureHookAllowanceMs": 24280380000,
+    "globalSetupTeardownAllowanceMs": 240000,
+    "workerProjectCleanupSlotMs": 672840000,
+    "startupFullSlotsMs": 1800000,
+    "commandListMs": 480000,
+    "readonlyLedgerSlotMs": 1200000,
+    "cleanupFullMs": 4800000,
+    "marginMs": 600000,
+    "outerMs": 49181520000,
+    "monotonicSegmentsMaxMs": 60000,
+    "notPersistentDeadlineInput": true
+  },
+  "manifestSha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+  "nodeNegativeReceiptSha256": "03e2a0b1ec7547b787dabe013c8642c54dd0fb486705c35d8e87a4754575c97c",
+  "unchangedNodeHelpersReceipt": "真实120s owned Node负向原receipt保留；当前launch/validator字节相同，不重复冒充新实际DB结果",
+  "noRuntime": true
+}

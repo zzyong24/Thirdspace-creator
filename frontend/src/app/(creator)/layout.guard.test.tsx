@@ -16,7 +16,7 @@
 
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 
 // --- next/navigation: redirect throws (Next semantics) so control stops; the
 //     client ShellRouter island reads usePathname/useSearchParams. ---
@@ -30,7 +30,7 @@ const redirect = vi.fn((target: string) => {
 });
 vi.mock("next/navigation", () => ({
   redirect: (target: string) => redirect(target),
-  usePathname: () => "/settings",
+  usePathname: () => pathnameHeader ?? "/settings",
   useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({
     replace: vi.fn(),
@@ -95,6 +95,16 @@ vi.mock("@/lib/activation-gate.server", () => ({
   isActivationAllowed: async () => true,
 }));
 
+// 只提供 Shell 首载真实列表读取端口；不替换初始化ready门、scope或后台权限。
+vi.mock("@/lib/http-transport", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/http-transport")>();
+  return {...actual,fetchCreatorApi: async (...args: Parameters<typeof actual.fetchCreatorApi>) => {
+    const input = JSON.parse(String(args[1]?.body ?? "{}"));
+    if (input.id !== "accountGroups.list") throw new Error(`未装配本例Shell端口 ${input.id}`);
+    return new Response(JSON.stringify({data:[],meta:{requestId:"t1246-shell-read",page:1,pageSize:100,total:0}}),{status:200,headers:{"content-type":"application/json"}});
+  }};
+});
+
 async function importLayout() {
   return (await import("./layout")).default;
 }
@@ -108,6 +118,7 @@ async function importAuthenticationError() {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   redirect.mockClear();
   resolveContextFromToken.mockReset();
   resolveLocalContext.mockReset();
@@ -251,7 +262,9 @@ describe("(creator) layout — [T-348] 0 号引导守卫", () => {
       children: <div data-testid="guarded-child">guarded</div>,
       modal: null,
     });
-    return render(tree);
+    const result = render(tree);
+    await waitFor(()=>expect(screen.queryByTestId("workspace-initialization-loading")).not.toBeInTheDocument(),{timeout:120000});
+    return result;
   }
 
   it("0 号 + 首页 `/` → 放行,渲染 children(首页承接 OnboardingCard 引导流,不被守卫盖)", async () => {

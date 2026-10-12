@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-12T03:02:40.327502+00:00",
+  "scope": "profile窄修前本机Apple原系统profile只读consumer证据；不执行sandbox或网络",
+  "sources": [
+    {
+      "file": "/usr/share/sandbox/com.apple.netbiosd.sb",
+      "sha256": "a9e5cd8206a00e9e0351a3c45be0b493ede07c2c5ccff8af235b1a61655662f6"
+    },
+    {
+      "file": "/System/Library/Sandbox/Profiles/application.sb",
+      "sha256": "dd1b4c01b3effc45cb033c98fe1b3dd65d2f36f2496786ea68d56e7eab529dff"
+    },
+    {
+      "file": "/usr/share/sandbox/com.apple.CommCenter.sb",
+      "sha256": "e086665c3028773ec9e632825bdcaf48e1006e8f88547189f2a783e5c54ab0c5"
+    }
+  ],
+  "facts": [
+    "netbiosd.sb66-70明确network-inbound implies network-bind且local udp4过滤监听；同文件70-75 network-outbound列remote tcp139/445、udp137/138多个候选。",
+    "application.sb761原remote ip localhost:631过滤规则；CommCenter.sb241-248 outbound使用require-all/require-any remote候选，再require-not remote ip localhost。"
+  ],
+  "inference": "同allow列多种互斥remote端口可正常表达候选，因此不应把同条local+remote两个filter当双端AND；为避免某direction未提供endpoint无条件或OR匹配风险，使用direction对应单filter。",
+  "recommendedNarrowShape": "deny network*保；allow network-bind/network-inbound仅local ip localhost:*；allow network-outbound仅remote ip localhost:*；保deny HOME读写、原HOME/CODEX_HOME、无TCC/App改动",
+  "actualCompileNotClaimed": true,
+  "actualNetworkPolicyNotClaimed": true,
+  "neededRuntimeBoundary": "fresh bound child实际profile编译/ownedloopbackheader-body/原完整清理；若外端negative探针加入必须先完整工具审且不向真实服务写入",
+  "noStarHostRecommended": true
+}

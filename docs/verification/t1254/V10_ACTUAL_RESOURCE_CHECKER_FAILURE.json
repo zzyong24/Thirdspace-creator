@@ -1,0 +1,96 @@
+{
+  "task": "T-1254",
+  "actualSummary": {
+    "task": "T-1254",
+    "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+    "exitCode": 1,
+    "startedAt": "2026-10-12T03:47:03.156Z",
+    "elapsedMs": 103057.347417,
+    "totalBudgetMs": 109260000,
+    "stepComplete": 1,
+    "stepTotal": 25,
+    "signals": [],
+    "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-2829e301398ddc9461fe76cb1ff133f1-bS8E3o",
+    "rootRetained": true,
+    "appliedToPrivateOnly": false,
+    "records": [
+      {
+        "name": "owned-network-boundary",
+        "code": 0,
+        "elapsedMs": 215,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": []
+      },
+      {
+        "name": "static-resource-checker-tests",
+        "code": 1,
+        "elapsedMs": 2096,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": []
+      }
+    ],
+    "noProductCopy": true,
+    "noApp": true
+  },
+  "raw": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/summary.json",
+      "size": 888,
+      "sha256": "fc01df08408dfc8938506aa970dd714cef14ff1e8445ed6a686423475a37fa77"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/source-after.json",
+      "size": 56363402,
+      "sha256": "dc7c362b8814ac999727dea19ca28b7a32055e0fb4bb1b1803f952ca76912161"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/runner-error.json",
+      "size": 470,
+      "sha256": "fbdbb8247c1cf1217b42821df2a1ab4af92fb3b076fe7cab9d732c0acf63b8f3"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/owned-network-boundary-exit.json",
+      "size": 1420,
+      "sha256": "3c382379e82357bb2bfd002e77d777dcdb229c7a4c367162faeb57bc65f56f3d"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/owned-network-boundary-results.json",
+      "size": 715,
+      "sha256": "bdbb61cefee6182aa7e49cf0c07025a96e4aae5761fec432e29222142cee3e3f"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/owned-network-boundary.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/owned-network-boundary-log-archive.json",
+      "size": 909,
+      "sha256": "a35ce85cedcf65763cd3e1559f9b847b84eb7ed708bc59ab25656f33ff865dbf"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/static-resource-checker-tests-exit.json",
+      "size": 1702,
+      "sha256": "fce9171b824f1d14ac1be69e964ed2c8fb1d91fab9671b3ce70f701a3e9e2b1e"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/static-resource-checker-tests.log",
+      "size": 890,
+      "sha256": "8ff4c6678bd1ad456cbf4dce0591813f393afa5548a06fab0b22a45a363fe1aa"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-2829e301398ddc9461fe76cb1ff133f1/static-resource-checker-tests-log-archive.json",
+      "size": 925,
+      "sha256": "fbc9f4fa41b767d7c7a0e68b191dcccaa87689490636292d899d39f254288935"
+    }
+  ],
+  "noCheckerJSON": true,
+  "actualObserved": "mapDeps positive fixture failed reuse LogicalExpression assertion; actual AST type was not recorded in V10",
+  "staticConsumerEvidence": "actual installed rolldown ParserOptions preserveParens default true; ParenthesizedExpression contains expression; next candidate unwraps only transparent parentheses preserving resource checks",
+  "actualASTProjectionPendingNextReviewedRuntime": true,
+  "noRED": true,
+  "noSourceApplied": true,
+  "noBuild": true,
+  "noProductCopy": true,
+  "noApp": true
+}

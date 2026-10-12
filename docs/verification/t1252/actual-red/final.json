@@ -1,0 +1,57 @@
+{
+  "at": "2026-10-11T22:43:31.443Z",
+  "status": "actual_baseline_two_failures_collected",
+  "error": null,
+  "expired": false,
+  "elapsedMs": 603265.074,
+  "afterError": null,
+  "inputAfter": [
+    {
+      "path": "docs/features/t1252-cli-http-consumer-budget-closure.md",
+      "same": true
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/launch.cjs",
+      "same": true
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/ownership-negatives.cjs",
+      "same": true
+    },
+    {
+      "path": "docs/verification/t1252/red-http-tool/protocol-red.cjs",
+      "same": true
+    },
+    {
+      "path": "mcp-server/package.json",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "same": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "same": true
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "same": true
+    }
+  ],
+  "productTestsPassed": 0,
+  "productTestsFailed": 2,
+  "notImplementationPass": true,
+  "noApp": true,
+  "noPG": true,
+  "noModel": true,
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-ANZdLY"
+}

@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-11T20:34:21.676169+00:00",
+  "scope": "仅验收工具准备期；保原0406/v8历史SHA，不重prepare、不启动runtime",
+  "changes": [
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+      "oldSha256": "b782bdd34214b515c197a74050f6949d1562951fa28f11f9197e7fc05f32cfa3",
+      "newSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "oldBytesArchive": "docs/verification/t1246/round-2/new-v3/reviews/final-seal-tool-deltas/old/launch.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+      "oldSha256": "a1dd57acae2d29dc66572cca1f93e9445fbe730eef820c862043fd459ff54658",
+      "newSha256": "6d7706baaa4f9272d1cf64572689395bc9cbd14573470a8030e98fd711f31962",
+      "oldBytesArchive": "docs/verification/t1246/round-2/new-v3/reviews/final-seal-tool-deltas/old/prepare-runtime.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "oldSha256": "7b4d6d60c3dca32761ef50e739902dde59642154879806ad8a59a431dc492c2c",
+      "newSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "oldBytesArchive": "docs/verification/t1246/round-2/browser-original/reviews/final-seal-tool-deltas/old/launch.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "oldSha256": "d8b043b22dc256c99eb7efbb1cda5d856bffe40468eccc37f2ea22366f696af8",
+      "newSha256": "c0cef4eeaae77fb66569442870b06250a1e59c72ffe62b67a50f21d30493a712",
+      "oldBytesArchive": "docs/verification/t1246/round-2/browser-original/reviews/final-seal-tool-deltas/old/prepare-runtime.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "oldSha256": "499da034dadfa5c570750984e0a9589773d60d0bd10cc85d7f726b19c44e9a1d",
+      "newSha256": "e159718f4d3ef197612e67ed33d1843ebffb8a362b5b4ec091df06ade390dbe6",
+      "oldBytesArchive": "docs/verification/t1246/round-2/browser-original/reviews/final-seal-tool-deltas/old/verify-binding.cjs"
+    }
+  ],
+  "reasons": [
+    "每个listener保留owned/birth验证，仅共用一次完整ps snapshot，预算不随listener数增倍",
+    "prepare dirty路径同源sourceManifest.productRoots，最终seal纳入frontend/src-tauri tracked native源",
+    "原170两完整startup槽改各1200秒，admission420+末fetch120+capture120+lsof120+snapshot120=900秒+300余量"
+  ],
+  "pending": [
+    "最终source/candidate/11真实Worker build/newpackage后重封manifest与9driver、native完整源库存",
+    "当前两manifest旧源SHA会failclosed拒新工具，不具runtime权限"
+  ]
+}

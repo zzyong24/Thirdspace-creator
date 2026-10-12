@@ -1,0 +1,75 @@
+{
+  "task": "T-1248",
+  "reviewer": "/root/engine_coverage_audit",
+  "reviewedAt": "2026-10-11T20:07:37.742238+00:00",
+  "specSha256": "a815e5da23ef92579ae722ba9bd4227259d0bb9d14960d6c9dffa626395195de",
+  "canonicalSpecSameBytes": true,
+  "verdict": "PASS_SPEC_ORDER_CLARIFICATION_ONLY",
+  "firstRuntimeEvidence": {
+    "originalJson": "/tmp/t1248-calibration/full-first.json",
+    "originalJsonSha256": "56c8a21525069dcbbb1c0566fa1a436625de1d90688d8faeb0d56e350335d016",
+    "receipt": "docs/verification/t1248/order-wholefirst-original-receipt.json",
+    "receiptSha256": "60f9442946fb55372c1e7386292a93f3018c5c1db2382d1cbca75edb704c399f",
+    "passed": 341,
+    "failed": 1,
+    "skipped": 3,
+    "exit": 1,
+    "failures": [
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/application/chat/assistant-system-root.integration.test.ts",
+        "name": "功能发现按真实域或完整读取/动作ID精确定位，不把操作ID误报成空目录",
+        "failureMessages": [
+          "Error: 系统工具定义与冻结任务不符\n    at matchFrozenAssistantSystemCatalog (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-system-tool-host.ts:23:60)\n    at resolve (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-system-tool-host.ts:48:23)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-system-tool-host.ts:55:20\n    at fixture (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/application/chat/assistant-system-root.integration.test.ts:232:14)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/application/chat/assistant-system-root.integration.test.ts:69:10\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        ]
+      }
+    ]
+  },
+  "firstSourceArchiveLimit": "wholefirst三完整源未当时byte归档；仅当时实际apply_patch文本、fullfirst before/after SHA以及按该实际patch恢复production SHA599d…精确相同。不得称原bytes archive或借其代签新candidate。",
+  "currentProductionRestoredToWholefirstSha": true,
+  "candidateBindings": [
+    {
+      "file": "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+      "sha256": "458d77fcce8688b87b5cf073fc35335cd3cbe2fcb6ce01bb91dddbe0c8f94b01"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts",
+      "sha256": "a1de56b30df77667e05b6fc94ef037bc1fa91f2c8d5d9a9bbf0a465d208cfa7c"
+    },
+    {
+      "file": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "sha256": "4d53770576533ac7c6f15200778c85c4331ced4123c602ab4a6f90895d3e9831"
+    }
+  ],
+  "consumerBindings": [
+    {
+      "file": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "sha256": "8b691e3e3a1732bd7af8147658c35f5d96b2e9be20d3c4e56cc605ace8157f8d"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-proposal-source.service.ts",
+      "sha256": "b710ae2442eb8532a33d7cdb4bf12b1cb68b9f5ba42a718b93c7de8b9adbc1f4"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "sha256": "a562f61ad86305ff64c9953b340b6bae869cd88472242027f52977f512ee2495"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-host-context.service.ts",
+      "sha256": "ace427b8cad238fd56329424303919226fb745f6a64edf6469cc9001032f00a8"
+    }
+  ],
+  "assessment": [
+    "原buildChatTools按传入whitelist迭代，合法action→read并非任意篡改；旧功能发现成功body不能因新全局order门失败。",
+    "候选取消全局Object.keys固定顺序要求，但按原冻结工具顺序生成固定完整已知原型并canonical逐项相等；数组不sort/normalize；duplicate Set与unknown系统名保持拒绝。",
+    "真实source/host digest映射保留，stored modelInput.tools.reverse但business digest不变在公开adopt被拒；新case用同root actualOwners preferences.update.adopt真实spy断言0，正式数据不变/results0/call不变，恢复原bytes后source.read保留原receipt。",
+    "原reverse仅mock输入但整体prototype合法的helper负例迁到真实stored冻结身份门；不删除任何原成功assert，未扩大read/action版本、权限或候选正式写入。"
+  ],
+  "findings": [],
+  "productChangedByReviewer": false,
+  "testsExecutedByReviewer": false,
+  "limits": [
+    "本轮仅澄清合同及精确候选独评，formal root round3之后才允许产品门落地",
+    "second343PASS3PGskip是补owner spy前临时候选，不能当当前4d5377版本最终formalGate",
+    "完整legacy4/ownedPG3/模型/App/全局Gate未由本评审签通过"
+  ]
+}

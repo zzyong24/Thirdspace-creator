@@ -66,7 +66,7 @@ it.each(["darwin","win32"] as const)("%s 私有宿主把真实任务文件登记
  const body=read.content.find(part=>part.type==="text");if(!body)throw new Error("missing artifact bytes");
  expect(JSON.parse(body.text)).toMatchObject({mime:"text/html",text:bytes.toString(),hash:metadata.hash});
  expect(filePort).toHaveBeenCalledWith({executionTaskId:task.id,attempt:claim.lease.attempt,
-  fenceToken:claim.lease.fenceToken},expect.any(String),expect.objectContaining({kind:"read",path:"报告/分析.html"}));
+  fenceToken:claim.lease.fenceToken},expect.any(String),expect.objectContaining({kind:"read",path:"报告/分析.html"}),{signal:expect.any(AbortSignal)});
  const foreign=await host.dispatch({context:{...context,accountId:"other-account",operationId:randomUUID()},
   invocation:{name:"artifact.register",schemaVersion:1,input:{path:"报告/分析.html",mime:"text/html"}}},
   {signal:new AbortController().signal,onProgress:()=>{}});
@@ -141,3 +141,34 @@ it('并发任务同路径、重放与下一版本诊断均绑定原 hash；诊�
  const read=await host.dispatch({context:{...contexts[1],operationId:randomUUID()},invocation:{name:'artifact.read',schemaVersion:1,input:{artifactId:unavailable.artifactId,version:1}}},{signal:new AbortController().signal,onProgress:()=>{}});
  expect(read.status).toBe('succeeded');
 });
+
+
+it("T1250 同宿主两dispatch取消隔离：原signal贯穿文件页，取消任务不登记Blob",async()=>{
+ const nonce=randomUUID(),tasks=createPersistentTaskService(db),contexts: Array<{userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string;leaseId:string}>=[];
+ for(let index=0;index<2;index++){
+  const userId=`cancel-user-${nonce}-${index}`,accountId=`cancel-account-${nonce}-${index}`,workerId=`cancel-worker-${nonce}-${index}`;
+  const task=await tasks.enqueue({userId,accountId,requestId:nonce,source:"user"},{kind:"ai_task",ownerType:"ai_task",ownerId:`${nonce}-${index}`,idempotencyKey:`${nonce}-${index}`,payload:{}});
+  const claim=(await tasks.claimTask({taskId:task.id,workerId}))!;
+  contexts.push({userId,accountId,taskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,leaseId:workerId});
+ }
+ const controllers=[new AbortController(),new AbortController()],bytes=Buffer.from("<h1>原文件真实字节</h1>");
+ let release!:()=>void,entered!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;}),bothEntered=new Promise<void>(resolve=>{entered=resolve;});let stats=0;
+ const observations:Array<{taskId:string;kind:string;signal:AbortSignal|undefined}>=[],objects=new Map<string,Uint8Array>();
+ const blobs:WorkbenchArtifactBlobPort={async submit(_ctx,input){const hash=createHash("sha256").update(input.bytes).digest("hex");objects.set(input.taskId,input.bytes);return {hash,size:input.bytes.length};},async read(_ctx,input){return objects.get(input.taskId)!;}};
+ const filePort=async(ref:{executionTaskId:string},_operationId:string,action:NativeFileAction,control?:{signal?:AbortSignal})=>{
+  observations.push({taskId:ref.executionTaskId,kind:action.kind,signal:control?.signal});
+  if(action.kind==="stat"){if(++stats<=2){if(stats===2)entered();await gate;}return {isDirectory:false,size:bytes.length,version:1};}
+  if(action.kind==="read")return {contentBase64:bytes.subarray(action.offset,action.offset+action.limit).toString("base64"),total:bytes.length,version:1};
+  throw Error("unexpected action");
+ };
+ const host=createWorkbenchArtifactHost(db,{platform:"darwin",desktop:true,socketPath:"private.sock",blobs,filePort})!;
+ const pending=contexts.map((context,index)=>host.dispatch({context:{...context,operationId:randomUUID()},invocation:{name:"artifact.register",schemaVersion:1,input:{path:"report.html",mime:"text/html"}}},{signal:controllers[index].signal,onProgress:()=>{}}));
+ // 先安装两条结果观察，避免故意取消的拒绝成为未处理Promise。
+ const settled=Promise.allSettled(pending);
+ await bothEntered;controllers[0].abort(Error("owned dispatch cancelled"));release();
+ const results=await settled;
+ expect(results[0].status).toBe("rejected");expect(results[1]).toMatchObject({status:"fulfilled",value:{status:"succeeded"}});
+ expect(observations.filter(row=>row.taskId===contexts[0].taskId)).toEqual([{taskId:contexts[0].taskId,kind:"stat",signal:controllers[0].signal}]);
+ expect(observations.filter(row=>row.taskId===contexts[1].taskId).map(row=>[row.kind,row.signal])).toEqual([["stat",controllers[1].signal],["read",controllers[1].signal],["stat",controllers[1].signal]]);
+ expect(objects.has(contexts[0].taskId)).toBe(false);expect(Buffer.from(objects.get(contexts[1].taskId)!)).toEqual(bytes);
+},1800000);

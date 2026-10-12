@@ -1,0 +1,170 @@
+{
+  "task": "T-1246",
+  "scope": "EXTERNAL_27CF_ONLY_PURE",
+  "at": "2026-10-12T07:31:46.701923+00:00",
+  "status": "actual-pure-test-FAIL",
+  "approvalSha256": "2c98f31dcb432a3e762ca52bf91d2bd730fe6948b9db5ed81be171476e631067",
+  "bindingSha256": "27cf7abc90b0a2cdb295e59a8a744178ccfc2ba7180125dc86a06ae983d80092",
+  "pureEntrySha256": "c6a959c118a82d7dcbad8a7319f636e56454d652c438a54ccd07b7eb1f3b3c1c",
+  "candidateExecutions": 1,
+  "wrapperActualEOF": 1,
+  "actualChildPID": 66912,
+  "actualChildExitCode": 1,
+  "actualChildElapsedMs": 209,
+  "actualChildClosed": true,
+  "actualChildStdioClosedFromCloseEvent": true,
+  "actualLogFdClosedFromHelperReturn": true,
+  "actualChildSignals": [],
+  "actualChildRemainingGroupMembers": [],
+  "actualFailure": "AssertionError expected49181520000 actual49182120000 at budget-test.cjs:10",
+  "sourceRootCause": "old pending JSON startup1.8M differs from actual original verifier consumer2.4M",
+  "originalWrapperAfter": "missing-because-catch-before-after; original final left unchanged",
+  "independentReadonlyAfter": {
+    "at": "2026-10-12T07:29:30.261590+00:00",
+    "type": "independent-readonly-post-failure-audit-not-wrapper-original-after",
+    "bindingSha256": "27cf7abc90b0a2cdb295e59a8a744178ccfc2ba7180125dc86a06ae983d80092",
+    "sourceRows": 215,
+    "sourceDrift": [],
+    "nodeFiles": 82,
+    "nodeLinks": 37,
+    "nodeEdges": 51,
+    "nodeDrift": [],
+    "nodeGraphSha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+    "actualPsCode": 0,
+    "actualOwnedGroup": 66912,
+    "actualRemainingGroupMembers": [],
+    "signals": [],
+    "originalWrapperAfterMissing": true,
+    "actualPureResultStillFAIL": true
+  },
+  "archivedPrivateFiles": [
+    {
+      "original": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e/PRE_NODE_SOURCE_AND_DYLD.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/PRE_NODE_SOURCE_AND_DYLD.json",
+      "sha256": "16edd7bbd665070021645cd72af5b852726d5178a10df70677fe13947686d82e",
+      "size": 2657
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e/actual-child-receipt.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/actual-child-receipt.json",
+      "sha256": "609d51a2f4229839bf6bd979e68ebb9b198f2ab2decc1947a2cd70279b206bd0",
+      "size": 1302
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e/before.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/before.json",
+      "sha256": "acb4d9030001a8347b81fe11bf03613099276476602a7fc3b208f33200b9133f",
+      "size": 261
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e/dispatch-once.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/dispatch-once.json",
+      "sha256": "3d727dbc721ffe1ae70190fad57c20ba87c2d849b3b4446d258ff74212e834bb",
+      "size": 737
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e/final.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/final.json",
+      "sha256": "66212e01ea75ce250e2747e07c518b577a3703fcfe7052551304c334ddb95e4f",
+      "size": 2351
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e/pure-child.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/pure-child.log",
+      "sha256": "81046ec0e220d7061a145637b0abfa55a16ff1106f713bf4c4cae603c94bd93f",
+      "size": 1006
+    },
+    {
+      "original": "/private/tmp/t1246-final-pure-fc389d5651b5c5a4faf23a8e/run-once.cjs",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/run-once.cjs",
+      "sha256": "feda355a3f2c66565eb15dba3253deeee6d9ac15d30b134cc173021a6e8491ce",
+      "size": 6624
+    }
+  ],
+  "archiveFiles": [
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/ACTUAL_FORMULA_READONLY.json",
+      "sha256": "8555ac4c8535f6fb50cc1a9f157a034068b4994306c6e87534b722e96501ce94",
+      "size": 1610
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/DISPATCH_EXEC_RESULT.json",
+      "sha256": "386b4a8ce42c42626cdcc3078e53b1719bdc23b17ede173c38cd70d779c847bf",
+      "size": 462
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/FAILED_FIRST_READONLY_DIAGNOSTIC_ASSERT.json",
+      "sha256": "f258ef202963751369b028c5aaed28d79c877427d5d1d0f473291c6414027354",
+      "size": 459
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/INDEPENDENT_READONLY_AFTER_FAILURE.json",
+      "sha256": "8718484b1ba8cdc1e32bb3e8358f1bbc26acb42aaa0843a783c23d7dbfc422b9",
+      "size": 601
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/PRE_NODE_SOURCE_AND_DYLD.json",
+      "sha256": "16edd7bbd665070021645cd72af5b852726d5178a10df70677fe13947686d82e",
+      "size": 2657
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/PRIVATE_DISPATCH_BINDING.json",
+      "sha256": "8fe8b8248be5e3bb236f3fbcb7877bdb2f24023aa527678b34c193f0154a5ec4",
+      "size": 499
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/independent-after-process-snapshot.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/independent-after-process-snapshot.txt",
+      "sha256": "288c395fb14f37d301734522804ae3f8891390ba3be81a84bb25372a6875e2e3",
+      "size": 236888
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/PRE_NODE_SOURCE_AND_DYLD.json",
+      "sha256": "16edd7bbd665070021645cd72af5b852726d5178a10df70677fe13947686d82e",
+      "size": 2657
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/actual-child-receipt.json",
+      "sha256": "609d51a2f4229839bf6bd979e68ebb9b198f2ab2decc1947a2cd70279b206bd0",
+      "size": 1302
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/before.json",
+      "sha256": "acb4d9030001a8347b81fe11bf03613099276476602a7fc3b208f33200b9133f",
+      "size": 261
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/dispatch-once.json",
+      "sha256": "3d727dbc721ffe1ae70190fad57c20ba87c2d849b3b4446d258ff74212e834bb",
+      "size": 737
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/final.json",
+      "sha256": "66212e01ea75ce250e2747e07c518b577a3703fcfe7052551304c334ddb95e4f",
+      "size": 2351
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/pure-child.log",
+      "sha256": "81046ec0e220d7061a145637b0abfa55a16ff1106f713bf4c4cae603c94bd93f",
+      "size": 1006
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/raw-private/run-once.cjs",
+      "sha256": "feda355a3f2c66565eb15dba3253deeee6d9ac15d30b134cc173021a6e8491ce",
+      "size": 6624
+    },
+    {
+      "path": "docs/verification/t1246/round-2/actual-external-27cf-only-pure-fc389d5651b5c5a4faf23a8e/run-once.cjs",
+      "sha256": "feda355a3f2c66565eb15dba3253deeee6d9ac15d30b134cc173021a6e8491ce",
+      "size": 6624
+    }
+  ],
+  "noMetadataResealPrepareVerifyListServicesBrowserOrProductCopy": true,
+  "App": false,
+  "Windows": false,
+  "allPriorFrozenEvidencePreserved": true
+}

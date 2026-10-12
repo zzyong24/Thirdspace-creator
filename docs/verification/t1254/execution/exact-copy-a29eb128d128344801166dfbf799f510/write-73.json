@@ -1,0 +1,10 @@
+{
+  "path": "reference-editors/manifest.json",
+  "after": {
+    "sha256": "38cfdb1fe0c230d98bcdbbe596511070397b5e05dd5f183a243c7aba5227bcff",
+    "size": 445778,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

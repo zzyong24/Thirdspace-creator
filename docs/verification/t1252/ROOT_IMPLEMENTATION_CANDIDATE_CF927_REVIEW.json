@@ -1,0 +1,117 @@
+{
+  "schema": "t1252-root-implementation-candidate-review/v1",
+  "reviewedAt": "2026-10-11T22:57:22.053238+00:00",
+  "approved": true,
+  "scope": "EXACT_SIX_PRODUCT_AND_FOUR_ORIGINAL_TEST_CANDIDATES_ONLY",
+  "specSha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+  "candidateBindingSha256": "cf927b8d82b83cbfd203fc3b52ebab8ccda2fbf968c7a90a62d52adec4b2c450",
+  "candidateDiffSha256": "5871be49d74c6fb6dedd24b3ae63ebae18c9ebe455314db0cf3474106864fd26",
+  "independentReviewSha256": "f447305271cb80c2cc2a4b2439b5701937ef72baa680b966128f2596b4d090ff",
+  "candidateBindings": [
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "currentSourceSha256": "4e679f48074de96a2c1badd3ef5a3950ca32fb8c3bd9de3dca12c39768ccf532",
+      "candidateSha256": "3bbbfa9f115eba36d1ba40de3a243d60b65534b383e425b2a1cb113d1f9ccb98",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "currentSourceSha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4",
+      "candidateSha256": "7b3b056f7873a9b5e4df35da6d14d6d3a10730ecd22529529f541fcea082c677",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "currentSourceSha256": "360e4531b26e7fe540bcca5efbfe08f12ba38a2b48bfb1d660a2527e1085f957",
+      "candidateSha256": "bec80c632e5eb4101545196b4e7af1dabcb683a5ef62e51505e363e68c730717",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/package.json",
+      "currentSourceSha256": "2ab421c76f3977b43e052699fefec3000816475eb78c26c80cd110dc38df0c3b",
+      "candidateSha256": "a74529f5ad9326a6299f81b15b1d7f3bb25656ffbf421f3770ffd4b613a39890",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "currentSourceSha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6",
+      "candidateSha256": "62f3a953ae6c1746e5227bf54ff39234d62e2e3d38fea4b5b08393cb2f5dcb28",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "currentSourceSha256": "6ef4e5c873fcd5ac2719a220454ba3ed33be78394b63d3fd7cba5140aaddff13",
+      "candidateSha256": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/tests/dispatch.test.ts",
+      "currentSourceSha256": "7f884b3feae4258ccdf22d1423d999c7381b4eb1c8b7216cb540b5e156d22bba",
+      "candidateSha256": "c4d414a7cd6239d9537228130b2c1a3669aafe1d48e58ac0d4c727570bd613ba",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/tests/cli.test.ts",
+      "currentSourceSha256": "acbffcdb6297c0aa55cad79ca3740371fc94795d8aeb7aaaac273daeee5dbd68",
+      "candidateSha256": "bca0e966ff43d61907af7a137cc05a2aaa65d6c8444bd1335566c735ba1ca715",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/tests/group-mcp-context.test.ts",
+      "currentSourceSha256": "f227e9466adb8b9d56acecd63cad16ca0aeb4506fb7a3e30978385f733db02e7",
+      "candidateSha256": "08fd68d8a7f7a2c6a9ca8f0c4ec3c7a16e3420f9cb37473057a89a985a7689cb",
+      "changed": true,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/tests/server-discovery.test.ts",
+      "currentSourceSha256": "2fdcb78dcc69923aca25c53acca5300d8e696fe369cd20cc5bb891b6a21a004c",
+      "candidateSha256": "2fdcb78dcc69923aca25c53acca5300d8e696fe369cd20cc5bb891b6a21a004c",
+      "changed": false,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/tests/group-context.test.ts",
+      "currentSourceSha256": "d995cf72c3bab41777dbd6b6ebe0c47fa925ce4003d8db7dab2d38f506bdb56e",
+      "candidateSha256": "d995cf72c3bab41777dbd6b6ebe0c47fa925ce4003d8db7dab2d38f506bdb56e",
+      "changed": false,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "mcp-server/tests/cli-artifacts.test.ts",
+      "currentSourceSha256": "3be2e2190fde9eec86a0a36b18efe569d8bb143f082b6c8ce4d081cd2ca77dd4",
+      "candidateSha256": "3be2e2190fde9eec86a0a36b18efe569d8bb143f082b6c8ce4d081cd2ca77dd4",
+      "changed": false,
+      "sourceStillUnchanged": true
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "currentSourceSha256": "806420ed506a56b28c43641ddc5ce7d70dd362f4ec10be8841b8207211173843",
+      "candidateSha256": "b034aa7082b41cad411b65e69884d13785dd72182ab0190f5bbe88d576c2a863",
+      "changed": true,
+      "sourceStillUnchanged": true
+    }
+  ],
+  "rootFullRead": true,
+  "actualSourceAndCandidateChecks": 13,
+  "oldWholeLockBytesRetained": true,
+  "packageOnlyDirectUndici7272": true,
+  "constructorLongerControlAndBothSignalsPreserved": true,
+  "originalErrorReceiptAndJsonConsumerPreserved": true,
+  "marginAndFullPositiveSlotClosed": true,
+  "allOriginalAssertionsPreservedByIndependentAst": true,
+  "actualOriginalDefaultRedEvidenceSha256": "535fd59124a4e6b39e6ef8f0186ffbf5d815f66868de8ad1509702b416832555",
+  "noGlobalFetchOrDispatcherMutation": true,
+  "noAppNoPublish": true,
+  "findings": [],
+  "allowedAction": "归档所有current原字节后精确应用10个changed候选，原3个unchanged不改；安装/构建/用例工具需独立完整绑定与准入；不签任何GREEN。",
+  "runtimeAuthorized": false
+}

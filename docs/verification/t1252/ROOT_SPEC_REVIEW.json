@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-11T22:23:47.857319+00:00",
+  "verdict": "PASS_SPEC_ONLY",
+  "specSha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402",
+  "packetSha256": "1a947229fc66739b33d055fe436b40602f1b2b5644828af2f7a68d1667a52c4e",
+  "fullSpecRead": true,
+  "peerFindings": [],
+  "producerAndAPIDrift": 0,
+  "authorizedTestTypeOnlyDifference": [
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "peerSha256": "fea75a5e809e0797d2aca429da3389aa5d9c02676a66748295fb0a560acf4104",
+      "actualSha256": "476c4a857b72b172f47923e8f98c0519d7d4d49222d6044a8d4f8d504e02f9d8"
+    }
+  ],
+  "differencePurpose": "T1250三个EndpointInput仅补body:undefined，不改运行/schema/guard；保原7项标准types红",
+  "notRuntimePass": true
+}

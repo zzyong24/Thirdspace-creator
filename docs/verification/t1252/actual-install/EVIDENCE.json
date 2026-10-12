@@ -1,0 +1,39 @@
+{
+  "at": "2026-10-11T23:15:48.684685+00:00",
+  "scope": "actual offline/frozen/ignore-scripts direct dependency install only; no types/test/build yet",
+  "sourceRunRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-install-4Ll9fh",
+  "rawFiles": [
+    {
+      "path": "docs/verification/t1252/actual-install/final.json",
+      "sha256": "e4c5efe71a054b90542dc1b404a60926184592fbbea8df3e2309a97ac9c0f820"
+    },
+    {
+      "path": "docs/verification/t1252/actual-install/install-receipt.json",
+      "sha256": "c5d40a6ef1327b927226ac2d3382c36be5e7a7bbea32b70f8148783bf87caf65"
+    },
+    {
+      "path": "docs/verification/t1252/actual-install/installed-undici.json",
+      "sha256": "c253d5e69004fa422fac12654641918412e551cc0839e14eadb1c2ca8f5e0ec2"
+    },
+    {
+      "path": "docs/verification/t1252/actual-install/marker.json",
+      "sha256": "5b33f995ce52bffa044d693ef8cd14e1e94cc2164d8d037acca9b1fcc7434dfd"
+    },
+    {
+      "path": "docs/verification/t1252/actual-install/offline-install.log",
+      "sha256": "34dd819f8afe43931c0dbd74a52526b6ec3bb418d43dd483b54079d2f4d94029"
+    },
+    {
+      "path": "docs/verification/t1252/actual-install/start.json",
+      "sha256": "88de6a72274327a129e40708859690d90a5c53b7be4ed03fd921a92c31e738a5"
+    }
+  ],
+  "actualUndici": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/node_modules/undici",
+    "realpath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/undici@7.27.2/node_modules/undici",
+    "version": "7.27.2",
+    "packageSha256": "d234a6fae6ec5c627bcf7a2c9bc1c00400509ca97f5f417276581bc6ddad98cc",
+    "standardTypesOrRuntimeNotYetRun": true
+  },
+  "officialModelOrAppNotRun": true
+}

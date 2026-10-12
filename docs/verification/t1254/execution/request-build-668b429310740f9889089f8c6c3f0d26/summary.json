@@ -1,0 +1,94 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_POST_V14_GRAPH_PATHNAME_CONSUMER_REPAIR_COMBINED_RED_GREEN_REMAINING8_ONLY",
+  "exitCode": 0,
+  "startedAt": "2026-10-12T06:35:11.789Z",
+  "elapsedMs": 484392.85175,
+  "totalBudgetMs": 33660000,
+  "segmentStepComplete": 9,
+  "segmentStepTotal": 9,
+  "originalPrefixStages": 17,
+  "originalTotalStages": 25,
+  "combinedOriginalStagesObserved": 25,
+  "newCombinedProbeStages": 1,
+  "continuedFrom": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-ba7a4e28f106fe98777e78428b4fb135",
+  "originalV12Run": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-14bcbffb7152bdb2b58cd5a252c2d27e",
+  "originalExitCodeUnchanged": 1,
+  "v13ExitCodeUnchanged": 1,
+  "v14ExitCodeUnchanged": 1,
+  "originalV12WallDeadline": "2026-10-13T10:50:47.959Z",
+  "originalV13WallDeadline": "2026-10-13T05:18:07.699Z",
+  "originalV14WallDeadline": "2026-10-12T16:01:07.952Z",
+  "effectiveInheritedWallDeadline": "2026-10-12T16:01:07.952Z",
+  "signals": [],
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj",
+  "rootRetained": true,
+  "appliedToPrivateOnly": true,
+  "records": [
+    {
+      "name": "graph-consumer-red-green",
+      "code": 0,
+      "elapsedMs": 5901,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-delivery-graph",
+      "code": 0,
+      "elapsedMs": 3279,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-original-lease4",
+      "code": 0,
+      "elapsedMs": 653,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-original-dom",
+      "code": 0,
+      "elapsedMs": 2346,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-original-dom-no-process",
+      "code": 0,
+      "elapsedMs": 2357,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-original-image-variants",
+      "code": 0,
+      "elapsedMs": 2199,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-repro-original-static-patch",
+      "code": 0,
+      "elapsedMs": 119,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "native-repro-combined-patch-check",
+      "code": 0,
+      "elapsedMs": 128,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-repro-combined-patch-check",
+      "code": 0,
+      "elapsedMs": 122,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "noProductCopy": true,
+  "noApp": true
+}

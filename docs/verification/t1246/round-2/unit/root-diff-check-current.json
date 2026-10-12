@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-11 21:21:42 UTC",
+  "global": {
+    "chunk_id": "71b4b4",
+    "wall_time_seconds": 0.069608458,
+    "exit_code": 2,
+    "original_token_count": 19,
+    "output": "docs/verification/t1246/driver/changes.diff:2165: trailing whitespace.\n+ \n"
+  },
+  "implementationDirectories": {
+    "chunk_id": "3753b2",
+    "wall_time_seconds": 0.049598709,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "scope": "实际全局检查保留exit2，首轮封存原patch含尾空格；实现目录当前exit0，不能代全局PASS",
+  "historicalDriverArtifactModified": false
+}

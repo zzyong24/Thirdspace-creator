@@ -1,0 +1,28 @@
+--- packages/shared/src/utils/fetch.ts (a46fe6)
++++ /tmp/t1254-readonly/fetch-budget-candidate.ts
+@@ -26,8 +26,23 @@
+   const url = config.url || ``
+   const headers: Record<string, string> = { ...config.headers }
+   const controller = new AbortController()
+-  const timeout = config.timeout ?? 30_000
+-  const timer = setTimeout(() => controller.abort(), timeout)
++  // SEMANTIC_BOUNDARY_ALLOW: 只校验独立请求预算与时间，不做内容理解或创作选择。
++  const requestedTimeout = config.timeout
++  const timeout = typeof requestedTimeout === `number` && Number.isFinite(requestedTimeout) && requestedTimeout >= 0
++    ? Math.max(120_000, requestedTimeout)
++    : 120_000
++  // 宿主单个 timer 有 32 位上界；所有 tick 共用同一个出生时间与预算，不能续期。
++  const bornAt = performance.now()
++  const maxTimerDelay = 2_147_483_647
++  const abortAtDeadline = () => {
++    const remaining = timeout - (performance.now() - bornAt)
++    if (remaining <= 0) {
++      controller.abort()
++      return
++    }
++    timer = setTimeout(abortAtDeadline, Math.min(remaining, maxTimerDelay))
++  }
++  let timer = setTimeout(abortAtDeadline, Math.min(timeout, maxTimerDelay))
+ 
+   let body: BodyInit | undefined
+   if (config.data !== undefined && method !== `GET` && method !== `HEAD`) {

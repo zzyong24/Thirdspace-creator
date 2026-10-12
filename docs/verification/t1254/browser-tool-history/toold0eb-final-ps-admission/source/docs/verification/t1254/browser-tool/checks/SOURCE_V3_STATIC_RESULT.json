@@ -1,0 +1,73 @@
+{
+  "at": "2026-10-12T05:15:31.081266+00:00",
+  "rows": [
+    {
+      "kind": "node-syntax-parser-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+      "sha256": "2275adcb1a30e3751bbf0910d4242920e4c44761a16bb976881c623c0a6e4b09",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-budget-v3-static-jb6tahw3/complete-run.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-parser-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/driver-types.cjs",
+      "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-budget-v3-static-jb6tahw3/driver-types.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-parser-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/launch.cjs",
+      "sha256": "e3cbfdcb9aba7c2cf45aa6ea14b4d379ccdbb8b7818e2b2d79428d9df8c3f8ba",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-budget-v3-static-jb6tahw3/launch.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-parser-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+      "sha256": "a38e0a0a62c3251444a1fb40f3334ccb794f97aa31cea799600105d5e257eb2a",
+      "code": 0,
+      "log": "/private/tmp/t1254-budget-v3-final-syntax-j1yqmpoo/prepare.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-parser-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/runtime-dyld.cjs",
+      "sha256": "2a872b3ffef2cf10c4d43f08312ceb52568a2d8cfcb2e3ae3d51d52ae8bf6aaa",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-budget-v3-static-jb6tahw3/runtime-dyld.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-parser-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/seal.cjs",
+      "sha256": "78428c2b8c996ad60295e0660d7285386c83d38fc536e157377b73e3c1c505bc",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-budget-v3-static-jb6tahw3/seal.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-syntax-parser-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "sha256": "57150ecbf5aa52a12cffbde45311e7b820511f345b851a2f40b01dafff21f7c5",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-budget-v3-static-jb6tahw3/verify-binding.cjs.check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "pure-budget-function-and-read-only-json-only",
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/checks/budget-v3.cjs",
+      "sha256": "99066dfa26aa8a2f4ee5342287c5b6879f2c953c1dff65e6337309aaf4d03da0",
+      "code": 0,
+      "log": "/private/tmp/t1254-browser-budget-v3-static-jb6tahw3/budget-v3.log",
+      "logSha256": "2321baabd634c274b4453a565d6170a2b20c4eefd21f27ea3e2d67c0323e4e44"
+    }
+  ],
+  "collectorServicesBrowserNeverExecuted": true,
+  "onlyNewBudgetPureFunctionsEvaluated": true,
+  "copyTypesListBodiesStillPending": true,
+  "singleClockAdmissionChangeParsed": true
+}

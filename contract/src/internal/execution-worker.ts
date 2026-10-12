@@ -474,3 +474,6 @@ export {productionRoughCutTaskInput,type ProductionRoughCutTaskInput} from './pr
 export * from "./asset-asr-timing";
 
 export {asrTranscriptSchema} from "./execution-asr";
+
+/** 原外部宿主调用的受控原参数证明，不更改providerResult身份。 */
+export const externalToolInputProofSchema=z.object({schemaVersion:z.literal(1),callId:z.string().min(1),turnCallId:z.string().min(1),toolCallId:z.string().min(1),toolName:z.string().min(1),toolVersion:z.string().min(1),inputDigest:z.string().min(1),input:z.json()}).strict().superRefine((value,ctx)=>{if(JSON.stringify(value.input).length>1_000_000)ctx.addIssue({code:'custom',message:'外部工具参数过大'});});

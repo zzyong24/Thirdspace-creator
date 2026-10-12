@@ -1,0 +1,111 @@
+{
+  "at": "2026-10-11T23:43:03.816777+00:00",
+  "status": "PASS_V8_QUALIFICATION_TOOL_STATIC_ONLY",
+  "candidateBindingSha256": "26616b94c0ac2de3bb7918a4d9fc245b57f07b44750d13f2d16106cb45694b9c",
+  "reviewedRunnerSha256": "f71d3a25d4bf8c13288f3a077545a8a7c97efd7a999bf9b6259fee6e88fd4a28",
+  "reviewedInventorySha256": "833c0119d6ac1a4d5de4a7e7c5268c5ff3be5de07437f0c2fcef7b908254e871",
+  "findings": [],
+  "previousBlocker": "ST1250-FULL-HOSTS-ALIAS closed by V8 known const conditional alias/explicit skip facts and full36 accounting, original4341 preserved",
+  "facts": {
+    "hostsDeclared": 36,
+    "hostsRunnable": 30,
+    "hostsOriginalQualificationSkip": 6,
+    "renderDeclaredAndRunnable": 11,
+    "actualTestsExecutedByReviewer": 0,
+    "hostNativeSixNeverPassed": true
+  },
+  "inputs": [
+    {
+      "path": "docs/verification/t1250/tools-candidate/run-focused-v8-candidate.cjs",
+      "sha256": "f71d3a25d4bf8c13288f3a077545a8a7c97efd7a999bf9b6259fee6e88fd4a28",
+      "bytes": 14572
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/runner-budget-inventory-v8-candidate.cjs",
+      "sha256": "833c0119d6ac1a4d5de4a7e7c5268c5ff3be5de07437f0c2fcef7b908254e871",
+      "bytes": 9552
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/v8-runner.diff",
+      "sha256": "9f5860c818e332cbe80b04cd83f3f53a21d2832b5887b88b80c8504c9b7c5d97",
+      "bytes": 8616
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/v8-inventory.diff",
+      "sha256": "2f06de222ca5b374cb5db2b2d678fafe9860d585db02089c4cc7db6c6c2c6438",
+      "bytes": 10653
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/V8_OLD_INVENTORY_QUALIFICATION_FIRST.json",
+      "sha256": "c0f5e46e13e0fc44d8b9fd13dd6ffb0b39c548f8c1e6797d4bc412dd7e87dfd7",
+      "bytes": 532
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/V8_PURE_PARSER_NEGATIVES.json",
+      "sha256": "d26bb1e179196919f6c885618e420054f647215c18495f2b0413bdaae9ed92f4",
+      "bytes": 1525
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/V8_STATIC_ORIGINAL_INVENTORY.json",
+      "sha256": "1853d5506b2590717309f6267b4f977e195c57e9f97b6eeffc99c7c411ccb95f",
+      "bytes": 26713
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/v8-hosts-prepare.json",
+      "sha256": "c09d4a921e3736c1dd1408f432d35c3550b352e84f9e0733c442d3e7f9791b78",
+      "bytes": 391883
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/v8-render-prepare.json",
+      "sha256": "211c6666ba8d5c5739be659d05ea991eef2c0622399875fe41fd74e9ba6ecae3",
+      "bytes": 379363
+    }
+  ],
+  "sourceInventoryChecks": [
+    {
+      "path": "docs/verification/t1250/tools-candidate/v8-hosts-prepare.json",
+      "sha256": "c09d4a921e3736c1dd1408f432d35c3550b352e84f9e0733c442d3e7f9791b78",
+      "actualSourceCount": 2189,
+      "sourceInputUnchanged": true,
+      "planned": {
+        "approved": true,
+        "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+        "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+        "phase": "regression",
+        "group": "hosts",
+        "toolSha256": "f71d3a25d4bf8c13288f3a077545a8a7c97efd7a999bf9b6259fee6e88fd4a28",
+        "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+        "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+        "selectedInputDigest": "1578b93351049884e5633ccef92e37ab2083e1832b289d204e173fa6265e337e",
+        "budgetInventoryDigest": "a7c8ffe15faa21d7b72f5698c8a1684c909d503a4ec2a78b3b4561d0f88a8ddb",
+        "entryAbsoluteOuterMs": 306480000,
+        "preparationBudgetMs": 120000,
+        "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+      }
+    },
+    {
+      "path": "docs/verification/t1250/tools-candidate/v8-render-prepare.json",
+      "sha256": "211c6666ba8d5c5739be659d05ea991eef2c0622399875fe41fd74e9ba6ecae3",
+      "actualSourceCount": 2188,
+      "sourceInputUnchanged": true,
+      "planned": {
+        "approved": true,
+        "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+        "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+        "phase": "regression",
+        "group": "render",
+        "toolSha256": "f71d3a25d4bf8c13288f3a077545a8a7c97efd7a999bf9b6259fee6e88fd4a28",
+        "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+        "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+        "selectedInputDigest": "3f421a8ee03b6b030c3bddc5d24ee25a6de36e7d1631f1eb01673b37c8465ebc",
+        "budgetInventoryDigest": "dd6528f5871ad1210a7cba6200d16bcf632dcd2ec70f9c5962f90f11268a2614",
+        "entryAbsoluteOuterMs": 109080000,
+        "preparationBudgetMs": 120000,
+        "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+      }
+    }
+  ],
+  "scope": "只私有工具静态准入，所有原body/预算/qualification保持；实际list/run/helper/old native/App/model未签"
+}

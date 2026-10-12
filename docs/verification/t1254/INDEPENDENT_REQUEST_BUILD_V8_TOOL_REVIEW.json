@@ -1,0 +1,210 @@
+{
+  "schema": "independent-execution-tool-review/v1",
+  "task": "T-1254",
+  "at": "2026-10-12T02:53:15.598799+00:00",
+  "result": "PASS_TOOL_REAL_ORIGINAL_RED_V2_REQUEST_TEST_TYPES_DUAL_BUILD_GRAPH_ONLY",
+  "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+  "tool": {
+    "path": "/tmp/t1254-readonly/run-owned-doocs-request-and-build-v8.cjs",
+    "sha256": "93f04ea5212b8ad7709c57fe5181a9d279a0dc43f853a30de9ac95aa52083e9e",
+    "size": 26296
+  },
+  "seal": {
+    "file": "/tmp/t1254-readonly/REQUEST_BUILD_V8_FULL_SEAL.json",
+    "sha256": "f98e3a9ab5b5a6a20d9f50f6b594635140eb0cfc2cb6b6575abe1318dc07a500"
+  },
+  "prepare": {
+    "path": "/tmp/t1254-readonly/REQUEST_BUILD_V8_PREPARE.json",
+    "sha256": "9e1ee181b70395a29180027630bbbaa439bbfcd8520eb93bd26ea9f02e4a892f"
+  },
+  "sourceSnapshotDigest": "cf988d91089628a370e285ce5cb651986fa57625e235f9aeb8d1d4568bf1fe2b",
+  "toolDigest": "0e00dc6da2640c46e03f3ac9723fcaa8d056a0048d99657d22ff00851c4e43fd",
+  "fullActualInputProof": {
+    "file": "docs/verification/t1254/INDEPENDENT_V8_FULL_INPUT_HASH_RECHECK.json",
+    "sha256": "f3398693878b9f4c57c679a203b37bd391c1a4a9abf5847a1f11e9000b2d2535",
+    "inputRecords": 1678,
+    "toolRecords": 141101,
+    "actualRegularSHAAndSizeChecks": 135332,
+    "actualLinksChecked": 7447,
+    "bytesRead": 1800931891,
+    "drift": [],
+    "bothDigestsRecomputedSame": true
+  },
+  "fullOriginalNativeConsumersRead": [
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.ts",
+      "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/src/utils/fetch.test.ts",
+      "sha256": "026114a5f9c4414121731c77dbd59226f08b8cbc952b014068c9e11453f0b1fe"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/packages/shared/vitest.config.ts",
+      "sha256": "0c5559cf319756e9c1d4d35d920f32416a7c675ee1b9825462fe233554c286c1"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web/src/native-lease.test.ts",
+      "sha256": "4875ae9bb37996c663a3a6282bb796cb5e1019dc8d8e1fbdeb71eb47be26f6d6"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web/vitest.config.ts",
+      "sha256": "a3bc24d4f43d6d875c6ebd9d0e8ff863d45fca9cdf2c1efb3bcb43d1d90805c8"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/scripts/build-native.mjs",
+      "sha256": "e2311c02592dfa03954a6b41d821e698a645e851e52c80c4ebf48475e7dde57b"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/scripts/verify-native-build.mjs",
+      "sha256": "ac58319b710f1e567c70c72bbb6970f693046492f36d9bce59f31aff9f251542"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/scripts/verify-native-dom.mjs",
+      "sha256": "4b7b3d10e5745de9b62642af95c84c6c326813731631577b8fd5e3a5ec74169e"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/scripts/verify-native-image-variants.mjs",
+      "sha256": "2ac19d968bcdac93784139b95f9090594b7338bb148ea5833a54ae0faac03017"
+    }
+  ],
+  "findingClosure": {
+    "GR001": "仅函数原BASE+其真实参数识别为preload前缀，非拼接的裸BASE仍真实拒绝，不把整base值一概排除。",
+    "GR002": "实际__vite__mapDeps缓存参数/第三默认参数||assignment.Array结构提取全静态JS及CSS，统一真实base归属后全部存在性核对；未知结构/非静态item抛错，不凭mapDeps名字输出PASS。",
+    "GR003": "无表达式TemplateLiteral按actualAST cooked/raw消费localReference，真实ESM/import/reexport仍保持。",
+    "VT001": "五次Vitest显式120000teardown；原test/hook180000完整保，原24只有24afterEach，whole24 8.64M+120k+240k=9M，原8 2.88M+120k+240k<3.6M。",
+    "nativeLeaseInventory": "实际原archive文件是4原case/no hooks；仅工具expected count2→4且保原1.44M（4×180k+120k+240k<1.44M），原源码字节不变。"
+  },
+  "realInstalledParserProof": "Vite8.3.1 parseSync实际reexport rolldown1.2.11/@oxc-project/types0.151，StringLiteral节点type Literal，ImportDeclaration.source该类型；实际Vite生产mapDeps和assetsURL实现已全文核，非回忆或假parser。",
+  "guardAndScopeProof": [
+    "V6两actual0/closed/group0/原source和lock未变；实际native pnpm12.6 binary3a4+Node32e/实际全部compiler deps封印。每child前guard所有原实现/lock/mode/link，允许只有两根fetch/test4批准修改与static单graph复现源。",
+    "新9例checker由封的actualVite parser运行且5正4缺失/错误负族，待真实发生；只是graph消费者回归，仍需两实际新输出整图，不能局部9例代签。",
+    "先原8每根完整，然后旧a46模块真实31s合法body错误：child真实code1、AbortError/1POST/时间/close/socket0/schema；两真实RED确认后才同V2 fe239/fed3字节应用，旧test8不换expect。",
+    "新whole24两根全部通过后真实31s完整JSON/120s自然abort/显式160s保130s完整JSON三request，各1POST/no global override/body EOF/nonce/listener closed/socket0；无公网或模型。",
+    "原wxt.prepare/共享tsc/原native build+verify/static原完整build及类型/native原lease4/jsdom DOM和无process/image边界全部实际执行并保失败；jsdom不代Playwright像素，未依赖HOME浏览器。",
+    "static新graph源内复现，只原inline脚本字节外置、新引用实际hash、原CSP全部值/connectnone不变；rootfavicon/assets原byte copies，未准资源变化直接失败。",
+    "原scanner inspectSource对两输出所有JS按未来真实路径只读检查；不改规则/vendor豁免；完整source tar native819/static803+单graph脚本包含原许可/锁/3static真实developer symlinks，没有node_modules/cache。",
+    "原patch+actual shared diff+static单复现脚本的真实Git --check作用于各正确a7/既有静态适配base，原源码/patchserved副本一致；之后仍需最终delivery精确路径/SHA清单双审，工具本身不复制产品。",
+    "child白名单env HOME/CODEX_HOME保原值，sandbox仅拒HOME读写/公网允127.0.0.1；owner0700 UID/inode/nonce、完整future槽、取消/SHA漂移/非预期非零/未闭合或group非0不启动下一child，原raw/sourceafter保。"
+  ],
+  "steps": [
+    [
+      "static-resource-checker-tests",
+      180000
+    ],
+    [
+      "native-old8",
+      3600000
+    ],
+    [
+      "native-red",
+      180000
+    ],
+    [
+      "static-old8",
+      3600000
+    ],
+    [
+      "static-red",
+      180000
+    ],
+    [
+      "native-whole24",
+      9000000
+    ],
+    [
+      "static-whole24",
+      9000000
+    ],
+    [
+      "native-real-green",
+      1800000
+    ],
+    [
+      "static-real-green",
+      1800000
+    ],
+    [
+      "native-wxt-prepare",
+      900000
+    ],
+    [
+      "static-wxt-prepare",
+      900000
+    ],
+    [
+      "native-shared-types",
+      900000
+    ],
+    [
+      "static-shared-types",
+      900000
+    ],
+    [
+      "native-original-build",
+      3600000
+    ],
+    [
+      "native-original-build-verify",
+      900000
+    ],
+    [
+      "static-original-build",
+      3600000
+    ],
+    [
+      "static-delivery-graph",
+      900000
+    ],
+    [
+      "native-original-lease4",
+      1440000
+    ],
+    [
+      "native-original-dom",
+      900000
+    ],
+    [
+      "native-original-dom-no-process",
+      900000
+    ],
+    [
+      "native-original-image-variants",
+      900000
+    ],
+    [
+      "native-repro-original-static-patch",
+      180000
+    ],
+    [
+      "native-repro-combined-patch-check",
+      180000
+    ],
+    [
+      "static-repro-combined-patch-check",
+      180000
+    ]
+  ],
+  "totalBudgetMs": 106560000,
+  "minimumPositiveMs": 180000,
+  "prepareMs": 3600000,
+  "applyMs": 900000,
+  "afterMs": 3600000,
+  "eachHelperLifecycleMs": 2160000,
+  "limitations": [
+    "静态双审只给ROOT exact运行准入依据；reviewer未运行新deps/fixture/RED/tests/types/build或复制产品。",
+    "104.22M原V7静态CONCERNS全源保history，未runtime不伪造TDD RED；index形状首次harness KeyError在fullhash proof保留且只修读取器。",
+    "如果实际sandbox/原typescript/build/原patch/symlink或graph失败，应保真实失败，不改锁/原适配/放外网或只改压缩块洗绿。",
+    "原sourcepack/新完整输出仅私有候选，需再核archive内容、exactdelivery路径新增/删除/source/patch/manifest/verification脚本后双审复制。",
+    "新浏览器实际两视口还待新delivery/clean commit/11Workers/newDMG/owned工具，App已明确暂不授权保持未验；官方49/全T1246不签。"
+  ],
+  "previousConcerns": {
+    "path": "docs/verification/t1254/INDEPENDENT_REQUEST_BUILD_V7_FIRST_CONCERNS.json",
+    "sha256": "ab5d130580357fc44d9ddabe53cc2fafc1c9467e0c2f018368dcc1062988dfbc"
+  },
+  "findings": [],
+  "runtimePermissionByReviewer": false,
+  "reviewerExecutedToolOrDependencies": false,
+  "reviewerChangedSharedProduction": false,
+  "AppPassed": false
+}

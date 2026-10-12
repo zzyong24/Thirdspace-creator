@@ -1,0 +1,10 @@
+[
+  {
+    "name": "T1250 真实控件active超过90秒不触发idle，结束后仍按原idle及life截止",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "T1250 公共CLI→HTTP→service→Chromium慢checkout及动作超过30秒仍保原session和同key回执",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts"
+  }
+]

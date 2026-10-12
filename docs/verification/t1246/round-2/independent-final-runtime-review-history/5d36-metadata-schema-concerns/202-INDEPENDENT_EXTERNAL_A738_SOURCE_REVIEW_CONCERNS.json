@@ -1,0 +1,94 @@
+{
+  "task": "T-1246",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T06:42:46.433745+00:00",
+  "status": "CONCERNS",
+  "scope": "原170/new111最终外层a738源码一次独立完整预审，不准入runtime",
+  "binding": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-runtime-guard/SOURCE_TOOL_BINDING.json",
+    "sha256": "a7384b4022a8e886194d2e7a4d7480d3cc290de6060aad6c0fa0f743c5acb8c8",
+    "files": 23,
+    "externalInputs": 38
+  },
+  "fullInputProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/INDEPENDENT_EXTERNAL_A738_SOURCE_INPUT_RECHECK.json",
+    "sha256": "474de5bd94bc1d6f209fd1b5641d720f97404a7541c3184083509a4e9464104c",
+    "drift": [],
+    "fullReusedDiffsMechanicallyReconstructed": 4,
+    "historicalFrozenSnapshot": "docs/verification/t1246/round-2/independent-final-runtime-review-history/a738-source-concerns"
+  },
+  "findings": [
+    {
+      "id": "FG-INNER-EXISTING",
+      "status": "CONCERNS",
+      "file": "两个legacy launch/verify",
+      "fact": "旧nextOnly/ledgerOnly/run在420k ready、1.2M/1.8M ledger及entry/final中重复source/runtime verify；外层新增槽不能改变旧内部截止。",
+      "required": "按新四文件完整公式、真实消费者与单出生future封印续版；保170/111/first100及SQL正文。",
+      "previouslyKnown": true
+    },
+    {
+      "id": "FG-METADATA-INPUT",
+      "status": "CONCERNS",
+      "file": "prepare-metadata-input.cjs → discover-joint-pairs.py/prepare-joint-dyld.py",
+      "fact": "PRE_METADATA_INPUT仅写browserRoot，未写browserRoots。两个Python在unreached browser library上下文读C['browserRoots']，结尾无条件读C['originalBuilderProducer']/C['originalBuilderClosure']，三字段均无producer。",
+      "required": "从已核两个真实browser根与批准8bac/3bc9原builder事实写完整字段并精确SHA守卫；不填虚构值。",
+      "runtimeFailureObserved": false
+    },
+    {
+      "id": "FG-PREPARE-FUTURE",
+      "status": "CONCERNS",
+      "file": "两个legacy prepare-runtime.cjs内部prepareDeadline及external run.cjs prepareMs",
+      "fact": "原prepare固定3.6M，但内含entry source verify、post runtime verify、result source verify、result runtime verify四个S/R/S/R；另有clone360k/checkout360k/owned HEAD120k/dirty与untracked240k/new ffmpeg240k及完整copy/relink IO。未来新版verify独立source/runtime完整串行不能挤入旧3.6M原非verify容量。",
+      "required": "按实际新版verify预算派生prepare独立总槽并更新内部截止和外层future；不能只扩大外层或停旧watchdog。需要ROOT明确最窄验收工具续版写集。",
+      "exactNewBudgetAwaitingFourFileCandidate": true,
+      "runtimeFailureObserved": false
+    },
+    {
+      "id": "FG-SOURCE-RAW",
+      "status": "CONCERNS",
+      "file": "common.cjs verifyDynamic(source)与reseal.cjs sourceFiles",
+      "fact": "source图本体SHA、82类目标bytes/link/edge有守卫，但fresh source图rawCommands stdout/stderr等实际otool原件无逐SHA重核且未纳reseal sourceFiles；runtime own图raw逐件已有守卫。",
+      "required": "把actual source rawCommands的stdout/stderr及真实存在receipt纳完整source库存，或入口/后验逐SHA+归属路径核闭环。不得补造历史不存在的receipt。",
+      "runtimeFailureObserved": false
+    },
+    {
+      "id": "FG-SUPERVISOR-POSITIVE-DEADLINE",
+      "status": "CONCERNS",
+      "file": "supervise.cjs close callback及返回budgetExhausted",
+      "fact": "close callback无monotonic正执行截止后验；最后budgetExhausted=exhausted||(lifecycleElapsed>=budgetMs&&result===null)。同步ps或事件循环延迟后，已过deadline但close Promise先被消费时result非null，可把超时code0标为非exhausted。更长整单外层不能代本child正执行期限。",
+      "required": "在真实close记录monotonic时间并严格按该child一出生deadline核正执行完成；与信号/closed group/log清理生命周期分别记录，保原2.16M生命周期。",
+      "runtimeFailureObserved": false
+    }
+  ],
+  "fullReadCoverage": [
+    "README/snapshot/预算与全部8当前源码",
+    "common source/owned验证、prepareMetadataInput、binary header discovery及actualOtool producer全文",
+    "owned-dyld实际FD/parser/relative与absolute目标/主程序上下文/canonical全文",
+    "reseal/run/supervisor完整positive/信号/closed/log/group与最终process proof路径",
+    "两原prepare、两原verify及两原launch全文，真实Next/PGlite/protocol PG/readonly ledger consumers",
+    "两个Playwright配置、Pi/protocol support，实际Playwright1.60 core registry primary实现",
+    "全部4复用源码unified diff严格全上下文及完整重建"
+  ],
+  "closedStaticAreas": {
+    "sourceRoot": "后端/contract/frontend src/public/scripts/src-tauri/package/pnpm/native新增完整库存明确，最终实际clean HEAD/真实提交及scope仍pending。",
+    "legacy253": "保首源/上次SHA，最终生产源以实际批准scope.sourceEntries核；de1生产chat归T1251，11907 minimum仅T1252 test，不能互相归因。",
+    "first100": "原source/generated/media和新增readonly输入逐SHA保留，原170与103/7/1配置/用例断言不改。",
+    "driverSelfManifest": "new-v3 driver exact组搬外层inventory，真实manifest外置SHA避免自循环，其余exactSourceInventories原组保持。",
+    "browser": "默认实际headless shell1223与Doocs fullChrome双实现/各helper根及registryDirectory明确，不把fullChrome父目录当browsercache。",
+    "ffmpeg": "真实9.0.1_1入口进入fixtureMachORoots+完整递归图，fresh header pair discovery独立，不能借旧131pair。",
+    "metadata": "header discovery仅生成非final库存，实际otool逐fresh file/arch完整串行，每120k正执行+120k启动关闭raw容量；与binary语义/路径/首命中canonical严格相等才可图完成。",
+    "owned": "相对loader/rpath在actual私有copy按真实上下文重选，绝对LOAD保原路径；非系统目标byte provenance与source canonical严格等，Node addon仅Node，独立主程序各自@executable_path；OS cache只声明边界。",
+    "protocol": "唯一批准Codex私有CJS/newinode/0700+marker0600/controlToken/original officialSHA替换，仅删该原MachO入口主上下文；Pi/original/official无此替换，不拿fixture签official语义。",
+    "runtimeSourceBinding": "sealed所有源字段除schema外逐字段相等，runtime driver bytes必须等批准legacy源与manifest。",
+    "bodyVerdict": "真实结果每选中1次/retry0/expected passed/status passed；skip/缺失/失败不计PASS，启动/list非body。",
+    "ownership": "沿393f UID/birth/group归属拒绝时不发信号；日志FD真实close后回执。两个原launch清理phase及READONLY账本正文不在本候选改写范围。",
+    "longBudget": "外层与supervisor单birth≤60s分段避免int32溢出，不改变原持久任务deadline。"
+  },
+  "unchangedEvidenceBoundaries": [
+    "8个source parser/AST0实际回执与原logSHA已核，仅parse不签候选执行；首Python缩进错误保持",
+    "a738与旧9/current29b3全部绑定实际0漂移，不混尚未封新候选",
+    "最终native delivery/archive、cleanHEAD、11Worker/DMG/package、freshjoint实际graph/raw与应用仍pending",
+    "未运行metadata/collector/prepare/reseal/types/list/SDK服务/browser；没有生产source改写或App/TCC授权"
+  ],
+  "nextReview": "route可一次交完整四文件预算候选及ROOT明确的最窄prepare/外层适配、新binding/fullinverse/串行公式/纯检查；当前a738不可签完整future闭合或执行PASS。"
+}

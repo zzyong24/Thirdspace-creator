@@ -1,0 +1,33 @@
+{
+  "task": "T-1246",
+  "at": "2026-10-12T10:08:57.880651+00:00",
+  "status": "V6_DDCE_SOURCE_PASS_EXACT_52_GIT_DISPLAY_PROJECTION_NOT_RUNTIME_APPROVAL",
+  "bindings": {
+    "bindingSHA": "ddcec3baa62c6cb4f5a481dc284569fa50d8d34325ee0689455be9be8600679c",
+    "auditSHA": "aba8421736eddeb1d3062e2528a3749185d14954865470c2d694adf0a61b04b3",
+    "projectionSHA": "692c938e897751474fd23b3df24ee6954c92af4fb575dd23c56c1285c67b80c9",
+    "matcherSHA": "45ac79e5cc5525bc0dcf53d4b12ecc8ecaef8a07a249fdce67feb6b8faad2050",
+    "pureCandidateSHA": "9acd342deb1642594893fb9dffab6ec99089761d92b6c283ddf4ab451a7f988a",
+    "projectionDataSHA": "da5a68a70f0ee2aafd6ae895429da7b848f5cae4d0012d420de44a9dd905b486"
+  },
+  "fullProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audit-provenance-v6/INDEPENDENT_V6_DDCE_FULL_INPUT_AND_EXACT_PAIRS_RECHECK.json",
+    "sha256": "9128d93c8827238970a3720a642901e759015d05e40570ed19c3a824384b85b0",
+    "fullBindings": 556,
+    "bytes": 47762733,
+    "drift": []
+  },
+  "scope": [
+    "仅原969真实52个 {R ,file,source} tuple；原source必须原4b55 delete及948实际delete且lstat真正absent，原target必须批准write且map/currentSHA/size/modeUID严格一致。",
+    "52完整原行和approve/delete/write row固定SHA；C、RC、未知、跨另一批准pair、非删除源和重复tuple继续拒绝；无相似度或业务选择。Git原R行保持，显示含义仅机械批准delete+write。",
+    "原31adapter8f8同字节、所有源归属/checkSpec/全ROOTS暂存/unknown/348+100+53/first100/legacy253/五Git及3M单出生完整预算同；新四接线仅prepare/match/after重核/输出receipt。",
+    "before/after核真实旧FAIL报告、批准记录和52目标物理态，旧FAIL969/error52/child1/raw永不改写。",
+    "5个解析原始回执0只说明语法；pure候选52正421负未运行，duplicate状态消费在projection独立Set中守，不能以本source报告声称实际pure或audit成功。"
+  ],
+  "findings": [],
+  "recommendation": "PASS SOURCE：ROOT 可对固定Node、上述完整556绑定、实际Node/Git动态图与新的owned once wrapper完整串行预算另签唯一v6审计（如要先pure也须独立精确准入）。本报告不批准任何未审wrapper、不执行pure或审计。",
+  "pureTestsActuallyExecuted": false,
+  "auditActuallyExecuted": false,
+  "finalCommitPackageWorkerBrowserAppPASSClaimed": false,
+  "nativeAppAcceptance": "用户暂不授权，保留未完成。"
+}

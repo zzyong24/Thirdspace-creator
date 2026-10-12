@@ -1,0 +1,1678 @@
+{
+  "consumers": [
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(resolve(visibleCopyPath, \"..\"), { recursive: true })",
+      "sourceSha256": "2a9d68d17fe423efa0787def232bddf4f9c39171e1438bfc1caeaad6decc205a",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "line": 29,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    visibleCopyPath,\n    `${JSON.stringify(\n      {\n        schema: \"frontend-visible-copy/v1\",\n        task_id: \"T-1023\",\n        commit_sha: commitSha,\n        captures: visibleCopyCaptures,\n      },\n      null,\n      2,\n    )}\\n`,\n    \"utf8\",\n  )",
+      "sourceSha256": "2a9d68d17fe423efa0787def232bddf4f9c39171e1438bfc1caeaad6decc205a",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(resolve(visibleCopyPath, \"..\"), { recursive: true })",
+      "sourceSha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "line": 29,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    visibleCopyPath,\n    `${JSON.stringify(\n      {\n        schema: \"frontend-visible-copy/v1\",\n        task_id: \"T-913\",\n        commit_sha: commitSha,\n        captures: visibleCopyCaptures,\n      },\n      null,\n      2,\n    )}\\n`,\n    \"utf8\",\n  )",
+      "sourceSha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "line": 140,
+      "consumer": "card.screenshot",
+      "call": "card.screenshot({\n    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/.codex-tmp/t913-model-recovery.png\")),\n  timeout: 120000})",
+      "sourceSha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "line": 185,
+      "consumer": "card.screenshot",
+      "call": "card.screenshot({\n    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/.codex-tmp/t913-positioning-recovery-compact.png\")),\n  timeout: 120000})",
+      "sourceSha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "line": 201,
+      "consumer": "page.locator('[data-slot=\"production-decisions\"]').screenshot",
+      "call": "page.locator('[data-slot=\"production-decisions\"]').screenshot({\n    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/.codex-tmp/t806-direct-error-regular.png\")),\n  timeout: 120000})",
+      "sourceSha256": "e5899edc568ec835cba009540550995316a4da01d6d2b5c3cf818228effa05fa",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "line": 222,
+      "consumer": "page.locator('[data-slot=\"production-decisions\"]').screenshot",
+      "call": "page.locator('[data-slot=\"production-decisions\"]').screenshot({\n    path: resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/.codex-tmp/t806-direct-error-compact.png\")),\n  timeout: 120000})",
+      "sourceSha256": "e5899edc568ec835cba009540550995316a4da01d6d2b5c3cf818228effa05fa",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "line": 88,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "6bf428d04821ac81c9944efba3c804e66625512d1d732cba37e0d60f0ef45a2d",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "line": 103,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidenceDir, \"T-641-visible-copy.json\"), artifact)",
+      "sourceSha256": "6bf428d04821ac81c9944efba3c804e66625512d1d732cba37e0d60f0ef45a2d",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "line": 129,
+      "consumer": "readFile",
+      "call": "readFile(sourcePath)",
+      "sourceSha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "line": 234,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(fileName)",
+      "sourceSha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "line": 235,
+      "consumer": "mkdir",
+      "call": "mkdir(dirname(path), { recursive: true })",
+      "sourceSha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "line": 236,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path, fullPage: true, timeout: 120_000, animations: \"disabled\", caret: \"hide\" })",
+      "sourceSha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 130,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(`${name}.png`)",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 131,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:file,fullPage:true,timeout:REQUEST_MS})",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 224,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"t1245-responsive-geometry.json\")",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 225,
+      "consumer": "writeFile",
+      "call": "writeFile(path,`${JSON.stringify(geometries,null,2)}\\n`)",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 321,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"run-now-auth-wait-desktop.png\")",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 322,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: desktopPath, fullPage: true , timeout: 120000})",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 330,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"run-now-auth-wait-narrow-after-reload.png\")",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 331,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: narrowPath, fullPage: true , timeout: 120000})",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 355,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"public-original-task-auth-wait.json\")",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "line": 356,
+      "consumer": "writeFile",
+      "call": "writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\\n`)",
+      "sourceSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "fddfb0cf1007237ff143aac1a29227ff1dba3e2f2a09411cf34a147f13008cc5",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "line": 33,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    resolve(evidenceDir, `${TASK_ID}-visible-copy.json`),\n    `${JSON.stringify(\n      {\n        schema: \"frontend-visible-copy/v1\",\n        task_id: TASK_ID,\n        commit_sha: commitSha,\n        captures,\n      },\n      null,\n      2,\n    )}\\n`,\n  )",
+      "sourceSha256": "fddfb0cf1007237ff143aac1a29227ff1dba3e2f2a09411cf34a147f13008cc5",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 402,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 407,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    resolve(evidenceDir, `${taskId}-visible-copy.json`),\n    `${JSON.stringify(\n      {\n        schema: \"frontend-visible-copy/v1\",\n        task_id: taskId,\n        commit_sha: commitSha,\n        captures,\n        ...(evidence ? { evidence } : {}),\n      },\n      null,\n      2,\n    )}\\n`,\n  )",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 725,
+      "consumer": "waitForTransform",
+      "call": "waitForTransform(page, account.id, itemId, preview.transform.id)",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 851,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n      path: info.outputPath(\"radar-ready-1536x1024.png\"),\n      fullPage: false,\n    timeout: 120000})",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 852,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"radar-ready-1536x1024.png\")",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 926,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n      path: info.outputPath(\"project-created-1024x720.png\"),\n      fullPage: false,\n    timeout: 120000})",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 927,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"project-created-1024x720.png\")",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 1071,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n      path: info.outputPath(\"project-reloaded-1024x720.png\"),\n      fullPage: false,\n    timeout: 120000})",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "line": 1072,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"project-reloaded-1024x720.png\")",
+      "sourceSha256": "4c92e79bde420eb242c2cdb49184b82e78fa5c4f6eaf2185fdfede59ea411325",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "line": 125,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "2c3c7f31326213c8006c10242d5f8cc325303baa05328e4ba7ec2637b6f9b5b7",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "line": 140,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidenceDir, \"T-642-visible-copy.json\"), artifact)",
+      "sourceSha256": "2c3c7f31326213c8006c10242d5f8cc325303baa05328e4ba7ec2637b6f9b5b7",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 28,
+      "consumer": "readFileSync",
+      "call": "readFileSync(path)",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 182,
+      "consumer": "transform",
+      "call": "transform()",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 184,
+      "consumer": "transform",
+      "call": "transform()",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 189,
+      "consumer": "transform",
+      "call": "transform()",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 191,
+      "consumer": "transform",
+      "call": "transform()",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 254,
+      "consumer": "page.locator('#materials').screenshot",
+      "call": "page.locator('#materials').screenshot({path:testInfo.outputPath(\"project-materials-after.png\"), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 254,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"project-materials-after.png\")",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 261,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath(\"canvas-empty-after.png\"), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 261,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"canvas-empty-after.png\")",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 265,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath(\"canvas-narrow-after.png\"), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 265,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"canvas-narrow-after.png\")",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 276,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath(\"canvas-assets-after.png\"), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 276,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"canvas-assets-after.png\")",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 287,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath(\"canvas-upload-1024.png\"), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 287,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"canvas-upload-1024.png\")",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 289,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath(\"canvas-upload-1536.png\"), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 289,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"canvas-upload-1536.png\")",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 307,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(testInfo.outputPath(\"t1220-upload-result.json\"),JSON.stringify({commit_sha:execFileSync(\"git\",[\"rev-parse\",\"HEAD\"],{encoding:\"utf8\"}).trim(),canvasId,groupId:account.groupId,projectId:project.id,beforeRevision:before.revision,savedRevision:saved.revision,title:saved.title,captures:uploadCaptures},null,2))",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 307,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"t1220-upload-result.json\")",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 360,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath(\"canvas-result-actions-after.png\"), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 360,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"canvas-result-actions-after.png\")",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 440,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1101-running.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 440,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1101-running.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 446,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1108-interrupted-save.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 446,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1108-interrupted-save.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 446,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1117-error-normal.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 446,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1117-error-normal.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 448,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1117-error-narrow.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 448,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1117-error-narrow.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 465,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1108-legacy-normal.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 465,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1108-legacy-normal.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 466,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1108-legacy-narrow.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 466,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1108-legacy-narrow.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 478,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1117-preview-normal.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 478,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1117-preview-normal.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 485,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1117-preview-narrow.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 485,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1117-preview-narrow.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 493,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1117/visible-copy.json\")),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1117',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:t1117Captures},null,2)+'\\n')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 494,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1108/visible-copy.json\")),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1108',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:legacyCaptures},null,2)+'\\n')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 496,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1101-regenerate.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 496,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1101-regenerate.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 499,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1101-gallery.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 499,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1101-gallery.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 502,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1101-canvas-narrow.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 502,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1101-canvas-narrow.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 505,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1101/canvas-copy.json\")),JSON.stringify(captures))",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 514,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true, timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 514,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1101-platform-table.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 515,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1101-qr-dialog.png'), timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 515,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1101-qr-dialog.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 518,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true, timeout: 120000})",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 518,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t1101-platform-narrow.png')",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "line": 519,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1101/binding-copy.json\")),JSON.stringify(captures))",
+      "sourceSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 57,
+      "consumer": "readFileSync",
+      "call": "readFileSync(\n    resolve(repoRoot, \"output/content-samples/ai-copy-eval-loop/motion-preview.mp4\"),\n  )",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 172,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: info.outputPath(\"video-preview-desktop.png\"), timeout: 120_000 })",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 172,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"video-preview-desktop.png\")",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 173,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"video-preview-desktop.png\")",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 208,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: info.outputPath(\"video-preview-after-playback.png\"), timeout: 120_000 })",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 208,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"video-preview-after-playback.png\")",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 209,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"video-preview-after-playback.png\")",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 239,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: info.outputPath(\"video-preview-compact-after-reload.png\"), timeout: 120_000 })",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 239,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"video-preview-compact-after-reload.png\")",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 240,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"video-preview-compact-after-reload.png\")",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 242,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"evidence\")",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 243,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "line": 258,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidenceDir, \"T-853-visible-copy.json\"), visibleCopy)",
+      "sourceSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/group-skill-customization.spec.ts",
+      "line": 118,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(name)",
+      "sourceSha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/group-skill-customization.spec.ts",
+      "line": 119,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000})",
+      "sourceSha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "line": 43,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n    path: resolve(evidence, checkpoint + \".png\"),\n    fullPage: true,\n    style: \"nextjs-portal{visibility:hidden}\",\n  timeout: 120000})",
+      "sourceSha256": "1c53cf9c4939bc438aaa94ef14f748701e6433b648d8588c04ee157fe458a774",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "line": 655,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidence, { recursive: true })",
+      "sourceSha256": "1c53cf9c4939bc438aaa94ef14f748701e6433b648d8588c04ee157fe458a774",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "line": 659,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    resolve(evidence, \"visible-copy.json\"),\n    JSON.stringify(\n      {\n        schema: \"frontend-visible-copy/v1\",\n        task_id: \"T-1075\",\n        commit_sha,\n        observed_at: new Date().toISOString(),\n        captures,\n      },\n      null,\n      2,\n    ) + \"\\n\",\n  )",
+      "sourceSha256": "1c53cf9c4939bc438aaa94ef14f748701e6433b648d8588c04ee157fe458a774",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "line": 673,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    resolve(evidence, \"journey-observations.json\"),\n    JSON.stringify(\n      {\n        commit_sha,\n        witnesses,\n        observed_at: new Date().toISOString(),\n        data_mode: \"non-fixture\",\n      },\n      null,\n      2,\n    ) + \"\\n\",\n  )",
+      "sourceSha256": "1c53cf9c4939bc438aaa94ef14f748701e6433b648d8588c04ee157fe458a774",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "line": 123,
+      "consumer": "readFile",
+      "call": "readFile(resolve(process.cwd(), \"public/douyin-icon.png\"))",
+      "sourceSha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "line": 156,
+      "consumer": "readFile",
+      "call": "readFile(physicalPath)",
+      "sourceSha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "line": 173,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: info.outputPath(\"group-a-uploaded-asset.png\"), fullPage: true , timeout: 120000})",
+      "sourceSha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "line": 173,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"group-a-uploaded-asset.png\")",
+      "sourceSha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "line": 193,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: info.outputPath(\"group-b-cannot-see-group-a-asset.png\"), fullPage: true , timeout: 120000})",
+      "sourceSha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "line": 193,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"group-b-cannot-see-group-a-asset.png\")",
+      "sourceSha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "line": 32,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "71600b432afa5296737a1175510cf4bc0978539bc2a68d34302699b7919bcd8b",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "line": 37,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    resolve(evidenceDir, `${taskId}-visible-copy.json`),\n    `${JSON.stringify(\n      {\n        schema: \"frontend-visible-copy/v1\",\n        task_id: taskId,\n        commit_sha: commitSha,\n        captures,\n      },\n      null,\n      2,\n    )}\\n`,\n  )",
+      "sourceSha256": "71600b432afa5296737a1175510cf4bc0978539bc2a68d34302699b7919bcd8b",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/production-broll-remove.spec.ts",
+      "line": 53,
+      "consumer": "readFileSync",
+      "call": "readFileSync(\n    resolve(\n      process.cwd(),\n      \"../output/content-samples/ai-copy-eval-loop/motion-preview.mp4\",\n    ),\n  )",
+      "sourceSha256": "0e73385fc3135c8c3b929f8cbd5ede748fa25ecfeb4bff96bafca04f97df058e",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/production-empty-workbench.spec.ts",
+      "line": 82,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n    path: info.outputPath(\"no-video-output-workbench.png\"),\n    fullPage: true,\n  timeout: 120000})",
+      "sourceSha256": "79a128d841b96d8ee29521681d08da6e77dd1abc297c219f682aeed7dec7ceff",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/production-empty-workbench.spec.ts",
+      "line": 83,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"no-video-output-workbench.png\")",
+      "sourceSha256": "79a128d841b96d8ee29521681d08da6e77dd1abc297c219f682aeed7dec7ceff",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "line": 199,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "00f36b2ffbc3986e6733514885320a2fb043f7577e8086fa8f1ef3dbbfb5159f",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "line": 214,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidenceDir, \"T-849-visible-copy.json\"), visibleCopy)",
+      "sourceSha256": "00f36b2ffbc3986e6733514885320a2fb043f7577e8086fa8f1ef3dbbfb5159f",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "line": 62,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "300e8182766e1306460f2af094cc8557ac4f49a5df9a6fad8fe80b19c1cdb2e1",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "line": 67,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    resolve(evidenceDir, `${taskId}-visible-copy.json`),\n    `${JSON.stringify(\n      {\n        schema: \"frontend-visible-copy/v1\",\n        task_id: taskId,\n        commit_sha: commitSha,\n        captures,\n      },\n      null,\n      2,\n    )}\\n`,\n  )",
+      "sourceSha256": "300e8182766e1306460f2af094cc8557ac4f49a5df9a6fad8fe80b19c1cdb2e1",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "line": 170,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(name)",
+      "sourceSha256": "5f1b39bf8697b214b0a79a2b6c633c3be33722ccd5cd952dccdf722028396407",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "line": 171,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n    path,\n    fullPage: false,\n    animations: \"disabled\",\n    caret: \"hide\",\n    timeout: REQUEST_TIMEOUT_MS,\n  })",
+      "sourceSha256": "5f1b39bf8697b214b0a79a2b6c633c3be33722ccd5cd952dccdf722028396407",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "line": 163,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidenceDir, { recursive: true })",
+      "sourceSha256": "02defd8b59971efb7ba28da91739d398975aafd05b5677d07cb6990378022197",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "line": 178,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidenceDir, \"T-854-visible-copy.json\"), visibleCopy)",
+      "sourceSha256": "02defd8b59971efb7ba28da91739d398975aafd05b5677d07cb6990378022197",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "line": 131,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(directory, { recursive: true })",
+      "sourceSha256": "1374710abec3ff66590e77a70ac906fae6e3d2847e4c9c1b9347b91a77ec8edf",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "line": 133,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000})",
+      "sourceSha256": "1374710abec3ff66590e77a70ac906fae6e3d2847e4c9c1b9347b91a77ec8edf",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "line": 80,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(directory, { recursive: true })",
+      "sourceSha256": "e543dc995ae65d48aadc860b105ffcb67a0b66725df1fdebd5d7f0d9c4f02e9f",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "line": 89,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path, animations: \"disabled\", caret: \"hide\" , timeout: 120000})",
+      "sourceSha256": "e543dc995ae65d48aadc860b105ffcb67a0b66725df1fdebd5d7f0d9c4f02e9f",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "line": 27,
+      "consumer": "panel.screenshot",
+      "call": "panel.screenshot({path:testInfo.outputPath(\"t1105-resource-normal.png\"), timeout: 120000})",
+      "sourceSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "line": 27,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"t1105-resource-normal.png\")",
+      "sourceSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "line": 45,
+      "consumer": "panel.screenshot",
+      "call": "panel.screenshot({path:testInfo.outputPath(\"t1105-resource-error.png\"), timeout: 120000})",
+      "sourceSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "line": 45,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"t1105-resource-error.png\")",
+      "sourceSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "line": 50,
+      "consumer": "panel.screenshot",
+      "call": "panel.screenshot({path:testInfo.outputPath(\"t1105-resource-narrow.png\"), timeout: 120000})",
+      "sourceSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "line": 50,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(\"t1105-resource-narrow.png\")",
+      "sourceSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "line": 52,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + \"/original-output/t1105/resource-copy.json\")),JSON.stringify(captures,null,2)+\"\\n\")",
+      "sourceSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "line": 117,
+      "consumer": "readFileSync",
+      "call": "readFileSync(join(FIXTURE_ROOT, fixture.name))",
+      "sourceSha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "line": 323,
+      "consumer": "readFileSync",
+      "call": "readFileSync(join(FIXTURE_ROOT, 'manifest.json'))",
+      "sourceSha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "line": 326,
+      "consumer": "readFileSync",
+      "call": "readFileSync(join(FIXTURE_ROOT, file.name))",
+      "sourceSha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "line": 337,
+      "consumer": "readFileSync",
+      "call": "readFileSync(admission)",
+      "sourceSha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "line": 344,
+      "consumer": "readFileSync",
+      "call": "readFileSync(path)",
+      "sourceSha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "line": 350,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: testInfo.outputPath(name), fullPage: true , timeout: 120000})",
+      "sourceSha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "line": 350,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath(name)",
+      "sourceSha256": "e4295ad971d469b03c73a34e03602e5ef3737ad232e38609d8216471f894f043",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "line": 34,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('picker-1366.png'),fullPage:true, timeout: 120000})",
+      "sourceSha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "line": 34,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('picker-1366.png')",
+      "sourceSha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "line": 35,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('picker-1024.png'),fullPage:true, timeout: 120000})",
+      "sourceSha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "line": 35,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('picker-1024.png')",
+      "sourceSha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "line": 40,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('picker-683x450-reflow.png'),fullPage:true, timeout: 120000})",
+      "sourceSha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "line": 40,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('picker-683x450-reflow.png')",
+      "sourceSha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "line": 14,
+      "consumer": "readFileSync",
+      "call": "readFileSync(resolve(process.cwd(),'../output/content-samples/ai-copy-eval-loop/motion-preview.mp4'))",
+      "sourceSha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "line": 41,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:info.outputPath('video-tab-restored.png'),fullPage:true, timeout: 120000})",
+      "sourceSha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "line": 41,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath('video-tab-restored.png')",
+      "sourceSha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "line": 44,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath('neutral-tab-export.mp4')",
+      "sourceSha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "line": 44,
+      "consumer": "download.saveAs",
+      "call": "download.saveAs(exportedPath)",
+      "sourceSha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 77,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(directory, { recursive: true })",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 80,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(name)",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 151,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n    path: evidence(info, \"article-after-desktop.png\"),\n    fullPage: true,\n  timeout: 120000})",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 160,
+      "consumer": "download.saveAs",
+      "call": "download.saveAs(html)",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 161,
+      "consumer": "readFileSync",
+      "call": "readFileSync(html, \"utf8\")",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 169,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n    path: evidence(info, \"article-director-narrow.png\"),\n    fullPage: true,\n  timeout: 120000})",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 271,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n    path: evidence(info, \"graphic-after-desktop.png\"),\n    fullPage: true,\n  timeout: 120000})",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 279,
+      "consumer": "download.saveAs",
+      "call": "download.saveAs(archive)",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 280,
+      "consumer": "readFileSync",
+      "call": "readFileSync(archive)",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "line": 292,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({\n    path: evidence(info, \"graphic-director-narrow.png\"),\n    fullPage: true,\n  timeout: 120000})",
+      "sourceSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 73,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(resolve(evidence,\"screenshots\"),{recursive:true})",
+      "sourceSha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 74,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:resolve(evidence,\"screenshots\",name+\".png\"), timeout: 120000})",
+      "sourceSha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 91,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidence,\"layout-observation.json\"),JSON.stringify({surface:\"browser\",mode:\"non-fixture\",input:\"fresh public synthetic group/project/accounts\",viewports:records},null,2))",
+      "sourceSha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 141,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidence,\"public-write-read-observation.json\"),JSON.stringify({surface:\"browser\",mode:\"non-fixture\",witnesses:{groupId:group.id,projectId:project.id,entryId:entry.id},finalEntry:rows[0],faultFixture:{operation:\"calendar.entries.target\",http:409,count:injected,successfulWritesReplaced:false},captures},null,2))",
+      "sourceSha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 174,
+      "consumer": "readFileSync",
+      "call": "readFileSync(resolve(\"public/douyin-icon.png\"))",
+      "sourceSha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "line": 208,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidence,\"shared-consumer-observation.json\"),JSON.stringify({surface:\"browser\",loadingFixture:\"once held real accountGroups.get; original response retained\",feedbackSubmitted:false,modelCalled:false,assetId:asset.id,canvasId:canvas.id,cancelBeforeRevision:beforePicker.revision,cancelAfterRevision:saved.revision,cancelDocumentUnchanged:true,captures},null,2))",
+      "sourceSha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "line": 20,
+      "consumer": "readFileSync",
+      "call": "readFileSync(resolve(\"public/visual-templates\",file))",
+      "sourceSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "line": 69,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(evidence,{recursive:true})",
+      "sourceSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "line": 69,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidence,\"failed-paint-observation.json\"),JSON.stringify({at:new Date().toISOString(),viewport:image.page().viewportSize(),observed},null,2))",
+      "sourceSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "line": 82,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(resolve(evidence,\"screenshots\"),{recursive:true})",
+      "sourceSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "line": 82,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:resolve(evidence,\"screenshots\",name+\".png\"), timeout: 120000})",
+      "sourceSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "line": 111,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidence,\"layout-observation.json\"),JSON.stringify({surface:\"browser\",mode:\"non-fixture\",witnesses:{groupId:s.group.id,canvasId:s.canvas.id,assets:[s.first,s.second]},cancelBeforeRevision:before.revision,cancelUnchanged:true,modelCalled:false,viewports,captures},null,2))",
+      "sourceSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "line": 148,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(evidence,\"public-write-read-observation.json\"),JSON.stringify({surface:\"browser\",mode:\"non-fixture\",witnesses:{groupId:s.group.id,canvasId:s.canvas.id,selected:s.second,nodeId:node.id},beforeRevision:before.revision,savedRevision:saved.revision,exactReference:saved.document.nodes.find(n=>n.id===node.id),refresh:true,back:true,repeat:true,galleryAdopted:false,galleryUnchanged:true,errorFixture:{operation:\"assets.search\",count:injected,status:503,successfulWritesReplaced:false},modelCalled:false,captures},null,2))",
+      "sourceSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "line": 15,
+      "consumer": "readFileSync",
+      "call": "readFileSync(resolve(\"public/visual-templates\",file))",
+      "sourceSha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "line": 45,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(resolve(dir,\"screenshots\"),{recursive:true})",
+      "sourceSha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "line": 45,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:resolve(dir,\"screenshots\",name+\".png\"), timeout: 120000})",
+      "sourceSha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "line": 66,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(dir,{recursive:true})",
+      "sourceSha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "line": 66,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(dir,\"aspect-public-observation.json\"),JSON.stringify({surface:\"browser\",mode:\"non-fixture\",witnesses:{groupId:s.group.id,projectId:s.project.id,canvasId:s.canvas.id,reference:s.reference,staticImage:s.staticImage},capabilityFixture:true,successfulWritesReplaced:false,modelCalled:false,refresh:true,back:true,repeat:true,writes,captures},null,2))",
+      "sourceSha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "line": 83,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(dir,\"capability-public-observation.json\"),JSON.stringify({surface:\"browser\",mode:\"non-fixture\",witnesses:{groupId:s.group.id,projectId:s.project.id,canvasId:s.canvas.id,reference:s.reference},capabilityFixture:true,errorFixture:{operation:\"canvas.save\",count:injected,status:503,successfulWritesReplaced:false},modelCalled:false,originalRevision:original.revision,unifiedRevision:unified.revision,savedRevision:saved.revision,modeRefusalPreserved:true,refresh:true,back:true,repeat:true,captures},null,2))",
+      "sourceSha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "line": 26,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(resolve(output, \"screenshots\"), { recursive: true })",
+      "sourceSha256": "e7a5943264ad9de3fc407e5031440b6a6af42a0bf586d4365306f914ac8f86f8",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "line": 67,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: resolve(output, \"screenshots\", `${name}.png`) , timeout: 120000})",
+      "sourceSha256": "e7a5943264ad9de3fc407e5031440b6a6af42a0bf586d4365306f914ac8f86f8",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "line": 90,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: resolve(output, \"screenshots\", `${name}.png`) , timeout: 120000})",
+      "sourceSha256": "e7a5943264ad9de3fc407e5031440b6a6af42a0bf586d4365306f914ac8f86f8",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "line": 96,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(resolve(output, \"public-read-observation.json\"), JSON.stringify({ surface: \"browser\", mode: \"non-fixture\", witnesses: { groupId: group.id, accountIds: accounts.map(account => account.id) }, domainResponsesReplaced: false, manualAccountsIdentityVerified: false, realWechatCalled: false, bindingStarts, observations, captures }, null, 2) + \"\\n\")",
+      "sourceSha256": "e7a5943264ad9de3fc407e5031440b6a6af42a0bf586d4365306f914ac8f86f8",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "line": 34,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t954-review-empty-desktop.png'),fullPage:true, timeout: 120000})",
+      "sourceSha256": "9d307ca8dd0dae8dd15bb384dc6f6946dd09cc3632f73fd2d8786a7c4f0023ba",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "line": 34,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t954-review-empty-desktop.png')",
+      "sourceSha256": "9d307ca8dd0dae8dd15bb384dc6f6946dd09cc3632f73fd2d8786a7c4f0023ba",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "line": 38,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({path:testInfo.outputPath('t954-review-empty-narrow.png'),fullPage:true, timeout: 120000})",
+      "sourceSha256": "9d307ca8dd0dae8dd15bb384dc6f6946dd09cc3632f73fd2d8786a7c4f0023ba",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "line": 38,
+      "consumer": "testInfo.outputPath",
+      "call": "testInfo.outputPath('t954-review-empty-narrow.png')",
+      "sourceSha256": "9d307ca8dd0dae8dd15bb384dc6f6946dd09cc3632f73fd2d8786a7c4f0023ba",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "line": 110,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: info.outputPath(\"group-a-initial.png\"), fullPage: true , timeout: 120000})",
+      "sourceSha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "line": 110,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"group-a-initial.png\")",
+      "sourceSha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "line": 116,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: info.outputPath(\"group-b-after-switch.png\"), fullPage: true , timeout: 120000})",
+      "sourceSha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "line": 116,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"group-b-after-switch.png\")",
+      "sourceSha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "line": 125,
+      "consumer": "page.screenshot",
+      "call": "page.screenshot({ path: info.outputPath(\"group-a-return-reload.png\"), fullPage: true , timeout: 120000})",
+      "sourceSha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "line": 125,
+      "consumer": "info.outputPath",
+      "call": "info.outputPath(\"group-a-return-reload.png\")",
+      "sourceSha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "line": 51,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(screenshotRoot, { recursive: true })",
+      "sourceSha256": "2f663f63396f441c93a947c46a8f5312ae86ac09d1b1bf4fb7e2967f7dff5f82",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "line": 67,
+      "consumer": "capturedPage.screenshot",
+      "call": "capturedPage.screenshot({\n        path: screenshotPath,\n        animations: \"disabled\",\n        caret: \"hide\",\n      timeout: 120000})",
+      "sourceSha256": "2f663f63396f441c93a947c46a8f5312ae86ac09d1b1bf4fb7e2967f7dff5f82",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "line": 108,
+      "consumer": "appendFileSync",
+      "call": "appendFileSync(scenarioIndexPath, `${JSON.stringify(record)}\\n`, \"utf8\")",
+      "sourceSha256": "2f663f63396f441c93a947c46a8f5312ae86ac09d1b1bf4fb7e2967f7dff5f82",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "visual/__setup__.ts",
+      "line": 21,
+      "consumer": "fingerprintReferences",
+      "call": "fingerprintReferences(REFERENCE_BASELINES_DIR)",
+      "sourceSha256": "0ba9d7801bdd36fc2816b681096de517edf5d007b184e54325ca3737d45a140d",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "visual/__setup__.ts",
+      "line": 28,
+      "consumer": "mkdirSync",
+      "call": "mkdirSync(ARTIFACT_DIR, { recursive: true })",
+      "sourceSha256": "0ba9d7801bdd36fc2816b681096de517edf5d007b184e54325ca3737d45a140d",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "visual/__setup__.ts",
+      "line": 29,
+      "consumer": "writeFileSync",
+      "call": "writeFileSync(\n    FINGERPRINT_PATH,\n    JSON.stringify(\n      {\n        capturedAt: new Date().toISOString(),\n        ...fingerprint,\n      },\n      null,\n      2,\n    ),\n    \"utf8\",\n  )",
+      "sourceSha256": "0ba9d7801bdd36fc2816b681096de517edf5d007b184e54325ca3737d45a140d",
+      "classification": "输出/owned路径消费者，逐consumer审"
+    },
+    {
+      "file": "visual/__teardown__.ts",
+      "line": 21,
+      "consumer": "readFileSync",
+      "call": "readFileSync(FINGERPRINT_PATH, \"utf8\")",
+      "sourceSha256": "6f7ffe6c1b9db88ec43d65c917b4e9a6d7176e1fbb9b444e501322dbdb86cb12",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "visual/__teardown__.ts",
+      "line": 23,
+      "consumer": "fingerprintReferences",
+      "call": "fingerprintReferences(REFERENCE_BASELINES_DIR)",
+      "sourceSha256": "6f7ffe6c1b9db88ec43d65c917b4e9a6d7176e1fbb9b444e501322dbdb86cb12",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    },
+    {
+      "file": "visual/visual-lifecycle.ts",
+      "line": 32,
+      "consumer": "readFileSync",
+      "call": "readFileSync(join(directory, name))",
+      "sourceSha256": "7378e72afbf34ace113bfc5f3c6bcd0e30667d394b497cc744cd1067b97b813b",
+      "classification": "原输入/已owned输出回读，需逐consumer审"
+    }
+  ],
+  "byteScope": "全部生成100文件，所有TS的screenshot/saveAs/write/read/mkdir/outputPath/rename/rm；不只verification字面量",
+  "runtimeStarted": false
+}

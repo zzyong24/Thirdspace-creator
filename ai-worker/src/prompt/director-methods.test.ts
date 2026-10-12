@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { _resetRegistry, getTemplate, getOfficialSkillBase, registerAllTemplates } from './registry';
 import { bindPrompt } from './template';
+import type {IntelligenceTopicFromDecompositionOutput} from './templates/intelligence-topic-from-decomposition';
+const confirmedTopic:Pick<IntelligenceTopicFromDecompositionOutput,'contentRole'|'contentRoleReason'>={contentRole:'conversion',contentRoleReason:'原作科普，本账号有服务证据，帮助顾客决策。'};
 
 describe('T-944 编导方法实际装配边界', () => {
  beforeEach(() => { _resetRegistry(); registerAllTemplates(); });
@@ -20,12 +22,12 @@ describe('T-944 编导方法实际装配边界', () => {
  });
  it.each(['intelligence.topic-from-decomposition', 'intelligence.topic-adapted-draft', 'script.voiceover.compose', 'method.topic', 'method.writing'])('%s 实际可见三种目的与独立表现形式方法', id => {
   const tpl = getTemplate(id);
-  const bound = bindPrompt(tpl, { ...Object.fromEntries(tpl.requiredFacets.map(key => [key, '真实测试输入'])), positioning:'服务线下门店', topicCandidate: JSON.stringify({contentRole:'conversion',contentRoleReason:'原作科普，本账号有服务证据，帮助顾客决策。'}) });
+  const bound = bindPrompt(tpl, { ...Object.fromEntries(tpl.requiredFacets.map(key => [key, '真实测试输入'])), positioning:'服务线下门店', topicCandidate: JSON.stringify(confirmedTopic), confirmedContext: `【我的选题卡】\n${JSON.stringify(confirmedTopic)}` });
   expect(bound.system).toContain('traffic 流量型');
   expect(bound.system).toContain('trust 信任型');
   expect(bound.system).toContain('conversion 获客型');
   expect(bound.system).toContain('表现形式是另一维');
-  if (id === 'intelligence.topic-adapted-draft') expect(bound.prompt).toContain('"contentRole":"conversion"');
+  if (id === 'intelligence.topic-adapted-draft') {expect(bound.prompt).toContain('"contentRole":"conversion"');expect(bound.prompt).toContain('原作科普，本账号有服务证据，帮助顾客决策。');}
  });
  it('方法正文更新同时更新管理端版本且不把新写规则注入冻结分镜', () => {
   const official = getOfficialSkillBase('method.writing');

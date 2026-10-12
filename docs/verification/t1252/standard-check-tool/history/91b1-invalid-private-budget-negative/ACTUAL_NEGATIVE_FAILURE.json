@@ -1,0 +1,7 @@
+{
+  "actualExit": 1,
+  "assert": "fullBudget(1)==5400000",
+  "actual": 7800000,
+  "expected": 5400000,
+  "cause": "preparation string replacement matched PER_CASE constant as well; no install/HTTP/body/production change"
+}

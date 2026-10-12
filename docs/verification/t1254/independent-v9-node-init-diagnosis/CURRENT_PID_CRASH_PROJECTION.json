@@ -1,0 +1,120 @@
+{
+  "source": "/Users/zyongzhu/Library/Logs/DiagnosticReports/node-2026-10-12-111836.ips",
+  "sourceSha256": "6371883296c6f2dd967ffe5fe355dc4c4d884772e0f6d2f9223f56691b7a367a",
+  "onlyCurrentPid": 89663,
+  "actualPid": 89663,
+  "header": {
+    "app_name": "node",
+    "timestamp": "2026-10-12 11:18:36.00 +0800",
+    "app_version": "",
+    "slice_uuid": "ed8994ab-e473-395e-aa5f-2ca06bb902f2",
+    "build_version": "",
+    "platform": 1,
+    "share_with_app_devs": 0,
+    "is_first_party": 1,
+    "bug_type": "309",
+    "os_version": "macOS 26.2 (25C56)",
+    "roots_installed": 0,
+    "incident_id": "E9A0810A-0C4E-4483-9DC6-CFCBC9AD87C0",
+    "name": "node"
+  },
+  "captureTime": "2026-10-12 11:18:12.9223 +0800",
+  "exception": {
+    "codes": "0x0000000000000000, 0x0000000000000000",
+    "rawCodes": [
+      0,
+      0
+    ],
+    "type": "EXC_CRASH",
+    "signal": "SIGABRT"
+  },
+  "termination": {
+    "flags": 0,
+    "code": 6,
+    "namespace": "SIGNAL",
+    "indicator": "Abort trap: 6",
+    "byProc": "node",
+    "byPid": 89663
+  },
+  "faultFrames": [
+    {
+      "imageOffset": 38320,
+      "symbol": "__pthread_kill",
+      "symbolLocation": 8,
+      "imageIndex": 25
+    },
+    {
+      "imageOffset": 26760,
+      "symbol": "pthread_kill",
+      "symbolLocation": 296,
+      "imageIndex": 26
+    },
+    {
+      "imageOffset": 497744,
+      "symbol": "abort",
+      "symbolLocation": 124,
+      "imageIndex": 27
+    },
+    {
+      "imageOffset": 18961716,
+      "symbol": "<deduplicated_symbol>",
+      "symbolLocation": 36,
+      "imageIndex": 1
+    },
+    {
+      "imageOffset": 2542972,
+      "symbol": "node::InitializeOncePerProcessInternal(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>>> const&, node::ProcessInitializationFlags::Flags)",
+      "symbolLocation": 4352,
+      "imageIndex": 1
+    },
+    {
+      "imageOffset": 2546000,
+      "symbol": "node::Start(int, char**)",
+      "symbolLocation": 92,
+      "imageIndex": 1
+    },
+    {
+      "imageOffset": 36180,
+      "symbol": "start",
+      "symbolLocation": 7184,
+      "imageIndex": 28
+    }
+  ],
+  "registersX23X25X26": {
+    "23": {
+      "value": 1
+    },
+    "25": {
+      "value": 4473538928,
+      "symbolLocation": 0,
+      "symbol": "node::stdio"
+    },
+    "26": {
+      "value": 4473539152,
+      "symbolLocation": 224,
+      "symbol": "node::stdio"
+    }
+  },
+  "currentImages": [
+    {
+      "index": 0,
+      "source": "P",
+      "arch": "arm64",
+      "base": 4371972096,
+      "size": 32768,
+      "uuid": "ed8994ab-e473-395e-aa5f-2ca06bb902f2",
+      "path": "/opt/homebrew/*/node",
+      "name": "node"
+    },
+    {
+      "index": 1,
+      "source": "P",
+      "arch": "arm64",
+      "base": 4439359488,
+      "size": 33079296,
+      "uuid": "d8006fe9-cd87-3eef-bd46-b24c722a5083",
+      "path": "/opt/homebrew/*/libnode.141.dylib",
+      "name": "libnode.141.dylib"
+    }
+  ]
+}

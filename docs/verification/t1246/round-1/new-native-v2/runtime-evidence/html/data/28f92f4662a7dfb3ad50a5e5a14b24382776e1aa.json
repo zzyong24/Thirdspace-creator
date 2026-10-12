@@ -1,0 +1,340 @@
+{
+  "task": "T-1246",
+  "candidateCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "testId": "e001182671dd9993fecb-7c54ec444d93f9a0bf13",
+  "titlePath": [
+    "e2e/integrated-browser.spec.ts",
+    "INT-RECOVERY：原公共恢复入口及真实绑定准入，不伪造unknown历史"
+  ],
+  "caseId": "INT-RECOVERY",
+  "generationKey": null,
+  "boundary": "controlled external Codex protocol fixture required；官方账户unknown不可代签",
+  "status": "blocked",
+  "browserStepStatus": "blocked",
+  "acceptanceRequiresOriginalLedger": false,
+  "startedAt": "2026-10-11T15:49:52.348Z",
+  "endedAt": "2026-10-11T15:49:55.682Z",
+  "groupId": "grp-3812e00f-456",
+  "projectId": "project-3812e00f-460",
+  "taskIds": [],
+  "tasks": [],
+  "receipts": [
+    {
+      "time": "2026-10-11T15:49:52.408Z",
+      "id": "accountGroups.create",
+      "input": {
+        "body": {
+          "name": "整合验收-INT-RECOVERY-t1246-9f474a2f-1479-4493-b100-8de0eff16f2b",
+          "idempotencyKey": "t1246-2c98e2f1-1f74-478b-9c6d-0a5057b6e410"
+        }
+      },
+      "groupId": "",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "grp-3812e00f-456",
+          "userId": "user-3812e00f-1",
+          "name": "整合验收-INT-RECOVERY-t1246-9f474a2f-1479-4493-b100-8de0eff16f2b",
+          "status": "active",
+          "version": 1,
+          "createdAt": "2026-10-11T15:49:52.392Z",
+          "updatedAt": "2026-10-11T15:49:52.392Z",
+          "members": []
+        },
+        "meta": {
+          "requestId": "req-3812e00f-455"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:53.428Z",
+      "id": "settings.preferences.patch",
+      "input": {
+        "body": {
+          "assistantExecutionEngine": "codex"
+        }
+      },
+      "groupId": "grp-3812e00f-456",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-3812e00f-1",
+          "userId": "user-3812e00f-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-458"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:53.461Z",
+      "id": "projects.create",
+      "input": {
+        "body": {
+          "title": "整合真实项目-INT-RECOVERY",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+        }
+      },
+      "groupId": "grp-3812e00f-456",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "project-3812e00f-460",
+          "userId": "user-3812e00f-1",
+          "title": "整合真实项目-INT-RECOVERY",
+          "brief": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "briefDetail": {
+            "targetPlatforms": []
+          },
+          "contentCategory": "",
+          "source": "manual",
+          "platformRef": {
+            "platform": "",
+            "externalId": ""
+          },
+          "creationMode": "guided",
+          "status": "active",
+          "currentStage": "brief",
+          "progressPct": 0,
+          "starred": false,
+          "startedAt": "2026-10-11T15:49:53.448Z",
+          "targetCompletedAt": null,
+          "completedAt": null,
+          "archivedAt": null,
+          "createdAt": "2026-10-11T15:49:53.448Z",
+          "updatedAt": "2026-10-11T15:49:53.448Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-459"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:53.486Z",
+      "id": "projects.outputs.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-460"
+        },
+        "body": {
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "clientRequestId": "t1246-4df17d37-de34-494b-8e9c-1db4cb83030d"
+        }
+      },
+      "groupId": "grp-3812e00f-456",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "output-3812e00f-471",
+          "projectId": "project-3812e00f-460",
+          "title": "本轮原始视频稿",
+          "contentType": "video",
+          "targetPlatform": null,
+          "format": "",
+          "aspectRatio": "",
+          "targetDurationSeconds": 0,
+          "status": "drafting",
+          "contentRole": null,
+          "primaryAssetId": null,
+          "createdAt": "2026-10-11T15:49:53.475Z",
+          "updatedAt": "2026-10-11T15:49:53.475Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-470"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:53.513Z",
+      "id": "artifacts.create",
+      "input": {
+        "params": {
+          "projectId": "project-3812e00f-460"
+        },
+        "body": {
+          "title": "原始测试文稿",
+          "artifactType": "output_script",
+          "stage": "script",
+          "contentOutputId": "output-3812e00f-471"
+        }
+      },
+      "groupId": "grp-3812e00f-456",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifact-3812e00f-478",
+          "projectId": "project-3812e00f-460",
+          "contentOutputId": "output-3812e00f-471",
+          "currentVersionId": "artifactversion-3812e00f-479",
+          "stage": "script",
+          "artifactType": "output_script",
+          "title": "原始测试文稿",
+          "status": "drafting",
+          "archivedAt": null,
+          "origin": null,
+          "createdAt": "2026-10-11T15:49:53.505Z",
+          "updatedAt": "2026-10-11T15:49:53.505Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-477"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:53.555Z",
+      "id": "artifacts.versions.create",
+      "input": {
+        "params": {
+          "artifactId": "artifact-3812e00f-478"
+        },
+        "body": {
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "heading": "桌面整理",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。"
+              }
+            ]
+          }
+        }
+      },
+      "groupId": "grp-3812e00f-456",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "artifactversion-3812e00f-481",
+          "artifactId": "artifact-3812e00f-478",
+          "versionNumber": 2,
+          "contentText": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+          "contentData": {
+            "sections": [
+              {
+                "id": "section-main",
+                "body": "这是一份测试用户明确提供的普通知识资料：整理桌面时，先把物品分为正在使用、需要保留和暂时不需要三类。每周花十分钟检查，减少寻找物品的时间。本例不包含外部统计、报价或平台发布行为。",
+                "heading": "桌面整理"
+              }
+            ]
+          },
+          "changeSummary": "用户明确输入的验收稿，不冒充模型产物",
+          "createdByType": "user",
+          "aiTaskId": null,
+          "createdAt": "2026-10-11T15:49:53.546Z"
+        },
+        "meta": {
+          "requestId": "req-3812e00f-480"
+        }
+      }
+    },
+    {
+      "time": "2026-10-11T15:49:55.660Z",
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 100
+        }
+      },
+      "groupId": "grp-3812e00f-456",
+      "status": 200,
+      "body": {
+        "data": [],
+        "meta": {
+          "requestId": "req-3812e00f-488",
+          "page": 1,
+          "pageSize": 100,
+          "total": 0
+        }
+      }
+    }
+  ],
+  "captures": [
+    {
+      "label": "recovery-entry-1366",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-browser-INT-5e413-原公共恢复入口及真实绑定准入，不伪造unknown历史-e2e/recovery-entry-1366.png",
+      "url": "http://127.0.0.1:61347/automations",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "at": "2026-10-11T15:49:54.612Z"
+    },
+    {
+      "label": "recovery-entry-390",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-browser-INT-5e413-原公共恢复入口及真实绑定准入，不伪造unknown历史-e2e/recovery-entry-390.png",
+      "url": "http://127.0.0.1:61347/automations",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-10-11T15:49:55.640Z"
+    },
+    {
+      "label": "final-state",
+      "path": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results/e2e-integrated-browser-INT-5e413-原公共恢复入口及真实绑定准入，不伪造unknown历史-e2e/final-state.png",
+      "url": "http://127.0.0.1:61347/automations",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "at": "2026-10-11T15:49:55.682Z"
+    }
+  ],
+  "events": [
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/api/v1/dispatch",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/_next/static/media/noto-sans-sc-114-wght-normal.3naf47xc68q03.woff2",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/_next/static/media/noto-sans-sc-110-wght-normal.01_ricus9pfmr.woff2",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/_next/static/media/noto-sans-sc-111-wght-normal.1elhdyp0hximn.woff2",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/_next/static/media/noto-sans-sc-109-wght-normal.1y2t1ibqaj0br.woff2",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/_next/static/media/noto-sans-sc-106-wght-normal.2f5w_1dzlj7b7.woff2",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "kind": "requestfailed",
+      "url": "http://127.0.0.1:61347/_next/static/media/noto-sans-sc-107-wght-normal.0zf7rmtx_19df.woff2",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "independentBrowserModelProbes": 0,
+  "workerApiZero": "须独立对账原持久 ledger；此回执不代签",
+  "error": {
+    "name": "Error",
+    "message": "T1246_BLOCKED: 本轮未交付可经真实公开聊天形成原thread/turn绑定并丢ACK的外部协议fixture；不直写库伪造unknown",
+    "detail": {
+      "originalUnknownIds": [],
+      "runtimeFixtureManifest": null
+    }
+  }
+}

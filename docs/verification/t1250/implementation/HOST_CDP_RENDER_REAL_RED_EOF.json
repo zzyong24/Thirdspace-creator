@@ -1,0 +1,62 @@
+{
+  "task": "T-1250",
+  "runs": [
+    {
+      "group": "hosts",
+      "evidence": "docs/verification/t1250/runs/ct1250-red-hosts-2dOLcR",
+      "resultSha256": "8f25da33057d1459d8d9b4db6c01e8c97452db63a067c6a95cf15e7fd3dc6a16",
+      "testCases": 36,
+      "passed": 0,
+      "failed": 3,
+      "filtered": 33,
+      "exit": 1,
+      "processClosed": true,
+      "groupRemaining": [],
+      "sourceInputUnchanged": true,
+      "outerExhausted": false
+    },
+    {
+      "group": "cdp",
+      "evidence": "docs/verification/t1250/runs/ct1250-red-cdp-S0xft6",
+      "resultSha256": "45050ad729d511f25509e4772168acb7bae10fc2b63b3471490c9055b97f3e45",
+      "testCases": 30,
+      "passed": 0,
+      "failed": 1,
+      "filtered": 29,
+      "exit": 1,
+      "processClosed": true,
+      "groupRemaining": [],
+      "sourceInputUnchanged": true,
+      "outerExhausted": false
+    },
+    {
+      "group": "render",
+      "evidence": "docs/verification/t1250/runs/ct1250-red-render-zcHZ52",
+      "resultSha256": "698a3e7673f107c5b11cdc9164508f1474144c65b10493695cc728ba6e4746d6",
+      "testCases": 8,
+      "passed": 0,
+      "failed": 1,
+      "filtered": 7,
+      "exit": 1,
+      "processClosed": true,
+      "groupRemaining": [],
+      "sourceInputUnchanged": true,
+      "outerExhausted": false
+    },
+    {
+      "group": "render-cleanup",
+      "evidence": "docs/verification/t1250/runs/ct1250-red-render-FwjxnU",
+      "resultSha256": "19c602e916603196288647b62a2c5c0647727139f443624e7bef776e8262df5f",
+      "testCases": 10,
+      "passed": 2,
+      "failed": 1,
+      "filtered": 7,
+      "exit": 1,
+      "processClosed": true,
+      "groupRemaining": [],
+      "sourceInputUnchanged": true,
+      "outerExhausted": false
+    }
+  ],
+  "note": "初render慢链真实15s红保留。补充cleanup RED慢链2PASS1FAIL，只stop有效交付/槽例真实新红，late launch本次通过不补签历史RED。均非App/模型验收。"
+}

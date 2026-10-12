@@ -1,0 +1,283 @@
+{
+  "status": "ACTUAL_TWO_GATES_EOF0_FULL_RAW_SOURCE_AND_GROUP_RECHECK_PASS",
+  "createdAt": "2026-10-12T09:50:52.266181+00:00",
+  "runs": [
+    {
+      "run": "boundary-1d57ed0741762d3255b5aebfd58dd910",
+      "actualExecSession": 14639,
+      "execNaturalEOF": 0,
+      "sourceEqualExceptAfterUnchangedFlag": true,
+      "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+      "files": [
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/environment-proof.json",
+          "sha256": "fd48e880ff02a5dcce1ce666f84c81a00df13da17e3321b220016c8a6cf48361",
+          "bytes": 1489
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/environment-proof.log",
+          "sha256": "6bb18c7be870097f42bac3af3a7ab69bb2771622d011605fb4caf4c363d880ae",
+          "bytes": 51
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/exit.json",
+          "sha256": "137492b5df6708b907570583d717d97f8af9284f3f22106725b2a2fbdb4072c0",
+          "bytes": 1033
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/gate.log",
+          "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+          "bytes": 779
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/review.json",
+          "sha256": "478c232b7fb89171c2d920b4b4953705fff8cc05b4a1d8d9a849d3e124750bf5",
+          "bytes": 978
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/source-after.json",
+          "sha256": "0c58819b233222a344053d8d16f26e509b98d564d9e931b399d65c91eeca4a1c",
+          "bytes": 1756254
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/source-before.json",
+          "sha256": "7c1d46e4919472b6a84991e2adbc9a2ab80eefd9041a1dcc6bdcd960af98778b",
+          "bytes": 1756233
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/summary.json",
+          "sha256": "42ed133f952c36fcbbdea3a0cfb48d9a2e3f9884dd782e59a4e5a5e9a0966f9b",
+          "bytes": 478
+        }
+      ],
+      "summary": {
+        "phase": "boundary",
+        "code": 0,
+        "elapsedMs": 3809.73875,
+        "totalMs": 7680000,
+        "expired": false,
+        "cancelled": false,
+        "recordsClosed": true,
+        "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-final-gate-1d57ed0741762d3255b5aebfd58dd910-5y3ATM",
+        "ownedRootRemoved": true,
+        "cleanupError": null,
+        "cleanupElapsedMs": 1.4514580000000024,
+        "sourceAndGateNonzeroNeverHidden": true,
+        "noApp": true,
+        "noPG": true,
+        "noPublish": true
+      },
+      "exit": {
+        "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "args": [
+          "orchestrator/process/boundary-scan.mjs"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+        "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/gate.log",
+        "pid": 13665,
+        "identity": {
+          "pid": 13665,
+          "pgid": 13665,
+          "uid": 501,
+          "birth": "Mon Oct 12 17:28:08 2026",
+          "startedAt": 1791797288706
+        },
+        "startedAt": "2026-10-12T09:28:08.706Z",
+        "endedAt": "2026-10-12T09:28:09.137Z",
+        "elapsedMs": 431,
+        "budgetMs": 1200000,
+        "deadlineAt": "2026-10-12T09:48:08.706Z",
+        "budgetExhausted": false,
+        "termGraceMs": 180000,
+        "killGraceMs": 180000,
+        "signals": [],
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "persistentOwnedServer": false,
+        "outerAbort": false,
+        "code": 0,
+        "signal": null,
+        "spawnError": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "environment": {
+        "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "args": [
+          "-e",
+          "const net=require('node:net');let denied=false;try{new net.Socket().connect({host:'127.0.0.1',port:55422})}catch(e){denied=e.message.startsWith('T1246_ENV_NOT_OWNED_PG')}const facts={foreignDenied:denied,noNative:!Object.hasOwn(process.env,'NODE_PG_FORCE_NATIVE'),noPG:!Object.keys(process.env).some(k=>k.startsWith('PG')||['DATABASE_URL','TEST_DATABASE_URL'].includes(k))};console.log(JSON.stringify(facts));if(!Object.values(facts).every(v=>v===true))process.exitCode=1;"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+        "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-1d57ed0741762d3255b5aebfd58dd910/environment-proof.log",
+        "pid": 13654,
+        "identity": {
+          "pid": 13654,
+          "pgid": 13654,
+          "uid": 501,
+          "birth": "Mon Oct 12 17:28:08 2026",
+          "startedAt": 1791797288435
+        },
+        "startedAt": "2026-10-12T09:28:08.435Z",
+        "endedAt": "2026-10-12T09:28:08.705Z",
+        "elapsedMs": 270,
+        "budgetMs": 180000,
+        "deadlineAt": "2026-10-12T09:31:08.435Z",
+        "budgetExhausted": false,
+        "termGraceMs": 180000,
+        "killGraceMs": 180000,
+        "signals": [],
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "persistentOwnedServer": false,
+        "outerAbort": false,
+        "code": 0,
+        "signal": null,
+        "spawnError": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "baselineRemaining": 5,
+      "warnings": null
+    },
+    {
+      "run": "orphan-9960c50c5374bf8b867ab029afc3daee",
+      "actualExecSession": 43188,
+      "execNaturalEOF": 0,
+      "sourceEqualExceptAfterUnchangedFlag": true,
+      "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+      "files": [
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/environment-proof.json",
+          "sha256": "887e22417ebf3132c50e2013f2141237a40550a49afa9c402cd91ddf411c187a",
+          "bytes": 1487
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/environment-proof.log",
+          "sha256": "6bb18c7be870097f42bac3af3a7ab69bb2771622d011605fb4caf4c363d880ae",
+          "bytes": 51
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/exit.json",
+          "sha256": "86978f3e29c52ebf9c91c02d733520b61d550819af56037c8e704a295d5dde37",
+          "bytes": 1029
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/gate.log",
+          "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+          "bytes": 15862
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/review.json",
+          "sha256": "6dfe11b9b55ce2266a192ce3b704585a29534fd16d8c0810c879b48ad07e996b",
+          "bytes": 976
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/source-after.json",
+          "sha256": "4af5eb1f7012e060f9c62c3389d1a367100a209027c8e027207dae7b65fbe0f5",
+          "bytes": 1756252
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/source-before.json",
+          "sha256": "77c8b014244869219ba377e3531ffc39895141d6754fae621adbfabf3b793d2e",
+          "bytes": 1756231
+        },
+        {
+          "path": "docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/summary.json",
+          "sha256": "8afa6a274c9ebe399e1031e4969a7a2f67e97a9e6483de249a00c8df08aba0bd",
+          "bytes": 474
+        }
+      ],
+      "summary": {
+        "phase": "orphan",
+        "code": 0,
+        "elapsedMs": 3654.8665,
+        "totalMs": 7680000,
+        "expired": false,
+        "cancelled": false,
+        "recordsClosed": true,
+        "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-final-gate-9960c50c5374bf8b867ab029afc3daee-YEY8Ue",
+        "ownedRootRemoved": true,
+        "cleanupError": null,
+        "cleanupElapsedMs": 2.302958999999646,
+        "sourceAndGateNonzeroNeverHidden": true,
+        "noApp": true,
+        "noPG": true,
+        "noPublish": true
+      },
+      "exit": {
+        "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "args": [
+          "orchestrator/process/orphan-scan.mjs"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+        "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/gate.log",
+        "pid": 13666,
+        "identity": {
+          "pid": 13666,
+          "pgid": 13666,
+          "uid": 501,
+          "birth": "Mon Oct 12 17:28:08 2026",
+          "startedAt": 1791797288706
+        },
+        "startedAt": "2026-10-12T09:28:08.706Z",
+        "endedAt": "2026-10-12T09:28:08.968Z",
+        "elapsedMs": 262,
+        "budgetMs": 1200000,
+        "deadlineAt": "2026-10-12T09:48:08.706Z",
+        "budgetExhausted": false,
+        "termGraceMs": 180000,
+        "killGraceMs": 180000,
+        "signals": [],
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "persistentOwnedServer": false,
+        "outerAbort": false,
+        "code": 0,
+        "signal": null,
+        "spawnError": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "environment": {
+        "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "args": [
+          "-e",
+          "const net=require('node:net');let denied=false;try{new net.Socket().connect({host:'127.0.0.1',port:55422})}catch(e){denied=e.message.startsWith('T1246_ENV_NOT_OWNED_PG')}const facts={foreignDenied:denied,noNative:!Object.hasOwn(process.env,'NODE_PG_FORCE_NATIVE'),noPG:!Object.keys(process.env).some(k=>k.startsWith('PG')||['DATABASE_URL','TEST_DATABASE_URL'].includes(k))};console.log(JSON.stringify(facts));if(!Object.values(facts).every(v=>v===true))process.exitCode=1;"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+        "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-9960c50c5374bf8b867ab029afc3daee/environment-proof.log",
+        "pid": 13653,
+        "identity": {
+          "pid": 13653,
+          "pgid": 13653,
+          "uid": 501,
+          "birth": "Mon Oct 12 17:28:08 2026",
+          "startedAt": 1791797288434
+        },
+        "startedAt": "2026-10-12T09:28:08.434Z",
+        "endedAt": "2026-10-12T09:28:08.706Z",
+        "elapsedMs": 272,
+        "budgetMs": 180000,
+        "deadlineAt": "2026-10-12T09:31:08.434Z",
+        "budgetExhausted": false,
+        "termGraceMs": 180000,
+        "killGraceMs": 180000,
+        "signals": [],
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "persistentOwnedServer": false,
+        "outerAbort": false,
+        "code": 0,
+        "signal": null,
+        "spawnError": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "baselineRemaining": null,
+      "warnings": 100
+    }
+  ],
+  "priorReadonlyCheckerMismatch": "afterSource新增unchanged:true不是source漂移；原工具AssertionError保留",
+  "noNewScanExecution": true,
+  "noAppExecution": true
+}

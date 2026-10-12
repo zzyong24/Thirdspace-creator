@@ -18,6 +18,7 @@
  */
 
 import * as React from "react";
+import {SettingsReturnProvider} from "./settings-return-context";
 
 import {
   PageScrollArea,
@@ -98,7 +99,7 @@ export function AppShell({
     previousPath.current=pathname;
   },[pathname]);
   return (
-    <div
+    <SettingsReturnProvider><div
       onClickCapture={event=>{
         const target=event.target instanceof Element?event.target.closest<HTMLAnchorElement>('a[href="/projects/new"]'):null;
         if(target && event.button===0) newProjectReturn.current={node:target,path:pathname,index:Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href="/projects/new"]')).indexOf(target)};
@@ -162,7 +163,7 @@ export function AppShell({
           </div>
         </PageScrollArea>
       </div>
-    </div>
+    </div></SettingsReturnProvider>
   );
 }
 

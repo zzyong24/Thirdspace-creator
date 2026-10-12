@@ -1,0 +1,564 @@
+{
+  "passedFiles": 554,
+  "failedFiles": 88,
+  "skippedFiles": 1,
+  "otherFiles": 0,
+  "rawFileStatusCounts": {
+    "passed": 555,
+    "failed": 88
+  },
+  "skippedWholeFiles": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/assets/s3-object-storage.integration.test.ts",
+      "rawStatus": "passed",
+      "assertionStatuses": [
+        "skipped"
+      ]
+    }
+  ],
+  "unhandledErrorsFromOriginalLog": 0,
+  "package": "backend",
+  "actualExitCode": 1,
+  "files": 643,
+  "totalTests": 6893,
+  "passedTests": 6492,
+  "failedTests": 400,
+  "pendingTests": 1,
+  "todoTests": 0,
+  "success": false,
+  "firstStartedAt": "2026-10-11T14:53:06.156Z",
+  "endedAt": "2026-10-11T17:39:50.825Z",
+  "elapsedMs": 10004669,
+  "failedSuites": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/group-upgrade-postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-scheduled-job-migration.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 17
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "message": "",
+      "failedAssertions": 15,
+      "totalAssertions": 31
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts",
+      "message": "",
+      "failedAssertions": 4,
+      "totalAssertions": 23
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 18,
+      "totalAssertions": 18
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 20,
+      "totalAssertions": 20
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-generation-worker.test.ts",
+      "message": "",
+      "failedAssertions": 21,
+      "totalAssertions": 21
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "message": "",
+      "failedAssertions": 13,
+      "totalAssertions": 14
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-redfox-worker.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 5
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-research-worker.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 5
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 8
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-script-patch-worker.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-video-edit-worker.test.ts",
+      "message": "",
+      "failedAssertions": 4,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/chat-work-editor-worker.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 2
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/copilot-worker.fork.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 3
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "message": "",
+      "failedAssertions": 5,
+      "totalAssertions": 8
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 10,
+      "totalAssertions": 10
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 12,
+      "totalAssertions": 12
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-platform-facts.integration.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 10
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/intelligence-source-workspace.test.ts",
+      "message": "Cannot find module '../../../docs/verification/t1217/fixtures/historical-intelligence.service' imported from /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/intelligence-source-workspace.test.ts",
+      "failedAssertions": 0,
+      "totalAssertions": 0
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 7,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 18,
+      "totalAssertions": 18
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/research-material-adoption.test.ts",
+      "message": "",
+      "failedAssertions": 7,
+      "totalAssertions": 9
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+      "message": "",
+      "failedAssertions": 6,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 16
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 30,
+      "totalAssertions": 30
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "message": "",
+      "failedAssertions": 30,
+      "totalAssertions": 30
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/structured-target-adoption.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 12
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 2
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "message": "",
+      "failedAssertions": 4,
+      "totalAssertions": 25
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 75
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/application/generation/work-review-root.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 12
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/articles/articles.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 45
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/analytics/analytics.acceptance.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 6
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/agentic-proposal-adoption.integration.test.ts",
+      "message": "",
+      "failedAssertions": 4,
+      "totalAssertions": 5
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai-task-commit.integration.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai-task-submission.service.test.ts",
+      "message": "",
+      "failedAssertions": 4,
+      "totalAssertions": 5
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.contract.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 8
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.learnings-project-scope.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.task-execution.integration.test.ts",
+      "message": "",
+      "failedAssertions": 6,
+      "totalAssertions": 19
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/group-task-scope.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 8
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/platform-adapt-execution.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/script-draft-task-submission.integration.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai/work-creation-chat.integration.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/assets/assets.acceptance.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 6
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/assets/assets.legacy-media-backfill.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 2
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/creative-canvas/creative-canvas-series-reference.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 2
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 25
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/agentic-browser-worker.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 2
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/agentic-business-execution.service.test.ts",
+      "message": "",
+      "failedAssertions": 5,
+      "totalAssertions": 9
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 3
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 12
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/browser-task-authorization.service.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 106
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-local-tool-host.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-script-draft-preparation.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 5
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/chat-video-edit-tool-host.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 8
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/review-facets.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/review-insights-injection.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 22
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/intelligence/intelligence-rewrite-official.integration.test.ts",
+      "message": "Cannot find module '../../../../docs/verification/t1229/historical-generation-bridge' imported from /Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/intelligence/intelligence-rewrite-official.integration.test.ts",
+      "failedAssertions": 0,
+      "totalAssertions": 0
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/knowledge/knowledge-proposal-adoption.service.test.ts",
+      "message": "",
+      "failedAssertions": 4,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/knowledge/knowledge.db-schema.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/knowledge/knowledge.repository.integration.test.ts",
+      "message": "",
+      "failedAssertions": 16,
+      "totalAssertions": 17
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 5
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/moments/moments-model.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 24
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/learning-adoption-key.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 2
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/learnings-calibration-reflow.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 2
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/learnings.acceptance.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/learnings.contract.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 6
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/learnings/review-adoption-scope.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 1
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/platform-account/account-binding.integration.test.ts",
+      "message": "",
+      "failedAssertions": 16,
+      "totalAssertions": 23
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/platform-account/platform-account.service.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 16
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 9
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr-mapping.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-precise-asr.integration.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 11
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 15
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "message": "",
+      "failedAssertions": 2,
+      "totalAssertions": 4
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/projects/data-foundation-prefer-real.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 3
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/publishing/publication-cover.integration.test.ts",
+      "message": "",
+      "failedAssertions": 16,
+      "totalAssertions": 18
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/reviews/reviews.acceptance.test.ts",
+      "message": "",
+      "failedAssertions": 3,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/reviews/reviews.contract.test.ts",
+      "message": "",
+      "failedAssertions": 6,
+      "totalAssertions": 7
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/settings/settings.service.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 20
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/chat-web-profile-wait.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 8
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-provider-job.service.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 29
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 3
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 43
+    }
+  ],
+  "rawLog": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/backend.log",
+  "rawJson": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/backend.json"
+}

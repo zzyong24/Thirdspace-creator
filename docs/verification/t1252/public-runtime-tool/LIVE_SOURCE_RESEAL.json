@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-12T00:47:34.515139+00:00",
+  "oldBindingSha256": "4233f0db803e7aa359a6ccaccc43004b10bdcefa710bfaec0816e226737e7bde",
+  "newBindingSha256": "5d62c13de340a088e612d657b422298c0026a4ad37d813d4c459c2ab884e0714",
+  "toolSha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9",
+  "actualFullPrepareElapsedMs": 15720.744917,
+  "actualCounts": {
+    "inputs": 2207,
+    "installedInputs": 111831,
+    "browserInputs": 337
+  },
+  "actualOnlyInputDelta": [
+    {
+      "group": "inputs",
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "before": {
+        "path": "frontend/src/server/workbench-file-recovery.test.ts",
+        "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c"
+      },
+      "after": {
+        "path": "frontend/src/server/workbench-file-recovery.test.ts",
+        "sha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d"
+      }
+    }
+  ],
+  "runtimeExecuted": false,
+  "sourceApplied": true,
+  "otherToolBudgetInstalledBrowserInputsUnchanged": true
+}

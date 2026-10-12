@@ -1,0 +1,19 @@
+{
+  "schema": "t1250-standard-frontend-types-actual/v1",
+  "run": "docs/verification/t1250/runs/ct1250-types-VZNGG9",
+  "resultSha256": "4ec4747ffb770f107e1124eaf19e60db6bd5e06426c9ec657335b2d8f5b2c0af",
+  "logSha256": "0831ae3970e1bc5327fefbe3a96fb46731569510d55cdc72a8b4918db2da0e37",
+  "exit": 2,
+  "elapsedMs": 44444,
+  "sourceInputUnchanged": true,
+  "processClosed": true,
+  "ownedGroup": [],
+  "actualErrorLines": [
+    "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts(616,20): error TS2339: Property 'document' does not exist on type '{ factSelection: { mode: \"keep\"; } | { mode: \"replace\"; expectedBeforeDigest: string; proposedFactsDigest: string; }; adoptionMode: \"assistant\"; expectedCurrentVersionId: string; assistantSource: { ...; }; fieldSelection: (\"title\" | ... 1 more ... | \"tags\")[]; policyVersion: 1; clientRequestId: string; } | { ...; }'.",
+    "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts(621,82): error TS2339: Property 'document' does not exist on type '{ factSelection: { mode: \"keep\"; } | { mode: \"replace\"; expectedBeforeDigest: string; proposedFactsDigest: string; }; adoptionMode: \"assistant\"; expectedCurrentVersionId: string; assistantSource: { ...; }; fieldSelection: (\"title\" | ... 1 more ... | \"tags\")[]; policyVersion: 1; clientRequestId: string; } | { ...; }'.",
+    "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts(630,91): error TS2339: Property 'document' does not exist on type '{ factSelection: { mode: \"keep\"; } | { mode: \"replace\"; expectedBeforeDigest: string; proposedFactsDigest: string; }; adoptionMode: \"assistant\"; expectedCurrentVersionId: string; assistantSource: { ...; }; fieldSelection: (\"title\" | ... 1 more ... | \"tags\")[]; policyVersion: 1; clientRequestId: string; } | { ...; }'.",
+    "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts(75,21): error TS2304: Cannot find name 'resolve'."
+  ],
+  "historicalFirst100ErrorsOnly": true,
+  "notGlobalGreen": true
+}

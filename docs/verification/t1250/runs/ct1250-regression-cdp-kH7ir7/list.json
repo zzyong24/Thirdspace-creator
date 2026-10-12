@@ -1,0 +1,126 @@
+[
+  {
+    "name": "真实runCliCommand→HTTP正式dispatch→SQL幂等账本→Chromium：同key只点一次、跨账号隔离、失效作品可关闭、进程后pending不重派",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts"
+  },
+  {
+    "name": "T1250 公共CLI→HTTP→service→Chromium慢checkout及动作超过30秒仍保原session和同key回执",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts"
+  },
+  {
+    "name": "真实SPA由菜单进入并选择真实作品，前4普通button不抢导航预算，网络只自然触发且不泄露值",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "observe原子废旧ref，重渲染/移出导航不以旧handle点击，重复advance只执行一次",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "跨账号零宿主动作；作品删改后observe不再发token但原owner仍可close",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "同真实profile池与采集互斥，checkout取消不遗留排队；close失败不按TTL释放占用",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "正常采集cooldown拒绝不导航",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "已派发后popup异常保留unknown/dispatched，原动作重复不重派",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "独审红测：aria-controls不能替不安全anchor href发放expand token",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "独审红测：native/role dialog的status及嵌套导航不公开正文或发动作token",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "独审红测：重复关闭旧A不得释放新B的账号占用",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "anchor展开不接受不安全或会重载的href：/logout",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "anchor展开不接受不安全或会重载的href：javascript:void(0)",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "anchor展开不接受不安全或会重载的href：https://outside.invalid/",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "anchor展开不接受不安全或会重载的href：/creator-micro/home?different=1",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "anchor展开不接受不安全或会重载的href：/creator-micro/home",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "合法无href/同页fragment展开仍可执行：",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "合法无href/同页fragment展开仍可执行：#",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "合法无href/同页fragment展开仍可执行：#menu",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root红测：全document发现第二导航，首栏不能垄断候选额度，补充侧栏只结构",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root：根上限/发现预算给下界和不完整标记，零语义根不声称侧栏不存在",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root：节点搬到同标签/同祖先摘要的另root仍拒旧token；dialog根和正文不可发现",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root：native与role同元素不重复、嵌套导航各自归属，补充menu不泄漏表单/正文且不给token",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root：共享12KiB输出限制后root/group数量仍与实际候选一致",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root不能让补充根吞掉既有nav内的合法入口：<div role=\"menu\">",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root不能让补充根吞掉既有nav内的合法入口：<aside>",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root不能让补充根吞掉既有nav内的合法入口：<div role=\"complementary\">",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "多root不能让补充根吞掉既有nav内的合法入口：<div role=\"menubar\">",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "终审红测：超额省略的导航仍是边界，父根不能发token或允许跨省略根移动",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "终审预算红测：深度裁剪的宽兄弟也计入发现预算，不能无计费遍历整批",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  },
+  {
+    "name": "T1250 真实控件active超过90秒不触发idle，结束后仍按原idle及life截止",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts"
+  }
+]

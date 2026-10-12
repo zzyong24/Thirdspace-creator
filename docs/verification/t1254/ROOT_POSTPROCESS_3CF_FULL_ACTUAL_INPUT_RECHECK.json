@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "rows": 144537,
+  "readBytes": 2358415392,
+  "elapsedSeconds": 36.95800970902201,
+  "indexSHA": "3cf6a0fc449c8f1db56745ff36b91c43bb631a8b5ec157f3a5860fb9c76a9c89",
+  "scope": "only existing prepared result postprocess",
+  "oldWrapperActualExit1Preserved": true,
+  "oldMissingReceiptNotBackfilled": true,
+  "childrenActualPassed": 3,
+  "preparedFullRows": 141014,
+  "preparedPathActualChildTMPDIR": true,
+  "scopeFileSetsAndLinksExact": true,
+  "actualDyldFirstHitsVerified": true,
+  "noExecutionOrCopy": true,
+  "inheritedEarliestUTC": "2026-10-12T13:12:37.651Z"
+}

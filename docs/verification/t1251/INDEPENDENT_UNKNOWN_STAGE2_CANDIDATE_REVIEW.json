@@ -1,0 +1,60 @@
+{
+  "schema": "t1251-independent-unknown-candidate/v1",
+  "status": "PASS_TEST_CANDIDATE_ONLY",
+  "findings": [],
+  "bindings": [
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.integration-stage1-finite-settlement.test.ts",
+      "sha256": "df9fa08bf2f68f14261f8ca8d3c620fe387ffb30e0863f376f8a1b0a7a4039a4"
+    },
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.integration-stage2-unknown.test.ts",
+      "sha256": "9e3e2e94e752d48609abf95f7f0971b00916e1c2cdf093ea820ce105f7926a0f"
+    },
+    {
+      "path": "/tmp/t1251-candidate/integration-stage2-unknown.diff",
+      "sha256": "755ff0c3badae0a591a5417ac14ed0a6e635008658c5aa4b89bd98df271f9e52"
+    },
+    {
+      "path": "/tmp/t1251-candidate/integration-stage2-unknown-binding.json",
+      "sha256": "1ae6c197db5a794be6e1f9f08e6d8413dbcb3ee576089e2f3196ed9ebd9c5257"
+    },
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.ts",
+      "sha256": "de1a62340a7ec38d7b1a51fa00bce27acfcd9af86f679f504c0faf44b2a1b273"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-generation-model.ts",
+      "sha256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-agentic-tool.ts",
+      "sha256": "01ba54a811b3f915b5fc1369696941ba20fa3ba70fa5e723d0562d4ef78bc796"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/chat-generation-recovery.ts",
+      "sha256": "5dc872fa71297d23c85c767983cae1e60ce4d89fb1b9d1fce41f18112d13f69c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts",
+      "sha256": "843405d9faed7880be042171995ae64f1415f25fb4e659c161d8adec7d7dbd08"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+      "sha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84"
+    }
+  ],
+  "cause": "受控合法 provider 回复完成后，仅原 crashUnknownChild 模式且同 submission executionTaskId 在 service.settle 写入前丢失端口回执。真实 durable-generation-model 抛 MODEL_SETTLEMENT_RECEIPT_UNKNOWN；可信叶保留 unknown，complete 无子回执不能重建候选；durable-agentic-tool 结算同父 unknown。原恢复器拒绝 unknown 父与 started 子，不获得新的 Pi 请求许可。",
+  "retained": [
+    "原21模式与新增finite共22 body；finite继承已评df9唯一unknown结算修订",
+    "原请求2/原parent与child ID/原scope/原预算/原其余模式断言",
+    "child started/providerResult null/totalTokens null，非SQL造unknown或伪已确认用量",
+    "新checkpoint原task unknown_result/父unknown/lease null，第二host仅原任务检查，不重发"
+  ],
+  "limits": [
+    "仅静态候选准入；未应用源码、未build、未运行PG/HTTP/Worker/模型",
+    "原3HTTP误刺激红仍保留；新2HTTP/parentunknown/lease null须完整实际whole逐case证明",
+    "不签badOutput/diagnosisEmpty partial或5/6HTTP、31/38tokens调整"
+  ],
+  "model": "unknown/inherited"
+}

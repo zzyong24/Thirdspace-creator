@@ -1,0 +1,24 @@
+Executable=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/MacOS/CreatorOS
+Identifier=cloud.aitongban.creatoros
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory v=20500 size=34394 flags=0x10002(adhoc,runtime) hashes=1064+7 location=embedded
+VersionPlatform=1
+VersionMin=853248
+VersionSDK=1705216
+Hash type=sha256 size=32
+CandidateCDHash sha256=b46a273fc8d28a331e2b7204239c0c3f52270f67
+CandidateCDHashFull sha256=b46a273fc8d28a331e2b7204239c0c3f52270f672622ba77087df79eb0c04e67
+Hash choices=sha256
+CMSDigest=b46a273fc8d28a331e2b7204239c0c3f52270f672622ba77087df79eb0c04e67
+CMSDigestType=2
+Executable Segment base=0
+Executable Segment limit=13795328
+Executable Segment flags=0x1
+Page size=16384
+CDHash=b46a273fc8d28a331e2b7204239c0c3f52270f67
+Signature=adhoc
+Info.plist entries=14
+TeamIdentifier=not set
+Runtime Version=26.5.0
+Sealed Resources version=2 rules=13 files=4
+Internal requirements count=0 size=12

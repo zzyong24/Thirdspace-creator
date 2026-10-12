@@ -1,0 +1,31 @@
+{
+  "phase": "calibrated-whole25",
+  "total": 25,
+  "passed": 25,
+  "failed": 0,
+  "skip": 0,
+  "files": [
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "status": "passed",
+      "assertions": 14
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+      "status": "passed",
+      "assertions": 8
+    },
+    {
+      "name": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "status": "passed",
+      "assertions": 3
+    }
+  ],
+  "allClean": true,
+  "caseComplete": true,
+  "sourceUnchanged": true,
+  "candidateCalibration": true,
+  "originalPositiveAssertionsKept": true,
+  "originalStimulusUnchanged": true,
+  "neverClaimFullSystem": true
+}

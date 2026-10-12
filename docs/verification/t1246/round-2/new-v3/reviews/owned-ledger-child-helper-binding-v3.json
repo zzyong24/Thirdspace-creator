@@ -1,0 +1,33 @@
+{
+  "rows": [
+    {
+      "name": "childClosure",
+      "originalSha256": "30ccd79d4d731f4c1d3e584eb4ad5e86a09485e558f4a283d5a1c97b26e5e8d0",
+      "v3Sha256": "30ccd79d4d731f4c1d3e584eb4ad5e86a09485e558f4a283d5a1c97b26e5e8d0",
+      "byteIdentical": true
+    },
+    {
+      "name": "boundedClosure",
+      "originalSha256": "8ac707d08b5ff6e641cb9a751182ea8928e14231a91f30e8a1e6bfdbb5ca7a02",
+      "v3Sha256": "8ac707d08b5ff6e641cb9a751182ea8928e14231a91f30e8a1e6bfdbb5ca7a02",
+      "byteIdentical": true
+    },
+    {
+      "name": "processSnapshot",
+      "originalSha256": "439db9152390c11deb7338426f61c9bbcc5fd2d8578d10050693f7e1327cf107",
+      "v3Sha256": "439db9152390c11deb7338426f61c9bbcc5fd2d8578d10050693f7e1327cf107",
+      "byteIdentical": true
+    },
+    {
+      "name": "signalOwned",
+      "originalSha256": "80c3dfbe5948da86bec4559022a9a774d27b57a570fb8d1cfcd8f6c6d2271da5",
+      "v3Sha256": "80c3dfbe5948da86bec4559022a9a774d27b57a570fb8d1cfcd8f6c6d2271da5",
+      "byteIdentical": true
+    }
+  ],
+  "allByteIdentical": true,
+  "originalLauncherSha256": "7b4d6d60c3dca32761ef50e739902dde59642154879806ad8a59a431dc492c2c",
+  "v3LauncherSha256": "b782bdd34214b515c197a74050f6949d1562951fa28f11f9197e7fc05f32cfa3",
+  "realNegativeReceipt": "../browser-original/reviews/owned-node-closure-negatives-result.json",
+  "scope": "真实120s owned Node负向仅绑定同字节4helpers；原metadata/PG新字段门各有当场pure Node negative，不签真实SQL/runtime"
+}

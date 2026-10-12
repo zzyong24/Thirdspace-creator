@@ -1,0 +1,21 @@
+{
+  "kind": "onlypure-wrapper-complete-independent-helper-life-source",
+  "wrapperPath": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/run-once.cjs",
+  "wrapperSha256": "f11cafb012273a6c3f0584f3df4f306e1d187cad4cc08349265c19f073472835",
+  "preDispatchPath": "/private/tmp/t1246-final-pure-7dd0492156b02ee92c531d89/PRE_DISPATCH.json",
+  "preDispatchSha256": "606f2128a2be29cd1a4766534b90ee182b03eaa82a55202329acdd3f3e163074",
+  "previous2aa33WrapperSnapshot": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/wrapper-history/2aa33-helper-lifecycle-concern/run-once.cjs",
+  "previous2aa33SHA": "2aa33d3c34dae41edbf85609c3852ae6ee8a0885bc6a9e84134eb407ad09e036",
+  "narrowForwardPath": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_2AA_TO_COMPLETE_LIFECYCLE_FORWARD.diff",
+  "narrowForwardSHA": "833dc839fb41ef183a5fb8258dff12064d3c3dfe1bea799648bc20a695959c31",
+  "narrowInversePath": "docs/verification/t1246/round-2/actual-external-7391-only-pure-7dd0492156b02ee92c531d89/WRAPPER_TO_2AA_COMPLETE_LIFECYCLE_INVERSE.diff",
+  "narrowInverseSHA": "14c333383774216ddcd925cec07933e24a546e9b9b61e256e9bf88defa8c0707",
+  "fullContextMechanicalForwardInverseExact": true,
+  "positiveMs": 120000,
+  "independentHelperLifecycleMs": 2160000,
+  "aggregateHelperDeadlineMs": 2280000,
+  "outerOnceMs": 3840000,
+  "positiveObservedCloseIndependent": true,
+  "helperElapsedIsAggregateNotCleanupOnly": true,
+  "candidateDispatches": 0
+}

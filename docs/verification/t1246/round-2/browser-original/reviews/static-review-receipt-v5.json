@@ -1,0 +1,445 @@
+{
+  "currentOriginal100": 100,
+  "generated100": 100,
+  "inverse": [
+    {
+      "file": "e2e/ai-copilot.spec.ts",
+      "edits": 1,
+      "originalSha256": "ee1081b55fa67d5f5dc96322685b46851cc4f239b8c7bd6cb168baea3c1c8d2a",
+      "generatedSha256": "844f38a0a77d3c424993fa749bf9402fd537c682185283e3bea4b1be9bd5a267",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "edits": 8,
+      "originalSha256": "a2719518f5b0aaf7de7ad0ba6eb9cdc9d640b6699d8d128e2dd86a23659da703",
+      "generatedSha256": "2a9d68d17fe423efa0787def232bddf4f9c39171e1438bfc1caeaad6decc205a",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "edits": 9,
+      "originalSha256": "500b8cd4407df0553c843a7a99dd14e6987fbb63372715271d119363f64fe0e0",
+      "generatedSha256": "d836541ad5555f91f20050d09db6b8eb55ea2d5bc32939ba7b5847be65b3bdfc",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "edits": 9,
+      "originalSha256": "d4ad01c71994a85a0ef092fb4b35e7c0476d760c4a325884b1cf9985e71632f6",
+      "generatedSha256": "e5899edc568ec835cba009540550995316a4da01d6d2b5c3cf818228effa05fa",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/all-routes.spec.ts",
+      "edits": 1,
+      "originalSha256": "48cdddad1504ab12b38af1c48e3e6ae19de61a2e20478724ef229a01ad6ed9dc",
+      "generatedSha256": "2c898414cb2bca08fb676c358e2905fe244f7c9fb5e351c2de0a695b97a59eb5",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/app-shell.spec.ts",
+      "edits": 1,
+      "originalSha256": "c8d2e375c76f633da9c8c3111bd46fa5153e804496c23e0132814a4a755e0bc1",
+      "generatedSha256": "0d885b11e3b0e731cfe9ddfaeb646e47825d6bb247f183f50a78b1cce9c25087",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/asr-configuration.spec.ts",
+      "edits": 2,
+      "originalSha256": "06ebc8a2282965c0bcf67274900d72d23a36f54ae0dbb07575177a18c890162b",
+      "generatedSha256": "6bf428d04821ac81c9944efba3c804e66625512d1d732cba37e0d60f0ef45a2d",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/assets.spec.ts",
+      "edits": 6,
+      "originalSha256": "1e6cc00ff998df2fa6a92e53c71164f98a94e802c85b53549c9b1a3d15b67a53",
+      "generatedSha256": "97448b31e2faecadb10e694f637bbfb2e569923968fe03c3612e3b1a544c243f",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/audience-task-topics.spec.ts",
+      "edits": 2,
+      "originalSha256": "e40b020ab87c15a1e77488712ade293c80ad79a5e0e92e0b7ceeadd72e336571",
+      "generatedSha256": "1ea2f8303ada072132c83cfd35370a4430d41cce4ff620302de0659da35ed641",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/automations-group-media-jobs.spec.ts",
+      "edits": 10,
+      "originalSha256": "f0ff2387eeda60af3624012f4197e5fc7aab8ea353281ea7dbaae50c4d8835e8",
+      "generatedSha256": "6b8756632ef92c34b2ef2e5b61a6b327b35f24866e2d3c1396564d5f0f9b154e",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "edits": 9,
+      "originalSha256": "6da58089fc3ea8f2808a30d06ca3d5d568c87cfa0143178708705b1bc3cb2d28",
+      "generatedSha256": "9bed11cdd7929961f8cd2ced88a82b1c0f5eed1ef488e2cf4b2f430484cc4736",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "edits": 2,
+      "originalSha256": "9b3fbd72b747b53d67add6b5c79e1eceafd004cc03e7e17bd6c4ed57c0836224",
+      "generatedSha256": "fddfb0cf1007237ff143aac1a29227ff1dba3e2f2a09411cf34a147f13008cc5",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/channel-public-links.spec.ts",
+      "edits": 1,
+      "originalSha256": "7cd345588ffed00c11d527e852203d297bbb2341a8f64db4ed21fa3a7581ee2b",
+      "generatedSha256": "2ae30b2c3488521756eb15e84b4a2905ec0161991de9c2a5e934a190cd9ec8e5",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "edits": 9,
+      "originalSha256": "36544f17be3766f5c62752dfd71a0c7aa7c9b87e80f64a778ecfede8f2fe1f31",
+      "generatedSha256": "b98e29a4793bcdc9e8a03a58faccd645b37167ee4d8afefa68d003b1e47c4dfc",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "edits": 3,
+      "originalSha256": "d975762567f50956853d872d5bb09bf9399d9a531788f73bfe3690fc38f659f7",
+      "generatedSha256": "2c3c7f31326213c8006c10242d5f8cc325303baa05328e4ba7ec2637b6f9b5b7",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/creative-canvas.spec.ts",
+      "edits": 50,
+      "originalSha256": "0b99bc21babdb3859ccf5f39d2ebb12ce63088e8297e8c6f94ba496fc9390edd",
+      "generatedSha256": "e7eb0576dc888220d8414a0ef00f9ce6276be62d382f7a6c9458a27f2a91d9af",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "edits": 6,
+      "originalSha256": "2e789a839eaf4611d9863dfd6aee1ff64579c8310c76862c1f30564c125eb643",
+      "generatedSha256": "5fb6d5a40513c49d4d7ced56ff32e5a1312142f21bbe353f91053443719587ea",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/experience.spec.ts",
+      "edits": 1,
+      "originalSha256": "c6710f3e0f6a9df0c4f07cc4f0e69c8baa2514c532033d7c1d7bc6654e3dc682",
+      "generatedSha256": "ba47f5b03f8985d52e84c242a8343f6deab527ab9f19b978fb80ee4368876eec",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/group-skill-customization.spec.ts",
+      "edits": 20,
+      "originalSha256": "adf969630fde3f4ce7c3afb1d163b590e8d36d36e7739b89771b9878e39677ab",
+      "generatedSha256": "cdcb0f0dfdb3c77ce51115228df7a4a558427c6f372b8c084a6b2e8015fb3ecb",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/knowledge-library.spec.ts",
+      "edits": 4,
+      "originalSha256": "8eed8c2b0d52323d921b2f80da1d3cfa7c948e1c28d45f7ea94158f3b5ddb840",
+      "generatedSha256": "1c53cf9c4939bc438aaa94ef14f748701e6433b648d8588c04ee157fe458a774",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/media-root-isolation.spec.ts",
+      "edits": 7,
+      "originalSha256": "cb063f9b66416e3d927c9df9ec73b89c60a279ff2b5eac8f57224c908d7bf717",
+      "generatedSha256": "a57864101cb16fd3f96cc311418a0e5a9e6ee3a3f0ed3d0c6324a6fdfc4d3f6d",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/new-project.spec.ts",
+      "edits": 1,
+      "originalSha256": "3a71276a6e3a07a6bf6d476c10d1ddf6a89e776850c25d7854077bd1fbe86d31",
+      "generatedSha256": "0e0c43e23149af34703243dcb85e464b9055df9a78f3061ca390b0bfc98edcf7",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "edits": 2,
+      "originalSha256": "7d81d7ee70f6bc3767e2582f8ef6847d8692ad59d27107895d9230072af6d937",
+      "generatedSha256": "71600b432afa5296737a1175510cf4bc0978539bc2a68d34302699b7919bcd8b",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/overlay-routing.spec.ts",
+      "edits": 1,
+      "originalSha256": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "generatedSha256": "02ea5021383e87328a603b9d2d0913f62ed66d710d7eef4dbcbca65c524c672e",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/platform-work-catalog.spec.ts",
+      "edits": 2,
+      "originalSha256": "ef877df223ada39d3d28b2177907f6682084064a0cd19bc8725713ac1d1fc4be",
+      "generatedSha256": "5ab7b0722c84698f0853a5737f9d03742167892b74aa39b3c1d28e2038b5ad51",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/production-broll-remove.spec.ts",
+      "edits": 4,
+      "originalSha256": "049b53cdc4a14ef91d369273bc7ecf187890b3894381acbc57203eb0785ba3ef",
+      "generatedSha256": "0e73385fc3135c8c3b929f8cbd5ede748fa25ecfeb4bff96bafca04f97df058e",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/production-empty-workbench.spec.ts",
+      "edits": 4,
+      "originalSha256": "5a5194fd6e32acaa765d8d086b539b4d1cb699849c7f0f21c902a2bc95d45dd4",
+      "generatedSha256": "79a128d841b96d8ee29521681d08da6e77dd1abc297c219f682aeed7dec7ceff",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/projects.spec.ts",
+      "edits": 2,
+      "originalSha256": "11fd30f1ef86d1b61025c904947202c7e364554a88a520ce1722fba7e9893f88",
+      "generatedSha256": "8ddfc7b6d9f65083f660f468c06e88da0b8d9ebdf14070baa59283444de3ec71",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/publish-package-readback.spec.ts",
+      "edits": 4,
+      "originalSha256": "34a5f45bc28998f964f0c856045d0005bb78a8aa04cac46ee682ee49f4e287ca",
+      "generatedSha256": "00f36b2ffbc3986e6733514885320a2fb043f7577e8086fa8f1ef3dbbfb5159f",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/publishing-center.spec.ts",
+      "edits": 2,
+      "originalSha256": "c4acc22f735ae02fbe147c7167f9bc48dc162d1d2af3518003d95af964e3acf3",
+      "generatedSha256": "ea23c2175b333750794ed30cec7e7e7cedd8bdcd755af17fc5f69e65bffa41a4",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/publishing-workspace.spec.ts",
+      "edits": 2,
+      "originalSha256": "17c01a1df224d51c0a9f98e6540980b50e156a54a46916ff5da70fa49d1014c1",
+      "generatedSha256": "774f887d8560276d66bdfe36515b91e9ca32c6b30c61d470f36baf20c25442ec",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/qwen-asr-configuration.spec.ts",
+      "edits": 1,
+      "originalSha256": "469b7eca9607e9c504d95111f443d36494c370782fc00c5cfba514daae9f4f0c",
+      "generatedSha256": "070089167df46eb922d822450f7eca0a4fa98224245d0fd27ff147af0690815e",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/recent-data-safety.spec.ts",
+      "edits": 4,
+      "originalSha256": "36006f122115eca95d96139d3bd3801b654b8c614f9001f2cccb4237c91ad5a6",
+      "generatedSha256": "300e8182766e1306460f2af094cc8557ac4f49a5df9a6fad8fe80b19c1cdb2e1",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "edits": 2,
+      "originalSha256": "dd62b0b6ae16492d9fbb7d1ea4f592eaba63dcee6a6449ff94e343f905990701",
+      "generatedSha256": "5f1b39bf8697b214b0a79a2b6c633c3be33722ccd5cd952dccdf722028396407",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/review-history.spec.ts",
+      "edits": 2,
+      "originalSha256": "f005b82d69cd981e9e1f795fe43a656bd577a6dd4b9801c27f5afe5c2570343d",
+      "generatedSha256": "c63763db44201933497d5bd1c5a90c0ca9cc03eb7f0fc1daf8380cb8626d1270",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/search.spec.ts",
+      "edits": 1,
+      "originalSha256": "598955baac6d7b3527f83617a79a48c7350135a5242f2bd4cb903f3fb205cf7b",
+      "generatedSha256": "b8ea3a45c2b416dd056a91f742bad97c6f794e7db1d733b7ac1faabd92723b20",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "edits": 3,
+      "originalSha256": "ffc561f3134437778e5f275c2919102522c7cb2573eba4fcb119f3e032b608da",
+      "generatedSha256": "02defd8b59971efb7ba28da91739d398975aafd05b5677d07cb6990378022197",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "edits": 3,
+      "originalSha256": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "generatedSha256": "1374710abec3ff66590e77a70ac906fae6e3d2847e4c9c1b9347b91a77ec8edf",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/settings.spec.ts",
+      "edits": 4,
+      "originalSha256": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "generatedSha256": "a871e6efd60dd4f074a089b420f35aec6828112fc7a8c9d46d44b9fd1350ef2b",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "edits": 6,
+      "originalSha256": "2b3e7f7068822a3e0614d168ec5cf4003f584aa9dc2e29ba2e7627f7728f27ea",
+      "generatedSha256": "3cd08bcc34d0a281c62440ee9dd84e9ba0ae42605345da704969d069432cd69e",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/smoke.spec.ts",
+      "edits": 1,
+      "originalSha256": "359a0678903ba447af114beedfeebda0d71a552ab1a750481297220cda88eb61",
+      "generatedSha256": "f3012ed68fc5609655f9a6b1ee0de374b81608247965e67aaed4b92de796173b",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "edits": 17,
+      "originalSha256": "68300389f35d5a682daa8195fd4e100c5cc5aa46b99ee711cceb0b4acd5f27e5",
+      "generatedSha256": "fffa1562c0600a795c1da553282a4a6f49111780566602ae232bbba8faf513e3",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "edits": 9,
+      "originalSha256": "36391a48eca43e3eded6dd14d590f32a3468a7d4fef1eaa40d2cf31543320245",
+      "generatedSha256": "a318f6332528780dcab3713655827e46fc3f85c2ef91712f3079892ee6d90333",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "edits": 4,
+      "originalSha256": "a7f75ff9177c465d8c279a700348f67ca9e251956cb71665ad8c8c11d9d5c311",
+      "generatedSha256": "e27283640de5a86c2a9b8e1505334faa4045725745525de32f7127f12e918e72",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "edits": 9,
+      "originalSha256": "f05eb72d068cc2768d799fe715441c3a02db329380418dcb60d4f4929f836757",
+      "generatedSha256": "caef0b76eb4f3b78fd3f51f007eb2b47e3bbbb2d507bd3bca3b8e2bbf302c1ae",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "edits": 11,
+      "originalSha256": "c528fa43b3787159e773df78ba8a423e11ff4554386ed1049f7863dade87807c",
+      "generatedSha256": "dd512b15f3429eefdab7d47a528020fe8da22d428e6442de218a927de1ab89c2",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "edits": 12,
+      "originalSha256": "7e83385dce28ed66077b8632833ab927c2cf03a424d637b434b51f60a855212d",
+      "generatedSha256": "858619fe5b7beb6d33333b566998bf74ca2274285f5b46d9224040cec87f87ca",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "edits": 7,
+      "originalSha256": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+      "generatedSha256": "337ae15fdeb81ef19f8423fbe044850ef94149999b8b6827a428404d1785f0fd",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "edits": 7,
+      "originalSha256": "df40efd73678a1d7d36d251ebe17164a5d57f9affde00d7b9396f0e0c554a200",
+      "generatedSha256": "e7a5943264ad9de3fc407e5031440b6a6af42a0bf586d4365306f914ac8f86f8",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+      "edits": 2,
+      "originalSha256": "ffc6608f45171773095d345f84a54f691a44f610310f6a3a561964bb2549a4cf",
+      "generatedSha256": "7b06d1ec3778b3f3590ef6f1059a10799f3b176e733d04569f1af778470359e6",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/t954-director-review.spec.ts",
+      "edits": 7,
+      "originalSha256": "c7c45a8124d49101d25c43b95fb0e581ab15e26ea986b5bef1dd109d0e61b7d8",
+      "generatedSha256": "b912bb1e88029e626151201d44932073a1b8f4a847086234f718e944cee6e45b",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/web-material-read-save.spec.ts",
+      "edits": 6,
+      "originalSha256": "8b7c7ff4813a5b1331548953c03dd844690a3fb2570568b4e3e6904f08d47de4",
+      "generatedSha256": "564a3bb64a074497e83496426744d691252c31e737362e8b368ec2c09ebea417",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/wechat-article-workbench.spec.ts",
+      "edits": 7,
+      "originalSha256": "9cab769242f140bd5c48f6b6487c364b615f9f56f67b027170df103c70b69c2d",
+      "generatedSha256": "707c2b3d39522ad5cd2134822c4407aa59588ca5728eb21fd7c8ecf3c4b86ed2",
+      "inverseExact": true
+    },
+    {
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "edits": 6,
+      "originalSha256": "d3c1a982870b4bd36c45a8ed2f3fff2b53093862fadb8fc8e173ee2de05b5a18",
+      "generatedSha256": "d3b41e3ef65da97a9bccc1f72da569bce04f203879542f89198dfb547f4a6b78",
+      "inverseExact": true
+    },
+    {
+      "file": "fixtures/routes.ts",
+      "edits": 0,
+      "originalSha256": "7ae9222d9ccaef5d8c1cd316a2eef05f39780d20b5ea816c8894e75b7ebc2624",
+      "generatedSha256": "7ae9222d9ccaef5d8c1cd316a2eef05f39780d20b5ea816c8894e75b7ebc2624",
+      "inverseExact": true
+    },
+    {
+      "file": "helpers/network-policy.ts",
+      "edits": 0,
+      "originalSha256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+      "generatedSha256": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+      "inverseExact": true
+    },
+    {
+      "file": "helpers/test-environment.ts",
+      "edits": 4,
+      "originalSha256": "ca3687d02ab6e42a1acde6024149aa2d5af0b56ab570bdc5ce2a7f2fe899850f",
+      "generatedSha256": "2f663f63396f441c93a947c46a8f5312ae86ac09d1b1bf4fb7e2967f7dff5f82",
+      "inverseExact": true
+    },
+    {
+      "file": "visual/__setup__.ts",
+      "edits": 1,
+      "originalSha256": "073be3097ac3173e7dea87548261bab7ce49d7c0acc3763445a8a26d6d3ec779",
+      "generatedSha256": "0ba9d7801bdd36fc2816b681096de517edf5d007b184e54325ca3737d45a140d",
+      "inverseExact": true
+    },
+    {
+      "file": "visual/__teardown__.ts",
+      "edits": 1,
+      "originalSha256": "f66e5693777c979e20d45d571ce825ec74467c393bc4f48efcc7807798c6e95c",
+      "generatedSha256": "6f7ffe6c1b9db88ec43d65c917b4e9a6d7176e1fbb9b444e501322dbdb86cb12",
+      "inverseExact": true
+    }
+  ],
+  "inverseFailures": [],
+  "actualListedBodies": 170,
+  "files": 54,
+  "sameOriginal170Names": true,
+  "sourceSharedRoutesFrozen533": true,
+  "original17Baselines": 19,
+  "generatedTransforms": 322,
+  "dr006": [
+    {
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "start": 107,
+      "end": 107,
+      "original": "",
+      "replacement": ", resolve",
+      "kind": "approved-output-consumer-import",
+      "consumer": "DR006 generated resolve output path only",
+      "line": 3,
+      "context": "{ randomUUID } from \"node:crypto\";\nimport { readFileSync, mkdirSync } from \"node:fs\";\nimport { join } from \"node:path\";\nimport { unzipSync } from \"fflate\";\nimport type { Page } from \"@playwright/test\""
+    }
+  ],
+  "fullFsConsumers": 209,
+  "staticTypeDiagnostics": 0,
+  "runtimePrepared": false,
+  "serverStarted": false,
+  "browserBodyStarted": false,
+  "manifestSha256": "12d3fbff983baa9e98874dc54eb3afdb16b3191698496b299f5405f62ad5c3fe"
+}

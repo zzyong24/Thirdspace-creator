@@ -1,0 +1,114 @@
+{
+  "kind": "仅static --list/typecheck，无server/browser/PG/model",
+  "additionalReadonlyInputs": [
+    {
+      "source": "frontend/tests/e2e/settings-return.spec.ts",
+      "sourceSha256": "31b322c623803101e823f9608b5bd122cad0411aa8814f928422e4d4b48cca64",
+      "generated": "frontend/tests-t1246-v3/e2e/settings-return.spec.ts",
+      "generatedSha256": "34956ddfbed3cfc9ccd79a4a2ed47c65bffc9b8a22b804c67d037c87a3b6204a",
+      "exactInverse": true,
+      "changes": [
+        "单一helper import迁到本轮无历史写入helper",
+        "3声明case预算提高72M，不减原assert"
+      ],
+      "oldTimeouts": [
+        "test.setTimeout(900_000)",
+        "test.setTimeout(1_200_000)",
+        "test.setTimeout(1_800_000)"
+      ]
+    },
+    {
+      "source": "frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "sourceSha256": "7b1d67a061c10a40e9ad9cf71ecdd8e0f681ea73b9fa3e38eba5a60e705e821e",
+      "generated": "frontend/tests-t1246-v3/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "generatedSha256": "51cbf6fc2b21ddf4ad3b3f138b95bebf5308ca253f23f6dc4d1131f06800e335",
+      "exactInverse": true,
+      "changes": [
+        "单一helper import迁到本轮无历史写入helper"
+      ],
+      "oldTimeouts": []
+    }
+  ],
+  "files": [
+    {
+      "path": "frontend/tests-t1246-v3/e2e/acceptance-support.ts",
+      "sha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-browser.spec.ts",
+      "sha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-dependent.spec.ts",
+      "sha256": "999a081cf51411514280d0bb4a96a88540de79939afae87f54390ca6b172b50b"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-native.spec.ts",
+      "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-protocol.spec.ts",
+      "sha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/integrated-routes.spec.ts",
+      "sha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/pi-support.ts",
+      "sha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/protocol-support.ts",
+      "sha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/settings-return.spec.ts",
+      "sha256": "34956ddfbed3cfc9ccd79a4a2ed47c65bffc9b8a22b804c67d037c87a3b6204a"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "sha256": "51cbf6fc2b21ddf4ad3b3f138b95bebf5308ca253f23f6dc4d1131f06800e335"
+    },
+    {
+      "path": "frontend/tests-t1246-v3/fixtures/codex-protocol.cjs",
+      "sha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453"
+    },
+    {
+      "path": "frontend/driver/README.md",
+      "sha256": "b16e314f7cfb9d6207673fb92c7deb1a94e5bd8b17d35213a5ed1115e6e02604"
+    },
+    {
+      "path": "frontend/driver/budget-consumers.json",
+      "sha256": "a0bd0a1a4a2ed3019949bb9cf99d8bf988b3f8a4d6763ffaa71dac192c933449"
+    },
+    {
+      "path": "frontend/driver/coverage-mapping.json",
+      "sha256": "c99a2e6ea8f870ed077e9e4a5036b38555871a4e8bc58adeaecabfa5a39379eb"
+    },
+    {
+      "path": "frontend/driver/launch.cjs",
+      "sha256": "131fbfbc84f74aeb3ff0cd8210d3dca64e1c5c46cb3dad1ccebe30cf5fe79730"
+    },
+    {
+      "path": "frontend/driver/manifest.json",
+      "sha256": "ef5133d02fe72fbeaee01746622a4fd81a9122c2aac1f429f457d050559cb7e3"
+    },
+    {
+      "path": "frontend/driver/playwright.config.ts",
+      "sha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e"
+    },
+    {
+      "path": "frontend/driver/prepare-runtime.cjs",
+      "sha256": "69844fcf9af7bf6172b4d43046499ca26fc1aea672c0a57a4621454331e305fe"
+    },
+    {
+      "path": "frontend/driver/runtime-closure.json",
+      "sha256": "2081636227ba64d557b73ec5e3d170ff6951bb9d904a4087bd16dcc4ae4682ba"
+    },
+    {
+      "path": "frontend/driver/verify-binding.cjs",
+      "sha256": "6cc5005574c2c57972b342d645b7cc24660739715dea68392149e2e303c5e620"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/child.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/mirror/frontend/scripts/verify-native-editors.mjs"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/mirror",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/logs/native-all-four-verifier.log",
+  "pid": 75488,
+  "identity": {
+    "pid": 75488,
+    "pgid": 75488,
+    "uid": 501,
+    "birth": "Mon Oct 12 15:52:39 2026",
+    "startedAt": 1791791559321
+  },
+  "startedAt": "2026-10-12T07:52:39.321Z",
+  "endedAt": "2026-10-12T07:52:45.546Z",
+  "elapsedMs": 6225,
+  "budgetMs": 900000,
+  "deadlineAt": "2026-10-12T08:07:39.321Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

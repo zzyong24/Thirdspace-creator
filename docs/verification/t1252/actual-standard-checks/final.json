@@ -1,0 +1,1048 @@
+{
+  "at": "2026-10-11T23:22:44.089Z",
+  "status": "actual_standard_checks_completed",
+  "error": null,
+  "expired": false,
+  "elapsedMs": 16445.574708,
+  "results": [
+    {
+      "label": "proper-mcp-types",
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/tsc.js",
+        "--noEmit",
+        "--project",
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/tsconfig.json"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+      "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/proper-mcp-types.log",
+      "pid": 33862,
+      "identity": {
+        "pid": 33862,
+        "pgid": 33862,
+        "uid": 501,
+        "birth": "Mon Oct 12 07:22:27 2026",
+        "startedAt": 1791760947863
+      },
+      "startedAt": "2026-10-11T23:22:27.863Z",
+      "endedAt": "2026-10-11T23:22:31.662Z",
+      "elapsedMs": 3799,
+      "budgetMs": 1800000,
+      "deadlineAt": "2026-10-11T23:52:27.863Z",
+      "budgetExhausted": false,
+      "termGraceMs": 180000,
+      "killGraceMs": 180000,
+      "signals": [],
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "persistentOwnedServer": false,
+      "outerAbort": false,
+      "code": 0,
+      "signal": null,
+      "spawnError": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "whole-mcp-list",
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/vitest.mjs",
+        "list",
+        "--json=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/actual-list.json",
+        "--maxWorkers=1",
+        "--no-file-parallelism"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server",
+      "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/whole-mcp-list.log",
+      "pid": 33880,
+      "identity": {
+        "pid": 33880,
+        "pgid": 33880,
+        "uid": 501,
+        "birth": "Mon Oct 12 07:22:31 2026",
+        "startedAt": 1791760951663
+      },
+      "startedAt": "2026-10-11T23:22:31.663Z",
+      "endedAt": "2026-10-11T23:22:35.694Z",
+      "elapsedMs": 4031,
+      "budgetMs": 900000,
+      "deadlineAt": "2026-10-11T23:37:31.663Z",
+      "budgetExhausted": false,
+      "termGraceMs": 180000,
+      "killGraceMs": 180000,
+      "signals": [],
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "persistentOwnedServer": false,
+      "outerAbort": false,
+      "code": 0,
+      "signal": null,
+      "spawnError": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "all-original-mcp-and-new",
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/vitest.mjs",
+        "run",
+        "--retry=0",
+        "--maxWorkers=1",
+        "--no-file-parallelism",
+        "--testTimeout=420000",
+        "--hookTimeout=180000",
+        "--reporter=json",
+        "--reporter=default",
+        "--outputFile.json=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/actual-mcp-result.json"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server",
+      "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/all-original-mcp-and-new.log",
+      "pid": 33941,
+      "identity": {
+        "pid": 33941,
+        "pgid": 33941,
+        "uid": 501,
+        "birth": "Mon Oct 12 07:22:35 2026",
+        "startedAt": 1791760955696
+      },
+      "startedAt": "2026-10-11T23:22:35.696Z",
+      "endedAt": "2026-10-11T23:22:40.268Z",
+      "elapsedMs": 4572,
+      "budgetMs": 212400000,
+      "deadlineAt": "2026-10-14T10:22:35.696Z",
+      "budgetExhausted": false,
+      "termGraceMs": 180000,
+      "killGraceMs": 180000,
+      "signals": [],
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "persistentOwnedServer": false,
+      "outerAbort": false,
+      "code": 0,
+      "signal": null,
+      "spawnError": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "whole-original-scanner-and-new",
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "--test-timeout=600000",
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/tools/timeout-policy/check.test.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+      "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/whole-original-scanner-and-new.log",
+      "pid": 33975,
+      "identity": {
+        "pid": 33975,
+        "pgid": 33975,
+        "uid": 501,
+        "birth": "Mon Oct 12 07:22:40 2026",
+        "startedAt": 1791760960268
+      },
+      "startedAt": "2026-10-11T23:22:40.268Z",
+      "endedAt": "2026-10-11T23:22:43.261Z",
+      "elapsedMs": 2993,
+      "budgetMs": 5040000,
+      "deadlineAt": "2026-10-12T00:46:40.268Z",
+      "budgetExhausted": false,
+      "termGraceMs": 180000,
+      "killGraceMs": 180000,
+      "signals": [],
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "persistentOwnedServer": false,
+      "outerAbort": false,
+      "code": 0,
+      "signal": null,
+      "spawnError": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "actual-package-cli-build",
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/scripts/build-runtime.mjs",
+        "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/creatoros.cjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+      "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50/actual-package-cli-build.log",
+      "pid": 34018,
+      "identity": {
+        "pid": 34018,
+        "pgid": 34018,
+        "uid": 501,
+        "birth": "Mon Oct 12 07:22:43 2026",
+        "startedAt": 1791760963261
+      },
+      "startedAt": "2026-10-11T23:22:43.261Z",
+      "endedAt": "2026-10-11T23:22:43.893Z",
+      "elapsedMs": 632,
+      "budgetMs": 1800000,
+      "deadlineAt": "2026-10-11T23:52:43.261Z",
+      "budgetExhausted": false,
+      "termGraceMs": 180000,
+      "killGraceMs": 180000,
+      "signals": [],
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "persistentOwnedServer": false,
+      "outerAbort": false,
+      "code": 0,
+      "signal": null,
+      "spawnError": null,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "inputAfter": [
+    {
+      "path": "ai-worker/package.json",
+      "same": true
+    },
+    {
+      "path": "backend/package.json",
+      "same": true
+    },
+    {
+      "path": "contract/package.json",
+      "same": true
+    },
+    {
+      "path": "contract/src/assistant-operation-catalog.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/assistant-system.test.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/chat-tool-labels.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/cli-policy.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/client.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/endpoint-definition.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/endpoints.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/envelope.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/index.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/agent-workbench.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/agentic-tool-call.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/agentic-worker.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/asset-asr-ports.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/asset-asr-timing.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/asset-asr.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/asset-generation.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/asset-processing.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/chat-provider-content.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/chat-task-submission.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/chat-web-read.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/chat-worker.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/embedding-io.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-asr.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-browser.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-chat-hooks.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-checkpoint.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-cover.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-engine.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-stream.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-topic-read.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-transcribe-audio.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-video.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-worker.test.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/local-codex-status.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/model-probe-io.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/moments-model.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/production-rough-cut.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/redfox.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/transcribe-task.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/internal/transcribe-workflow.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/local-platform.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations-sync.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/account-groups.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/ai.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/analytics.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/articles.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/artifacts.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/assets.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/assistant-system.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/auth.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/benchmark.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/calibration.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/candidate.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/content-calendar.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/creative-canvas.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/creative-results.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/execution.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/favorites-folder.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/graphic-posts.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/ingestion.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/intelligence.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/knowledge.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/learnings.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/material-links.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/notifications.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/pages.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/platform-accounts.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/platform-collection.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/positioning.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/production.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/projects.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/publishing.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/review-gate.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/reviews.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/scheduling.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/search.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/settings.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/taxonomy.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/topic-attribution.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/trend-source.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/visual-templates.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/work-compositions.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/work-sources.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/operations/workbench.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/pages/daily-report-analysis.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/pages/daily-report.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/pages/dashboard.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/pages/global-search.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/pages/group-workspace.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/pages/project-overview.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/pages/publishing-center.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/primitives.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/request-context.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/account-groups.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/agentic-proposal.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/ai-public-message.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/ai.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/analytics.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/articles.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/artifacts.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/assets.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/assistant-system.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/audience-task.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/benchmark.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/calibration.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/candidate.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/canvas-material-selection.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/content-calendar.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/creative-canvas.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/creative-results.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/execution.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/favorites-folder.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/graphic-posts.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/ingestion.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/intelligence.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/knowledge.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/learnings.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/material-links.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/moments.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/noterelay-layout.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/notifications.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/output-conversions.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/platform-accounts.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/platform-capabilities.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/platform-native-reports.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/positioning.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production-conversion.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production-editor.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production-main-track.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production-native-document.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production-native-rough.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production-rough-cut.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production-time-mapping.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production-transcripts.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/production.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/project-script-source.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/projects.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/publication-cover.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/publishing.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/reference-editor.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/review-gate.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/reviews.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/scheduling.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/search.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/settings.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/taxonomy.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/topic-attribution.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/trend-source.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/video-render.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/visual-templates.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-basis.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-candidate-adoption.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-compositions.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-creation.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-editor.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-reviews.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-source-anchors.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-source-select.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-sources.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/resources/work-writing-context.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/timeout-policy.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/transport.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/version.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/work-candidate-adoption.test.ts",
+      "same": true
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "same": true
+    },
+    {
+      "path": "docs/features/t1252-cli-http-consumer-budget-closure.md",
+      "same": true
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "same": true
+    },
+    {
+      "path": "docs/verification/t1252/standard-checks-after-install/launch.cjs",
+      "same": true
+    },
+    {
+      "path": "docs/verification/t1252/standard-checks-after-install/seal-installed.cjs",
+      "same": true
+    },
+    {
+      "path": "frontend/package.json",
+      "same": true
+    },
+    {
+      "path": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "same": true
+    },
+    {
+      "path": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "same": true
+    },
+    {
+      "path": "mcp-server/package.json",
+      "same": true
+    },
+    {
+      "path": "mcp-server/scripts/build-runtime.mjs",
+      "same": true
+    },
+    {
+      "path": "mcp-server/scripts/smoke.mjs",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/artifact-export.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/connection.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/context.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/index.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/operation-catalog.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/sea-entry.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/src/tools.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/cli-artifacts.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/cli.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/connection.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/dispatch.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/group-context.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/group-mcp-context.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/helpers/loopback-cli.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/server-discovery.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tests/tools.test.ts",
+      "same": true
+    },
+    {
+      "path": "mcp-server/tsconfig.json",
+      "same": true
+    },
+    {
+      "path": "mcp-server/vitest.config.ts",
+      "same": true
+    },
+    {
+      "path": "package.json",
+      "same": true
+    },
+    {
+      "path": "patches/@earendil-works__pi-ai@0.80.7.patch",
+      "same": true
+    },
+    {
+      "path": "patches/hyperframes@0.7.54.patch",
+      "same": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "same": true
+    },
+    {
+      "path": "pnpm-workspace.yaml",
+      "same": true
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "same": true
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "same": true
+    },
+    {
+      "path": "tools/timeout-policy/hyperframes.test.mjs",
+      "same": true
+    },
+    {
+      "path": "tools/timeout-policy/inventory.mjs",
+      "same": true
+    },
+    {
+      "path": "tools/timeout-policy/verify.mjs",
+      "same": true
+    }
+  ],
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-checks-n1rL50",
+  "noSlowHttpOrPublicRustOrAppYet": true
+}

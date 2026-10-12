@@ -1,0 +1,56 @@
+{
+  "task": "T-1246",
+  "at": "2026-10-12T10:13:33.897987+00:00",
+  "status": "PACKAGE_V2_3162_PK001_SOURCE_DELTA_AND_ALL_BINDINGS_PASS_NO_PREPARE_OR_PACKAGE_RUN",
+  "sourceIndexSha256": "3162e9e3cf941681677745c8872040c8b8a6e43ed36a000b57f344a0fead1ab5",
+  "runnerSHA": "504bd7d18b8ba0f51745451fecf2ccbc68921da49fe8fe8138408529676e0cb5",
+  "artifactVerifierSHA": "3482fadf977840cd386beef943db2bdbea0ad99466f97f84b27eb666f631d22f",
+  "producerSHA": "e1f3cb386867dbfad57c20347fca208022fa0e83172512d7f81f33ce42474037",
+  "unchanged37ConsumersFirstDMGFixedEntryOutputsWorkerFactsAndAuthorization": true,
+  "fullForwardInverseMechanicalReconstruction": true,
+  "prepareMs": 4440000,
+  "completeEachGuardMs": 4200000,
+  "actualGuardCountStatic": 8,
+  "futureAdmissionSlots": [
+    {
+      "stage": 0,
+      "beforeGuard": 4200000,
+      "positive": 32760000,
+      "lifecycle": 2160000,
+      "postGuard": 4200000,
+      "completeLater": 57720000,
+      "admissionFromStage": 101040000
+    },
+    {
+      "stage": 1,
+      "beforeGuard": 4200000,
+      "positive": 21600000,
+      "lifecycle": 2160000,
+      "postGuard": 4200000,
+      "completeLater": 25560000,
+      "admissionFromStage": 57720000
+    },
+    {
+      "stage": 2,
+      "beforeGuard": 4200000,
+      "positive": 7200000,
+      "lifecycle": 2160000,
+      "postGuard": 4200000,
+      "completeLater": 7800000,
+      "admissionFromStage": 25560000
+    }
+  ],
+  "finalGuardPlusAfterMs": 7800000,
+  "totalMs": 109680000,
+  "cliIoGuardBornCapsAndReturnPostchecksReviewed": true,
+  "guardFailureNoNextChildAndFullDeadlineFinalCheck": true,
+  "originalBasic45Retry2AndAfterEachPreserved": true,
+  "originalPackage21_6MAndVerifier7_2MBytesPreserved": true,
+  "sourceOnlyPendingCleanCommittedHEADFreezeAndFreshRuntimeBindings": true,
+  "readBytes": 864877764,
+  "elapsedMs": 546.9923340715468,
+  "findings": [],
+  "closedFinding": "PKG001 完整prepare7Git+IO、initial/三child前后/final共8guard5Git+IO及每child完整未来现均覆盖。",
+  "reviewerExecutedNoModulePreparePackageOrProductMutation": true,
+  "nativeAppAcceptance": "用户暂不授权，保留未完成。"
+}

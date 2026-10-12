@@ -1,0 +1,106 @@
+{
+  "at": "2026-10-11T20:46:29.535481+00:00",
+  "records": [
+    {
+      "path": "docs/features/t1250-positive-timeout-consumer-closure.md",
+      "beforeSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+      "afterSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "beforeSha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "afterSha256": "b4d29e6ddcd65d2f0c28abe7362e78db2aba61517210785f1ad842381045171a",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc_windows.rs",
+      "beforeSha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "afterSha256": "ecdcf7f0932c60b94595a3e67c0be376b0021c1ff9195219c5642c0ba040239d",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "beforeSha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "afterSha256": "4b5dd13d3d6084edfc20131b2dcbb21c0f29830368439ab2f4d4b3ed376bbdb7",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/mod.rs",
+      "beforeSha256": "c8ecef697def879cb1937510679155ff03add7d3c14b24e9f2790766238b3f5e",
+      "afterSha256": "c8ecef697def879cb1937510679155ff03add7d3c14b24e9f2790766238b3f5e",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.toml",
+      "beforeSha256": "48b53dc32c591b2ff41f40f38605c542ec34b844e45b624147a2d9b7f5f5f688",
+      "afterSha256": "48b53dc32c591b2ff41f40f38605c542ec34b844e45b624147a2d9b7f5f5f688",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/Cargo.lock",
+      "beforeSha256": "a2aea4e2b53e7e9aaad471e7fe8daffb450348f83b27e651e0204de1e0546613",
+      "afterSha256": "a2aea4e2b53e7e9aaad471e7fe8daffb450348f83b27e651e0204de1e0546613",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/Cargo.toml",
+      "beforeSha256": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f",
+      "afterSha256": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/Cargo.lock",
+      "beforeSha256": "1f28d0b8440de395647f3852516a8a4acb913db7a290645a1fa84e8d8a1dcd6f",
+      "afterSha256": "1f28d0b8440de395647f3852516a8a4acb913db7a290645a1fa84e8d8a1dcd6f",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/build.rs",
+      "beforeSha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "afterSha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "same": true
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser.rs",
+      "beforeSha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e",
+      "afterSha256": "8b265cf5d2509933b9b05d0b3603672bbf9948366680321b80df60b6f1e8298e",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "beforeSha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "afterSha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "beforeSha256": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866",
+      "afterSha256": "11bc782af7e2baf332231dcfa5b0e8bb9fae8fa5696322c284e8d54c07f70866",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-native-host.test.ts",
+      "beforeSha256": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2",
+      "afterSha256": "cd072091da2e7f1f6b29f3f871c72f17d6a24efed185dabdb76af160182037d2",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.test.ts",
+      "beforeSha256": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a",
+      "afterSha256": "dae35dec122da94b2d7bfa1307030bf6b9fba4e906b2f3f81ea96ac430e62f5a",
+      "same": true
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "beforeSha256": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008",
+      "afterSha256": "a9e25c5ad684bc201070d8800a3e264523e46d3790f5485dfd6718a2d1d74008",
+      "same": true
+    }
+  ],
+  "mismatches": [],
+  "native3Unchanged": true,
+  "reportSha256": "beeee34b54517fa60c7423ca61e395a4bfc1c339a317f7f21a371433486e8fe9",
+  "bindingSha256": "854764ec52ec915c28aa5bf46e294f7a5ed9adcf3b00c11a5dd80a63c3e03282",
+  "noRuntimeStarted": true
+}

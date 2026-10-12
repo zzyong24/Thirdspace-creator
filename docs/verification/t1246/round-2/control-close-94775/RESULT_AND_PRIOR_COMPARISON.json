@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-12T10:45:41.543486+00:00",
+  "actualSession": 94775,
+  "actualOuterEOF": 1,
+  "pmemActualEOF": 0,
+  "reconcileActualEOF": 1,
+  "naturalBothChildrenClosedGroupZeroSignalsEmpty": true,
+  "originalResultObservationNoExpiry": true,
+  "priorFullReconcileSHA256": "c54608652ea2807411701f2ba9f4a16e44b0900640c28bea7ba209c7d1dfe609",
+  "priorErrors": 25,
+  "currentErrors": [
+    "✗ [ERROR] backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md.",
+    "✗ [ERROR] review receipt: T-1072-owned-devices: review receipt 缺少任务 T-1072-owned-devices 的 hash-chained event",
+    "✗ [ERROR] review receipt: T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f",
+    "✗ [ERROR] review receipt: T-915: BACKLOG review receipt 692283b8bace 与 snapshot ad76cf555129 不一致",
+    "✗ [ERROR] review receipt: T-859: BACKLOG review receipt 9895a91a63a8 与 snapshot 5818394813ca 不一致",
+    "✗ [ERROR] review receipt: T-858: BACKLOG review receipt 2521be715a0a 与 snapshot c76009a5586c 不一致",
+    "✗ [ERROR] review receipt: T-824: BACKLOG review receipt 18361dc8c3c3 与 snapshot f0e215103ddf 不一致",
+    "✗ [ERROR] review receipt: T-819: BACKLOG review receipt 0425ab7b87b8 与 snapshot a8879edf798f 不一致",
+    "✗ [ERROR] review receipt: T-816: BACKLOG review receipt fb03de3a57d7 与 snapshot 7896d566ccf8 不一致",
+    "✗ [ERROR] review receipt: T-768: BACKLOG review receipt 3eb18966ea59 与 snapshot 64f8010b2045 不一致",
+    "✗ [ERROR] review receipt: T-726: BACKLOG review receipt 2809820bf64a 与 snapshot 39e3f41ca866 不一致",
+    "✗ [ERROR] review receipt: T-707: BACKLOG review receipt 06867c4bf60c 与 snapshot 87de34262527 不一致",
+    "✗ [ERROR] review receipt: T-703: BACKLOG review receipt c1a3920aea71 与 snapshot 0662dafac8fa 不一致",
+    "✗ [ERROR] review receipt: T-691: BACKLOG review receipt 9444ca5b32a9 与 snapshot 2f2a131519e7 不一致",
+    "✗ [ERROR] review receipt: T-694: BACKLOG review receipt 2c7be136aea0 与 snapshot 171b7c9ad2f2 不一致",
+    "✗ [ERROR] review receipt: T-656: BACKLOG review receipt 5f6970ac76f2 与 snapshot bd8a6ac135f0 不一致",
+    "✗ [ERROR] review receipt: T-652: 审核列为「待审」；存在未销账问题，不得开工",
+    "✗ [ERROR] review receipt: T-645: BACKLOG review receipt 5dfe24b42eb7 与 snapshot 7ff0c3cb1906 不一致",
+    "✗ [ERROR] review receipt: T-642: BACKLOG review receipt 7728c9ed44bd 与 snapshot 9002b8dbeb4d 不一致",
+    "✗ [ERROR] review receipt: T-635: BACKLOG review receipt b8add273a494 与 snapshot 84661017fde5 不一致",
+    "✗ [ERROR] lesson LED-052 RECURRED — 归档执行门失败：普通AI/source_sync claim与新动作必须拒绝；四类实际collector按真实job/member/owner/version验证；已存在同键调用settlement必须保留幂等。缺隔离PG配置不能skip。",
+    "✗ [ERROR] lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。",
+    "✗ [ERROR] lesson LED-057 RECURRED — 保留完整性校验并修复已完成隔离目录的安全复用；禁止清空用户 AppData、放宽入口校验或无依据重试。"
+  ],
+  "exactNewErrorLines": [],
+  "oldErrorsNoLongerReported": [
+    "✗ [ERROR] DRIFT: manifest updated_at=2026-09-21 is older than newest DECISION_LOG Date=2026-10-11 — reconcile the stage rows.",
+    "✗ [ERROR] lesson LED-053 RECURRED — 超时预算回归：正执行最低两分钟；独立外层覆盖完整内部预算；原绝对期限/continuous/即时取消保持；前端保留原任务ID；HyperFrames同版本补丁与实际CLI配置必须一致。公共链回归失败不能用词法扫描替代。"
+  ],
+  "files": [
+    {
+      "original": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/pmem-receipt.json",
+      "archive": "docs/verification/t1246/round-2/control-close-94775/pmem-receipt.json",
+      "sha256": "7da1ddc49c336c6165d7718e9fa6d60d684b96dca83f4ee4d9a00a79b23c5474",
+      "size": 952
+    },
+    {
+      "original": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/summary.json",
+      "archive": "docs/verification/t1246/round-2/control-close-94775/summary.json",
+      "sha256": "1de5e44a6efe26421c0ea93c7b69690cea364213b0018808dc443a103e5d08d7",
+      "size": 572
+    },
+    {
+      "original": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/reconcile.log",
+      "archive": "docs/verification/t1246/round-2/control-close-94775/reconcile.log",
+      "sha256": "492ea335bdd58257ac4702e6fbee0130ac406733238489444cd4f80835700967",
+      "size": 12157
+    },
+    {
+      "original": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/reconcile-receipt.json",
+      "archive": "docs/verification/t1246/round-2/control-close-94775/reconcile-receipt.json",
+      "sha256": "c2e4f8e0bba93ad58f15e93c9faa8ab648cf3a0b8851214dc946850be0f5b3c3",
+      "size": 953
+    },
+    {
+      "original": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/pmem.log",
+      "archive": "docs/verification/t1246/round-2/control-close-94775/pmem.log",
+      "sha256": "f81ed69f879f195e8df53938bc347b983480d1fa0b9773dc04a14bfc91401c39",
+      "size": 151
+    }
+  ],
+  "rootCauseTaskAlreadyRegistered": "T-1204",
+  "backlogCapacityTaskAlreadyRegistered": "T-1171",
+  "threeLessonActualLeafCauseVerificationPending": true,
+  "globalGreen": false,
+  "initialObserverHadZeroChildDispatchesPreserved": true
+}

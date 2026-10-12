@@ -1,0 +1,46 @@
+[
+  {
+    "name": "用真实 Chromium 把静态 HTML 渲染为 PNG，脚本和网络资源均不执行",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "用真实 Chromium 输出可解析 PDF 字节并保留正文",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "运行时缺失时明确失败，不返回伪图像",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "并发渲染超过固定预算时拒绝额外请求",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "T1250 真实离线document超过30秒仍生成原PNG/PDF，完整请求允许串行尾轮",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "T1250 launch观察超时后迟到浏览器仅关闭，不产生输出或遗留目录",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "T1250 两个browser停止未确认仍占原并发槽，第三请求不得启动",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "T1250 cleanup观察到期后原close成功收据恢复槽并清理目录，不重复close",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-render.test.ts"
+  },
+  {
+    "name": "四种共用 representation 保持来源 hash；真实 Chromium SVG 像素与 PDF 正文可读",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-representation.test.ts"
+  },
+  {
+    "name": "旧脚本报告四种输出均标记降级，正文保留；脚本不能改写像素且没有外网请求",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-representation.test.ts"
+  },
+  {
+    "name": "非 HTML raw/preview 仍返回诊断，来源校验继续拒绝错误 hash",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-artifact-representation.test.ts"
+  }
+]

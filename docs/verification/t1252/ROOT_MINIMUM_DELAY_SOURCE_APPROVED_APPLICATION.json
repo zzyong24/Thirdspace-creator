@@ -1,0 +1,14 @@
+{
+  "task": "T-1252",
+  "at": "2026-10-12T02:19:55.198354+00:00",
+  "scope": "ROOT全文审一行最低等待真实消费者修改；未放松断言/生产预算/任务期限",
+  "sourceFile": "frontend/src/server/workbench-file-recovery.test.ts",
+  "beforeSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+  "afterSha256": "11907ace55aceaa085fb290e92062a52ed5be3671af2b638f5803ba07ac40884",
+  "originalPreserved": "docs/verification/t1252/approved-minimum-delay-originals/workbench-file-recovery.test.ts",
+  "peerReviewSha256": "55e04e7ee339c0ecd37b5c472b998e1c69661bcfb0015772cc8db31951a35f0d",
+  "all13BoundInputShaVerified": true,
+  "runtimeApproved": false,
+  "publicRetestCompleted": false,
+  "AppAccepted": false
+}

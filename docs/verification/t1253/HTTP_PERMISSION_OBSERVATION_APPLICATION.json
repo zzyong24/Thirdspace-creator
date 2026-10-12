@@ -1,0 +1,19 @@
+{
+  "sourceChanges": [
+    {
+      "file": "backend/src/integration/chat-hooks-worker.test.ts",
+      "before": "fb2dfb542eccb91c45747dd5c0320d0823d78e8f93e3daf2d2045df8e0c4db0f",
+      "after": "f9fe46310f1f18a5185a4bc56c84cf3906bb27e13f8c734ee0e35fd722d72bc0"
+    },
+    {
+      "file": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "before": "ba8f2a344a8c5f042f0fd45e89047772663e364830d8435e04af11cde7904d75",
+      "after": "44be1b5c2e3834bcc957aa6330a5d3065f8f985a7d480bcc95b65347a525ddd0"
+    }
+  ],
+  "originalFirst17Pass8FailPreserved": "docs/verification/t1253/OBSERVATION_WHOLE25_FIRST_ACTUAL.json",
+  "rootReview": "ROOT_HTTP_PERMISSION_OBSERVATION_TOOL_748F_REVIEW.json",
+  "all118ExpectAndResDestroyUnchanged": true,
+  "portsUnchanged": true,
+  "notExecutedYet": true
+}

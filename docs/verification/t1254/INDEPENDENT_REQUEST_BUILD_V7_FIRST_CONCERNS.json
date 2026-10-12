@@ -1,0 +1,77 @@
+{
+  "schema": "independent-execution-tool-review/v1",
+  "task": "T-1254",
+  "at": "2026-10-12T02:43:11.641755+00:00",
+  "result": "CONCERNS_STATIC_GRAPH_AND_TEARDOWN_CONSUMERS",
+  "originalRunnerSha256": "4b50bc0c7384ef37cb1d3e7aaea26dbc16bcbed59aba0edf1d99e1fb9d28dc7d",
+  "originalGraphSha256": "60b01b92cde8bdaee7ca94a7b259d80a52e822745fc31db3798aa9999fca4875",
+  "sourceSealSha256": "309b7aeafc7687d8414c7ccb362bee1c6a7c459ae15dabb2b3b82f2ee9e0b0c9",
+  "fullRunnerAndRealGraphProvenanceAndOriginalNativeScriptsRead": true,
+  "actualInstalledConsumers": [
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/@oxc-project+types@0.151.0/node_modules/@oxc-project/types/types.d.ts",
+      "sha256": "f76d2226b20ec0d3e884114cfbbb933cb4d25d26cc306e8315e21a0e3afafc39"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/rolldown@1.2.11/node_modules/rolldown/dist/shared/parse-WKtEKiA6.mjs",
+      "sha256": "06844a9024d43dcc4b6f315c76cb0bdb6f592d035424fee7b7432d4a5fcbf4d9"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/vite@8.3.1_@types+node@26.6.3_esbuild@0.28.2_jiti@2.7.0_less@4.9.1_supports-color@10.2._a1698267a68de54747e65eb7f6ac16f9/node_modules/vite/dist/node/chunks/node.js",
+      "sha256": "5a604cb8f97126675dbdf9044c919b0fd1fe1280bfa4077de225e6adfa213e4a"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/vite@8.3.1_@types+node@26.6.3_esbuild@0.28.2_jiti@2.7.0_less@4.9.1_supports-color@10.2._a1698267a68de54747e65eb7f6ac16f9/node_modules/vite/dist/node/index.d.ts",
+      "sha256": "8f213112bdefc3591ced0bfed900a28233ef0e40ba12614641eaf83a8bb9d84a"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/vite@8.3.1_@types+node@26.6.3_esbuild@0.28.2_jiti@2.7.0_less@4.9.1_supports-color@10.2._a1698267a68de54747e65eb7f6ac16f9/node_modules/vite/dist/node/index.js",
+      "sha256": "f109fff88512ed5cf39503b7a4b2a1de1c95bff333cb1d3635454558e3bfefc7"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/vitest@5.0.2_@types+node@26.6.3_jsdom@30.1.1_vite@8.3.1_@types+node@26.6.3_esbuild@0.28_b251ac018f4ab108f13090f7ceb3c369/node_modules/vitest/dist/chunks/cac.BLbEtnDd.js",
+      "sha256": "5f5c23279439e06afe622b5701b5fbb9bc70827b32f509ee48c75f453715c957"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/vitest@5.0.2_@types+node@26.6.3_jsdom@30.1.1_vite@8.3.1_@types+node@26.6.3_esbuild@0.28_b251ac018f4ab108f13090f7ceb3c369/node_modules/vitest/dist/chunks/defaults.D2ip7f-X.js",
+      "sha256": "94c9e4edfb342f810c1e717c30005b8e0bfa3c17aa60280ac8b5ec88eef0eda2"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static/node_modules/.pnpm/vitest@5.0.2_@types+node@26.6.3_jsdom@30.1.1_vite@8.3.1_@types+node@26.6.3_esbuild@0.28_b251ac018f4ab108f13090f7ceb3c369/node_modules/vitest/dist/chunks/index.C-uw7tH9.js",
+      "sha256": "a0fd07e32370305250f173648b675304c4b3fa2740a7323eabfb6665241d0c67"
+    }
+  ],
+  "astConsumerProof": "实际Vite8.3.1 index.js re-export parseSync→rolldown1.2.11 utils→@oxc-project/types0.151.0 StringLiteral interface type Literal；ImportDeclaration.source StringLiteral，此Literal guard类型正确，不按回忆要求StringLiteral标签。",
+  "findings": [
+    {
+      "id": "T1254-GR001",
+      "trigger": "实际Vite getPreloadCode生成assetsURL return base+dep；base Literal==/reference-editors/doocs-md/",
+      "effect": "GRAPH将所有startsWith(BASE)字面量当文件，localReference(BASE) resolve为deliveryRoot本身，strict startsWith(root+sep)拒，不能证明实际图",
+      "required": "结构区分base前缀表达式与真正完整资源，同时完整验证依赖表消费，不以粗跳过全部base值洗图"
+    },
+    {
+      "id": "T1254-GR002",
+      "trigger": "Vite buildImportAnalysisPlugin真实__vite__mapDeps fileDeps表static/js/...及static/css/...通过assetsURL(base+dep)消费；当前guard仅BASE绝对literal",
+      "effect": "依赖表特别CSS边不会被验证，completeLocalGraph声称不成立",
+      "required": "按真实helper/table/consumer结构提取所有有限字面量依赖并归已核base完整校验，保持未知拒绝/故障负例"
+    },
+    {
+      "id": "T1254-GR003",
+      "trigger": "旧真实minified动态import(`./md-...js`)的source是无expression TemplateLiteral；GRAPH只Literal",
+      "effect": "实际dynamic import边遗漏",
+      "required": "机械解析无表达式TemplateLiteral cooked/raw URL并核完整归属，动态未知不得当已证明；保持import/reexport/CSS/HTML同要求"
+    },
+    {
+      "id": "T1254-VT001",
+      "trigger": "原安装Vitest5.0.2 teardownTimeout默认10000ms，close()真实消费21450-21460；工具5run只传test/hook180000",
+      "effect": "正关闭观察仍短于120000政策",
+      "required": "工具窄加实际CLI --teardownTimeout=120000，保持完整test/hook更长，复核23child全串行/whole24启动/teardown槽"
+    }
+  ],
+  "scope": "工具静态CONCERNS，尚未执行V7下载依赖、RED/build，不登记runtime FAIL或改原产品",
+  "reviewerRanDownloadedDependencies": false,
+  "sourceCandidateV2StillApprovedSeparately": true,
+  "runtimePermissionByReviewer": false,
+  "producerNotified": true,
+  "rootNotified": true
+}

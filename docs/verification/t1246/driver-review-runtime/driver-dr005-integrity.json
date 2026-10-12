@@ -1,0 +1,10 @@
+{
+  "manifestSha256": "ffad154d551cff348965ff995ea44883db99b53f52392517041db429e3783524",
+  "configSha256": "78f9b52e25056a4c29341e48a11efce748e7f35fdbd2631f27be66006bd6e395",
+  "changes": 252,
+  "transformedFiles": 59,
+  "original": 100,
+  "generated": 100,
+  "driverFiles": 8,
+  "errors": []
+}

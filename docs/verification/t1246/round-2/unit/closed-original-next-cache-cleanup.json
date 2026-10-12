@@ -1,0 +1,31 @@
+{
+  "task": "T-1246",
+  "at": "2026-10-11T19:34:15.273525+00:00",
+  "removedOnlyOwnedClosedGeneratedCache": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867",
+  "fileCount": 2363,
+  "logicalBytes": 11672007756,
+  "proofFiles": [
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-dr005/next-launch.json",
+      "sha256": "e5feaaad614645324d68dc99f1b37f260a0fe88dad5b284ab77213cea1aeb8d7"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-dr005/next-cleanup.json",
+      "sha256": "e3334620b2ffb6e1ef9e1d7cc15a10246eb00ad3f17c7127ec83128df2abefa4"
+    },
+    {
+      "path": "docs/verification/t1246/round-1/533224f/browser-original-dr005/FINAL_FIRST_ROUND.json",
+      "sha256": "327e1b78367758c19fad677c8d07913d23874ae55abf3d849335cabcc30069bd"
+    }
+  ],
+  "original170CasesFinished": true,
+  "port61346Absent": true,
+  "matchingRuntimeProcesses": [],
+  "preserved": [
+    "首轮original/generated 100源码",
+    "170截图/trace/结果/原错误",
+    "原DB/media/auth数据根",
+    "其余Next缓存与产品源码"
+  ],
+  "cacheAbsentAfter": true
+}

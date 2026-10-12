@@ -1,0 +1,79 @@
+{
+  "toolSha256": "2d48c8cdea6c87d9b1fd27bcfc15283c0153abd0634fca0da4e861c6e4d0c394",
+  "at": "2026-10-11T19:20:57.825Z",
+  "REQUEST": 120000,
+  "COMMAND": 240000,
+  "CLEANUP": 2400000,
+  "results": [
+    {
+      "case": "exit-before-last-stdout-must-not-settle",
+      "status": "PASS",
+      "receipt": {
+        "code": 0,
+        "signal": null,
+        "exitAt": "2026-10-11T19:18:56.504Z",
+        "error": null,
+        "closeAt": "2026-10-11T19:18:57.404Z",
+        "stdioClosed": true,
+        "logClosedAt": "2026-10-11T19:18:57.404Z"
+      }
+    },
+    {
+      "case": "spawn-error-still-waits-close-and-log-close",
+      "status": "PASS",
+      "receipt": {
+        "code": -2,
+        "signal": null,
+        "error": "Error: spawn /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/launcher-negative-owned-yi7To6/NONEXISTENT_EXECUTABLE ENOENT",
+        "closeAt": "2026-10-11T19:18:57.405Z",
+        "stdioClosed": true,
+        "logClosedAt": "2026-10-11T19:18:57.405Z"
+      }
+    },
+    {
+      "case": "live-pid-wrong-birth-no-signal",
+      "status": "PASS",
+      "pid": 6648,
+      "rejected": {
+        "sent": false,
+        "reason": "PID_BIRTH_OR_OWNER_CHANGED_NO_SIGNAL"
+      }
+    },
+    {
+      "case": "live-pid-no-proof-no-signal",
+      "status": "PASS",
+      "pid": 6648,
+      "rejected": {
+        "sent": false,
+        "reason": "PROCESS_SNAPSHOT_FAILED_NO_SIGNAL"
+      }
+    },
+    {
+      "case": "real-hanging-list-command-watchdog-and-owned-close",
+      "status": "PASS",
+      "elapsedMs": 120002.449209,
+      "watchdogReceipt": {
+        "label": "owned-negative-list",
+        "budgetMs": 120000,
+        "at": "2026-10-11T19:20:57.643Z"
+      },
+      "closure": {
+        "code": null,
+        "signal": "SIGTERM",
+        "exitAt": "2026-10-11T19:20:57.762Z",
+        "error": null,
+        "closeAt": "2026-10-11T19:20:57.762Z",
+        "stdioClosed": true,
+        "logClosedAt": "2026-10-11T19:20:57.762Z"
+      }
+    }
+  ],
+  "realOwnedNodeSubprocessesOnly": true,
+  "modelCalls": 0,
+  "browserCalls": 0,
+  "serverCalls": 0,
+  "pgCalls": 0,
+  "appCalls": 0,
+  "knownChildSurvivors": [],
+  "evidenceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/launcher-negative-owned-yi7To6"
+}

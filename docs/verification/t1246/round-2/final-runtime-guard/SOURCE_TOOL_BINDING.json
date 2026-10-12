@@ -1,0 +1,338 @@
+{
+  "at": "2026-10-12T06:17:40.699637+00:00",
+  "kind": "source-only-final-runtime-external-adapter-candidate",
+  "status": "source-review-required-with-documented-remaining-old-inner-budget-boundary",
+  "files": [
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/LEGACY_INPUT_SNAPSHOT.json",
+      "sha256": "606121b451a27b09599f4c6717f0571f1c3c6013913ab26827e8a1d72afb9112",
+      "size": 7079
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/README.md",
+      "sha256": "9ca7b6351a136ad6d72e73cbb2434ddad1f35fefbbcd9bca71e1bb6d36932e23",
+      "size": 5137
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/REUSED_SOURCE_EXACT.diff",
+      "sha256": "59b1529f8713a9885ea84699a49e7728d3aec3d7932f1de113c24c6c77ac248c",
+      "size": 58500
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/SOURCE_DELTA_AND_BUDGET.json",
+      "sha256": "fa05af97452399fcba6095ca1612b58da507b94575fac219e20f3a8ab3a7bc7a",
+      "size": 3491
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/STATIC_PARSE_BEFORE_BROWSER_ROOTS_HISTORY.json",
+      "sha256": "6bdfe1ad29c0fa5e950fd43d816e9d4d74163ad088a73f1ab3488c5141d8116d",
+      "size": 3396
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/STATIC_PARSE_RESULT.json",
+      "sha256": "797ae052d0c277084a7a1a70220242bc60591d052ccfcd4ca36bdd84cddce215",
+      "size": 3092
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/common.cjs",
+      "sha256": "0ea77c01e132b08f14efcf94206d5f62122366c859e219d76b7d831bf871642d",
+      "size": 19122
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/discover-joint-pairs.py",
+      "sha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b",
+      "size": 13768
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/EVIDENCE.json",
+      "sha256": "6076a97150ce4f408266cb532dbed1d3f2a84ff511fb6d25457da6bf42930c8f",
+      "size": 3229
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/common.cjs",
+      "sha256": "48719fd983307e1672041de6088cf62cef865ce0c6df745c8a0cc601df7a972f",
+      "size": 19016
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/discover-joint-pairs.py",
+      "sha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b",
+      "size": 13768
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/owned-dyld.cjs",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "size": 10866
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/prepare-joint-dyld.py",
+      "sha256": "bc8f0e75fb11e919702f81782ab6c8e92901585efa9865d7d6f3fc62e77dd2aa",
+      "size": 16404
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/prepare-metadata-input.cjs",
+      "sha256": "d1e1b55ba3edc7c4d6ba1a1531d5b7790e17545346efbfcfb90a27689a3da119",
+      "size": 4799
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/reseal.cjs",
+      "sha256": "cc85f6a35d08b67c2774d3a8fae9bc9c38c05963c608753b0923882c444d3480",
+      "size": 10984
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/run.cjs",
+      "sha256": "fb2465842df087b259453809e87d64b7b6e89afe94e3c51cab7f0ba03b915d58",
+      "size": 9281
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/history-first-python-syntax-failure/supervise.cjs",
+      "sha256": "53185fcf4525b1f253bbb2d61ea38605cc7a05266b5b31ff45b910bb1dc2623e",
+      "size": 3639
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/owned-dyld.cjs",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "size": 10866
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/prepare-joint-dyld.py",
+      "sha256": "22c3e3b06dcc85678c93a59c765a4cfeed8ad3700d01874d83a8226084abfe9c",
+      "size": 16403
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/prepare-metadata-input.cjs",
+      "sha256": "d1e1b55ba3edc7c4d6ba1a1531d5b7790e17545346efbfcfb90a27689a3da119",
+      "size": 4799
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/reseal.cjs",
+      "sha256": "cc85f6a35d08b67c2774d3a8fae9bc9c38c05963c608753b0923882c444d3480",
+      "size": 10984
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/run.cjs",
+      "sha256": "fb2465842df087b259453809e87d64b7b6e89afe94e3c51cab7f0ba03b915d58",
+      "size": 9281
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/supervise.cjs",
+      "sha256": "53185fcf4525b1f253bbb2d61ea38605cc7a05266b5b31ff45b910bb1dc2623e",
+      "size": 3639
+    }
+  ],
+  "externalInputs": [
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/README.md",
+      "sha256": "478e161796fc8cb29606cee055683d2a0c021a9c7ad960bc5087be299a84d585",
+      "size": 2337
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/budget-consumers.json",
+      "sha256": "d41408b2ec0134d7fad9a727f2889c64688e85ec7ffa8fc2708578352d46fbc1",
+      "size": 27311
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "sha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "size": 22102
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/manifest.json",
+      "sha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+      "size": 1183546
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/playwright.config.ts",
+      "sha256": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe",
+      "size": 3353
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/prepare-browser-driver.cjs",
+      "sha256": "22535480f510e8d94544182b987af068ed1f784824c7ea05eff0b1ede4f2d091",
+      "size": 20236
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "sha256": "c0cef4eeaae77fb66569442870b06250a1e59c72ffe62b67a50f21d30493a712",
+      "size": 10509
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/runtime-closure.json",
+      "sha256": "350d1e8febe75ba228a36e81a80e3fc89aeae3cb3b63b336f94e79b493666240",
+      "size": 2239
+    },
+    {
+      "path": "docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "sha256": "e159718f4d3ef197612e67ed33d1843ebffb8a362b5b4ec091df06ade390dbe6",
+      "size": 7403
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/README.md",
+      "sha256": "84c849be9139aa265f372c27a257786336fb22d8cc926ed30216f3fce0336564",
+      "size": 4754
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/budget-consumers.json",
+      "sha256": "5aaadbe196fa55f601aba12f78de962b67915a95bacab42acf9d1d37f27086bb",
+      "size": 160043
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/coverage-mapping.json",
+      "sha256": "d26ceefc81b4329fe73dc53e1a11d3fd662cb77edabfff3c216351e088f2f7b4",
+      "size": 145333
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+      "sha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "size": 31817
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/manifest.json",
+      "sha256": "0406a01c3d2e73ba3da66601aa496f338f3c9489c309cff8f89b88beab8b8724",
+      "size": 934070
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/playwright.config.ts",
+      "sha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e",
+      "size": 1387
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+      "sha256": "6d7706baaa4f9272d1cf64572689395bc9cbd14573470a8030e98fd711f31962",
+      "size": 12494
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/runtime-closure.json",
+      "sha256": "36268470200b452b2e2ae45c2deefa5c044330aeb1fbb3d3661541e0b39c28c2",
+      "size": 80604
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/driver/verify-binding.cjs",
+      "sha256": "92b653b3ac3cfe34610f158d1488c52737bbb622e78d283a5703d03f442f0d55",
+      "size": 5091
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/acceptance-support.ts",
+      "sha256": "662a483890e44a5ed7d78fb8244701d1f622c7adf607a5c390efb87108a3b2d1",
+      "size": 18905
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-browser.spec.ts",
+      "sha256": "b5e87240fccad9469ae0de5705784bbddb3136d754079a7d64f09b0337272c24",
+      "size": 12629
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "size": 22409
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+      "sha256": "ec5a57620a80dc2fbc08ad73533481beafaf6efc2acd57b206e96910da6ffdf8",
+      "size": 25307
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "sha256": "c8c81d5a5eb4895a867a25abdb34de343c86502deab2a78fade3074140c819f8",
+      "size": 7729
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-routes.spec.ts",
+      "sha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "size": 13500
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/pi-support.ts",
+      "sha256": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c",
+      "size": 3166
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/e2e/protocol-support.ts",
+      "sha256": "fc78c567855fe87f5f8a90b577162313277840298bc64d7e8df6f0495ba67865",
+      "size": 11524
+    },
+    {
+      "path": "docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+      "sha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453",
+      "size": 10930
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+      "size": 15668
+    },
+    {
+      "path": "frontend/playwright.config.ts",
+      "sha256": "9b4ea64f81fadc0282a33ae0223c45a75a8649d98ef2c91ee97b2580caa597b6",
+      "size": 7250
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/SOURCE_TOOL_BINDING.json",
+      "sha256": "29b3d1d379ab656b9d780bd5274577d0f1a12ea6bf3251d4deecb7864e22678c",
+      "size": 13713
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "sha256": "044dd5003a1eda8595f76a4328e30d41e8a4851bc9d0927bb7d62b46357c7c08",
+      "size": 17414
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/runtime-dyld.cjs",
+      "sha256": "2a872b3ffef2cf10c4d43f08312ceb52568a2d8cfcb2e3ae3d51d52ae8bf6aaa",
+      "size": 10749
+    },
+    {
+      "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/prepare-browser-dyld-closure.py",
+      "sha256": "258b4a1dde102fcad8cc6354e8040882227680b99bbc0fa61033c29810caf324",
+      "size": 14116
+    },
+    {
+      "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/prepare-browser-dyld-closure-budget-v3.py",
+      "sha256": "dabd652e7456c83c942e333b3230bdb88a31b08b52b4b7dce2587b0699aa10ac",
+      "size": 14778
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/current-exact-source-write-set-partial-latest.json",
+      "sha256": "f5d0e51c21b32800bdbf41852591a16b6368cdd902bb732f43f36336ba8a4d85",
+      "size": 130574
+    },
+    {
+      "path": "node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/index.js",
+      "sha256": "36faa53b7c6fa8f76788f2bcfa21d72edc22e5f528c45328b71d07e215d79a32",
+      "size": 34490
+    },
+    {
+      "path": "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js",
+      "sha256": "f74353fcb8e406756a70a6af0dfc4a5069acd577e35ec9d923ccf36ac009c2f5",
+      "size": 3206963
+    },
+    {
+      "path": "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/browsers.json",
+      "sha256": "af53e32ffe35a024ddb34563700956b01ada00ac7e9270ba5df0604ec57e38e1",
+      "size": 1941
+    }
+  ],
+  "legacy9Paths": {
+    "browser-original": [
+      "docs/verification/t1246/round-2/browser-original/driver/prepare-browser-driver.cjs",
+      "docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "docs/verification/t1246/round-2/browser-original/driver/playwright.config.ts"
+    ],
+    "new-v3": [
+      "docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+      "docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+      "docs/verification/t1246/round-2/new-v3/driver/verify-binding.cjs",
+      "docs/verification/t1246/round-2/new-v3/driver/playwright.config.ts"
+    ]
+  },
+  "legacy9CurrentSHAUnchanged": true,
+  "doocs29bFrozen": true,
+  "realEightSourceParsers0": true,
+  "noCandidateModuleBodiesOrMetadataCollectorResealLegacy9ServicesBrowserExecuted": true,
+  "firstSourcePythonParseFailurePreserved": true,
+  "original170New111First100Unchanged": true,
+  "actualGraphFinalHeadWorkerDMGPending": true,
+  "remainingOldInnerTimersNotBypassed": true,
+  "runtimeAdmitted": false
+}

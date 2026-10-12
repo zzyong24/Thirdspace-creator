@@ -1,0 +1,45 @@
+{
+  "account-binding-stage.integration.test.ts": {
+    "summary": " ❯ src/server/ingestion/account-binding-stage.integration.test.ts (12 tests | 10 failed) 580276ms",
+    "failures": [
+      "× 生产公共链在PGlite事务外预留宿主租约，新账号真实登记并完成目录采用 5098ms",
+      "× 已有真实账号采用新登录态，保留ID并清除旧备份且不重复成员 3616ms",
+      "× 取消等待真实浏览器停止与宿主租约释放，清理后才确认cancelled 182787ms",
+      "× 等待目标租约期间组可更新，随后清理已持预租约而不自我等待 184157ms",
+      "× 重启没有内存Map时依据持久run与采用marker恢复旧目录，再确认中断失败 2901ms",
+      "× 目标租约等待期间取消会释放预留资源，只清理本run且保留原账号目录 182979ms",
+      "× T1110 xiaohongshu真实目录、宿主租约与账号组事务闭环 2895ms",
+      "× T1110 kuaishou真实目录、宿主租约与账号组事务闭环 3032ms",
+      "× T1110 wechatOfficial真实目录、宿主租约与账号组事务闭环 3606ms",
+      "× T1110 wechatVideo真实目录、宿主租约与账号组事务闭环 3145ms"
+    ]
+  },
+  "douyin-throttle-integration.test.ts": {
+    "summary": " ❯ src/server/ingestion/douyin-throttle-integration.test.ts (14 tests | 2 failed) 360047ms",
+    "failures": [
+      "× [gate-F6 错误映射] download 超时 + 有「暂无数据」toast → report('content-error')(图集不退避) 180014ms",
+      "× [T-176 错误映射] download 超时 + 无 toast → report('content-error')(导出 DOM 脆弱,不再退避) 180006ms"
+    ]
+  },
+  "article-workbench.test.tsx": {
+    "summary": " ❯ src/features/article/article-workbench.test.tsx (19 tests | 9 failed) 7888ms",
+    "failures": [
+      "× 衍生稿不重复页头小字，正文与段落标题跟脚本使用同一字号 1056ms",
+      "× Brief 缺失时仍可手写和生成通用候选 1023ms",
+      "× 生成结果只作为候选展示，明确采纳后才写入 1026ms",
+      "× 默认继承当前账号品牌版本，也能改选中性写作 1026ms",
+      "× 只把显式勾选的项目文档精确文件版本交给模型 1023ms",
+      "× 候选事实采纳前显示旧清单与将替换的新清单 1022ms",
+      "× 手工修改衍生稿正文仍保留稳定段落、来源和 NoteRelay 版式 94ms",
+      "× 首次沿用脚本标题简介标签，主生成入口直接可见且不默认覆盖已填元数据 51ms",
+      "× 已有稿生成后标题与摘要默认不被重写 1022ms"
+    ]
+  },
+  "chat-task-submission.integration.test.ts": {
+    "summary": " ❯ src/server/chat-task-submission.integration.test.ts (14 tests | 2 failed) 183427ms",
+    "failures": [
+      "× 真实 'review.script' 工厂首次准备失败 +0 次后，不重启也能读回候选 24270ms",
+      "× 真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选 20734ms"
+    ]
+  }
+}

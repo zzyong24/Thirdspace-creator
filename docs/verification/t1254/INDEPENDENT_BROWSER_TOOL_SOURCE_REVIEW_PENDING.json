@@ -1,0 +1,32 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T03:51:55.200314+00:00",
+  "status": "PENDING_SOURCE_REVIEW_NOT_APPROVED",
+  "sourceBinding": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-tool/SOURCE_TOOL_BINDING.json",
+  "sourceBindingSha256": "31c4002580f58df2ae2d0ad7c3bd0bd60593b20fca6d1d083bf50547a9a44f23",
+  "reviewReadScopeSoFar": [
+    "README/PENDING/INHERITED_PROVENANCE",
+    "all seven driver source files",
+    "original b16 consumer independently reviewed in earlier44f627 report"
+  ],
+  "remainingReview": [
+    "two FROM_V3 diffs and pure/static receipts",
+    "mechanical full source binding hash recheck",
+    "final static source review conclusion"
+  ],
+  "pauseReason": "ROOT要求优先独核本次V10实际resource checker FAIL新窄候选。浏览器源码审核尚未收尾；不得借当前已读部分预签运行。",
+  "requiredFutureActualInputs": [
+    "final new delivery",
+    "clean actual HEAD",
+    "11 actual Worker bundles",
+    "new DMG and successful matching package receipt",
+    "actual full Node/Chrome/PG/installed Mach-O graph",
+    "fresh full exact manifest and peer+ROOT runtime review"
+  ],
+  "runtimeStartedByReviewer": false,
+  "sourceApproved": false,
+  "runtimeApproved": false,
+  "actualCopyTypesList2Body2": false,
+  "original170New111First100Unchanged": true,
+  "App": "用户暂不授权，未验收"
+}

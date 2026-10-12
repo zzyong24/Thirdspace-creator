@@ -1,0 +1,7 @@
+{
+  "kind": "ROOT-read-only-verifier-schema-error",
+  "runtimeExecuted": false,
+  "expectedBootstrapSchema": "four inherited symlink rows carry realPath without link",
+  "actualError": "reject symlink in regular row branch for .bin/pn",
+  "historicalInputChanged": false
+}

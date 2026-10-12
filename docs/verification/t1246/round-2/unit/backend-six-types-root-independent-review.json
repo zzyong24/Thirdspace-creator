@@ -1,0 +1,39 @@
+{
+  "reviewedAt": "2026-10-11T20:10:04.719947+00:00",
+  "verdict": "PASS_TEST_ONLY_PENDING_ACTUAL_WHOLE_FILES_AND_TYPES",
+  "candidateSha256": "1d8602ed1796f3caffcdf8a725ddb43e0cad623918013af0fc185e08389d9d1d",
+  "bindings": [
+    {
+      "file": "backend/src/integration/chat-generation-worker.test.ts",
+      "beforeSha256": "8f9308c4a87913fb7d1855b655387d58a6e6093907e1f884ffbaa2d3f7b1e41b",
+      "candidateSha256": "590ea90c29f3fd0d04ea8d4dcc56a5afe8dd84884a32a2f1937670f7356b40de"
+    },
+    {
+      "file": "backend/src/integration/copilot-worker.fork.test.ts",
+      "beforeSha256": "fbd1765888f079df6f6590fa002aa0669214d92d67ce626c4a2920935401e482",
+      "candidateSha256": "949db6516cb23df1c665c56ebd1f99a8cba001b19d2848ef30d871a36ccff439"
+    },
+    {
+      "file": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "beforeSha256": "6c5bb19192fd7bf258896cbe588a1502da2d4cfed44869548cab4c2cd393209e",
+      "candidateSha256": "1dbb44fde62b22d57ce3deaa2b93ff74b20ccbb3da808fd3e2078c6e8c4b59df"
+    },
+    {
+      "file": "backend/src/integration/t1026-tool-result-read.integration.test.ts",
+      "beforeSha256": "a8eb27b9aa9f4a83e49081aba703ba0a3121ff612acf3b62bcb75e894e382211",
+      "candidateSha256": "ab04f77e0ce76c846b74eb77dd4493982cdb8dbde06a09131d8a9d74aefe965a"
+    },
+    {
+      "file": "backend/src/modules/ai/ai.contract.test.ts",
+      "beforeSha256": "6a6d6050cec2bc6818b9814b322dbbba04abe77a6a04aafc5e5da79a3e3a5f7f",
+      "candidateSha256": "e70bf69fa2b796aa734bf8d094b7a5c0fca557dd8c6487b23e452fbdeb50547f"
+    }
+  ],
+  "findings": [],
+  "reason": "逐五diff与实际schema/dispatcher/worker-runtime消费者核验：真实字段诊断、已冻结空工具resolver、公开同GenerationFailure身份审批适配、Pi明确窄化、非空原chatTaskId验证；不变产品、不删原body/assert、不承诺实际运行或全功能通过。",
+  "constraints": [
+    "精确候选应用，保原五完整文件运行",
+    "T1248 dist独占结束且最终产品冻结后才build/test",
+    "第一类型6错误及各轮红测保留"
+  ]
+}

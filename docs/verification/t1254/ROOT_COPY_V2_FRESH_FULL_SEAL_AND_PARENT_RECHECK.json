@@ -1,0 +1,16 @@
+{
+  "task": "T-1254",
+  "passed": true,
+  "copyNotExecuted": true,
+  "indexSHA": "7c6ae7440bceb425d70014d6c6316cadaff8c142bc0a1af51cffa9cd5cb92f95",
+  "fullRows": 144689,
+  "readBytes": 2429403657,
+  "elapsedSeconds": 34.529338707972784,
+  "corePrepareActualEOF0": true,
+  "writes": 73,
+  "deletes": 53,
+  "unchanged": 636,
+  "allActualParentDirectoriesOwnedAndNoSymlink": true,
+  "rootFullCopySourceReadSHA": "e2e1e742a384f1d222a60ad143f5e36b88c27272119eaa1a65c7ae72b2a70f9f",
+  "inheritedEarliestUTC": "2026-10-12T13:12:37.651Z"
+}

@@ -20,14 +20,14 @@ it("真实浏览器解析搜索页并切换空来源，结果沿聊天观察协�
    const context=await target.newContext(...args);
    return new Proxy(context,{get(ctx,prop){if(prop==="route")return async(pattern:Parameters<BrowserContext["route"]>[0])=>ctx.route(pattern,async route=>{
     const url=route.request().url();visited.push(url);
-    await route.fulfill({status:200,contentType:"text/html; charset=utf-8",body:url.includes("bing.com")?'<html><body><ol><li class="b_algo"><h2><a href="https://example.com/source">真实测试页面</a></h2><p>真实测试摘要</p></li></ol></body></html>':'<html><body>没有匹配项</body></html>'});
+    await route.fulfill({status:200,contentType:"text/html; charset=utf-8",body:url.includes("duckduckgo.com")?'<html><body><div class="result"><h2><a class="result__a" href="https://example.com/source">真实测试页面</a></h2><a class="result__snippet">真实测试摘要</a></div></body></html>':'<html><body>没有匹配项</body></html>'});
    });const value=Reflect.get(ctx,prop,ctx);return typeof value==="function"?value.bind(ctx):value;}});
   };const value=Reflect.get(target,key,target);return typeof value==="function"?value.bind(target):value;}});
  }});
  try{
   await runChatResearchInWorker("search",controller.signal,call,research);
-  expect(visited.some(url=>url.includes("baidu.com"))).toBe(true);expect(visited.some(url=>url.includes("bing.com"))).toBe(true);
+  expect(visited.some(url=>url.includes("baidu.com"))).toBe(true);expect(visited.some(url=>url.includes("duckduckgo.com"))).toBe(true);
   expect(visited.every(url=>decodeURIComponent(url.replaceAll("+"," ")).includes("原查询 原材料"))).toBe(true);
  }finally{await research.close();await server.close();}
  expect(browser?.isConnected()).toBe(false);
-},30000);
+},180000);

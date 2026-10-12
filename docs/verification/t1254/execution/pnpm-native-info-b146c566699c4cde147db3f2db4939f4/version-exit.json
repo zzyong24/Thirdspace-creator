@@ -1,0 +1,37 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-native-info-b146c566699c4cde147db3f2db4939f4-4NvOOq/child-restriction.sb",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/@pnpm/exe.darwin-arm64/pnpm",
+    "--version"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-native-info-b146c566699c4cde147db3f2db4939f4-4NvOOq",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/pnpm-native-info-b146c566699c4cde147db3f2db4939f4/version.log",
+  "pid": 61413,
+  "identity": {
+    "pid": 61413,
+    "pgid": 61413,
+    "uid": 501,
+    "birth": "Mon Oct 12 09:11:21 2026",
+    "startedAt": 1791767481081
+  },
+  "startedAt": "2026-10-12T01:11:21.081Z",
+  "endedAt": "2026-10-12T01:11:22.618Z",
+  "elapsedMs": 1537,
+  "budgetMs": 180000,
+  "deadlineAt": "2026-10-12T01:14:21.081Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

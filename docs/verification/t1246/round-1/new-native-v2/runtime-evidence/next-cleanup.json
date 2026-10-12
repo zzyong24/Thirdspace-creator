@@ -1,0 +1,16 @@
+{
+  "cleanupRecords": [
+    {
+      "file": "/private/tmp/t1246-native-runtime-533/frontend/tsconfig.json",
+      "removedOnlyRuntimePath": ".next/t1246-8e51585c2d32337d",
+      "preservedConcurrentOtherEdits": true
+    },
+    {
+      "file": "/private/tmp/t1246-native-runtime-533/frontend/next-env.d.ts",
+      "removedOnlyRuntimePath": ".next/t1246-8e51585c2d32337d",
+      "preservedConcurrentOtherEdits": true
+    }
+  ],
+  "isolatedDistDir": ".next/t1246-8e51585c2d32337d",
+  "preservedRuntimeCache": true
+}

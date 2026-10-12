@@ -1,0 +1,310 @@
+{
+  "at": "2026-10-12T05:15:50.392359+00:00",
+  "task": "T-1254",
+  "scope": "complete-doocs-two-body-tool-source-v3-budget-candidate-only",
+  "files": [
+    {
+      "path": "docs/verification/t1254/browser-tool/BUDGET_V3_DELTA_PROOF.json",
+      "sha256": "35598d9e63df4a51f51f70c30e983841fca2bf9459d1c0022be2ad75a005b425",
+      "size": 5178
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/INHERITED_PROVENANCE.json",
+      "sha256": "1ce36489006ee2149738587686502cf939e45f2f38bcc0789849161e914f2e58",
+      "size": 2120
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/LAUNCH_FROM_V3.diff",
+      "sha256": "f6834a0933175eaf94f7fc3d56d421abbcc1738154889eed7050eb4888fd00ac",
+      "size": 34150
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/PENDING_INPUTS.json",
+      "sha256": "cd17a66121fc58b2f4e38898fc46ee86af13e0523999740ac4bad9365475f586",
+      "size": 3015
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/PREPARE_FROM_V3.diff",
+      "sha256": "29d30b720ddfcb14de7c6a1d02cac49804d738b48674a0ef7d9bcf1b6a302367",
+      "size": 18217
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/README.md",
+      "sha256": "91d358cc8117be40df65e1148dc726e98b38d2f818caf5ac72736c311c9b4494",
+      "size": 7967
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/SOURCE_V2_DELTA_PROOF.json",
+      "sha256": "e222e1766d211a396813037ad6d2d9227fea1c8f3a31e0c39fa581bbbeba3edd",
+      "size": 4167
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/TOOL_31C_TO_SOURCE_V2.diff",
+      "sha256": "c0eac95c21e74fa9e448804753edd3552bdee83c12e136c42c546a6e0d1de9d2",
+      "size": 51492
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/TOOL_6816_TO_BUDGET_V3.diff",
+      "sha256": "afebcaa695b70e919d7167f7e2865d3ff88c62aec35ddd18a9c51a28b3e5ad81",
+      "size": 58350
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/BUDGET_V3_PURE_RESULT.json",
+      "sha256": "44afc3835bbbfb7b5e7058f53676f779e0e4985b934e1297bbea98c4e9809545",
+      "size": 2776
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/FINAL_STATIC_PARSE_RESULT.json",
+      "sha256": "0b8a08dec55c24cb665e503b66e7dd21ee938e0d98469673d390e6efafb6923b",
+      "size": 3674
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V2_SYNTAX_PRE_GIT_HISTORY.json",
+      "sha256": "68777a403194d5ab0aaa0ed16b33397b1c44b17911d7e87a24ef8b3f859941dd",
+      "size": 4089
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V2_SYNTAX_RESULT.json",
+      "sha256": "cc582228a66950edbd57f3998a1a160351b11afee2949ece79a864c59fcfda6c",
+      "size": 4131
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V3_STATIC_BEFORE_SINGLE_CLOCK_HISTORY.json",
+      "sha256": "48198d1c9d12282b619152f81bb4a88ce7d15c5f65ac60dbf277330f7fa96380",
+      "size": 4133
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/SOURCE_V3_STATIC_RESULT.json",
+      "sha256": "955812e680abab2ca83261eb36ffc6164bdc10509617a967710ebed2c9373498",
+      "size": 4163
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/STATIC_RESULT.json",
+      "sha256": "80f5b21575f7565036dbfc4973febe1d3c1fb07b95dd0e38dda84ffae7a5d67b",
+      "size": 4686
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/budget-result.json",
+      "sha256": "3ba874e99925c9da6d86a7e9f2db4a6d56076b3aaae93f55a6f67b9cef29cff1",
+      "size": 960
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/budget-v3.cjs",
+      "sha256": "99066dfa26aa8a2f4ee5342287c5b6879f2c953c1dff65e6337309aaf4d03da0",
+      "size": 2930
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/budget.cjs",
+      "sha256": "8092ed140ed90f0493eceaf2dd9f190e3c0ac03f5a67eb9926c07b6c52a77616",
+      "size": 1479
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/dynamic-priority-result.json",
+      "sha256": "15b89671c0dbcce459cb2c576abcc03a9d79ef307c2ca9e5e93dea3c474a280e",
+      "size": 367
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/dynamic-priority.cjs",
+      "sha256": "687fc6efa4e133dacf9d2f2c8d4fd21ac4598d6ab6f8f8b85bfea8f844a6eb19",
+      "size": 2904
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/STATIC_RESULT.json",
+      "sha256": "fa306bee1187cebe1c12c530d789fb36dc727bb066bf250979de99b69a762d1f",
+      "size": 4192
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/budget-result.json",
+      "sha256": "6360d922eb3c306b8e183c52e75a764b813acd5b74aedc561039289b65985f97",
+      "size": 960
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/history-before-final-tool/pg-preconnect-result.json",
+      "sha256": "ec3bae6bbcb228c7c8b986f54865003e24ebfca1c3727faca7f24c0f1ad16af4",
+      "size": 4661
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/pg-preconnect-result.json",
+      "sha256": "9cc23214e9c86dab2ec5a85748f4b5eb0a81f31e46bc0c6c73bfd7309bd9556d",
+      "size": 4661
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/pg-preconnect.cjs",
+      "sha256": "b6886ff18555a85489d1b1be38511b384e5a333170b08c5cfd645b8e038d3711",
+      "size": 3504
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/source-types-result.json",
+      "sha256": "632b316392180ebc2c33d32c371f3e900b743d8ddbf096735e7bea5482a5d9fa",
+      "size": 1028
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/checks/source-types.cjs",
+      "sha256": "0dc275174a45bf34e64337501d5d6ee66d88e5a97ddaf2b02322561324d9d433",
+      "size": 1644
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+      "sha256": "2275adcb1a30e3751bbf0910d4242920e4c44761a16bb976881c623c0a6e4b09",
+      "size": 5999
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/driver-types.cjs",
+      "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149",
+      "size": 1166
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/launch.cjs",
+      "sha256": "e3cbfdcb9aba7c2cf45aa6ea14b4d379ccdbb8b7818e2b2d79428d9df8c3f8ba",
+      "size": 32251
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/playwright.config.ts",
+      "sha256": "7077666eaae6cbf1ffc01017b0f64b0aa71832d5e1d9fcd7f0bd04b44b9e8b69",
+      "size": 902
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+      "sha256": "a38e0a0a62c3251444a1fb40f3334ccb794f97aa31cea799600105d5e257eb2a",
+      "size": 12024
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/runtime-dyld.cjs",
+      "sha256": "2a872b3ffef2cf10c4d43f08312ceb52568a2d8cfcb2e3ae3d51d52ae8bf6aaa",
+      "size": 10749
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/seal.cjs",
+      "sha256": "78428c2b8c996ad60295e0660d7285386c83d38fc536e157377b73e3c1c505bc",
+      "size": 7753
+    },
+    {
+      "path": "docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "sha256": "57150ecbf5aa52a12cffbde45311e7b820511f345b851a2f40b01dafff21f7c5",
+      "size": 17346
+    }
+  ],
+  "externalInputs": [
+    {
+      "path": "docs/verification/t1254/browser-candidate/doocs-public.spec.ts",
+      "sha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+      "size": 9921
+    },
+    {
+      "path": "docs/verification/t1254/browser-candidate/SOURCE_V2_BINDING.json",
+      "sha256": "74e21edf5b2803b2dbd5f885233c40363a3a8d5dc0d339d12f5293e9895acbcc",
+      "size": 887
+    },
+    {
+      "path": "docs/verification/t1254/INDEPENDENT_BROWSER_SOURCE_V2_REVIEW.json",
+      "sha256": "44f627a6ed04215c104fb83c47c4c79880116db0c9eb4921a8e0d126347f7683",
+      "size": 4923
+    },
+    {
+      "path": "docs/verification/t1254/INDEPENDENT_BROWSER_TOOL_31C_FIRST_CONCERNS.json",
+      "sha256": "230881f0489ff292a13749c822c83523912a9f70f58ebe2506fb62e9c7079e27",
+      "size": 12641
+    },
+    {
+      "path": "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+      "sha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+      "size": 9823
+    },
+    {
+      "path": "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+      "size": 15668
+    },
+    {
+      "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/CURRENT_READONLY_BINDING.json",
+      "sha256": "25e3bade794bb3e5da1a5d4ea6f9a642628604e6c9c4b8f8820fc008ca57f15d",
+      "size": 313040
+    },
+    {
+      "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/BROWSER_DYLD_CLOSURE_CURRENT.json",
+      "sha256": "074af906fd38110e7c2e1dd9d8caf151a6e3e18d50f76ad6961ed0ccc5cc7110",
+      "size": 1517834
+    },
+    {
+      "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/prepare-browser-dyld-closure.py",
+      "sha256": "258b4a1dde102fcad8cc6354e8040882227680b99bbc0fa61033c29810caf324",
+      "size": 14116
+    },
+    {
+      "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/PRODUCER_FROM_BUILDER_V10_FINAL.diff",
+      "sha256": "a4eb6016a94dad7d4c077159bb8d47febf37123c17424bd6fc72f2625167eade",
+      "size": 18595
+    },
+    {
+      "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/prepare-browser-dyld-closure-budget-v3.py",
+      "sha256": "dabd652e7456c83c942e333b3230bdb88a31b08b52b4b7dce2587b0699aa10ac",
+      "size": 14778
+    },
+    {
+      "path": "/private/tmp/t1254-browser-dyld-7l0dxkzf/PRODUCER_BUDGET_V3_ONLY.diff",
+      "sha256": "644027f8930c7d7dd456cda30b72693f41622f604ea4031a32ded2110c0abc17",
+      "size": 5855
+    },
+    {
+      "path": "docs/verification/t1254/INDEPENDENT_BROWSER_TOOL_SOURCE_V2_BUDGET_CONCERNS.json",
+      "sha256": "b4f68cedef44e55bf835da10aafdaafdd1439149d0c3409940064e20ca7be836",
+      "size": 3022
+    },
+    {
+      "path": "docs/verification/t1254/INDEPENDENT_BROWSER_CURRENT_READONLY_DYLD_RECHECK.json",
+      "sha256": "9a8c812fec8989683610840907c1aa7e523692c4889edc100b4c869c63ad5ba7",
+      "size": 1175
+    }
+  ],
+  "old31cBindingSHA": "31c4002580f58df2ae2d0ad7c3bd0bd60593b20fca6d1d083bf50547a9a44f23",
+  "old31cSavedAt": "docs/verification/t1254/browser-tool-history/tool31c-original",
+  "old31cIndependentConcernsSHA": "230881f0489ff292a13749c822c83523912a9f70f58ebe2506fb62e9c7079e27",
+  "driverFileCount": 8,
+  "runnerBudgetMs": 391500000,
+  "completeEntryBudgetMs": 453300000,
+  "prepareBudgetMs": 47160000,
+  "caseB16Unchanged": true,
+  "sourceFindingsClosedInCandidate": [
+    "BT001 synchronous afterverify/final monotonic expiry",
+    "BT002 actual owned LC_LOAD/RPATH graph before types/list; absolute loads not rebased",
+    "BT003 all actual Chrome helpers Mach-O",
+    "actual Homebrew Git whitelist entrance/aliases/deps before any git CLI",
+    "BT004 actual full 131 metadata pairs and all source/runtime verifier nesting/future slots"
+  ],
+  "actualReadOnlyMetadata": {
+    "bindingSHA": "25e3bade794bb3e5da1a5d4ea6f9a642628604e6c9c4b8f8820fc008ca57f15d",
+    "graphSHA": "074af906fd38110e7c2e1dd9d8caf151a6e3e18d50f76ad6961ed0ccc5cc7110",
+    "roots": 94,
+    "regular": 128,
+    "links": 50,
+    "nonSystemEdges": 253,
+    "hostSystemBoundaryEdges": 851,
+    "unresolved": 0,
+    "actualDlopenCallerObserved": false,
+    "inspectedBusinessImagesNeverExecuted": true
+  },
+  "newChecks": {
+    "7CjsSyntaxParserOnly": "current7 syntaxall0 including finalprepare singleclock; no candidate imports/bodies",
+    "twoTsSourceTypes": "unchanged actual previous0 preserved, no global frontend claim",
+    "newDynamicPureGuardScripts": "adapted source-only, not executed",
+    "actualOwnedCollectorTypesListBodiesScreenshotsCleanup": "not executed",
+    "pureBudgetV3": "actual0 budget functions + readonly JSON only; no verify/Git/otool/collector"
+  },
+  "runtimeStarted": false,
+  "sealManifestExists": false,
+  "missingActualInputsRecordedIn": "PENDING_INPUTS.json",
+  "pending": [
+    "final delivery/newHEAD/11Worker/DMG",
+    "fresh physical runtime final seal and exact peer+ROOT",
+    "actual private copy metadata/raw receipts plus proper types/list2/body2/screenshots/trace/readonly/cleanup/sourceafter"
+  ],
+  "historicalPublicFirstFailPreserved": true,
+  "AppUnverified": true,
+  "original170New111First100Unchanged": true,
+  "old6816BindingSHA": "681683c6aceaf17dddd90f26df9a1ea26b558d8f1295c3a4e685c3fdba0535c4",
+  "old6816SavedAt": "docs/verification/t1254/browser-tool-history/tool6816-original",
+  "sourceVerifyBudgetMs": 1860000,
+  "runtimeVerifyBudgetMs": 3000000,
+  "metadataBudgetMs": 33840000,
+  "staticSealBudgetMs": 3000000
+}

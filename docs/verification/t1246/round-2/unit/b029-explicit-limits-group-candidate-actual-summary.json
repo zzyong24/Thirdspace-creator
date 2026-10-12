@@ -1,0 +1,39 @@
+{
+  "scope": "精确private fixture候选whole3；未应用原source、非官方模型/全系统/App",
+  "mode": "FIXTURE_EXPLICIT_LIMITS_GROUP_CANDIDATE_TEST",
+  "candidateSha256": "0a6bbc9d52f059426d832da2459db44b4c77ff56ffaadd71484758f68c11e191",
+  "originalSha256": "6e1f008900b7b768354b5f60cb1685c2ebec189df212399b57b1f496f1915f83",
+  "originalSourceUnchanged": true,
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "exit": 0,
+  "elapsedMs": 24307,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "sourceDigestBefore": "b59b499d8c5f38e7c7590eca954113bf3c88a95538c4bf267146c7f9b64539eb",
+  "sourceDigestAfter": "b59b499d8c5f38e7c7590eca954113bf3c88a95538c4bf267146c7f9b64539eb",
+  "evidence": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b029-explicit-limits-group-candidate-evidence/evidence-7f336a4ef1665a7811ebc2249427bec0",
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-b029-7f336a4ef1665a7811ebc2249427bec0-qGwsmu",
+  "shapeBindings": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b029-explicit-limits-group-candidate-evidence/evidence-7f336a4ef1665a7811ebc2249427bec0/http-shape-10.json",
+      "sha256": "173074ae3cdfe59b7f25b627b8d604d855b33e7a22318c9be703d5cb5e598d1f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b029-explicit-limits-group-candidate-evidence/evidence-7f336a4ef1665a7811ebc2249427bec0/http-shape-20.json",
+      "sha256": "611ed00d34f0e7bc6f77271c68a064afeb4ea71a66b9302cc7b3e3f811071a0a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/b029-explicit-limits-group-candidate-evidence/evidence-7f336a4ef1665a7811ebc2249427bec0/http-shape-8.json",
+      "sha256": "6bf1b4dd90ed60ba375b3469539fbc7bd15a66c2e0434daddf336365af3ea7ca"
+    }
+  ],
+  "firstThreeRedRoundsPreserved": true,
+  "notClaimed": [
+    "未修改原测试文件",
+    "未签官方模型账户E2E",
+    "未签其它预算族",
+    "未签App或全局Gate"
+  ]
+}

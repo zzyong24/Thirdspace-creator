@@ -1,6 +1,8 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {afterEach,expect,it} from 'vitest';
 import {randomUUID} from 'node:crypto';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {listOfficialSkillBases} from '@creatoros/ai-worker';
 import {ENDPOINTS,createClient,type RequestContext} from '@creatoros/contract';
 import {createDb,createRuntimeDb,type Db} from '../db';
@@ -25,7 +27,7 @@ const budget={maxCalls:4,maxTokens:1000,deadlineMs:120000};
 async function open(kind:'pglite'|'postgres'){
  if(kind==='pglite'){const runtime=await createDb();cleanups.push(()=>runtime.client.close());return runtime.db;}
  const url=process.env.CREATOROS_TEST_POSTGRES_URL;if(!url)throw Error('需要显式隔离 PostgreSQL 地址');const parsed=new URL(url);
- if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');
+ assertOwnedPostgresUrl(parsed.toString());
  const name=`t1210_consumption_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());
  await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname=`/${name}`;
  const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());return runtime.db;

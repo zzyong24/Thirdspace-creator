@@ -1,0 +1,105 @@
+{
+  "schema": "independent-tool-first-run-diagnosis/v1",
+  "at": "2026-10-12T00:56:28.483363+00:00",
+  "task": "T-1252",
+  "findingId": "PT002",
+  "result": "CONFIRMED_TOOL_COLLECTION_SCOPE_DEFECT",
+  "sources": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "realPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-runtime-tool/launch.cjs",
+      "sha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/vitest.config.ts",
+      "realPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/vitest.config.ts",
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/vitest/dist/config.js",
+      "realPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/config.js",
+      "sha256": "0ab30953d20f3f2c9662d4ea4d174dc0506483e0afaf02fd84713bbc391972cd"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/vite/dist/node/chunks/node.js",
+      "realPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js",
+      "sha256": "c3dd49d14b140acd79ce8f76d3b9c191dbe76713a47e15947c2efc65f453588b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules/vitest/dist/chunks/cli-api.BfdDOPPI.js",
+      "realPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/cli-api.BfdDOPPI.js",
+      "sha256": "a000538647c41d8323fd0d9d24b836a6ec428ae8f0057ac4a551af4cf36c9e7a"
+    }
+  ],
+  "actualReceipts": [
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/start.json",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/start.json",
+      "sha256": "dc04739cdb10f16fd977cc779cd459fe9f4065a270f8b1e2d8b0e8c8a4d5457f"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list/vitest.config.mts",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list/vitest.config.mts",
+      "sha256": "41e4ebd9a22a670cb50a93b9c0e301a98c773dc8465f2d82ed8bfd1d5656de8c"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list.log",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list.log",
+      "sha256": "2a6c4ebf9a09029a26b333bc5937676398cd45218993cd8b7cdd0ad1a08e28cf"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list-child.json",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/list-child.json",
+      "sha256": "305b8ee9f4a608db5dd623b12a0a975e02aebf4782cb31df40dc25102aee23d2"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/final.json",
+      "realPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/final.json",
+      "sha256": "be2e87e895a4205c3381e69ae9b3dbbc5c5cfde154ad6275cd427bf05ff7750c"
+    }
+  ],
+  "actualOutcome": {
+    "collectChildMs": 240375,
+    "declaredCollectBudgetMs": 240000,
+    "budgetExhausted": true,
+    "code": 143,
+    "processClosed": true,
+    "remainingOwnedGroupMembers": [],
+    "finalStatus": "failed",
+    "finalError": "OWNED_CHILD_FAILED_OR_CLOSE_UNCONFIRMED:list",
+    "allInputAfterSame": {
+      "allBoundSourceInstalledBrowserNodeBinaryToolSame": true
+    },
+    "actualListExists": false,
+    "caseArtifacts": [],
+    "threeSelectedBodiesNotStarted": true,
+    "distinctWarningNodePids": 243,
+    "cssWarnings": 44
+  },
+  "cause": {
+    "launcherLine": 25,
+    "baseInclude": [
+      "src/**/*.{test,spec}.{ts,tsx}",
+      "scripts/**/*.{test,spec}.mjs"
+    ],
+    "runtimeInclude": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/public-native-render.test.ts",
+    "mergeConsumer": "vitest/dist/config.js:2 re-export vite.mergeConfig; vite/dist/node/chunks/node.js:2294-2295 concat arrays",
+    "effectiveInclude": [
+      "src/**/*.{test,spec}.{ts,tsx}",
+      "scripts/**/*.{test,spec}.mjs",
+      "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID/public-native-render.test.ts"
+    ],
+    "discoveryConsumer": "cli-api globTestFiles:10748 selects include before collecting; collectTests:13676 runs files to collect; task-name pattern is interpretTaskModes after collection (13654)",
+    "limit": "243 distinct warning pids and CSS warnings corroborate expanded import; no reliable complete loaded-file count or body execution count is inferred."
+  },
+  "minimalCandidateConstraints": [
+    "仅工具配置合并完成后显式赋值config.test.include=[privateTestPath]，保原base其余环境/插件/setup/aliases。",
+    "list与每run另传exact privateTestPath作文件scope双门；实际list严格3原名字/同file，运行计数仍各1。",
+    "保持原3body、原任务出生/原60k持久期限、新36M任务期限、全部预算/generator/断言不变，不扩大list预算洗此红。",
+    "先保存32468及5d62/真实83BEID原回执；新工具/输入封印重新独复与ROOT准入后才执行。"
+  ],
+  "reviewHistoryDisclosure": "原9496静态通过未核真实mergeConfig.test.include数组拼接，故未发现本缺陷；保该报告原字节并以本真实首轮补充，不将它反写成历史FAIL或通过。",
+  "noProductDefectProven": true,
+  "reviewerExecutedTool": false,
+  "reviewerChangedLiveInput": false
+}

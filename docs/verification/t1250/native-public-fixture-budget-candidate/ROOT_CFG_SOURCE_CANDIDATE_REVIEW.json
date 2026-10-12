@@ -1,0 +1,26 @@
+{
+  "task": "T-1250",
+  "approvedSourceCandidate": true,
+  "reviewer": "root",
+  "reviewedAt": "2026-10-11T21:49:40.228639+00:00",
+  "sourceBindings": [
+    {
+      "path": "frontend/src-tauri/src/workbench/ipc.rs",
+      "originalSha256": "96d2d4df08422c458b248328940e18308b4de45048c8086309545a9d6dc47cb7",
+      "candidateSha256": "46ace3fab56c8ed39ebd40e8826f4a00dde09d3d3f76e7b9a15419eaf84568a2"
+    },
+    {
+      "path": "frontend/src-tauri/src/workbench/browser_ipc.rs",
+      "originalSha256": "7c1efaf57c165aea4f7bbe5c5ba0deb798b6e306dd50dfd38964bde9663f8471",
+      "candidateSha256": "5dc28fd769a1f60184f7e17146e1b94553ce2e0b9b644c516010de986eef5b21"
+    }
+  ],
+  "diffSha256": "4f65c05dd34e364fa4741c70ad0a080cd1c5bffec26ae3672de35c38a18f4d1a",
+  "independentReviewSha256": "14fd00c9219a870907be6bfadc73cdf0892a23c6813589f8cbef1626ab1fbb7d",
+  "constraints": [
+    "仅两Rust原3 cfg(test)段；生产protocol/deadline/字段与原body/ignore不变",
+    "公开工具精确derived finite WAIT尚待独评，不能用默认120/180代全串行",
+    "先原源归档再exact应用；原11+1 binary/全部证据保留",
+    "新源新binding/生产lock subset私有编译工具另准入；本签不签编译或runtime/App"
+  ]
+}

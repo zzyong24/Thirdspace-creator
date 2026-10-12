@@ -1,0 +1,48 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T07:41:58.566669+00:00",
+  "status": "FULL_BYTE_AND_FOUR_GUARD_READONLY_RECHECK_PASS_NOT_RUNTIME",
+  "indexSha256": "77ef0bbc0c9189cca8d0f7e96705a72c02904b78ad252f16cd411a79debb7643",
+  "exactManifestSha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd",
+  "validationInputsSha256": "cb1233c8e03c5bbc3abbfe3316b25c507fc602c1053cd1cda1bc4ad462d663c7",
+  "rows": 143462,
+  "mirrorFiles": 1018,
+  "candidateFiles": 709,
+  "other708ExactlySame": true,
+  "onlyChangedCandidateFiles": [
+    "frontend/scripts/build-doocs-request-budget.mjs"
+  ],
+  "originalProductInventoriesIdentical": true,
+  "pathSets73Write53Delete636SameIdentical": true,
+  "strictFullNarrowDiffReconstruction": true,
+  "runnerOnlyCandidateBaseV2ToV3": true,
+  "sourceFileSets": [
+    {
+      "role": "native",
+      "sourceFiles": 819,
+      "extra": [],
+      "missing": []
+    },
+    {
+      "role": "static",
+      "sourceFiles": 804,
+      "extra": [],
+      "missing": []
+    }
+  ],
+  "scopes": 17,
+  "scopeLinkCount": 7448,
+  "scopeLinkEscapes": [],
+  "actualMachORealRoots": 56,
+  "actualMachONotInDynamicRoots": [],
+  "dynamicRoots": 58,
+  "allFirstExistingAndRealpathsSame": true,
+  "otherThreeEditorManifestValuesIdentical": true,
+  "corePrepareReceiptSha256": "11de93816d4783251b64882fdb239c1159f67bd41b3c6eb81dbd8c8f0235b377",
+  "receiptExactlyCurrentBinding": true,
+  "readBytes": 2328840925,
+  "elapsedMs": 45950.023459037766,
+  "drift": [],
+  "candidateExecutedByReviewer": false,
+  "productionCopyByReviewer": false
+}

@@ -1,0 +1,154 @@
+{
+  "schema": "independent-test-candidate-review/v1",
+  "at": "2026-10-11T23:22:56.275569+00:00",
+  "result": "PASS_TEST_CANDIDATE_ONLY_PENDING_FR_USAGE_FORMAL",
+  "scope": "精确三个原测试私有候选；不准按旧SPEC运行，不签types/runtime",
+  "candidateBindingSha256": "88a4dcb727bf659c4973fe53c4fd6ccb16ae0c62f9b8500f5ea0047b84747be3",
+  "specSha256": "b132114ba0b561dc362b9f10d2cb5471a12206a35ef6377bfa3324859661059c",
+  "pendingClarificationSha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484",
+  "candidateBindings": [
+    {
+      "family": "hooks",
+      "before": {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+        "sha256": "f9fe46310f1f18a5185a4bc56c84cf3906bb27e13f8c734ee0e35fd722d72bc0"
+      },
+      "candidate": {
+        "file": "/tmp/t1253-candidate/hooks-all-families-combined-v3.test.ts",
+        "sha256": "9f9505eca46c1fd6d929e8f22cf21dd4890427e5c58c682a9a8163ec3a02f1f3"
+      },
+      "diff": {
+        "file": "/tmp/t1253-candidate/hooks-all-families-combined-v3.diff",
+        "sha256": "31188be68d5945ec2a4f71f67876df5420e53d5339775f071a668a2eef968ce3"
+      },
+      "priorCandidate": {
+        "file": "/tmp/t1253-candidate/hooks-all-families-combined.test.ts",
+        "sha256": "9f9505eca46c1fd6d929e8f22cf21dd4890427e5c58c682a9a8163ec3a02f1f3"
+      },
+      "priorCandidateV2": {
+        "file": "/tmp/t1253-candidate/hooks-all-families-combined-v2.test.ts",
+        "sha256": "9f9505eca46c1fd6d929e8f22cf21dd4890427e5c58c682a9a8163ec3a02f1f3"
+      }
+    },
+    {
+      "family": "draft",
+      "before": {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+        "sha256": "44be1b5c2e3834bcc957aa6330a5d3065f8f985a7d480bcc95b65347a525ddd0"
+      },
+      "candidate": {
+        "file": "/tmp/t1253-candidate/draft-all-families-combined-v3.test.ts",
+        "sha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60"
+      },
+      "diff": {
+        "file": "/tmp/t1253-candidate/draft-all-families-combined-v3.diff",
+        "sha256": "9717c8be177892d2dcbc68deb5efca21c06ce8ff18f83b222c2ecd3cb2e45d02"
+      },
+      "priorCandidate": {
+        "file": "/tmp/t1253-candidate/draft-all-families-combined.test.ts",
+        "sha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60"
+      },
+      "priorCandidateV2": {
+        "file": "/tmp/t1253-candidate/draft-all-families-combined-v2.test.ts",
+        "sha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60"
+      }
+    },
+    {
+      "family": "ports",
+      "before": {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+        "sha256": "0d758bfa7ce0bbae6b16aeb9db39e3e3c5bd4c1decdd3c1dc8a9ea8fc061752e"
+      },
+      "candidate": {
+        "file": "/tmp/t1253-candidate/ports-all-families-combined-v3.test.ts",
+        "sha256": "17de16b8a1234dcff377a3c4b1c01b3e65af5cf53f59b8131798f0b2b5ab02f6"
+      },
+      "diff": {
+        "file": "/tmp/t1253-candidate/ports-all-families-combined-v3.diff",
+        "sha256": "1157514afd635d623fbe48ef669ad0f4d8ba9800cfdefd4242e267c646aae84a"
+      },
+      "priorCandidate": {
+        "file": "/tmp/t1253-candidate/ports-all-families-combined.test.ts",
+        "sha256": "4b1a1b07152e9a7a0bff44cb125675e4ae60b25d974ab44e4b79ad1f6901d2ae"
+      },
+      "priorCandidateV2": {
+        "file": "/tmp/t1253-candidate/ports-all-families-combined-v2.test.ts",
+        "sha256": "8ae3baac25bc36ee2e2f9ddafb088cb88e2452810a15eed084ecd72369f1238a"
+      }
+    }
+  ],
+  "consumerBindings": [
+    {
+      "file": "backend/src/modules/execution/execution-lease.service.ts",
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "file": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d"
+    },
+    {
+      "file": "backend/src/modules/execution/model-call-recovery.ts",
+      "sha256": "a96b971c39046008560bbb3d3ad5d6a1bf07645454b4afe3d2b570042659041b"
+    },
+    {
+      "file": "backend/src/modules/execution/chat-generation-recovery.ts",
+      "sha256": "5dc872fa71297d23c85c767983cae1e60ce4d89fb1b9d1fce41f18112d13f69c"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-chat-text-node.service.ts",
+      "sha256": "9c566881592905c537635a7ec09a8c8d8da84f44d15ad5706844ca80ea761ef7"
+    },
+    {
+      "file": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "sha256": "843405d9faed7880be042171995ae64f1415f25fb4e659c161d8adec7d7dbd08"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-turn-completion.service.ts",
+      "sha256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4"
+    },
+    {
+      "file": "backend/src/modules/ai/execution-candidate.service.ts",
+      "sha256": "bb669b03cd66ea582e57a60c387dc73a91d97e28189885a488c38b361c918784"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-checkpoint.service.ts",
+      "sha256": "fccafb9872cae58a293d6883d20b649eb33914860a5c5a349666593200cf29ae"
+    },
+    {
+      "file": "ai-worker/src/execution/worker-runtime.ts",
+      "sha256": "7057344bc467ae84521c610450f40c2f24e30cf607a2226663f1e118eaae350f"
+    },
+    {
+      "file": "contract/src/internal/execution-worker.ts",
+      "sha256": "c77dbe817b6a5c08a792522bded49d4411323bd27472331e129c8497109f4586"
+    },
+    {
+      "file": "backend/src/schema/intelligence.ts",
+      "sha256": "2ac7b3d136452ce7759847175a62f5a303e9e92b03af4b001eb0945cfe587fcc"
+    }
+  ],
+  "findings": [],
+  "closedFindings": [
+    {
+      "id": "CP001",
+      "evidence": "ports17de用真实workerPortInputSchemas严格parse原data；非成功记录原unknown_result/准确code，拒candidate-only owner，不push正文；成功owner输入真实计数，缺usage owner0及唯一raw严格断言。原false成功路径原assert保，failureReports0增强。"
+    }
+  ],
+  "staticConclusions": [
+    "hooks9f9505/draftbdc395保原25模式/body/response/budgets，UNKNOWN原Pi retry严格原task/attempt/fence/retryOf/hash/key/parent/预留证明",
+    "ledger.inspect仅settlement锁与真实读取；configured budget没有被initializeBudget写入，superseded预留/null usage始终保留",
+    "三429只有可信superseded预期更正，401/400 rejected不降；continuous按原租约恢复/null deadline不伪finite",
+    "draft完整partial尾串、v1原工具回执、唯一formal reply、直接artifact0/scriptdraft0/业务归属增强，不能由过去refs null补签",
+    "missingusage=true仍1HTTP/原call与checkpoint不变/0新reserve/start/settle/save/provider/0owner与正式结果；failure-status报告不冒succeeded"
+  ],
+  "conditionsBeforeRuntime": [
+    "root/route正式FR-USAGE3cb窄澄清record后，绑定最新SPEC，而非旧b132回执",
+    "T1252 source/lock/dist窗口释放后fresh tool prepare并精确root准入，不能在fullreg共享dist在途build",
+    "完整原25/原9files46、propertypes真实执行，任何失败封存；不拿本静态review代实际case/count/预算读回",
+    "当前尚未执行新产品0/inspect/HTTP后半断言，保原17/8和CP001v1未执行历史"
+  ]
+}

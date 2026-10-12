@@ -1,0 +1,56 @@
+{
+  "at": "2026-10-12T00:50:29.447Z",
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-public-native-render-83BEID",
+  "nonce": "e3d699b0-5256-4b6c-92f4-b1afecedddf1",
+  "bindingSha256": "5d62c13de340a088e612d657b422298c0026a4ad37d813d4c459c2ab884e0714",
+  "toolSha256": "32468ddc109ad2a8a0f2f97f89191c47e985b6d45a2a8730de3e7394d53ddff9",
+  "node": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+  },
+  "binary": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/target/debug/deps/creatoros_workbench_test-4492fe5165c214f3",
+    "sha256": "b88eec4446f78c6bc3b2e94b936b1a91651b28dae4352eece12aaa135b06295d",
+    "exactFilter": "ipc::tests::external_node_file_journal_fixture"
+  },
+  "budget": {
+    "MIN": 120000,
+    "HOOK": 180000,
+    "LIFECYCLE": 2160000,
+    "CLI": 8280000,
+    "NATIVE": 420000,
+    "prepareMs": 240000,
+    "listMs": 240000,
+    "lastSourceMs": 600000,
+    "marginMs": 120000,
+    "cases": [
+      {
+        "name": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+        "bodyMs": 80040000,
+        "minimumDerivedMs": 80040000,
+        "childMs": 80880000,
+        "fixtureDoneMs": 80160000
+      },
+      {
+        "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+        "bodyMs": 36000000,
+        "minimumDerivedMs": 29470000,
+        "childMs": 36840000,
+        "fixtureDoneMs": 36120000
+      },
+      {
+        "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+        "bodyMs": 42000000,
+        "minimumDerivedMs": 35760000,
+        "childMs": 42840000,
+        "fixtureDoneMs": null
+      }
+    ],
+    "outerMs": 170400000
+  },
+  "sourceCandidateSha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d",
+  "originalTaskDeadlineMs": 60000,
+  "sharedBuild": false,
+  "App": false,
+  "officialModel": false
+}

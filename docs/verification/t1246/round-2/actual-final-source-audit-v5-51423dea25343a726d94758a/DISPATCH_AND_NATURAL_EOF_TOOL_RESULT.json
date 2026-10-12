@@ -1,0 +1,17 @@
+{
+  "dispatch": {
+    "chunk_id": "692540",
+    "wall_time_seconds": 1.004106292,
+    "session_id": 67892,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "EOF": {
+    "chunk_id": "eab3a4",
+    "wall_time_seconds": 4.248142417,
+    "exit_code": 1,
+    "original_token_count": 41,
+    "output": "{\"status\":\"failed\",\"failure\":\"AUDIT_CHILD_NOT_CLOSED_OR_POSITIVE_OR_LIFECYCLE_EXHAUSTED\",\"out\":\"/private/tmp/t1246-final-source-audit-v5-51423dea25343a726d94758a\"}\n"
+  },
+  "onlyOneExistingSessionObserved": true
+}

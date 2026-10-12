@@ -1,0 +1,242 @@
+{
+  "task": "T-1246/T-1254",
+  "at": "2026-10-12T05:02:00.170161+00:00",
+  "scope": "原170/新111九工具只读入口及fixture MachO闭包缺口核查",
+  "manifestFacts": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/manifest.json",
+      "sha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+      "candidate": null,
+      "sealState": "static-review-pending-final-build",
+      "expectedBodies": {
+        "original": 170
+      },
+      "fixtureTools": [
+        {
+          "name": "ffmpeg",
+          "path": "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/bin/ffmpeg",
+          "sha256": "9f5ddd4f8b36eb07b0c5d60ab6ea1e618bedd70bc45feab82b4dc23be1596ad1"
+        }
+      ]
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/manifest.json",
+      "sha256": "0406a01c3d2e73ba3da66601aa496f338f3c9489c309cff8f89b88beab8b8724",
+      "candidate": null,
+      "sealState": "static-review-pending-final-build",
+      "expectedBodies": {
+        "official": 103,
+        "protocol": 7,
+        "pi": 1
+      },
+      "fixtureTools": [
+        {
+          "name": "ffmpeg",
+          "path": "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/bin/ffmpeg",
+          "sha256": "9f5ddd4f8b36eb07b0c5d60ab6ea1e618bedd70bc45feab82b4dc23be1596ad1"
+        }
+      ]
+    }
+  ],
+  "nineDriverRows": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/prepare-browser-driver.cjs",
+      "expectedPendingManifestSha256": "22535480f510e8d94544182b987af068ed1f784824c7ea05eff0b1ede4f2d091",
+      "actualSha256": "22535480f510e8d94544182b987af068ed1f784824c7ea05eff0b1ede4f2d091",
+      "size": 20236,
+      "same": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "expectedPendingManifestSha256": "d8b043b22dc256c99eb7efbb1cda5d856bffe40468eccc37f2ea22366f696af8",
+      "actualSha256": "c0cef4eeaae77fb66569442870b06250a1e59c72ffe62b67a50f21d30493a712",
+      "size": 10509,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "expectedPendingManifestSha256": "7b4d6d60c3dca32761ef50e739902dde59642154879806ad8a59a431dc492c2c",
+      "actualSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "size": 22102,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "expectedPendingManifestSha256": "499da034dadfa5c570750984e0a9589773d60d0bd10cc85d7f726b19c44e9a1d",
+      "actualSha256": "e159718f4d3ef197612e67ed33d1843ebffb8a362b5b4ec091df06ade390dbe6",
+      "size": 7403,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/playwright.config.ts",
+      "expectedPendingManifestSha256": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe",
+      "actualSha256": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe",
+      "size": 3353,
+      "same": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+      "expectedPendingManifestSha256": "b782bdd34214b515c197a74050f6949d1562951fa28f11f9197e7fc05f32cfa3",
+      "actualSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "size": 31817,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/playwright.config.ts",
+      "expectedPendingManifestSha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e",
+      "actualSha256": "e48106d4db708e06ef97ecaf56c2890fc8238c56005510cc3def12b9537aeb4e",
+      "size": 1387,
+      "same": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+      "expectedPendingManifestSha256": "a1dd57acae2d29dc66572cca1f93e9445fbe730eef820c862043fd459ff54658",
+      "actualSha256": "6d7706baaa4f9272d1cf64572689395bc9cbd14573470a8030e98fd711f31962",
+      "size": 12494,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/verify-binding.cjs",
+      "expectedPendingManifestSha256": "92b653b3ac3cfe34610f158d1488c52737bbb622e78d283a5703d03f442f0d55",
+      "actualSha256": "92b653b3ac3cfe34610f158d1488c52737bbb622e78d283a5703d03f442f0d55",
+      "size": 5091,
+      "same": true
+    }
+  ],
+  "pendingManifestDriverDifferences": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "expectedPendingManifestSha256": "d8b043b22dc256c99eb7efbb1cda5d856bffe40468eccc37f2ea22366f696af8",
+      "actualSha256": "c0cef4eeaae77fb66569442870b06250a1e59c72ffe62b67a50f21d30493a712",
+      "size": 10509,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "expectedPendingManifestSha256": "7b4d6d60c3dca32761ef50e739902dde59642154879806ad8a59a431dc492c2c",
+      "actualSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "size": 22102,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "expectedPendingManifestSha256": "499da034dadfa5c570750984e0a9589773d60d0bd10cc85d7f726b19c44e9a1d",
+      "actualSha256": "e159718f4d3ef197612e67ed33d1843ebffb8a362b5b4ec091df06ade390dbe6",
+      "size": 7403,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+      "expectedPendingManifestSha256": "b782bdd34214b515c197a74050f6949d1562951fa28f11f9197e7fc05f32cfa3",
+      "actualSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "size": 31817,
+      "same": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+      "expectedPendingManifestSha256": "a1dd57acae2d29dc66572cca1f93e9445fbe730eef820c862043fd459ff54658",
+      "actualSha256": "6d7706baaa4f9272d1cf64572689395bc9cbd14573470a8030e98fd711f31962",
+      "size": 12494,
+      "same": false
+    }
+  ],
+  "harnessAttemptHistory": [
+    {
+      "attempt": 1,
+      "result": "ASSERTION_STOP",
+      "reason": "错把pending旧manifest里的九工具SHA当现源码绑定；未生成PASS报告、未执行任何候选。"
+    },
+    {
+      "attempt": 2,
+      "result": "READONLY_FACTS_ONLY",
+      "reason": "逐行诚实记录当前5项与旧pendingmanifest不同；正式准入必须fresh最终source绑定。"
+    }
+  ],
+  "ffmpeg": {
+    "path": "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/bin/ffmpeg",
+    "realpath": "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/bin/ffmpeg",
+    "sha256": "9f5ddd4f8b36eb07b0c5d60ab6ea1e618bedd70bc45feab82b4dc23be1596ad1",
+    "size": 426496,
+    "mode": 365,
+    "cpu": "0x100000c",
+    "filetype": 2,
+    "MH_EXECUTE": true,
+    "loadCommands": [
+      "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/lib/libavdevice.63.dylib",
+      "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/lib/libavfilter.12.dylib",
+      "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/lib/libavformat.63.dylib",
+      "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/lib/libavcodec.63.dylib",
+      "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/lib/libswresample.7.dylib",
+      "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/lib/libswscale.10.dylib",
+      "/opt/homebrew/Cellar/ffmpeg/9.0.1_1/lib/libavutil.61.dylib",
+      "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox",
+      "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+      "/usr/lib/libSystem.B.dylib",
+      "/System/Library/Frameworks/AVFoundation.framework/Versions/A/AVFoundation",
+      "/System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo",
+      "/System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia",
+      "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+      "/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL",
+      "/usr/lib/libz.1.dylib",
+      "/opt/homebrew/opt/libvmaf/lib/libvmaf.3.dylib",
+      "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+      "/System/Library/Frameworks/VideoToolbox.framework/Versions/A/VideoToolbox",
+      "/System/Library/Frameworks/CoreImage.framework/Versions/A/CoreImage",
+      "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+      "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+      "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+      "/usr/lib/libbz2.1.0.dylib",
+      "/opt/homebrew/opt/openssl@3/lib/libssl.3.dylib",
+      "/opt/homebrew/opt/openssl@3/lib/libcrypto.3.dylib",
+      "/opt/homebrew/opt/libvpx/lib/libvpx.12.dylib",
+      "/usr/lib/libiconv.2.dylib",
+      "/opt/homebrew/opt/xz/lib/liblzma.5.dylib",
+      "/opt/homebrew/opt/dav1d/lib/libdav1d.7.dylib",
+      "/opt/homebrew/opt/lame/lib/libmp3lame.0.dylib",
+      "/opt/homebrew/opt/opus/lib/libopus.0.dylib",
+      "/opt/homebrew/opt/svt-av1/lib/libSvtAv1Enc.4.dylib",
+      "/opt/homebrew/opt/x264/lib/libx264.165.dylib",
+      "/opt/homebrew/opt/x265/lib/libx265.217.dylib"
+    ],
+    "rpaths": [],
+    "method": "独立读取实际MachO常规文件load-command二进制；未执行ffmpeg或otool"
+  },
+  "actualConsumer": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+    "sourceLine": 22,
+    "action": "生成owned user-test-video.mp4，lavfi颜色+静音，4s，libx264+aac，240000正执行",
+    "originalManifestEntryOnlySHA": true,
+    "currentNineToolsNoRecursiveDyldConsumer": true
+  },
+  "currentDoocsReadonlyGraph": {
+    "roots": 94,
+    "ffmpegPresent": false,
+    "manifestSha256": "074af906fd38110e7c2e1dd9d8caf151a6e3e18d50f76ad6961ed0ccc5cc7110"
+  },
+  "recommendation": [
+    "保持九旧工具/原测试/first100不变；单独外层准入工具显式列实际Node/Git/otool/Chrome所有Helpers/PG/installed MachO及fixtureTools实际根，复用新producer的context/rpath/byte/link逻辑形成fresh联合图。",
+    "ffmpeg作为实际独立MH_EXECUTE使用自身main context，全部非OS加载链递归封印；OS缓存仍为host边界，不声称逐字节封OS。",
+    "在prepare前核source图及全九工具/manifest封印；prepare之后只读actualowned图与原source canonical provenance相等，在types/list/launch之前核actual相对loader/rpath、absolute不盲rebase；之后子进程与final逐精确绑定重核。",
+    "完整预算按新joint图unique(file,arch)×原metadata正执行+close/raw/final余量，以及所有实际verify调用串行槽派生；不借旧94图或快执行签覆盖。",
+    "当前两manifest为pending，干净最终HEAD/11Worker/newDMG/actualdelivery/freshseal未齐，当前九源码5个SHA与旧pendingmanifest不同，需最终重新封印，不能当现runtime准入。",
+    "protocol唯一已批准CJS vendor替换需externaladapter按原profile/marker/fixtureSHA/newinode/官方源SHA显式绑定，actual根据实际copy列；不得对CJS伪造MachO图或盲rebase；其它root/edge/firstexists/canonical断言不减。"
+  ],
+  "reviewerExecutedCandidate": false,
+  "nineToolsChangedByReviewer": false,
+  "testsChanged": false,
+  "first100Changed": false,
+  "protocolApprovedPrivateReplacement": {
+    "profile": "protocol",
+    "consumer": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+    "fixturePath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/source/fixtures/codex-protocol.cjs",
+    "fixtureSha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453",
+    "onlyPrivateVendorPath": true,
+    "newInode": true,
+    "sourceOfficialBinaryMustRemainExact": true,
+    "otherProfilesVendorUnchanged": true,
+    "actualProtocolVendorNotMachO": true,
+    "pureDoocsCollectorCannotBlindlyRebaseOriginalMachORoot": true,
+    "actualReplacementNotExecutedByReviewer": true
+  }
+}

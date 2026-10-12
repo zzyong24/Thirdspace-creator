@@ -1,3 +1,5 @@
+import {platformAccounts as originalAccounts,type Db as OwnedFixtureDb} from "@creatoros/backend";
+import {createAccountGroupService} from "../platform-account/account-group.service";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createDb, eq, knowledgeItems, knowledgeRevisions, knowledgeAdoptions } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -10,7 +12,7 @@ const proposal = () => prepareKnowledgeProposal(ctx, { proposalId: "proposal-1",
   source: { taskId: "task", toolCallId: "call", evidenceRefs: ["https://example.com/article"] } });
 describe("知识候选原子采纳", () => {
   let fixture: Awaited<ReturnType<typeof createDb>>;
-  beforeEach(async () => { fixture = await createDb(); });
+  beforeEach(async () => { fixture = await createDb(); await seedOwnedKnowledgeAccount(fixture.db,ctx.userId,ctx.accountId!); });
   afterEach(async () => { await fixture.client.close(); });
   it("准备候选不写知识；并发采纳只建一条知识、一版和一张回执", async () => {
     const candidate = proposal();
@@ -53,3 +55,9 @@ describe("知识候选原子采纳", () => {
     expect(await fixture.db.select().from(knowledgeRevisions)).toHaveLength(0);
   });
 });
+
+async function seedOwnedKnowledgeAccount(db:OwnedFixtureDb,userId:string,accountId:string){
+ const stamp="2026-06-21T00:00:00.000Z";
+ await db.insert(originalAccounts).values({id:accountId,userId,platform:'douyin',accountHandle:accountId,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing();
+ await createAccountGroupService({db,now:()=>stamp,nextId:prefix=>`${prefix}-${accountId}-fixture`}).ensureLegacyGroups({userId,requestId:'original-knowledge-fixture',source:'user'});
+}

@@ -1,0 +1,42 @@
+{
+  "phase": "calibrated-whole25",
+  "scopeSignals": [],
+  "childAdmissions": [
+    {
+      "label": "environment-proof",
+      "elapsedMs": 1179.46475,
+      "remainingMs": 23218820.53525,
+      "requiredMs": 21000000,
+      "positiveMs": 180000,
+      "futurePositiveMs": 15300000,
+      "remainingChildren": 2,
+      "independentOuterDeadline": "2026-10-12T06:20:14.422Z"
+    },
+    {
+      "label": "calibrated-whole25",
+      "elapsedMs": 1407.515458,
+      "remainingMs": 23218592.484542,
+      "requiredMs": 18660000,
+      "positiveMs": 15300000,
+      "futurePositiveMs": 0,
+      "remainingChildren": 1,
+      "independentOuterDeadline": "2026-10-12T06:20:14.422Z"
+    }
+  ],
+  "entryClockUsed": true,
+  "startedAt": "2026-10-11T23:53:14.422Z",
+  "deadlineAt": "2026-10-12T06:20:14.422Z",
+  "elapsedMs": 76262.20874999999,
+  "totalBudgetMs": 23220000,
+  "outerBudgetExhausted": false,
+  "cleanupElapsedMs": 520.9931250000081,
+  "cleanupBudgetMs": 1200000,
+  "exitCode": 1,
+  "ownedDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1253-calibrated-ebf72f4351973c3e394f42e8d9195a64-W0xoXk",
+  "cleaned": true,
+  "ownedRootRetained": false,
+  "noPG": true,
+  "noApp": true,
+  "retry": 0,
+  "firstEvidencePreserved": true
+}

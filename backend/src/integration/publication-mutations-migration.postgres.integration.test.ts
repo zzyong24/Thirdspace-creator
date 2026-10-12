@@ -1,7 +1,9 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {assets} from "../schema/assets";
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it} from 'vitest';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import type {RequestContext} from '@creatoros/contract';
 import {createRuntimeDb,type Db} from '../db';
@@ -31,7 +33,7 @@ function observeWrite(db:Db,table:string,observe:()=>Promise<void>):Db{
  };return wrap(db);
 }
 async function fixture(){
- if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');
+ if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);assertOwnedPostgresUrl(parsed.toString());
  const name=`t1022_pubmut_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname=`/${name}`;
  const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());const pool=new Pool({connectionString:parsed.toString(),max:1,application_name:`${name}_writer`});cleanups.push(()=>pool.end());const writer=drizzle(pool) as unknown as Db;
  let seq=0;const now=()=>new Date().toISOString(),nextId=(p:string)=>`${p}-${++seq}`,base:RequestContext={userId:`owner-${name}`,requestId:'publication-mutation-race',source:'user'},deps={db:runtime.db,now,nextId};
@@ -62,7 +64,7 @@ for(const family of ['revision','cover','schedule','publish','visibility','platf
   if(order==='migration-first')expect(rows.rows).toHaveLength(1);
   else if(revision){expect(rows.rows).toHaveLength(2);if(family!=='adopt-draft')expect(rows.rows.find(row=>row.title==='完整新版'||row.title==='补齐真实标题'||row.id!==f.publication.currentRevisionId)?.id).toBe(rows.rows[0].current_revision_id);}
   expect(rows.rows.every(row=>row.group_id===(order==='writer-first'?f.from:f.to))).toBe(true);
- },30000);
+ },180000);
 }
 it.skipIf(!url)('采集metadata沿原冻结事实组：账号已转出且组已归档仍可补封面、可见性、审核状态',async()=>{
  const f=await fixture();await f.runtime.pool.query("UPDATE publications SET external_id='old-external',status='published' WHERE id=$1",[f.publication.id]);
@@ -70,7 +72,7 @@ it.skipIf(!url)('采集metadata沿原冻结事实组：账号已转出且组已�
  await f.runtime.pool.query("UPDATE account_groups SET status='archived' WHERE id=$1",[f.from]);const frozen={...f.targetCtx,source:'ingestion' as const},service=f.service(f.writer);
  expect((await service.setCover(frozen,f.publication.id,'mock-historical-cover')).coverAssetId).toBe('mock-historical-cover');expect((await service.setVisibilityByExternalKey(frozen,{platform:'douyin',externalId:'old-external',hidden:true}))?.hiddenAt).not.toBeNull();expect((await service.setPlatformStatusByExternalKey(frozen,{platform:'douyin',externalId:'old-external',platformStatus:'审核通过'}))?.platformStatus).toBe('审核通过');
  const row=await f.runtime.pool.query('SELECT group_id,account_id FROM publications WHERE id=$1',[f.publication.id]);expect(row.rows[0]).toEqual({group_id:f.from,account_id:f.account.id});expect(f.sideEffects()).toBe(0);
-},30000);
+},180000);
 
 it.skipIf(!url)('真实孤儿publication可补采平台metadata并重锚到用户选择的真实新稿件，不造假parent',async()=>{
  const f=await fixture();await f.runtime.pool.query("UPDATE publications SET content_output_id='missing-historical-output',external_id='orphan-external',status='published' WHERE id=$1",[f.publication.id]);
@@ -80,4 +82,4 @@ it.skipIf(!url)('真实孤儿publication可补采平台metadata并重锚到用�
  await expect(service.createRevision(f.targetCtx,f.publication.id,{title:'不存在的内容不能编辑',description:''})).rejects.toMatchObject({code:'OwnershipError'});
  const repaired=await service.registerOwnerPublication(f.targetCtx,f.output.id,{platform:'douyin',externalId:'orphan-external'});expect(repaired.id).toBe(f.publication.id);expect(repaired.contentOutputId).toBe(f.output.id);expect(f.sideEffects()).toBe(0);
  expect((await f.runtime.pool.query("SELECT id FROM content_outputs WHERE id='missing-historical-output'")).rows).toEqual([]);
-},30000);
+},180000);

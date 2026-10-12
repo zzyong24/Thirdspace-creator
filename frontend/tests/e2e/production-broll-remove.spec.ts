@@ -233,6 +233,7 @@ test("已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧
   await selectAccount(page, account.id, baseURL);
   await page.setViewportSize({ width: 1536, height: 1024 });
   await page.goto(`/projects/${project.id}/production`);
+  await page.getByRole("button", { name: "返回制作页", exact: true }).click();
   await expect(page.locator('[data-slot="confirmed-decisions-notice"]')).toBeVisible();
   const item = page.locator('[data-slot="broll-auto-item"]', {
     hasText: "待剔除真实素材.mp4",

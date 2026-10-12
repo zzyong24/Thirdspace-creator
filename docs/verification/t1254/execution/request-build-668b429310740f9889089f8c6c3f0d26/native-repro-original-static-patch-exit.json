@@ -1,0 +1,43 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/child-restriction.sb",
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/git",
+    "-c",
+    "core.hooksPath=/dev/null",
+    "-c",
+    "core.fsmonitor=false",
+    "apply",
+    "--whitespace=nowarn",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/original-static.patch"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/native-patch-check-base",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/child-logs/native-repro-original-static-patch.log",
+  "pid": 54200,
+  "identity": {
+    "pid": 54200,
+    "pgid": 54200,
+    "uid": 501,
+    "birth": "Mon Oct 12 14:41:11 2026",
+    "startedAt": 1791787271107
+  },
+  "startedAt": "2026-10-12T06:41:11.107Z",
+  "endedAt": "2026-10-12T06:41:11.226Z",
+  "elapsedMs": 119,
+  "budgetMs": 180000,
+  "deadlineAt": "2026-10-12T06:44:11.107Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

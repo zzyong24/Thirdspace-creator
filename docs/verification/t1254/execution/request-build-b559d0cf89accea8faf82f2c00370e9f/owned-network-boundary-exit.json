@@ -1,0 +1,38 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-b559d0cf89accea8faf82f2c00370e9f-ZKkNkg/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "/tmp/t1254-readonly/doocs-owned-network-boundary.mjs",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-b559d0cf89accea8faf82f2c00370e9f-ZKkNkg/reports/owned-network-boundary-results.json"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/static",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-b559d0cf89accea8faf82f2c00370e9f/owned-network-boundary.log",
+  "pid": 89663,
+  "identity": {
+    "pid": 89663,
+    "pgid": 89663,
+    "uid": 501,
+    "birth": "Mon Oct 12 11:18:12 2026",
+    "startedAt": 1791775092792
+  },
+  "startedAt": "2026-10-12T03:18:12.792Z",
+  "endedAt": "2026-10-12T03:18:13.066Z",
+  "elapsedMs": 274,
+  "budgetMs": 540000,
+  "deadlineAt": "2026-10-12T03:27:12.792Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": null,
+  "signal": "SIGABRT",
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

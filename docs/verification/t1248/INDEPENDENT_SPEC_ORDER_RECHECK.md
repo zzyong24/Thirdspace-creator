@@ -1,0 +1,9 @@
+# T-1248 第三轮次序澄清独立复核
+
+结论：**PASS_SPEC_ORDER_CLARIFICATION_ONLY**。两树SPEC SHA `a815e5da23ef92579ae722ba9bd4227259d0bb9d14960d6c9dffa626395195de` 相同。REV-001冻结resolved事实保留；REV-002来自真实wholefirst原成功body的新失败，合同层销账。
+
+原buildChatTools依whitelist装配，action→read合法；新增全局顺序门反杀已有成功。澄清及精确候选保冻结次序下的完整固定原型逐项相等，不sort/normalize，仍拒duplicate/unknown。真实stored次序篡改保持原business digest时由公共adopt拒绝，新增case以同root的actualOwners真实adopt spy核0调用、正式数据/receipt/call不变，恢复原bytes可读原source。
+
+wholefirst341PASS1FAIL3PGskip原回执保留。原三完整文件未当时字节归档，只有实际patch文本及当时前后SHA、production恢复SHA精确相同的证明，未伪称原archive。临时second343PASS3PGskip发生在owner spy补强前，不签当前候选最终Gate。
+
+本Agent未改产品、未运行测试、未record控制面。formal第三轮准入后仍需实际完整文件、legacy4、ownedPG和任务Gate；不签历史用户升级/官方模型/App/全功能通过。

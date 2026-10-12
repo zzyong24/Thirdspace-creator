@@ -1,0 +1,4 @@
+{
+  "message": "T1254_ACTUAL_ORIGINAL30S_RED_NOT_PROVEN:native",
+  "stack": "Error: T1254_ACTUAL_ORIGINAL30S_RED_NOT_PROVEN:native\n    at main (/private/tmp/t1254-readonly/run-owned-doocs-request-and-build-v11.cjs:41:1556)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+}

@@ -1,0 +1,10 @@
+{
+  "task": "T-1246",
+  "kind": "INDEPENDENT_READONLY_HARNESS_SCHEMA_ERROR_NOT_CANDIDATE_FAILURE",
+  "error": "KeyError uid at physical row metadata comparison",
+  "cause": "375 inherited physical rows seal only path/size/SHA/spec; 73 delivered rows additionally seal mode/UID. Reviewer incorrectly assumed uniform schema.",
+  "actualPreviousShellExit": 1,
+  "noFinalReviewWrittenByFailedAttempt": true,
+  "candidateBindingsUnchanged": true,
+  "correction": "核所有448真实bytes/size，375 mode/UID仅当场观测记录；73当前delivery mode/UID按精确manifest核。"
+}

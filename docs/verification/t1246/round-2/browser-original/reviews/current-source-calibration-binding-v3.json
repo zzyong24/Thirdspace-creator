@@ -1,0 +1,101 @@
+{
+  "at": "2026-10-11T19:56:48.392662+00:00",
+  "phase": "static only; no body",
+  "sourceFiles": [
+    {
+      "path": "frontend/tests/e2e/ai-copilot.spec.ts",
+      "currentSha256": "ee1081b55fa67d5f5dc96322685b46851cc4f239b8c7bd6cb168baea3c1c8d2a",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/ai-reliability-recovery.spec.ts",
+      "currentSha256": "d4ad01c71994a85a0ef092fb4b35e7c0476d760c4a325884b1cf9985e71632f6",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/all-routes.spec.ts",
+      "currentSha256": "48cdddad1504ab12b38af1c48e3e6ae19de61a2e20478724ef229a01ad6ed9dc",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/app-shell.spec.ts",
+      "currentSha256": "c8d2e375c76f633da9c8c3111bd46fa5153e804496c23e0132814a4a755e0bc1",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/automations-group-media-jobs.spec.ts",
+      "currentSha256": "f0ff2387eeda60af3624012f4197e5fc7aab8ea353281ea7dbaae50c4d8835e8",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+      "currentSha256": "6da58089fc3ea8f2808a30d06ca3d5d568c87cfa0143178708705b1bc3cb2d28",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/experience.spec.ts",
+      "currentSha256": "c6710f3e0f6a9df0c4f07cc4f0e69c8baa2514c532033d7c1d7bc6654e3dc682",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/group-skill-customization.spec.ts",
+      "currentSha256": "adf969630fde3f4ce7c3afb1d163b590e8d36d36e7739b89771b9878e39677ab",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts",
+      "currentSha256": "7d81d7ee70f6bc3767e2582f8ef6847d8692ad59d27107895d9230072af6d937",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/platform-work-catalog.spec.ts",
+      "currentSha256": "ef877df223ada39d3d28b2177907f6682084064a0cd19bc8725713ac1d1fc4be",
+      "owner": "root"
+    },
+    {
+      "path": "frontend/tests/e2e/production-broll-remove.spec.ts",
+      "currentSha256": "049b53cdc4a14ef91d369273bc7ecf187890b3894381acbc57203eb0785ba3ef",
+      "owner": "root"
+    },
+    {
+      "path": "frontend/tests/e2e/publishing-center.spec.ts",
+      "currentSha256": "c4acc22f735ae02fbe147c7167f9bc48dc162d1d2af3518003d95af964e3acf3",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/recent-data-safety.spec.ts",
+      "currentSha256": "36006f122115eca95d96139d3bd3801b654b8c614f9001f2cccb4237c91ad5a6",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/search.spec.ts",
+      "currentSha256": "598955baac6d7b3527f83617a79a48c7350135a5242f2bd4cb903f3fb205cf7b",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/semantic-material-generation.spec.ts",
+      "currentSha256": "ffc561f3134437778e5f275c2919102522c7cb2573eba4fcb119f3e032b608da",
+      "owner": "root"
+    },
+    {
+      "path": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "currentSha256": "68300389f35d5a682daa8195fd4e100c5cc5aa46b99ee711cceb0b4acd5f27e5",
+      "owner": "/root/codex_route_inventory"
+    },
+    {
+      "path": "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+      "currentSha256": "9cab769242f140bd5c48f6b6487c364b615f9f56f67b027170df103c70b69c2d",
+      "owner": "/root/codex_route_inventory"
+    }
+  ],
+  "diffSha256": "fd204b6c43a65b66c0e35a2d0bb12d9db16bbfd77c005264a45c6ceb6fdcac19",
+  "sharedRoutesFixtureChanged": false,
+  "listActual54Files170BodiesSameNames": true,
+  "generatedInverseAll100": "59 transformed249 edits，0差；其余41复制原字节",
+  "wechatWorkerSurface": "原articles.candidates.generate公开producer→实际原taskId恢复key→reload原UI候选/采纳；不是退役按钮点击证据；原metadata/refs/CAS/history/图片断言保持",
+  "T1062": "原normal/offset/manifest输入与真实offlineASR准入仍缺，保真实资格失败，不伪造/skip",
+  "parentSpecSha256": "fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a",
+  "originalDriverManifestSha256": "fcdab7fc38739e63b96a6c3fb943d3b7b5156c5997a24cafd0c01b1b5545df6f",
+  "v3DriverManifestSha256": "726a0aa80e0f080459595e7dd89a41cf66a4407fa1f2cb9c281661b64338a98c",
+  "noServerBrowserModelAppStarted": true
+}

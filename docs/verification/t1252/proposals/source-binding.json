@@ -1,0 +1,219 @@
+{
+  "schema": "t1252-readonly-proposal-source-binding/v1",
+  "at": "2026-10-11T22:11:13.100079+00:00",
+  "spec": {
+    "path": "docs/features/t1252-cli-http-consumer-budget-closure.md",
+    "sha256": "f3b2413cba9f9d3e6abb76f49ed3276c89b785d3ce304b93716a4aa3cc5c3402"
+  },
+  "implementationAuthorized": false,
+  "actualHttp300SecondExperiment": false,
+  "modelIdentity": "unknown/inherited",
+  "sourceBindings": [
+    {
+      "path": "backend/src/modules/execution/workbench-artifact.service.ts",
+      "sha256": "7432eeec20b49549695197b3ef1527c0ca867dab22bb100707dd2c471ad64acf"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-file-recovery.service.ts",
+      "sha256": "1a5613702ab81e92cc4a33d437d9aa78c58c6f318dd5c2ae838e63887bcb892b"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-public.transport.ts",
+      "sha256": "5275d186348b44c2cc88ab62153d8179a4fae67ff7c13b61ec8fc20c7ac27ef3"
+    },
+    {
+      "path": "contract/src/operations/workbench.ts",
+      "sha256": "10940f09cf7c76b1473776c366e307fa5225a15e920b9079362ce5c04d9aaeda"
+    },
+    {
+      "path": "contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71"
+    },
+    {
+      "path": "docs/features/t1250-positive-timeout-consumer-closure.md",
+      "sha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.ts",
+      "sha256": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "sha256": "1a894b9ec1d6a63c9ad0036756e01351f0d05020e2d5d4480035c4e244415e04"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-host.ts",
+      "sha256": "620a03ac625a1f0e5c407f9d9facf4f89c835a2265cd290497b5930919807b55"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "sha256": "402b5e5554568d839a5d9326230dcd7ce4739d70f110d21c5c5827f9709b6e63"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-representation.ts",
+      "sha256": "8347d45f00a32841a62dd65490f557282b998b431a5dc1562ffd431c62db886f"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-client.ts",
+      "sha256": "5b39a3848dfd22996e0ca8837a68ece88ffbb00d1dbdd12fa881abd30b6e6b2f"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "sha256": "2f2638540072fc79da7d650bc779fee028c557fbc21f03b7e542a8e89f108571"
+    },
+    {
+      "path": "frontend/src/server/workbench-file-recovery.test.ts",
+      "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "sha256": "89df7926d81f68b8b6dbca54b8b773fd846dc5ab6f7536545144af4bc0e89f01"
+    },
+    {
+      "path": "frontend/src/server/workbench-preview-read.ts",
+      "sha256": "97d27b001c275e6018454cef3b04c51d71aa45d20a4d9241db59d2170e77287b"
+    },
+    {
+      "path": "frontend/src/server/workbench-public.integration.test.ts",
+      "sha256": "fea75a5e809e0797d2aca429da3389aa5d9c02676a66748295fb0a560acf4104"
+    },
+    {
+      "path": "mcp-server/package.json",
+      "sha256": "2ab421c76f3977b43e052699fefec3000816475eb78c26c80cd110dc38df0c3b"
+    },
+    {
+      "path": "mcp-server/scripts/build-runtime.mjs",
+      "sha256": "312cf5a13083730702e8e5e92f042c317b8e24737fdd17ecff7e0a7078c13fdb"
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "sha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4"
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "sha256": "4e679f48074de96a2c1badd3ef5a3950ca32fb8c3bd9de3dca12c39768ccf532"
+    },
+    {
+      "path": "mcp-server/src/index.ts",
+      "sha256": "9975083dd1457fcbfc756643a69b9cdb5a8dbffea656cad1a9f9a03c1a418bcd"
+    },
+    {
+      "path": "mcp-server/src/sea-entry.ts",
+      "sha256": "36be1b1c770503983c3bef7df348ceb3b71b39722be8724023dba2672ba0a2ed"
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "sha256": "360e4531b26e7fe540bcca5efbfe08f12ba38a2b48bfb1d660a2527e1085f957"
+    },
+    {
+      "path": "mcp-server/tests/cli-artifacts.test.ts",
+      "sha256": "3be2e2190fde9eec86a0a36b18efe569d8bb143f082b6c8ce4d081cd2ca77dd4"
+    },
+    {
+      "path": "mcp-server/tests/dispatch.test.ts",
+      "sha256": "7f884b3feae4258ccdf22d1423d999c7381b4eb1c8b7216cb540b5e156d22bba"
+    },
+    {
+      "path": "mcp-server/tests/group-context.test.ts",
+      "sha256": "d995cf72c3bab41777dbd6b6ebe0c47fa925ce4003d8db7dab2d38f506bdb56e"
+    },
+    {
+      "path": "mcp-server/tests/group-mcp-context.test.ts",
+      "sha256": "f227e9466adb8b9d56acecd63cad16ca0aeb4506fb7a3e30978385f733db02e7"
+    },
+    {
+      "path": "mcp-server/tests/helpers/loopback-cli.ts",
+      "sha256": "396da24a2758d789d5f97ae2d21ef3c49c139be9d7b1d8364a124479419e1617"
+    },
+    {
+      "path": "mcp-server/tests/server-discovery.test.ts",
+      "sha256": "2fdcb78dcc69923aca25c53acca5300d8e696fe369cd20cc5bb891b6a21a004c"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6"
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "sha256": "6ef4e5c873fcd5ac2719a220454ba3ed33be78394b63d3fd7cba5140aaddff13"
+    },
+    {
+      "path": "tools/timeout-policy/check.test.mjs",
+      "sha256": "806420ed506a56b28c43641ddc5ce7d70dd362f4ec10be8841b8207211173843"
+    }
+  ],
+  "installedInputs": [
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/package.json",
+      "realpath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/undici@7.27.2/node_modules/undici/package.json",
+      "sha256": "d234a6fae6ec5c627bcf7a2c9bc1c00400509ca97f5f417276581bc6ddad98cc"
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/types/client.d.ts",
+      "realpath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/undici@7.27.2/node_modules/undici/types/client.d.ts",
+      "sha256": "21adf13435b9b748529c8cedf80f884e5130b9684188120a686cd2b26a2059c7"
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/types/fetch.d.ts",
+      "realpath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/undici@7.27.2/node_modules/undici/types/fetch.d.ts",
+      "sha256": "3ac40516c33b87f751f7507346933081a26cdb8a3e11a6b3aa07d23f803c85db"
+    },
+    {
+      "path": "node_modules/.pnpm/undici@7.27.2/node_modules/undici/lib/web/fetch/index.js",
+      "realpath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/undici@7.27.2/node_modules/undici/lib/web/fetch/index.js",
+      "sha256": "de99d1d1944b747c6428a73f8ad72f687c1c66a568af5aaae90c9dd22aaa2aa7"
+    },
+    {
+      "path": "node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.d.ts",
+      "realpath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.d.ts",
+      "sha256": "beb2cdafa1697caece370cedc97cddc7638b2df66310193cd2ab2a76029828e8"
+    },
+    {
+      "path": "node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js",
+      "realpath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@modelcontextprotocol+sdk@1.29.0_zod@4.4.3/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js",
+      "sha256": "8de524602541771e084f7185e7d0fc418b8142a9cae1bd80a3ee7c70e9a9e132"
+    }
+  ],
+  "actualNode": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+    "undiciVersion": "7.24.4",
+    "builtinSource": "internal/deps/undici/undici",
+    "headersTimeoutMs": 300000,
+    "bodyTimeoutMs": 300000,
+    "clientLines": [
+      9165,
+      9166
+    ],
+    "fetchDispatchLines": [
+      13616,
+      13624
+    ]
+  },
+  "budget": {
+    "renderDeclared11SlotMs": 1380000,
+    "renderCleanupMs": 240000,
+    "sourcePreparationObservationAllocationMs": 5460000,
+    "sourceLegacyHistoryCardinalityBounded": false,
+    "resultObservationMs": 7800000,
+    "postMs": 8100000,
+    "loginMs": 780000,
+    "credentialDispatchMs": 17940000,
+    "noCredentialDispatchMs": 8280000,
+    "privateBudgetNotTaskDeadline": true
+  },
+  "runtimeStarted": false,
+  "notProven": [
+    "300second header/body actual",
+    "packaged CLI behavior with new source",
+    "public Node Rust chain",
+    "complete CLI all ops",
+    "App Windows official model"
+  ],
+  "externalMcpCallerDefaultMs": 60000,
+  "externalMcpCallerPolicyNotChanged": true
+}

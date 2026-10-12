@@ -1,0 +1,37 @@
+{
+  "profile": "original",
+  "runtime": "第4独立finalcandidate私有完整clone，prepare拒绝未冻结/new11bundle/newpackage",
+  "dependencies": "完整私有node_modules，所有深层链接realpath须在私有runtime；不能原位写store/共享vendor",
+  "data": "real os.tmpdir/creatoros-playwright-t1246-original-data-<nonce>；data/media/auth/profile/cache独立；HOME/CODEX_HOME exact parent，不复制auth",
+  "workerBundles": "原11个最终新build真实SHA+ownrealpath/cwd",
+  "port": 61352,
+  "inputs": [
+    {
+      "path": "output/content-samples/ai-copy-eval-loop/motion-preview.mp4",
+      "sha256": "a116d9d135ca730df76dd4932f2cf0e5630e47b4094eff6d83af5f731aa1ac04",
+      "bytes": 209277,
+      "role": "原真实只读INPUT，私有clone精确复制，不替换合成视频"
+    },
+    {
+      "path": "output/content-samples/composable-scene-graph-loop/archive-understanding.landscape.mp4",
+      "sha256": "1875435a6dda031a1dca415852b260a6e4b73f1370685af1db32800c308239e1",
+      "bytes": 874516,
+      "role": "原真实只读INPUT，私有clone精确复制，不替换合成视频"
+    },
+    {
+      "path": "docs/verification/t1101/user-baseline.png",
+      "sha256": "0fd5be87a6ea6d7b01644ef5e71ebda69f842acae59893e480ba72f053aab809",
+      "bytes": 236392,
+      "role": "原真实只读INPUT，私有clone精确复制，不替换合成视频"
+    }
+  ],
+  "missingInput": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp",
+    "fact": "目录存在但normal/offset/manifest原输入缺失；原case不得skip或假媒体替代，执行将保实际资格失败",
+    "kind": "not verified original ASR/media fixture"
+  },
+  "candidate": null,
+  "runtimePrepared": false,
+  "browserStarted": false,
+  "appStarted": false
+}

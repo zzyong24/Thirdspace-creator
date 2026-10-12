@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-11T21:12:06.712657+00:00",
+  "reviewer": "root",
+  "approved": true,
+  "scope": "T1250-entire-macOS-ipc-tests-no-App",
+  "mode": "green",
+  "toolSha256": "d806cb70c66e1c44b5419c3a0aed0a0231ad94f95060ee70b45b3133a17d408e",
+  "inputBindingSha256": "85062b5a2c39039174a1733c3aa111a509eb60f21414557510bbe7761a262468",
+  "inputsActuallyRehashed": 12,
+  "status": "PASS_TOOL_CANDIDATE_ONLY",
+  "facts": [
+    "原09c4安全工具唯一差异新input文件路径；原RED与两失败自然EOF完整保留",
+    "生产三Rust精确diff已读：accept/read和真实dispatch后write各冻结120s，活动不续、owned取消poll100ms",
+    "Windows保未完成OVERLAPPED栈与OS drain；无真实Windows运行声明",
+    "12源/Node/Cargo实际重算；准入整ipc::tests原ignored保持，声明18不冒实际数"
+  ],
+  "actualRustTestsByThisReview": 0,
+  "browserCompiledOrExecuted": false,
+  "windowsCompiledOrExecuted": false,
+  "AppAcceptance": false,
+  "remainingPublicChainProofRequired": true
+}

@@ -1,3 +1,7 @@
+import {createHash} from 'node:crypto';
+import {createExecutionRoute} from '@creatoros/contract/execution-worker';
+import {createPersistentTaskService} from '../execution/persistent-task.service';
+import {createExecutionCallLedgerService} from '../execution/execution-call-ledger.service';
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {createDb,projects,contentOutputs,artifacts,artifactVersions,aiTasks,eq,type Db} from "@creatoros/backend";
 import {createAiService,type ServiceDeps} from "./ai.service";
@@ -13,7 +17,7 @@ async function fixture(){
  const targets=createScriptDraftTargetService({now,nextId});
  const service=createAiService({db,now,nextId,scriptDraftTargets:targets,resolveTaskRuntimeData} as unknown as ServiceDeps);
  const input={projectId,topic:"原主题",attemptId:`script-task-attempt-${++seq}`};
- const binding={executionTaskId:"parent",callId:`parent-call-${++seq}`,inputDigest:`sha256:${"a".repeat(64)}`};
+ const binding=await originalParentCall(ctx,input);
  const readArtifacts=()=>db.select().from(artifacts).where(eq(artifacts.projectId,projectId));
  return {ctx,service,input,binding,resolveTaskRuntimeData,readArtifacts,targets};
 }
@@ -99,3 +103,16 @@ it("同项目两个视频 output 有独立脚本；旧项目任务仍复用无 o
  await expect(ai.createScriptDraftTask({...f.ctx,accountId:"another-account"},
   {...f.input,outputId:outputIds[0],attemptId:`script-output-${++seq}-cross`})).rejects.toThrow();
 });
+
+async function originalParentCall(ctx:import('@creatoros/contract').RequestContext,input:unknown,engine:'pi'|'codex'='pi'){
+ const now=()=>new Date().toISOString(),budget={maxCalls:8,maxTokens:100000,deadlineMs:600000};
+ const tasks=createPersistentTaskService(db,{now,nextId:prefix=>`${prefix}-${++seq}`});
+ const parent=await tasks.enqueue(ctx,{kind:'ai_task',ownerType:'ai_task',ownerId:`original-host-parent-${++seq}`,idempotencyKey:`original-host-parent-${++seq}`,executionBudget:budget,payload:{executionRoute:createExecutionRoute(engine)}});
+ const claim=await tasks.claimTask({taskId:parent.id,workerId:'original-host'});if(!claim)throw Error('本case真实父执行没有claim');
+ const ref={executionTaskId:parent.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ const ledger=createExecutionCallLedgerService(db,{now,budget}),inputDigest=`sha256:${createHash('sha256').update(JSON.stringify(input)).digest('hex')}`;
+ const call=await ledger.reserve(ref,{operationKey:`original-task-submit-${++seq}`,kind:'tool',inputDigest,reservedTokens:0});
+ await ledger.start(ref,call.id);
+ expect((await ledger.inspect(ref)).calls).toMatchObject([{id:call.id,inputDigest,status:'started',startedAttempt:ref.attempt}]);
+ return {executionTaskId:parent.id,callId:call.id,inputDigest};
+}

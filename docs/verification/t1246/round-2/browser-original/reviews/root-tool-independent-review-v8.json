@@ -1,0 +1,72 @@
+{
+  "reviewedAt": "2026-10-11T20:15:44.500382+00:00",
+  "verdict": "PASS_TOOL_ONLY_PENDING_FINAL_SOURCE_BUILD_PACKAGE_SEAL",
+  "sourceManifestSha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754",
+  "exactDriverFiles": [
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/README.md",
+      "sha256": "478e161796fc8cb29606cee055683d2a0c021a9c7ad960bc5087be299a84d585"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/budget-consumers.json",
+      "sha256": "d41408b2ec0134d7fad9a727f2889c64688e85ec7ffa8fc2708578352d46fbc1"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/changes.diff",
+      "sha256": "6716cbb53aa2069f9e453f86786d2a22279cfb3597d46bc028f2a197a2e22bd7"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "sha256": "7b4d6d60c3dca32761ef50e739902dde59642154879806ad8a59a431dc492c2c"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/manifest.json",
+      "sha256": "b994943033c39e9cdcb1ba7600d36b6604439d53be3d291f5309cc1b142f9754"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/playwright.config.ts",
+      "sha256": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/prepare-browser-driver.cjs",
+      "sha256": "22535480f510e8d94544182b987af068ed1f784824c7ea05eff0b1ede4f2d091"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "sha256": "d8b043b22dc256c99eb7efbb1cda5d856bffe40468eccc37f2ea22366f696af8"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/runtime-closure.json",
+      "sha256": "350d1e8febe75ba228a36e81a80e3fc89aeae3cb3b63b336f94e79b493666240"
+    },
+    {
+      "file": "docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "sha256": "499da034dadfa5c570750984e0a9589773d60d0bd10cc85d7f726b19c44e9a1d"
+    }
+  ],
+  "independentReviewPath": "/tmp/t1246-original-driver-independent-v8.json",
+  "independentReviewSha256": "1a804a2f1a933b07dcaacb1fd0f855a060245ef0c5ee125ae9e2513ef85c1093",
+  "independentInventory": {
+    "source100": 100,
+    "generated100": 100,
+    "specs": 54,
+    "bodies": 170,
+    "edits": 327,
+    "filesWithEdits": 57
+  },
+  "findings": [],
+  "rootRead": [
+    "prepare-runtime完整私有no-local Git clone与samecandidate、11Worker SHA/private dependency realpaths/HOME不复制",
+    "verify-binding完整输入库存、safeinteger/派生预算及原170完整outer",
+    "prepare-browser-driver只机械预算/输出/显式缺import；独立逐UTF16逆构0差",
+    "config限定原e2e项目/54spec170、retry0/screenshot+traceon/原初次100不动",
+    "launch同owned child closure+birth/uid、单独readonly ledger1200s和两次完整cleanup；env明确review标志、outer同derived字段"
+  ],
+  "runtimePermission": false,
+  "limits": [
+    "最终源码仍并行漂移，candidate/new11build/newpackage尚未封口",
+    "不得借静态list/类型/工具negative代签170实际浏览器、模型或App",
+    "T1062原媒体缺失保真实失败，不造输入"
+  ],
+  "finalSealRequired": true
+}

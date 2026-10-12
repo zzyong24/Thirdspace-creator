@@ -1,0 +1,94 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T06:50:19.433242+00:00",
+  "factsSha256": "0b7e01654d89f50e587d189de3f072b6da69287189054ac1439c7d52360dc895",
+  "nonce": "668b429310740f9889089f8c6c3f0d26",
+  "actualWrapperExitCode": 0,
+  "elapsedMs": 484392.85175,
+  "rawFiles": 64,
+  "rawBytes": 115501893,
+  "rawSHAZeroDrift": true,
+  "sourceAndToolFullBeforeAfterArraysSame": true,
+  "children": [
+    {
+      "name": "graph-consumer-red-green",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    },
+    {
+      "name": "static-delivery-graph",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    },
+    {
+      "name": "native-original-lease4",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    },
+    {
+      "name": "native-original-dom",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    },
+    {
+      "name": "native-original-dom-no-process",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    },
+    {
+      "name": "native-original-image-variants",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    },
+    {
+      "name": "native-repro-original-static-patch",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    },
+    {
+      "name": "native-repro-combined-patch-check",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    },
+    {
+      "name": "static-repro-combined-patch-check",
+      "code": 0,
+      "closed": true,
+      "groupEmpty": true
+    }
+  ],
+  "scannerJsFiles": 485,
+  "scannerFailures": 0,
+  "actualOutputFiles": {
+    "native": 395,
+    "static": 300
+  },
+  "archives": [
+    {
+      "role": "native",
+      "archiveSHA": "e93e5fe4da962637fa6eb5612b8bf8fad8c0d42d53b6af8d31dda4dc9cc159fe",
+      "patchSHA": "ba256e44dacee468db1d3ae82c17ad98a3d607bedb67149c15a57a8a86a41cbd",
+      "completeTarFileSetBytesModesLinks": true,
+      "members": 819
+    },
+    {
+      "role": "static",
+      "archiveSHA": "d63e3e278f135c47dfd4e7c290b91f9504b0a5ac874d548ce57ccbcebb0dc602",
+      "patchSHA": "43ee5ddfdcad6ae0a0a49f32e5069691c3fdd0345f167a4c15b93f5c2445a14e",
+      "completeTarFileSetBytesModesLinks": true,
+      "members": 804
+    }
+  ],
+  "noProductCopy": true,
+  "noApp": true,
+  "originalV12V13V14FailuresAndMissingReceiptsNotRewritten": true,
+  "initialRootSchemaErrorPreservedSHA": "4347d0a9eae5da045751d74f7cc747e19c37ecdce7a08a14febcdc6c77e436ea"
+}

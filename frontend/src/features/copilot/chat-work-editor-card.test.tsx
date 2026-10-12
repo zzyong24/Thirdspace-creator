@@ -15,6 +15,7 @@ import {
 import { articleDocument,assistantActionCandidateSchema } from "@creatoros/contract";
 import {withEditorCandidateSave,EditorCandidateConflictError} from "@/features/draft-workbench/draft-chat-request";
 const api = vi.hoisted(() => ({
+  readWorkCandidateSource: vi.fn(),
   createArticleVersion: vi.fn(),
   getArticleVersion: vi.fn(),
   getArticle: vi.fn(),
@@ -111,19 +112,18 @@ const result: any = {
 };
 afterEach(() => {
   cleanup();
+  sessionStorage.clear();
   vi.clearAllMocks();
 });
 it("收起候选不装重预览；实际预览就绪后才可采用，完整document和真实CAS基准保真", async () => {
+  api.readWorkCandidateSource.mockResolvedValue({assistantSource:{taskId:"source-task",callId:"source-call",toolCallId:"tool-real",candidateDigest:"sha256:"+"c".repeat(64)},candidate:result});
   api.createArticleVersion.mockResolvedValue({ versionId: "saved-real" });
-  api.getArticleVersion.mockResolvedValue({
-    versionId: "saved-real",
-    document,
-  });
+  api.getArticleVersion.mockImplementation(async ({params}:any)=>({versionId:params.versionId,document:params.versionId==="base-real"?{...document,title:"",summary:""}:document}));
   api.getArticle.mockResolvedValue({
     currentVersionId: "saved-real",
     current: document,
   });
-  render(<ChatWorkEditorCard result={result} toolCallId="tool-real" />);
+  render(<ChatWorkEditorCard result={result} toolCallId="tool-real" location={{conversationId:"conversation-real",sourceMessageId:"source-message",toolCallId:"tool-real"}} />);
   expect(screen.queryByTestId("preview")).toBeNull();
   expect(screen.getByRole("button", { name: "采纳到当前作品" })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "预览改动" }));
@@ -142,10 +142,13 @@ it("收起候选不装重预览；实际预览就绪后才可采用，完整docu
     params: { outputId: "article-real" },
     body: {
       expectedCurrentVersionId: "base-real",
-      document,
+      adoptionMode:"assistant",
+      fieldSelection:["title","summary"],
+      factSelection:{mode:"keep"},
       clientRequestId: expect.stringMatching(/^sha256:/),
     },
   });
+  expect(api.createArticleVersion.mock.calls[0][0].body).not.toHaveProperty("document");
 });
 it("原owner回执丢失重放同body/key，current漂移只报告已保存未同步", async () => {
   const owner = {
@@ -217,4 +220,10 @@ it('同请求ID绑定的候选内容被替换时拒绝，结束后释放本次�
  expect(save).not.toHaveBeenCalled();
  await expect(withEditorCandidateSave(result,'fixed-key',save,()=>saveWorkEditorCandidate(api,result,'fixed-key'))).resolves.toEqual({receipt:{versionId:'v'}});
  expect(save).toHaveBeenCalledTimes(1);expect(api.createArticleVersion).not.toHaveBeenCalled();
+});
+
+it('缺原消息或原来源candidate不符不能采纳、不能用最新任务补造',async()=>{
+ const view=render(<ChatWorkEditorCard result={result} toolCallId="tool-real"/>);fireEvent.click(screen.getByRole('button',{name:'预览改动'}));await screen.findByText(/缺少原会话消息来源/);fireEvent.click(screen.getByRole("button",{name:"关闭"}));await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull());expect(screen.getByRole('button',{name:'采纳到当前作品'})).toBeDisabled();expect(api.createArticleVersion).not.toHaveBeenCalled();view.unmount();
+ api.readWorkCandidateSource.mockResolvedValue({assistantSource,candidate:{...result,summary:'另一轮'}});
+ render(<ChatWorkEditorCard result={result} toolCallId="tool-real" location={{conversationId:'conversation',sourceMessageId:'original-message',toolCallId:'tool-real'}}/>);await screen.findByText(/来源读回与正在显示的原候选不一致/);expect(screen.getByRole('button',{name:'采纳到当前作品'})).toBeDisabled();expect(api.createArticleVersion).not.toHaveBeenCalled();
 });

@@ -1,0 +1,40 @@
+{
+  "kind": "symbolic-complete-future-serial-capacity-SOURCE-only",
+  "uniquePairsN": null,
+  "NSource": "future actual full binary discovery file+arch unique inventory, frozen SHA and dual review before OTool",
+  "old131NotUsedAsCapacity": true,
+  "inventoryChildren": [
+    {
+      "name": "prepare-metadata-input",
+      "positiveMs": 1140000,
+      "independentLifecycleMs": 2160000,
+      "consumer": "one git --exec-path240k + original900k inventoryIO"
+    },
+    {
+      "name": "binary-discovery",
+      "positiveMs": 900000,
+      "independentLifecycleMs": 2160000,
+      "consumer": "read actual Mach-O headers and recursive loads, zero OTool"
+    }
+  ],
+  "inventoryBeforeMs": 840000,
+  "inventoryAfterMs": 840000,
+  "inventoryPsMs": 180000,
+  "inventoryMarginMs": 180000,
+  "inventoryOuterMs": 8400000,
+  "actualOToolPerPairPositiveMs": 120000,
+  "actualOToolPerPairStartCloseRawMs": 120000,
+  "collectorEntryMs": 900000,
+  "collectorPostMs": 900000,
+  "collectorMarginMs": 600000,
+  "collectorPositiveFormula": "N*240000+2400000",
+  "collectorIndependentLifecycleMs": 2160000,
+  "collectorParentBeforeMs": 840000,
+  "collectorParentAfterMs": 840000,
+  "collectorPsMs": 180000,
+  "collectorParentMarginMs": 180000,
+  "collectorParentOuterFormula": "N*240000+6600000",
+  "segmentsMaxMs": 60000,
+  "separatePhaseBirthsNotRuntimeRenewal": true,
+  "sourceOnlyNoActualBudgetOrPairCountClaimed": true
+}

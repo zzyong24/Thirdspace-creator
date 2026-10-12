@@ -1,0 +1,9 @@
+{
+  "schema": "readonly-candidate-hash-proof/v1",
+  "packetSha256": "fbfcf39c5217db51c4ff660b9300ca61206365bddb2c95e66ef283684a74fcd9",
+  "regularArchiveMembersActuallyHashed": 1617,
+  "archiveMembersMetadataActuallyChecked": 1776,
+  "actualFilesChecked": 26,
+  "drift": [],
+  "noExtractOrCandidateRun": true
+}

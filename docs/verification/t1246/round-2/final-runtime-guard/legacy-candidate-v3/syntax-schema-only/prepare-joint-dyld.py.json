@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-12T07:13:26.388029+00:00",
+  "parser": "Python ast.parse",
+  "code": 0,
+  "error": null,
+  "input": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/prepare-joint-dyld.py",
+  "inputSha256": "0430982cd69814dcd76ddfe0289d93a6254dc01dbecca8731a5dc809216d2c4a",
+  "scope": "single-line old builder consumer path→file",
+  "candidateModuleBodyExecuted": false
+}

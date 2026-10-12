@@ -1,0 +1,19 @@
+{
+  "scope": "ROOT只读精确模板/escape静态负路，无launcher、MTS import、网络、Native或App执行",
+  "launcherSha256": "17916593a3dde3a115359c5cf6e47ff57c6da9ec0010e1eb00ac31a287cf2ff8",
+  "actualGeneratedTemplateTail": "alse,maxWorkers:1,maxConcurrency:1}}));\n",
+  "templateSyntaxErrors": [],
+  "escapeInput": "[a](+)?$",
+  "actualEscaped": "\\[a\\]\\(\\+\\)\\?\\$",
+  "expectedEscaped": "\\[a\\]\\(\\+\\)\\?\\$",
+  "escapeCorrect": true,
+  "actualRuntime": false,
+  "actualJavaScriptCookedTemplateTail": "alse,maxWorkers:1,maxConcurrency:1}}));\n",
+  "actualLastCharacterCodes": [
+    41,
+    59,
+    10
+  ],
+  "actualCookedTemplateParseError": null,
+  "tsLiteralTextWasNotJavaScriptCookedRuntimeProof": true
+}

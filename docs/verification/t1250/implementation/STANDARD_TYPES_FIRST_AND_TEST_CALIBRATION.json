@@ -1,0 +1,20 @@
+{
+  "schema": "t1250-approved-test-calibration/v1",
+  "actualTypesFailureEvidence": "docs/verification/t1250/runs/ct1250-types-kPuf02/types.log",
+  "standardTypeErrors": 7,
+  "historicalFirst100ErrorsPreserved": 4,
+  "newPublicMissingBodyErrors": 3,
+  "public": {
+    "path": "frontend/src/server/workbench-public.integration.test.ts",
+    "before": "fea75a5e809e0797d2aca429da3389aa5d9c02676a66748295fb0a560acf4104",
+    "after": "476c4a857b72b172f47923e8f98c0519d7d4d49222d6044a8d4f8d504e02f9d8",
+    "change": "仅三原EndpointInput补body:undefined，schema/断言/真实慢body不改"
+  },
+  "render": {
+    "path": "frontend/src/server/workbench-artifact-render.test.ts",
+    "before": "de75b05152de40645b8aa8fe46e2e94cd3e4c17e66c3412c7c6d2a51abc20d56",
+    "after": "b2a01d1c20b31c5cdd3278a4734cda19f819214dfa9891a3b67fa93b414062ac",
+    "change": "仅原三个60秒case保原全部body/assert并提高至已批准1.8M；无删除case"
+  },
+  "runsAfterMutation": 0
+}

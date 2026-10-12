@@ -58,15 +58,14 @@ async function createJob(page: Page, groupId: string, name: string, accountId?: 
 }
 
 async function openGroup(page: Page, baseURL: string | undefined, groupId: string): Promise<void> {
-  const cookieUrl = baseURL ?? "http://127.0.0.1";
-  await page.context().addCookies([
-    { name: "creatoros_current_group", value: encodeURIComponent(groupId), url: cookieUrl },
-    { name: "creatoros_current_account", value: "", url: cookieUrl },
-  ]);
-  await page.addInitScript((id) => {
-    window.localStorage.setItem("creatoros:current-group", id);
-    window.localStorage.removeItem("creatoros:current-account");
-  }, groupId);
+  await page.reload({waitUntil:"domcontentloaded",timeout:120_000});
+  await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state","ready");
+  await page.getByTestId("account-switcher-trigger").click();
+  await page.getByTestId("account-switcher-menu").locator(`[data-group-id="${groupId}"]`).click();
+  await expect.poll(()=>page.evaluate(()=>localStorage.getItem("creatoros:current-group"))).toBe(groupId);
+  const cookieUrl=baseURL??"http://127.0.0.1";
+  await expect.poll(async()=> (await page.context().cookies(cookieUrl)).find(c=>c.name==="creatoros_current_group")?.value).toBe(encodeURIComponent(groupId));
+  await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state","ready");
   await page.goto("/automations");
   await expect(page.getByTestId("automations-current-group")).toBeVisible();
 }

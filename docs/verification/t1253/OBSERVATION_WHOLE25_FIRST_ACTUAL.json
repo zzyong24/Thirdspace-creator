@@ -1,0 +1,691 @@
+{
+  "task": "T-1253",
+  "scope": "原三文件25完整观察，原118expect/原res.destroy/原预算不变；不是修复PASS",
+  "evidence": "docs/verification/t1253/execution/observation-whole25-936861b3079dc6f7c610d656dad8d7fb",
+  "actualCounts": {
+    "total": 25,
+    "passed": 17,
+    "failed": 8,
+    "skip": 0
+  },
+  "childExitCode": 1,
+  "childElapsedMs": 62919,
+  "wrapperElapsedMs": 63795.446041999996,
+  "sourceDigest": "287720898315cd16e818bdce5548c1749f4eb1dc7c271682de3bdf41b3906e57",
+  "sourceUnchanged": true,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "ownedRootCleaned": true,
+  "observations": [
+    {
+      "stage": "before-recovery",
+      "executionTaskId": "execution-task-3162505b-9048-423b-a6ce-c9af7bca1899",
+      "aiTaskId": "ai-task-b8379b80-a0e1-41af-b3c0-b392fb5fc918",
+      "httpTrace": [
+        {
+          "type": "http_request",
+          "ordinal": 1,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:07.502Z",
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "script_hooks"
+          ],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "http_request",
+          "ordinal": 2,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:07.785Z",
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": [],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "res_destroy",
+          "ordinal": 2,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:07.785Z"
+        }
+      ],
+      "task": {
+        "id": "execution-task-3162505b-9048-423b-a6ce-c9af7bca1899",
+        "userId": "hooks-worker-u",
+        "accountId": "hooks-worker-a-25",
+        "groupId": null,
+        "status": "running",
+        "executionBudget": {
+          "policy": "continuous",
+          "maxCalls": null,
+          "maxTokens": null,
+          "deadlineMs": null
+        },
+        "createdAt": "2026-10-11T22:26:06.642Z",
+        "deadlineAt": null,
+        "leaseExpiresAt": "2026-10-11T22:27:06.645Z",
+        "retryAt": null,
+        "lastErrorCode": null
+      },
+      "calls": [
+        {
+          "id": "call_e09df75a-8db1-47c7-bf3b-b4202b3959ec",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-27/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "providerReceiptPresent": true,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:07.475Z",
+          "updatedAt": "2026-10-11T22:26:07.515Z"
+        },
+        {
+          "id": "call_850e7ca7-3b7d-440a-9d5e-4466dfb01452",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:3ea2b44f7523216302225f7309bd053ca0e97619edb5c1492d702b1c2e5df0be",
+          "status": "started",
+          "totalTokens": null,
+          "providerReceiptPresent": false,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:07.592Z",
+          "updatedAt": "2026-10-11T22:26:07.601Z"
+        },
+        {
+          "id": "call_8329eb47-1fc1-4204-b246-4258a045c1c2",
+          "kind": "model",
+          "parentCallId": "call_850e7ca7-3b7d-440a-9d5e-4466dfb01452",
+          "operationKey": "hooks:call_850e7ca7-3b7d-440a-9d5e-4466dfb01452:093380d27d25e7d19a52853d441f735b6c16d7badfcda23d23a436bb9f2b1c13/model/1",
+          "status": "unknown",
+          "totalTokens": null,
+          "providerReceiptPresent": false,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:07.721Z",
+          "updatedAt": "2026-10-11T22:26:07.792Z"
+        }
+      ],
+      "formal": [],
+      "business": {
+        "id": "ai-task-b8379b80-a0e1-41af-b3c0-b392fb5fc918",
+        "status": "queued",
+        "executionTaskId": "execution-task-3162505b-9048-423b-a6ce-c9af7bca1899"
+      }
+    },
+    {
+      "stage": "after-cleanup",
+      "executionTaskId": "execution-task-3162505b-9048-423b-a6ce-c9af7bca1899",
+      "aiTaskId": "ai-task-b8379b80-a0e1-41af-b3c0-b392fb5fc918",
+      "httpTrace": [
+        {
+          "type": "http_request",
+          "ordinal": 1,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:07.502Z",
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "script_hooks"
+          ],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "http_request",
+          "ordinal": 2,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:07.785Z",
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": [],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "res_destroy",
+          "ordinal": 2,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:07.785Z"
+        },
+        {
+          "type": "http_request",
+          "ordinal": 3,
+          "phase": "resumed",
+          "at": "2026-10-11T22:26:09.313Z",
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": [],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "res_destroy",
+          "ordinal": 3,
+          "phase": "resumed",
+          "at": "2026-10-11T22:26:09.313Z"
+        }
+      ],
+      "task": {
+        "id": "execution-task-3162505b-9048-423b-a6ce-c9af7bca1899",
+        "userId": "hooks-worker-u",
+        "accountId": "hooks-worker-a-25",
+        "groupId": null,
+        "status": "unknown_result",
+        "executionBudget": {
+          "policy": "continuous",
+          "maxCalls": null,
+          "maxTokens": null,
+          "deadlineMs": null
+        },
+        "createdAt": "2026-10-11T22:26:06.642Z",
+        "deadlineAt": null,
+        "leaseExpiresAt": null,
+        "retryAt": null,
+        "lastErrorCode": "TOOL_REQUIRES_RECONCILIATION"
+      },
+      "calls": [
+        {
+          "id": "call_e09df75a-8db1-47c7-bf3b-b4202b3959ec",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-27/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "providerReceiptPresent": true,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:07.475Z",
+          "updatedAt": "2026-10-11T22:26:07.515Z"
+        },
+        {
+          "id": "call_850e7ca7-3b7d-440a-9d5e-4466dfb01452",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:3ea2b44f7523216302225f7309bd053ca0e97619edb5c1492d702b1c2e5df0be",
+          "status": "unknown",
+          "totalTokens": null,
+          "providerReceiptPresent": false,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:07.592Z",
+          "updatedAt": "2026-10-11T22:27:08.034Z"
+        },
+        {
+          "id": "call_8329eb47-1fc1-4204-b246-4258a045c1c2",
+          "kind": "model",
+          "parentCallId": "call_850e7ca7-3b7d-440a-9d5e-4466dfb01452",
+          "operationKey": "hooks:call_850e7ca7-3b7d-440a-9d5e-4466dfb01452:093380d27d25e7d19a52853d441f735b6c16d7badfcda23d23a436bb9f2b1c13/model/1",
+          "status": "superseded",
+          "totalTokens": null,
+          "providerReceiptPresent": false,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:07.721Z",
+          "updatedAt": "2026-10-11T22:27:06.646Z"
+        },
+        {
+          "id": "call_3ab6265c-5bdf-47be-af7e-08b3d1ae5d00",
+          "kind": "model",
+          "parentCallId": "call_850e7ca7-3b7d-440a-9d5e-4466dfb01452",
+          "operationKey": "hooks:call_850e7ca7-3b7d-440a-9d5e-4466dfb01452:093380d27d25e7d19a52853d441f735b6c16d7badfcda23d23a436bb9f2b1c13/model/1",
+          "status": "unknown",
+          "totalTokens": null,
+          "providerReceiptPresent": false,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": "call_8329eb47-1fc1-4204-b246-4258a045c1c2",
+          "createdAt": "2026-10-11T22:27:07.881Z",
+          "updatedAt": "2026-10-11T22:27:07.966Z"
+        }
+      ],
+      "formal": [],
+      "business": {
+        "id": "ai-task-b8379b80-a0e1-41af-b3c0-b392fb5fc918",
+        "status": "queued",
+        "executionTaskId": "execution-task-3162505b-9048-423b-a6ce-c9af7bca1899"
+      }
+    },
+    {
+      "stage": "before-recovery",
+      "executionTaskId": "execution-task-df5b209d-4549-44ae-9c75-19dfa39d4b35",
+      "aiTaskId": "ai-task-377bea66-7ba6-4f63-aa42-2663463a5b4c",
+      "httpTrace": [
+        {
+          "type": "http_request",
+          "ordinal": 1,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:32.502Z",
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "script_draft"
+          ],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "http_request",
+          "ordinal": 2,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:32.799Z",
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": [],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "res_destroy",
+          "ordinal": 2,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:32.799Z"
+        }
+      ],
+      "task": {
+        "id": "execution-task-df5b209d-4549-44ae-9c75-19dfa39d4b35",
+        "userId": "hooks-worker-u",
+        "accountId": "hooks-worker-a-33",
+        "groupId": null,
+        "status": "running",
+        "executionBudget": {
+          "policy": "continuous",
+          "maxCalls": null,
+          "maxTokens": null,
+          "deadlineMs": null
+        },
+        "createdAt": "2026-10-11T22:26:31.635Z",
+        "deadlineAt": null,
+        "leaseExpiresAt": "2026-10-11T22:27:31.639Z",
+        "retryAt": null,
+        "lastErrorCode": null
+      },
+      "calls": [
+        {
+          "id": "call_dd3260bc-f3bb-4026-af59-1b67dc444e0c",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-36/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "providerReceiptPresent": true,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:32.474Z",
+          "updatedAt": "2026-10-11T22:26:32.515Z"
+        },
+        {
+          "id": "call_5def4bab-f040-4de6-a1cb-2d4fdbb86140",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:d643c2c291e86d4816018f8b2862171a5431d813da4d41ddf2a88a1f3611269b",
+          "status": "started",
+          "totalTokens": null,
+          "providerReceiptPresent": false,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:32.595Z",
+          "updatedAt": "2026-10-11T22:26:32.604Z"
+        },
+        {
+          "id": "call_c12689d1-2f16-4f8c-b3c9-9ee5a943ecfe",
+          "kind": "model",
+          "parentCallId": "call_5def4bab-f040-4de6-a1cb-2d4fdbb86140",
+          "operationKey": "script-draft:call_5def4bab-f040-4de6-a1cb-2d4fdbb86140:7eb74a4f906d3d244ded6b84887fd669f95e7d030bd253965150fcccb9cf7016/model/1",
+          "status": "unknown",
+          "totalTokens": null,
+          "providerReceiptPresent": false,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:32.732Z",
+          "updatedAt": "2026-10-11T22:26:32.810Z"
+        }
+      ],
+      "formal": [],
+      "business": {
+        "id": "ai-task-377bea66-7ba6-4f63-aa42-2663463a5b4c",
+        "status": "queued",
+        "executionTaskId": "execution-task-df5b209d-4549-44ae-9c75-19dfa39d4b35"
+      }
+    },
+    {
+      "stage": "after-cleanup",
+      "executionTaskId": "execution-task-df5b209d-4549-44ae-9c75-19dfa39d4b35",
+      "aiTaskId": "ai-task-377bea66-7ba6-4f63-aa42-2663463a5b4c",
+      "httpTrace": [
+        {
+          "type": "http_request",
+          "ordinal": 1,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:32.502Z",
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "script_draft"
+          ],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "http_request",
+          "ordinal": 2,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:32.799Z",
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": [],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "res_destroy",
+          "ordinal": 2,
+          "phase": "initial",
+          "at": "2026-10-11T22:26:32.799Z"
+        },
+        {
+          "type": "http_request",
+          "ordinal": 3,
+          "phase": "resumed",
+          "at": "2026-10-11T22:26:33.986Z",
+          "rootRequest": false,
+          "stream": true,
+          "toolNames": [],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            }
+          ]
+        },
+        {
+          "type": "http_request",
+          "ordinal": 4,
+          "phase": "resumed",
+          "at": "2026-10-11T22:26:34.487Z",
+          "rootRequest": true,
+          "stream": true,
+          "toolNames": [
+            "script_draft"
+          ],
+          "messageRoles": [
+            {
+              "role": "system"
+            },
+            {
+              "role": "user"
+            },
+            {
+              "role": "assistant"
+            },
+            {
+              "role": "tool",
+              "toolCallId": "hooks"
+            }
+          ]
+        }
+      ],
+      "task": {
+        "id": "execution-task-df5b209d-4549-44ae-9c75-19dfa39d4b35",
+        "userId": "hooks-worker-u",
+        "accountId": "hooks-worker-a-33",
+        "groupId": null,
+        "status": "partial",
+        "executionBudget": {
+          "policy": "continuous",
+          "maxCalls": null,
+          "maxTokens": null,
+          "deadlineMs": null
+        },
+        "createdAt": "2026-10-11T22:26:31.635Z",
+        "deadlineAt": null,
+        "leaseExpiresAt": null,
+        "retryAt": null,
+        "lastErrorCode": null
+      },
+      "calls": [
+        {
+          "id": "call_dd3260bc-f3bb-4026-af59-1b67dc444e0c",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-36/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "providerReceiptPresent": true,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:32.474Z",
+          "updatedAt": "2026-10-11T22:26:32.515Z"
+        },
+        {
+          "id": "call_5def4bab-f040-4de6-a1cb-2d4fdbb86140",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:d643c2c291e86d4816018f8b2862171a5431d813da4d41ddf2a88a1f3611269b",
+          "status": "settled",
+          "totalTokens": 0,
+          "providerReceiptPresent": false,
+          "resultText": "{\"schemaVersion\":1,\"kind\":\"tool\",\"toolCallId\":\"hooks\",\"toolName\":\"script_draft\",\"output\":{\"status\":\"error\",\"summary\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\",\"evidence\":[],\"data\":{\"kind\":\"script.draft\",\"draftMode\":\"verbatim\",\"taskId\":null,\"projectId\":null,\"error\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\"},\"error\":{\"code\":\"no_evidence\",\"retryable\":false,\"recovery\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\"},\"continuation\":null,\"sideEffect\":\"none\"}}",
+          "startedAttempt": 2,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:32.595Z",
+          "updatedAt": "2026-10-11T22:27:32.769Z"
+        },
+        {
+          "id": "call_c12689d1-2f16-4f8c-b3c9-9ee5a943ecfe",
+          "kind": "model",
+          "parentCallId": "call_5def4bab-f040-4de6-a1cb-2d4fdbb86140",
+          "operationKey": "script-draft:call_5def4bab-f040-4de6-a1cb-2d4fdbb86140:7eb74a4f906d3d244ded6b84887fd669f95e7d030bd253965150fcccb9cf7016/model/1",
+          "status": "superseded",
+          "totalTokens": null,
+          "providerReceiptPresent": false,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:26:32.732Z",
+          "updatedAt": "2026-10-11T22:27:31.640Z"
+        },
+        {
+          "id": "call_563b64db-3c77-40c5-b1b8-b15c6c3a6496",
+          "kind": "model",
+          "parentCallId": "call_5def4bab-f040-4de6-a1cb-2d4fdbb86140",
+          "operationKey": "script-draft:call_5def4bab-f040-4de6-a1cb-2d4fdbb86140:7eb74a4f906d3d244ded6b84887fd669f95e7d030bd253965150fcccb9cf7016/model/1",
+          "status": "settled",
+          "totalTokens": 5,
+          "providerReceiptPresent": true,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": "call_c12689d1-2f16-4f8c-b3c9-9ee5a943ecfe",
+          "createdAt": "2026-10-11T22:27:32.529Z",
+          "updatedAt": "2026-10-11T22:27:32.623Z"
+        },
+        {
+          "id": "call_3827ea0c-20df-4bfa-8c68-0991b476fe70",
+          "kind": "model",
+          "parentCallId": null,
+          "operationKey": "chat:ai-msg-36/model/2",
+          "status": "settled",
+          "totalTokens": 5,
+          "providerReceiptPresent": true,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:27:33.094Z",
+          "updatedAt": "2026-10-11T22:27:33.156Z"
+        }
+      ],
+      "formal": [
+        {
+          "id": "chat:ai-task-377bea66-7ba6-4f63-aa42-2663463a5b4c",
+          "resultType": "conversation_reply",
+          "assetId": null,
+          "artifactId": null,
+          "knowledgeItemId": null,
+          "resultData": {
+            "messageId": "chat:ai-msg-36",
+            "stopReason": "stop",
+            "actualEngine": "pi",
+            "completeness": "partial",
+            "checkpointRef": 3,
+            "conversationId": "ai-conv-35",
+            "sourceMessageId": "ai-msg-36"
+          }
+        }
+      ],
+      "business": {
+        "id": "ai-task-377bea66-7ba6-4f63-aa42-2663463a5b4c",
+        "status": "partial",
+        "executionTaskId": "execution-task-df5b209d-4549-44ae-9c75-19dfa39d4b35"
+      }
+    }
+  ],
+  "actualTraceLineCount": 4,
+  "failures": [
+    {
+      "file": "src/integration/chat-hooks-worker.test.ts",
+      "name": "同一真实Worker内部开场生成：reject429",
+      "failureMessages": [
+        "AssertionError: expected { …(22) } to match object { status: 'rejected' }\n(21 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:111:49\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "src/integration/chat-hooks-worker.test.ts",
+      "name": "同一真实Worker内部开场生成：reject429drop",
+      "failureMessages": [
+        "AssertionError: expected { …(22) } to match object { status: 'rejected' }\n(21 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:111:49\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "src/integration/chat-hooks-worker.test.ts",
+      "name": "同一真实Worker内部开场生成：crashUnknownChild",
+      "failureMessages": [
+        "AssertionError: expected [ { model: 'fixture', …(7) }, …(2) ] to have a length of 2 but got 3\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:121:21\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "src/integration/chat-hooks-worker.test.ts",
+      "name": "同一真实Worker内部开场生成：crashDeadline",
+      "failureMessages": [
+        "RangeError: Invalid time value\n    at Date.toISOString (<anonymous>)\n    at now (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:42:155)\n    at Object.recoverExpiredLeases (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts:954:21)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:470:19\n    at Object.drainOnce (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:572:5)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:98:59\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20",
+        "RangeError: Invalid time value\n    at Date.toISOString (<anonymous>)\n    at now (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:42:155)\n    at Object.recoverExpiredLeases (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts:954:21)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:470:19\n    at Object.drainOnce (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:572:5)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:98:59\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "src/integration/chat-script-draft-worker.test.ts",
+      "name": "真实 Worker 整稿授权与原子提交：unauthorized",
+      "failureMessages": [
+        "AssertionError: expected '候选已准备好\\n\\n本次部分完成。最后一次工具操作未成功，尚未交付可采用候…' to be '候选已准备好' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts:127:109\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "src/integration/chat-script-draft-worker.test.ts",
+      "name": "真实 Worker 整稿授权与原子提交：reject429",
+      "failureMessages": [
+        "AssertionError: expected { …(22) } to match object { status: 'rejected' }\n(21 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts:103:49\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "src/integration/chat-script-draft-worker.test.ts",
+      "name": "真实 Worker 整稿授权与原子提交：crashUnknownChild",
+      "failureMessages": [
+        "AssertionError: expected 'partial' to be 'unknown_result' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts:110:25\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "name": "真实 Worker 与后端持久调用端口 真实进程检查点恢复不重放供应商（缺少usage=true）",
+      "failureMessages": [
+        "AssertionError: expected 'unknown_result' to be 'completed' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts:93:61\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    }
+  ],
+  "notCapturedInThisRun": [
+    "frozen executionRoute/modelInput engine",
+    "task retryOfCallId/attempt at actual resumed HTTP",
+    "child inputDigest/reservedTokens/accountingBasis/providerJob/resultRef/usage null proof"
+  ],
+  "readonlySourceCause": [
+    "model-worker-dispatcher drainOnce调用recoverExpiredLeases",
+    "persistent-task service1004-1025在任务行锁内筛选/虚拟superseded/核safe parent后实写并携带retryOf",
+    "model-call-recovery unconfirmedModelCalls排Codex/asset且仅model/providerJob/result/ref空",
+    "execution-call-ledger totals保superseded null-token的原reservedTokens占预算",
+    "T1022已确认无外部副作用候选可superseded废弃重试，工具/发布/浏览器/providerJob禁止"
+  ],
+  "legalPermissionConclusion": "pending 实际当HTTP字段绑定及独复；不得仅源码推断当时许可，更不改counts/刺激遮重发",
+  "oldEvidencePreserved": true,
+  "old58436BudgetTheoryGap": "原18060000outer只留360000组grace，未完整计两个child的ps身份/快照/信号尾生命周期；实际本轮EOF/group0/无超时事实保留，理论gap不回签。新stage使用23220000outer。",
+  "noProductionWrites": true,
+  "nativeAppNotTested": true
+}

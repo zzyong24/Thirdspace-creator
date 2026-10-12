@@ -1,0 +1,56 @@
+{
+  "task": "T-1254",
+  "at": "2026-10-12T04:54:37.270314+00:00",
+  "conclusion": "CONCERNS_STATIC_SOURCE_V2_NO_RUNTIME_ADMISSION",
+  "sourceToolBindingSha256": "681683c6aceaf17dddd90f26df9a1ea26b558d8f1295c3a4e685c3fdba0535c4",
+  "exactSnapshot": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/browser-review-history/tool6816-budget-concerns",
+    "rows": 40,
+    "drift": []
+  },
+  "fullSourceRead": [
+    "README/PENDING/binding/delta",
+    "全部8driver源码",
+    "9函数继承proof与原31c独立完整源码审查；新8driver全文核",
+    "readonly Python producer及94roots当前metadata",
+    "当前原图全部raw加载命令与字节独立复核另单报告"
+  ],
+  "previousFindings": [
+    {
+      "id": "BT001",
+      "staticCandidate": "已加入同步verify之后及finally的出生deadline检查；待最终精确工具版本复审与实际运行"
+    },
+    {
+      "id": "BT002",
+      "staticCandidate": "collectOwned用actual私有clone的FD读LC_LOAD/RPATH；relative实际选择、absolute保持原absolute；规范化source provenance比较、actual所有bytes/mode/uid/link/firstexists及raw每次检查；actualcollector未执行"
+    },
+    {
+      "id": "BT003",
+      "staticCandidate": "dynamicRoots全browserInputs的实际MachO roots，Chrome Helpers与独立main路径纳入；最终manifest尚不存在，实际最终覆盖仍pending"
+    }
+  ],
+  "findings": [
+    {
+      "id": "BT004",
+      "title": "外层未覆盖完整串行元数据及verify消费槽",
+      "facts": [
+        "sealed当前194上下文/131唯一(file,arch)需要131×120000=15720000ms原otool正执行槽，collector仅900000；prepare3600000亦不足。",
+        "verify source包含4个240000 Git命令串行960000，runtime另外owned HEAD240000；各自再需保原IO余量，不能借快执行压缩。",
+        "prepare实际verify调用S/R/S/R，complete实际S/R/尾S+R，launch本进程entryR/startS+R/finalS+R；所有调用需逐项计入外层和future准入。",
+        "Next子entryR发生在父Next startup ready420000 admission内；readonly子entryR之后还有两次ps及connect/identity/BEGIN/SELECT/ROLLBACK/end串行原120000请求槽，原readonly1800000不足。",
+        "seal在旧900000预算检查后仍执行source verify；需覆盖完整后验与显式finaldeadline。"
+      ],
+      "required": "按真实封印的unique命令数和完整verify调用推导完整outer及所有nested/future槽，保原120k/240k/原其它长预算；一次新binding/diff复审。",
+      "observedRuntimeFailure": false
+    }
+  ],
+  "pending": [
+    "final delivery/newHEAD/11Worker/DMG",
+    "fresh physical runtime final seal and exact peer+ROOT",
+    "actual private copy metadata/raw receipts plus proper types/list2/body2/screenshots/trace/readonly/cleanup/sourceafter"
+  ],
+  "noManifest": true,
+  "noCandidateOrBrowserExecution": true,
+  "original170New111First100Unchanged": true,
+  "AppUnverified": true
+}

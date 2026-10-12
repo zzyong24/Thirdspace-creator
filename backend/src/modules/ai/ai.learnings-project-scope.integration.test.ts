@@ -1,3 +1,4 @@
+import {projects as originalProjects} from "../../schema/projects";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -60,6 +61,7 @@ describe("[T-118a gate-F3] review.analyze → confirm → project-scoped candida
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedOriginalProject(db,ctx,"project-abc",NOW);
   });
 
   it("confirmed review.analyze learnings are readable by learnings.list(projectId, candidate)", async () => {
@@ -110,3 +112,7 @@ describe("[T-118a gate-F3] review.analyze → confirm → project-scoped candida
     expect(other.total).toBe(0);
   });
 });
+
+async function seedOriginalProject(db:Db,owner:RequestContext,id:string,stamp:string){
+ await db.insert(originalProjects).values({id,userId:owner.userId,accountId:owner.accountId??null,groupId:owner.groupId??null,title:'原用例真实父项目',creationMode:'free',status:'active',currentStage:'review',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
+}

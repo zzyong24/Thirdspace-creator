@@ -1,0 +1,26 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "scope": "source causal review only, no repairs/reruns",
+  "bindings": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/reporting-consent-card.tsx",
+      "sha256": "c96813bdcbd6a82208c585ce79b89b7711bb16e639c86685fee0a5d30c7c80ae"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/check-update-card.test.tsx",
+      "sha256": "a6bfeacdc1101fa5b92dcfdbea8dba566ef13a5ff4e2c3335639f325d1707619"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/identity-section.test.tsx",
+      "sha256": "2018a4f89ed7cd533a12a6f18888bfb6b2475a9bcdd55f4cdf5bbe28ecf5b453"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+      "sha256": "58916cb4c38b4e1acd3c8f87259e0ff12bff7e1f0a95b3bc6ae83c5b43bbfe92"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/reference-editors/noterelay/web/native.ts",
+      "sha256": "2cfdbecb0fea02352e64c6c8a350fc622fda8c5286e9276b1ca6e9d1cb30c212"
+    }
+  ]
+}

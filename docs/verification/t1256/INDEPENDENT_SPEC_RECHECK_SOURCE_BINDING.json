@@ -1,0 +1,19 @@
+{
+  "task": "T-1256",
+  "currentSpecSha256": "b9dc30e952da0239038e8f8c9ce4a33c30d291aede4ba556a553b60d21cc0a3e",
+  "previousSpecSha256": "b7bddf48b56b3590ad95c22dd88d0c41be067f6cc4881a1870cce39e3a0f5fe3",
+  "constitutionSha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "contextSha256": "b3891d333d72c7a43dda93fe3854ad463481fc2ff3368968e588b1f705a6b871",
+  "changedLineRefs": [
+    {
+      "origin_ref": "SPEC-LINE:22:73ceb9871251930f",
+      "text": "- FR-ORIGIN：仅已验证owned static源根的这一个文件，按独立候选完整diff/前后SHA/V6实际适配后原mode0644（库存mode420与当前0644一致；a7归档成员0664不作为应用后模式）和inode/UID核后应用。native根不改；fetch/test/Graph维持V13已审SHA。原a7归档/旧creatoros.patch与历史收据保持。新修后static source archive和对应combined patch准确含该清理；T1254 exact交付清单须显式列它的源改动及该原build重试来源。"
+    }
+  ],
+  "exactOnlyLine22Changed": true,
+  "actualCurrentMode": 420,
+  "actualCurrentSha256": "a076d986b80fc88a7416e305d125690d0c626c11cf43c4ba6cda1ccfc133046c",
+  "previousFindingOnly": true,
+  "noRuntimeOrSourceWrites": true,
+  "packetSha256": "58b4fbd4732252eef1f1ff56d02fcc569be8213c785d1f41fb9b85c6796de900"
+}

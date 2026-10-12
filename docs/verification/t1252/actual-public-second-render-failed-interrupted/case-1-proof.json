@@ -1,0 +1,15 @@
+{
+  "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+  "budget": {
+    "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+    "bodyMs": 36000000,
+    "minimumDerivedMs": 29470000,
+    "childMs": 36840000,
+    "fixtureDoneMs": 36120000
+  },
+  "actualPassed": 1,
+  "actualFailed": 0,
+  "allOtherFilteredCasesNotPassed": true,
+  "resultSha256": "d5cfabcd961d03f87a4e9c4bc67b1df048488a9bac313a7c8dd5d7c79557335e",
+  "originalTaskDeadlineMs": 36000000
+}

@@ -1,0 +1,22 @@
+{
+  "task": "T-1251",
+  "verdict": "PASS_TEST_CANDIDATE_ONLY",
+  "candidate": "/tmp/t1251-candidate/chat-generation-worker.integration-partial-counts.test.ts",
+  "candidateSha256": "fab298e7d5077d05e48884d94292658a175100c59fdcfdae47eece7b368d0f36",
+  "summary": "已读真实双工具回执及正式 conversation_reply/business partial。badOutput 实际 5HTTP/31tokens，diagnosisEmpty 3/17，mixed 6/38；候选增加 settled 原ID/key/parent 不重写校验，保留原内容与预算断言。原 last messages 未采集，新断言与日志仍需真实下一轮验证。",
+  "findings": [],
+  "actualExecutionByReviewer": false,
+  "whole22Original": "18PASS/4FAIL; 不覆盖原9红",
+  "evidenceSha256": "a25771e55b54fc72a2624b53cc1df1847b878710e00ea3e641c03ad7d814969b",
+  "sourceBinding": [
+    {
+      "path": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-generation.service.ts",
+      "sha256": "43d1fc7d75859c628fd66bcb3372cc3d95cf6fb8d44eb7b906d655f74968b06c"
+    }
+  ],
+  "runtimePermission": false
+}

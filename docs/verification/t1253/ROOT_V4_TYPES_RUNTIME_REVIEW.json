@@ -1,0 +1,21 @@
+{
+  "specSha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484",
+  "phase": "types",
+  "scope": "original-owner-calibrated-fixtures-current-receipt",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "sourceSnapshotDigest": "7ea09334f719556fed9d699ae676a9ab1579379b0d132659748e9d21911c3fac",
+  "toolDigest": "2b402f6ecdae2abe337df760be7c71bf5a420a21f14c6a14229b44c5e176dc9f",
+  "sharedDistExclusive": true,
+  "approved": true,
+  "reviewer": "/root",
+  "at": "2026-10-12T00:11:52.003260+00:00",
+  "toolSha256": "41600e71781f362a816d7b1ef5d19e34810ee48ef05ea0ec4d61a74423c3aa8d",
+  "prepareSha256": "37c5f92594e7697f6a7daf310c5646da1800e8c7b81244339b65e06eb186fdca",
+  "independentSourceReviewSha256": "6301853f492b262119779752d30f9872f1989e75774253896967d5e8bc24f8c7",
+  "independentToolReviewSha256": "9317b1366f3bd4b27c96c65f64b3724db4e3ac5272decbae9e3ebd06fbfd400a",
+  "allActualInputAndToolSHARead": true,
+  "sourceReady": true,
+  "runtimeCondition": "ROOT须释放T1250 hosts/CDP dist读窗口后才运行；不并发build，顺序25→46→types",
+  "nativeApp": false,
+  "firstV3FailuresPreserved": true
+}

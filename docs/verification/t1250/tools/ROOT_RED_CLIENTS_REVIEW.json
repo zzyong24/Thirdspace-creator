@@ -1,0 +1,22 @@
+{
+  "approved": true,
+  "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "phase": "red",
+  "group": "clients",
+  "toolSha256": "ed30d07285d6cf07a3f076c515d14b5a9c9857c3da47d3d88493c285eb628e06",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "selectedInputDigest": "6235ff0644a3e767cf8807e4a0d5858ad9c95736aa2c886e226f0be1d7ef3713",
+  "reviewer": "root",
+  "at": "2026-10-11T21:05:26.858837+00:00",
+  "status": "PASS_TOOL_RED_ONLY",
+  "inputsActuallyRehashed": 13,
+  "facts": [
+    "完整阅读v2工具；393f有界owned进程与stdio/log关闭",
+    "红测当前真实依赖绑定；无共享build/backend/worker/contract/Rust写入",
+    "实际EOF与源前后比对后才允许实施；GREEN依赖与source变化必须重新准入"
+  ],
+  "runtimeExecutedByThisReview": false,
+  "noAppAcceptance": true
+}

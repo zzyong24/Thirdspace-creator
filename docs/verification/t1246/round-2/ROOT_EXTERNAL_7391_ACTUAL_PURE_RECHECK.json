@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "actualPureResult": "PASS",
+  "actualWrapperEOF": 0,
+  "actualChildCode": 0,
+  "allRawFiles": 29,
+  "allPrivateOriginals": 13,
+  "evidenceSHA": "b0c0983c96e0c0c967fc6df691a88223ad3b7d9817558aec3c2099a410be3da0",
+  "historicalFailUnchanged": true,
+  "noBrowserOrNewMetadataClaim": true
+}

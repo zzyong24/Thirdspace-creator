@@ -23,7 +23,8 @@ const ep = (id: string, isList = false) =>
 // [T-332 S2] strict 账号门:assets 域 per-account,ctx 必须带 accountId(未选号 →
 // AccountRequiredError,SPEC §4.2)。测试号按 userId 派生 → A/B 天然异号,多租户
 // (user + account 双维)隔离断言语义保持。
-const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
+let fixtureAccountId = "";
+const ctx = (userId: string, accountId = userId === canonicalDataset.user.id ? fixtureAccountId : `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
@@ -59,8 +60,13 @@ async function createAsset(
   return done.data.id;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   __resetPersistenceForTests();
+  const created = await compositeTransport.request(ep("accounts.create"), {
+    params: undefined, query: undefined,
+    body: {platform:"douyin",accountHandle:"@t1246-owned-fixture",followerBaseline:0},
+  } as never, {userId:canonicalDataset.user.id,requestId:"t1246-public-account",source:"user"}) as {data:{id:string}};
+  fixtureAccountId = created.data.id;
 });
 
 describe("assets ops registered in the composite transport", () => {
@@ -73,7 +79,8 @@ describe("assets ops registered in the composite transport", () => {
       ).rejects.toThrow();
     }
     // [T-055d] +assets.downloadUrl(下载做真)。[T-219] +assets.commit(截图确认门)。
-    expect(ASSET_OP_IDS).toHaveLength(11);
+    // T1246：逐ID核真实视觉模板/组日历/视觉导出/组概览与日报所有者；保原无ctx逐项拒绝。
+    expect(ASSET_OP_IDS).toEqual(["assets.visualTemplates.list", "assets.visualTemplates.save", "assets.visualTemplates.remove", "assets.downloadUrl", "assets.fileDownloadUrl", "assets.list", "assets.search", "assets.uploads.create", "assets.uploads.complete", "assets.get", "assets.files.create", "assets.trash", "assets.restore", "assets.commit", "assets.favorite.toggle", "assets.usage.list"]);
   });
 
   it("[T-135] 开箱空:owner 的 assets.list 初始为空,建一条后可列出(全部本人 + active)", async () => {
@@ -194,7 +201,10 @@ describe("assets ops registered in the composite transport", () => {
     // [T-135] 自建 fixture 素材(不依赖 canonical seed)。
     const assetId = await createAsset(owner);
     // Create a 用料链 edge that references this asset, then reverse-look it up.
-    const projectId = canonicalDataset.projects[0]!.id;
+    const project = await compositeTransport.request(ep("projects.create"), {
+      params:undefined,query:undefined,body:{title:"真实素材用料项目"},
+    } as never, owner) as {data:{id:string}};
+    const projectId = project.data.id;
     await compositeTransport.request(
       ep("materialLinks.create"),
       {

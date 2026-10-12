@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-11T22:32:15.379539+00:00",
+  "actualStartFailed": true,
+  "actualHttpRequests": 0,
+  "actualTestBodies": 0,
+  "rootCause": "parent mkdtemp(os.tmpdir) /var alias differs child strict realpath /private/var; owned directory gate rejects before listen",
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-BHtQEi",
+  "toolSha256": "29a6b68a15117dbdbbf2f50cbb9df51ba94c862e738fcd14bf3497d8bf110e75",
+  "bindingSha256": "e671cfbc72c1936406b01d71bfa77d666055be4ceaba6895d4f3beadccd984b9",
+  "receipts": [
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-BHtQEi/cleanup.json",
+      "sha256": "4bd07b20811f492433820a1a40b9a37519490fee371025487d38a6d2f5a66eef"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-BHtQEi/final.json",
+      "sha256": "3327225628c2685a66cde7e8e5dc72b5622fe2e5f930eb30cb484abc093170f8"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-BHtQEi/headers-exit.json",
+      "sha256": "e213aec3ed17ec8392ce3cffe20b00d4996595366bd502cd3e062ae7e6efaec9"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-BHtQEi/headers.log",
+      "sha256": "073c56492d68555ebc0522960de567eb27c52a910117d5104add2c012de6fd32"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-BHtQEi/marker.json",
+      "sha256": "d0f2abf7add4d193bdbfc35c8bfe7908133dcd7c30da8cc582ac80477039c369"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-red-BHtQEi/start.json",
+      "sha256": "1cf175e5d575bb0ffe6d831709ea3a01143f03133c038eaa5c5560804451a409"
+    }
+  ]
+}

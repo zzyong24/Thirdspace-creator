@@ -1,0 +1,22 @@
+{
+  "task": "T-1251",
+  "verdict": "PASS_TEST_CANDIDATE_ONLY",
+  "candidate": "/tmp/t1251-candidate/chat-generation-worker.integration-finite-owner-dto.test.ts",
+  "candidateSha256": "abb3ff6724367e7c600cc0d00cb21af9e5f9a13bc9685219281ab994b4e38c69",
+  "summary": "原公共 DTO 无 accountId；使用真实 groupId，并由既有 scoped getTaskExecutionRuntime.owner 保留完整 user/account/group/version/membership 校验。首次失败在 enqueue 前，未验证期限。",
+  "findings": [],
+  "actualExecutionByReviewer": false,
+  "whole22Original": "18PASS/4FAIL; 不覆盖原9红",
+  "evidenceSha256": "a25771e55b54fc72a2624b53cc1df1847b878710e00ea3e641c03ad7d814969b",
+  "sourceBinding": [
+    {
+      "path": "contract/src/resources/ai.ts",
+      "sha256": "3706a6479215427e5da7664409b618746c09cec5866730e7916068949b11361b"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "sha256": "a21dcc6cd25167caf7cec732681b84e37a72dd673f859bcc926a48c30a43f560"
+    }
+  ],
+  "runtimePermission": false
+}

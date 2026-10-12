@@ -1,0 +1,50 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+ ✓ src/modules/settings/settings.service.test.ts (20 tests) 4007ms
+     ✓ 真实偏好repository首次写与采用随外层事务回滚，不留下半次更新  3994ms
+ ✓ src/modules/execution/execution-provider-job.service.test.ts (29 tests) 4780ms
+ ✓ src/modules/ai-runtime/review-insights-injection.test.ts (4 tests) 3ms
+ ❯ src/modules/creative-canvas/creative-canvas-series-reference.test.ts (2 tests | 1 failed) 6193ms
+   × 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本 3647ms
+   ✓ 精确参考端口若返回别的file，生成不能换图  2545ms
+ ✓ src/modules/ai-runtime/review-facets.test.ts (4 tests) 2ms
+stdout | src/modules/execution/chat-web-profile-wait.test.ts > 占用后真实释放才重获；只获取资源，不重发业务操作
+[chat-web-profile-wait] 网站资源占用，等待实际持有者释放
+
+stdout | src/modules/execution/chat-web-profile-wait.test.ts > 占用后真实释放才重获；只获取资源，不重发业务操作
+[chat-web-profile-wait] 网站资源已释放，取得租约 { waitedMs: 1 }
+
+stdout | src/modules/execution/chat-web-profile-wait.test.ts > 持续占用有界退出，保留同一个忙错误
+[chat-web-profile-wait] 网站资源占用，等待实际持有者释放
+
+stdout | src/modules/execution/chat-web-profile-wait.test.ts > 等待中取消立即退出，此后不再获取
+[chat-web-profile-wait] 网站资源占用，等待实际持有者释放
+
+stdout | src/modules/execution/chat-web-profile-wait.test.ts > 每次获取仍核对权限，等待中变为陈旧执行不能继续
+[chat-web-profile-wait] 网站资源占用，等待实际持有者释放
+
+ ✓ src/modules/execution/chat-web-profile-wait.test.ts (8 tests) 35ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-canvas/creative-canvas-series-reference.test.ts > 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本
+ConflictError: 此节点仍在生成或等待原任务结果，请勿重复提交
+ ❯ Object.reserveGenerationInTransaction src/modules/creative-canvas/creative-canvas.service.ts:243:110
+    241|     const task=await deps.readTask(sourceContext(ctx,pending),pending.…
+    242|     const status=task?.runtimeStatus??task?.status;
+    243|     if(!status||!["succeeded","awaiting_confirmation","failed","partia…
+       |                                                                                                              ^
+    244|    }
+    245|    const stamp=now();
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 66 passed (67)
+   Start at  02:36:33
+   Duration  23.10s (transform 2.47s, setup 0ms, import 7.07s, tests 15.02s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/short-groups-first.json

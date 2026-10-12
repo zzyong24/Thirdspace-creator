@@ -1,0 +1,317 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "ownedPort": 50028,
+  "unownedPort": 55422,
+  "classificationRule": "只有实际stack明确URL或Socket护栏拒绝时为ENV；不是所有这些file红都算ENV。T1074独立50028行锁观察点漂移另列。",
+  "files": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/application/generation/work-review-root.test.ts",
+      "sha256": "cf7347cb43e7127c05e2197ade1e67e9d5b878754293f163dfe6b7bf72790026",
+      "matches": [
+        {
+          "line": 108,
+          "source": "const url=new URL(reviewLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/group-upgrade-postgres.integration.test.ts",
+      "sha256": "21e7611fde3d4df4bbe0b6d3592ae374e1879497fd7fb31783beda3821dd5013",
+      "matches": [
+        {
+          "line": 7,
+          "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('此测试只允许显式隔离测试服务器55422');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "sha256": "61e2bc9b394f12618922fc180ea232a4a5d3a80e272c1d935fa6873c988d7645",
+      "matches": [
+        {
+          "line": 38,
+          "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式隔离55422测试服务');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "sha256": "cd55d1cede15641e1b668cfecc10763d63944b4c310e2f49aa6a367524681ffc",
+      "matches": [
+        {
+          "line": 31,
+          "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式55422隔离测试');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-knowledge-write.postgres.integration.test.ts",
+      "sha256": "86da1c83a1a3c9f92278c703bea301290f472f0d46458aae1e29ff881544b8a3",
+      "matches": [
+        {
+          "line": 23,
+          "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/group-migration-concurrency.postgres.integration.test.ts",
+      "sha256": "131ffdfdb6952a4e888224fc210e2c3c8df196f0661440402f993ed19dadbc00",
+      "matches": [
+        {
+          "line": 21,
+          "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许显式隔离55422测试服务器');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/intelligence-source-workspace.test.ts",
+      "sha256": "0769e7f8de6f73e7a68c71057fcf126aca184a722d915011f0efeead821a3a7b",
+      "matches": [
+        {
+          "line": 32,
+          "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422'||!(parsed.pathname==='/postgres'||parsed.pathname.startsWith('/creatoros_test')))throw Error('只允许已确认本机 55422 隔离服务');"
+        },
+        {
+          "line": 137,
+          "source": "it('PG55422 两入口来源并发和不同来源相同作品并发只复用一个逻辑实体',async()=>{"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/project-create-archive.postgres.integration.test.ts",
+      "sha256": "f5beea0e13df190139ecf4666e086bb17695640325c156f2ccd118faaf61d7d4",
+      "matches": [
+        {
+          "line": 32,
+          "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "sha256": "84dda08648a2de8b0f098bc21352ab20de4cb512e662785874fa146acf051ed9",
+      "matches": [
+        {
+          "line": 34,
+          "source": "if(!url)throw new Error('缺少显式隔离PG地址');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('仅允许显式55422隔离测试服务');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-export-progress.test.ts",
+      "sha256": "3265af8ce246585d6a45db95f47f3e18bf8311e38ea321c5a6103bdf38f4655d",
+      "matches": [
+        {
+          "line": 31,
+          "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/scheduled-flywheel-consumption.test.ts",
+      "sha256": "43128c2d8b74baf6786350e87542aa18f7b658ace868a9ee31f1d17760df1f82",
+      "matches": [
+        {
+          "line": 28,
+          "source": "if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许 55422 隔离测试服务');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/shared-parent-writers.postgres.integration.test.ts",
+      "sha256": "a0af88f4cd72f2968703d0e7044182ada4f5607f61bf43ae8d70c0034cc511ff",
+      "matches": [
+        {
+          "line": 27,
+          "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');"
+        },
+        {
+          "line": 82,
+          "source": "const parsed=new URL(url!);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许隔离55422 PG');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "sha256": "969c43578cc96a84ac8714c194443efa24fce531c73203f0c3bf2b8706a544e3",
+      "matches": [
+        {
+          "line": 16,
+          "source": "if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "sha256": "e94d5210c11df4883d455c954ab16418bf6d4dd7916b6422ff6cca15da6ad60f",
+      "matches": [
+        {
+          "line": 134,
+          "source": "const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-scheduled-job-migration.test.ts",
+      "sha256": "bb89b6a28aad5d6edbc2551f543fa252913078418b46e46c2466d66cda9d2e97",
+      "matches": [
+        {
+          "line": 146,
+          "source": "const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离PG');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/legacy-source-migration.test.ts",
+      "sha256": "aa4dd55141084440831898be6bf7f09ea5f30e5885a3cb38b7b2898b48413c6c",
+      "matches": [
+        {
+          "line": 116,
+          "source": "const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/migration-convergence.test.ts",
+      "sha256": "8653853cbcceba9dd58d88ceb65e1d8ed31abc9ee6138fcf16f8a1857cc686bd",
+      "matches": [
+        {
+          "line": 95,
+          "source": "const pgAdminUrl='postgresql://zyongzhu@127.0.0.1:55422/postgres';"
+        },
+        {
+          "line": 105,
+          "source": "await admin.query(`CREATE DATABASE ${quote(restoreName)}`);await runFile('pg_restore',['--no-owner','--no-acl','--dbname',restoreName,manifest.databasePath],{env:{...process.env,PGHOST:'127.0.0.1',PGPORT:'55422',PGUSER:'zyongzhu',PGDATABASE:restoreName},maxBuffer:1024*1024});const restoreUrl=new URL(pgAdminUrl);restoreUrl.pathname='/'+restoreName;const restored=new Pool({connectionString:restoreUrl.toString()});try{const actual=await snapshot(restored as Client,before!.columns);expect(actual.rows).toEqual(before!.rows);expect(actual.counts).toEqual(before!.counts);expect(actual.ledger).toEqual(before!.ledger);}finally{await restored.end();}"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "sha256": "9e1df5f7d667165a0a7cd97baf56ee30c716cb53e872197b8ee1039a5fd6ba49",
+      "matches": [
+        {
+          "line": 85,
+          "source": "const url=new URL(assetLockPg);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅允许 localhost55422 随机库');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/articles/articles.integration.test.ts",
+      "sha256": "eacc71df7b216f528ad6db72c124c48c038c82350ca5c2c9242e63aff612ad46",
+      "matches": [
+        {
+          "line": 797,
+          "source": "const url=new URL(isolatedPgUrl!);if(url.hostname!==\"127.0.0.1\"||url.port!==\"55422\")throw Error(\"只允许隔离PG服务\");"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/artifacts/workspace-parent-write.integration.test.ts",
+      "sha256": "d3bf2d4da45460d02ff5a8f137d13abb819967c1a36c133a5000aa1094d70e58",
+      "matches": [
+        {
+          "line": 26,
+          "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "sha256": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+      "matches": [
+        {
+          "line": 238,
+          "source": "const url=new URL(canvasLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('只允许55422随机PG库');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "sha256": "14761851e1ca3d6c45575e86ff22fa2769f452e5e07571b7498b054861eec51a",
+      "matches": [
+        {
+          "line": 330,
+          "source": "const url=new URL(isolatedPgUrl!);if(url.hostname!==\"127.0.0.1\"||url.port!==\"55422\")throw Error(\"只允许隔离PG服务\");"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/material-links/workspace-parent-write.integration.test.ts",
+      "sha256": "40f269b1026c9cfbbe4625c0473327be9f86564fc749a136f24d542567932983",
+      "matches": [
+        {
+          "line": 33,
+          "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/moments/moments-model.integration.test.ts",
+      "sha256": "0619b3f891485d73839c55ff1a6571492bfe561f15c6446d4ac1abde361b610a",
+      "matches": [
+        {
+          "line": 97,
+          "source": "const url=new URL(momentsLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "sha256": "3fd93ea3546080fd6190a535a6647dd5fb4271cb71c993234799dc48f6648fee",
+      "matches": [
+        {
+          "line": 140,
+          "source": "const url=new URL(sourcePgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "sha256": "3eddedaedaeed193144ab360ab4417d8de8313072276ff3015a33b51abef5b01",
+      "matches": [
+        {
+          "line": 130,
+          "source": "const url=new URL(roughLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/backend/src/modules/production/workspace-parent-write.integration.test.ts",
+      "sha256": "08e34f1297a06785bc7ce1e67529f13c98ce9ae2810197301865b46393d0e724",
+      "matches": [
+        {
+          "line": 26,
+          "source": "if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');"
+        }
+      ],
+      "status": "static_guard_candidate_not_automatic_failure_classification"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_OWNED_PNPM_REGISTRY_METADATA_ONLY",
+  "startedAt": "2026-10-12T00:42:59.507Z",
+  "deadlineAt": "2026-10-12T02:03:59.507Z",
+  "elapsedMs": 3429.766166,
+  "totalBudgetMs": 4860000,
+  "slots": {
+    "prepare": 900000,
+    "positiveInstall": 900000,
+    "childLifecycle": 2160000,
+    "reportCleanup": 900000
+  },
+  "scopeSignals": [],
+  "exitCode": 0,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ",
+  "rootRetained": true,
+  "retainedReason": "原registry查询日志保留；等待固定版本安装工具的独立准入",
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "noInstall": true,
+  "newPnpmExecuted": false,
+  "noPG": true,
+  "noApp": true,
+  "noProductOrArchiveChanges": true
+}

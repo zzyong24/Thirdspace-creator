@@ -1,0 +1,92 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-12T00:10:18.970459+00:00",
+  "result": "PASS_PRIVATE_TOOL_ONLY_PENDING_EXACT_APPLY_AND_FRESH_READY_BINDING",
+  "tool": {
+    "file": "/tmp/t1253-candidate/run-final-v4-owner-batches-source-guard.cjs",
+    "sha256": "41600e71781f362a816d7b1ef5d19e34810ee48ef05ea0ec4d61a74423c3aa8d"
+  },
+  "fullSeal": {
+    "file": "/tmp/t1253-candidate/v4-source-guard-tool-full-seal.json",
+    "sha256": "cd2cfdf819bb603206b4622bb8a062c3c547d10d65df33314f211bb72a570e2f"
+  },
+  "diff": {
+    "file": "/tmp/t1253-candidate/run-final-v4-owner-batches-source-guard.diff",
+    "sha256": "82644aa6da60464745d63e674d0cd4d66fda4e44dbc770a83e85598c7960c4c7"
+  },
+  "phases": [
+    {
+      "phase": "calibrated-whole25",
+      "prepareFile": "/tmp/t1253-candidate/v4-source-guard-whole25-prepare.json",
+      "prepareSha256": "793427127f1f223ebb0521cacd499b285f0f9e6d0bb395fb9addb95ef4c96842",
+      "sourceInputs": 3035,
+      "toolInputs": 3909,
+      "installedImplementationFiles": 3887,
+      "installedPackages": 93,
+      "executionReady": false,
+      "sourceSnapshotDigest": "7ea09334f719556fed9d699ae676a9ab1579379b0d132659748e9d21911c3fac",
+      "toolDigest": "2b402f6ecdae2abe337df760be7c71bf5a420a21f14c6a14229b44c5e176dc9f",
+      "slots": {
+        "body": 15300000,
+        "prepare": 2400000,
+        "cleanup": 1200000,
+        "processCleanup": 4320000
+      },
+      "totalBudgetMs": 23220000,
+      "actualSourcesKnownBeforeOrCandidateValidated": true
+    },
+    {
+      "phase": "regression-whole46",
+      "prepareFile": "/tmp/t1253-candidate/v4-source-guard-whole46-prepare.json",
+      "prepareSha256": "26b531d37a97ddf7fa4a5ecb510973079a384fe96440730e1a0e3db33b2d80d0",
+      "sourceInputs": 3035,
+      "toolInputs": 3909,
+      "installedImplementationFiles": 3887,
+      "installedPackages": 93,
+      "executionReady": false,
+      "sourceSnapshotDigest": "7ea09334f719556fed9d699ae676a9ab1579379b0d132659748e9d21911c3fac",
+      "toolDigest": "2b402f6ecdae2abe337df760be7c71bf5a420a21f14c6a14229b44c5e176dc9f",
+      "slots": {
+        "body": 46440000,
+        "prepare": 2400000,
+        "cleanup": 1200000,
+        "processCleanup": 4320000
+      },
+      "totalBudgetMs": 54360000,
+      "actualSourcesKnownBeforeOrCandidateValidated": true
+    },
+    {
+      "phase": "types",
+      "prepareFile": "/tmp/t1253-candidate/v4-source-guard-types-prepare.json",
+      "prepareSha256": "399bdac582d25c04d0603dba7e2ec3563689941cc381d6539829476bf7723b6f",
+      "sourceInputs": 3035,
+      "toolInputs": 3909,
+      "installedImplementationFiles": 3887,
+      "installedPackages": 93,
+      "executionReady": false,
+      "sourceSnapshotDigest": "7ea09334f719556fed9d699ae676a9ab1579379b0d132659748e9d21911c3fac",
+      "toolDigest": "2b402f6ecdae2abe337df760be7c71bf5a420a21f14c6a14229b44c5e176dc9f",
+      "slots": {
+        "body": 2400000,
+        "prepare": 2400000,
+        "cleanup": 1200000,
+        "processCleanup": 6480000
+      },
+      "totalBudgetMs": 12480000,
+      "actualSourcesKnownBeforeOrCandidateValidated": true
+    }
+  ],
+  "findings": [],
+  "reviewedConclusions": [
+    "唯一two-hunk差异为两候选before/expected字节与两个V4证据绑定；原入口clock/env/Node/实际93package _tsc/Vitest全闭包、monotonic余槽、393f完整2.16M生命周期不变",
+    "所有3035实际源/3909工具与3888 installed实现重核0异常；当前只有两个test仍V3真实before，virtual source7ea不能称已经apply",
+    "OT001 after.executionReady=true且actual ownedSHA前后全同，原虚拟digest不能掩盖known-before还原；新纯guard反例仅表达式不称runtime",
+    "25/46/types分别23.22M/54.36M/12.48M，source guard、两types取消后拒新child与原费用/声明预算均保"
+  ],
+  "constraints": [
+    "当前三个prepare ready=false，正式execute必须拒；exact apply及fresh ready source/tool digest需ROOT另准入",
+    "不复用V3 ebee回执代V4运行；original hooks/build180k继承消费者未改，不由外层证明原内部所有最坏界",
+    "此轮未运行任何envproof/test/Workerbuild/模型/PG/App；dist窗口由ROOT协调"
+  ],
+  "runtimePermissionByReviewer": false
+}

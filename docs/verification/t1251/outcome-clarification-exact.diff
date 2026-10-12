@@ -1,0 +1,14 @@
+--- /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1251/spec-history/candidate-254310755165.md
+
++++ /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1251-chat-generation-failure-and-fixture-closure.md
+
+@@ -29,7 +29,7 @@
+
+ - FR-1251-FAILURE：仅在chat-generation-worker叶catch中用已安装findGenerationFailure(error)保同实例/可信cause，再按原generationFailure分类未知普通错误。先complete回读优先不变；原unknown仍unknown，401等waiting_user、retry_wait的原errorCode/retryAfterMs保留。backend fail端仍独立核完整账本，不扩大可重放工具/不改global classifier/SDK retries/模型供应商/Codex只读恢复。
+ - FR-1251-ISOLATION：原21mode列表不删、不skip、不only；去除等待第二工具先完成才给第一工具ACK的屏障，spy的统计/stop仅匹配本例真实executionTaskId。不能改Pi sequential或伪造parallel，不改变真实stopExecutionTree、原settlementDrop/failure ACK drop刺激、真实host.stop及HTTP/进程自然关闭证明。测试异常也须await本轮draining及owned cleanup，不能让上一case在下一case继续结算/stop。
+ - FR-1251-FIXTURE：continuous的真实无deadline不得SQL回写为有限、续期或换原任务ID。原deadline mode的错误入口应改为真实continuous/no-deadline恢复断言，并保既有有界deadline功能覆盖：新增真实persistent-task service在enqueue时即冻结有限budget/原deadline的受控生成fixture（不得修改已冻结task），用同原execution/call/operation证明到期停止、0新请求/0续期。若当前公开服务无法合法装配该完整有限链，保持该项未验并报告，不能删掉到期验收来完成任务。
+-- FR-1251-OUTCOME：badOutput/diagnosisEmpty只在可信后台completionReceipt与no_evidence失败回执证明下按已启用partial政策校准，继续严格要求完整原工具/receipt、没有“真实选题卡”、完整model请求和tokens/calls/CAS/fence与原task identity。不得仅把succeeded改成任意终态或用contains弱化内容。原crashUnknownChild必须真的注入缺可信model receipt/unknown，不能用已允许discard后retry的网络错误冒充未知；刺激变更先出/tmp精确候选+真实ledger因果、由独立reviewer审后应用。若非任务范围可修的生产问题被发现，保红、记录根因，不改期望吞掉。
++- FR-1251-OUTCOME：badOutput/diagnosisEmpty只在可信后台completionReceipt与完整工具失败回执证明下按已启用partial政策校准，严格绑定真实原error.code=transient、retryable=true、sideEffect=none、完整恢复说明、零候选及原projection版本1的partial条件；其他族no_evidence原断言保留。继续严格要求完整原工具/receipt、没有“真实选题卡”、完整model请求和tokens/calls/CAS/fence与原task identity。不得仅把succeeded改成任意终态或用contains弱化内容。原crashUnknownChild必须真的注入缺可信model receipt/unknown，不能用已允许discard后retry的网络错误冒充未知；刺激变更先出/tmp精确候选+真实ledger因果、由独立reviewer审后应用。若非任务范围可修的生产问题被发现，保红、记录根因，不改期望吞掉。
+ - FR-1251-COUNTS：crashTwoNodes/crashMixed原重复生成/fallback/replay保完整原节点与两工具、相同toolCallId/operationKey/parent、真实replay prefix和0重发已settled调用。旧5/6HTTP与31/38token须先在现行串行、原literal模型usage(父5/子7)和真实fallback配置下推导；只能经独立精确消费者/候选评审据实修计数，不能提高maxCalls、改变root消息、删第二工具/有效内容或改生产语义让数字相等。任何未闭合分歧保FAIL。
+ 
+ ## 精确写集

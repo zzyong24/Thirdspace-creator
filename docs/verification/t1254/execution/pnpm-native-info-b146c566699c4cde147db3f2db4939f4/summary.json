@@ -1,0 +1,42 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_OWNED_NATIVE_VERSION_INSTALL_HELP_ONLY",
+  "startedAt": "2026-10-12T01:11:20.857Z",
+  "deadlineAt": "2026-10-12T02:59:20.857Z",
+  "elapsedMs": 2083.444125,
+  "totalBudgetMs": 6480000,
+  "slots": {
+    "prepare": 900000,
+    "version": 180000,
+    "installHelp": 180000,
+    "childLifecycle": 4320000,
+    "reportCleanup": 900000
+  },
+  "scopeSignals": [],
+  "exitCode": 0,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-native-info-b146c566699c4cde147db3f2db4939f4-4NvOOq",
+  "rootRetained": true,
+  "retainedReason": "原信息probe日志/config及restriction保留待参数consumer独审；未安装或改source",
+  "records": [
+    {
+      "code": 0,
+      "elapsedMs": 1537,
+      "processClosed": true,
+      "budgetExhausted": false,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "code": 0,
+      "elapsedMs": 134,
+      "processClosed": true,
+      "budgetExhausted": false,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "nativeReadOnlyInformationOnly": true,
+  "noWrapper": true,
+  "noInstall": true,
+  "noNetwork": true,
+  "noSourceOrProductChanges": true,
+  "noApp": true
+}

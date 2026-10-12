@@ -1,0 +1,25 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+  "command": [
+    "pnpm",
+    "-C",
+    "contract",
+    "exec",
+    "vitest",
+    "run",
+    "--config=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-contract-extra-69q5moe3/vitest.config.mjs",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile.json=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/contract-extra.json"
+  ],
+  "config": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-contract-extra-69q5moe3/vitest.config.mjs",
+  "review": "/tmp/t1246-contract-extra-first-review.md",
+  "coverage": "仅补原config未include的两原src测试，不替代原76文件/43FAIL",
+  "startedAt": "2026-10-11T15:12:23.125213+00:00",
+  "status": "completed",
+  "nativeAppAcceptance": false,
+  "pid": 98747,
+  "exitCode": 0,
+  "endedAt": "2026-10-11T15:12:26.715329+00:00"
+}

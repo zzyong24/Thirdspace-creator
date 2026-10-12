@@ -1,0 +1,26 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_OWNED_PNPM_BOOTSTRAP_INSTALL_ONLY",
+  "startedAt": "2026-10-12T00:54:53.931Z",
+  "deadlineAt": "2026-10-12T02:15:53.931Z",
+  "elapsedMs": 11322.834208,
+  "totalBudgetMs": 4860000,
+  "slots": {
+    "prepare": 900000,
+    "positiveInstall": 900000,
+    "childLifecycle": 2160000,
+    "reportCleanup": 900000
+  },
+  "scopeSignals": [],
+  "exitCode": 0,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA",
+  "rootRetained": true,
+  "retainedReason": "实际固定pnpm实现保留；等待完整实现独立封印与下一阶段准入",
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "bootstrapInstallOnly": true,
+  "newPnpmExecuted": false,
+  "noPG": true,
+  "noApp": true,
+  "noProductOrArchiveChanges": true
+}

@@ -1,0 +1,67 @@
+{
+  "at": "2026-10-12T06:16:49.396209+00:00",
+  "rows": [
+    {
+      "kind": "node-parser-only",
+      "file": "docs/verification/t1246/round-2/final-runtime-guard/common.cjs",
+      "sha256": "0ea77c01e132b08f14efcf94206d5f62122366c859e219d76b7d831bf871642d",
+      "code": 0,
+      "log": "/private/tmp/t1246-final-guard-final-parser-83kaunes/common.cjs.check.log",
+      "logSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-parser-only",
+      "file": "docs/verification/t1246/round-2/final-runtime-guard/owned-dyld.cjs",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "code": 0,
+      "log": "/private/tmp/t1246-final-guard-final-parser-83kaunes/owned-dyld.cjs.check.log",
+      "logSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-parser-only",
+      "file": "docs/verification/t1246/round-2/final-runtime-guard/prepare-metadata-input.cjs",
+      "sha256": "d1e1b55ba3edc7c4d6ba1a1531d5b7790e17545346efbfcfb90a27689a3da119",
+      "code": 0,
+      "log": "/private/tmp/t1246-final-guard-final-parser-83kaunes/prepare-metadata-input.cjs.check.log",
+      "logSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-parser-only",
+      "file": "docs/verification/t1246/round-2/final-runtime-guard/reseal.cjs",
+      "sha256": "cc85f6a35d08b67c2774d3a8fae9bc9c38c05963c608753b0923882c444d3480",
+      "code": 0,
+      "log": "/private/tmp/t1246-final-guard-final-parser-83kaunes/reseal.cjs.check.log",
+      "logSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-parser-only",
+      "file": "docs/verification/t1246/round-2/final-runtime-guard/run.cjs",
+      "sha256": "fb2465842df087b259453809e87d64b7b6e89afe94e3c51cab7f0ba03b915d58",
+      "code": 0,
+      "log": "/private/tmp/t1246-final-guard-final-parser-83kaunes/run.cjs.check.log",
+      "logSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "node-parser-only",
+      "file": "docs/verification/t1246/round-2/final-runtime-guard/supervise.cjs",
+      "sha256": "53185fcf4525b1f253bbb2d61ea38605cc7a05266b5b31ff45b910bb1dc2623e",
+      "code": 0,
+      "log": "/private/tmp/t1246-final-guard-final-parser-83kaunes/supervise.cjs.check.log",
+      "logSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "python-ast-only",
+      "file": "docs/verification/t1246/round-2/final-runtime-guard/discover-joint-pairs.py",
+      "sha256": "69a2227795ae02d548cbec94e504b2411286bd074a7a334a6a73e5769cf3c52b",
+      "code": 0
+    },
+    {
+      "kind": "python-ast-only",
+      "file": "docs/verification/t1246/round-2/final-runtime-guard/prepare-joint-dyld.py",
+      "sha256": "22c3e3b06dcc85678c93a59c765a4cfeed8ad3700d01874d83a8226084abfe9c",
+      "code": 0
+    }
+  ],
+  "noCandidateBodiesOrCollectorServicesBrowserExecuted": true,
+  "firstSourceParseFailurePreserved": true
+}

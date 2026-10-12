@@ -1,0 +1,106 @@
+{
+  "at": "2026-10-12T04:36:09.546536+00:00",
+  "kind": "source-only-byte-comparison",
+  "old31cBindingSHA": "31c4002580f58df2ae2d0ad7c3bd0bd60593b20fca6d1d083bf50547a9a44f23",
+  "old31cLaunchSHA": "f9670d3a841a41a134c03b5c10340ea0185f7d187d40862311a0656403274a6d",
+  "newLaunchSHA": "afebd49f175d8c6b3a00f26d49065178da99ff652f6ad75b9252ddba7eeac692",
+  "unchangedFunctions": [
+    {
+      "function": "processSnapshot",
+      "unchangedBytes": 466,
+      "sha256": "456d69b6d7a6884eceeb65796ce5d068a154d75a30abbb09e5808cd61b7448c0"
+    },
+    {
+      "function": "identity",
+      "unchangedBytes": 88,
+      "sha256": "298decf44a51915e9e57852a8277f4c28e6e2e95dc73e5d33bfd825dc0a53660"
+    },
+    {
+      "function": "childClosure",
+      "unchangedBytes": 768,
+      "sha256": "cad71fb121661e21ef3053558b77f0092e2fbb16efac67b2fcbe91d6395a185a"
+    },
+    {
+      "function": "boundedClosure",
+      "unchangedBytes": 352,
+      "sha256": "8c26469ad9e3316df2522aff2ba915eacf2290533da6695eaa47d5116e2441ca"
+    },
+    {
+      "function": "signalOwned",
+      "unchangedBytes": 486,
+      "sha256": "fa22da4bf9d8ebdd3b82c8742445ab7136c355d979ffd4ba8d0a99255f418417"
+    },
+    {
+      "function": "assertOwnedPgFacts",
+      "unchangedBytes": 1911,
+      "sha256": "e2f22cf1977bfecbf3ba0865d7c496bf1e75b2d2498788ddd6b073c8b2d4033f"
+    },
+    {
+      "function": "assertOwnedPgBeforeConnect",
+      "unchangedBytes": 608,
+      "sha256": "5afd6d8a7d08a052982221742d53ac049a29accf21025a9715a27d0267a0b207"
+    },
+    {
+      "function": "exclusivePort",
+      "unchangedBytes": 265,
+      "sha256": "293500327aa0aad26061c784b3ce52e00c4869cf61951b6f08e46bebd71cad78"
+    },
+    {
+      "function": "nextOnly",
+      "unchangedBytes": 2334,
+      "sha256": "152a4036e18c360a5f111ea090567ae92ecf7e9b60be550d2cef02d0035700ec"
+    }
+  ],
+  "caseB16Unchanged": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+  "budgetMsUnchanged": {
+    "launch": 374580000,
+    "parent": 384900000,
+    "prepare": 3600000
+  },
+  "staticFindingsClosedInSource": [
+    "BT001 final monotonic deadline after sync verification",
+    "BT002 actual owned metadata before type/list + relative paths actual resolution absolute paths unchanged",
+    "BT003 complete browser helpers roots",
+    "actual whitelist Homebrew Git + aliases and deps before first git call"
+  ],
+  "changes": [
+    {
+      "file": "docs/verification/t1254/browser-tool/driver/complete-run.cjs",
+      "beforeSha256": "616e3a24977145b652d96be699f39caa8d3806e575864cd80a2157950b6f79cc",
+      "afterSha256": "8ac60e9ab2af43b0355f6c5b1624af783e9a1d0ceb7275a055016df0863c22c3",
+      "new": false
+    },
+    {
+      "file": "docs/verification/t1254/browser-tool/driver/launch.cjs",
+      "beforeSha256": "f9670d3a841a41a134c03b5c10340ea0185f7d187d40862311a0656403274a6d",
+      "afterSha256": "afebd49f175d8c6b3a00f26d49065178da99ff652f6ad75b9252ddba7eeac692",
+      "new": false
+    },
+    {
+      "file": "docs/verification/t1254/browser-tool/driver/prepare-runtime.cjs",
+      "beforeSha256": "23c5bfe8636ce2d03282430737e2b5101946b0b4bd6276a1d5eaf1f92f031193",
+      "afterSha256": "68179eda393991c16c2f5cec238637581120628f5d43bfe49d0a958ee89f9394",
+      "new": false
+    },
+    {
+      "file": "docs/verification/t1254/browser-tool/driver/runtime-dyld.cjs",
+      "beforeSha256": null,
+      "afterSha256": "09962bc804feb2b609d5185bcc1963caf213203d77603773e68bf0a73b9e7fb4",
+      "new": true
+    },
+    {
+      "file": "docs/verification/t1254/browser-tool/driver/seal.cjs",
+      "beforeSha256": "06f6b8a6792c789db6eca43613c943e2e71952df6581f6d2be238a00ab0b9775",
+      "afterSha256": "85bdd7c62036d30385eff03c7f3620ba723b602786a0c4713131853141765464",
+      "new": false
+    },
+    {
+      "file": "docs/verification/t1254/browser-tool/driver/verify-binding.cjs",
+      "beforeSha256": "5a78a7b3f4fada4421bc544d2fd1f04673dfd45a06f09b6e07b476fb9be4fb51",
+      "afterSha256": "174240548c992d4904a0fe1ac13246225192fe8a70280846f8303773bfa07471",
+      "new": false
+    }
+  ],
+  "diffSHA": "c0eac95c21e74fa9e448804753edd3552bdee83c12e136c42c546a6e0d1de9d2",
+  "ownedCollectorStillNeverExecuted": true
+}

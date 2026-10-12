@@ -1,0 +1,128 @@
+[
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-group-medi-a07d1-变工作区列表，回到原组后原-job-ID-与排期仍相同-e2e/trace.zip",
+    "time": "2026-10-11T15:25:17.076Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.create",
+    "selectionHeaders": {},
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-group-medi-a07d1-变工作区列表，回到原组后原-job-ID-与排期仍相同-e2e/trace.zip",
+    "time": "2026-10-11T15:25:17.114Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.create",
+    "selectionHeaders": {},
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-group-medi-a07d1-变工作区列表，回到原组后原-job-ID-与排期仍相同-e2e/trace.zip",
+    "time": "2026-10-11T15:25:17.166Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.list",
+    "selectionHeaders": {},
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-group-medi-a07d1-变工作区列表，回到原组后原-job-ID-与排期仍相同-e2e/trace.zip",
+    "time": "2026-10-11T15:25:17.635Z",
+    "url": "http://127.0.0.1:61346/automations",
+    "operation": "",
+    "selectionHeaders": {
+      "Cookie": "creatoros_current_group=grp_legacy_acct-81b98377-37"
+    },
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-group-medi-a07d1-变工作区列表，回到原组后原-job-ID-与排期仍相同-e2e/trace.zip",
+    "time": "2026-10-11T15:25:18.565Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.list",
+    "selectionHeaders": {
+      "Cookie": "creatoros_current_group=grp_legacy_acct-81b98377-37"
+    },
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/trace.zip",
+    "time": "2026-10-11T15:27:26.991Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.create",
+    "selectionHeaders": {},
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/trace.zip",
+    "time": "2026-10-11T15:27:27.016Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.create",
+    "selectionHeaders": {},
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/trace.zip",
+    "time": "2026-10-11T15:27:27.055Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.list",
+    "selectionHeaders": {},
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/trace.zip",
+    "time": "2026-10-11T15:27:27.570Z",
+    "url": "http://127.0.0.1:61346/automations",
+    "operation": "",
+    "selectionHeaders": {
+      "Cookie": "creatoros_current_group=grp_legacy_acct-81b98377-37"
+    },
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/trace.zip",
+    "time": "2026-10-11T15:27:28.541Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.list",
+    "selectionHeaders": {
+      "Cookie": "creatoros_current_group=grp_legacy_acct-81b98377-37"
+    },
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-group-skill-customization-空账号组通过设置页定制官方-Skill-的首写入口可用-e2e/trace.zip",
+    "time": "2026-10-11T15:34:36.812Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.list",
+    "selectionHeaders": {},
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-group-skill-customization-空账号组通过设置页定制官方-Skill-的首写入口可用-e2e/trace.zip",
+    "time": "2026-10-11T15:34:37.023Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.create",
+    "selectionHeaders": {
+      "cookie": "creatoros_current_group=grp_legacy_acct-81b98377-37"
+    },
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-group-skill-customization-空账号组通过设置页定制官方-Skill-的首写入口可用-e2e/trace.zip",
+    "time": "2026-10-11T15:34:37.206Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.create",
+    "selectionHeaders": {
+      "cookie": "creatoros_current_group=grp_legacy_acct-81b98377-37"
+    },
+    "status": 200
+  },
+  {
+    "file": "docs/verification/t1246/round-1/533224f/browser-original-dr005/test-results/e2e-group-skill-customization-空账号组通过设置页定制官方-Skill-的首写入口可用-e2e/trace.zip",
+    "time": "2026-10-11T15:34:38.359Z",
+    "url": "http://127.0.0.1:61346/api/v1/dispatch",
+    "operation": "accountGroups.list",
+    "selectionHeaders": {
+      "Cookie": "creatoros_current_group=grp_legacy_acct-81b98377-37"
+    },
+    "status": 200
+  }
+]

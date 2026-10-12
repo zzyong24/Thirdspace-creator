@@ -20,6 +20,7 @@ import type { AiService } from "./ai.service";
 // the envelope.
 
 export const AI_OP_IDS = [
+  "ai.workCandidates.source",
   "ai.conversations.list",
   "ai.conversations.create",
   "ai.conversations.messages.create",
@@ -87,6 +88,7 @@ export function createAiTransport(
           );
           return { data: message, meta: { requestId } };
         }
+        case "ai.workCandidates.source": return {data:await service.readWorkCandidateSource(ctx,{conversationId:p.conversationId??'',sourceMessageId:String((query as Record<string,unknown>|undefined)?.sourceMessageId??''),toolCallId:String((query as Record<string,unknown>|undefined)?.toolCallId??'')}),meta:{requestId}};
         case "ai.conversations.messages.list": {
           const rows = await service.listMessages(ctx, p.conversationId ?? "");
           return {

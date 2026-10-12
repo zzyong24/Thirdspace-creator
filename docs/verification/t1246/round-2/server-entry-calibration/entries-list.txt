@@ -1,0 +1,10 @@
+(node:34085) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:34116) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > publish.platform_adapt 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > planning.outline 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=false invalid=false
+src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=true invalid=false
+src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=false invalid=true

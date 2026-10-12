@@ -1,0 +1,9 @@
+{
+  "elapsedMs": 157.42820799999998,
+  "remainingMs": 4859842.571792,
+  "requiredMs": 3960000,
+  "positiveInstallMs": 900000,
+  "childLifecycleMs": 2160000,
+  "cleanupMs": 900000,
+  "deadlineAt": "2026-10-12T02:03:59.507Z"
+}

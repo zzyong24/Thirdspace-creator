@@ -1,0 +1,1011 @@
+[
+  {
+    "path": "frontend/src/server/workbench-native-host.test.ts",
+    "sha256": "047ada903a4ac6229517722168202a31f5c982b84fd00a2e824af5255a2f077b",
+    "title": "\"真实 Mac socket + 模型工具调用、双版本 Blob 与导出，跨账号与旧 fence 拒绝\"",
+    "line": 139,
+    "explicitTimeout": "180_000",
+    "sites": [
+      {
+        "line": 168,
+        "callee": "createDb",
+        "args": [],
+        "loops": []
+      },
+      {
+        "line": 184,
+        "callee": "host.dispatch",
+        "args": [
+          "{context:{...context,operationId},invocation:{name,schemaVersion:1,input}}",
+          "{signal:AbortSignal.timeout(20_000),onProgress:()=>{}}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 195,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"files.write\"",
+          "{path:file,content:html,expectedVersion:0}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 196,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"files.read\"",
+          "{path:file,offset:0,limit:4096}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 198,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"files.stat\"",
+          "{path:file}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 199,
+        "callee": "invoke",
+        "args": [
+          "other.context",
+          "\"files.read\"",
+          "{path:file}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 200,
+        "callee": "invoke",
+        "args": [
+          "other.context",
+          "\"files.stat\"",
+          "{path:file}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 201,
+        "callee": "invoke",
+        "args": [
+          "foreign.context",
+          "\"files.read\"",
+          "{path:file}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 202,
+        "callee": "invoke",
+        "args": [
+          "{...other.context,taskId:owner.task.id}",
+          "\"files.read\"",
+          "{path:file}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 204,
+        "callee": "invoke",
+        "args": [
+          "{...owner.context,fenceToken:\"stale-fence\"}",
+          "\"files.stat\"",
+          "{path:file}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 216,
+        "callee": "artifactCall",
+        "args": [
+          "context",
+          "\"artifact.register\"",
+          "input"
+        ],
+        "loops": []
+      },
+      {
+        "line": 224,
+        "callee": "registered",
+        "args": [
+          "owner.context",
+          "{path:file,mime:\"text/html\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 227,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"files.write\"",
+          "{path:secondFile,content:secondHtml,expectedVersion:0}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 229,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"files.read\"",
+          "{path:secondFile,offset:0,limit:4096}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 231,
+        "callee": "registered",
+        "args": [
+          "owner.context",
+          "{path:secondFile,mime:\"text/html\",\n      artifactId:version1.artifactId,expectedVersion:1}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 243,
+        "callee": "renderTrustedWorkbenchHtml",
+        "args": [
+          "{html:firstBlob.bytes,format:\"pdf\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 244,
+        "callee": "renderTrustedWorkbenchHtml",
+        "args": [
+          "{html:secondBlob.bytes,format:\"pdf\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 251,
+        "callee": "renderTrustedWorkbenchHtml",
+        "args": [
+          "{html:secondBlob.bytes,format:\"png\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 273,
+        "callee": "execFileSync",
+        "args": [
+          "process.execPath",
+          "[resolve(projectRoot,\"ai-worker/scripts/build.mjs\")]",
+          "{cwd:projectRoot,stdio:\"pipe\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 291,
+        "callee": "host.dispatch",
+        "args": [
+          "call",
+          "dispatchControl"
+        ],
+        "loops": []
+      },
+      {
+        "line": 330,
+        "callee": "renderTrustedWorkbenchHtml",
+        "args": [
+          "{html:modelBlob.bytes,format:\"pdf\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 333,
+        "callee": "worker.stop",
+        "args": [],
+        "loops": []
+      },
+      {
+        "line": 334,
+        "callee": "artifactCall",
+        "args": [
+          "owner.context",
+          "\"artifact.read\"",
+          "{artifactId:version1.artifactId,\n      version:1,offset:0,limit:4096}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 339,
+        "callee": "artifactCall",
+        "args": [
+          "{...owner.context,accountId:\"foreign-account\"}",
+          "\"artifact.read\"",
+          "{artifactId:version1.artifactId,version:1}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 341,
+        "callee": "artifactCall",
+        "args": [
+          "other.context",
+          "\"artifact.read\"",
+          "{artifactId:version1.artifactId,version:1}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 343,
+        "callee": "artifactCall",
+        "args": [
+          "foreign.context",
+          "\"artifact.read\"",
+          "{artifactId:version1.artifactId,version:1}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 345,
+        "callee": "artifactCall",
+        "args": [
+          "{...owner.context,fenceToken:\"stale-fence\"}",
+          "\"artifact.register\"",
+          "{path:file,mime:\"text/html\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 347,
+        "callee": "artifactCall",
+        "args": [
+          "{...owner.context,fenceToken:\"stale-fence\"}",
+          "\"artifact.read\"",
+          "{artifactId:version1.artifactId,version:1}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 353,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"files.write\"",
+          "{path:\"check.js\",content:script,expectedVersion:0}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 355,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"execution.run\"",
+          "{argv:[\"check.js\"],cwd:\".\",runtimeId:\"bundled-node\",timeoutMs:10000}",
+          "commandId"
+        ],
+        "loops": []
+      },
+      {
+        "line": 359,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"execution.status\"",
+          "{targetOperationId:commandId}"
+        ],
+        "loops": [
+          "for(let index=0;index<100 && state===\"running\";index++)"
+        ]
+      },
+      {
+        "line": 364,
+        "callee": "invoke",
+        "args": [
+          "owner.context",
+          "\"execution.read\"",
+          "{targetOperationId:commandId,stream:\"stdout\",offset:0,limit:256}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 366,
+        "callee": "invoke",
+        "args": [
+          "other.context",
+          "\"execution.status\"",
+          "{targetOperationId:commandId}"
+        ],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "path": "frontend/src/server/workbench-browser-host.test.ts",
+    "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105",
+    "title": "\"interrupted real Chromium host recovers the same task profile on attempt two\"",
+    "line": 402,
+    "explicitTimeout": "180_000",
+    "sites": [
+      {
+        "line": 409,
+        "callee": "startRealRustBridge",
+        "args": [
+          "root",
+          "profileRoot",
+          "\"first\"",
+          "true"
+        ],
+        "loops": []
+      },
+      {
+        "line": 414,
+        "callee": "host.dispatch",
+        "args": [
+          "{\n   context:{userId:ctx.userId,accountId:ctx.accountId,taskId:task.id,attempt:ref.attempt,fenceToken:ref.fenceToken,leaseId:worker,operationId:randomUUID()},\n   invocation:{name,schemaVersi",
+          "{signal:AbortSignal.timeout(45_000),onProgress:()=>{}}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 417,
+        "callee": "invoke",
+        "args": [
+          "first",
+          "oldRef",
+          "oldWorker",
+          "\"browser.open\"",
+          "{laneId:\"original-alias\",mode:\"anonymous\",domain:\"example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 421,
+        "callee": "profiles.listOwned",
+        "args": [
+          "oldRef"
+        ],
+        "loops": []
+      },
+      {
+        "line": 422,
+        "callee": "resolveManagedBrowserProfile",
+        "args": [
+          "bridge.socketPath",
+          "{userId:ctx.userId,accountId:ctx.accountId,taskId:task.id}",
+          "\"anonymous\"",
+          "AbortSignal.timeout(10_000)"
+        ],
+        "loops": []
+      },
+      {
+        "line": 425,
+        "callee": "first.dispose",
+        "args": [],
+        "loops": []
+      },
+      {
+        "line": 425,
+        "callee": "bridge.finish",
+        "args": [],
+        "loops": []
+      },
+      {
+        "line": 432,
+        "callee": "startRealRustBridge",
+        "args": [
+          "root",
+          "profileRoot",
+          "\"second\""
+        ],
+        "loops": []
+      },
+      {
+        "line": 434,
+        "callee": "invoke",
+        "args": [
+          "second",
+          "ref",
+          "worker",
+          "\"browser.status\"",
+          "{laneId:oldLane.lane_id}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 435,
+        "callee": "invoke",
+        "args": [
+          "second",
+          "ref",
+          "worker",
+          "\"browser.open\"",
+          "{laneId:\"reopened-alias\",mode:\"anonymous\",domain:\"example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 440,
+        "callee": "profiles.listOwned",
+        "args": [
+          "oldRef"
+        ],
+        "loops": []
+      },
+      {
+        "line": 441,
+        "callee": "profiles.listOwned",
+        "args": [
+          "ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 443,
+        "callee": "invoke",
+        "args": [
+          "second",
+          "ref",
+          "worker",
+          "\"browser.status\"",
+          "{laneId:lane.lane_id}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 444,
+        "callee": "invoke",
+        "args": [
+          "second",
+          "ref",
+          "worker",
+          "\"browser.close\"",
+          "{laneId:lane.lane_id,browserEpoch:lane.browser_epoch}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 446,
+        "callee": "profiles.listOwned",
+        "args": [
+          "ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 449,
+        "callee": "bridge.finish",
+        "args": [],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "path": "frontend/src/server/workbench-browser-host.test.ts",
+    "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105",
+    "title": "\"Node/DB leases use the PID-bound Rust socket and real Chromium\"",
+    "line": 453,
+    "explicitTimeout": "180_000",
+    "sites": [
+      {
+        "line": 479,
+        "callee": "createDb",
+        "args": [],
+        "loops": []
+      },
+      {
+        "line": 493,
+        "callee": "host.dispatch",
+        "args": [
+          "{context:{...context,operationId:randomUUID()},\n    invocation:{name,schemaVersion:1,input}}",
+          "{signal:AbortSignal.timeout(45_000),onProgress:()=>{}}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 501,
+        "callee": "call",
+        "args": [
+          "\"browser.open\"",
+          "{laneId:\"research\",mode:\"anonymous\",domain:\"example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 505,
+        "callee": "call",
+        "args": [
+          "\"browser.navigate\"",
+          "{laneId,browserEpoch,url:\"https://example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 507,
+        "callee": "call",
+        "args": [
+          "\"browser.extract\"",
+          "{laneId,browserEpoch}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 510,
+        "callee": "call",
+        "args": [
+          "\"browser.close\"",
+          "{laneId,browserEpoch}"
+        ],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "path": "frontend/src/server/workbench-browser-host.test.ts",
+    "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105",
+    "title": "\"a restarted Rust host proves a stopped old DB lease before a new task opens the same profile\"",
+    "line": 527,
+    "explicitTimeout": "180_000",
+    "sites": [
+      {
+        "line": 534,
+        "callee": "startRealRustBridge",
+        "args": [
+          "root",
+          "profileRoot",
+          "\"first\""
+        ],
+        "loops": []
+      },
+      {
+        "line": 539,
+        "callee": "resolveManagedBrowserProfile",
+        "args": [
+          "bridge.socketPath",
+          "{userId,accountId,taskId:old.id}",
+          "\"primary\"",
+          "AbortSignal.timeout(10_000)"
+        ],
+        "loops": []
+      },
+      {
+        "line": 545,
+        "callee": "bridge.finish",
+        "args": [],
+        "loops": []
+      },
+      {
+        "line": 548,
+        "callee": "startRealRustBridge",
+        "args": [
+          "root",
+          "profileRoot",
+          "\"second\""
+        ],
+        "loops": []
+      },
+      {
+        "line": 556,
+        "callee": "host.dispatch",
+        "args": [
+          "{context:{...context,operationId:randomUUID()},\n    invocation:{name,schemaVersion:1,input}}",
+          "{signal:AbortSignal.timeout(45_000),onProgress:()=>{}}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 563,
+        "callee": "dispatch",
+        "args": [
+          "\"browser.open\"",
+          "{laneId:\"recovered\",mode:\"primary\",domain:\"example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 564,
+        "callee": "profiles.listOwned",
+        "args": [
+          "oldRef"
+        ],
+        "loops": []
+      },
+      {
+        "line": 565,
+        "callee": "profiles.listOwned",
+        "args": [
+          "{executionTaskId:next.id,attempt:nextClaim.lease.attempt,\n   fenceToken:nextClaim.lease.fenceToken}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 568,
+        "callee": "dispatch",
+        "args": [
+          "\"browser.close\"",
+          "{laneId:opened.lane.lane_id,\n   browserEpoch:opened.lane.browser_epoch}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 573,
+        "callee": "profiles.listOwned",
+        "args": [
+          "newRef"
+        ],
+        "loops": []
+      },
+      {
+        "line": 575,
+        "callee": "bridge.finish",
+        "args": [],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "path": "frontend/src/server/workbench-browser-host.test.ts",
+    "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105",
+    "title": "\"two accounts keep separate primary profiles and one cancellation leaves the other running\"",
+    "line": 580,
+    "explicitTimeout": "180_000",
+    "sites": [
+      {
+        "line": 586,
+        "callee": "startRealRustBridge",
+        "args": [
+          "root",
+          "profileRoot",
+          "\"accounts\""
+        ],
+        "loops": []
+      },
+      {
+        "line": 596,
+        "callee": "resolveManagedBrowserProfile",
+        "args": [
+          "bridge!.socketPath",
+          "{userId,accountId,taskId:task.id}",
+          "\"primary\"",
+          "AbortSignal.timeout(10_000)"
+        ],
+        "loops": []
+      },
+      {
+        "line": 604,
+        "callee": "host.dispatch",
+        "args": [
+          "{context:{...scope.context,operationId:randomUUID()},\n    invocation:{name,schemaVersion:1,input}}",
+          "{signal:AbortSignal.timeout(45_000),onProgress:()=>{}}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 611,
+        "callee": "dispatch",
+        "args": [
+          "scope",
+          "\"browser.open\"",
+          "{laneId:scope.label,mode:\"primary\",domain:\"example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 617,
+        "callee": "profiles.listOwned",
+        "args": [
+          "first.ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 617,
+        "callee": "profiles.listOwned",
+        "args": [
+          "second.ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 624,
+        "callee": "host.dispatch",
+        "args": [
+          "{context:{...first.context,operationId:randomUUID()},\n   invocation:{name:\"browser.status\",schemaVersion:1,input:{laneId:secondLane}}}",
+          "{signal:AbortSignal.timeout(10_000),onProgress:()=>{}}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 632,
+        "callee": "profiles.listOwned",
+        "args": [
+          "first.ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 634,
+        "callee": "profiles.listOwned",
+        "args": [
+          "first.ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 635,
+        "callee": "profiles.listOwned",
+        "args": [
+          "second.ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 636,
+        "callee": "dispatch",
+        "args": [
+          "second",
+          "\"browser.navigate\"",
+          "{laneId:secondLane,browserEpoch:secondEpoch,\n   url:\"https://example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 638,
+        "callee": "dispatch",
+        "args": [
+          "second",
+          "\"browser.extract\"",
+          "{laneId:secondLane,browserEpoch:secondEpoch}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 641,
+        "callee": "dispatch",
+        "args": [
+          "second",
+          "\"browser.close\"",
+          "{laneId:secondLane,browserEpoch:secondEpoch}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 642,
+        "callee": "profiles.listOwned",
+        "args": [
+          "second.ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 644,
+        "callee": "bridge.finish",
+        "args": [],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "path": "frontend/src/server/workbench-browser-host.test.ts",
+    "sha256": "01d107c60bce2996f588f4e3404c384d491934b90e2ada3455c320f6ea2b3105",
+    "title": "\"a live legacy Playwright profile blocks Rust until the real context stops\"",
+    "line": 649,
+    "explicitTimeout": "180_000",
+    "sites": [
+      {
+        "line": 656,
+        "callee": "startRealRustBridge",
+        "args": [
+          "root",
+          "join(root,\"profiles\")",
+          "\"handoff\""
+        ],
+        "loops": []
+      },
+      {
+        "line": 662,
+        "callee": "resolveManagedBrowserProfile",
+        "args": [
+          "bridge.socketPath",
+          "{userId,accountId,taskId:task.id}",
+          "\"primary\"",
+          "AbortSignal.timeout(10_000)"
+        ],
+        "loops": []
+      },
+      {
+        "line": 677,
+        "callee": "host.dispatch",
+        "args": [
+          "{context:{...context,operationId:randomUUID()},\n   invocation:{name,schemaVersion:1,input}}",
+          "{signal:AbortSignal.timeout(45_000),onProgress:()=>{}}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 679,
+        "callee": "dispatch",
+        "args": [
+          "\"browser.open\"",
+          "{laneId:\"same-profile\",mode:\"primary\",domain:\"example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 682,
+        "callee": "profiles.listOwned",
+        "args": [
+          "ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 685,
+        "callee": "dispatch",
+        "args": [
+          "\"browser.open\"",
+          "{laneId:\"same-profile\",mode:\"primary\",domain:\"example.com\"}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 692,
+        "callee": "dispatch",
+        "args": [
+          "\"browser.close\"",
+          "{laneId:lane.lane_id,browserEpoch:lane.browser_epoch}"
+        ],
+        "loops": []
+      },
+      {
+        "line": 694,
+        "callee": "profiles.listOwned",
+        "args": [
+          "ref"
+        ],
+        "loops": []
+      },
+      {
+        "line": 698,
+        "callee": "bridge.finish",
+        "args": [],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "path": "frontend/src/server/workbench-file-recovery.test.ts",
+    "sha256": "71c0bf941de9ef1290a092f1d9c211cf597f1b306510b865430cf6bd77df618c",
+    "title": "\"真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写\"",
+    "line": 283,
+    "explicitTimeout": "60000",
+    "sites": [
+      {
+        "line": 301,
+        "callee": "fixture",
+        "args": [
+          "socket"
+        ],
+        "loops": []
+      },
+      {
+        "line": 315,
+        "callee": "cli.run",
+        "args": [
+          "args"
+        ],
+        "loops": []
+      },
+      {
+        "line": 316,
+        "callee": "cli!.run",
+        "args": [
+          "[...args,\"--apply\",\"--idempotency-key\",key]"
+        ],
+        "loops": []
+      },
+      {
+        "line": 317,
+        "callee": "request",
+        "args": [],
+        "loops": []
+      },
+      {
+        "line": 325,
+        "callee": "fixture",
+        "args": [
+          "socket",
+          "\"unknown_result\""
+        ],
+        "loops": []
+      },
+      {
+        "line": 337,
+        "callee": "fixture",
+        "args": [
+          "socket",
+          "\"paused\"",
+          "true"
+        ],
+        "loops": [
+          "for(const conflict of [false,true])"
+        ]
+      },
+      {
+        "line": 340,
+        "callee": "cli.run",
+        "args": [
+          "preArgs"
+        ],
+        "loops": [
+          "for(const conflict of [false,true])"
+        ]
+      },
+      {
+        "line": 350,
+        "callee": "pre.native.file",
+        "args": [
+          "next",
+          "\"concurrent-update\"",
+          "{kind:\"write\",path:\"报告.html\",expectedVersion:3,contentBase64:Buffer.from(\"其他真实写入\").toString(\"base64\")}"
+        ],
+        "loops": [
+          "for(const conflict of [false,true])"
+        ]
+      },
+      {
+        "line": 353,
+        "callee": "pre.ports.execute",
+        "args": [
+          "next",
+          "{callId:pre.callId}"
+        ],
+        "loops": [
+          "for(const conflict of [false,true])"
+        ]
+      },
+      {
+        "line": 361,
+        "callee": "cli.run",
+        "args": [
+          "repeat"
+        ],
+        "loops": [
+          "for(const conflict of [false,true])"
+        ]
+      },
+      {
+        "line": 368,
+        "callee": "request",
+        "args": [],
+        "loops": []
+      },
+      {
+        "line": 369,
+        "callee": "request",
+        "args": [
+          "\"another-key\""
+        ],
+        "loops": []
+      },
+      {
+        "line": 371,
+        "callee": "cli.run",
+        "args": [
+          "[...changed,\"--apply\",\"--idempotency-key\",\"original-key\"]"
+        ],
+        "loops": []
+      },
+      {
+        "line": 375,
+        "callee": "f.ports.execute",
+        "args": [
+          "{executionTaskId:f.task.id,attempt:resumed.lease.attempt,fenceToken:resumed.lease.fenceToken}",
+          "{callId:f.callId}"
+        ],
+        "loops": []
+      }
+    ]
+  }
+]

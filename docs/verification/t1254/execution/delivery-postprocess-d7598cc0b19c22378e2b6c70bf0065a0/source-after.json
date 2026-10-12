@@ -1,0 +1,21 @@
+{
+  "task": "T-1254",
+  "scope": "DOOCS_ACTUAL_THREE_CHILD_PREPARED_PATH_POSTPROCESS_ONLY",
+  "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "inputSha256": "9b8ba2a32370272ed0897aa98a40ef177e47eb8dcacb8142025aba818681c68e",
+  "runnerSha256": "98633fa2a3fae3df14db5b5c72014904e4a9492382921258a67b5a2410abee55",
+  "factsSha256": "3f85ceec7a1737fa5db36e23491a870cfc0791b6f60445ef77578a5661b0c80c",
+  "preparedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-delivery-validation-9f4bdd0b7db6150e1b31768309508baa-EfBwL6/tmp/t1254-rebuild-prepare-TAqiND",
+  "preparedBindingSha256": "34f2ecf6992081c5a5ac5672a2142424fb1cadd9a9afd56549fd62c3eab4d233",
+  "fullPreparedRows": 141014,
+  "priorParentWrapperExitCodeUnchanged": 1,
+  "priorProjectionReceiptStillMissing": true,
+  "threeOriginalChildrenNotReexecuted": true,
+  "latestObservedOriginalUTC": "2026-10-12T08:11:14.909034Z",
+  "inheritedDeadline": "2026-10-12T13:12:37.651Z",
+  "noProductionCopy": true,
+  "noStandaloneRebuildExecute": true,
+  "staticActualCases": 23,
+  "nativeAllFourActualVerified": true,
+  "boundInputsUnchanged": true
+}

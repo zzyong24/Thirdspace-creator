@@ -1,0 +1,10 @@
+{
+  "path": "frontend/public/reference-editors/sources/doocs-md/request-budget-static-patches.diff",
+  "after": {
+    "sha256": "43ee5ddfdcad6ae0a0a49f32e5069691c3fdd0345f167a4c15b93f5c2445a14e",
+    "size": 99311,
+    "mode": 420,
+    "uid": 501
+  },
+  "copied": true
+}

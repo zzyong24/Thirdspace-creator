@@ -1,0 +1,30 @@
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+Error: Cannot update an unmounted root.
+ ❯ ReactDOMRoot.process.env.NODE_ENV.ReactDOMHydrationRoot.render.ReactDOMRoot.render [as render] ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:27876:34
+ ❯ Object.render ../node_modules/.pnpm/@testing-library+react@16.3.2_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@type_796f041f1bf25f255ff84691b91a8ac6/node_modules/@testing-library/react/dist/pure.js:160:12
+ ❯ ../node_modules/.pnpm/@testing-library+react@16.3.2_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@type_796f041f1bf25f255ff84691b91a8ac6/node_modules/@testing-library/react/dist/pure.js:193:12
+ ❯ ../node_modules/.pnpm/@testing-library+react@16.3.2_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@type_796f041f1bf25f255ff84691b91a8ac6/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22
+ ❯ ../node_modules/.pnpm/@testing-library+react@16.3.2_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@type_796f041f1bf25f255ff84691b91a8ac6/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot ../node_modules/.pnpm/@testing-library+react@16.3.2_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@type_796f041f1bf25f255ff84691b91a8ac6/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Object.rerender ../node_modules/.pnpm/@testing-library+react@16.3.2_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@type_796f041f1bf25f255ff84691b91a8ac6/node_modules/@testing-library/react/dist/pure.js:210:7
+ ❯ Object.<anonymous> src/features/settings/settings-interactive-region.test.tsx:303:58
+    301|     const tree = render(<SettingsDialog viewModel={data.initial} />);
+    302|     category("models");
+    303|     mockRouter.refresh.mockImplementationOnce(() => tree.rerender(<Set…
+       |                                                          ^
+    304|     fireEvent.click(element("model-test-connection"));
+    305|     await waitFor(() => expect(element("model-test-result")).toHaveAtt…
+ ❯ Object.Mock [as refresh] ../node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34
+
+This error originated in "src/features/settings/settings-interactive-region.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "toggling 自动保存 calls patchPreferences({ autosaveEnabled }) then router.refresh()". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+

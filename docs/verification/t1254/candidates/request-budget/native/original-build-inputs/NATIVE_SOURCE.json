@@ -1,0 +1,16 @@
+{
+  "task": "T-1053",
+  "upstreamRepository": "https://github.com/doocs/md",
+  "upstreamCommit": "a7c17fc4cda92e3c13aa7e24f06615cfa4219b31",
+  "upstreamLicense": "WTFPL",
+  "baseline": "T1049 固定来源的 CreatorOS 独立页适配源码",
+  "nativeEntry": "apps/web/src/native-entry.ts",
+  "buildScript": "scripts/build-native.mjs",
+  "buildConfig": "apps/web/vite.native.config.ts",
+  "output": "apps/web/dist-native/",
+  "hostingBase": "/reference-editors/doocs-md/native/",
+  "sourceDownload": "/reference-editors/sources/doocs-md/native-source.tar.gz",
+  "storageOwner": "CreatorOS 既有宿主服务；native 仅内存存储",
+  "browserAutomation": "未运行，仍禁止",
+  "tddHistory": "保留实际 lease 失败/通过日志；无证据的其它前置 TDD 不声称通过"
+}

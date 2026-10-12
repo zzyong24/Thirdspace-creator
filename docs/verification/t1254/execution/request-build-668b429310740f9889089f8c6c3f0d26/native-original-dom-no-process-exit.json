@@ -1,0 +1,38 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/child-restriction.sb",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "scripts/verify-native-dom.mjs",
+    "--without-process"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-668b429310740f9889089f8c6c3f0d26-ry3QIj/child-logs/native-original-dom-no-process.log",
+  "pid": 53944,
+  "identity": {
+    "pid": 53944,
+    "pgid": 53944,
+    "uid": 501,
+    "birth": "Mon Oct 12 14:39:37 2026",
+    "startedAt": 1791787177255
+  },
+  "startedAt": "2026-10-12T06:39:37.255Z",
+  "endedAt": "2026-10-12T06:39:39.612Z",
+  "elapsedMs": 2357,
+  "budgetMs": 900000,
+  "deadlineAt": "2026-10-12T06:54:37.255Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

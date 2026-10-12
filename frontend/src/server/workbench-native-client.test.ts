@@ -189,6 +189,29 @@ describe("private native command client", () => {
     const client=createWorkbenchNativeClient(lease,{platform:"darwin",desktop:true,socketPath:path});
     await client.command(ref,"run-1",{kind:"command_run",argv:["-e","1"],cwd:".",runtimeId:"bundled-node",timeoutMs:10000});
     stopped=true;
-    await Promise.race([cancelSeen,new Promise((_resolve,reject)=>setTimeout(()=>reject(new Error("cancel not sent")),3000))]);
+    // 原500ms心跳发现停止 + 完整420s RPC + 原响应后的有限结算余量。
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    try{await Promise.race([cancelSeen,new Promise<never>((_resolve,reject)=>{timer=setTimeout(()=>reject(new Error("cancel not sent")),540500);})]);}
+    finally{if(timer)clearTimeout(timer);}
   });
 });
+
+
+it("T1250 原Unix请求超过30秒仍回读同operation，不以10秒活动窗口切断",async()=>{
+ const path=await socket((request,reply)=>{
+  const timer=setTimeout(()=>reply({ok:true,operationId:request.operationId,value:{version:1}}),35000);
+  server!.once("close",()=>clearTimeout(timer));
+ });
+ const lease:NativeLeasePort={async withLease(_ref,_mode,action){return action(scope);}};
+ const client=createWorkbenchNativeClient(lease,{platform:"darwin",desktop:true,socketPath:path});
+ await expect(client.file(ref,"slow-owned-op",{kind:"stat",path:"a"})).resolves.toEqual({version:1});
+},180000);
+
+it("T1250 已取消的原control在派发前拒绝，原operation没有原生副作用",async()=>{
+ let dispatches=0;const path=await socket((request,reply)=>{dispatches++;reply({ok:true,operationId:request.operationId,value:{version:1}});});
+ const lease:NativeLeasePort={async withLease(_ref,_mode,action){return action(scope);}};
+ const client=createWorkbenchNativeClient(lease,{platform:"darwin",desktop:true,socketPath:path});
+ const controller=new AbortController();controller.abort();
+ await expect(client.file(ref,"cancelled-original",{kind:"write",path:"a",contentBase64:"YQ==",expectedVersion:0},{signal:controller.signal})).rejects.toMatchObject({dispatched:false});
+ expect(dispatches).toBe(0);
+},180000);

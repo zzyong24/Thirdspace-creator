@@ -7,13 +7,13 @@ import {
   workbenchResultSchema, type WorkbenchResult,
 } from "@creatoros/contract/agent-workbench";
 import type { ExecutionRef } from "@creatoros/contract/execution-worker";
-import { createWorkbenchNativeClient, NativeFileError, type NativeFileAction, type NativeCommandAction } from "./workbench-native-client";
+import { createWorkbenchNativeClient, NativeFileError, type NativeFileAction, type NativeCommandAction, type NativeCallControl } from "./workbench-native-client";
 import { projectFileSuccess } from "./workbench-file-success";
 import { commandRunInvalidInput, projectCommandRunResult } from "./workbench-command-guidance";
 
 type Host = NonNullable<ChatProductionCompositionDeps["workbenchHost"]>;
-type FilePort = (ref: ExecutionRef, operationId: string, action: NativeFileAction) => Promise<unknown>;
-type CommandPort = (ref: ExecutionRef, operationId: string, action: NativeCommandAction) => Promise<unknown>;
+type FilePort = (ref: ExecutionRef, operationId: string, action: NativeFileAction, control?:NativeCallControl) => Promise<unknown>;
+type CommandPort = (ref: ExecutionRef, operationId: string, action: NativeCommandAction, control?:NativeCallControl) => Promise<unknown>;
 
 const path = { type: "string", minLength: 1, maxLength: 2048 };
 const content = { type: "string", maxLength: 1_000_000 };
@@ -158,7 +158,7 @@ export function createNativeFilesWorkbenchHost(db: Db, options: {
             action={kind:call.invocation.name==="execution.cancel"?"command_cancel":"command_status",targetOperationId:target};
           }
         }
-        try { const value=await nativeCommand(ref,call.context.operationId,action);
+        try { const value=await nativeCommand(ref,call.context.operationId,action,{signal});
           signal.throwIfAborted();
           return result(call.context.operationId,action.kind==="command_read"?projectRead(value):action.kind==="command_run"?projectCommandRunResult(value):value);
         } catch(error) { if (signal.aborted) throw error; return commandErrorResult(call.context.operationId,action,error); }
@@ -178,7 +178,7 @@ export function createNativeFilesWorkbenchHost(db: Db, options: {
         : request.operation === "stat" ? {kind:"stat",path:request.path}
         : {kind:"write",path:request.path,contentBase64:Buffer.from(request.content,"utf8").toString("base64"),expectedVersion:request.expectedVersion??null};
       try {
-        const value = await native(ref,call.context.operationId,action);
+        const value = await native(ref,call.context.operationId,action,{signal});
         signal.throwIfAborted();
         return result(call.context.operationId,projectFileSuccess(action,request.operation==="read"?projectRead(value):value));
       } catch (error) {

@@ -1,0 +1,55 @@
+{
+  "task": "T-1254",
+  "reviewer": "independent_review_resume",
+  "at": "2026-10-12T08:59:14.868451+00:00",
+  "status": "EXACT_COPY_V2_SOURCE_AND_COMPLETE_CURRENT_INPUT_PASS_COPY_NOT_EXECUTED",
+  "scope": "DOOCS_COMPLETE_DELIVERY_EXACT_PRODUCTION_COPY",
+  "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "independentCopyApproved": true,
+  "runtimeAdmissionAuthority": "ROOT仅可依据本精确候选另签一次复制准入；本评审没有执行复制。",
+  "bindings": {
+    "indexSha256": "7c6ae7440bceb425d70014d6c6316cadaff8c142bc0a1af51cffa9cd5cb92f95",
+    "sealSha256": "c12d7da875d293b0fad7c2aea67c4a0b101e7ad5bd18e17886cc1910fb8c254e",
+    "runnerSha256": "e2e1e742a384f1d222a60ad143f5e36b88c27272119eaa1a65c7ae72b2a70f9f",
+    "manifestSha256": "4b55ec3a01e10979fb4179dc95ba411acf6d31e8dddbded0cd1f705ee0ad92dd",
+    "postprocessProofSha256": "1137e5f28faed37ac1a98279f8dfedc482a0afa31cd9ee186477222a36552767",
+    "inputSha256": "9b8ba2a32370272ed0897aa98a40ef177e47eb8dcacb8142025aba818681c68e"
+  },
+  "corePrepareReceiptSha256": "f1d4bb9bdba9d30cd55ccce41d166c2c3604c4775ed0b0e6d3aa6f37e0407a5c",
+  "independentFullProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/INDEPENDENT_EXACT_COPY_V2_FRESH_FULL_INPUT_AND_POST_EOF0_RECHECK.json",
+    "sha256": "a6dcd3c91ed1707f80db04f7cda8cdd710f459f012852f33b3741725a1d1fdf0",
+    "fullRows": 144537,
+    "sourceSealRows": 9,
+    "readUniqueBytes": 2418272242,
+    "elapsedMs": 33991.682666994166,
+    "drift": []
+  },
+  "sourceReview": [
+    "全文读取 e2e1 复制源码、最终 index/seal/core EOF0 回执及旧草稿到 v2 的完整差异；严格上下文机械重建所得字节等于 e2e1。只使用 Node 核心模块，不生成新归档、不重跑构建或三个验收 child。",
+    "已独核 postprocess 真正 EOF0、5 个当场原始档案与完整 before/after 相等。原 9f4 三 child 真正 code0/closed/group0、wrapper 原 exit1 和缺失旧 result 均保持原状。",
+    "清单固定为 73 写入、53 删除、636 保持及完整 709 候选文件；逐字节核候选、旧目标、全部 source/input、native/static 完整集合和其他三个编辑器完整集合与 manifest 值。",
+    "唯一写族为批准的 Doocs native/static 及显式元数据和三个验收脚本。变更前备份原字节并核 SHA；既有目标 O_NOFOLLOW 与 fd inode/UID 校验，新增目标 O_EXCL，写入后核字节、长度、模式和 UID。全部实际已有变更目标 nlink=1。",
+    "每次变更守根内路径、无符号链接父目录及原 UID/inode/mode；复制期间需要 ROOT 明确无并发产品写者。写入异常记录 activeMutation、已完成真实写入/删除与备份根，不自动重试或回滚。",
+    "最终完整守卫仅容许本清单的 73 替换和 53 缺失，其他完整输入、冻结文件与其他编辑器不变。全 after 成功及最后显式出生 deadline 校验后才可 exit0。"
+  ],
+  "budget": {
+    "earliestInheritedUTC": "2026-10-12T13:12:37.651Z",
+    "localMaximumSingleBirthMs": 19320000,
+    "prepareMs": 3600000,
+    "applyMs": 900000,
+    "afterMs": 3600000,
+    "completeInitialFutureMs": 8100000,
+    "mutationAdmissionMs": 4500000,
+    "description": "ROOT 一次准入必须仍有完整初始 8.1M 未来槽；程序修改前再守完整 APPLY+AFTER。单出生单调时钟与继承 UTC 取更早，拒墙钟回退，原期限不续期；结束前显式复核。"
+  },
+  "findings": [],
+  "limits": {
+    "copyExecutedByReviewer": false,
+    "actualProductCopyPassed": false,
+    "gatePackageBrowserAcceptancePassed": false,
+    "nativeAppAcceptance": "用户暂不授权，未完成；本工具不操作 App。",
+    "productionCopyNeedsExactRootAdmission": true
+  },
+  "recommendation": "PASS：可由 ROOT 对上述唯一绑定签一次精确复制准入。复制实际 EOF、73/53 当场收据、完整 after 和备份仍需按真实结果复核；不得以本静态结论替代实际复制成功。"
+}

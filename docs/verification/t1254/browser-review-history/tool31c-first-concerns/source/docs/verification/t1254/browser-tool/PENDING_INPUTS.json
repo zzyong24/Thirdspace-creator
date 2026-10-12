@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-12T03:43:24.409577+00:00",
+  "task": "T-1254",
+  "phase": "complete-tool-source-candidate-only",
+  "runtimeStarted": false,
+  "actualTypesCopyListAndBodies": "pending",
+  "runtimeAdmission": "pending exact fresh peer + ROOT; pending final delivery/commit/11 Worker/DMG",
+  "freshFieldsRequired": [
+    "final clean product HEAD40",
+    "final original170 manifest (same original denominator)",
+    "final new111 manifest (official103/protocol7/pi1)",
+    "exact11Worker physical SHA from final HEAD",
+    "successful real package receipt with same HEAD and new DMG physical SHA",
+    "new Doocs full native delivery plus sourceArchive SHA",
+    "actual Node/Chrome/PG/installed Mach-O roots complete dynamic closure manifest and priority/links/bytes/modes/uid",
+    "reviewed closed-loop tool manifest SHA",
+    "unique fresh24hex nonce"
+  ],
+  "dynamicProducerReuse": {
+    "path": "/tmp/t1254-readonly/NODE_DYLD_CLOSURE_V10.json",
+    "schemaSha256AtRead": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+    "supersedesTemporarySchema": "c8a5de9c9889fef7ae190a746929cc89ce5f559f1c3ce3d9fd9ff3ec148d3923",
+    "onlyAlreadyListedRootsCovered": true,
+    "mustExtendForActualBrowserRuntimeRootsIfMissing": true,
+    "builderPeerRootReviewStillPendingAtRead": true
+  },
+  "App": "用户暂不授权；未验收",
+  "historicalAuthSeed": "来源/使用未确认；本Doocs无生成，只运行fresh ownedDB current ensureLocalUser，不读/复制Codex auth seed"
+}

@@ -1,0 +1,15 @@
+{
+  "approved": true,
+  "task": "T-1250",
+  "reviewer": "root",
+  "toolSha256": "e3331794ae00630298618bed44749d76095f2bc433c36b10a422c0d7c585d2d6",
+  "inputBindingSha256": "120f0fb9b79afe383212bd6fbef96c2ca6a33e890b49db48cfd704a9279b1bb8",
+  "inputs": 328,
+  "scope": "真实源副本Rust browser_ipc全12例；实际main lock子集证明成功后才build",
+  "constraints": [
+    "不启动App/Chrome/模型/PG，不签Windows或公共Node链",
+    "保原HOME/CODEX_HOME；私有target/profile和带birth/UID的实际子进程清理",
+    "任何resolver包tuple漂移、源码漂移、名单不符、未closed或残留均失败",
+    "原未执行工具和原IPC standalone结果保留，不替代主Cargo依赖证明"
+  ]
+}

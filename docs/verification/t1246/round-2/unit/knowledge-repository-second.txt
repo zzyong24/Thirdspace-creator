@@ -1,0 +1,108 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend
+
+ ✓ src/modules/knowledge/knowledge.repository.integration.test.ts (17 tests) 45823ms
+     ✓ list is user-scoped: A sees only A's items  3861ms
+     ✓ [T-547] list 按写入时间倒序返回，最新导入排在最前  2542ms
+     ✓ get(B, aItemId) throws OwnershipError (no existence leak)  2921ms
+     ✓ createRevision(B, aItemId) throws — cannot revise A's item  2567ms
+     ✓ [T-211] renameTitle 只改标题(content/status/currentRevisionId 不变)  2498ms
+     ✓ [T-211] renameTitle(B, aItemId) throws — 跨用户不能改 A 的标题  2748ms
+     ✓ createRelation cannot link to B's item (both ends must be owned)  2837ms
+     ✓ createRelation rejects a self-link with ConflictError  2845ms
+     ✓ create produces revision #1 and sets currentRevisionId  2496ms
+     ✓ a second revision yields #2, repoints currentRevisionId, leaves #1 unchanged (append-only)  2535ms
+     ✓ createRelation between two owned items returns a numeric strength  2522ms
+     ✓ accountId scopes reads strictly within a user (A 号知识 B 号不可见)  2624ms
+     ✓ listAllAccountsSystem / renameTitleSystem are user-level (跨号可见/可改,仅系统巡检用)  2517ms
+     ✓ create 透传 sourceNote,get/list 原样读回;缺省为 NULL  2455ms
+     ✓ 四原子类型可落库(claim/evidence/quote/qa)  2436ms
+     ✓ usedCount = materialLinks(entity_type='knowledge') 反查计数;无用料 = 0  2457ms
+     ✓ usedInPublished = 所挂项目存在 status='published' 的 publication  2961ms
+stderr | src/integration/t1026-tool-result-read.integration.test.ts > 长回执经真实 Worker/Pi notice 调用 backend reader；截图=false 仍使用 execution ID
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "modelInput"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"modelInput\""
+  }
+]
+    at Object.withLease (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-lease.service.ts:20:38)
+    at Object.reserve (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-call-ledger.service.ts:79:21)
+    at Object.call (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/t1026-tool-result-read.integration.test.ts:86:27)
+    at Object.reserve (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-worker-run.ts:117:62)
+    at wrapStream (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-stream-model.ts:121:47)
+    at Object.doStream (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:14101:33)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at execute (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8008:26)
+    at runWithTracingChannelSpan (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4084:12)
+    at executeLanguageModelCall (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4292:14)
+
+stderr | src/integration/t1026-tool-result-read.integration.test.ts > 长回执经真实 Worker/Pi notice 调用 backend reader；截图=true 仍使用 execution ID
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "modelInput"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"modelInput\""
+  }
+]
+    at Object.withLease (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-lease.service.ts:20:38)
+    at Object.reserve (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-call-ledger.service.ts:79:21)
+    at Object.call (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/t1026-tool-result-read.integration.test.ts:86:27)
+    at Object.reserve (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/chat-worker-run.ts:117:62)
+    at wrapStream (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/execution/durable-stream-model.ts:121:47)
+    at Object.doStream (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:14101:33)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at execute (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8008:26)
+    at runWithTracingChannelSpan (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4084:12)
+    at executeLanguageModelCall (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4292:14)
+
+ ❯ src/integration/t1026-tool-result-read.integration.test.ts (2 tests | 2 failed) 4435ms
+   × 长回执经真实 Worker/Pi notice 调用 backend reader；截图=false 仍使用 execution ID 172ms
+   × 长回执经真实 Worker/Pi notice 调用 backend reader；截图=true 仍使用 execution ID 44ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/t1026-tool-result-read.integration.test.ts > 长回执经真实 Worker/Pi notice 调用 backend reader；截图=false 仍使用 execution ID
+ FAIL  src/integration/t1026-tool-result-read.integration.test.ts > 长回执经真实 Worker/Pi notice 调用 backend reader；截图=true 仍使用 execution ID
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "modelInput"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"modelInput\""
+  }
+]
+ ❯ Object.withLease src/modules/execution/execution-lease.service.ts:20:38
+     18|       action: (scope: {tx: Transaction; task: TaskRow; context: Reques…
+     19|     ): Promise<T> {
+     20|       const ref = executionRefSchema.parse(execution);
+       |                                      ^
+     21|       return db.transaction(async tx => {
+     22|         const [snapshot] = await tx.select().from(executionTasks).wher…
+ ❯ Object.reserve src/modules/execution/execution-call-ledger.service.ts:79:21
+ ❯ Object.call src/integration/t1026-tool-result-read.integration.test.ts:86:27
+ ❯ Object.reserve ../ai-worker/src/execution/chat-worker-run.ts:117:62
+ ❯ wrapStream ../ai-worker/src/execution/durable-stream-model.ts:121:47
+ ❯ Object.doStream ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/middleware/wrap-language-model.ts:104:16
+ ❯ execute ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/stream-language-model-call.ts:350:6
+ ❯ runWithTracingChannelSpan ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/tracing-channel-publisher.ts:79:11
+ ❯ executeLanguageModelCall ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/create-telemetry-dispatcher.ts:184:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 17 passed (19)
+   Start at  03:17:08
+   Duration  54.82s (transform 2.25s, setup 0ms, import 4.09s, tests 50.26s, environment 0ms)
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/knowledge-repository-second.json

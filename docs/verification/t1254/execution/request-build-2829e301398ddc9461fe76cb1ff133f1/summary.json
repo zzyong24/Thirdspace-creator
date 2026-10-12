@@ -1,0 +1,32 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_TWO_INSTALLED_ORIGINAL_SOURCE_REAL_RED_V2_FULL_REQUEST_TEST_TYPES_BUILD_GRAPH_ONLY",
+  "exitCode": 1,
+  "startedAt": "2026-10-12T03:47:03.156Z",
+  "elapsedMs": 103057.347417,
+  "totalBudgetMs": 109260000,
+  "stepComplete": 1,
+  "stepTotal": 25,
+  "signals": [],
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-2829e301398ddc9461fe76cb1ff133f1-bS8E3o",
+  "rootRetained": true,
+  "appliedToPrivateOnly": false,
+  "records": [
+    {
+      "name": "owned-network-boundary",
+      "code": 0,
+      "elapsedMs": 215,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-resource-checker-tests",
+      "code": 1,
+      "elapsedMs": 2096,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "noProductCopy": true,
+  "noApp": true
+}

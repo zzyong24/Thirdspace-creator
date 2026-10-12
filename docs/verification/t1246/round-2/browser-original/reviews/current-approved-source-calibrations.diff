@@ -1,0 +1,1191 @@
+diff --git a/frontend/tests/e2e/ai-copilot.spec.ts b/frontend/tests/e2e/ai-copilot.spec.ts
+index b0199104f..f1bd7a82b 100644
+--- a/frontend/tests/e2e/ai-copilot.spec.ts
++++ b/frontend/tests/e2e/ai-copilot.spec.ts
+@@ -37,9 +37,10 @@ test.describe("AI Copilot dialog", () => {
+ 
+     // Page-specs §16 component tree.
+     await expect(page.locator('[data-slot="prompt-composer"]')).toBeVisible();
+-    await expect(page.locator('[data-slot="copilot-dashboard"]')).toBeVisible();
+-    await expect(page.locator('[data-slot="quick-entries"]')).toBeVisible();
+-    await expect(page.locator('[data-slot="smart-recommendation"]')).toBeVisible();
++    await expect(dialog.locator('[data-slot="copilot-conversation"]')).toBeVisible();
++    await expect(dialog.locator('[data-slot="suggested-action-chips"]')).toBeVisible();
++    await expect(dialog.locator('[data-slot="suggested-chip"]').first()).toBeVisible();
++    await expect(page.locator('[data-slot="copilot-dashboard"]')).toHaveCount(0);
+   });
+ 
+   test("close button removes only ?copilot=open and preserves the pathname", async ({
+@@ -68,19 +69,30 @@ test.describe("AI Copilot dialog", () => {
+   test("submit button does not post a real network request", async ({
+     page,
+   }) => {
+-    const requests: string[] = [];
+-    page.on("request", (req) => {
+-      if (req.method() !== "GET") {
+-        requests.push(req.url());
+-      }
++    // T1024/T1026：打开和预填不自动生成；明确提交必须落原source/task，任意POST不代签。
++    const generationRequests: Array<{url:string;body:any}> = [];
++    page.on("request", req => {
++      if(req.method()!=="POST")return;
++      const url=new URL(req.url());let body;try{body=req.postDataJSON();}catch{return;}
++      if(url.pathname==="/api/chat"||url.pathname==="/api/v1/dispatch"&&["ai.conversations.messages.create","ai.tasks.create"].includes(body?.id))generationRequests.push({url:url.pathname,body});
+     });
+     await page.goto("/?copilot=open");
+-    // The composer disables submit while empty, so type first; the submit
+-    // path is a local-only append and must still fire no network request.
+-    await page.getByLabel("我能帮你做什么").fill("帮我分析这个选题");
+-    await page.getByTestId("submit-button").click();
+-    // Allow microtasks to settle.
+-    await page.waitForTimeout(50);
+-    expect(requests).toEqual([]);
++    const dialog=page.getByRole("dialog");await expect(dialog).toBeVisible();
++    const input=page.getByLabel("我能帮你做什么");await expect(input).toBeVisible();
++    await dialog.locator('[data-slot="suggested-chip"]').first().click();
++    await expect(input).not.toHaveValue("");expect(generationRequests).toEqual([]);
++    await input.fill("请只确认收到这段用户测试文字，不调用工具或外部网络。");
++    expect(generationRequests).toEqual([]);
++    const sourceResponse=page.waitForResponse(r=>{try{return new URL(r.url()).pathname==="/api/v1/dispatch"&&r.request().postDataJSON()?.id==="ai.conversations.messages.create";}catch{return false;}},{timeout:300_000});
++    await page.getByTestId("submit-button").click();const response=await sourceResponse;expect(response.ok()).toBe(true);
++    const source=(await response.json()).data;expect(source.id).toBeTruthy();expect(source.role).toBe("user");expect(source.content).toBe("请只确认收到这段用户测试文字，不调用工具或外部网络。");
++    await expect.poll(async()=>{
++      const result=await page.request.post("/api/v1/dispatch",{timeout:120_000,data:{id:"ai.tasks.list",input:{query:{page:1,pageSize:100,taskType:"copilot.assist"}}}});expect(result.ok()).toBe(true);
++      return (await result.json()).data.find((t:any)=>t.inputData?.sourceMessageId===source.id);
++    },{timeout:300_000}).toMatchObject({taskType:"copilot.assist",inputData:{sourceMessageId:source.id,conversationId:source.conversationId}});
++    const originalSources=generationRequests.filter(r=>r.body?.id==="ai.conversations.messages.create");expect(originalSources).toHaveLength(1);
++    const sent=originalSources[0]!.body.input;expect(sent.body.content).toBe(source.content);expect(sent.params.conversationId).toBe(source.conversationId);
++    // 此例核真实提交生产者，不把未配Pi后的失败/等待签成模型成功；官方生成另逐ledger验。
++
+   });
+ });
+diff --git a/frontend/tests/e2e/ai-reliability-recovery.spec.ts b/frontend/tests/e2e/ai-reliability-recovery.spec.ts
+index cb182ecb7..54c6c8e80 100644
+--- a/frontend/tests/e2e/ai-reliability-recovery.spec.ts
++++ b/frontend/tests/e2e/ai-reliability-recovery.spec.ts
+@@ -115,7 +115,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+   await expect(page.getByText("已上传:t804.srt")).toBeVisible();
+ 
+   // 页面初始状态确认无历史失败后，再生成一条真实 terminal 任务。无效 SRT 在备料阶段
+-  // 立即取消且不调用外部模型；首次按钮点击仍代表“本轮新发起”，刷新后则应恢复它。
++  // 以原 VIDEO_DECISIONS_FAILED 失败且不调用外部模型；首次按钮点击仍代表本轮新发起。
+   const terminalTask = await dispatch<{ id: string; status: string }>(
+     page,
+     "ai.tasks.create",
+@@ -146,7 +146,19 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+           )
+         ).status,
+     )
+-    .toBe("cancelled");
++    .toBe("failed");
++
++  const failedTask = await dispatch<{ id: string; status: string; errorCode: string; executionTaskId: string }>(
++    page, "ai.tasks.get", { params: { taskId: terminalTask.id }, query: undefined, body: undefined }, account.id,
++  );
++  expect(failedTask).toMatchObject({ id: terminalTask.id, status: "failed", errorCode: "VIDEO_DECISIONS_FAILED" });
++  expect(failedTask.executionTaskId).toBeTruthy();
++  const originalExecution = await dispatch<{ task: { id: string; ownerId: string; attempt: number; status: string; errorCode: string }; calls: Array<{ kind: string }>; hasMore: boolean }>(
++    page, "workbench.tasks.inspect", { params: { taskId: failedTask.executionTaskId }, query: { afterSequence: 0, limit: 100 }, body: undefined }, account.id,
++  );
++  expect(originalExecution.task).toMatchObject({ id: failedTask.executionTaskId, ownerId: terminalTask.id, attempt: 1, status: "failed", errorCode: "VIDEO_DECISIONS_FAILED" });
++  expect(originalExecution.hasMore).toBe(false);
++  expect(originalExecution.calls.filter((call) => call.kind === "model" || call.kind === "external_agent")).toHaveLength(0);
+ 
+   const createBodies: Array<Record<string, unknown>> = [];
+   let taskGetCount = 0;
+diff --git a/frontend/tests/e2e/all-routes.spec.ts b/frontend/tests/e2e/all-routes.spec.ts
+index b2b9b748e..c8a69c723 100644
+--- a/frontend/tests/e2e/all-routes.spec.ts
++++ b/frontend/tests/e2e/all-routes.spec.ts
+@@ -1,4 +1,5 @@
+ import { expect, test } from "../helpers/test-environment";
++import { randomUUID } from "node:crypto";
+ import { ROUTES } from "../fixtures/routes";
+ 
+ /**
+@@ -17,13 +18,35 @@ test.describe("Whole-system route matrix (Task 26)", () => {
+   for (const route of ROUTES) {
+     test(`route ${route.id} (${route.pathname}) renders with single shell and correct active state`, async ({
+       page,
++      baseURL,
+     }) => {
+       const consoleErrors: string[] = [];
+       page.on("console", (msg) => {
+         if (msg.type() === "error") consoleErrors.push(msg.text());
+       });
+ 
+-      await page.goto(route.pathname);
++      // 每例使用真实公共创建的当前成员、项目和组，不能借 seed slug 或缺账号复盘。
++      const dispatch = async <T,>(id: string, input: unknown, headers: Record<string, string> = {}): Promise<T> => {
++        const response = await page.request.post("/api/v1/dispatch", { data: { id, input }, headers, timeout: 120_000 });
++        expect(response.ok(), `${id}: ${response.status()}`).toBe(true);
++        return (await response.json()).data as T;
++      };
++      const group = await dispatch<{ id: string }>("accountGroups.create", { body: { name: `路由 ${route.id}`, idempotencyKey: randomUUID() } });
++      const account = await dispatch<{ id: string }>("accounts.create", { body: { platform: "douyin", accountHandle: `@route-${randomUUID()}` } }, { "x-group-id": group.id });
++      const project = await dispatch<{ id: string; groupId: string }>("projects.create", { body: { title: "AI Native Browser 深度解析", brief: "真实路由验收" } }, { "x-group-id": group.id, "x-account-id": account.id });
++      expect(project.groupId).toBe(group.id);
++      await page.context().addCookies([
++        { name: "creatoros_current_group", value: encodeURIComponent(group.id), url: baseURL! },
++        { name: "creatoros_current_account", value: encodeURIComponent(account.id), url: baseURL! },
++      ]);
++      await page.addInitScript(({ groupId, accountId }) => {
++        localStorage.setItem("creatoros:current-group", groupId);
++        localStorage.setItem("creatoros:current-account", accountId);
++      }, { groupId: group.id, accountId: account.id });
++      await page.goto(route.pathname.replace("ai-native-browser", project.id));
++      await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state", "ready");
++      if (route.id === "experience") await expect(page).toHaveURL(/\/knowledge$/);
++      if (route.id === "settings") await expect(page.getByRole("dialog", { name: "设置" })).toBeVisible();
+ 
+       // Single shared AppShell.
+       await expect(page.locator('[data-slot="app-shell"]')).toHaveCount(1);
+@@ -32,18 +55,19 @@ test.describe("Whole-system route matrix (Task 26)", () => {
+ 
+       // TopHeader mode.
+       const header = page.locator('[data-slot="app-top-header"]');
+-      await expect(header).toHaveAttribute("data-mode", route.headerMode);
++      // 只在本获批浏览器用例投影当前IA；共享首轮ROUTES输入字节保持。
++      const expectedHeaderMode = route.id === "project-overview" ? "project-workspace" : route.headerMode;
++      await expect(header).toHaveAttribute("data-mode", expectedHeaderMode);
+ 
+       // Sidebar active item.
+       const nav = page.getByRole("navigation", { name: "主要导航" });
+       const active = nav.locator('[aria-current="page"]');
+-      await expect(active).toHaveCount(1);
+-      const activeHref = await active.getAttribute("href");
+-      // The "search" and "ai-copilot-overlay" routes use the home
+-      // nav as their active anchor (no dedicated search nav item).
+-      const expectedHref =
+-        route.sidebarActiveId === "home" ? "/" : `/${route.sidebarActiveId}`;
+-      expect(activeHref).toBe(expectedHref);
++      const expectedActive = route.id === "experience" ? "knowledge" : route.id === "search" ? null : route.id === "settings" ? "home" : route.sidebarActiveId;
++      await expect(active).toHaveCount(expectedActive === null ? 0 : 1);
++      if (expectedActive !== null) {
++        const activeHref = await active.getAttribute("href");
++        expect(activeHref).toBe(expectedActive === "home" ? "/" : `/${expectedActive}`);
++      }
+ 
+       // No console errors.
+       expect(consoleErrors).toEqual([]);
+diff --git a/frontend/tests/e2e/app-shell.spec.ts b/frontend/tests/e2e/app-shell.spec.ts
+index 9373d5f19..83fc87b6a 100644
+--- a/frontend/tests/e2e/app-shell.spec.ts
++++ b/frontend/tests/e2e/app-shell.spec.ts
+@@ -34,14 +34,10 @@ test.describe("AppShell", () => {
+     const nav = page.getByRole("navigation", { name: "主要导航" });
+     const items = nav.getByRole("link");
+ 
+-    await expect(items).toHaveCount(7);
+-    await expect(items.nth(0)).toHaveText("首页");
+-    await expect(items.nth(1)).toHaveText("项目");
+-    await expect(items.nth(2)).toHaveText("知识库");
+-    await expect(items.nth(3)).toHaveText("素材中心");
+-    await expect(items.nth(4)).toHaveText("发布中心");
+-    await expect(items.nth(5)).toHaveText("经验沉淀");
+-    await expect(items.nth(6)).toHaveText("设置");
++    const approved=[["首页", "/"], ["创作者总览", "/overview"], ["定位中心", "/positioning"], ["内容雷达", "/intelligence"], ["选题", "/topics"], ["项目", "/projects"], ["知识库", "/knowledge"], ["素材中心", "/assets"], ["创作画布", "/canvases"], ["发布中心", "/publishing"], ["运营分析", "/daily-report"], ["自动化", "/automations"], ["设置", "/settings"]] as const;
++    await expect(items).toHaveCount(approved.length);
++    for(const [index,[label,href]] of approved.entries()){await expect(items.nth(index)).toHaveText(label);await expect(items.nth(index)).toHaveAttribute("href",href);await expect(items.nth(index)).toBeVisible();}
++
+   });
+ 
+   test("derives the active nav item from the pathname", async ({ page }) => {
+@@ -60,50 +56,20 @@ test.describe("AppShell", () => {
+   }) => {
+     await page.goto("/");
+ 
+-    // Tab through the primary nav (sidebar) until we land in the header.
+-    let attempts = 0;
+-    let inHeader = false;
+-    let inScroll = false;
+-    while (attempts < 12 && !inHeader) {
+-      await page.keyboard.press("Tab");
+-      attempts += 1;
+-      const focused = await page.evaluate(() => {
+-        const active = document.activeElement;
+-        if (!active || !(active instanceof HTMLElement)) return null;
+-        return {
+-          inHeader:
+-            active.closest('[data-testid="app-top-header"]') !== null,
+-          inScroll:
+-            active.closest('[data-testid="page-scroll-area"]') !== null,
+-        };
+-      });
+-      inHeader = focused?.inHeader ?? false;
+-      inScroll = focused?.inScroll ?? false;
++    await expect(page.locator('main[data-page="dashboard"]')).toBeVisible();
++    const limit=await page.evaluate(()=>Array.from(document.querySelectorAll<HTMLElement>('a[href],button,input,select,textarea,[tabindex]')).filter(e=>e.tabIndex>=0&&!e.matches(':disabled,[hidden]')&&e.getClientRects().length>0&&getComputedStyle(e).visibility!=="hidden").length*2+1);
++    expect(limit).toBeGreaterThan(0);let inHeader=false,inScroll=false;
++    for(let attempts=0;attempts<limit&&!inHeader;attempts++){
++      await page.keyboard.press("Tab");const focused=await page.evaluate(()=>{const a=document.activeElement;return a instanceof HTMLElement?{inHeader:!!a.closest('[data-testid="app-top-header"]'),inScroll:!!a.closest('[data-testid="page-scroll-area"]')}:null;});
++      inHeader=focused?.inHeader??false;inScroll=focused?.inScroll??false;expect(inScroll,"正文不得先于Header获得Tab焦点").toBe(false);
+     }
+-    expect(inHeader).toBe(true);
+-    expect(inScroll).toBe(false);
+-
+-    // Continue tabbing — the next page-content focusable should be after
+-    // the header. We assert by tabbing through every header action and
+-    // confirming we do not enter the page scroll area.
+-    for (let i = 0; i < 8; i += 1) {
+-      await page.keyboard.press("Tab");
+-      const focused = await page.evaluate(() => {
+-        const active = document.activeElement;
+-        if (!active || !(active instanceof HTMLElement)) return null;
+-        return {
+-          inHeader:
+-            active.closest('[data-testid="app-top-header"]') !== null,
+-          inScroll:
+-            active.closest('[data-testid="page-scroll-area"]') !== null,
+-        };
+-      });
+-      if (focused?.inScroll) {
+-        // Once we have crossed all header actions, the next focusable is
+-        // in the page content. That's the expected order.
+-        break;
+-      }
++    expect(inHeader).toBe(true);expect(inScroll).toBe(false);
++    for(let attempts=0;attempts<limit&&!inScroll;attempts++){
++      await page.keyboard.press("Tab");const focused=await page.evaluate(()=>{const a=document.activeElement;return a instanceof HTMLElement?{inScroll:!!a.closest('[data-testid="page-scroll-area"]'),inSidebar:!!a.closest('[data-testid="app-sidebar"]')}:null;});
++      expect(focused?.inSidebar,"未进入正文前不能绕回侧栏形成焦点循环").not.toBe(true);inScroll=focused?.inScroll??false;
+     }
++    expect(inScroll,"真实Tab必须从Header进入正文").toBe(true);
++
+   });
+ 
+   test("the page scroll area is the only scrollable region in the main frame", async ({
+@@ -187,11 +153,13 @@ test.describe("AppShell", () => {
+   test("applies shared page spacing tokens in the browser", async ({ page }) => {
+     await page.goto("/");
+ 
++    await expect(page.locator('main[data-page="dashboard"]')).toBeVisible();
+     const styles = await page
+       .locator('[data-slot="app-page-content"]')
+       .evaluate((element) => {
+         const pageStyle = getComputedStyle(element);
+-        const main = element.firstElementChild as HTMLElement;
++        const main = element.querySelector('main[data-page="dashboard"]') as HTMLElement;
++        if(!main||!main.getClientRects().length)throw new Error("当前可见Dashboard尚未交付");
+         return {
+           gap: getComputedStyle(main).gap,
+           paddingLeft: pageStyle.paddingLeft,
+diff --git a/frontend/tests/e2e/automations-group-media-jobs.spec.ts b/frontend/tests/e2e/automations-group-media-jobs.spec.ts
+index aceae9464..3d8f6c990 100644
+--- a/frontend/tests/e2e/automations-group-media-jobs.spec.ts
++++ b/frontend/tests/e2e/automations-group-media-jobs.spec.ts
+@@ -58,15 +58,14 @@ async function createJob(page: Page, groupId: string, name: string, accountId?:
+ }
+ 
+ async function openGroup(page: Page, baseURL: string | undefined, groupId: string): Promise<void> {
+-  const cookieUrl = baseURL ?? "http://127.0.0.1";
+-  await page.context().addCookies([
+-    { name: "creatoros_current_group", value: encodeURIComponent(groupId), url: cookieUrl },
+-    { name: "creatoros_current_account", value: "", url: cookieUrl },
+-  ]);
+-  await page.addInitScript((id) => {
+-    window.localStorage.setItem("creatoros:current-group", id);
+-    window.localStorage.removeItem("creatoros:current-account");
+-  }, groupId);
++  await page.reload({waitUntil:"domcontentloaded",timeout:120_000});
++  await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state","ready");
++  await page.getByTestId("account-switcher-trigger").click();
++  await page.getByTestId("account-switcher-menu").locator(`[data-group-id="${groupId}"]`).click();
++  await expect.poll(()=>page.evaluate(()=>localStorage.getItem("creatoros:current-group"))).toBe(groupId);
++  const cookieUrl=baseURL??"http://127.0.0.1";
++  await expect.poll(async()=> (await page.context().cookies(cookieUrl)).find(c=>c.name==="creatoros_current_group")?.value).toBe(encodeURIComponent(groupId));
++  await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state","ready");
+   await page.goto("/automations");
+   await expect(page.getByTestId("automations-current-group")).toBeVisible();
+ }
+diff --git a/frontend/tests/e2e/automations-run-now-public.spec.ts b/frontend/tests/e2e/automations-run-now-public.spec.ts
+index 60656f3a9..8323280ea 100644
+--- a/frontend/tests/e2e/automations-run-now-public.spec.ts
++++ b/frontend/tests/e2e/automations-run-now-public.spec.ts
+@@ -246,9 +246,13 @@ test("组内真实作业通过立即运行准入并保原任务显示待扫码",
+   expect(beforeJob.membershipVersion).toBeGreaterThanOrEqual(1);
+   expect(beforeJob.groupVersion).toBeGreaterThanOrEqual(1);
+   expect(await listRuns(page, job.id, target)).toEqual([]);
+-  await context.clearCookies({ name: /^creatoros_current_(account|group)$/ });
+-  await context.addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(groupA.id), url: baseURL! }]);
+-  await page.addInitScript((id) => { localStorage.setItem("creatoros:current-group", id); localStorage.removeItem("creatoros:current-account"); }, groupA.id);
++  await page.reload({waitUntil:"domcontentloaded",timeout:REQUEST_MS});
++  await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state","ready");
++  await page.getByTestId("account-switcher-trigger").click();
++  await page.getByTestId("account-switcher-menu").locator(`[data-group-id="${groupA.id}"]`).click();
++  await expect.poll(()=>page.evaluate(()=>localStorage.getItem("creatoros:current-group"))).toBe(groupA.id);
++  await expect.poll(async()=> (await context.cookies(baseURL!)).find(c=>c.name==="creatoros_current_group")?.value).toBe(encodeURIComponent(groupA.id));
++  await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state","ready");
+   await page.goto("/automations");
+   await expect(page.getByTestId("automations-current-group")).toContainText(groupA.name);
+   const row = page.locator(`[data-slot="automations-list"] li[data-job-id="${job.id}"]`);
+diff --git a/frontend/tests/e2e/experience.spec.ts b/frontend/tests/e2e/experience.spec.ts
+index b92d427b5..bae3e07cd 100644
+--- a/frontend/tests/e2e/experience.spec.ts
++++ b/frontend/tests/e2e/experience.spec.ts
+@@ -20,17 +20,18 @@ test.describe("经验裁决台 page", () => {
+     page,
+   }) => {
+     await page.goto("/experience");
++    await expect(page).toHaveURL(/\/knowledge$/);
+ 
+     // Header in global mode with the page title.
+     const header = page.locator('[data-slot="app-top-header"]');
+     await expect(header).toHaveAttribute("data-mode", "global");
+     const heading = page.locator('[data-slot="header-page-heading"]');
+-    await expect(heading).toContainText("经验沉淀");
++    await expect(heading).toContainText("知识库");
+ 
+     // The Experience nav item is the active page in the sidebar.
+     const nav = page.getByRole("navigation", { name: "主要导航" });
+     const active = nav.locator('[aria-current="page"]');
+-    await expect(active).toHaveAttribute("href", "/experience");
++    await expect(active).toHaveAttribute("href", "/knowledge");
+ 
+     // Contextual card variant is `assistant` (D-003).
+     const assistant = page.locator(
+@@ -44,58 +45,18 @@ test.describe("经验裁决台 page", () => {
+     await expect(page.locator('[data-slot="app-top-header"]')).toHaveCount(1);
+ 
+     // The page-internal main region exists exactly once.
+-    const main = page.locator('main[data-page="experience"]');
++    const main = page.locator('main[data-page="knowledge"]');
+     await expect(main).toHaveCount(1);
+ 
+-    // 3 truth summary cards in spec order.
+-    const summary = main.locator('[data-slot="experience-summary-cards"]');
+-    await expect(summary).toBeVisible();
+-    await expect(summary.locator('[data-slot="summary-card"]')).toHaveCount(3);
+-    await expect(
+-      summary.locator('[data-summary-id="exp-candidates"]'),
+-    ).toContainText("待裁决");
+-    await expect(
+-      summary.locator('[data-summary-id="exp-validated"]'),
+-    ).toContainText("已验证");
+-    await expect(
+-      summary.locator('[data-summary-id="exp-reflowed"]'),
+-    ).toContainText("已回流校准");
+-
+-    // Two-column workbench: 裁决队列 + 已验证库 (with the discarded fold).
+-    const workbench = main.locator('[data-slot="experience-workbench"]');
+-    await expect(workbench).toBeVisible();
+-    await expect(
+-      workbench.locator('[data-slot="learning-queue"]'),
+-    ).toBeVisible();
+-    await expect(
+-      workbench.locator('[data-slot="validated-library"]'),
+-    ).toBeVisible();
+-    await expect(
+-      workbench.locator('[data-slot="discarded-section"]'),
+-    ).toBeVisible();
+-
+-    // Honest queue: either real candidate cards or the empty-state copy —
+-    // never fixture rows.
+-    const queue = workbench.locator('[data-slot="learning-queue"]');
+-    const candidateCount = await queue
+-      .locator('[data-slot="candidate-card"]')
+-      .count();
+-    if (candidateCount === 0) {
+-      await expect(
+-        queue.locator('[data-slot="learning-queue-empty"]'),
+-      ).toContainText("还没有待确认的经验");
+-    } else {
+-      const firstCard = queue.locator('[data-slot="candidate-card"]').first();
+-      await expect(
+-        firstCard.locator('[data-slot="learning-adopt"]'),
+-      ).toBeVisible();
+-      await expect(
+-        firstCard.locator('[data-slot="learning-discard"]'),
+-      ).toBeVisible();
+-      await expect(
+-        firstCard.locator('[data-slot="learning-edit"]'),
+-      ).toBeVisible();
+-    }
++    // T118b/T119 已批准 /experience 并入知识库，裁决留在复盘；这里是只读资料和经验入口。
++    await expect(main).toHaveAttribute("data-page-state", /^(default|empty)$/);
++    await expect(main.locator('[data-slot="experience-summary-cards"]')).toHaveCount(0);
++    await expect(main.locator('[data-slot="learning-queue"]')).toHaveCount(0);
++    await expect(main.locator('[data-slot="learning-adopt"], [data-slot="learning-discard"], [data-slot="learning-edit"]')).toHaveCount(0);
++    const captureTools = main.locator('[data-slot="knowledge-capture-tools"]');
++    await expect(captureTools).toBeVisible();
++    await captureTools.locator("summary").click();
++    await expect(main.getByRole("textbox", { name: "粘贴文本或 URL，也可拖入 PDF、DOCX、Markdown 或 TXT 文件" })).toBeVisible();
+ 
+     // 快速记录 form retired → Copilot capture deep-link instead.
+     await expect(
+@@ -106,5 +67,11 @@ test.describe("经验裁决台 page", () => {
+     const href = (await capture.getAttribute("href")) ?? "";
+     expect(href).toContain("copilot=open");
+     expect(href).toContain("surface=experience");
++    const submissions: string[] = [];
++    page.on("request", (request) => { if (request.method() === "POST" && new URL(request.url()).pathname === "/api/chat") submissions.push(request.url()); });
++    await capture.click();
++    await expect(page.getByRole("dialog", { name: "AI 助手" })).toBeVisible();
++    await expect(page.locator('[data-slot="prompt-input"]')).toHaveValue("记一条经验:");
++    expect(submissions).toEqual([]);
+   });
+ });
+diff --git a/frontend/tests/e2e/group-skill-customization.spec.ts b/frontend/tests/e2e/group-skill-customization.spec.ts
+index a45971dcf..313219dd0 100644
+--- a/frontend/tests/e2e/group-skill-customization.spec.ts
++++ b/frontend/tests/e2e/group-skill-customization.spec.ts
+@@ -197,8 +197,8 @@ test("空账号组通过设置页定制官方 Skill 的首写入口可用", asyn
+   await expectHomeWorkspace(page);
+ 
+   const currentGroupId = await selectedActiveGroupFromMenu(page);
+-  const initialGroup = [anchor, groupA].find((group) => group.id === currentGroupId);
+-  expect(initialGroup, "初始活动组选项必须是本例公开创建的真实组").toBeDefined();
++  const initialGroup=ENDPOINTS.getAccountGroup.response.parse((await dispatch<unknown>(page,"accountGroups.get",{params:{groupId:currentGroupId}})).data);
++  expect(initialGroup.id).toBe(currentGroupId);expect(initialGroup.status).toBe("active");
+   await expectGroupMirrors(page, context, baseURL!, currentGroupId);
+   await expectHomeWorkspace(page, initialGroup!.name);
+ 
+diff --git a/frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts b/frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts
+index 461e54552..840107f38 100644
+--- a/frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts
++++ b/frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts
+@@ -1,3 +1,4 @@
++import { randomUUID } from "node:crypto";
+ import { execFileSync } from "node:child_process";
+ import { mkdirSync, writeFileSync } from "node:fs";
+ import { resolve } from "node:path";
+@@ -51,6 +52,7 @@ function writeVisibleCopy(
+ test.describe("新手成果路径与低高度侧栏", () => {
+   test("重新打开后真实回到首页，并保留新号/已有作品两条连续路径", async ({
+     page,
++    baseURL,
+   }) => {
+     const captures: Array<{
+       checkpoint: string;
+@@ -59,44 +61,46 @@ test.describe("新手成果路径与低高度侧栏", () => {
+       text: string;
+     }> = [];
+ 
++    const created = await page.request.post("/api/v1/dispatch", { data: { id: "accountGroups.create", input: { body: { name: "引导真实空组", idempotencyKey: randomUUID() } } }, timeout: 120_000 });
++    expect(created.ok()).toBe(true);
++    const group = (await created.json()).data as { id: string };
++    const saveOnboarding = async (body: Record<string, unknown>) => {
++      const response = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "settings.onboarding.group.patch", input: { params: { groupId: group.id }, body } }, timeout: 120_000 });
++      expect(response.ok()).toBe(true);
++      const saved = (await response.json()).data as { groupId: string; origin: string; hidden: boolean; collapsed: boolean };
++      expect(saved.groupId).toBe(group.id);
++      return saved;
++    };
++    expect(await saveOnboarding({ origin: "fresh", hidden: true, collapsed: false })).toMatchObject({ origin: "fresh", hidden: true, collapsed: false });
++    await page.context().addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(group.id), url: baseURL! }]);
++    await page.addInitScript((id) => { localStorage.setItem("creatoros:current-group", id); localStorage.removeItem("creatoros:current-account"); }, group.id);
+     await page.setViewportSize({ width: 1440, height: 900 });
+     await page.goto("/settings");
++    await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state", "ready");
+     await page.getByRole("tab", { name: "偏好" }).click();
+-    await page.evaluate(() => {
+-      localStorage.setItem("creatoros:onboarding:hidden", "1");
+-      localStorage.removeItem("creatoros:onboarding:force-open");
+-      localStorage.setItem("creatoros:onboarding:origin", "fresh");
+-    });
+     await page.locator('[data-slot="pref-reopen-onboarding"]').click();
+     await expect(page).toHaveURL(/\/$/);
+ 
+     const card = page.locator('[data-slot="onboarding-card"]');
+     await expect(card).toBeVisible();
+     await expect(card).toContainText("上手引导");
+-    await expect(card).toContainText("绑定你的抖音号");
+-    await expect(card).toContainText("确定账号定位");
++    await expect(card).toContainText("将平台账号加入账号组");
++    await expect(card).toContainText("确定账号组的内容定位");
+     await expect(card).toContainText("添加一个对标账号");
+     await expect(card).toContainText("从对标内容创建选题");
+     await expect(card).toContainText("把选题变成项目");
+     await expect(card).not.toContainText("模型配置");
+     await expect(card).not.toContainText("自动化任务");
+-    expect(
+-      await page.evaluate(() => ({
+-        hidden: localStorage.getItem("creatoros:onboarding:hidden"),
+-        forceOpen: localStorage.getItem("creatoros:onboarding:force-open"),
+-      })),
+-    ).toEqual({ hidden: null, forceOpen: "1" });
++    const afterReopen = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "settings.onboarding.group.get", input: { params: { groupId: group.id } } }, timeout: 120_000 });
++    expect(afterReopen.ok()).toBe(true);
++    expect((await afterReopen.json()).data).toMatchObject({ groupId: group.id, origin: "fresh", hidden: false, collapsed: false });
+ 
+     const freshSteps = card.locator('[data-slot="onboarding-step"]');
+     await expect(freshSteps).toHaveCount(6);
+-    expect(await freshSteps.evaluateAll((rows) => rows.map((row) => row.getAttribute("data-order")))).toEqual([
+-      "1",
+-      "2",
+-      "3",
+-      "4",
+-      "5",
+-      "6",
++    expect(await freshSteps.evaluateAll((rows) => rows.map((row) => row.getAttribute("data-step-key")))).toEqual([
++      "import-account", "confirm-origin", "positioning-profile", "benchmark-monitor", "benchmark-topic", "first-project",
+     ]);
++    expect(await freshSteps.locator(":scope > span").allTextContents()).toEqual(["1", "2", "3", "4", "5", "6"]);
+     await expect(card).not.toContainText("查看已发布的历史项目");
+     captures.push({
+       checkpoint: "reopen-fresh-account",
+@@ -105,9 +109,7 @@ test.describe("新手成果路径与低高度侧栏", () => {
+       text: await card.innerText(),
+     });
+ 
+-    await page.evaluate(() =>
+-      localStorage.setItem("creatoros:onboarding:origin", "existing"),
+-    );
++    expect(await saveOnboarding({ origin: "existing" })).toMatchObject({ origin: "existing", hidden: false });
+     await page.reload();
+     await expect(card).toBeVisible();
+     await expect(card).toContainText("查看已发布的历史项目");
+diff --git a/frontend/tests/e2e/platform-work-catalog.spec.ts b/frontend/tests/e2e/platform-work-catalog.spec.ts
+index c40beb28f..9025f3d86 100644
+--- a/frontend/tests/e2e/platform-work-catalog.spec.ts
++++ b/frontend/tests/e2e/platform-work-catalog.spec.ts
+@@ -1,133 +1,63 @@
+-import { expect, test } from "../helpers/test-environment";
+-import type { Page } from "@playwright/test";
+-
+-async function dispatch<T>(page: Page, id: string, params: unknown, accountId?: string): Promise<T> {
+-  const response = await page.request.post("/api/v1/dispatch", {
+-    headers: { "content-type": "application/json", ...(accountId ? { "x-account-id": accountId } : {}) },
+-    data: { id, input: params },
+-  });
+-  expect(response.ok(), `${id}: ${response.status()} ${await response.text()}`).toBe(true);
+-  return ((await response.json()) as { data: T }).data;
++import { expect as baseExpect, test } from "../helpers/test-environment";
++import type { Page, BrowserContext } from "@playwright/test";
++import { randomUUID } from "node:crypto";
++import { ENDPOINTS } from "@creatoros/contract";
++const expect=baseExpect.configure({timeout:120_000});
++test.beforeEach(async({page,context})=>{test.setTimeout(900_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);context.setDefaultTimeout(120_000);});
++async function dispatch<T>(page:Page,id:string,input:unknown,groupId?:string,accountId?:string):Promise<T>{
++ const response=await page.request.post("/api/v1/dispatch",{timeout:120_000,headers:{"content-type":"application/json",...(groupId?{"x-group-id":groupId}:{}),...(accountId?{"x-account-id":accountId}:{})},data:{id,input}});
++ expect(response.ok(),`${id}: ${response.status()} ${await response.text()}`).toBe(true);return ((await response.json()) as {data:T}).data;
+ }
++async function group(page:Page,name:string){return await dispatch<{id:string}>(page,"accountGroups.create",{body:{name,idempotencyKey:randomUUID()}});}
++async function select(page:Page,context:BrowserContext,baseURL:string,groupId:string){
++ await context.clearCookies({name:"creatoros_current_account"});await context.addCookies([{name:"creatoros_current_group",value:encodeURIComponent(groupId),url:baseURL}]);
++ // 实际已加载页面与随后导航共用同一组；不累积相互覆盖的addInitScript。
++ await page.evaluate(id=>{localStorage.setItem("creatoros:current-group",id);localStorage.removeItem("creatoros:current-account");},groupId);
++}
++async function account(page:Page,groupId:string,platform:string,accountHandle:string){return await dispatch<{id:string}>(page,"accounts.create",{body:{platform,accountHandle,idempotencyKey:randomUUID()}},groupId);}
+ 
+-test("平台作品页按当前账号显示真实空目录和待核验能力", async ({ page, context, baseURL }) => {
+-  const created = await page.request.post("/api/v1/dispatch", {
+-    headers: { "content-type": "application/json" },
+-    data: {
+-      id: "accounts.create",
+-      input: { params: undefined, query: undefined,
+-        body: { platform: "douyin", accountHandle: "E2E作品空目录号" } },
+-    },
+-  });
+-  expect(created.ok()).toBe(true);
+-  const payload = await created.json() as { data: { id: string } };
+-  const accountId = payload.data.id;
+-  await context.addCookies([{ name: "creatoros_current_account", value: encodeURIComponent(accountId),
+-    url: baseURL ?? "http://127.0.0.1" }]);
+-  await page.addInitScript(([key, id]) => window.localStorage.setItem(key!, id!),
+-    ["creatoros:current-account", accountId]);
+-
+-  await page.goto("/accounts");
+-  await expect(page.getByTestId("platform-capability-overview")).toBeVisible();
+-  await expect(page.locator('[data-platform="xiaohongshu"]')).toContainText("已接入");
+-  await expect(page.locator('[data-platform="kuaishou"]')).toContainText("已接入");
+-  await page.goto("/accounts/works");
+-  const catalog = page.getByTestId("platform-work-catalog");
+-  await expect(catalog).toHaveAttribute("data-account-id", accountId);
+-  await expect(page.getByTestId("catalog-completeness")).toContainText("尚无已核验的作品目录");
+-  await expect(page.getByText("当前目录没有作品。可返回账号页查看平台接入状态。")).toBeVisible();
+-  await expect(page.getByText("暂无粉丝总量记录。")).toBeVisible();
++test("平台作品页按当前账号显示真实空目录和待核验能力",async({page,context,baseURL})=>{
++ await page.goto("/accounts");const owned=await group(page,`E2E作品空目录-${randomUUID()}`);const created=await account(page,owned.id,"douyin","E2E作品空目录号");await select(page,context,baseURL!,owned.id);
++ const capabilities=ENDPOINTS.getPlatformAccountCapabilities.response.array().parse(await dispatch(page,"accounts.bindingCapabilities",{}));
++ await page.goto("/accounts");const table=page.getByRole("table",{name:"各平台能力"});await expect(table).toBeVisible();
++ for(const [platform,label]of [["douyin","抖音"],["xiaohongshu","小红书"],["kuaishou","快手"],["wechatOfficial","公众号"],["wechatVideo","视频号"]]as const){
++  const capability=capabilities.find(row=>row.platform===platform);expect(capability).toBeDefined();const row=table.getByRole("row").filter({has:page.getByRole("rowheader",{name:label,exact:true})});
++  for(const [index,key]of ["bind","collect","publish","draft","manual"].entries()){const state=capability![key as "bind"|"collect"|"publish"|"draft"|"manual"];const cell=row.getByRole("cell").nth(index);await expect(cell.locator(":scope > span")).toHaveText(state.available?"可用":"暂不可用");await expect(cell).toContainText(state.reason);}
++ }
++ await page.getByRole("link",{name:"查看E2E作品空目录号的数据",exact:true}).click();await expect(page).toHaveURL(new RegExp(`/accounts/works\\?accountId=${created.id}$`));
++ await expect(page.getByTestId("platform-work-catalog")).toHaveAttribute("data-account-id",created.id);await expect(page.getByTestId("catalog-completeness")).toContainText("尚无已核验的作品目录");await expect(page.getByText("当前目录没有作品。可返回账号页查看平台接入状态。")).toBeVisible();await expect(page.getByText("暂无粉丝总量记录。")).toBeVisible();
+ });
+ 
+-test("本地账号完成多平台目标项目与发布草稿，账号归属隔离", async ({ page, context, baseURL }) => {
+-  let firstProjectId: string | null = null;
+-  for (const [platform, title, targetPlatforms] of [
+-    ["douyin", "抖音视频创作链验收", ["douyin", "kuaishou"]],
+-    ["xiaohongshu", "小红书账号视频创作链验收", ["xiaohongshu", "wechatOfficialAccount"]],
+-  ] as const) {
+-    const account = await dispatch<{ id: string }>(page, "accounts.create", {
+-      params: undefined, query: undefined,
+-      body: { platform, accountHandle: `e2e-${platform}-${Date.now()}` },
+-    });
+-    if (firstProjectId) {
+-      const crossAccountRead = await page.request.post("/api/v1/dispatch", {
+-        headers: { "content-type": "application/json", "x-account-id": account.id },
+-        data: { id: "projects.get", input: {
+-          params: { projectId: firstProjectId }, query: undefined, body: undefined,
+-        } },
+-      });
+-      expect(crossAccountRead.status()).toBe(404);
+-    }
+-    const project = await dispatch<{ id: string }>(page, "projects.create", {
+-      params: undefined, query: undefined,
+-      body: { title, brief: "本地隔离环境创作流验收", contentType: "video", targetPlatforms },
+-    }, account.id);
+-    const artifact = await dispatch<{ id: string }>(page, "artifacts.create", {
+-      params: { projectId: project.id }, query: undefined,
+-      body: { title: "创作稿", artifactType: "output_script", stage: "script" },
+-    }, account.id);
+-    await dispatch(page, "artifacts.versions.create", {
+-      params: { artifactId: artifact.id }, query: undefined,
+-      body: { contentText: `${title}：真实稿件内容。`, changeSummary: "隔离环境验收" },
+-    }, account.id);
+-    const output = await dispatch<{ id: string }>(page, "projects.outputs.create", {
+-      params: { projectId: project.id }, query: undefined,
+-      body: { title: `${title}作品`, contentRole: "conversion" },
+-    }, account.id);
+-    const publication = await dispatch<{ id: string }>(page, "outputs.publications.create", {
+-      params: { outputId: output.id }, query: undefined,
+-      body: { platform, accountReference: account.id },
+-    }, account.id);
+-    const readProject = await dispatch<{ id: string; title: string; briefDetail: { targetPlatforms: string[] } }>(page, "projects.get", {
+-      params: { projectId: project.id }, query: undefined, body: undefined,
+-    }, account.id);
+-    expect(readProject.title).toBe(title);
+-    expect(readProject.briefDetail.targetPlatforms).toEqual(targetPlatforms);
+-    firstProjectId ??= project.id;
+-    const readPublications = await dispatch<{ items?: Array<{ id: string }> } | Array<{ id: string }>>(
+-      page, "outputs.publications.list", { params: { outputId: output.id }, query: undefined, body: undefined }, account.id,
+-    );
+-    const publications = Array.isArray(readPublications) ? readPublications : readPublications.items ?? [];
+-    expect(publications.some(item => item.id === publication.id)).toBe(true);
+-
+-    await context.addCookies([{ name: "creatoros_current_account", value: encodeURIComponent(account.id),
+-      url: baseURL ?? "http://127.0.0.1" }]);
+-    await page.addInitScript(([key, id]) => window.localStorage.setItem(key!, id!),
+-      ["creatoros:current-account", account.id]);
+-    await page.goto(`/projects/${project.id}`);
+-    await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
+-  }
++test("本地账号完成多平台目标项目与发布草稿，账号归属隔离",async({page,context,baseURL})=>{
++ await page.goto("/accounts");let firstProjectId:string|null=null;
++ for(const [platform,title,targetPlatforms]of [["douyin","抖音视频创作链验收",["douyin","kuaishou"]],["xiaohongshu","小红书账号视频创作链验收",["xiaohongshu","wechatOfficial"]]]as const){
++  const owned=await group(page,`隔离作品组-${platform}-${randomUUID()}`);const created=await account(page,owned.id,platform,`e2e-${platform}-${randomUUID()}`);
++  if(firstProjectId){const foreign=await page.request.post("/api/v1/dispatch",{timeout:120_000,headers:{"content-type":"application/json","x-group-id":owned.id,"x-account-id":created.id},data:{id:"projects.get",input:{params:{projectId:firstProjectId}}}});expect(foreign.status()).toBe(404);}
++  const project=await dispatch<{id:string}>(page,"projects.create",{body:{title,brief:"本地隔离环境创作流验收",contentType:"video",targetPlatforms}},owned.id,created.id);
++  const artifact=await dispatch<{id:string}>(page,"artifacts.create",{params:{projectId:project.id},body:{title:"创作稿",artifactType:"output_script",stage:"script"}},owned.id,created.id);
++  await dispatch(page,"artifacts.versions.create",{params:{artifactId:artifact.id},body:{contentText:`${title}：真实稿件内容。`,changeSummary:"隔离环境验收"}},owned.id,created.id);
++  const output=await dispatch<{id:string}>(page,"projects.outputs.create",{params:{projectId:project.id},body:{title:`${title}作品`,contentType:"video",contentRole:"conversion",clientRequestId:randomUUID()}},owned.id,created.id);
++  const readGroup=await dispatch<{members:Array<{accountId:string;version:number}>}>(page,"accountGroups.get",{params:{groupId:owned.id}},owned.id,created.id);const member=readGroup.members.find(row=>row.accountId===created.id);expect(member).toBeDefined();
++  const publication=await dispatch<{id:string}>(page,"outputs.publications.create",{params:{outputId:output.id},body:{platform,accountId:created.id,expectedMembershipVersion:member!.version,accountReference:created.id}},owned.id,created.id);
++  const readProject=await dispatch<{id:string;title:string;briefDetail:{targetPlatforms:string[]}}>(page,"projects.get",{params:{projectId:project.id}},owned.id,created.id);expect(readProject.title).toBe(title);expect(readProject.briefDetail.targetPlatforms).toEqual(targetPlatforms);firstProjectId??=project.id;
++  const publications=await dispatch<Array<{id:string}>>(page,"outputs.publications.list",{params:{outputId:output.id},query:{page:1,pageSize:100}},owned.id,created.id);expect(publications.some(row=>row.id===publication.id)).toBe(true);
++  await select(page,context,baseURL!,owned.id);await page.goto(`/projects/${project.id}`);await expect(page.getByText(title,{exact:true}).first()).toBeVisible();
++ }
+ });
+ 
+-test("账号页绑定成功后可直接切换到对应的小红书与快手作品页", async ({ page }) => {
+-  const accounts = new Map<string, string>();
+-  for (const platform of ["xiaohongshu", "kuaishou"] as const) {
+-    const account = await dispatch<{ id: string }>(page, "accounts.create", {
+-      params: undefined, query: undefined,
+-      body: { platform, accountHandle: `页面交互验收-${platform}` },
+-    });
+-    accounts.set(platform, account.id);
+-  }
+-  // This browser test covers the navigation after a successful bind response.
+-  // Identity proof and catalog writes are exercised by the service integration
+-  // test; this stub must not be described as a real QR login.
+-  await page.route("**/api/v1/dispatch", async (route) => {
+-    const body = route.request().postDataJSON() as { id?: string; input?: { body?: { platform?: string } } };
+-    if (body.id !== "platforms.bind.begin") return route.continue();
+-    const platform = body.input?.body?.platform ?? "";
+-    const accountId = accounts.get(platform);
+-    expect(accountId).toBeTruthy();
+-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+-      data: { bindAttemptId: `bind-${platform}`, platform, status: "bound", accountId,
+-        verifiedPlatformIdentity: `verified-${platform}`, expiresAt: "2026-10-01T00:00:00.000Z" },
+-      meta: { requestId: "e2e-navigation" },
+-    }) });
+-  });
+-  for (const platform of ["xiaohongshu", "kuaishou"] as const) {
+-    await page.goto("/accounts");
+-    await page.getByTestId(`bind-${platform}-scan`).click();
+-    await page.getByTestId(`view-${platform}-works`).click();
+-    await expect(page.getByTestId("platform-work-catalog")).toHaveAttribute("data-account-id", accounts.get(platform)!);
+-    await expect(page.getByTestId("catalog-completeness")).toContainText("尚无已核验的作品目录");
+-  }
++test("账号页绑定成功后可直接切换到对应的小红书与快手作品页",async({page,context,baseURL})=>{
++ await page.goto("/accounts");const owned=await group(page,`绑定导航契约-${randomUUID()}`);const accounts=new Map<string,{id:string;handle:string}>();
++ for(const platform of ["xiaohongshu","kuaishou"]as const){const handle=`页面交互验收-${platform}`;const created=await account(page,owned.id,platform,handle);accounts.set(platform,{id:created.id,handle});}
++ await select(page,context,baseURL!,owned.id);const starts=new Map<string,number>();
++ // 明确的终态UI契约fixture；账号/成员/目录走实际公共接口。本例不代表真实扫码或平台认证。
++ await page.route("**/api/v1/dispatch",async route=>{
++  const body=route.request().postDataJSON() as {id?:string;input?:{body?:{platform?:string;groupId?:string}}};if(body.id!=="accounts.bind.start")return route.continue();
++  const platform=body.input?.body?.platform??"";expect(body.input?.body?.groupId).toBe(owned.id);const created=accounts.get(platform);expect(created).toBeDefined();starts.set(platform,(starts.get(platform)??0)+1);
++  const stamp=new Date().toISOString(),data=ENDPOINTS.startAccountBinding.response.parse({runId:`bind-${platform}-${randomUUID()}`,groupId:owned.id,platform,status:"succeeded",accountId:created!.id,error:null,createdAt:stamp,updatedAt:stamp});
++  await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({data,meta:{requestId:"e2e-ui-binding-navigation"}})});
++ });
++ for(const [platform,label]of [["xiaohongshu","小红书"],["kuaishou","快手"]]as const){
++  await page.goto("/accounts");await page.getByRole("table",{name:"各平台能力"}).getByRole("button",{name:`扫码绑定${label}账号`,exact:true}).click();const dialog=page.getByRole("dialog",{name:`扫码绑定${label}账号`,exact:true});await expect(dialog).toBeVisible();await dialog.getByRole("button",{name:`扫码绑定${label}账号`,exact:true}).click();await expect(dialog.getByRole("status")).toHaveText("绑定已完成");expect(starts.get(platform)).toBe(1);
++  await page.keyboard.press("Escape");await expect(dialog).not.toBeVisible();await page.getByRole("link",{name:`查看${accounts.get(platform)!.handle}的数据`,exact:true}).click();await expect(page.getByTestId("platform-work-catalog")).toHaveAttribute("data-account-id",accounts.get(platform)!.id);await expect(page.getByTestId("catalog-completeness")).toContainText("尚无已核验的作品目录");
++ }
+ });
+diff --git a/frontend/tests/e2e/production-broll-remove.spec.ts b/frontend/tests/e2e/production-broll-remove.spec.ts
+index 374c2430e..b843dec67 100644
+--- a/frontend/tests/e2e/production-broll-remove.spec.ts
++++ b/frontend/tests/e2e/production-broll-remove.spec.ts
+@@ -233,6 +233,7 @@ test("已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧
+   await selectAccount(page, account.id, baseURL);
+   await page.setViewportSize({ width: 1536, height: 1024 });
+   await page.goto(`/projects/${project.id}/production`);
++  await page.getByRole("button", { name: "返回制作页", exact: true }).click();
+   await expect(page.locator('[data-slot="confirmed-decisions-notice"]')).toBeVisible();
+   const item = page.locator('[data-slot="broll-auto-item"]', {
+     hasText: "待剔除真实素材.mp4",
+diff --git a/frontend/tests/e2e/publishing-center.spec.ts b/frontend/tests/e2e/publishing-center.spec.ts
+index 8d6381855..420a11440 100644
+--- a/frontend/tests/e2e/publishing-center.spec.ts
++++ b/frontend/tests/e2e/publishing-center.spec.ts
+@@ -1,3 +1,4 @@
++import { randomUUID } from "node:crypto";
+ import type { Page } from "@playwright/test";
+ import { expect, test } from "../helpers/test-environment";
+ 
+@@ -10,11 +11,13 @@ async function dispatch(
+   id: string,
+   input: unknown,
+   accountId?: string,
++  groupId?: string,
+ ): Promise<{ id: string }> {
+   const response = await page.request.post("/api/v1/dispatch", {
+     headers: {
+       "content-type": "application/json",
+       ...(accountId ? { "x-account-id": accountId } : {}),
++      ...(groupId ? { "x-group-id": groupId } : {}),
+     },
+     data: { id, input },
+   });
+@@ -27,18 +30,19 @@ async function selectAccount(
+   page: Page,
+   accountId: string,
+   baseURL: string | undefined,
++  groupId: string,
+ ) {
+-  await page.context().addCookies([
++  await page.context().addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(groupId), url: baseURL! },
+     {
+       name: CURRENT_ACCOUNT_COOKIE,
+       value: encodeURIComponent(accountId),
+       url: baseURL ?? "http://127.0.0.1",
+     },
+   ]);
+-  await page.addInitScript(
+-    ([key, id]) => window.localStorage.setItem(key!, id!),
+-    [CURRENT_ACCOUNT_KEY, accountId],
+-  );
++  await page.addInitScript(({ accountId, groupId }) => {
++    localStorage.setItem("creatoros:current-account", accountId);
++    localStorage.setItem("creatoros:current-group", groupId);
++  }, { accountId, groupId });
+ }
+ 
+ test.describe("发布中心日历主视图（T-599）", () => {
+@@ -46,6 +50,7 @@ test.describe("发布中心日历主视图（T-599）", () => {
+     page,
+     baseURL,
+   }) => {
++    const group = await dispatch(page, "accountGroups.create", { body: { name: "T599 真实排期组", idempotencyKey: randomUUID() } });
+     const account = await dispatch(page, "accounts.create", {
+       params: undefined,
+       query: undefined,
+@@ -53,7 +58,7 @@ test.describe("发布中心日历主视图（T-599）", () => {
+         platform: "douyin",
+         accountHandle: `@e2e-t599-publishing-${Date.now()}`,
+       },
+-    });
++    }, undefined, group.id);
+     const project = await dispatch(
+       page,
+       "projects.create",
+@@ -63,8 +68,9 @@ test.describe("发布中心日历主视图（T-599）", () => {
+         body: { title: PROJECT_TITLE, brief: "" },
+       },
+       account.id,
++      group.id,
+     );
+-    await dispatch(
++    const originalEntry = await dispatch(
+       page,
+       "accounts.calendar.entries.create",
+       {
+@@ -73,8 +79,9 @@ test.describe("发布中心日历主视图（T-599）", () => {
+         body: { projectId: project.id, plannedDate: "2099-12-31" },
+       },
+       account.id,
++      group.id,
+     );
+-    await selectAccount(page, account.id, baseURL);
++    await selectAccount(page, account.id, baseURL, group.id);
+ 
+     await page.goto("/publishing?month=2099-12");
+ 
+@@ -120,5 +127,13 @@ test.describe("发布中心日历主视图（T-599）", () => {
+       .getByRole("navigation", { name: "主要导航" })
+       .locator('[aria-current="page"]');
+     await expect(activeNav).toHaveAttribute("href", "/publishing");
++    await page.getByTestId("calendar-day-2099-12-31").click();
++    const detail = page.getByTestId("calendar-day-drawer");
++    await expect(detail).toHaveAttribute("data-date", "2099-12-31");
++    const originalRow = detail.locator(`[data-entry-id="${originalEntry.id}"]`);
++    await expect(originalRow).toContainText(PROJECT_TITLE);
++    await expect(originalRow.getByRole("link", { name: "打开项目" })).toHaveAttribute("href", `/projects/${project.id}`);
++    await detail.getByRole("button", { name: "Close", exact: true }).click();
++    await expect(detail).not.toBeVisible();
+   });
+ });
+diff --git a/frontend/tests/e2e/recent-data-safety.spec.ts b/frontend/tests/e2e/recent-data-safety.spec.ts
+index ed7b71b06..836615014 100644
+--- a/frontend/tests/e2e/recent-data-safety.spec.ts
++++ b/frontend/tests/e2e/recent-data-safety.spec.ts
+@@ -1,3 +1,4 @@
++import { randomUUID } from "node:crypto";
+ import { execFileSync } from "node:child_process";
+ import { mkdirSync, writeFileSync } from "node:fs";
+ import { resolve } from "node:path";
+@@ -13,11 +14,13 @@ async function dispatch<T>(
+   id: string,
+   input: unknown,
+   accountId?: string,
++  groupId?: string,
+ ): Promise<T> {
+   const response = await page.request.post("/api/v1/dispatch", {
+     headers: {
+       "content-type": "application/json",
+       ...(accountId ? { "x-account-id": accountId } : {}),
++      ...(groupId ? { "x-group-id": groupId } : {}),
+     },
+     data: { id, input },
+   });
+@@ -30,8 +33,9 @@ async function selectAccount(
+   page: Page,
+   accountId: string,
+   baseURL: string | undefined,
++  groupId?: string,
+ ) {
+-  await page.context().addCookies([
++  await page.context().addCookies([...(groupId ? [{ name: "creatoros_current_group", value: encodeURIComponent(groupId), url: baseURL! }] : []),
+     {
+       name: CURRENT_ACCOUNT_COOKIE,
+       value: encodeURIComponent(accountId),
+@@ -39,8 +43,8 @@ async function selectAccount(
+     },
+   ]);
+   await page.addInitScript(
+-    ([key, id]) => window.localStorage.setItem(key!, id!),
+-    [CURRENT_ACCOUNT_KEY, accountId],
++    ({ accountId, groupId }) => { localStorage.setItem("creatoros:current-account", accountId); if (groupId) localStorage.setItem("creatoros:current-group", groupId); },
++    { accountId, groupId },
+   );
+ }
+ 
+@@ -80,6 +84,7 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，
+   baseURL,
+ }) => {
+   test.setTimeout(90_000);
++  const group = await dispatch<{ id: string }>(page, "accountGroups.create", { body: { name: "定位安全真实组", idempotencyKey: randomUUID() } });
+   const account = await dispatch<{ id: string }>(page, "accounts.create", {
+     params: undefined,
+     query: undefined,
+@@ -87,8 +92,8 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，
+       platform: "douyin",
+       accountHandle: `@e2e-positioning-safety-${Date.now()}`,
+     },
+-  });
+-  await dispatch(page, "positioning.profile.upsert", {
++  }, undefined, group.id);
++  const profile = await dispatch<{ id: string }>(page, "positioning.profile.upsert", {
+     params: undefined,
+     query: undefined,
+     body: {
+@@ -98,8 +103,8 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，
+       differentiation: "只讲真实门店验证过的方法",
+       capabilities: ["门店经营", "内容表达"],
+     },
+-  }, account.id);
+-  await dispatch(page, "positioning.statements.create", {
++  }, account.id, group.id);
++  const originalStatement = await dispatch<{ id: string }>(page, "positioning.statements.create", {
+     params: undefined,
+     query: undefined,
+     body: {
+@@ -108,13 +113,15 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，
+       productAnchorIds: [],
+       changeReason: "定位数据安全真实旅程",
+     },
+-  }, account.id);
+-  await dispatch(page, "positioning.discovery.start", {
++  }, account.id, group.id);
++  const session = await dispatch<{ id: string; revision: number; sourceMode: string; inputManifest: { legacyProfileId: string | null; legacyStatementIds: string[]; legacyWorkIds: string[] } }>(page, "positioning.discovery.start", {
+     params: undefined,
+     query: undefined,
+     body: { sourceMode: "scratch" },
+-  }, account.id);
+-  await selectAccount(page, account.id, baseURL);
++  }, account.id, group.id);
++  expect(session.sourceMode).toBe("scratch");
++  expect(session.inputManifest).toEqual({ legacyProfileId: null, legacyStatementIds: [], legacyWorkIds: [] });
++  await selectAccount(page, account.id, baseURL, group.id);
+ 
+   const captures: Array<{
+     checkpoint: string;
+@@ -136,19 +143,29 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，
+     "帮湖南餐饮老板把门店经验变成可信、可执行的内容",
+   );
+   await expect(center).toContainText("版本历史");
+-  await expect(page.getByTestId("positioning-discovery-workflow")).toBeVisible();
+-  await expect(page.getByLabel("搜索地区")).toHaveValue("cn");
+-  await expect(page.getByLabel("搜索语言")).toHaveValue("zh-CN");
+-  await expect(center).toContainText("二次搜索会替换上一批未采用结果");
+-  const researchInput = page.getByPlaceholder("例如：杭州家装 IP 用户高频痛点");
+-  await researchInput.fill("湖南餐饮行业 IP");
+-  await page.getByRole("button", { name: "联网补充" }).click();
+-  const researchCandidates = center.getByRole("button", { name: "采用" });
+-  await expect(researchCandidates.first()).toBeVisible({ timeout: 45_000 });
+-  await expect(center.locator('aside a[target="_blank"]').first()).toHaveAttribute(
+-    "href",
+-    /^https?:\/\//,
+-  );
++  await expect(page.getByTestId("positioning-copilot-entry")).toBeVisible();
++  await expect(page.getByTestId("positioning-discovery-workflow")).toHaveCount(0);
++  await page.getByTestId("positioning-open-copilot").click();
++  const dialog = page.getByRole("dialog", { name: "AI 助手" });
++  await expect(dialog).toBeVisible();
++  await expect(dialog.locator('[data-slot="prompt-input"]')).toHaveValue(/定位路径：scratch/);
++  await expect(dialog.locator('[data-slot="prompt-input"]')).not.toHaveValue(/湖南餐饮经营者/);
++  await page.keyboard.press("Escape");
++  await expect(dialog).not.toBeVisible();
++  // 独立六问退役；显式联网仍走既有公开工具，默认地区/语言来自正式合同与回执。
++  const researched = await dispatch<{ id: string; webReferences: Array<{ id: string; url: string; market: string; language: string; adopted: boolean }> }>(page, "positioning.discovery.research", {
++    params: { sessionId: session.id }, body: { query: "湖南餐饮行业 IP", purpose: "补充公开参考", targetThemeId: "proof", expectedRevision: session.revision },
++  }, account.id, group.id);
++  expect(researched.id).toBe(session.id);
++  expect(researched.webReferences.length).toBeGreaterThan(0);
++  for (const reference of researched.webReferences) {
++    expect(reference).toMatchObject({ market: "cn", language: "zh-CN", adopted: false });
++    expect(reference.url).toMatch(/^https?:\/\//);
++  }
++  const originalProfile = await dispatch<{ id: string }>(page, "positioning.profile.get", {}, account.id, group.id);
++  expect(originalProfile.id).toBe(profile.id);
++  const history = await dispatch<Array<{ id: string; oneLiner: string }>>(page, "positioning.statements.list", { query: { limit: 200, offset: 0 } }, account.id, group.id);
++  expect(history.find((row) => row.id === originalStatement.id)?.oneLiner).toBe("帮湖南餐饮老板把门店经验变成可信、可执行的内容");
+   await expect(center).toContainText("帮湖南餐饮老板把门店经验变成可信、可执行的内容");
+   captures.push({
+     checkpoint: "official-master-with-scratch-discovery",
+@@ -159,7 +176,7 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，
+ 
+   await page.setViewportSize({ width: 1024, height: 720 });
+   await expect(center).toContainText("当前定位母版");
+-  await expect(page.getByTestId("positioning-discovery-workflow")).toBeVisible();
++  await expect(page.getByTestId("positioning-copilot-entry")).toBeVisible();
+   captures.push({
+     checkpoint: "official-master-with-scratch-minimum-window",
+     check_ids: checkIds,
+diff --git a/frontend/tests/e2e/search.spec.ts b/frontend/tests/e2e/search.spec.ts
+index 588384b68..519abe1db 100644
+--- a/frontend/tests/e2e/search.spec.ts
++++ b/frontend/tests/e2e/search.spec.ts
+@@ -1,3 +1,4 @@
++import { randomUUID } from "node:crypto";
+ import { expect, test } from "../helpers/test-environment";
+ 
+ /**
+@@ -19,7 +20,22 @@ import { expect, test } from "../helpers/test-environment";
+ test.describe("Global Search page", () => {
+   test("renders the global search structure on the /search route", async ({
+     page,
++    baseURL,
+   }) => {
++    const groupResponse = await page.request.post("/api/v1/dispatch", { data: { id: "accountGroups.create", input: { body: { name: "搜索真实三项目", idempotencyKey: randomUUID() } } }, timeout: 120_000 });
++    expect(groupResponse.ok()).toBe(true);
++    const group = (await groupResponse.json()).data as { id: string };
++    const query = `search-${randomUUID()}`;
++    const projectIds: string[] = [];
++    for (let index = 0; index < 3; index += 1) {
++      const response = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "projects.create", input: { body: { title: `${query} 项目 ${index + 1}`, brief: "用户创建的真实搜索对象" } } }, timeout: 120_000 });
++      expect(response.ok()).toBe(true);
++      const project = (await response.json()).data as { id: string; groupId: string };
++      expect(project.groupId).toBe(group.id);
++      projectIds.push(project.id);
++    }
++    await page.context().addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(group.id), url: baseURL! }]);
++    await page.addInitScript((id) => { localStorage.setItem("creatoros:current-group", id); localStorage.removeItem("creatoros:current-account"); }, group.id);
+     await page.goto("/search");
+ 
+     // Header is in `search` mode with the global search field.
+@@ -67,6 +83,12 @@ test.describe("Global Search page", () => {
+     expect(cleaned.indexOf("知识")).toBeLessThan(cleaned.indexOf("素材"));
+     expect(cleaned.indexOf("素材")).toBeLessThan(cleaned.indexOf("视频"));
+ 
++    // 空查询诚实无搜索结果；真实用户输入后原公共项目成为这三张卡。
++    await expect(main.locator('[data-slot="project-result-card"]')).toHaveCount(0);
++    await page.locator("#app-header-search").fill(query);
++    await page.locator("#app-header-search").press("Enter");
++    await expect(page).toHaveURL(new RegExp(`[?&]q=${query}`));
++
+     // ProjectResultSection: exactly three project cards.
+     const projectSection = main.locator(
+       '[data-slot="project-result-section"]',
+@@ -76,6 +98,8 @@ test.describe("Global Search page", () => {
+       '[data-slot="project-result-card"]',
+     );
+     await expect(projectCards).toHaveCount(3);
++    expect((await projectCards.evaluateAll((cards) => cards.map((card) => card.getAttribute("data-project-id")))).sort()).toEqual([...projectIds].sort());
++    for (const id of projectIds) await expect(main.locator(`[data-slot="project-result-card"][data-project-id="${id}"]`)).toHaveAttribute("href", `/projects/${id}`);
+ 
+     // SearchSideRail order.
+     const rail = main.locator('[data-slot="search-side-rail"]');
+@@ -95,9 +119,8 @@ test.describe("Global Search page", () => {
+   }) => {
+     await page.goto("/search?q=AI");
+     const main = page.locator('main[data-page="search"]');
+-    const input = main.locator(
+-      '[data-slot="search-page-input"]',
+-    );
++    await expect(main).toHaveCount(1);
++    const input = page.locator("#app-header-search");
+     await expect(input).toHaveValue("AI");
+   });
+ });
+diff --git a/frontend/tests/e2e/semantic-material-generation.spec.ts b/frontend/tests/e2e/semantic-material-generation.spec.ts
+index 78453f8dd..ab1c6f418 100644
+--- a/frontend/tests/e2e/semantic-material-generation.spec.ts
++++ b/frontend/tests/e2e/semantic-material-generation.spec.ts
+@@ -140,6 +140,8 @@ test("图片按确认稿需要预填多个候选，视频默认预填一个候
+   await page.setViewportSize({ width: 1024, height: 768 });
+   // 最小窗口会按既有响应式规则收起右栏；从侧栏真实入口重新打开同一 Copilot。
+   if (!(await imageButton.isVisible())) {
++    const expandSidebar = page.getByRole("button", { name: "展开侧栏", exact: true });
++    if (await expandSidebar.isVisible()) await expandSidebar.click();
+     await page.getByText("打开 AI 助手", { exact: true }).click();
+   }
+   await expect(imageButton).toBeVisible();
+diff --git a/frontend/tests/e2e/t1062-group-native-rough.spec.ts b/frontend/tests/e2e/t1062-group-native-rough.spec.ts
+index 31f76fadf..e127cb01d 100644
+--- a/frontend/tests/e2e/t1062-group-native-rough.spec.ts
++++ b/frontend/tests/e2e/t1062-group-native-rough.spec.ts
+@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
+ import { tmpdir } from 'node:os';
+ import { basename, join, relative } from 'node:path';
+ import type { Locator, Page, Request, TestInfo } from '@playwright/test';
+-import { ENDPOINTS, productionReferencePlan, projectProductionRoughPlan } from '@creatoros/contract';
++import { ENDPOINTS, articleManualVersionBody, productionReferencePlan, projectProductionRoughPlan } from '@creatoros/contract';
+ import { expect, test } from '../helpers/test-environment';
+ 
+ // 本文件只验证真实浏览器、公共服务和原生剪辑工作流。loopback粗剪输出是协议夹具，
+@@ -612,7 +612,7 @@ async function saveInitializedArticle(page: Page, article: Locator, outputId: st
+       () => article.getByRole('button', { name: '保存修改', exact: true }).click());
+     expect(saveRequest.headers()['x-group-id']).toBe(groupId);
+     expect(saveRequest.headers()['x-account-id']).toBeUndefined();
+-    const command = ENDPOINTS.createArticleVersion.body!.parse(requestInput(saveRequest)!.input.body);
++    const command = articleManualVersionBody.parse(requestInput(saveRequest)!.input.body);
+     expect(command.document.title).toBe(title); expect(command.expectedCurrentVersionId).toBeTruthy();
+     expect(command.clientRequestId).toBeTruthy();
+     const saveResponse = await saveRequest.response();
+@@ -880,7 +880,8 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B
+     expect(browserCreates).toBe(0); expect(browserProjectCreates).toBe(0);
+     // 等待产品真实15s超时状态，不sleep、不给挂起响应放行。
+     const error = page.getByTestId('workspace-initialization-error');
+-    await expect(error).toContainText('工作区页面打开超时，请重试。', { timeout: 20_000 });
++    // 覆盖真实120s RSC请求结束及UI落地；原失败/重试/晚响应拒绝断言保持。
++    await expect(error).toContainText('工作区页面打开超时，请重试。', { timeout: 300_000 });
+     observation.elapsedToErrorMs = Date.now() - started;
+     await expect(page.locator('[data-page="article-workbench"]')).toHaveCount(0);
+     await expect(page.locator('[data-page="projects"]')).toHaveCount(0);
+diff --git a/frontend/tests/e2e/wechat-article-workbench.spec.ts b/frontend/tests/e2e/wechat-article-workbench.spec.ts
+index 708d1bc65..6dbb72dc4 100644
+--- a/frontend/tests/e2e/wechat-article-workbench.spec.ts
++++ b/frontend/tests/e2e/wechat-article-workbench.spec.ts
+@@ -3,10 +3,10 @@ import type { Page } from "@playwright/test";
+ import { createServer } from "node:http";
+ import { ENDPOINTS } from "@creatoros/contract";
+ 
+-type RequestScope = string | { groupId: string };
++type RequestScope = string | { groupId: string; accountId?: string };
+ async function dispatch<T>(page: Page, id: string, input: unknown, scope?: RequestScope): Promise<T> {
+   const response = await page.request.post("/api/v1/dispatch", {
+-    headers: { "content-type": "application/json", ...(typeof scope === "string" ? { "x-account-id": scope } : scope?.groupId ? { "x-group-id": scope.groupId } : {}) },
++    headers: { "content-type": "application/json", ...(typeof scope === "string" ? { "x-account-id": scope } : scope?.groupId ? { "x-group-id": scope.groupId, ...(scope.accountId ? { "x-account-id": scope.accountId } : {}) } : {}) },
+     data: { id, input },
+   });
+   expect(response.ok(), `${id}: ${response.status()} ${await response.text()}`).toBe(true);
+@@ -138,27 +138,32 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
+         usage: { prompt_tokens: 20, completion_tokens: 40, total_tokens: 60 } })}\n\n` + "data: [DONE]\n\n");
+   });
+   await new Promise<void>((done) => model.listen(0, "127.0.0.1", done));
++  let priorEngine: "pi" | "codex" | undefined;
+   try {
++    priorEngine = (await dispatch<{ assistantExecutionEngine: "pi" | "codex" }>(page, "settings.preferences.get", {})).assistantExecutionEngine;
++    await dispatch(page, "settings.preferences.patch", { body: { assistantExecutionEngine: "pi" } });
+     const address = model.address();
+     if (!address || typeof address === "string") throw new Error("隔离模型服务未取得端口");
++    const group = await dispatch<{ id: string }>(page, "accountGroups.create", { body: { name: "文章Pi Worker独立组", idempotencyKey: crypto.randomUUID() } });
++    const groupId = group.id;
+     const account = await dispatch<{ id: string }>(page, "accounts.create", {
+       params: undefined, query: undefined, body: { platform: "xiaohongshu", accountHandle: `article-model-${Date.now()}` },
+-    });
++    }, {groupId});
+     await dispatch(page, "settings.models.put", { params: { capability: "copy.generate" }, query: undefined,
+       body: { provider: "openai-compatible", modelName: "article-e2e", baseUrl: `http://127.0.0.1:${address.port}/v1`,
+-        apiFormat: "openai_chat", settings: { structuredOutputs: true }, secret: "local-article-e2e-only", isDefault: false } }, account.id);
++        apiFormat: "openai_chat", settings: { structuredOutputs: true }, secret: "local-article-e2e-only", isDefault: false } }, {groupId, accountId: account.id});
+     const project = await dispatch<{ id: string }>(page, "projects.create", { params: undefined, query: undefined,
+       body: { title: "模型文章创作验收", brief: "介绍账号核验与作品归属的真实方法", contentType: "article",
+-        targetPlatforms: ["wechatOfficialAccount"] } }, account.id);
++        targetPlatforms: ["wechatOfficialAccount"] } }, {groupId, accountId: account.id});
+     const projectCurrent = await dispatch<{ updatedAt: string }>(page, "projects.get", {
+       params: { projectId: project.id }, query: undefined, body: undefined,
+-    }, account.id);
++    }, {groupId, accountId: account.id});
+     projectRef = {kind: "project", id: project.id, versionId: projectCurrent.updatedAt};
+     await context.addCookies([{ name: "creatoros_current_account", value: encodeURIComponent(account.id),
+       url: baseURL ?? "http://127.0.0.1" }]);
+     await page.addInitScript(([key, id]) => window.localStorage.setItem(key!, id!),
+       ["creatoros:current-account", account.id]);
+-    const groupId = await selectAccountGroup(page, account.id, baseURL);
++    expect(await selectAccountGroup(page, account.id, baseURL)).toBe(groupId);
+     await page.goto(`/projects/${project.id}/article`);
+     const workbench = page.locator('[data-page="article-workbench"]');
+     await workbench.getByRole("button", { name: "新建文章" }).click();
+@@ -190,13 +195,18 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
+     }, {groupId});
+     expect(before.currentVersionId).toBe(saved.versionId);
+     expect(before.current).toEqual(saved.document);
++    // 原生成按钮已退役；公开原候选producer真实执行，原恢复key仅保存公开返回ID。
++    // 此例证明API producer→真实Worker→原UI恢复/采纳，不声称点击退役按钮。
++    const generated = await dispatch<{taskId:string;candidateId:string;status:string}>(page, "articles.candidates.generate", {
++      params: { outputId: output!.id }, query: undefined,
++      body: { clientRequestId: crypto.randomUUID(), sourceAssets: [] },
++    }, {groupId});
++    expect(generated.taskId).toBeTruthy(); expect(generated.candidateId).toBe(generated.taskId);
++    await page.evaluate(({outputId, taskId}) => sessionStorage.setItem(`creatoros:article-task:${outputId}`, taskId), {outputId:output!.id, taskId:generated.taskId});
++    await page.reload();
++    await expect(workbench).toBeVisible();
+     await workbench.getByText("AI 辅助生成与内容扩展", { exact: true }).click();
+-    const generatedResponsePromise=page.waitForResponse(response=>{
+-      if(!response.url().includes("/api/v1/dispatch"))return false;
+-      try{return response.request().postDataJSON()?.id==="articles.candidates.generate";}catch{return false;}
+-    });
+-    await workbench.getByRole("button", { name: "根据脚本扩写文章" }).click();
+-    const generatedEnvelope=await (await generatedResponsePromise).json() as {data:{candidateId:string}};
++    const generatedEnvelope = {data:generated};
+     await expect(workbench.getByRole("heading", { name: "待审读候选" })).toBeVisible({ timeout: 60_000 });
+     await expect(workbench.getByText("来源：项目资料").first()).toBeVisible();
+     const generatedCandidate=await dispatch<{proposedTitle:string;proposedTitleSourceRefs:unknown[];proposedSummary:string;proposedSummarySourceRefs:unknown[];proposedSections:Array<{sourceRefs:unknown[]}>}>(page,"articles.candidates.get",{params:{candidateId:generatedEnvelope.data.candidateId},query:undefined,body:undefined},{groupId});
+@@ -247,7 +257,9 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
+     await expect(page).toHaveURL(/fn=material\.generate\.image/);
+     await expect(page.getByRole("textbox", {name: "我能帮你做什么"})).toHaveValue(/账号与作品归属示意图/);
+   } finally {
++    try { if(priorEngine)await dispatch(page, "settings.preferences.patch", { body: { assistantExecutionEngine: priorEngine } }); } finally {
+     model.closeAllConnections();
+     await new Promise<void>((done) => model.close(() => done()));
++    }
+   }
+ });

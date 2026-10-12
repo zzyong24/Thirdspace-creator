@@ -1,0 +1,39 @@
+{
+  "name": "LED-018",
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/no-creatoros-app.sb",
+    "/bin/bash",
+    "-c",
+    "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs && cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/LED-018.log",
+  "pid": 53015,
+  "identity": {
+    "pid": 53015,
+    "pgid": 53015,
+    "uid": 501,
+    "birth": "Mon Oct 12 19:03:20 2026",
+    "startedAt": 1791803000958
+  },
+  "startedAt": "2026-10-12T11:03:20.958Z",
+  "endedAt": "2026-10-12T11:05:36.607Z",
+  "elapsedMs": 135649,
+  "budgetMs": 22800000,
+  "deadlineAt": "2026-10-12T17:23:20.958Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

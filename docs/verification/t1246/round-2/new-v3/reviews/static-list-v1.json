@@ -1,0 +1,2168 @@
+{
+  "config": {
+    "configFile": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/driver/playwright.config.ts",
+    "rootDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/tests-t1246-v3",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/reviews/list-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "official",
+        "name": "official",
+        "testDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/tests-t1246-v3",
+        "testIgnore": [],
+        "testMatch": [
+          "/e2e\\/integrated-(browser|native|dependent|routes)\\.spec\\.ts/"
+        ],
+        "timeout": 72000000
+      },
+      {
+        "outputDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/reviews/list-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "protocol",
+        "name": "protocol",
+        "testDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/tests-t1246-v3",
+        "testIgnore": [],
+        "testMatch": [
+          "/e2e\\/integrated-protocol\\.spec\\.ts/"
+        ],
+        "timeout": 72000000
+      },
+      {
+        "outputDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/reviews/list-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "pi",
+        "name": "pi",
+        "testDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/new-v3/reviews/static-list-runtime-v1/frontend/tests-t1246-v3",
+        "testIgnore": [],
+        "testMatch": [
+          "/e2e\\/integrated-protocol\\.spec\\.ts/"
+        ],
+        "timeout": 72000000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.60.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "e2e/integrated-browser.spec.ts",
+      "file": "e2e/integrated-browser.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "INT-ENGINE：免独立API配置、真实偏好切换、刷新及第二窗口同步",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-3637099e0f1e4900b7a6",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 6,
+          "column": 5
+        },
+        {
+          "title": "INT-ENGINE-FAIL：真实GET透传等待、PATCH故障保服务原值、能力fixture明确分界",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-5e095f596a4961d4342b",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 12,
+          "column": 5
+        },
+        {
+          "title": "INT-GROUP：真实A/B组、项目与知识错组404、刷新同ID且B列表诚实空",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-8132acfddef6fbce8959",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 22,
+          "column": 5
+        },
+        {
+          "title": "INT-KNOWLEDGE：窄窗真实创建编辑、公开新旧版本、目录移动、原文历史与组隔离",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-6702291df6383def59b6",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 27,
+          "column": 5
+        },
+        {
+          "title": "INT-T1245：稳定390/900/1536和低高度筛选、可达关闭按钮、保真实状态",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-9e7a97b827ba913f80da",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 33,
+          "column": 5
+        },
+        {
+          "title": "INT-NAV：同页编导弹层与返回、真实链接宽窄、保持本项目已保存文稿",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-e982f6f95caee63160fe",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 40,
+          "column": 5
+        },
+        {
+          "title": "INT-FREEZE：Codex原任务在途切Pi、原ID候选读回、不重新提交",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-cb104a57b43b6fccded7",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 43,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/integrated-dependent.spec.ts",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "INT-TEXT-DISCOVERY / topic.enrich：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-8045a2729dc0a75e9579",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / topic.preference：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-9ba4c291fcdc46f3f9ea",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / calibration.diagnose：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-5c8aef06730f08c381c9",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / calibration.score：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-6731e8dbaabbfcd64955",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-MOMENTS / moments text：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-d58640f10a2f60da70b0",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-MOMENTS / work review：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-f776c2d01b40161ebc6d",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-VIDEO / video.decisions：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-ef311209e54080db0e81",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-VIDEO / reconstruct.project：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-c75bd3b6c3dcb9056878",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-KNOWLEDGE-AI / comment.qa-sift：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-36e8a43081f3a857bccb",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-RESEARCH / script.source_similarity：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-a00cac03ebb1024a2e50",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-INTELLIGENCE / intelligence generation：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-e83613105c8096c04a54",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-INTELLIGENCE / intelligence.rewrite-text：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-6f84eef7412964c69ee3",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-BACKGROUND / scheduled.topic.daily：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-16f222e42884ec70e735",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-BACKGROUND / scheduled flywheel：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-3623600aebf91bf1e2c5",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-TRANSCRIBE / transcribe postprocess：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-d2966357d1d5961202eb",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        },
+        {
+          "title": "INT-VISION / video.visual-review：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-c25068cac32173a68f39",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 44,
+          "column": 27
+        }
+      ]
+    },
+    {
+      "title": "e2e/integrated-native.spec.ts",
+      "file": "e2e/integrated-native.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "INT-TEXT-PLAN / planning.thesis：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-27d0725f1d93ee299028",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-PLAN / planning.contract：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-bdce982856d644c6b56a",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-PLAN / planning.outline：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-90dc2379410af338c2e6",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-WRITE / script.draft：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-9c4e533f90181e56064d",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-WRITE / wechat.article-draft：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-b93b40c4bc65c228f58c",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-REVIEW / script.review：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-a8fb2956458e662d52dd",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-REVIEW / publish.platform_adapt：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-06f1064fb0e11afa5e08",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-REVIEW / review.analyze：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-25eb225277262176c64b",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-POST / graphic.post-text：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-403d5628e0176cd2f5bf",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-POST / wechat.article-text：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-5544f760a4c147acd9f9",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-POST / publication.text：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-72c5f3bb60f90089fb38",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / positioning.generate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-7d464070f95eff64a792",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / topic.generate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-22c77d28084058c3a84a",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-RESEARCH / research.gather_material：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-75115401c02d3b224193",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-RESEARCH / copilot.assist：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-53cc87a6fe13ec10e2fd",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-MEDIA / asset.classify：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-38b9ae86dc8c8c4d65d6",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-MEDIA / material.extract：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-0493ed36b8eeaa984bbf",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-MEDIA / material.match：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-59cc15c9ed27120c90ce",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.classify：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-bd34accceff8dcba505b",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.distill：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-8b46572073ae35e0fe03",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.relate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-3ea1620500e5ff057dcc",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-ASSET / asset.generate image：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-349ef2dbb67c6ce37c0b",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-REF / asset.generate image_to_image：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-29fc65060b4d8048dac3",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-COVER / cover.generate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-b229a8b918a82eca3c8e",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-CARDS / graphic.card.generate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-954f942420040b6120b7",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-CARDS / 系列图：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-9bf942eb135a067d442a",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-CARDS / 文章配图：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-7d11d5d557a815f75f0e",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-VISION / asset.classify vision：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-edd45a1de13f3723512b",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / chat.run Codex：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-a7df5c2dd48c38048741",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / worker.structured-node/proposal：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-e7a901f0494e6c053ffd",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / worker.script-hooks/proposal：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-10bbb14ee793c64829ca",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / worker.script-draft/committed：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-e16ae0c72044c5c1d54c",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / chat image generation：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-186a9b832504a83cc176",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 98,
+          "column": 28
+        }
+      ]
+    },
+    {
+      "title": "e2e/integrated-routes.spec.ts",
+      "file": "e2e/integrated-routes.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "INT-ROUTES / route-01 / /projects/new：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-669f1a459a6eaf45de06",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-02 / /accounts：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-cb3ac9b857abe8d8bed9",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-03 / /accounts/works：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-894b8fabb30aa7c6b2f2",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-04 / /assets：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-d933b857d2026747eeeb",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-05 / /automations：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-e82709742ccb8c3e3ba5",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-06 / /calendar：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-dda261266a27a9ff47a1",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-07 / /canvases/[canvasId]：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-22d75d60dc9ff807240d",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-08 / /canvases：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-c105a231a429bdccaa7a",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-09 / /daily-report：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-10bd0abbe5e6fe3e4b2d",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-10 / /experience：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-1a2dd7bb840303271a78",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-11 / /intelligence：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-d39f7dbbb932e3fe7262",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-12 / /knowledge：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-42b0b06780daf916c523",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-13 / /overview：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-7b8b850e955a09ba0dd3",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-14 / /：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-ea0966f520756cb50582",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-15 / /positioning：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-647259b5ac4c2e95058b",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-16 / /projects/[projectId]/article：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-3f5b90d678b5ac42a566",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-17 / /projects/[projectId]/image：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-6b8e650e46ce72d48c7c",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-18 / /projects/[projectId]/moments/[momentsId]：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-4c1ae110953d95756a84",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-19 / /projects/[projectId]/outputs/[outputId]/image：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-0d3249ad3616ee721481",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-20 / /projects/[projectId]/outputs/[outputId]/video：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-fb79599544a76cc34cb6",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-21 / /projects/[projectId]：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-a712f5f6eb29957e2b51",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-22 / /projects/[projectId]/planning：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-5feb7c46b95835a17088",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-23 / /projects/[projectId]/production：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-59a01d0cd2a58e8ab486",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-24 / /projects/[projectId]/publishing：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-48eb8aee1e0c6174b924",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-25 / /projects/[projectId]/research：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-b9b28871f9e0c9b99ad6",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-26 / /projects/[projectId]/review：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-d7210b9f2048f940a61b",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-27 / /projects/[projectId]/script：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-b0e23f2ad476690d106e",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-28 / /projects/[projectId]/work：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-3ef55514d875886c2c7c",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-29 / /projects/create：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-25000ec7f4814268510a",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-30 / /projects/new：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-48b0e0a9590771e40afc",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-31 / /projects：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-7b1ec602dc1a5666667e",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-32 / /publishing：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-b2ddcdf44afa299fe67e",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-33 / /search：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-40b8d87c4ae452a3285a",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-34 / /settings：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-be9e2619ad523df9eb9d",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-35 / /topics：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-907ef06cdcf37bc7bce1",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-36 / /activate：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-e7c7c80d603d7abd7b68",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-37 / /login：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-5a8881e79a8c00dfb792",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        },
+        {
+          "title": "INT-ROUTES / route-38 / /register：真实对象、宽窄、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "official",
+              "projectName": "official",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dda2a25d57b38a20de23-ac076876d33e95a5526e",
+          "file": "e2e/integrated-routes.spec.ts",
+          "line": 296,
+          "column": 35
+        }
+      ]
+    },
+    {
+      "title": "e2e/integrated-protocol.spec.ts",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "INT-RECOVERY text-null 原ACP unknown→同ID thread/read",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "protocol",
+              "projectName": "protocol",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6adc29cdc7ee7d3ca6f8-11a062a00ffe564d1497",
+          "file": "e2e/integrated-protocol.spec.ts",
+          "line": 6,
+          "column": 76
+        },
+        {
+          "title": "INT-RECOVERY text-usage 原ACP unknown→同ID thread/read",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "protocol",
+              "projectName": "protocol",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6adc29cdc7ee7d3ca6f8-4fc11bda4d2def802a41",
+          "file": "e2e/integrated-protocol.spec.ts",
+          "line": 6,
+          "column": 76
+        },
+        {
+          "title": "INT-RECOVERY image 原ACP unknown→同ID thread/read",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "protocol",
+              "projectName": "protocol",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6adc29cdc7ee7d3ca6f8-5875b0f229f0321617a7",
+          "file": "e2e/integrated-protocol.spec.ts",
+          "line": 6,
+          "column": 76
+        },
+        {
+          "title": "INT-RECOVERY 原ACP真实在途→原生脏工程设置往返→EOF→同ID恢复",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "protocol",
+              "projectName": "protocol",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6adc29cdc7ee7d3ca6f8-ed1a9737e393378c75d4",
+          "file": "e2e/integrated-protocol.spec.ts",
+          "line": 13,
+          "column": 5
+        },
+        {
+          "title": "INT-RECOVERY 首次read不完整保原unknown不爆重发",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "protocol",
+              "projectName": "protocol",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6adc29cdc7ee7d3ca6f8-61bc06a0b878ea3c686d",
+          "file": "e2e/integrated-protocol.spec.ts",
+          "line": 14,
+          "column": 5
+        },
+        {
+          "title": "INT-RECOVERY 缺真实turn通知 binding拒绝不重发",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "protocol",
+              "projectName": "protocol",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6adc29cdc7ee7d3ca6f8-9fe9fc4d298150310401",
+          "file": "e2e/integrated-protocol.spec.ts",
+          "line": 15,
+          "column": 5
+        },
+        {
+          "title": "INT-RECOVERY 错组拒绝与真实cancel后恢复拒绝",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "protocol",
+              "projectName": "protocol",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6adc29cdc7ee7d3ca6f8-d9322b2adc318963712a",
+          "file": "e2e/integrated-protocol.spec.ts",
+          "line": 16,
+          "column": 5
+        },
+        {
+          "title": "INT-PI 公共UI文本真实HTTP fixture兼容同task/call/result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 72000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "pi",
+              "projectName": "pi",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6adc29cdc7ee7d3ca6f8-03cd49fc58a0c6135931",
+          "file": "e2e/integrated-protocol.spec.ts",
+          "line": 17,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T18:46:24.586Z",
+    "duration": 669.009,
+    "expected": 0,
+    "skipped": 102,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-12T02:35:38.391240+00:00",
+  "sourceSha256": "b16d722f1ba4e20599cf94cd5967681365640e9c9bedece3fb98790a58faf4ee",
+  "oldSourceSha256": "014a276cb46db9c217516367626d869112aa94162f8b309743a8c46012fce9ba",
+  "diffSha256": "9a10e90308c2ffa6c36cc900ce995d57e70cdc0bfa44789498b8f9a4e632d44f",
+  "scope": "只将原不支持的整篇替换改为读取真实当前UI marker并与public当前section IDs完整相等后替换唯一用户原正文，不造新ID，不改parser/生产/其它assert",
+  "idsFromRealPublicAndUI": true,
+  "model": false,
+  "App": false,
+  "runtimeExecuted": false,
+  "history": "source-v1-marker-static-concerns preserves source014a and review finding, not actual browser FAIL",
+  "typesSha256": "9cac21266aa3b2aaedd24077128a06ec619b791164d43da5cf9a5dd795a9e338",
+  "parseSha256": "d12397d129d7f54cdfffdf77908e9ed65b8b6acb75e120de00fbc758abd871ee"
+}

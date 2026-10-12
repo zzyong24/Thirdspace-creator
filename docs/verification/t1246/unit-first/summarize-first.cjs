@@ -1,0 +1,14 @@
+const fs=require('node:fs'),path=require('node:path');
+const root='/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first';
+const pkg=process.argv[2];
+const j=JSON.parse(fs.readFileSync(path.join(root,pkg+'.json'),'utf8'));
+const receipt=JSON.parse(fs.readFileSync(path.join(root,pkg+'-exit.json'),'utf8'));
+if(receipt.status==='running')throw Error('尚未结束');
+const failures=j.testResults.flatMap(f=>(f.assertionResults||[]).filter(a=>a.status==='failed').map(a=>({file:f.name,title:a.fullName,duration:a.duration,failureMessages:a.failureMessages})));
+const failedSuites=j.testResults.filter(f=>f.status==='failed').map(f=>({file:f.name,message:f.message,failedAssertions:(f.assertionResults||[]).filter(a=>a.status==='failed').length,totalAssertions:(f.assertionResults||[]).length}));
+const logText=fs.readFileSync(receipt.log,'utf8');const unhandledMatch=logText.match(/Vitest caught (\d+) unhandled error/);
+const fileCounts=require('/tmp/t1246-unit/file-result-counts.cjs')(j.testResults);
+const summary={...fileCounts,unhandledErrorsFromOriginalLog:unhandledMatch?Number(unhandledMatch[1]):0,package:pkg,actualExitCode:receipt.exitCode,files:j.testResults.length,failedFiles:failedSuites.length,totalTests:j.numTotalTests,passedTests:j.numPassedTests,failedTests:j.numFailedTests,pendingTests:j.numPendingTests,todoTests:j.numTodoTests,success:j.success,unhandledErrors:j.numUnhandledErrors,firstStartedAt:receipt.startedAt,endedAt:receipt.endedAt,elapsedMs:receipt.elapsedMs,failedSuites,rawLog:receipt.log,rawJson:receipt.resultJson};
+fs.writeFileSync(path.join(root,pkg+'-summary.json'),JSON.stringify(summary,null,2)+'\n');
+fs.writeFileSync(path.join(root,pkg+'-failures.json'),JSON.stringify(failures,null,2)+'\n');
+console.log(JSON.stringify(summary));

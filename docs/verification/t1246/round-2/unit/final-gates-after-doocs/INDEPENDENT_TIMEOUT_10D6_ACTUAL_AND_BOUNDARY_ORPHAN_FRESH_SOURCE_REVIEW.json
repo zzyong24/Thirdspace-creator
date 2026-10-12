@@ -1,0 +1,109 @@
+{
+  "task": "T-1246/T-1254",
+  "at": "2026-10-12T09:26:25.595095+00:00",
+  "status": "ACTUAL_TIMEOUT_10D6_EOF0_AND_ORIGINAL_EIGHT_GROUPS_PASS_WITH_FRESH_BOUNDARY_ORPHAN_SOURCE_BINDINGS",
+  "actualSession": 54145,
+  "timeoutNaturalEOF0ReportedByROOT": true,
+  "rawFiles": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/environment-proof.json",
+      "size": 1485,
+      "sha256": "c8a9579a615bb47d9d2c2a92a59e7b38112537a939bd87d5dca934568f350933"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/environment-proof.log",
+      "size": 51,
+      "sha256": "6bb18c7be870097f42bac3af3a7ab69bb2771622d011605fb4caf4c363d880ae"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/exit.json",
+      "size": 1027,
+      "sha256": "d7ebe6bddf5f234753610f7a755512e910c1541c1e2bc60b7c18430a79886da1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/gate.log",
+      "size": 5872,
+      "sha256": "453458c4d44996aaae44b53a1b4e4b91790009f19a9e25a03f2e27177409564b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/review.json",
+      "size": 968,
+      "sha256": "a5af2c0c0dfe8c7b4fa8f7e42a8daa652d85f369099e67e06bd147ce1c991762"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/source-after.json",
+      "size": 1756259,
+      "sha256": "397b89cce52886d104d3859779204156445ef1bb5a7231e801752c7681bf1a48"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/source-before.json",
+      "size": 1756238,
+      "sha256": "cd67a790b481f7c1e6f9dfa933eef4cdbab7022fedd69733630b09551e2af7c0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-10d6d738c702a8d51733dc3dfb676f63/summary.json",
+      "size": 488,
+      "sha256": "99146c6cc17b541f7aa4edda1929a313ef90e574efe45b00126dc370330b2279"
+    }
+  ],
+  "actualTimeoutEightCommands": 8,
+  "actualVitestPassed": 158,
+  "actualNodePassed": 11,
+  "actualWindowsPolicyPassed": 5,
+  "actualScannerFiles": 2765,
+  "actualScannerFailures": [],
+  "actualElapsedMs": 44357.037041999996,
+  "actualOwnedRemovedTrue": true,
+  "twoProcessReceiptsClosedGroupZeroSignalsEmpty": true,
+  "sourceBeforeAfterSame": true,
+  "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+  "current8303InputsAnd17867CachedListRecheckedZeroDrift": true,
+  "inputReadBytes": 458149769,
+  "toolSha256": "b5a32eadc6aa2bf429c058e4bc95ea4b287296c159f4e797e95abff3e7006bcc",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "parserSha256": "ccdd5db1edbca67b691bf24736bc17a8c957b18f783612147ce6d67cd28c9d3d",
+  "phaseSourceCandidates": [
+    {
+      "phase": "boundary",
+      "preparePath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates-after-doocs/boundary-prepare.json",
+      "prepareSha256": "c8aabe8e059e3e47b4f9ed54bbc0f3f099854f89844b27c4bdbdd5a3c242ff25",
+      "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+      "bodyMs": 1200000,
+      "totalMs": 7680000,
+      "slots": {
+        "prepare": 600000,
+        "environmentProof": 180000,
+        "body": 1200000,
+        "childLifecycle": 4320000,
+        "afterSource": 600000,
+        "cleanup": 600000,
+        "margin": 180000
+      }
+    },
+    {
+      "phase": "orphan",
+      "preparePath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates-after-doocs/orphan-prepare.json",
+      "prepareSha256": "b3d98b8a175a644c46cbb2dccf29d253b314f0c3e693c1ebef945a69478c1a22",
+      "sourceDigest": "cdc00cb1e8aa4f4ce32e6d6b524fc7dea8560c823fa1b832e27a324a44247965",
+      "bodyMs": 1200000,
+      "totalMs": 7680000,
+      "slots": {
+        "prepare": 600000,
+        "environmentProof": 180000,
+        "body": 1200000,
+        "childLifecycle": 4320000,
+        "afterSource": 600000,
+        "cleanup": 600000,
+        "margin": 180000
+      }
+    }
+  ],
+  "findings": [],
+  "reviewerLaunchedNoGateChild": true,
+  "boundaryOrphanActualPassed": false,
+  "newGateExecutionRequiresROOTExactOneAdmissionEach": true,
+  "nativeAppAcceptance": "用户暂不授权，保留未完成。",
+  "elapsedReadonlyMs": 1704.89475002978
+}

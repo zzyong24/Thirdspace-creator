@@ -72,6 +72,8 @@ const outer = Math.max(180000, ...manifest.budgets.map((x: { effectiveTestMs: nu
 export default {
   ...original,
   testDir: resolve(root, manifest.generatedTestRoot),
+  globalSetup: resolve(root, manifest.generatedTestRoot, "visual/__setup__.ts"),
+  globalTeardown: resolve(root, manifest.generatedTestRoot, "visual/__teardown__.ts"),
   outputDir: resolve(runDir, "test-results"),
   retries: 0,
   workers: 1,
@@ -86,7 +88,7 @@ export default {
     trace: "on" as const,
     screenshot: "on" as const,
   },
-  webServer: { ...original.webServer, command: "node ../docs/verification/t1246/driver/start-isolated-next.cjs", timeout: Math.max(original.webServer?.timeout ?? 300000, 300000), gracefulShutdown: { signal: "SIGTERM" as const, timeout: 120000 } },
+  webServer: { ...original.webServer, cwd: resolve(root, "frontend"), command: "node ../docs/verification/t1246/driver/start-isolated-next.cjs", timeout: Math.max(original.webServer?.timeout ?? 300000, 300000), gracefulShutdown: { signal: "SIGTERM" as const, timeout: 120000 } },
   reporter: [
     ["list"],
     ["json", { outputFile: resolve(runDir, "results.json") }],

@@ -1,0 +1,70 @@
+{
+  "schema": "independent-tool-review/v1",
+  "at": "2026-10-11T23:08:06.084171+00:00",
+  "scope": "只读静态工具评审；未prepare/运行任何Gate",
+  "result": "REQUEST_TOOL_CHANGES",
+  "toolSha256": "aa06d56234263c05c7e7fb7b7409c55168ed67e5c666cbffdb1aacadcbc93a98",
+  "bindings": [
+    {
+      "path": "docs/verification/t1246/round-2/unit/run-final-gates.cjs",
+      "sha256": "aa06d56234263c05c7e7fb7b7409c55168ed67e5c666cbffdb1aacadcbc93a98"
+    },
+    {
+      "path": "tools/timeout-policy/verify.mjs",
+      "sha256": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae"
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "sha256": "dcfabd591362ab1f38151f7865d3bcf6067aa17ab3d30398f7fbeba841bedc5e"
+    },
+    {
+      "path": "tools/timeout-policy/hyperframes.test.mjs",
+      "sha256": "988e1cdb67cf68a9cc7225c8007e6b2078f1402f7dc632e1fed3de67d383db38"
+    },
+    {
+      "path": "orchestrator/process/orphan-scan.mjs",
+      "sha256": "3fb5a7c75d8de394f999fc34202520633c37450d96400ebbf2cec29393f20232"
+    },
+    {
+      "path": "orchestrator/process/boundary-scan.mjs",
+      "sha256": "ae9156168e030a026b97b8a2512ea20fa615e5019865808ecfa00469eb0c51fe"
+    },
+    {
+      "path": "tools/windows-closure-rat/render-probe-policy.test.mjs",
+      "sha256": "5a56d656cca7750861560f3796c056ab6a8e2c05a9484ecf34c950ce7919736a"
+    },
+    {
+      "path": "frontend/scripts/desktop/timeout-policy.node.mjs",
+      "sha256": "56ea743eef359f0fc1ca7f569838d980a57ec9e3a27788db0cf67b9e65e0a8ce"
+    }
+  ],
+  "findings": [
+    {
+      "id": "FG001",
+      "status": "blocking_tool_binding",
+      "evidence": [
+        "run-final-gates.cjs:24 roots/filter omit tracked frontend/src-tauri Rust, frontend/public vendor, other tracked scanned extensions",
+        "check.mjs:100-108 consumes git ls-files inventory and rs/py/ps1/yml/yaml/toml",
+        "orphan-scan.mjs:165-176 consumes ID_REGISTRY.md, TRACEABILITY_MATRIX.md, ARTIFACT_MANIFEST.yaml, unbound by this runner",
+        "hyperframes.test.mjs:13-18 consumes actual installed package.json/dist/cli.js and patches/hyperframes@0.7.54.patch, not all bound"
+      ],
+      "minimum": "按实际phase消费者绑定精确Git清单及内容/缺失事实、配置/控制面/安装依赖；前后均重核，不能只扩大JS目录后宣称闭包。"
+    },
+    {
+      "id": "FG002",
+      "status": "blocking_budget_evidence",
+      "evidence": [
+        "run-final-gates.cjs:14 timeout body fixed96000000 without complete original eight-check inventory derivation",
+        "verify.mjs eight serial spawn checks; Node --test checks have no finite test-timeout declaration",
+        "hyperframes.test.mjs:43 spawnSync real installed render has no timeout",
+        "render-probe-policy.test.mjs keeps options.timeout===undefined; original controlled child fast behavior does not declare finite full consumer limit"
+      ],
+      "minimum": "保原8checks/所有原断言，先列实际case/hook/配置更长值、Node嵌套进程和启动/关闭预算，有限观察界限明确分离原持久执行；不可把96M固定值、常见耗时或isolated helper计数冒称全链预算。若需新工具/Node观察方案先独评，不擅改原无上限政策。"
+    }
+  ],
+  "retained": [
+    "原两次22 timeout失败不覆盖",
+    "未签boundary/orphan/timeout通过",
+    "复用393f lifecycle两child2160000各槽方向成立，但不替代嵌套原8组输入/预算证明"
+  ]
+}

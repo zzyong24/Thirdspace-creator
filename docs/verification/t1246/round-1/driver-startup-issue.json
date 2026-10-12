@@ -1,0 +1,11 @@
+[
+  {
+    "id": "DR004",
+    "phase": "真实启动失败，任何test执行前",
+    "observedAt": "2026-10-11T22:53:51.476606+08:00",
+    "before": "webServer cwd缺省=configDir，相对路径解析到double docs",
+    "after": "显式cwd resolve(root,frontend)，保原Node启动命令/产品/54原断言/预算",
+    "candidateCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+    "redEvidence": "docs/verification/t1246/round-1-original-console.txt"
+  }
+]

@@ -1,0 +1,23 @@
+--- /tmp/t1254-readonly/fetch-budget-candidate.test.ts
++++ /tmp/t1254-readonly/fetch-budget-candidate-v2.test.ts
+@@ -186,4 +186,20 @@
+     expect(mock).toHaveBeenCalledTimes(1)
+     expect(vi.getTimerCount()).toBe(0)
+   }, 180_000)
++
++
++  it(`正文序列化错误保原错误且不发送请求或遗留 timer`, async () => {
++    vi.useFakeTimers({ toFake: [`setTimeout`, `clearTimeout`, `performance`] })
++    const mock = stubFetch(() => jsonResponse({ shouldNotBeRequested: true }))
++    const circular: { self?: unknown } = {}
++    circular.self = circular
++    await expect(fetch.post(`http://127.0.0.1:1/owned-serialization-unit`, circular)).rejects.toBeInstanceOf(TypeError)
++    expect(mock).toHaveBeenCalledTimes(0)
++    expect(vi.getTimerCount()).toBe(0)
++    const originalError = new Error(`owned toJSON error`)
++    const throwsOnSerialization = { toJSON() { throw originalError } }
++    await expect(fetch.post(`http://127.0.0.1:1/owned-serialization-unit`, throwsOnSerialization)).rejects.toBe(originalError)
++    expect(mock).toHaveBeenCalledTimes(0)
++    expect(vi.getTimerCount()).toBe(0)
++  }, 180_000)
+ })

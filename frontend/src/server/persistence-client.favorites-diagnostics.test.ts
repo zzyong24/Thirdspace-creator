@@ -9,7 +9,7 @@ describe("[T-536] 内容雷达收藏同步诊断接线", () => {
       "utf8",
     );
     const adapterStart = source.indexOf(
-      "fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId }) =>",
+      "fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId, signal }) =>",
     );
     const nextAdapter = source.indexOf("readWeb:", adapterStart);
     const favoriteAdapter = source.slice(adapterStart, nextAdapter);
@@ -27,7 +27,7 @@ describe("[T-536] 内容雷达收藏同步诊断接线", () => {
       "utf8",
     );
     const adapterStart = source.indexOf(
-      "fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId }) =>",
+      "fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId, signal }) =>",
     );
     const nextAdapter = source.indexOf("readWeb:", adapterStart);
     const favoriteAdapter = source.slice(adapterStart, nextAdapter);

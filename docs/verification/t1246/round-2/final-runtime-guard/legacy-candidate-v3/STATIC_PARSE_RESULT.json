@@ -1,0 +1,151 @@
+{
+  "at": "2026-10-12T07:38:35.731726+00:00",
+  "status": "syntax-only-parsed",
+  "entries": [
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/common.cjs",
+      "sha256": "5fac7f48b0db4bc6befac1fe319364815244f6d80fcc2ae913364f65063805a1",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__common.cjs__upstream-inputs.json",
+      "rawSha256": "4959a76142f4e1d04e30a5985b9d3c9b0314d2c1a3b0f1797fd16496f99fa61f",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/common.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/owned-dyld.cjs",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__owned-dyld.cjs.json",
+      "rawSha256": "0af78150245930cf60449f2387dc2c1140623899909b05695dcc6a871ecc3f02",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/owned-dyld.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/prepare-metadata-input.cjs",
+      "sha256": "b5bf7f6b63d8065c1c9615f0cf661c537ba71156b20b783f86cc58790b93238d",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__prepare-metadata-input.cjs.json",
+      "rawSha256": "92007ea8b66cd6bad943c993358201e6294e7ca843886103fb9f970009af736c",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/prepare-metadata-input.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/reseal.cjs",
+      "sha256": "05825374a61c5c10e95d8f0d4319994da804dac289638b21745f8d42610495bb",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/syntax-v3-current-formula/reseal.cjs.json",
+      "rawSha256": "29c5215abce84e910ec9e23e9193140c3aff8702f6ebb1cd60433dc719f0c93a"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/run.cjs",
+      "sha256": "79521b70a41ba1195859b6d2c45580bbfc8b7fd391c8793b422cfb3488eb0494",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__run.cjs.json",
+      "rawSha256": "fcf5360c0c0ecdc49eae60fcdc11757febe85bbc4bedc3dce75c91bd5418691d",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/run.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/supervise.cjs",
+      "sha256": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/tool__supervise.cjs.json",
+      "rawSha256": "17defdacb7b7a9a3eb6dc273dff1b43f63b8e0315d42308d45366037d7b53b03",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/supervise.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/browser-original/prepare-runtime.cjs",
+      "sha256": "7ea85e26381261a0d6d60ef2a218df4b611a162d6cdaf107184395c2f000a99f",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/browser-original__prepare-runtime.cjs.json",
+      "rawSha256": "dafb61d6b64d7af3bf1de8e3a3f2b6ddcb7e7ae954a70559943b30ffe4980736",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/prepare-runtime.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/browser-original/verify-binding.cjs",
+      "sha256": "204975e5ef71689d127eacae445b91e0f8bf4a28496c15305bc5a5b63d79d3b6",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/browser-original__verify-binding.cjs.json",
+      "rawSha256": "a62a59d7eb9bdc9b936af7e55d8d9943ac1a16285f2b770740ee1bfe330d93bb",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/verify-binding.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/browser-original/launch.cjs",
+      "sha256": "74c5dda545a1583d9d43d7ce42dd22bbafd0d47cff9fbf058efdae050b8e35f0",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/browser-original__launch.cjs__final-ledger.json",
+      "rawSha256": "46cf270130b5774549a5c3d95f30040ceba9a2550db854c7b16b1d1c6d49021b",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/browser-original/launch.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/new-v3/prepare-runtime.cjs",
+      "sha256": "3dda6c2ac7d4a0aae158684b5e4d810401749323a344d4733cd466da788b2af6",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/new-v3__prepare-runtime.cjs.json",
+      "rawSha256": "66cb93b5cdc5910bcceb1d97f578b69d0bfece25fc43f540a7cbcd40872e5baf",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/prepare-runtime.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/new-v3/verify-binding.cjs",
+      "sha256": "93329aa95e829baaa5a941797959314958735f7cedc51fa066ac9cbdfa2f764c",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/new-v3__verify-binding.cjs.json",
+      "rawSha256": "e0ba35a74d39a9c984bafc47950bf2659f8e3cee1caad8c02f69f6b6a1db5290",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/verify-binding.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/new-v3/launch.cjs",
+      "sha256": "8c391110ca66326f5da1f8a2165c3466238ef11188f235efc8c396c63ca255cb",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-final/new-v3__launch.cjs.json",
+      "rawSha256": "a3ebb6d645731e2228a593ec512713219734a9a944991a24578ff223eb456614",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/new-v3/launch.cjs"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/budget-test.cjs",
+      "sha256": "dae6513613692a7ac7cd4549694610b5a17a74eb6600441779aabcca30e4cd0a",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/syntax-v3-current-formula/budget-test-history-input.json",
+      "rawSha256": "ed05d6012e685c04efcdc29906882377cd5d4cbecaf39e7497c16faabe05eb60"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/discover-joint-pairs.py",
+      "sha256": "3324eb3f4bf006349e56f85ba17248b3b04c5f1b1a91423ea9ef782d17937845",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-schema-only/discover-joint-pairs.py.json",
+      "rawSha256": "fffa2d935a7107b548e2dfb534c27a8d40881c6320079aafa2aa89eb60e57162",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/discover-joint-pairs.py"
+    },
+    {
+      "path": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/prepare-joint-dyld.py",
+      "sha256": "0430982cd69814dcd76ddfe0289d93a6254dc01dbecca8731a5dc809216d2c4a",
+      "code": 0,
+      "raw": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/syntax-schema-only/prepare-joint-dyld.py.json",
+      "rawSha256": "ec7524f2fd966fb9a964efaa8a4d43874809829fb57d8a15d7598a5f2396cb56",
+      "priorIdenticalInputPath": "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate/tool/prepare-joint-dyld.py"
+    }
+  ],
+  "count": 15,
+  "candidateCodeExecuted": false,
+  "pureBudgetTestExecuted": false,
+  "collectorOrPrepareOrVerifyOrServicesExecuted": false,
+  "firstStaticFailurePreserved": "history-first-legacy-syntax-failure/EVIDENCE.json",
+  "currentChangedInputActualParserCount": 2,
+  "allCurrentParserInputsAndRawSHARechecked": true,
+  "reusedUnchangedPriorParserCount": 13,
+  "reusedCurrentInputPaths": [
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/common.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/owned-dyld.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/prepare-metadata-input.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/run.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/supervise.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/browser-original/prepare-runtime.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/browser-original/verify-binding.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/browser-original/launch.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/new-v3/prepare-runtime.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/new-v3/verify-binding.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/new-v3/launch.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/discover-joint-pairs.py",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/prepare-joint-dyld.py"
+  ],
+  "actualChangedInputPaths": [
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/tool/reseal.cjs",
+    "docs/verification/t1246/round-2/final-runtime-guard/legacy-candidate-v3/budget-test.cjs"
+  ]
+}

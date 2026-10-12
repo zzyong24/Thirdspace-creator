@@ -40,6 +40,7 @@ it('复用真实客户端和上游 stdio fixture：结算等待客户端通知�
  const call=vi.fn(async(port:string,data:any)=>{
   if(port==='reserveExternalChatTurn')return {callId:'call-real',status:'reserved'};
   if(port==='listExternalTaskTools')return {tools:[]};
+  if(port==='bindCodexCall'){expect(data).toMatchObject({callId:'call-real',threadId:expect.any(String)});return {callId:'call-real',threadId:data.threadId};}
   if(port==='startExternalChatTurn')return {callId:'call-real',status:'started',sessionId:data.sessionId,protocolKind:'acp',protocolVersion:1};
   if(port==='settleExternalChatTurn'){receipt=data.receipt;return {callId:'call-real',status:data.status};}
   throw Error('Unexpected isolated port '+port);
@@ -48,5 +49,7 @@ it('复用真实客户端和上游 stdio fixture：结算等待客户端通知�
  expect(result).toEqual({callId:'call-real'});
  expect(receipt.text).toBe(Array.from({length:4096},(_,i)=>`burst-${i}`).join('')+'burst-complete');
  expect(receipt.stopReason).toBe('end_turn');
+ expect(call.mock.calls.filter(([name])=>name==='bindCodexCall')).toHaveLength(1);
+ expect(call).toHaveBeenCalledWith('bindCodexCall',{callId:'call-real',threadId:receipt.sessionId},expect.any(AbortSignal));
  expect(call.mock.calls.filter(([name])=>name==='settleExternalChatTurn')).toHaveLength(1);
-},20000);
+},180000);

@@ -1,0 +1,64 @@
+[playwright.config] Isolated test data root: /tmp/t1246-new-native-data-533-v1
+[playwright.config] Isolated media root: /tmp/t1246-new-native-data-533-v1/media
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+Listing tests:
+  [e2e] › e2e/integrated-browser.spec.ts:6:5 › INT-ROUTES：全部现有静态入口与真实项目各阶段宽窄、空态、刷新
+  [e2e] › e2e/integrated-browser.spec.ts:12:5 › INT-ENGINE：免独立API配置、真实偏好切换、刷新及第二窗口同步
+  [e2e] › e2e/integrated-browser.spec.ts:18:5 › INT-ENGINE-FAIL：真实GET透传等待、PATCH故障保服务原值、能力fixture明确分界
+  [e2e] › e2e/integrated-browser.spec.ts:28:5 › INT-GROUP：真实A/B组、项目与知识错组404、刷新同ID且B列表诚实空
+  [e2e] › e2e/integrated-browser.spec.ts:33:5 › INT-KNOWLEDGE：窄窗真实创建编辑、公开新旧版本、目录移动、CAS与组隔离
+  [e2e] › e2e/integrated-browser.spec.ts:39:5 › INT-T1245：稳定390/900/1536和低高度筛选、可达关闭按钮、保真实状态
+  [e2e] › e2e/integrated-browser.spec.ts:47:5 › INT-NAV：同页编导弹层与返回、真实链接宽窄、保持本项目已保存文稿
+  [e2e] › e2e/integrated-browser.spec.ts:50:5 › INT-FREEZE：Codex原任务在途切Pi、原ID候选读回、不重新提交
+  [e2e] › e2e/integrated-browser.spec.ts:53:5 › INT-RECOVERY：原公共恢复入口及真实绑定准入，不伪造unknown历史
+  [e2e] › e2e/integrated-browser.spec.ts:58:5 › INT-PI：合法Pi入口与Codex切换，原HTTP模型配置仅独立fixture批次允许
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-DISCOVERY / topic.enrich：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-DISCOVERY / topic.preference：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-DISCOVERY / calibration.diagnose：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-DISCOVERY / calibration.score：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-MOMENTS / moments text：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-MOMENTS / work review：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-VIDEO / video.decisions：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-VIDEO / reconstruct.project：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-KNOWLEDGE-AI / comment.qa-sift：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-RESEARCH / script.source_similarity：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-INTELLIGENCE / intelligence generation：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-INTELLIGENCE / intelligence.rewrite-text：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-BACKGROUND / scheduled.topic.daily：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-BACKGROUND / scheduled flywheel：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-TEXT-TRANSCRIBE / transcribe postprocess：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-dependent.spec.ts:39:27 › INT-VISION / video.visual-review：真实前置检查、原公开入口和任务读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-PLAN / planning.thesis：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-PLAN / planning.contract：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-PLAN / planning.outline：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-WRITE / script.draft：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-WRITE / wechat.article-draft：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-REVIEW / script.review：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-REVIEW / publish.platform_adapt：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-REVIEW / review.analyze：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-POST / graphic.post-text：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-POST / wechat.article-text：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-POST / publication.text：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-DISCOVERY / positioning.generate：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-DISCOVERY / topic.generate：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-RESEARCH / research.gather_material：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-RESEARCH / copilot.assist：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-MEDIA / asset.classify：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-MEDIA / material.extract：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-MEDIA / material.match：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-KNOWLEDGE-AI / knowledge.classify：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-KNOWLEDGE-AI / knowledge.distill：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-TEXT-KNOWLEDGE-AI / knowledge.relate：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-IMAGE-ASSET / asset.generate image：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-IMAGE-REF / asset.generate image_to_image：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-IMAGE-COVER / cover.generate：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-IMAGE-CARDS / graphic.card.generate：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-IMAGE-CARDS / 系列图：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-IMAGE-CARDS / 文章配图：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-VISION / asset.classify vision：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-CHAT / chat.run Codex：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-CHAT / worker.structured-node/proposal：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-CHAT / worker.script-hooks/proposal：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-CHAT / worker.script-draft/committed：真实公共生成、宽窄截图、原ID读回
+  [e2e] › e2e/integrated-native.spec.ts:97:28 › INT-CHAT / chat image generation：真实公共生成、宽窄截图、原ID读回
+Total: 59 tests in 3 files

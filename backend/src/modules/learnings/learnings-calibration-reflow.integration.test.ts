@@ -1,3 +1,5 @@
+import {reviews as originalReviews} from "../../schema/reviews";
+import {projects as originalProjects} from "../../schema/projects";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -73,6 +75,8 @@ describe("Learning→校准 飞轮回流 (cross-module, real services)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedOriginalProject(db,ctx,"review-project",NOW);
+    await db.insert(originalReviews).values({id:"review-1",userId:ctx.userId,accountId:ctx.accountId,projectId:"review-project",reviewType:"project",status:"completed",periodStart:NOW,periodEnd:NOW,createdAt:NOW,completedAt:NOW});
   });
 
   it("reflows a Learning into a real suggestion the 校准中心 reads + adopts (rubric bumped)", async () => {
@@ -145,3 +149,7 @@ describe("Learning→校准 飞轮回流 (cross-module, real services)", () => {
     ).rejects.toThrowError(); // ConflictError — no rubric to bump
   });
 });
+
+async function seedOriginalProject(db:Db,owner:RequestContext,id:string,stamp:string){
+ await db.insert(originalProjects).values({id,userId:owner.userId,accountId:owner.accountId??null,groupId:owner.groupId??null,title:'原用例真实父项目',creationMode:'free',status:'active',currentStage:'review',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
+}

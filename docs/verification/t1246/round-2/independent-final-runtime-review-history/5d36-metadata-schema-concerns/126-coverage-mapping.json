@@ -1,0 +1,3118 @@
+{
+  "schemaVersion": 3,
+  "task": "T-1246",
+  "boundary": "仅实际--list库存，不代签body/官方调用/App",
+  "logicalJourneys": [
+    {
+      "logicalJourneyId": "INT-ROUTES",
+      "generationKey": null,
+      "bodyIds": [
+        "dda2a25d57b38a20de23-669f1a459a6eaf45de06",
+        "dda2a25d57b38a20de23-cb3ac9b857abe8d8bed9",
+        "dda2a25d57b38a20de23-894b8fabb30aa7c6b2f2",
+        "dda2a25d57b38a20de23-d933b857d2026747eeeb",
+        "dda2a25d57b38a20de23-e82709742ccb8c3e3ba5",
+        "dda2a25d57b38a20de23-dda261266a27a9ff47a1",
+        "dda2a25d57b38a20de23-22d75d60dc9ff807240d",
+        "dda2a25d57b38a20de23-c105a231a429bdccaa7a",
+        "dda2a25d57b38a20de23-10bd0abbe5e6fe3e4b2d",
+        "dda2a25d57b38a20de23-1a2dd7bb840303271a78",
+        "dda2a25d57b38a20de23-d39f7dbbb932e3fe7262",
+        "dda2a25d57b38a20de23-42b0b06780daf916c523",
+        "dda2a25d57b38a20de23-7b8b850e955a09ba0dd3",
+        "dda2a25d57b38a20de23-ea0966f520756cb50582",
+        "dda2a25d57b38a20de23-647259b5ac4c2e95058b",
+        "dda2a25d57b38a20de23-3f5b90d678b5ac42a566",
+        "dda2a25d57b38a20de23-6b8e650e46ce72d48c7c",
+        "dda2a25d57b38a20de23-4c1ae110953d95756a84",
+        "dda2a25d57b38a20de23-0d3249ad3616ee721481",
+        "dda2a25d57b38a20de23-fb79599544a76cc34cb6",
+        "dda2a25d57b38a20de23-a712f5f6eb29957e2b51",
+        "dda2a25d57b38a20de23-5feb7c46b95835a17088",
+        "dda2a25d57b38a20de23-59a01d0cd2a58e8ab486",
+        "dda2a25d57b38a20de23-48eb8aee1e0c6174b924",
+        "dda2a25d57b38a20de23-b9b28871f9e0c9b99ad6",
+        "dda2a25d57b38a20de23-d7210b9f2048f940a61b",
+        "dda2a25d57b38a20de23-b0e23f2ad476690d106e",
+        "dda2a25d57b38a20de23-3ef55514d875886c2c7c",
+        "dda2a25d57b38a20de23-25000ec7f4814268510a",
+        "dda2a25d57b38a20de23-48b0e0a9590771e40afc",
+        "dda2a25d57b38a20de23-7b1ec602dc1a5666667e",
+        "dda2a25d57b38a20de23-b2ddcdf44afa299fe67e",
+        "dda2a25d57b38a20de23-40b8d87c4ae452a3285a",
+        "dda2a25d57b38a20de23-be9e2619ad523df9eb9d",
+        "dda2a25d57b38a20de23-907ef06cdcf37bc7bce1",
+        "dda2a25d57b38a20de23-e7c7c80d603d7abd7b68",
+        "dda2a25d57b38a20de23-5a8881e79a8c00dfb792",
+        "dda2a25d57b38a20de23-ac076876d33e95a5526e"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-ENGINE",
+      "generationKey": null,
+      "bodyIds": [
+        "e001182671dd9993fecb-3637099e0f1e4900b7a6"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-ENGINE-FAIL",
+      "generationKey": null,
+      "bodyIds": [
+        "e001182671dd9993fecb-5e095f596a4961d4342b"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-PI",
+      "generationKey": null,
+      "bodyIds": [
+        "6adc29cdc7ee7d3ca6f8-03cd49fc58a0c6135931"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-WRITE / wechat.article-draft",
+      "generationKey": "wechat.article-draft",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-b93b40c4bc65c228f58c"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-WRITE / script.draft",
+      "generationKey": "script.draft",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-9c4e533f90181e56064d"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-PLAN / planning.thesis",
+      "generationKey": "planning.thesis",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-27d0725f1d93ee299028"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-PLAN / planning.contract",
+      "generationKey": "planning.contract",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-bdce982856d644c6b56a"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-PLAN / planning.outline",
+      "generationKey": "planning.outline",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-90dc2379410af338c2e6"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-REVIEW / script.review",
+      "generationKey": "script.review",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-a8fb2956458e662d52dd"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-REVIEW / publish.platform_adapt",
+      "generationKey": "publish.platform_adapt",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-06f1064fb0e11afa5e08"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-REVIEW / review.analyze",
+      "generationKey": "review.analyze",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-25eb225277262176c64b"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-POST / graphic.post-text",
+      "generationKey": "graphic.post-text",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-403d5628e0176cd2f5bf"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-POST / wechat.article-text",
+      "generationKey": "wechat.article-text",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-5544f760a4c147acd9f9"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-POST / publication.text",
+      "generationKey": "publication.text",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-72c5f3bb60f90089fb38"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MOMENTS / moments text",
+      "generationKey": "moments text",
+      "bodyIds": [
+        "05d77e355062c9acafd9-d58640f10a2f60da70b0"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MOMENTS / work review",
+      "generationKey": "work review",
+      "bodyIds": [
+        "05d77e355062c9acafd9-f776c2d01b40161ebc6d"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / topic.generate",
+      "generationKey": "topic.generate",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-22c77d28084058c3a84a"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / topic.enrich",
+      "generationKey": "topic.enrich",
+      "bodyIds": [
+        "05d77e355062c9acafd9-8045a2729dc0a75e9579"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / topic.preference",
+      "generationKey": "topic.preference",
+      "bodyIds": [
+        "05d77e355062c9acafd9-9ba4c291fcdc46f3f9ea"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / positioning.generate",
+      "generationKey": "positioning.generate",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-7d464070f95eff64a792"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / calibration.diagnose",
+      "generationKey": "calibration.diagnose",
+      "bodyIds": [
+        "05d77e355062c9acafd9-5c8aef06730f08c381c9"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / calibration.score",
+      "generationKey": "calibration.score",
+      "bodyIds": [
+        "05d77e355062c9acafd9-6731e8dbaabbfcd64955"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-RESEARCH / research.gather_material",
+      "generationKey": "research.gather_material",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-75115401c02d3b224193"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-RESEARCH / script.source_similarity",
+      "generationKey": "script.source_similarity",
+      "bodyIds": [
+        "05d77e355062c9acafd9-a00cac03ebb1024a2e50"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-RESEARCH / copilot.assist",
+      "generationKey": "copilot.assist",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-53cc87a6fe13ec10e2fd"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MEDIA / asset.classify",
+      "generationKey": "asset.classify",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-38b9ae86dc8c8c4d65d6"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MEDIA / material.extract",
+      "generationKey": "material.extract",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-0493ed36b8eeaa984bbf"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MEDIA / material.match",
+      "generationKey": "material.match",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-59cc15c9ed27120c90ce"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-VIDEO / video.decisions",
+      "generationKey": "video.decisions",
+      "bodyIds": [
+        "05d77e355062c9acafd9-ef311209e54080db0e81"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-VIDEO / reconstruct.project",
+      "generationKey": "reconstruct.project",
+      "bodyIds": [
+        "05d77e355062c9acafd9-c75bd3b6c3dcb9056878"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-KNOWLEDGE-AI / knowledge.classify",
+      "generationKey": "knowledge.classify",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-bd34accceff8dcba505b"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-KNOWLEDGE-AI / knowledge.distill",
+      "generationKey": "knowledge.distill",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-8b46572073ae35e0fe03"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-KNOWLEDGE-AI / knowledge.relate",
+      "generationKey": "knowledge.relate",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-3ea1620500e5ff057dcc"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-KNOWLEDGE-AI / comment.qa-sift",
+      "generationKey": "comment.qa-sift",
+      "bodyIds": [
+        "05d77e355062c9acafd9-36e8a43081f3a857bccb"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-INTELLIGENCE / intelligence generation",
+      "generationKey": "intelligence generation",
+      "bodyIds": [
+        "05d77e355062c9acafd9-e83613105c8096c04a54"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-INTELLIGENCE / intelligence.rewrite-text",
+      "generationKey": "intelligence.rewrite-text",
+      "bodyIds": [
+        "05d77e355062c9acafd9-6f84eef7412964c69ee3"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-BACKGROUND / scheduled.topic.daily",
+      "generationKey": "scheduled.topic.daily",
+      "bodyIds": [
+        "05d77e355062c9acafd9-16f222e42884ec70e735"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-BACKGROUND / scheduled flywheel",
+      "generationKey": "scheduled flywheel",
+      "bodyIds": [
+        "05d77e355062c9acafd9-3623600aebf91bf1e2c5"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-TRANSCRIBE / transcribe postprocess",
+      "generationKey": "transcribe postprocess",
+      "bodyIds": [
+        "05d77e355062c9acafd9-d2966357d1d5961202eb"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-ASSET / asset.generate image",
+      "generationKey": "asset.generate image",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-349ef2dbb67c6ce37c0b"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-REF / asset.generate image_to_image",
+      "generationKey": "asset.generate image_to_image",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-29fc65060b4d8048dac3"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-COVER / cover.generate",
+      "generationKey": "cover.generate",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-b229a8b918a82eca3c8e"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-CARDS / graphic.card.generate",
+      "generationKey": "graphic.card.generate",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-954f942420040b6120b7"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-CARDS / 文章配图",
+      "generationKey": "文章配图",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-7d11d5d557a815f75f0e"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-CARDS / 系列图",
+      "generationKey": "系列图",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-9bf942eb135a067d442a"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-VISION / asset.classify vision",
+      "generationKey": "asset.classify vision",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-edd45a1de13f3723512b"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-VISION / video.visual-review",
+      "generationKey": "video.visual-review",
+      "bodyIds": [
+        "05d77e355062c9acafd9-c25068cac32173a68f39"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / chat.run Codex",
+      "generationKey": "chat.run Codex",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-a7df5c2dd48c38048741"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / worker.structured-node/proposal",
+      "generationKey": "worker.structured-node/proposal",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-e7a901f0494e6c053ffd"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / worker.script-hooks/proposal",
+      "generationKey": "worker.script-hooks/proposal",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-10bbb14ee793c64829ca"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / worker.script-draft/committed",
+      "generationKey": "worker.script-draft/committed",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-e16ae0c72044c5c1d54c"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / chat image generation",
+      "generationKey": "chat image generation",
+      "bodyIds": [
+        "142fc0dc372ec88486cf-186a9b832504a83cc176"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-FREEZE",
+      "generationKey": null,
+      "bodyIds": [
+        "e001182671dd9993fecb-cb104a57b43b6fccded7"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-RECOVERY",
+      "generationKey": null,
+      "bodyIds": [
+        "6adc29cdc7ee7d3ca6f8-11a062a00ffe564d1497",
+        "6adc29cdc7ee7d3ca6f8-4fc11bda4d2def802a41",
+        "6adc29cdc7ee7d3ca6f8-5875b0f229f0321617a7",
+        "6adc29cdc7ee7d3ca6f8-ed1a9737e393378c75d4",
+        "6adc29cdc7ee7d3ca6f8-61bc06a0b878ea3c686d",
+        "6adc29cdc7ee7d3ca6f8-9fe9fc4d298150310401",
+        "6adc29cdc7ee7d3ca6f8-d9322b2adc318963712a"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-GROUP",
+      "generationKey": null,
+      "bodyIds": [
+        "e001182671dd9993fecb-8132acfddef6fbce8959"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-KNOWLEDGE",
+      "generationKey": null,
+      "bodyIds": [
+        "e001182671dd9993fecb-6702291df6383def59b6"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-T1245",
+      "generationKey": null,
+      "bodyIds": [
+        "e001182671dd9993fecb-9e7a97b827ba913f80da"
+      ]
+    },
+    {
+      "logicalJourneyId": "INT-NAV",
+      "generationKey": null,
+      "bodyIds": [
+        "e001182671dd9993fecb-e982f6f95caee63160fe"
+      ]
+    }
+  ],
+  "generationKeys": [
+    {
+      "logicalJourneyId": "INT-TEXT-WRITE / wechat.article-draft",
+      "family": "INT-TEXT-WRITE",
+      "generationKey": "wechat.article-draft",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-b93b40c4bc65c228f58c",
+        "title": "INT-TEXT-WRITE / wechat.article-draft：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 71,
+        "recipe": " {family:'INT-TEXT-WRITE',key:'wechat.article-draft',path:j=>projectPath(j,'article'),run:async j=>{const {output}=await article(j);await j.noIndependentModels();await j.nativeAvailable();await j.responsive(projectPath(j,'article'),'before');const r=await j.op('articles.candidates.generate',{params:{outputId:output.id},body:{clientRequestId:key()}});const t=await j.op('ai.tasks.get',{params:{taskId:r.taskId}});j.tasks.push({created:t});await j.waitTask(t);const candidate=await j.op('articles.candidates.get',{params:{candidateId:r.candidateId}});expect(candidate.outputId).toBe(output.id);expect(candidate.proposedSections.length).toBeGreaterThan(0);await j.page.reload();await j.shot('article-candidate');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-WRITE / script.draft",
+      "family": "INT-TEXT-WRITE",
+      "generationKey": "script.draft",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-9c4e533f90181e56064d",
+        "title": "INT-TEXT-WRITE / script.draft：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 70,
+        "recipe": " {family:'INT-TEXT-WRITE',key:'script.draft',path:j=>projectPath(j,'script'),run:j=>direct(j,'script.draft',{projectId:j.project.id,artifactId:j.script.id,topic:'整理桌面',instruction:'基于明确提供的原文写一份简短口播稿，不杜撰数据。'},'script')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-PLAN / planning.thesis",
+      "family": "INT-TEXT-PLAN",
+      "generationKey": "planning.thesis",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-27d0725f1d93ee299028",
+        "title": "INT-TEXT-PLAN / planning.thesis：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 67,
+        "recipe": " {family:'INT-TEXT-PLAN',key:'planning.thesis',path:j=>projectPath(j,'planning'),run:j=>direct(j,'planning.thesis',{projectId:j.project.id,topic:'如何让工作桌面更整洁'},'planning')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-PLAN / planning.contract",
+      "family": "INT-TEXT-PLAN",
+      "generationKey": "planning.contract",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-bdce982856d644c6b56a",
+        "title": "INT-TEXT-PLAN / planning.contract：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 68,
+        "recipe": " {family:'INT-TEXT-PLAN',key:'planning.contract',path:j=>projectPath(j,'planning'),run:async j=>{const a=await artifact(j,'content_contract','planning');await direct(j,'planning.contract',{projectId:j.project.id,artifactId:a.id,topic:'整理桌面'},'planning');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-PLAN / planning.outline",
+      "family": "INT-TEXT-PLAN",
+      "generationKey": "planning.outline",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-90dc2379410af338c2e6",
+        "title": "INT-TEXT-PLAN / planning.outline：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 69,
+        "recipe": " {family:'INT-TEXT-PLAN',key:'planning.outline',path:j=>projectPath(j,'planning'),run:async j=>{const a=await artifact(j,'content_outline','planning');await direct(j,'planning.outline',{projectId:j.project.id,artifactId:a.id,topic:'整理桌面'},'planning');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-REVIEW / script.review",
+      "family": "INT-TEXT-REVIEW",
+      "generationKey": "script.review",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-a8fb2956458e662d52dd",
+        "title": "INT-TEXT-REVIEW / script.review：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 72,
+        "recipe": " {family:'INT-TEXT-REVIEW',key:'script.review',path:j=>projectPath(j,'script'),run:j=>direct(j,'script.review',{projectId:j.project.id,artifactId:j.script.id,artifactVersion:j.scriptVersion.versionNumber},'script')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-REVIEW / publish.platform_adapt",
+      "family": "INT-TEXT-REVIEW",
+      "generationKey": "publish.platform_adapt",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-06f1064fb0e11afa5e08",
+        "title": "INT-TEXT-REVIEW / publish.platform_adapt：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 73,
+        "recipe": " {family:'INT-TEXT-REVIEW',key:'publish.platform_adapt',path:j=>projectPath(j,'publishing'),run:j=>direct(j,'publish.platform_adapt',{projectId:j.project.id,outputId:j.output.id,scriptText:TEXT,platforms:['xiaohongshu']},'publishing')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-REVIEW / review.analyze",
+      "family": "INT-TEXT-REVIEW",
+      "generationKey": "review.analyze",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-25eb225277262176c64b",
+        "title": "INT-TEXT-REVIEW / review.analyze：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 74,
+        "recipe": " {family:'INT-TEXT-REVIEW',key:'review.analyze',path:j=>projectPath(j,'review'),run:j=>direct(j,'review.analyze',{projectId:j.project.id,topic:'只从原稿寻找可改进之处，不杜撰播放量'},'review')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-POST / graphic.post-text",
+      "family": "INT-TEXT-POST",
+      "generationKey": "graphic.post-text",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-403d5628e0176cd2f5bf",
+        "title": "INT-TEXT-POST / graphic.post-text：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 75,
+        "recipe": " {family:'INT-TEXT-POST',key:'graphic.post-text',path:j=>projectPath(j,'image'),run:async j=>{const output=await graphic(j);await creative(j,output.id,'title',projectPath(j,'image'));}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-POST / wechat.article-text",
+      "family": "INT-TEXT-POST",
+      "generationKey": "wechat.article-text",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-5544f760a4c147acd9f9",
+        "title": "INT-TEXT-POST / wechat.article-text：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 76,
+        "recipe": " {family:'INT-TEXT-POST',key:'wechat.article-text',path:j=>projectPath(j,'article'),run:async j=>{const {output}=await article(j);await creative(j,output.id,'title',projectPath(j,'article'));}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-POST / publication.text",
+      "family": "INT-TEXT-POST",
+      "generationKey": "publication.text",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-72c5f3bb60f90089fb38",
+        "title": "INT-TEXT-POST / publication.text：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 77,
+        "recipe": " {family:'INT-TEXT-POST',key:'publication.text',path:j=>projectPath(j,'publishing'),run:j=>creative(j,j.output.id,'publish_title',projectPath(j,'publishing'),{targetPlatform:'xiaohongshu'})},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MOMENTS / moments text",
+      "family": "INT-TEXT-MOMENTS",
+      "generationKey": "moments text",
+      "body": {
+        "testId": "05d77e355062c9acafd9-d58640f10a2f60da70b0",
+        "title": "INT-TEXT-MOMENTS / moments text：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 31,
+        "recipe": " {family:'INT-TEXT-MOMENTS',key:'moments text',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const created=await j.op('moments.create',{body:{projectId:j.project.id,clientRequestId:key(),document:{schemaVersion:1,text:TEXT,imageUses:[],sourceRefs:[]}}});const m=created.moments;const selected=await j.op('work.sources.select',{body:{projectId:j.project.id,pick:{kind:'moments_version',momentsId:m.momentsId,versionId:m.currentVersionId,selection:{mode:'whole'}}}});await j.responsive(`${path(j,'moments')}/${m.momentsId}`,'moments-before');const panel=j.page.getByRole('region',{name:'朋友圈生成候选'});await panel.getByRole('button',{name:'使用当前保存稿作为来源',exact:true}).click();const generate=panel.getByRole('button',{name:'生成朋友圈候选',exact:true});await expect(generate).toBeEnabled();const c=await j.uiOp('moments.candidates.generate',()=>generate.click());expect(c.momentsId).toBe(m.momentsId);expect(c.taskId).toBeTruthy();await attached(j,c.taskId);const read=await j.op('moments.candidates.get',{params:{candidateId:c.candidateId}});expect(read.value).not.toBeNull();expect((await j.op('moments.get',{params:{momentsId:m.momentsId}})).current.text).toBe(TEXT);await expect(panel.getByRole('textbox',{name:'朋友圈短文候选',exact:true})).toHaveValue(read.value);await j.shot('same-moments-candidate-ui');const adopt=panel.getByRole('button',{name:'采纳候选并保存新版本',exact:true});await expect(adopt).toBeEnabled();await j.uiOp('moments.candidates.adopt',()=>adopt.click());expect((await j.op('moments.get',{params:{momentsId:m.momentsId}})).current.text).toBe(read.value);await j.page.reload();await j.shot('moments-original-adoption');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MOMENTS / work review",
+      "family": "INT-TEXT-MOMENTS",
+      "generationKey": "work review",
+      "body": {
+        "testId": "05d77e355062c9acafd9-f776c2d01b40161ebc6d",
+        "title": "INT-TEXT-MOMENTS / work review：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 32,
+        "recipe": " {family:'INT-TEXT-MOMENTS',key:'work review',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();let c=await composition(j);const m=(await j.op('moments.create',{body:{projectId:j.project.id,clientRequestId:key(),document:{schemaVersion:1,text:TEXT,imageUses:[],sourceRefs:[]}}})).moments;c=(await j.op('workCompositions.members.bind',{params:{compositionId:c.compositionId},body:{expectedRevision:c.currentRevision,clientRequestId:key(),member:{kind:'moments',momentsId:m.momentsId}}})).composition;await j.responsive(path(j,'work'),'review-before');const report=await j.op('workReviews.create',{body:{clientRequestId:key(),scope:{kind:'member',compositionId:c.compositionId,member:{kind:'moments',momentsId:m.momentsId}}}});expect(report.taskId).toBeTruthy();await attached(j,report.taskId);const saved=await j.op('workReviews.get',{params:{reportId:report.reportId}});expect(saved.status).toBe('succeeded');expect(saved.settledCallId).toBeTruthy();expect(saved.outcome).not.toBeNull();await j.page.reload();await j.shot('real-work-review');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / topic.generate",
+      "family": "INT-TEXT-DISCOVERY",
+      "generationKey": "topic.generate",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-22c77d28084058c3a84a",
+        "title": "INT-TEXT-DISCOVERY / topic.generate：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 79,
+        "recipe": " {family:'INT-TEXT-DISCOVERY',key:'topic.generate',path:()=>'/topics',run:async j=>{await j.op('knowledge.create',{body:{title:'用户明确知识依据',knowledgeType:'note',content:TEXT}});await chat(j,'请只基于我刚保存的三分类桌面整理知识，通过 topic.generate 工具按 knowledge 依据生成可采纳选题候选，不杜撰外部数据。','topic.generate',{path:'/topics',testId:'topics-generate-knowledge'});}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / topic.enrich",
+      "family": "INT-TEXT-DISCOVERY",
+      "generationKey": "topic.enrich",
+      "body": {
+        "testId": "05d77e355062c9acafd9-8045a2729dc0a75e9579",
+        "title": "INT-TEXT-DISCOVERY / topic.enrich：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 27,
+        "recipe": " {family:'INT-TEXT-DISCOVERY',key:'topic.enrich',run:async j=>{const c=await j.op('candidates.create',{body:{title:'整理桌面的三分类法',angle:'用户明确提出的普通方法',source:'idea'}});await j.generate('topic.enrich',{candidateId:c.id},'/topics');await j.op('candidates.get',{params:{candidateId:c.id}});}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / topic.preference",
+      "family": "INT-TEXT-DISCOVERY",
+      "generationKey": "topic.preference",
+      "body": {
+        "testId": "05d77e355062c9acafd9-9ba4c291fcdc46f3f9ea",
+        "title": "INT-TEXT-DISCOVERY / topic.preference：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 28,
+        "recipe": " {family:'INT-TEXT-DISCOVERY',key:'topic.preference',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();await j.responsive('/topics','preference-before');const c=await j.op('candidates.create',{body:{title:'重复的整理建议',source:'idea'}});await j.op('candidates.patch',{params:{candidateId:c.id},body:{status:'dropped',dropReason:'我明确希望多给可以在十分钟内操作的整理方法，少泛泛而谈。'}});let tasks:any[]=[];await expect.poll(async()=>{tasks=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,taskType:'topic.preference'}});return tasks.length;},{timeout:OBSERVE,intervals:[500,1000,2000]}).toBeGreaterThan(0);j.tasks.push({created:tasks[0]});await j.waitTask(tasks[0]);await j.page.reload();await j.shot('preference-real-task');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / positioning.generate",
+      "family": "INT-TEXT-DISCOVERY",
+      "generationKey": "positioning.generate",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-7d464070f95eff64a792",
+        "title": "INT-TEXT-DISCOVERY / positioning.generate：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 78,
+        "recipe": " {family:'INT-TEXT-DISCOVERY',key:'positioning.generate',path:()=>'/positioning',run:j=>chat(j,'我是一名整理收纳经验分享者，用户是希望整理自己桌面的普通人。只基于我明确提供的资料。请立即通过 positioning.generate 给一版可采纳定位候选，不增加调研前置。','positioning.generate',{path:'/positioning',testId:'positioning-open-copilot'})},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / calibration.diagnose",
+      "family": "INT-TEXT-DISCOVERY",
+      "generationKey": "calibration.diagnose",
+      "body": {
+        "testId": "05d77e355062c9acafd9-5c8aef06730f08c381c9",
+        "title": "INT-TEXT-DISCOVERY / calibration.diagnose：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 29,
+        "recipe": " {family:'INT-TEXT-DISCOVERY',key:'calibration.diagnose',run:async j=>{await j.op('calibration.rubrics.create',{body:{name:'测试用户明确维度',dimensions:[{key:'altruism',label:'方法是否便于操作',weight:1}]}});await j.generate('calibration.diagnose',{subjectType:'content_output',subjectId:j.output.id},path(j,'review'));}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-DISCOVERY / calibration.score",
+      "family": "INT-TEXT-DISCOVERY",
+      "generationKey": "calibration.score",
+      "body": {
+        "testId": "05d77e355062c9acafd9-6731e8dbaabbfcd64955",
+        "title": "INT-TEXT-DISCOVERY / calibration.score：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 30,
+        "recipe": " {family:'INT-TEXT-DISCOVERY',key:'calibration.score',run:async j=>{const rubric=await j.op('calibration.rubrics.create',{body:{name:'测试用户明确维度',dimensions:[{key:'altruism',label:'方法是否便于操作',weight:1}]}});const prediction=await j.op('calibration.predictions.create',{body:{subjectType:'content_output',subjectId:j.output.id,rubricVersionId:rubric.currentVersionId,predictedMetrics:{},predictedConversion:{dimensions:[{key:'altruism',score:3,reason:'测试用户手工预测',suggestion:''}]},confidence:'low'}});await j.op('calibration.predictions.lock',{params:{predictionId:prediction.id}});await j.generate('calibration.score',{predictionId:prediction.id},path(j,'review'));}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-RESEARCH / research.gather_material",
+      "family": "INT-TEXT-RESEARCH",
+      "generationKey": "research.gather_material",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-75115401c02d3b224193",
+        "title": "INT-TEXT-RESEARCH / research.gather_material：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 80,
+        "recipe": " {family:'INT-TEXT-RESEARCH',key:'research.gather_material',path:j=>projectPath(j,'research'),run:j=>direct(j,'research.gather_material',{projectId:j.project.id,topic:'整理桌面',angle:'用户已给出的三分类方法'},'research')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-RESEARCH / script.source_similarity",
+      "family": "INT-TEXT-RESEARCH",
+      "generationKey": "script.source_similarity",
+      "body": {
+        "testId": "05d77e355062c9acafd9-a00cac03ebb1024a2e50",
+        "title": "INT-TEXT-RESEARCH / script.source_similarity：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 36,
+        "recipe": " {family:'INT-TEXT-RESEARCH',key:'script.source_similarity',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const ref=await sourceReference(j);const candidate=await j.op('projects.scripts.generateCandidate',{params:{projectId:j.project.id},body:{referenceIds:[ref.id],strategy:'仅依据用户材料创作新表达，勿连续照抄来源',idempotencyKey:key()}});await j.waitExecution(candidate);const editedText='准备一张纸，写下今天正在推进的工作。把手边工具集中到容易拿取的位置，完成一件事再收回原处。将这个小步骤重复几天，记录找工具所花的实际时间。没有测量记录时不写提升比例，也不引用外部统计。';const acceptInput={params:{projectId:j.project.id,taskId:candidate.id},body:{editedText,idempotencyKey:key()}};let response;try{response=await j.raw('projects.scripts.acceptCandidate',acceptInput);}catch(e){j.events.push({kind:'original-accept-http-observation-ended',input:acceptInput,error:String(e),noNewTaskSubmission:true});}const tasks=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,projectId:j.project.id,taskType:'script.source_similarity'}});expect(tasks).toHaveLength(1);j.track(tasks[0]);expect(tasks[0].inputData.sourceTaskId).toBe(candidate.id);await j.waitTask(tasks[0]);if(!response?.response.ok())response=await j.raw('projects.scripts.acceptCandidate',acceptInput);expect(response.response.ok(),JSON.stringify(response.envelope.error)).toBe(true);expect(response.envelope.data.referenceIds).toContain(ref.id);j.receipts.push({id:'source-similarity-public-accept',candidateTaskId:candidate.id,similarityTaskId:tasks[0].id,referenceId:ref.id,artifactVersionId:response.envelope.data.artifactVersionId});}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-RESEARCH / copilot.assist",
+      "family": "INT-TEXT-RESEARCH",
+      "generationKey": "copilot.assist",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-53cc87a6fe13ec10e2fd",
+        "title": "INT-TEXT-RESEARCH / copilot.assist：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 81,
+        "recipe": " {family:'INT-TEXT-RESEARCH',key:'copilot.assist',path:j=>projectPath(j,'work'),run:j=>chat(j,'请阅读当前项目已有文稿，简单说明三分类的内容，不调用外部网络。')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MEDIA / asset.classify",
+      "family": "INT-TEXT-MEDIA",
+      "generationKey": "asset.classify",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-38b9ae86dc8c8c4d65d6",
+        "title": "INT-TEXT-MEDIA / asset.classify：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 82,
+        "recipe": " {family:'INT-TEXT-MEDIA',key:'asset.classify',path:()=>'/assets',run:async j=>{const a=await upload(j);await j.generate('asset.classify',{assetId:a.id},'/assets');const saved=await j.op('assets.get',{params:{assetId:a.id}});expect(saved.id).toBe(a.id);}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MEDIA / material.extract",
+      "family": "INT-TEXT-MEDIA",
+      "generationKey": "material.extract",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-0493ed36b8eeaa984bbf",
+        "title": "INT-TEXT-MEDIA / material.extract：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 83,
+        "recipe": " {family:'INT-TEXT-MEDIA',key:'material.extract',path:()=>'/assets',run:async j=>{const a=await upload(j,'document');await j.generate('material.extract',{assetId:a.id},'/assets');await j.op('assets.get',{params:{assetId:a.id}});}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-MEDIA / material.match",
+      "family": "INT-TEXT-MEDIA",
+      "generationKey": "material.match",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-59cc15c9ed27120c90ce",
+        "title": "INT-TEXT-MEDIA / material.match：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 84,
+        "recipe": " {family:'INT-TEXT-MEDIA',key:'material.match',path:j=>projectPath(j,'research'),run:async j=>{await upload(j);await direct(j,'material.match',{projectId:j.project.id,outputId:j.output.id,topic:'桌面整理'},'research');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-VIDEO / video.decisions",
+      "family": "INT-TEXT-VIDEO",
+      "generationKey": "video.decisions",
+      "body": {
+        "testId": "05d77e355062c9acafd9-ef311209e54080db0e81",
+        "title": "INT-TEXT-VIDEO / video.decisions：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 33,
+        "recipe": " {family:'INT-TEXT-VIDEO',key:'video.decisions',run:async j=>{await j.generate('video.decisions',{projectId:j.project.id,outputId:j.output.id,srtText:'1\\n00:00:00,000 --> 00:00:04,000\\n先把正在使用的物品放在桌面。\\n\\n2\\n00:00:04,000 --> 00:00:08,000\\n再把需要保留的物品分类。\\n',script:'先把正在使用的物品放在桌面，再把需要保留的物品分类。',orientation:'landscape'},path(j,'production'));}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-VIDEO / reconstruct.project",
+      "family": "INT-TEXT-VIDEO",
+      "generationKey": "reconstruct.project",
+      "body": {
+        "testId": "05d77e355062c9acafd9-c75bd3b6c3dcb9056878",
+        "title": "INT-TEXT-VIDEO / reconstruct.project：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 34,
+        "recipe": " {family:'INT-TEXT-VIDEO',key:'reconstruct.project',run:async j=>{const imported=await j.op('projects.create',{body:{title:'用户明确导入的验收原稿',brief:'这是一份测试用户编写且明确允许使用的原文；不是平台采集或历史发布证据。',source:'imported'}});const output=await j.op('projects.outputs.create',{params:{projectId:imported.id},body:{title:'用户导入口播稿',contentType:'video',clientRequestId:key()}});const a=await j.op('artifacts.create',{params:{projectId:imported.id},body:{title:'原导入文稿',artifactType:'output_script',stage:'script',contentOutputId:output.id}});const v=await j.op('artifacts.versions.create',{params:{artifactId:a.id},body:{contentText:TEXT,changeSummary:'用户明确导入，非采集/ASR',contentData:{transcript:TEXT}}});j.receipts.push({id:'truthful-user-import',projectId:imported.id,artifactId:a.id,versionId:v.id,origin:'user',notPlatformCollection:true});const o=await j.generate('reconstruct.project',{projectId:imported.id},`/projects/${imported.id}/work`);const arts=await j.op('artifacts.list',{params:{projectId:imported.id}});expect(arts.length).toBeGreaterThan(0);const versions=(await Promise.all(arts.map((a:any)=>j.op('artifacts.versions.list',{params:{artifactId:a.id}})))).flat();const reconstruction=o.results.find((x:any)=>x.resultType==='reconstruction');expect(reconstruction).toBeTruthy();const originalArtifact=arts.find((a:any)=>a.id===reconstruction.resultData.artifactId);expect(originalArtifact).toBeTruthy();expect(originalArtifact.origin).toBe('reconstructed');expect(reconstruction.resultData.projectId).toBe(imported.id);expect(versions.some((v:any)=>v.artifactId===originalArtifact.id&&v.createdByType==='ai'&&v.contentText.trim())).toBe(true);j.receipts.push({id:'original-reconstruction-receipt',taskId:o.task.id,result:reconstruction});}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-KNOWLEDGE-AI / knowledge.classify",
+      "family": "INT-TEXT-KNOWLEDGE-AI",
+      "generationKey": "knowledge.classify",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-bd34accceff8dcba505b",
+        "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.classify：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 85,
+        "recipe": " {family:'INT-TEXT-KNOWLEDGE-AI',key:'knowledge.classify',path:()=>'/knowledge',run:j=>j.generate('knowledge.classify',{content:TEXT},'/knowledge').then(()=>{})},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-KNOWLEDGE-AI / knowledge.distill",
+      "family": "INT-TEXT-KNOWLEDGE-AI",
+      "generationKey": "knowledge.distill",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-8b46572073ae35e0fe03",
+        "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.distill：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 86,
+        "recipe": " {family:'INT-TEXT-KNOWLEDGE-AI',key:'knowledge.distill',path:()=>'/knowledge',run:j=>j.generate('knowledge.distill',{content:TEXT},'/knowledge').then(()=>{})},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-KNOWLEDGE-AI / knowledge.relate",
+      "family": "INT-TEXT-KNOWLEDGE-AI",
+      "generationKey": "knowledge.relate",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-3ea1620500e5ff057dcc",
+        "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.relate：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 87,
+        "recipe": " {family:'INT-TEXT-KNOWLEDGE-AI',key:'knowledge.relate',path:()=>'/knowledge',run:async j=>{const rows=[];for(const title of ['整理桌面的方法','每周整理的习惯'])rows.push(await j.op('knowledge.create',{body:{title,content:TEXT,knowledgeType:'note'}}));await j.generate('knowledge.relate',{atoms:rows.map(r=>({id:r.id,knowledgeType:r.knowledgeType,title:r.title,sourceNote:r.sourceNote}))},'/knowledge');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-KNOWLEDGE-AI / comment.qa-sift",
+      "family": "INT-TEXT-KNOWLEDGE-AI",
+      "generationKey": "comment.qa-sift",
+      "body": {
+        "testId": "05d77e355062c9acafd9-36e8a43081f3a857bccb",
+        "title": "INT-TEXT-KNOWLEDGE-AI / comment.qa-sift：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 35,
+        "recipe": " {family:'INT-TEXT-KNOWLEDGE-AI',key:'comment.qa-sift',run:async j=>{const account=await j.op('accounts.create',{body:{platform:'douyin',accountHandle:`用户明确登记-评论资格-${key()}`,idempotencyKey:key()}});await j.useAccount(account.id);const job=await j.op('scheduledJobs.create',{body:{name:'本轮真实评论资格入口',sourceKind:'comments',schedule:'0 10 * * *',target:{accountId:account.id,platform:'douyin'}}});const run=await j.op('scheduledJobs.runNow',{params:{jobId:job.id}});const saved=await finishJob(j,run);const comments=await j.op('audienceSignals.list',{query:{page:1,pageSize:100}});if(!comments.length)throw new Blocked('原公共评论采集实际未产生signal，保原job/run/task；未授权扫码且不伪造评论',{jobId:job.id,runId:saved.id,aiTaskId:run.aiTaskId,status:saved.status,error:saved.error,signals:comments});await j.generate('comment.qa-sift',{comments:comments.map((c:any)=>({signalId:c.id,rawText:c.rawText,likeCount:c.likeCount??null}))},'/knowledge');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-INTELLIGENCE / intelligence generation",
+      "family": "INT-TEXT-INTELLIGENCE",
+      "generationKey": "intelligence generation",
+      "body": {
+        "testId": "05d77e355062c9acafd9-e83613105c8096c04a54",
+        "title": "INT-TEXT-INTELLIGENCE / intelligence generation：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 37,
+        "recipe": " {family:'INT-TEXT-INTELLIGENCE',key:'intelligence generation',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const {detail}=await originalSource(j);const statement=await strategy(j);const queued=await j.op('intelligence.projects.enqueue',{body:{itemIds:[detail.item.id],positioningVersionId:statement.id,idempotencyKey:key()}});expect(queued.tasks).toHaveLength(1);const parent=await j.waitExecution(queued.tasks[0]);expect(parent.kind).toBe('radar_project_upgrade');expect(parent.checkpoint.topicTaskId).toBeTruthy();const child=await j.inspectExecution(parent.checkpoint.topicTaskId);j.track(child);expect(child.kind).toBe('topic_preview');expect(child.status).toBe('succeeded');const original=await j.op('intelligence.items.get',{params:{itemId:detail.item.id}});const transform=original.transforms.find((t:any)=>t.id===parent.checkpoint.transformId);expect(transform.outputSnapshot.adaptedDraft.contentText).toBeTruthy();expect(transform.outputSnapshot.adaptationStrategy).toBeTruthy();j.receipts.push({id:'strategy-backed-parent-child',parentId:parent.id,childId:child.id,transformId:transform.id,positioningVersionId:statement.id,sourceItemId:detail.item.id});await j.responsive('/intelligence','strategy-original-source-ui');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-INTELLIGENCE / intelligence.rewrite-text",
+      "family": "INT-TEXT-INTELLIGENCE",
+      "generationKey": "intelligence.rewrite-text",
+      "body": {
+        "testId": "05d77e355062c9acafd9-6f84eef7412964c69ee3",
+        "title": "INT-TEXT-INTELLIGENCE / intelligence.rewrite-text：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 38,
+        "recipe": " {family:'INT-TEXT-INTELLIGENCE',key:'intelligence.rewrite-text',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const {detail,snapshot}=await originalSource(j);const preview=await j.op('intelligence.transforms.previewTopic',{body:{itemId:detail.item.id,sourceSnapshotId:snapshot.id,idempotencyKey:key()}});await j.waitExecution(preview.task);const read=await j.op('intelligence.items.get',{params:{itemId:detail.item.id}});const saved=read.transforms.find((t:any)=>t.id===preview.transform.id);expect(saved.outputSnapshot.adaptedDraft.contentText).toBeTruthy();j.receipts.push({id:'rewrite-only-original-source',taskId:preview.task.id,transformId:saved.id,itemId:detail.item.id,snapshotId:snapshot.id});await j.responsive('/intelligence','rewrite-original-source-ui');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-BACKGROUND / scheduled.topic.daily",
+      "family": "INT-TEXT-BACKGROUND",
+      "generationKey": "scheduled.topic.daily",
+      "body": {
+        "testId": "05d77e355062c9acafd9-16f222e42884ec70e735",
+        "title": "INT-TEXT-BACKGROUND / scheduled.topic.daily：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 39,
+        "recipe": " {family:'INT-TEXT-BACKGROUND',key:'scheduled.topic.daily',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();await j.op('knowledge.create',{body:{title:'用户实际提供的选题依据',knowledgeType:'note',content:TEXT}});const job=await j.op('scheduledJobs.create',{body:{name:'每天自动选题真实验收',sourceKind:'topic.daily',schedule:'0 10 * * *',prompt:'从已提供知识生成桌面整理的选题',target:{}}});await j.responsive('/automations','daily-before');const row=j.page.locator(`[data-slot=\"automations-list\"] li[data-job-id=\"${job.id}\"]`);await expect(row).toBeVisible();const launch=row.getByTestId('automation-run-now');await expect(launch).toBeEnabled();const run=await j.uiOp('scheduledJobs.runNow',()=>launch.click());expect(run.aiTaskId).toBeTruthy();await attached(j,run.aiTaskId);const saved=await j.op('jobRuns.get',{params:{runId:run.jobRunId}});expect(saved.jobId).toBe(job.id);expect(saved.aiTaskId).toBe(run.aiTaskId);expect(saved.status).toBe('succeeded');await j.page.reload();await j.shot('daily-original-run');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-BACKGROUND / scheduled flywheel",
+      "family": "INT-TEXT-BACKGROUND",
+      "generationKey": "scheduled flywheel",
+      "body": {
+        "testId": "05d77e355062c9acafd9-3623600aebf91bf1e2c5",
+        "title": "INT-TEXT-BACKGROUND / scheduled flywheel：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 40,
+        "recipe": " {family:'INT-TEXT-BACKGROUND',key:'scheduled flywheel',run:async j=>{const account=await j.op('accounts.create',{body:{platform:'douyin',accountHandle:`t1246-${key()}`,idempotencyKey:key()}});await j.useAccount(account.id);const job=await j.op('scheduledJobs.create',{body:{name:'真实飞轮登录前置验收',sourceKind:'self.metrics',schedule:'0 10 * * *',target:{accountId:account.id,platform:'douyin'}}});await j.responsive('/automations','flywheel-before');const run=await j.op('scheduledJobs.runNow',{params:{jobId:job.id}});const task=await j.op('ai.tasks.get',{params:{taskId:run.aiTaskId}});j.tasks.push({created:task});const saved=await finishJob(j,run);if(saved.status!=='succeeded')throw new Blocked('真实flywheel原任务未通过平台资格，保原terminal/error；不代签后续模型',{jobId:job.id,runId:run.jobRunId,taskId:run.aiTaskId,saved});await j.waitTask(task);await j.shot('original-flywheel-finished');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-TEXT-TRANSCRIBE / transcribe postprocess",
+      "family": "INT-TEXT-TRANSCRIBE",
+      "generationKey": "transcribe postprocess",
+      "body": {
+        "testId": "05d77e355062c9acafd9-d2966357d1d5961202eb",
+        "title": "INT-TEXT-TRANSCRIBE / transcribe postprocess：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 41,
+        "recipe": " {family:'INT-TEXT-TRANSCRIBE',key:'transcribe postprocess',run:async j=>{await j.responsive(path(j,'production'),'asr-public-qualification');const attemptId=key();const result=await j.raw('projects.transcribe',{params:{projectId:j.project.id},body:{attemptId}});if(!result.response.ok()){expect(result.response.status()).toBe(400);j.receipts.push({id:'transcribe-real-qualification',projectId:j.project.id,attemptId,taskCreated:false,error:result.envelope.error,notAsrSuccess:true});throw new Blocked('真实projects.transcribe拒绝无Douyin原work锚；本轮未授权新增aweme或扫码，不伪造ASR',{projectId:j.project.id,attemptId,error:result.envelope.error});}const task=await j.op('ai.tasks.get',{params:{taskId:result.envelope.data.taskId}});await j.waitTask(task);expect(task.taskType).toBe('transcribe.douyin');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-ASSET / asset.generate image",
+      "family": "INT-IMAGE-ASSET",
+      "generationKey": "asset.generate image",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-349ef2dbb67c6ce37c0b",
+        "title": "INT-IMAGE-ASSET / asset.generate image：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 88,
+        "recipe": " {family:'INT-IMAGE-ASSET',key:'asset.generate image',path:()=>'/assets',run:j=>j.generate('asset.generate',{kind:'image',mode:'text_to_image',prompt:'白色背景的蓝色文件盒极简插画，无文字。',aspectRatio:'1:1'},'/assets').then(()=>{})},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-REF / asset.generate image_to_image",
+      "family": "INT-IMAGE-REF",
+      "generationKey": "asset.generate image_to_image",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-29fc65060b4d8048dac3",
+        "title": "INT-IMAGE-REF / asset.generate image_to_image：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 89,
+        "recipe": " {family:'INT-IMAGE-REF',key:'asset.generate image_to_image',path:()=>'/assets',run:async j=>{const a=await upload(j);await j.generate('asset.generate',{kind:'image',mode:'image_to_image',referenceAssetId:a.id,referenceFileId:a.currentFileId,prompt:'将输入图片改成蓝色极简图标，无文字。',aspectRatio:'1:1'},'/assets');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-COVER / cover.generate",
+      "family": "INT-IMAGE-COVER",
+      "generationKey": "cover.generate",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-b229a8b918a82eca3c8e",
+        "title": "INT-IMAGE-COVER / cover.generate：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 90,
+        "recipe": " {family:'INT-IMAGE-COVER',key:'cover.generate',path:j=>projectPath(j,'work'),run:j=>j.generate('cover.generate',{projectId:j.project.id,outputId:j.output.id,topic:'整理桌面的三分类方法',aspectRatio:'3:4'},projectPath(j,'work')).then(()=>{})},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-CARDS / graphic.card.generate",
+      "family": "INT-IMAGE-CARDS",
+      "generationKey": "graphic.card.generate",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-954f942420040b6120b7",
+        "title": "INT-IMAGE-CARDS / graphic.card.generate：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 91,
+        "recipe": " {family:'INT-IMAGE-CARDS',key:'graphic.card.generate',path:j=>projectPath(j,'image'),run:async j=>{const o=await graphic(j);await creative(j,o.id,'image_card',projectPath(j,'image'));}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-CARDS / 文章配图",
+      "family": "INT-IMAGE-CARDS",
+      "generationKey": "文章配图",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-7d11d5d557a815f75f0e",
+        "title": "INT-IMAGE-CARDS / 文章配图：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 93,
+        "recipe": " {family:'INT-IMAGE-CARDS',key:'文章配图',path:j=>projectPath(j,'article'),run:async j=>{const {output,current}=await article(j);await j.op('articles.versions.create',{params:{outputId:output.id},body:{expectedCurrentVersionId:current.currentVersionId,clientRequestId:key(),document:{...current.current,title:'整理桌面',sections:[{sectionId:'section-one',order:0,heading:'先分类',headingLevel:2,body:TEXT,sourceRefs:[]}],visualBriefs:[{sectionId:'section-one',brief:'白色桌面上蓝色文件盒的极简插图'}]}}});await creative(j,output.id,'image_card',projectPath(j,'article'),{targetSectionId:'section-one'});}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-IMAGE-CARDS / 系列图",
+      "family": "INT-IMAGE-CARDS",
+      "generationKey": "系列图",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-9bf942eb135a067d442a",
+        "title": "INT-IMAGE-CARDS / 系列图：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 92,
+        "recipe": " {family:'INT-IMAGE-CARDS',key:'系列图',path:j=>projectPath(j,'image'),run:async j=>{const o=await graphic(j,true);await j.noIndependentModels();await j.nativeAvailable(true);await j.responsive(projectPath(j,'image'),'series-before');const generate=j.page.getByRole('button',{name:'生成所选 2 页',exact:true});await expect(generate).toBeEnabled();const bundle=await j.uiOp('creativeResults.bundles.create',()=>generate.click());expect(bundle.outputId).toBe(o.id);expect(bundle.items.length).toBe(2);for(const item of bundle.items){const original=await j.op('creativeResults.get',{params:{resultId:item.resultId}});expect(['card-one','card-two']).toContain(original.targetSectionId);await creative(j,o.id,'image_card',projectPath(j,'image'),{targetSectionId:original.targetSectionId},original);}}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-VISION / asset.classify vision",
+      "family": "INT-VISION",
+      "generationKey": "asset.classify vision",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-edd45a1de13f3723512b",
+        "title": "INT-VISION / asset.classify vision：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 94,
+        "recipe": " {family:'INT-VISION',key:'asset.classify vision',path:()=>'/assets',run:async j=>{const a=await upload(j);await j.generate('asset.classify',{assetId:a.id},'/assets');const saved=await j.op('assets.get',{params:{assetId:a.id}});expect(saved.id).toBe(a.id);}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-VISION / video.visual-review",
+      "family": "INT-VISION",
+      "generationKey": "video.visual-review",
+      "body": {
+        "testId": "05d77e355062c9acafd9-c25068cac32173a68f39",
+        "title": "INT-VISION / video.visual-review：真实前置检查、原公开入口和任务读回",
+        "file": "e2e/integrated-dependent.spec.ts",
+        "line": 44,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-dependent.spec.ts",
+        "line": 42,
+        "recipe": " {family:'INT-VISION',key:'video.visual-review',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const fixture=process.env.CREATOROS_T1246_VIDEO_FIXTURE;if(!fixture)throw Error('driver未交付已审确定性短片fixture，不能当外部BLOCKED');const fs=await import('node:fs/promises');const bytes=await fs.readFile(fixture);const upload=await j.op('assets.uploads.create',{body:{assetType:'video',mimeType:'video/mp4',fileSize:bytes.length,projectId:j.project.id,fileName:'t1246-user-test-video.mp4'}});const url=new URL(upload.uploadUrl,j.page.url());expect(url.origin).toBe(new URL(j.page.url()).origin);const put=await j.page.request.put(url.href,{timeout:REQUEST,data:bytes,headers:{'content-type':'video/mp4'}});expect(put.ok()).toBe(true);const asset=await j.op('assets.uploads.complete',{params:{uploadId:upload.uploadId},body:{name:'用户明确测试短片，非平台采集'}});const task=await j.op('execution.tasks.create',{body:{projectId:j.project.id,contentOutputId:j.output.id,attemptId:key(),spec:{taskType:'video.render',goal:'渲染已提供测试片并执行原可选视觉审查',inputs:[{assetId:asset.id,assetFileId:asset.currentFileId,mountAs:'test-video.mp4'}],params:{props:{meta:{title:'真实渲染验收',brandLabel:''},talkingHead:{file:'test-video.mp4',durationSec:4},scenes:[{id:'s1',label:'TEST',title:'桌面整理',startSec:0,endSec:4,role:'body',cards:[]}],captions:[],broll:[],delivery:{width:1280,height:720,fps:30}}},constraints:{timeoutSec:null,network:'deny',maxOutputMB:512}}}});j.track(task);const done=await observe(()=>j.op('execution.tasks.get',{params:{taskId:task.id}}),t=>['awaiting_confirmation','succeeded','failed','cancelled'].includes(t.status));expect(['awaiting_confirmation','succeeded'],JSON.stringify(done)).toContain(done.status);expect(done.manifest.artifacts.some((a:any)=>a.mimeType==='video/mp4'||a.fileName.endsWith('.mp4'))).toBe(true);const executions=await j.op('execution.tasks.list',{query:{page:1,pageSize:100,kind:'ai_task',ownerId:task.id}});const children=executions.filter((t:any)=>t.kind==='ai_task'&&t.ownerId===task.id&&t.id!==done.executionTaskId);j.receipts.push({id:'real-render-visual-review',parentAiTaskId:task.id,parentExecutionTaskId:done.executionTaskId,children,renderManifest:done.manifest,fixtureSha256:(await import('node:crypto')).createHash('sha256').update(bytes).digest('hex'),surface:'public-backend-API'});if(!children.length)throw Error('成片完成但未发现原视觉子execution，需账本核查不能代签visual key');await j.responsive(path(j,'production'),'real-render-and-review');}},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / chat.run Codex",
+      "family": "INT-CHAT",
+      "generationKey": "chat.run Codex",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-a7df5c2dd48c38048741",
+        "title": "INT-CHAT / chat.run Codex：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 95,
+        "recipe": " {family:'INT-CHAT',key:'chat.run Codex',path:j=>projectPath(j,'work'),run:j=>chat(j,'请读取当前项目已有文稿，简短说明桌面整理三分类。')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / worker.structured-node/proposal",
+      "family": "INT-CHAT",
+      "generationKey": "worker.structured-node/proposal",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-e7a901f0494e6c053ffd",
+        "title": "INT-CHAT / worker.structured-node/proposal：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 96,
+        "recipe": " {family:'INT-CHAT',key:'worker.structured-node/proposal',path:j=>projectPath(j,'work'),run:j=>chat(j,'请通过 knowledge.distill 工具，把我下面的明确原文蒸馏为候选，不自动采纳。\\n'+TEXT,'knowledge.distill')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / worker.script-hooks/proposal",
+      "family": "INT-CHAT",
+      "generationKey": "worker.script-hooks/proposal",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-10bbb14ee793c64829ca",
+        "title": "INT-CHAT / worker.script-hooks/proposal：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 97,
+        "recipe": " {family:'INT-CHAT',key:'worker.script-hooks/proposal',path:j=>projectPath(j,'work'),run:j=>chat(j,'请通过 script.hooks 工具给当前项目生成三个短视频钩子候选，不自动采纳。','script.hooks')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / worker.script-draft/committed",
+      "family": "INT-CHAT",
+      "generationKey": "worker.script-draft/committed",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-e16ae0c72044c5c1d54c",
+        "title": "INT-CHAT / worker.script-draft/committed：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 98,
+        "recipe": " {family:'INT-CHAT',key:'worker.script-draft/committed',path:j=>projectPath(j,'work'),run:j=>chat(j,'我明确授权通过 script.draft 为当前项目已有脚本工件生成新的简短口播稿候选。依据三分类整理桌面方法，不杜撰数据。','script.draft')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    },
+    {
+      "logicalJourneyId": "INT-CHAT / chat image generation",
+      "family": "INT-CHAT",
+      "generationKey": "chat image generation",
+      "body": {
+        "testId": "142fc0dc372ec88486cf-186a9b832504a83cc176",
+        "title": "INT-CHAT / chat image generation：真实公共生成、宽窄截图、原ID读回",
+        "file": "e2e/integrated-native.spec.ts",
+        "line": 101,
+        "profile": "official"
+      },
+      "recipe": {
+        "path": "docs/verification/t1246/round-2/new-v3/source/e2e/integrated-native.spec.ts",
+        "line": 99,
+        "recipe": " {family:'INT-CHAT',key:'chat image generation',path:j=>projectPath(j,'work'),run:j=>chat(j,'请使用本地 Codex 原生生图能力生成一张白底蓝色文件盒极简图片，无文字，不自动采纳。','native.image')},"
+      },
+      "requiredEvidence": [
+        "本case原公开producer资格与task/source ID",
+        "原冻结route/原parent-child call/provider thread-turn",
+        "原候选/采纳/CAS/blob合法回读",
+        "model状态探针不计生成，缺资格保原任务真实状态"
+      ],
+      "status": "static-only-not-executed"
+    }
+  ],
+  "routes": [
+    {
+      "routeKey": "route-01",
+      "pattern": "/projects/new",
+      "source": "frontend/src/app/(creator)/@modal/(.)projects/new/page.tsx",
+      "selector": "[role=\"dialog\"]",
+      "intercepted": true,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-669f1a459a6eaf45de06",
+        "title": "INT-ROUTES / route-01 / /projects/new：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "5b3929fba94622cbefaefccd55378b8f5178f1c228afe5ddbd15aba7b84509b6",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-02",
+      "pattern": "/accounts",
+      "source": "frontend/src/app/(creator)/accounts/page.tsx",
+      "selector": "[data-testid=\"account-manager\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-cb3ac9b857abe8d8bed9",
+        "title": "INT-ROUTES / route-02 / /accounts：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "8a8945731c5e79a0edd17a314f4d47a7dea06a1efdb62a745fd7d3f6faa0b14a",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-03",
+      "pattern": "/accounts/works",
+      "source": "frontend/src/app/(creator)/accounts/works/page.tsx",
+      "selector": "[data-testid=\"platform-work-catalog\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-894b8fabb30aa7c6b2f2",
+        "title": "INT-ROUTES / route-03 / /accounts/works：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "fa750bc21592955476a057496ddaa394c7426da76c3f7135a4f41073b124813b",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-04",
+      "pattern": "/assets",
+      "source": "frontend/src/app/(creator)/assets/page.tsx",
+      "selector": "[data-page=\"assets\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-d933b857d2026747eeeb",
+        "title": "INT-ROUTES / route-04 / /assets：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "761dd56f773f83611b087f4d0e3bba40ed2fcc9594a4adac8d03a81fd78144fd",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-05",
+      "pattern": "/automations",
+      "source": "frontend/src/app/(creator)/automations/page.tsx",
+      "selector": "[data-page=\"automations\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-e82709742ccb8c3e3ba5",
+        "title": "INT-ROUTES / route-05 / /automations：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "1163bb7f58cb87f5e15f6d9e464a04fe77d3f6a563eb3718521e5c0b53c3eaa0",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-06",
+      "pattern": "/calendar",
+      "source": "frontend/src/app/(creator)/calendar/page.tsx",
+      "selector": "[data-page=\"publishing-center\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-dda261266a27a9ff47a1",
+        "title": "INT-ROUTES / route-06 / /calendar：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "c93fb58c63f422f72fe2aca41b9010670edc2985309a42652299656830cd0966",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-07",
+      "pattern": "/canvases/[canvasId]",
+      "source": "frontend/src/app/(creator)/canvases/[canvasId]/page.tsx",
+      "selector": "[data-testid=\"infinite-canvas\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-22d75d60dc9ff807240d",
+        "title": "INT-ROUTES / route-07 / /canvases/[canvasId]：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "27e1389b739f5224c565eed50fc60c5d7f1dbeccf1bb2378d46e8d840d081b80",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-08",
+      "pattern": "/canvases",
+      "source": "frontend/src/app/(creator)/canvases/page.tsx",
+      "selector": "h1",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-c105a231a429bdccaa7a",
+        "title": "INT-ROUTES / route-08 / /canvases：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "747af486a350c661413f3d31f16c9486e25e0888cafade5dafdd852a45200c91",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-09",
+      "pattern": "/daily-report",
+      "source": "frontend/src/app/(creator)/daily-report/page.tsx",
+      "selector": "[data-page=\"daily-report\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-10bd0abbe5e6fe3e4b2d",
+        "title": "INT-ROUTES / route-09 / /daily-report：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "67c65940bacfc5c64aab20578fb8376bae129581b4d989bc35dfd454157b1770",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-10",
+      "pattern": "/experience",
+      "source": "frontend/src/app/(creator)/experience/page.tsx",
+      "selector": "[data-page=\"knowledge-library\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-1a2dd7bb840303271a78",
+        "title": "INT-ROUTES / route-10 / /experience：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "34f60b67874fd5730358af1184fe5cf24354d6e0561b94b1d5bef986a8bf06ab",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-11",
+      "pattern": "/intelligence",
+      "source": "frontend/src/app/(creator)/intelligence/page.tsx",
+      "selector": "[data-testid=\"intelligence-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-d39f7dbbb932e3fe7262",
+        "title": "INT-ROUTES / route-11 / /intelligence：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "414d63aae1d4a59e728ccbaacff07dd8a09194acc39b89fd7f244e3c341d0eae",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-12",
+      "pattern": "/knowledge",
+      "source": "frontend/src/app/(creator)/knowledge/page.tsx",
+      "selector": "[data-page=\"knowledge-library\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-42b0b06780daf916c523",
+        "title": "INT-ROUTES / route-12 / /knowledge：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "da56de7d11a8a5a78fe0bf443fa1f326b927bf6952da361c370118eaf548c526",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-13",
+      "pattern": "/overview",
+      "source": "frontend/src/app/(creator)/overview/page.tsx",
+      "selector": "[data-page=\"group-overview\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-7b8b850e955a09ba0dd3",
+        "title": "INT-ROUTES / route-13 / /overview：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "44f646356c39c6a6a980f55be175ad6dd4856bda1a2c8d0f077daed2ec606785",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-14",
+      "pattern": "/",
+      "source": "frontend/src/app/(creator)/page.tsx",
+      "selector": "[data-page=\"dashboard\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-ea0966f520756cb50582",
+        "title": "INT-ROUTES / route-14 / /：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "2cbf08f1d8f35fbe9ffeb60bd887080a9c85271549625875b1efbf07ac7e009e",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-15",
+      "pattern": "/positioning",
+      "source": "frontend/src/app/(creator)/positioning/page.tsx",
+      "selector": "[data-testid=\"positioning-center\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-647259b5ac4c2e95058b",
+        "title": "INT-ROUTES / route-15 / /positioning：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "99134bc4295ecac53b86f47996883decbb4e1587d992852046bfbbee64f54efa",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-16",
+      "pattern": "/projects/[projectId]/article",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/article/page.tsx",
+      "selector": "[data-page=\"article-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-3f5b90d678b5ac42a566",
+        "title": "INT-ROUTES / route-16 / /projects/[projectId]/article：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "fe0c7533e266990221575b3c756f77871e1f7ee403753adf2f5beec7f89f2cca",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-17",
+      "pattern": "/projects/[projectId]/image",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/image/page.tsx",
+      "selector": "[data-page=\"graphic-post-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-6b8e650e46ce72d48c7c",
+        "title": "INT-ROUTES / route-17 / /projects/[projectId]/image：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "c69d987642de7031572377697c6bdc373eecf330a960911fe0269d7013ba7bf0",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-18",
+      "pattern": "/projects/[projectId]/moments/[momentsId]",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/moments/[momentsId]/page.tsx",
+      "selector": "[data-page=\"moments-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-4c1ae110953d95756a84",
+        "title": "INT-ROUTES / route-18 / /projects/[projectId]/moments/[momentsId]：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "ce840c29b9c83c7d72ac1d7c2a790c82477aaa8f25f0c903b15a155a29435f1f",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-19",
+      "pattern": "/projects/[projectId]/outputs/[outputId]/image",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/outputs/[outputId]/image/page.tsx",
+      "selector": "[data-page=\"graphic-post-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-0d3249ad3616ee721481",
+        "title": "INT-ROUTES / route-19 / /projects/[projectId]/outputs/[outputId]/image：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "95381454d3da1a60768a0ec025d1d6ac3ba1390521f5c5c5d7d26b3a09a4b917",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-20",
+      "pattern": "/projects/[projectId]/outputs/[outputId]/video",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/outputs/[outputId]/video/page.tsx",
+      "selector": "[data-page=\"video-output-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-fb79599544a76cc34cb6",
+        "title": "INT-ROUTES / route-20 / /projects/[projectId]/outputs/[outputId]/video：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "356fb31955e48a9910a05ae6d0ac84775707557c76a4606e1f2ab96401e7cc1e",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-21",
+      "pattern": "/projects/[projectId]",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/page.tsx",
+      "selector": "[data-page=\"draft-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-a712f5f6eb29957e2b51",
+        "title": "INT-ROUTES / route-21 / /projects/[projectId]：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "6988a9023340376282e7fae797a366b0596747337c8e499aec196c1b2fb84027",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-22",
+      "pattern": "/projects/[projectId]/planning",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/planning/page.tsx",
+      "selector": "[data-page=\"draft-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-5feb7c46b95835a17088",
+        "title": "INT-ROUTES / route-22 / /projects/[projectId]/planning：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "c630da0027dfb7ba62adcf5059b045d5362532bd6a9e3d37710f0ba54d390cf2",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-23",
+      "pattern": "/projects/[projectId]/production",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/production/page.tsx",
+      "selector": "[aria-label=\"视频剪辑工作台\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-59a01d0cd2a58e8ab486",
+        "title": "INT-ROUTES / route-23 / /projects/[projectId]/production：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "4b659bbf26f2ee5691f848bd1d59cc658361d7e2bb091b8816477a83ac0e5155",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-24",
+      "pattern": "/projects/[projectId]/publishing",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/publishing/page.tsx",
+      "selector": "[data-page=\"draft-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-48eb8aee1e0c6174b924",
+        "title": "INT-ROUTES / route-24 / /projects/[projectId]/publishing：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "f5c36f9c6cd0884ba41c0f6c3eb6809bb5c2aef36bf95c049033a8ef2f0824cb",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-25",
+      "pattern": "/projects/[projectId]/research",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/research/page.tsx",
+      "selector": "[data-page=\"draft-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-b9b28871f9e0c9b99ad6",
+        "title": "INT-ROUTES / route-25 / /projects/[projectId]/research：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "67db59b6d99b245d3a4d39d7b4d80f934418f91c9170c7d7a4f68597b936d371",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-26",
+      "pattern": "/projects/[projectId]/review",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/review/page.tsx",
+      "selector": "[data-page=\"analytics-review\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-d7210b9f2048f940a61b",
+        "title": "INT-ROUTES / route-26 / /projects/[projectId]/review：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "1d32839d38bf5fb641ec867baae4d4533a816bfb3dc67223b79fd77330de13d5",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-27",
+      "pattern": "/projects/[projectId]/script",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/script/page.tsx",
+      "selector": "[data-page=\"draft-workbench\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-b0e23f2ad476690d106e",
+        "title": "INT-ROUTES / route-27 / /projects/[projectId]/script：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "fee9a926cca15636914312636176847521b9ab594753b22cc6625a75a2eefec0",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-28",
+      "pattern": "/projects/[projectId]/work",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/work/page.tsx",
+      "selector": "[data-page=\"work-composition\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-3ef55514d875886c2c7c",
+        "title": "INT-ROUTES / route-28 / /projects/[projectId]/work：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "107dcc9f0294c00ae6014577c19e7c0530f18dda2a0ced669cf105b57d7b6d11",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-29",
+      "pattern": "/projects/create",
+      "source": "frontend/src/app/(creator)/projects/create/page.tsx",
+      "selector": "[data-page=\"quick-create-work\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-25000ec7f4814268510a",
+        "title": "INT-ROUTES / route-29 / /projects/create：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "d89d9ddc535375f1073b12dc5ec922f1b361d1feea071de8e446af0aa206d6d7",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-30",
+      "pattern": "/projects/new",
+      "source": "frontend/src/app/(creator)/projects/new/page.tsx",
+      "selector": "[role=\"dialog\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-48b0e0a9590771e40afc",
+        "title": "INT-ROUTES / route-30 / /projects/new：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "7602f0524d1ad40fdb11a0f12c9bdd958f44164de9e07f38dc0ee00078f9e1e1",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-31",
+      "pattern": "/projects",
+      "source": "frontend/src/app/(creator)/projects/page.tsx",
+      "selector": "[data-page=\"projects\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-7b1ec602dc1a5666667e",
+        "title": "INT-ROUTES / route-31 / /projects：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "cc49c05c651aec35d227834a4e4894d0bdcc1d8c35db65a8e640e8ac04d57c23",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-32",
+      "pattern": "/publishing",
+      "source": "frontend/src/app/(creator)/publishing/page.tsx",
+      "selector": "[data-page=\"publishing-center\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-b2ddcdf44afa299fe67e",
+        "title": "INT-ROUTES / route-32 / /publishing：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "5e831d9d9843937e3649d6fa379efb8d87331076d99827fd413682ece1ee0813",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-33",
+      "pattern": "/search",
+      "source": "frontend/src/app/(creator)/search/page.tsx",
+      "selector": "[data-page=\"search\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-40b8d87c4ae452a3285a",
+        "title": "INT-ROUTES / route-33 / /search：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "18b9e0c5a4dc68e4e61e172e30dfc8a53fba7534df04ca1c1c43a7deb10ed254",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-34",
+      "pattern": "/settings",
+      "source": "frontend/src/app/(creator)/settings/page.tsx",
+      "selector": "[data-slot=\"settings-dialog\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-be9e2619ad523df9eb9d",
+        "title": "INT-ROUTES / route-34 / /settings：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "ce2c274fdc1f4ff0bb9cfd2bbb45de2c20ff80c99185346cb788632eea3e3b75",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-35",
+      "pattern": "/topics",
+      "source": "frontend/src/app/(creator)/topics/page.tsx",
+      "selector": "[data-testid=\"topics\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-907ef06cdcf37bc7bce1",
+        "title": "INT-ROUTES / route-35 / /topics：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "c5f54175540949b2af2a3d2b7fa3e8ce24d4e83db387d2d8109e8624490ed5c4",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-36",
+      "pattern": "/activate",
+      "source": "frontend/src/app/activate/page.tsx",
+      "selector": "[data-page=\"dashboard\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-e7c7c80d603d7abd7b68",
+        "title": "INT-ROUTES / route-36 / /activate：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "9253a61f3bbe5e901fa878a4c5655c7ecac34fe49808a01849e51f99a5a9ad85",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-37",
+      "pattern": "/login",
+      "source": "frontend/src/app/login/page.tsx",
+      "selector": "[data-page=\"dashboard\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-5a8881e79a8c00dfb792",
+        "title": "INT-ROUTES / route-37 / /login：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "13bd96b5bbdeaf87ae030ef3378f16ccaf960bfa5b470b279dd1849b7e8c9c12",
+      "status": "static-only-not-executed"
+    },
+    {
+      "routeKey": "route-38",
+      "pattern": "/register",
+      "source": "frontend/src/app/register/page.tsx",
+      "selector": "[data-page=\"dashboard\"]",
+      "intercepted": false,
+      "body": {
+        "testId": "dda2a25d57b38a20de23-ac076876d33e95a5526e",
+        "title": "INT-ROUTES / route-38 / /register：真实对象、宽窄、刷新",
+        "file": "e2e/integrated-routes.spec.ts",
+        "line": 296,
+        "profile": "official"
+      },
+      "sourceSha256": "165069b9f6ab55a0af0b6f55e554cdc81adf85c283425ca1df15e95bf3ddcf08",
+      "status": "static-only-not-executed"
+    }
+  ],
+  "additionalInventories": {
+    "settings7": [
+      {
+        "testId": "a07e50f96ad9e8e65df6-9be58945c4439df4544b",
+        "title": "T1246 fresh直达设置 1366px close关闭回首页",
+        "file": "e2e/settings-return.spec.ts",
+        "line": 14,
+        "profile": "official"
+      },
+      {
+        "testId": "a07e50f96ad9e8e65df6-00d14e02417e992626bf",
+        "title": "T1246 fresh直达设置 1366px escape关闭回首页",
+        "file": "e2e/settings-return.spec.ts",
+        "line": 14,
+        "profile": "official"
+      },
+      {
+        "testId": "a07e50f96ad9e8e65df6-d40489df911a3249ff04",
+        "title": "T1246 fresh直达设置 390px close关闭回首页",
+        "file": "e2e/settings-return.spec.ts",
+        "line": 14,
+        "profile": "official"
+      },
+      {
+        "testId": "a07e50f96ad9e8e65df6-bd5ac27565d4372fb913",
+        "title": "T1246 fresh直达设置 390px escape关闭回首页",
+        "file": "e2e/settings-return.spec.ts",
+        "line": 14,
+        "profile": "official"
+      },
+      {
+        "testId": "a07e50f96ad9e8e65df6-00ae2e45b02d09b46741",
+        "title": "T1246 accounts站内来源 1366px 完整query/hash与触发焦点",
+        "file": "e2e/settings-return.spec.ts",
+        "line": 22,
+        "profile": "official"
+      },
+      {
+        "testId": "a07e50f96ad9e8e65df6-24aafdad4a33d691d2d6",
+        "title": "T1246 accounts站内来源 390px 完整query/hash与触发焦点",
+        "file": "e2e/settings-return.spec.ts",
+        "line": 22,
+        "profile": "official"
+      },
+      {
+        "testId": "a07e50f96ad9e8e65df6-f01a7075e89b6baee0fa",
+        "title": "T1246 站内设置保完整来源、原生脏工程与触发焦点；reload失效回首页",
+        "file": "e2e/settings-return.spec.ts",
+        "line": 29,
+        "profile": "official"
+      }
+    ],
+    "t1097ArticleAssisted2": [
+      {
+        "testId": "0d4413e600f2f771c0ac-504fde42b2f4ea7d57d1",
+        "title": "T1097 公共文章编导：明确资料→原候选→保护元信息采纳 1366",
+        "file": "e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+        "line": 22,
+        "profile": "official"
+      },
+      {
+        "testId": "0d4413e600f2f771c0ac-7e644f7cc94d7e79a1f6",
+        "title": "T1097 公共文章编导：明确资料→原候选→保护元信息采纳 390",
+        "file": "e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+        "line": 22,
+        "profile": "official"
+      }
+    ]
+  },
+  "exactBodies": [
+    {
+      "testId": "e001182671dd9993fecb-3637099e0f1e4900b7a6",
+      "title": "INT-ENGINE：免独立API配置、真实偏好切换、刷新及第二窗口同步",
+      "file": "e2e/integrated-browser.spec.ts",
+      "line": 6,
+      "profile": "official"
+    },
+    {
+      "testId": "e001182671dd9993fecb-5e095f596a4961d4342b",
+      "title": "INT-ENGINE-FAIL：真实GET透传等待、PATCH故障保服务原值、能力fixture明确分界",
+      "file": "e2e/integrated-browser.spec.ts",
+      "line": 12,
+      "profile": "official"
+    },
+    {
+      "testId": "e001182671dd9993fecb-8132acfddef6fbce8959",
+      "title": "INT-GROUP：真实A/B组、项目与知识错组404、刷新同ID且B列表诚实空",
+      "file": "e2e/integrated-browser.spec.ts",
+      "line": 22,
+      "profile": "official"
+    },
+    {
+      "testId": "e001182671dd9993fecb-6702291df6383def59b6",
+      "title": "INT-KNOWLEDGE：窄窗真实创建编辑、公开新旧版本、目录移动、原文历史与组隔离",
+      "file": "e2e/integrated-browser.spec.ts",
+      "line": 27,
+      "profile": "official"
+    },
+    {
+      "testId": "e001182671dd9993fecb-9e7a97b827ba913f80da",
+      "title": "INT-T1245：稳定390/900/1536和低高度筛选、可达关闭按钮、保真实状态",
+      "file": "e2e/integrated-browser.spec.ts",
+      "line": 33,
+      "profile": "official"
+    },
+    {
+      "testId": "e001182671dd9993fecb-e982f6f95caee63160fe",
+      "title": "INT-NAV：同页编导弹层与返回、真实链接宽窄、保持本项目已保存文稿",
+      "file": "e2e/integrated-browser.spec.ts",
+      "line": 40,
+      "profile": "official"
+    },
+    {
+      "testId": "e001182671dd9993fecb-cb104a57b43b6fccded7",
+      "title": "INT-FREEZE：Codex原任务在途切Pi、原ID候选读回、不重新提交",
+      "file": "e2e/integrated-browser.spec.ts",
+      "line": 43,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-8045a2729dc0a75e9579",
+      "title": "INT-TEXT-DISCOVERY / topic.enrich：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-9ba4c291fcdc46f3f9ea",
+      "title": "INT-TEXT-DISCOVERY / topic.preference：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-5c8aef06730f08c381c9",
+      "title": "INT-TEXT-DISCOVERY / calibration.diagnose：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-6731e8dbaabbfcd64955",
+      "title": "INT-TEXT-DISCOVERY / calibration.score：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-d58640f10a2f60da70b0",
+      "title": "INT-TEXT-MOMENTS / moments text：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-f776c2d01b40161ebc6d",
+      "title": "INT-TEXT-MOMENTS / work review：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-ef311209e54080db0e81",
+      "title": "INT-TEXT-VIDEO / video.decisions：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-c75bd3b6c3dcb9056878",
+      "title": "INT-TEXT-VIDEO / reconstruct.project：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-36e8a43081f3a857bccb",
+      "title": "INT-TEXT-KNOWLEDGE-AI / comment.qa-sift：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-a00cac03ebb1024a2e50",
+      "title": "INT-TEXT-RESEARCH / script.source_similarity：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-e83613105c8096c04a54",
+      "title": "INT-TEXT-INTELLIGENCE / intelligence generation：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-6f84eef7412964c69ee3",
+      "title": "INT-TEXT-INTELLIGENCE / intelligence.rewrite-text：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-16f222e42884ec70e735",
+      "title": "INT-TEXT-BACKGROUND / scheduled.topic.daily：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-3623600aebf91bf1e2c5",
+      "title": "INT-TEXT-BACKGROUND / scheduled flywheel：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-d2966357d1d5961202eb",
+      "title": "INT-TEXT-TRANSCRIBE / transcribe postprocess：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "05d77e355062c9acafd9-c25068cac32173a68f39",
+      "title": "INT-VISION / video.visual-review：真实前置检查、原公开入口和任务读回",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "line": 44,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-27d0725f1d93ee299028",
+      "title": "INT-TEXT-PLAN / planning.thesis：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-bdce982856d644c6b56a",
+      "title": "INT-TEXT-PLAN / planning.contract：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-90dc2379410af338c2e6",
+      "title": "INT-TEXT-PLAN / planning.outline：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-9c4e533f90181e56064d",
+      "title": "INT-TEXT-WRITE / script.draft：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-b93b40c4bc65c228f58c",
+      "title": "INT-TEXT-WRITE / wechat.article-draft：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-a8fb2956458e662d52dd",
+      "title": "INT-TEXT-REVIEW / script.review：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-06f1064fb0e11afa5e08",
+      "title": "INT-TEXT-REVIEW / publish.platform_adapt：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-25eb225277262176c64b",
+      "title": "INT-TEXT-REVIEW / review.analyze：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-403d5628e0176cd2f5bf",
+      "title": "INT-TEXT-POST / graphic.post-text：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-5544f760a4c147acd9f9",
+      "title": "INT-TEXT-POST / wechat.article-text：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-72c5f3bb60f90089fb38",
+      "title": "INT-TEXT-POST / publication.text：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-7d464070f95eff64a792",
+      "title": "INT-TEXT-DISCOVERY / positioning.generate：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-22c77d28084058c3a84a",
+      "title": "INT-TEXT-DISCOVERY / topic.generate：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-75115401c02d3b224193",
+      "title": "INT-TEXT-RESEARCH / research.gather_material：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-53cc87a6fe13ec10e2fd",
+      "title": "INT-TEXT-RESEARCH / copilot.assist：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-38b9ae86dc8c8c4d65d6",
+      "title": "INT-TEXT-MEDIA / asset.classify：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-0493ed36b8eeaa984bbf",
+      "title": "INT-TEXT-MEDIA / material.extract：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-59cc15c9ed27120c90ce",
+      "title": "INT-TEXT-MEDIA / material.match：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-bd34accceff8dcba505b",
+      "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.classify：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-8b46572073ae35e0fe03",
+      "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.distill：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-3ea1620500e5ff057dcc",
+      "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.relate：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-349ef2dbb67c6ce37c0b",
+      "title": "INT-IMAGE-ASSET / asset.generate image：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-29fc65060b4d8048dac3",
+      "title": "INT-IMAGE-REF / asset.generate image_to_image：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-b229a8b918a82eca3c8e",
+      "title": "INT-IMAGE-COVER / cover.generate：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-954f942420040b6120b7",
+      "title": "INT-IMAGE-CARDS / graphic.card.generate：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-9bf942eb135a067d442a",
+      "title": "INT-IMAGE-CARDS / 系列图：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-7d11d5d557a815f75f0e",
+      "title": "INT-IMAGE-CARDS / 文章配图：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-edd45a1de13f3723512b",
+      "title": "INT-VISION / asset.classify vision：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-a7df5c2dd48c38048741",
+      "title": "INT-CHAT / chat.run Codex：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-e7a901f0494e6c053ffd",
+      "title": "INT-CHAT / worker.structured-node/proposal：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-10bbb14ee793c64829ca",
+      "title": "INT-CHAT / worker.script-hooks/proposal：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-e16ae0c72044c5c1d54c",
+      "title": "INT-CHAT / worker.script-draft/committed：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "142fc0dc372ec88486cf-186a9b832504a83cc176",
+      "title": "INT-CHAT / chat image generation：真实公共生成、宽窄截图、原ID读回",
+      "file": "e2e/integrated-native.spec.ts",
+      "line": 101,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-669f1a459a6eaf45de06",
+      "title": "INT-ROUTES / route-01 / /projects/new：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-cb3ac9b857abe8d8bed9",
+      "title": "INT-ROUTES / route-02 / /accounts：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-894b8fabb30aa7c6b2f2",
+      "title": "INT-ROUTES / route-03 / /accounts/works：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-d933b857d2026747eeeb",
+      "title": "INT-ROUTES / route-04 / /assets：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-e82709742ccb8c3e3ba5",
+      "title": "INT-ROUTES / route-05 / /automations：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-dda261266a27a9ff47a1",
+      "title": "INT-ROUTES / route-06 / /calendar：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-22d75d60dc9ff807240d",
+      "title": "INT-ROUTES / route-07 / /canvases/[canvasId]：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-c105a231a429bdccaa7a",
+      "title": "INT-ROUTES / route-08 / /canvases：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-10bd0abbe5e6fe3e4b2d",
+      "title": "INT-ROUTES / route-09 / /daily-report：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-1a2dd7bb840303271a78",
+      "title": "INT-ROUTES / route-10 / /experience：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-d39f7dbbb932e3fe7262",
+      "title": "INT-ROUTES / route-11 / /intelligence：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-42b0b06780daf916c523",
+      "title": "INT-ROUTES / route-12 / /knowledge：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-7b8b850e955a09ba0dd3",
+      "title": "INT-ROUTES / route-13 / /overview：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-ea0966f520756cb50582",
+      "title": "INT-ROUTES / route-14 / /：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-647259b5ac4c2e95058b",
+      "title": "INT-ROUTES / route-15 / /positioning：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-3f5b90d678b5ac42a566",
+      "title": "INT-ROUTES / route-16 / /projects/[projectId]/article：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-6b8e650e46ce72d48c7c",
+      "title": "INT-ROUTES / route-17 / /projects/[projectId]/image：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-4c1ae110953d95756a84",
+      "title": "INT-ROUTES / route-18 / /projects/[projectId]/moments/[momentsId]：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-0d3249ad3616ee721481",
+      "title": "INT-ROUTES / route-19 / /projects/[projectId]/outputs/[outputId]/image：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-fb79599544a76cc34cb6",
+      "title": "INT-ROUTES / route-20 / /projects/[projectId]/outputs/[outputId]/video：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-a712f5f6eb29957e2b51",
+      "title": "INT-ROUTES / route-21 / /projects/[projectId]：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-5feb7c46b95835a17088",
+      "title": "INT-ROUTES / route-22 / /projects/[projectId]/planning：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-59a01d0cd2a58e8ab486",
+      "title": "INT-ROUTES / route-23 / /projects/[projectId]/production：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-48eb8aee1e0c6174b924",
+      "title": "INT-ROUTES / route-24 / /projects/[projectId]/publishing：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-b9b28871f9e0c9b99ad6",
+      "title": "INT-ROUTES / route-25 / /projects/[projectId]/research：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-d7210b9f2048f940a61b",
+      "title": "INT-ROUTES / route-26 / /projects/[projectId]/review：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-b0e23f2ad476690d106e",
+      "title": "INT-ROUTES / route-27 / /projects/[projectId]/script：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-3ef55514d875886c2c7c",
+      "title": "INT-ROUTES / route-28 / /projects/[projectId]/work：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-25000ec7f4814268510a",
+      "title": "INT-ROUTES / route-29 / /projects/create：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-48b0e0a9590771e40afc",
+      "title": "INT-ROUTES / route-30 / /projects/new：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-7b1ec602dc1a5666667e",
+      "title": "INT-ROUTES / route-31 / /projects：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-b2ddcdf44afa299fe67e",
+      "title": "INT-ROUTES / route-32 / /publishing：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-40b8d87c4ae452a3285a",
+      "title": "INT-ROUTES / route-33 / /search：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-be9e2619ad523df9eb9d",
+      "title": "INT-ROUTES / route-34 / /settings：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-907ef06cdcf37bc7bce1",
+      "title": "INT-ROUTES / route-35 / /topics：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-e7c7c80d603d7abd7b68",
+      "title": "INT-ROUTES / route-36 / /activate：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-5a8881e79a8c00dfb792",
+      "title": "INT-ROUTES / route-37 / /login：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "dda2a25d57b38a20de23-ac076876d33e95a5526e",
+      "title": "INT-ROUTES / route-38 / /register：真实对象、宽窄、刷新",
+      "file": "e2e/integrated-routes.spec.ts",
+      "line": 296,
+      "profile": "official"
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-9be58945c4439df4544b",
+      "title": "T1246 fresh直达设置 1366px close关闭回首页",
+      "file": "e2e/settings-return.spec.ts",
+      "line": 14,
+      "profile": "official"
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-00d14e02417e992626bf",
+      "title": "T1246 fresh直达设置 1366px escape关闭回首页",
+      "file": "e2e/settings-return.spec.ts",
+      "line": 14,
+      "profile": "official"
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-d40489df911a3249ff04",
+      "title": "T1246 fresh直达设置 390px close关闭回首页",
+      "file": "e2e/settings-return.spec.ts",
+      "line": 14,
+      "profile": "official"
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-bd5ac27565d4372fb913",
+      "title": "T1246 fresh直达设置 390px escape关闭回首页",
+      "file": "e2e/settings-return.spec.ts",
+      "line": 14,
+      "profile": "official"
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-00ae2e45b02d09b46741",
+      "title": "T1246 accounts站内来源 1366px 完整query/hash与触发焦点",
+      "file": "e2e/settings-return.spec.ts",
+      "line": 22,
+      "profile": "official"
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-24aafdad4a33d691d2d6",
+      "title": "T1246 accounts站内来源 390px 完整query/hash与触发焦点",
+      "file": "e2e/settings-return.spec.ts",
+      "line": 22,
+      "profile": "official"
+    },
+    {
+      "testId": "a07e50f96ad9e8e65df6-f01a7075e89b6baee0fa",
+      "title": "T1246 站内设置保完整来源、原生脏工程与触发焦点；reload失效回首页",
+      "file": "e2e/settings-return.spec.ts",
+      "line": 29,
+      "profile": "official"
+    },
+    {
+      "testId": "0d4413e600f2f771c0ac-504fde42b2f4ea7d57d1",
+      "title": "T1097 公共文章编导：明确资料→原候选→保护元信息采纳 1366",
+      "file": "e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "line": 22,
+      "profile": "official"
+    },
+    {
+      "testId": "0d4413e600f2f771c0ac-7e644f7cc94d7e79a1f6",
+      "title": "T1097 公共文章编导：明确资料→原候选→保护元信息采纳 390",
+      "file": "e2e/t1097-assisted-work-candidate-adoption.spec.ts",
+      "line": 22,
+      "profile": "official"
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-11a062a00ffe564d1497",
+      "title": "INT-RECOVERY text-null 原ACP unknown→同ID thread/read",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "line": 6,
+      "profile": "protocol"
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-4fc11bda4d2def802a41",
+      "title": "INT-RECOVERY text-usage 原ACP unknown→同ID thread/read",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "line": 6,
+      "profile": "protocol"
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-5875b0f229f0321617a7",
+      "title": "INT-RECOVERY image 原ACP unknown→同ID thread/read",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "line": 6,
+      "profile": "protocol"
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-ed1a9737e393378c75d4",
+      "title": "INT-RECOVERY 原ACP真实在途→原生脏工程设置往返→EOF→同ID恢复",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "line": 13,
+      "profile": "protocol"
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-61bc06a0b878ea3c686d",
+      "title": "INT-RECOVERY 首次read不完整保原unknown不爆重发",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "line": 14,
+      "profile": "protocol"
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-9fe9fc4d298150310401",
+      "title": "INT-RECOVERY 缺真实turn通知 binding拒绝不重发",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "line": 15,
+      "profile": "protocol"
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-d9322b2adc318963712a",
+      "title": "INT-RECOVERY 错组拒绝与真实cancel后恢复拒绝",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "line": 16,
+      "profile": "protocol"
+    },
+    {
+      "testId": "6adc29cdc7ee7d3ca6f8-03cd49fc58a0c6135931",
+      "title": "INT-PI 公共UI文本真实HTTP fixture兼容同task/call/result",
+      "file": "e2e/integrated-protocol.spec.ts",
+      "line": 17,
+      "profile": "pi"
+    }
+  ],
+  "counts": {
+    "logicalJourneys": 59,
+    "generationKeys": 49,
+    "routes": 38,
+    "officialBodies": 103,
+    "protocolBodies": 7,
+    "piBodies": 1,
+    "totalBodies": 111
+  },
+  "listEvidence": {
+    "path": "docs/verification/t1246/round-2/new-v3/reviews/static-list-v5.json",
+    "sha256": "72a331522e5262e84fac17eefebc19bc6bd5f512cc2982eea6a1e9f67f36507f"
+  },
+  "originalPlan": {
+    "path": "docs/verification/t1246/browser-cases.json",
+    "sha256": "369abb907e20cd61d5c82c3e9f815edefa95c730b9d0530e96ed5dc2775af829"
+  },
+  "unmappedBodyIds": [],
+  "generationCallsRule": "按实际ledger所有原call计，不凑49次。BLOCKED/框架PASS不代签官方生成。"
+}

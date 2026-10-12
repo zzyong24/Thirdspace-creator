@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-12T00:24:32.898289+00:00",
+  "scope": "只添加T1254 module同字段的progress绑定，状态pending，不修改任何既有vertical或BACKLOG状态",
+  "globalProgressSync": "失败保原日志：T1026 unsafe write_set，原既有欠债未修",
+  "firstContextCompileExitCodeBoth": 2,
+  "taskctlStartedBoth": true,
+  "specSha256": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad"
+}

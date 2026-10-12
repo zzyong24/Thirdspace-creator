@@ -27,8 +27,7 @@ export function sealChatProposal<T extends Candidate>(identity:SourceIdentity,ca
 }
 
 /** 人的采纳读取已结算账本，不伪造活跃租约，不从聊天文字恢复证明。 */
-export function createChatProposalSourceService(db:Db,deps:{tools:Record<string,Tool>;parseCandidate:(toolName:string,value:unknown)=>Candidate}){
- const binding=createAgenticToolBinding(deps.tools);
+export function createChatProposalSourceService(db:Db,deps:{tools:Record<string,Tool>;resolveTools?:(frozen:z.infer<typeof chatWorkerInputSchema>)=>Promise<Record<string,Tool>>;parseCandidate:(toolName:string,value:unknown)=>Candidate}){
  return {async read(ctx:RequestContext,raw:unknown,store:Db=db){
   requireWorkspace(ctx);
   const requested=assistantProposalSourceSchema.parse(raw);
@@ -43,6 +42,9 @@ export function createChatProposalSourceService(db:Db,deps:{tools:Record<string,
   if(business.projectId!==snapshot.conversation.projectId||object(snapshot.sourceMessage.modelMetadata).chatTaskId!==business.id||businessInput.historyDigest!==chatHistoryDigest(snapshot)||!isDeepStrictEqual(businessInput.historyMessageIds,snapshot.messages.map(m=>m.id)))throw new ConflictError("候选原始会话或指令已变化");
   const hostContext=readChatHostContextPair(payload.hostContext,businessInput.hostContextDigest,{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,projectId:snapshot.conversation.projectId});
   if(!hostContext)throw new ConflictError("候选缺少原宿主上下文");
+  // 组合根只返回代码内可信固定原型；选择发生在原身份/冻结映射验证之后。
+  const tools=deps.resolveTools?await deps.resolveTools(frozen):deps.tools;
+  const binding=createAgenticToolBinding(tools);
   const calls=await store.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
   function decode(call:typeof executionCalls.$inferSelect){
    if(call.status!=="settled"||!call.resultText)throw new ConflictError("候选调用尚未确认，不能采纳或重新提交");
@@ -53,7 +55,7 @@ export function createChatProposalSourceService(db:Db,deps:{tools:Record<string,
    const data=object(outcome.data),source=assistantProposalSourceSchema.parse(data.source),{source:_,...unsigned}=data;
    const piBinding=receipt?binding.forCall(verifiedTask,calls,call):null;
    const toolName=piBinding?.executionToolName??externalTaskToolCallSchema.parse(call.providerResult).toolName;
-   const definition=frozen.tools.filter(t=>t.name===toolName),tool=deps.tools[toolName];
+   const definition=frozen.tools.filter(t=>t.name===toolName),tool=tools[toolName];
    if(!proposalTools.has(toolName)||definition.length!==1||!tool||tool.version!==definition[0]!.version||tool.effect!=="proposal"||definition[0]!.effect!=="proposal"||(tool.execution??"host")!=="host"||(definition[0]!.execution??"host")!=="host"||!isDeepStrictEqual(tool.parameterSchema,definition[0]!.parameters))throw new ConflictError("候选工具或冻结参数定义已变化");
    const candidate=deps.parseCandidate(toolName,unsigned),parsed=tool.parameters.safeParse(candidate.request);
    if(!parsed.success)throw new ConflictError("候选原参数不符合冻结定义");

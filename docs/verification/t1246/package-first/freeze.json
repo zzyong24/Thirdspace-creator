@@ -1,0 +1,10 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "branch": "codex/integrated-dev-package-acceptance",
+  "git_status": "clean",
+  "diff_check_exit": 0,
+  "source_253_exact": true,
+  "cached_origin_main": "d84d10af5857262620388fc0d0d15ab84a3649e0",
+  "scope": "本地开发包；不安装启动App、不发布",
+  "raw_evidence_note": "保留原日志/diff字节，cached历史工件空白告警不改写为测试结果；产品源码cached diff-check exit0。"
+}

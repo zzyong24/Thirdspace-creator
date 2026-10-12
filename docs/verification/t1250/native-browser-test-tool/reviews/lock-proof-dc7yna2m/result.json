@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-11T21:20:33.114118+00:00",
+  "sourceSha256": "54daad3fc503629b715e09416516c42600224506b08372c313eac8152125e5df",
+  "cases": [
+    {
+      "id": "all-original-multi-version",
+      "expectedAccepted": true,
+      "actualAccepted": true,
+      "status": "passed"
+    },
+    {
+      "id": "version-changed",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "status": "passed"
+    },
+    {
+      "id": "source-changed",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "status": "passed"
+    },
+    {
+      "id": "checksum-changed",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "status": "passed"
+    },
+    {
+      "id": "unrecognized-new-package",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "status": "passed"
+    },
+    {
+      "id": "missing-private-root",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "status": "passed"
+    },
+    {
+      "id": "duplicate-private-root",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "status": "passed"
+    },
+    {
+      "id": "wrong-private-root-source",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "status": "passed"
+    }
+  ],
+  "total": 8,
+  "passed": 8,
+  "cargoExecuted": false,
+  "notRuntimeApproval": true
+}

@@ -839,3 +839,12 @@ describe("T1188 实际 Copilot 原 project.transcribe 工具回执入口", () =>
     expect(requests.some(row=>row.id==="ai.tasks.get"||row.id==="ai.tasks.steps.list"||row.id==="projects.transcribe"||row.id==="execution.tasks.command"||row.id==="execution.tasks.transcribeCommand.v1")).toBe(false);
   });
 });
+
+it.each(['pi','codex'] as const)('BC003 实际封面chip预填按当前%s引擎免错误独立API门，引用资格不放松',async engine=>{
+ protocol.engine=engine;renderDialog();fireEvent.click(screen.getByRole('button',{name:'生成封面'}));
+ const input=document.querySelector('[data-slot="prompt-input"]') as HTMLTextAreaElement;
+ expect(input.value).toContain('最新且最关联');
+ if(engine==='codex'){expect(input.value).toContain('不需要独立文本或图片 API');expect(input.value).toContain('Codex');expect(input.value).not.toContain('已配置的模型');}
+ else expect(input.value).toContain('Pi');
+ expect(protocol.send).not.toHaveBeenCalled();
+});

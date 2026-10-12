@@ -1,0 +1,16 @@
+{
+  "program": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+    "view",
+    "pnpm@12.6.0",
+    "--json",
+    "--fetch-timeout=300000",
+    "--fetch-retries=0",
+    "--registry=https://registry.npmjs.org/",
+    "--userconfig=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ/empty-user.npmrc",
+    "--globalconfig=/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ/empty-global.npmrc"
+  ],
+  "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-registry-metadata-c488a5a1ada148c38b24aae34499552c-VqY8IJ/tools",
+  "environmentProof": "environment-proof.json"
+}

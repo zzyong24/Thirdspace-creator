@@ -1,0 +1,16 @@
+{
+  "task": "T-1246",
+  "recordedAt": "2026-10-11T18:46:26.081Z",
+  "tool": "owned-pg-runtime.cjs",
+  "guardName": "t1246OwnedPgConnect",
+  "legacyAndDefaultRejections": 6,
+  "actualOriginalNetworkCallsForRejected": 0,
+  "otherPortOriginalArgumentIdentity": true,
+  "otherPortStubCalls": 1,
+  "cleanupRejectedBeforePgCli": true,
+  "actualPgCliCalls": 0,
+  "sqlCalls": 0,
+  "nativeAndPgServiceInputsActuallyRemoved": true,
+  "scope": "真实当前代码控制流+net/CLI调用端口桩；没有连接PG、没有PG功能PASS",
+  "pass": true
+}

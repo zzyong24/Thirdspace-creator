@@ -1,0 +1,33 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "destination": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+  "copiedAt": "2026-10-11T15:08:14.583236+00:00",
+  "review": "/tmp/t1246-rust-resource-preflight-review.md",
+  "resources": [
+    {
+      "path": "frontend/src-tauri/binaries/creatoros-server-aarch64-apple-darwin",
+      "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+      "bytes": 68384,
+      "sourceMode": 493,
+      "targetMode": 493,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/sidecar.tar.gz",
+      "sha256": "07b9351c8e2f2e49c6ac7c9f50560addf3b6cfb9562bae45a279d01398aa055c",
+      "bytes": 853667799,
+      "sourceMode": 420,
+      "targetMode": 420,
+      "executed": false
+    },
+    {
+      "path": "frontend/src-tauri/THIRD_PARTY_NOTICES.md",
+      "sha256": "164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962",
+      "bytes": 1620,
+      "sourceMode": 420,
+      "targetMode": 420,
+      "executed": false
+    }
+  ]
+}

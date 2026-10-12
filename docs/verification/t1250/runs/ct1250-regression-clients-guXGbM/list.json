@@ -1,0 +1,78 @@
+[
+  {
+    "name": "private native file client > derives identity in short admission checks and never holds the database callback through native I/O",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native file client > never connects when the backend rejects the current lease",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native file client > rejects stale fence even if a lease adapter erroneously returns another row",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native file client > marks a disconnected dispatched write as unknown_result",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native file client > keeps a completed write unknown when the lease changes before revalidation",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native file client > Windows 文件调用先核验原任务 lease；命令即使有管道仍拒绝",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native command client > uses the current task identity and a distinct target operation for status without holding the database callback",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native command client > keeps independent reads live while a native command reply is pending",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native command client > rejects a stale fence and Windows before dispatch",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private native command client > cancels the admitted process after the user stops its lease",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "T1250 原Unix请求超过30秒仍回读同operation，不以10秒活动窗口切断",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "T1250 已取消的原control在派发前拒绝，原operation没有原生副作用",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-native-client.test.ts"
+  },
+  {
+    "name": "private browser socket returns only the matching operation receipt",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-client.test.ts"
+  },
+  {
+    "name": "disconnect after dispatch and mismatched receipt are uncertain outcomes",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-client.test.ts"
+  },
+  {
+    "name": "aborted request is rejected before connecting",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-client.test.ts"
+  },
+  {
+    "name": "profile location is queried with the locked task identity and validates the native reply",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-client.test.ts"
+  },
+  {
+    "name": "rejects a native location for a different identity mode before leasing a profile",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-client.test.ts"
+  },
+  {
+    "name": "T1250 活动socket不能续期原完整RPC墙钟，原派发结果保持unknown",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-client.test.ts"
+  },
+  {
+    "name": "T1250 真实partial响应活动不能重置原RPC期限，原operation只发一次",
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/workbench-browser-client.test.ts"
+  }
+]

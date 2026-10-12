@@ -1,0 +1,29 @@
+{
+  "code": 1,
+  "signal": null,
+  "elapsedMs": 23543,
+  "args": [
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/vitest.mjs",
+    "run",
+    "src/modules/execution/execution-provider-job.service.test.ts",
+    "src/modules/settings/settings.service.test.ts",
+    "src/modules/execution/chat-web-profile-wait.test.ts",
+    "src/modules/ai-runtime/review-facets.test.ts",
+    "src/modules/ai-runtime/review-insights-injection.test.ts",
+    "src/modules/creative-canvas/creative-canvas-series-reference.test.ts",
+    "--retry=0",
+    "--bail=0",
+    "--testTimeout=180000",
+    "--hookTimeout=180000",
+    "--teardownTimeout=180000",
+    "--maxWorkers=1",
+    "--no-file-parallelism",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile.json=/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/short-groups-first.json"
+  ],
+  "runtimeRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-focused-Q9C0MG",
+  "nativeFlagAbsent": true,
+  "noPgUrl": true,
+  "firstEvidencePreserved": true
+}

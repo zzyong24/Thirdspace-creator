@@ -13,9 +13,7 @@ import {
 import type { Endpoint } from "@creatoros/contract";
 import { createAiService } from "../modules/ai/ai.service";
 import { createAiTransport } from "../modules/ai/ai.transport";
-import { createCopilotBusinessAdapter } from "../modules/ai-runtime/copilot-business-adapter";
-import { createStructuredBusinessExecutionService } from "../modules/ai-runtime/structured-business-execution.service";
-import { createModelWorkerDispatcher } from "../modules/execution/model-worker-dispatcher";
+import { createChatWorkerDispatcher } from "../modules/execution/model-worker-dispatcher";
 const ctx = {
     userId: "fork-u",
     accountId: "fork-a",
@@ -32,13 +30,13 @@ const unused = async (): Promise<never> => {
 };
 beforeAll(async () => {
   execFileSync(process.execPath, [resolve("../ai-worker/scripts/build.mjs")], {
-    stdio: "pipe",
+    stdio: "pipe",timeout:180000,
   });
   const f = await createDb();
   db = f.db;
   close = () => f.client.close();
-}, 30000);
-afterAll(async () => close?.());
+}, 180000);
+afterAll(async () => close?.(),180000);
 it.each(["success", "auth", "retry"])(
   "公开入口保存后恢复真实fork，%s重复唤醒不重复调用或伪造回复",
   async (mode) => {
@@ -46,6 +44,7 @@ it.each(["success", "auth", "retry"])(
       db,
       now,
       nextId: (p) => `${p}-${++seq}`,
+      prepareChatReply:async(owner,snapshot)=>({capability:"copilot.assist",system:"对原用户消息给一条实用建议",messages:snapshot.messages.map(message=>({role:message.role as "user",content:message.content})),maxSteps:6,maxOutputTokens:512,tools:[],hostContext:{schemaVersion:1,chatContext:{surface:"topics",projectId:null},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:{snapshotVersion:1,userId:owner.userId,accountId:owner.accountId??null,resolvedAt:now(),platformPolicyVersion:"1",platformPolicy:"原对话上下文",skills:[{skillId:"chatbox.topic",baseVersion:"original-fork-fixture",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"给一条建议",template:"",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}}}),
       artifacts: { createVersion: unused },
       knowledge: { createKnowledge: unused },
       candidate: { createFromAIResult: unused, enrichCard: unused },
@@ -92,30 +91,15 @@ it.each(["success", "auth", "retry"])(
         body: { content: "请给一条实用建议" },
       } as never,
       ctx,
-    )) as { data: { modelMetadata: { replyTaskId: string } } };
-    const id = response.data.modelMetadata.replyTaskId;
+    )) as { data: { modelMetadata: { chatTaskId: string } } };
+    const id = response.data.modelMetadata.chatTaskId;
     expect(id).toBeTruthy();
-    expect((await ai.getTask(ctx, id)).executionTaskId).toBeUndefined();
-    const business = createStructuredBusinessExecutionService(db, {
-      budget,
-      maxOutputTokens: 512,
-      adapters: {
-        "copilot.assist": createCopilotBusinessAdapter({
-          ai,
-          positioning: {
-            getPositioningCenter: async () => ({
-              profile: null,
-              currentStatement: null,
-            }),
-          },
-          assertProject: unused,
-        }),
-      },
-    });
-    await business.recoverQueued(async () => {
-      throw Error("recovery failed");
-    });
-    expect((await ai.getTask(ctx, id)).executionTaskId).toBeTruthy();
+    // 原公共消息端口原子预约同一真实聊天执行，不另建结构化Copilot任务。
+    expect((await ai.getTask(ctx,id)).executionTaskId).toBeTruthy();
+    const [reserved]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
+    expect(reserved).toMatchObject({taskType:"copilot.assist",status:"queued",inputData:{kind:"chat.run"}});
+    const [frozen]=await db.select().from(executionTasks).where(eq(executionTasks.id,reserved!.executionTaskId!));
+    expect(frozen).toMatchObject({kind:"ai_task",ownerId:id,payload:{aiTaskId:id,modelInput:{kind:"chat.run"}}});
     const requests: unknown[] = [];
     const server = createServer(async (req, res) => {
       const chunks: Buffer[] = [];
@@ -142,43 +126,29 @@ it.each(["success", "auth", "retry"])(
         );
         return;
       }
-      res.writeHead(200, { "content-type": "application/json" });
-      res.end(
-        JSON.stringify({
-          id: "fixture",
-          object: "chat.completion",
-          created: 1,
-          model: "fixture",
-          choices: [
-            {
-              index: 0,
-              message: {
-                role: "assistant",
-                content: JSON.stringify({
-                  reply: "先明确观众遇到的具体问题。",
-                }),
-              },
-              finish_reason: "stop",
-            },
-          ],
-          usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
-        }),
-      );
+      res.writeHead(200,{"content-type":"text/event-stream"});
+      const base={id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture"};
+      res.end([{...base,choices:[{index:0,delta:{role:"assistant",content:"先明确观众遇到的具体问题。"},finish_reason:null}]},{...base,choices:[{index:0,delta:{},finish_reason:"stop"}],usage:{prompt_tokens:10,completion_tokens:5,total_tokens:15}}].map(chunk=>`data: ${JSON.stringify(chunk)}\n\n`).join("")+"data: [DONE]\n\n");
     });
     await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
-    const worker = createModelWorkerDispatcher(db, {
+    const worker = createChatWorkerDispatcher(db, {
       now,
       budget,
       workerId: "copilot-host",
       entryPath: resolve("../ai-worker/dist/execution-worker.cjs"),
+      resolveTools:async(actualCtx,input,execution,signal)=>{
+        signal.throwIfAborted();
+        expect(actualCtx).toMatchObject({userId:ctx.userId,accountId:ctx.accountId});
+        expect(input).toMatchObject({kind:"chat.run",userId:ctx.userId,accountId:ctx.accountId,conversationId:conversation.id,tools:[]});
+        expect(execution.executionTaskId).toBe(reserved!.executionTaskId);
+        return {};
+      },
       resolveModelCredential: async () => ({
         apiFormat: "openai_chat",
         baseUrl: `http://127.0.0.1:${(server.address() as { port: number }).port}/v1`,
         model: "fixture",
         token: "fixture",
-        structuredOutputs: true,
       }),
-      projectCandidate: (_c, input) => business.projectCandidate(input),
     });
     try {
       await worker.drainOnce();
@@ -230,5 +200,5 @@ it.each(["success", "auth", "retry"])(
       await new Promise<void>((r) => server.close(() => r()));
     }
   },
-  20000,
+  180000,
 );

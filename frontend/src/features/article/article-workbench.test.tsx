@@ -8,12 +8,13 @@ const mocks = vi.hoisted(() => ({
   getTask: vi.fn(), getArticleCandidate: vi.fn(),
   getAssetFileDownloadUrl: vi.fn(), listAssets: vi.fn(),
   listMaterialLinks: vi.fn(), getAsset: vi.fn(),
-  adoptArticleCandidate: vi.fn(), createArticleVersion: vi.fn(),
+  adoptArticleCandidate: vi.fn(), createArticleVersion: vi.fn(), editorPort:null as any, setWritingContext:vi.fn(),
 }));
 vi.mock("@/lib/contract-client", () => ({ client: mocks }));
+vi.mock("@/features/draft-workbench/draft-chat-request",async original=>{const real:any=await original();return {...real,useDraftChatRequest:()=>({...real.useDraftChatRequest(),readWritingContext:()=>undefined,setWritingContext:mocks.setWritingContext,registerEditor:(port:any)=>{mocks.editorPort=port;return ()=>{};}})};});
 
 import { ArticleWorkbench } from "./article-workbench";
-async function openAux(){const label=await screen.findByText("AI 辅助生成与内容扩展");const details=label.closest("details")!;details.open=true;fireEvent(details,new Event("toggle"));await screen.findByRole("button",{name:"根据脚本扩写文章"});}
+async function openAux(){const label=await screen.findByText("AI 辅助生成与内容扩展");const details=label.closest("details")!;details.open=true;fireEvent(details,new Event("toggle"));await screen.findByText("写作身份");}
 
 
 const empty = {
@@ -109,15 +110,15 @@ describe("公众号文章工作台", () => {
     render(<ArticleWorkbench projectId="project-a" projectTitle="选题" briefReady={false} articleTargetSelected initialOutputs={[{ id: "output-a", title: "文章" }]} />);
     await waitFor(() => expect(screen.getByText("当前稿件")).toBeTruthy());
     await openAux();
-    expect(screen.getByRole("button", { name: "根据脚本扩写文章" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "根据脚本扩写文章" })).toBeNull();
     expect(screen.getByRole("button", { name: "添加段落" })).toBeEnabled();
   });
 
-  it("生成结果只作为候选展示，明确采纳后才写入", async () => {
+  it("生成结果只作为候选展示，明确采纳后才写入（原任务恢复）", async () => {
+    sessionStorage.setItem("creatoros:article-task:output-a","candidate-a");
     render(<ArticleWorkbench projectId="project-a" projectTitle="选题" briefReady articleTargetSelected initialOutputs={[{ id: "output-a", title: "文章" }]} />);
     await waitFor(() => expect(screen.getByText("当前稿件")).toBeTruthy());
     await openAux();
-    fireEvent.click(screen.getByRole("button", { name: "根据脚本扩写文章" }));
     await waitFor(() => expect(screen.getByText(/候选已生成/)).toBeTruthy());
     expect(screen.getByText("真实标题")).toBeTruthy();
     expect(mocks.adoptArticleCandidate).not.toHaveBeenCalled();
@@ -140,11 +141,9 @@ describe("公众号文章工作台", () => {
     expect(screen.getByRole("radio", { name: "中性写作方法" })).toBeChecked();
     fireEvent.click(screen.getByRole("radio", { name: /使用当前账号品牌版本 v3/ }));
     await openAux();
-    fireEvent.click(screen.getByRole("button", { name: "根据脚本扩写文章" }));
-    await waitFor(() => expect(mocks.generateArticleCandidate).toHaveBeenCalledWith({
-      params: { outputId: "output-a" }, query: undefined,
-      body: expect.objectContaining({ brandProfileVersionId: "statement-v3" }),
-    }));
+    expect(mocks.setWritingContext).toHaveBeenLastCalledWith(expect.any(String),"project-a",{schemaVersion:1,brandProfileVersionId:"statement-v3",sourceAssets:[]});
+    mocks.getArticleVersion.mockResolvedValue({versionId:"v1",document:empty});
+    const target=await mocks.editorPort.prepareForTurn();expect(target.writingContext.brandProfileVersionId).toBe("statement-v3");expect(mocks.generateArticleCandidate).not.toHaveBeenCalled();
   });
 
   it("只把显式勾选的项目文档精确文件版本交给模型", async () => {
@@ -155,14 +154,13 @@ describe("公众号文章工作台", () => {
     await waitFor(() => expect(screen.getByText("项目资料")).toBeTruthy());
     fireEvent.click(screen.getByRole("checkbox", { name: /项目资料/ }));
     await openAux();
-    fireEvent.click(screen.getByRole("button", { name: "根据脚本扩写文章" }));
-    await waitFor(() => expect(mocks.generateArticleCandidate).toHaveBeenCalledWith({
-      params: { outputId: "output-a" }, query: undefined,
-      body: expect.objectContaining({ sourceAssets: [{ assetId: "document-a", assetFileId: "file-v2" }] }),
-    }));
+    expect(mocks.setWritingContext).toHaveBeenLastCalledWith(expect.any(String),"project-a",{schemaVersion:1,brandProfileVersionId:null,sourceAssets:[{assetId:"document-a",assetFileId:"file-v2"}]});
+    mocks.getArticleVersion.mockResolvedValue({versionId:"v1",document:empty});
+    const target=await mocks.editorPort.prepareForTurn();expect(target.writingContext.sourceAssets).toEqual([{assetId:"document-a",assetFileId:"file-v2"}]);expect(mocks.generateArticleCandidate).not.toHaveBeenCalled();
   });
 
-  it("候选事实采纳前显示旧清单与将替换的新清单", async () => {
+  it("候选事实采纳前显示旧清单与将替换的新清单（原任务恢复）", async () => {
+    sessionStorage.setItem("creatoros:article-task:output-a","candidate-a");
     mocks.getArticle.mockResolvedValue({ ...saved, current: { ...empty, factItems: [{ id: "fact-old", text: "旧事实",
       reviewState: "needs_confirmation", sourceRefs: [] }] } });
     mocks.getArticleCandidate.mockResolvedValue({ candidateId: "candidate-a", proposedTitle: "新标题", proposedSummary: "新摘要",
@@ -172,7 +170,6 @@ describe("公众号文章工作台", () => {
       initialOutputs={[{ id: "output-a", title: "文章" }]} />);
     await waitFor(() => expect(screen.getByText("当前稿件")).toBeTruthy());
     await openAux();
-    fireEvent.click(screen.getByRole("button", { name: "根据脚本扩写文章" }));
     await waitFor(() => expect(screen.getByTestId("article-fact-diff")).toHaveTextContent("当前清单：旧事实"));
     expect(screen.getByTestId("article-fact-diff")).toHaveTextContent("候选清单：待核新事实");
   });
@@ -224,7 +221,7 @@ describe("公众号文章工作台", () => {
       })}),
     }));
     expect(mocks.generateArticleCandidate).not.toHaveBeenCalled();
-    expect(screen.getByRole("button",{name:"根据脚本扩写文章"})).toBeEnabled();
+    expect(screen.queryByRole("button",{name:"根据脚本扩写文章"})).toBeNull();
   });
 
   it("只能从当前账号 active 图片中审看并选用精确文件版本", async () => {
@@ -291,13 +288,14 @@ describe("T-1043 真实作品选择与未保存稿保护", () => {
  await waitFor(()=>expect(screen.getByRole("textbox",{name:"标题"})).toHaveValue("来自脚本的标题"));
  expect(screen.getByRole("textbox",{name:"摘要"})).toHaveValue("来自脚本的简介");
  expect(screen.getByRole("textbox",{name:"标签"})).toHaveValue("脚本标签");
- expect(screen.getByRole("button",{name:"根据脚本扩写文章"})).toBeEnabled();
+ expect(screen.queryByRole("button",{name:"根据脚本扩写文章"})).toBeNull();
  expect(screen.getByRole("button",{name:"保存修改"})).toBeEnabled();
  });
- it("已有稿生成后标题与摘要默认不被重写",async()=>{
+ it("已有稿生成后标题与摘要默认不被重写（原任务恢复）",async()=>{
+ sessionStorage.setItem("creatoros:article-task:output-a","candidate-a");
  mocks.getArticle.mockResolvedValue({...saved,current:{...empty,title:"人工标题",summary:"人工简介"}});
  render(<ArticleWorkbench projectId="project-a" projectTitle="选题" initialOutputs={[{id:"output-a",title:"文章"}]}/>);
- await screen.findByText("当前稿件");await openAux();fireEvent.click(screen.getByRole("button",{name:"根据脚本扩写文章"}));
+ await screen.findByText("当前稿件");await openAux();
  await screen.findByText(/候选已生成/);
  expect(screen.getByRole("checkbox",{name:/候选标题/})).not.toBeChecked();
  expect(screen.getByRole("checkbox",{name:/候选摘要/})).not.toBeChecked();

@@ -1,0 +1,120 @@
+{
+  "task": "T-1246",
+  "recordedAt": "2026-10-11T14:35:19.552Z",
+  "guardFile": "/tmp/t1246-unit/deny-legacy-postgres.cjs",
+  "guardSha256": "2c77bad16a509957762ab42fb6b9a148404b4331a54aa54c900474aed569dd26",
+  "node": "v25.9.0",
+  "testBudgetMs": 120000,
+  "retry": 0,
+  "realNetworkCalls": 0,
+  "evidenceLevel": "实际护栏源码+真实Node参数规范化+无网络原connect桩；不是PG连接/完整Vitest证明",
+  "passed": 21,
+  "failed": 0,
+  "results": [
+    {
+      "name": "options localhost",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "numeric localhost",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "string port localhost",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "normalized localhost",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "options 127.0.0.1",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "numeric 127.0.0.1",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "string port 127.0.0.1",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "normalized 127.0.0.1",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "options ::1",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "numeric ::1",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "string port ::1",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "normalized ::1",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "implicit localhost",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "options implicit localhost string port",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "localhost case",
+      "status": "PASS",
+      "originalConnectCalls": 0
+    },
+    {
+      "name": "本轮50028 options",
+      "status": "PASS",
+      "originalConnectCalls": 1
+    },
+    {
+      "name": "本轮50028 numeric",
+      "status": "PASS",
+      "originalConnectCalls": 1
+    },
+    {
+      "name": "其它端口localhost",
+      "status": "PASS",
+      "originalConnectCalls": 1
+    },
+    {
+      "name": "非本机55422",
+      "status": "PASS",
+      "originalConnectCalls": 1
+    },
+    {
+      "name": "Unix socket保持",
+      "status": "PASS",
+      "originalConnectCalls": 1
+    },
+    {
+      "name": "normalized其它端口保持",
+      "status": "PASS",
+      "originalConnectCalls": 1
+    }
+  ]
+}

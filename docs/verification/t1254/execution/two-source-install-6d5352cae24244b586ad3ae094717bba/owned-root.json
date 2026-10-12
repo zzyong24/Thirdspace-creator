@@ -1,0 +1,8 @@
+{
+  "task": "T-1254",
+  "nonce": "6d5352cae24244b586ad3ae094717bba",
+  "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig",
+  "uid": 501,
+  "inode": 351266650,
+  "purpose": "two exact original source frozen-lock ignore-scripts dependency install only; future build/code execution separately reviewed"
+}

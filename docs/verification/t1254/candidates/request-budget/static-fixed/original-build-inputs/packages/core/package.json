@@ -1,0 +1,39 @@
+{
+  "name": "@md/core",
+  "type": "module",
+  "version": "2.1.0",
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./renderer": "./src/renderer/index.ts",
+    "./extensions": "./src/extensions/index.ts",
+    "./utils": "./src/utils/index.ts",
+    "./utils/mathjax": "./src/utils/mathjax.ts",
+    "./theme": "./src/theme/index.ts",
+    "./theme/cssVariables": "./src/theme/cssVariables.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "vitest bench --run",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@antv/infographic": "^0.2.20",
+    "@md/shared": "workspace:*",
+    "entities": "^8.1.0",
+    "fflate": "^0.8.3",
+    "highlight.js": "^11.12.0",
+    "isomorphic-dompurify": "catalog:",
+    "js-yaml": "^5.4.2",
+    "marked": "catalog:",
+    "mermaid": "^12.0.0"
+  },
+  "devDependencies": {
+    "@md/config": "workspace:*",
+    "jsdom": "^30.1.1",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

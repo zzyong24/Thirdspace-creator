@@ -1,0 +1,1277 @@
+{
+  "kind": "STATIC_ONLY_CANDIDATE_NO_COLLECTION_OR_TEST_EXECUTION",
+  "groups": {
+    "hosts": {
+      "records": [
+        {
+          "file": "frontend/src/server/workbench-native-host.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "没有私有桌面通道时目录不向模型开放，读写副作用分别冻结",
+              "titleRegex": "没有私有桌面通道时目录不向模型开放，读写副作用分别冻结$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 31
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "Windows 私有通道只开放文件能力，命令继续拒绝",
+              "titleRegex": "Windows 私有通道只开放文件能力，命令继续拒绝$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 38
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "只把宿主上下文中的 task/fence 与经过验证的相对路径交给原生端口",
+              "titleRegex": "只把宿主上下文中的 task\\/fence 与经过验证的相对路径交给原生端口$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 51
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "%s 列举任务根目录接受点路径，但不开放绝对路径或父目录",
+              "titleRegex": ".* 列举任务根目录接受点路径，但不开放绝对路径或父目录$",
+              "multiplicity": 2,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 63
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "回读文本与冲突版本有确定结果，未知写入保留原 operationId 等待对账",
+              "titleRegex": "回读文本与冲突版本有确定结果，未知写入保留原 operationId 等待对账$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 76
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "目录分别声明启动、查询、取消；只把原任务中的目标 operation ID 交给原生端口",
+              "titleRegex": "目录分别声明启动、查询、取消；只把原任务中的目标 operation ID 交给原生端口$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 94
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "启动使用 argv 与已批准 runtime，输出分页保留游标，取消只引用本任务原操作",
+              "titleRegex": "启动使用 argv 与已批准 runtime，输出分页保留游标，取消只引用本任务原操作$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 108
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "缺失的随包运行时明确失败；已分发但断联的启动保持待对账",
+              "titleRegex": "缺失的随包运行时明确失败；已分发但断联的启动保持待对账$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 126
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "真实 Mac socket + 模型工具调用、双版本 Blob 与导出，跨账号与旧 fence 拒绝",
+              "titleRegex": "真实 Mac socket \\+ 模型工具调用、双版本 Blob 与导出，跨账号与旧 fence 拒绝$",
+              "multiplicity": 1,
+              "explicitBodyMs": 180000,
+              "effectiveBodyMs": 1800000,
+              "line": 139
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 私有文件和命令端口传原dispatch signal，原operation/action不变",
+              "titleRegex": "T1250 私有文件和命令端口传原dispatch signal，原operation\\/action不变$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 382
+            }
+          ],
+          "hooks": [],
+          "declaredCaseCount": 11,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 85800000,
+          "shortExplicitDeclarations": []
+        },
+        {
+          "file": "frontend/src/server/workbench-browser-host.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "only a desktop Mac with private socket advertises browser tools",
+              "titleRegex": "only a desktop Mac with private socket advertises browser tools$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 58
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "浏览器原生调用等待期间任务读取仍可完成，不占用 PGlite 事务通道",
+              "titleRegex": "浏览器原生调用等待期间任务读取仍可完成，不占用 PGlite 事务通道$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 68
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "截图只写可信媒体引用，回执和 Pi 工具目录不含原始 base64",
+              "titleRegex": "截图只写可信媒体引用，回执和 Pi 工具目录不含原始 base64$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 89
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "拒绝%s截图",
+              "titleRegex": "拒绝.*截图$",
+              "multiplicity": 3,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 112
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "native open failure releases the claimed profile only after stop proof",
+              "titleRegex": "native open failure releases the claimed profile only after stop proof$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 126
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "a new host only reconciles a stopped old owner before reusing the same physical profile",
+              "titleRegex": "a new host only reconciles a stopped old owner before reusing the same physical profile$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 144
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "reconciles a cancelled task without waiting for another task to claim its profile",
+              "titleRegex": "reconciles a cancelled task without waiting for another task to claim its profile$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 187
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "waits for in-flight profile reconciliation before disposing the database owner",
+              "titleRegex": "waits for in-flight profile reconciliation before disposing the database owner$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 223
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "open obtains the Rust physical profile and binds it to the current DB task before native dispatch",
+              "titleRegex": "open obtains the Rust physical profile and binds it to the current DB task before native dispatch$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 253
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "close waits for a transient native stop proof before releasing its physical profile",
+              "titleRegex": "close waits for a transient native stop proof before releasing its physical profile$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 331
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "close reports unknown and keeps the lease when native stop cannot be proven",
+              "titleRegex": "close reports unknown and keeps the lease when native stop cannot be proven$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 350
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "interrupted real Chromium host recovers the same task profile on attempt two",
+              "titleRegex": "interrupted real Chromium host recovers the same task profile on attempt two$",
+              "multiplicity": 1,
+              "explicitBodyMs": 180000,
+              "effectiveBodyMs": 1800000,
+              "line": 402
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "Node/DB leases use the PID-bound Rust socket and real Chromium",
+              "titleRegex": "Node\\/DB leases use the PID-bound Rust socket and real Chromium$",
+              "multiplicity": 1,
+              "explicitBodyMs": 180000,
+              "effectiveBodyMs": 1800000,
+              "line": 453
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "a restarted Rust host proves a stopped old DB lease before a new task opens the same profile",
+              "titleRegex": "a restarted Rust host proves a stopped old DB lease before a new task opens the same profile$",
+              "multiplicity": 1,
+              "explicitBodyMs": 180000,
+              "effectiveBodyMs": 1800000,
+              "line": 527
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "two accounts keep separate primary profiles and one cancellation leaves the other running",
+              "titleRegex": "two accounts keep separate primary profiles and one cancellation leaves the other running$",
+              "multiplicity": 1,
+              "explicitBodyMs": 180000,
+              "effectiveBodyMs": 1800000,
+              "line": 580
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "a live legacy Playwright profile blocks Rust until the real context stops",
+              "titleRegex": "a live legacy Playwright profile blocks Rust until the real context stops$",
+              "multiplicity": 1,
+              "explicitBodyMs": 180000,
+              "effectiveBodyMs": 1800000,
+              "line": 649
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "browser.act 的实际参数缺失在原生派发前明确拒绝并给出修复说明",
+              "titleRegex": "browser\\.act 的实际参数缺失在原生派发前明确拒绝并给出修复说明$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 703
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "七类合法 action 及 timeout_ms 经任务租约完整传至原生宿主",
+              "titleRegex": "七类合法 action 及 timeout_ms 经任务租约完整传至原生宿主$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 714
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放",
+              "titleRegex": "T1250 原停止owner真实cleanup回执超过30秒仍仅凭同lease stop证明释放$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 737
+            }
+          ],
+          "hooks": [
+            {
+              "name": "beforeAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 16
+            },
+            {
+              "name": "afterAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 17
+            },
+            {
+              "name": "afterEach",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 18
+            }
+          ],
+          "declaredCaseCount": 21,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 163800000,
+          "shortExplicitDeclarations": []
+        },
+        {
+          "file": "frontend/src/server/workbench-artifact-host.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "%s 私有宿主把真实任务文件登记为可回读的 HTML 版本，不向模型泄露存储键",
+              "titleRegex": ".* 私有宿主把真实任务文件登记为可回读的 HTML 版本，不向模型泄露存储键$",
+              "multiplicity": 2,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 15
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "并发任务同路径、重放与下一版本诊断均绑定原 hash；诊断回读失败仍保留登记成功",
+              "titleRegex": "并发任务同路径、重放与下一版本诊断均绑定原 hash；诊断回读失败仍保留登记成功$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 85
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 同宿主两dispatch取消隔离：原signal贯穿文件页，取消任务不登记Blob",
+              "titleRegex": "T1250 同宿主两dispatch取消隔离：原signal贯穿文件页，取消任务不登记Blob$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 146
+            }
+          ],
+          "hooks": [
+            {
+              "name": "beforeAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 12
+            },
+            {
+              "name": "afterAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 13
+            }
+          ],
+          "declaredCaseCount": 4,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 31200000,
+          "shortExplicitDeclarations": []
+        }
+      ],
+      "staticCaseCount": 36,
+      "staticChildMs": 299520000,
+      "collectMs": 1800000,
+      "prepareMs": 120000,
+      "eachProcessTerminationReserveMs": 2160000,
+      "afterSourceReceiptMs": 720000,
+      "outerMs": 306480000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "poolStartTeardownMs": 240000,
+      "childCleanupReportMs": 480000,
+      "helperLifecycleSourceFacts": {
+        "identityPsCount": 3,
+        "eachPsMs": 180000,
+        "normalInitialAndFinalSnapshots": 2,
+        "maxSignalSnapshots": 2,
+        "termKillEachGraceMs": 180000,
+        "lastPollingSnapshotOvershootEachMs": 180000,
+        "pollIntervalEachMs": 100,
+        "worstNormalLifecycleMs": 1980200,
+        "allocatedLifecycleMs": 2160000
+      },
+      "shortExplicitDeclarations": []
+    },
+    "cdp": {
+      "records": [
+        {
+          "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "真实SPA由菜单进入并选择真实作品，前4普通button不抢导航预算，网络只自然触发且不泄露值",
+              "titleRegex": "真实SPA由菜单进入并选择真实作品，前4普通button不抢导航预算，网络只自然触发且不泄露值$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 34
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "observe原子废旧ref，重渲染/移出导航不以旧handle点击，重复advance只执行一次",
+              "titleRegex": "observe原子废旧ref，重渲染\\/移出导航不以旧handle点击，重复advance只执行一次$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 47
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "跨账号零宿主动作；作品删改后observe不再发token但原owner仍可close",
+              "titleRegex": "跨账号零宿主动作；作品删改后observe不再发token但原owner仍可close$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 58
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "同真实profile池与采集互斥，checkout取消不遗留排队；close失败不按TTL释放占用",
+              "titleRegex": "同真实profile池与采集互斥，checkout取消不遗留排队；close失败不按TTL释放占用$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 67
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "正常采集cooldown拒绝不导航",
+              "titleRegex": "正常采集cooldown拒绝不导航$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 86
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "已派发后popup异常保留unknown/dispatched，原动作重复不重派",
+              "titleRegex": "已派发后popup异常保留unknown\\/dispatched，原动作重复不重派$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 93
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "独审红测：aria-controls不能替不安全anchor href发放expand token",
+              "titleRegex": "独审红测：aria-controls不能替不安全anchor href发放expand token$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 109
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "独审红测：native/role dialog的status及嵌套导航不公开正文或发动作token",
+              "titleRegex": "独审红测：native\\/role dialog的status及嵌套导航不公开正文或发动作token$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 116
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "独审红测：重复关闭旧A不得释放新B的账号占用",
+              "titleRegex": "独审红测：重复关闭旧A不得释放新B的账号占用$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 120
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "anchor展开不接受不安全或会重载的href：%s",
+              "titleRegex": "anchor展开不接受不安全或会重载的href：.*$",
+              "multiplicity": 5,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 127
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "合法无href/同页fragment展开仍可执行：%s",
+              "titleRegex": "合法无href\\/同页fragment展开仍可执行：.*$",
+              "multiplicity": 3,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 130
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "多root红测：全document发现第二导航，首栏不能垄断候选额度，补充侧栏只结构",
+              "titleRegex": "多root红测：全document发现第二导航，首栏不能垄断候选额度，补充侧栏只结构$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 134
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "多root：根上限/发现预算给下界和不完整标记，零语义根不声称侧栏不存在",
+              "titleRegex": "多root：根上限\\/发现预算给下界和不完整标记，零语义根不声称侧栏不存在$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 142
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "多root：节点搬到同标签/同祖先摘要的另root仍拒旧token；dialog根和正文不可发现",
+              "titleRegex": "多root：节点搬到同标签\\/同祖先摘要的另root仍拒旧token；dialog根和正文不可发现$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 148
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "多root：native与role同元素不重复、嵌套导航各自归属，补充menu不泄漏表单/正文且不给token",
+              "titleRegex": "多root：native与role同元素不重复、嵌套导航各自归属，补充menu不泄漏表单\\/正文且不给token$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 154
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "多root：共享12KiB输出限制后root/group数量仍与实际候选一致",
+              "titleRegex": "多root：共享12KiB输出限制后root\\/group数量仍与实际候选一致$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 158
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "多root不能让补充根吞掉既有nav内的合法入口：%s",
+              "titleRegex": "多root不能让补充根吞掉既有nav内的合法入口：.*$",
+              "multiplicity": 4,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 164
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "终审红测：超额省略的导航仍是边界，父根不能发token或允许跨省略根移动",
+              "titleRegex": "终审红测：超额省略的导航仍是边界，父根不能发token或允许跨省略根移动$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 168
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "终审预算红测：深度裁剪的宽兄弟也计入发现预算，不能无计费遍历整批",
+              "titleRegex": "终审预算红测：深度裁剪的宽兄弟也计入发现预算，不能无计费遍历整批$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 174
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 真实控件active超过90秒不触发idle，结束后仍按原idle及life截止",
+              "titleRegex": "T1250 真实控件active超过90秒不触发idle，结束后仍按原idle及life截止$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 180
+            }
+          ],
+          "hooks": [
+            {
+              "name": "beforeAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 8
+            },
+            {
+              "name": "afterAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 9
+            }
+          ],
+          "declaredCaseCount": 29,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 226200000,
+          "shortExplicitDeclarations": []
+        },
+        {
+          "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "真实runCliCommand→HTTP正式dispatch→SQL幂等账本→Chromium：同key只点一次、跨账号隔离、失效作品可关闭、进程后pending不重派",
+              "titleRegex": "真实runCliCommand→HTTP正式dispatch→SQL幂等账本→Chromium：同key只点一次、跨账号隔离、失效作品可关闭、进程后pending不重派$",
+              "multiplicity": 1,
+              "explicitBodyMs": 900000,
+              "effectiveBodyMs": 1800000,
+              "line": 23
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 公共CLI→HTTP→service→Chromium慢checkout及动作超过30秒仍保原session和同key回执",
+              "titleRegex": "T1250 公共CLI→HTTP→service→Chromium慢checkout及动作超过30秒仍保原session和同key回执$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 58
+            }
+          ],
+          "hooks": [
+            {
+              "name": "beforeAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 18
+            },
+            {
+              "name": "afterAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 19
+            }
+          ],
+          "declaredCaseCount": 2,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 15600000,
+          "shortExplicitDeclarations": []
+        }
+      ],
+      "staticCaseCount": 31,
+      "staticChildMs": 254520000,
+      "collectMs": 1800000,
+      "prepareMs": 120000,
+      "eachProcessTerminationReserveMs": 2160000,
+      "afterSourceReceiptMs": 720000,
+      "outerMs": 261480000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "poolStartTeardownMs": 240000,
+      "childCleanupReportMs": 480000,
+      "helperLifecycleSourceFacts": {
+        "identityPsCount": 3,
+        "eachPsMs": 180000,
+        "normalInitialAndFinalSnapshots": 2,
+        "maxSignalSnapshots": 2,
+        "termKillEachGraceMs": 180000,
+        "lastPollingSnapshotOvershootEachMs": 180000,
+        "pollIntervalEachMs": 100,
+        "worstNormalLifecycleMs": 1980200,
+        "allocatedLifecycleMs": 2160000
+      },
+      "shortExplicitDeclarations": []
+    },
+    "render": {
+      "records": [
+        {
+          "file": "frontend/src/server/workbench-artifact-render.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "用真实 Chromium 把静态 HTML 渲染为 PNG，脚本和网络资源均不执行",
+              "titleRegex": "用真实 Chromium 把静态 HTML 渲染为 PNG，脚本和网络资源均不执行$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 12
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "用真实 Chromium 输出可解析 PDF 字节并保留正文",
+              "titleRegex": "用真实 Chromium 输出可解析 PDF 字节并保留正文$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 41
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "运行时缺失时明确失败，不返回伪图像",
+              "titleRegex": "运行时缺失时明确失败，不返回伪图像$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 50
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "并发渲染超过固定预算时拒绝额外请求",
+              "titleRegex": "并发渲染超过固定预算时拒绝额外请求$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 67
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 真实离线document超过30秒仍生成原PNG/PDF，完整请求允许串行尾轮",
+              "titleRegex": "T1250 真实离线document超过30秒仍生成原PNG\\/PDF，完整请求允许串行尾轮$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 78
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 launch观察超时后迟到浏览器仅关闭，不产生输出或遗留目录",
+              "titleRegex": "T1250 launch观察超时后迟到浏览器仅关闭，不产生输出或遗留目录$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 106
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 两个browser停止未确认仍占原并发槽，第三请求不得启动",
+              "titleRegex": "T1250 两个browser停止未确认仍占原并发槽，第三请求不得启动$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 121
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 cleanup观察到期后原close成功收据恢复槽并清理目录，不重复close",
+              "titleRegex": "T1250 cleanup观察到期后原close成功收据恢复槽并清理目录，不重复close$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 134
+            }
+          ],
+          "hooks": [],
+          "declaredCaseCount": 8,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 62400000,
+          "shortExplicitDeclarations": []
+        },
+        {
+          "file": "frontend/src/server/workbench-artifact-representation.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "四种共用 representation 保持来源 hash；真实 Chromium SVG 像素与 PDF 正文可读",
+              "titleRegex": "四种共用 representation 保持来源 hash；真实 Chromium SVG 像素与 PDF 正文可读$",
+              "multiplicity": 1,
+              "explicitBodyMs": 3600000,
+              "effectiveBodyMs": 3600000,
+              "line": 15
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "旧脚本报告四种输出均标记降级，正文保留；脚本不能改写像素且没有外网请求",
+              "titleRegex": "旧脚本报告四种输出均标记降级，正文保留；脚本不能改写像素且没有外网请求$",
+              "multiplicity": 1,
+              "explicitBodyMs": 3600000,
+              "effectiveBodyMs": 3600000,
+              "line": 33
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "非 HTML raw/preview 仍返回诊断，来源校验继续拒绝错误 hash",
+              "titleRegex": "非 HTML raw\\/preview 仍返回诊断，来源校验继续拒绝错误 hash$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 51
+            }
+          ],
+          "hooks": [],
+          "declaredCaseCount": 3,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 27000000,
+          "shortExplicitDeclarations": []
+        }
+      ],
+      "staticCaseCount": 11,
+      "staticChildMs": 102120000,
+      "collectMs": 1800000,
+      "prepareMs": 120000,
+      "eachProcessTerminationReserveMs": 2160000,
+      "afterSourceReceiptMs": 720000,
+      "outerMs": 109080000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "poolStartTeardownMs": 240000,
+      "childCleanupReportMs": 480000,
+      "helperLifecycleSourceFacts": {
+        "identityPsCount": 3,
+        "eachPsMs": 180000,
+        "normalInitialAndFinalSnapshots": 2,
+        "maxSignalSnapshots": 2,
+        "termKillEachGraceMs": 180000,
+        "lastPollingSnapshotOvershootEachMs": 180000,
+        "pollIntervalEachMs": 100,
+        "worstNormalLifecycleMs": 1980200,
+        "allocatedLifecycleMs": 2160000
+      },
+      "shortExplicitDeclarations": []
+    },
+    "public": {
+      "records": [
+        {
+          "file": "frontend/src/server/workbench-public.integration.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "公开dispatch真实装配可发现宿主能力，并拒绝未授权任务/产物",
+              "titleRegex": "公开dispatch真实装配可发现宿主能力，并拒绝未授权任务\\/产物$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 7
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 原任务真实登记HTML版本→公共render transport→慢Chromium PNG/PDF保同来源hash和有效字节",
+              "titleRegex": "T1250 原任务真实登记HTML版本→公共render transport→慢Chromium PNG\\/PDF保同来源hash和有效字节$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 21
+            }
+          ],
+          "hooks": [
+            {
+              "name": "afterEach",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 6
+            }
+          ],
+          "declaredCaseCount": 2,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 15600000,
+          "shortExplicitDeclarations": []
+        }
+      ],
+      "staticCaseCount": 2,
+      "staticChildMs": 22320000,
+      "collectMs": 1800000,
+      "prepareMs": 120000,
+      "eachProcessTerminationReserveMs": 2160000,
+      "afterSourceReceiptMs": 720000,
+      "outerMs": 29280000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "poolStartTeardownMs": 240000,
+      "childCleanupReportMs": 480000,
+      "helperLifecycleSourceFacts": {
+        "identityPsCount": 3,
+        "eachPsMs": 180000,
+        "normalInitialAndFinalSnapshots": 2,
+        "maxSignalSnapshots": 2,
+        "termKillEachGraceMs": 180000,
+        "lastPollingSnapshotOvershootEachMs": 180000,
+        "pollIntervalEachMs": 100,
+        "worstNormalLifecycleMs": 1980200,
+        "allocatedLifecycleMs": 2160000
+      },
+      "shortExplicitDeclarations": []
+    },
+    "recovery": {
+      "records": [
+        {
+          "file": "frontend/src/server/workbench-file-recovery.test.ts",
+          "cases": [
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "公开对账原调用幂等结算、暂停不唤醒、费用和claim不变；新lease仅回放原工具",
+              "titleRegex": "公开对账原调用幂等结算、暂停不唤醒、费用和claim不变；新lease仅回放原工具$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 107
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "身份诊断 %s只返回固定reason，原拒绝/Native零调用/账本不变",
+              "titleRegex": "身份诊断 .*只返回固定reason，原拒绝\\/Native零调用\\/账本不变$",
+              "multiplicity": 16,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 125
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "真实start→pause→缺claim unknown：公开CLI重新准入原call，永久审计且paused不wake",
+              "titleRegex": "真实start→pause→缺claim unknown：公开CLI重新准入原call，永久审计且paused不wake$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 160
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "%s不产生回执、不写文件、不解除unknown",
+              "titleRegex": ".*不产生回执、不写文件、不解除unknown$",
+              "multiplicity": 3,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 187
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "拒绝伪原生 %s",
+              "titleRegex": "拒绝伪原生 .*$",
+              "multiplicity": 9,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 198
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "锁外Native期间查询及时完成，%s变动则CAS拒绝",
+              "titleRegex": "锁外Native期间查询及时完成，.*变动则CAS拒绝$",
+              "multiplicity": 5,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 206
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "账号错误不发Native请求；其他unknown外部动作原样保留",
+              "titleRegex": "账号错误不发Native请求；其他unknown外部动作原样保留$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 226
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "Rust/TS UTF8/null请求摘要向量一致",
+              "titleRegex": "Rust\\/TS UTF8\\/null请求摘要向量一致$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 237
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "恢复lane单在途，stop等待Native退出且拒绝迟到结算及wake",
+              "titleRegex": "恢复lane单在途，stop等待Native退出且拒绝迟到结算及wake$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 242
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "轮转有界扫描跳过absent/prepared，不能解开另一未知动作；CAS后中断仍按已存receipt定点恢复",
+              "titleRegex": "轮转有界扫描跳过absent\\/prepared，不能解开另一未知动作；CAS后中断仍按已存receipt定点恢复$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 259
+            },
+            {
+              "disabledByKnownQualification": true,
+              "qualificationSource": "process.platform!==\"darwin\"||!process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE",
+              "qualificationKnown": true,
+              "title": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+              "titleRegex": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写$",
+              "multiplicity": 1,
+              "explicitBodyMs": 60000,
+              "effectiveBodyMs": 1800000,
+              "line": 283
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "普通enqueue不能注入filePredispatchRecoveries审计，即便值为空",
+              "titleRegex": "普通enqueue不能注入filePredispatchRecoveries审计，即便值为空$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 387
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "缺claim恢复拒绝%s且账本/审计不部分推进",
+              "titleRegex": "缺claim恢复拒绝.*且账本\\/审计不部分推进$",
+              "multiplicity": 9,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 392
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "真实host/ledger同参旧success存在时不得readmit或冒用旧operation回执",
+              "titleRegex": "真实host\\/ledger同参旧success存在时不得readmit或冒用旧operation回执$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 406
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "准入audit写失败或停止时原call重置同事务回滚，不留下半笔事实",
+              "titleRegex": "准入audit写失败或停止时原call重置同事务回滚，不留下半笔事实$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 414
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "并发重新准入只append一次；幂等enqueue和后续payload更新保留audit；损坏audit拒绝覆盖",
+              "titleRegex": "并发重新准入只append一次；幂等enqueue和后续payload更新保留audit；损坏audit拒绝覆盖$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 429
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "只有严格null claim可准入；已有claim走原Native核对，后台source不能准入paused",
+              "titleRegex": "只有严格null claim可准入；已有claim走原Native核对，后台source不能准入paused$",
+              "multiplicity": 1,
+              "explicitBodyMs": null,
+              "effectiveBodyMs": 1800000,
+              "line": 447
+            },
+            {
+              "disabledByKnownQualification": false,
+              "qualificationSource": null,
+              "qualificationKnown": false,
+              "title": "T1250 私有只读对账传原signal；预先取消零读取，在途取消账本与原task不变",
+              "titleRegex": "T1250 私有只读对账传原signal；预先取消零读取，在途取消账本与原task不变$",
+              "multiplicity": 1,
+              "explicitBodyMs": 1800000,
+              "effectiveBodyMs": 1800000,
+              "line": 461
+            }
+          ],
+          "hooks": [
+            {
+              "name": "beforeAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 34
+            },
+            {
+              "name": "afterAll",
+              "explicitMs": null,
+              "effectiveMs": 3000000,
+              "line": 35
+            }
+          ],
+          "declaredCaseCount": 55,
+          "perCaseHookMs": 6000000,
+          "allHooksMs": 6000000,
+          "serialCasesMs": 429000000,
+          "shortExplicitDeclarations": [
+            {
+              "disabledByKnownQualification": true,
+              "qualificationSource": "process.platform!==\"darwin\"||!process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE",
+              "qualificationKnown": true,
+              "title": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+              "titleRegex": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写$",
+              "multiplicity": 1,
+              "explicitBodyMs": 60000,
+              "effectiveBodyMs": 1800000,
+              "line": 283
+            }
+          ]
+        }
+      ],
+      "staticCaseCount": 55,
+      "staticChildMs": 435720000,
+      "collectMs": 1800000,
+      "prepareMs": 120000,
+      "eachProcessTerminationReserveMs": 2160000,
+      "afterSourceReceiptMs": 720000,
+      "outerMs": 442680000,
+      "defaultBodyMs": 1800000,
+      "defaultHookMs": 3000000,
+      "poolStartTeardownMs": 240000,
+      "childCleanupReportMs": 480000,
+      "helperLifecycleSourceFacts": {
+        "identityPsCount": 3,
+        "eachPsMs": 180000,
+        "normalInitialAndFinalSnapshots": 2,
+        "maxSignalSnapshots": 2,
+        "termKillEachGraceMs": 180000,
+        "lastPollingSnapshotOvershootEachMs": 180000,
+        "pollIntervalEachMs": 100,
+        "worstNormalLifecycleMs": 1980200,
+        "allocatedLifecycleMs": 2160000
+      },
+      "shortExplicitDeclarations": [
+        {
+          "file": "frontend/src/server/workbench-file-recovery.test.ts",
+          "disabledByKnownQualification": true,
+          "qualificationSource": "process.platform!==\"darwin\"||!process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE",
+          "qualificationKnown": true,
+          "title": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",
+          "titleRegex": "真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写$",
+          "multiplicity": 1,
+          "explicitBodyMs": 60000,
+          "effectiveBodyMs": 1800000,
+          "line": 283
+        }
+      ]
+    }
+  }
+}

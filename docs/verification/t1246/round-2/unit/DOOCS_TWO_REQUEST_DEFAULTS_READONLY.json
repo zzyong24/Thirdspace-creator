@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-11T23:44:47.492665+00:00",
+  "result": "ACTUAL_TWO_POSITIVE_REQUEST_DEFAULTS_REMAIN_UNRESOLVED",
+  "gate": "docs/verification/t1246/round-2/unit/final-gates/timeout-1609ea867b99a9759ebfbb44e6547b21",
+  "sourceArchive": {
+    "path": "reference-editors/doocs-md/native/native-source.tar.gz",
+    "sha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583"
+  },
+  "entries": [
+    {
+      "archiveEntry": "doocs-md-native/apps/web/src/services/upload/providers.ts",
+      "sha256": "80b8a4c592a3a28d2c3dd1026cfcdbc5498397bd899a31c9f62373b36531c124",
+      "bytes": 24919,
+      "requestConsumer": false,
+      "importConsumer": true
+    },
+    {
+      "archiveEntry": "doocs-md-native/packages/shared/src/utils/fetch.ts",
+      "sha256": "a46fe6b6f34941d7b28868e966b6bc412a9b3704d78f4da50c94b19b2539485d",
+      "bytes": 4397,
+      "requestConsumer": true,
+      "importConsumer": false
+    }
+  ],
+  "actualDefaultMs": 30000,
+  "minimumPolicyMs": 120000,
+  "originalTenVendorAnimationsUnchanged": true,
+  "newProductionEdits": 0,
+  "newExternalCalls": 0,
+  "runtimeConsumerAndExactRebuildScopeStillRequireReview": true,
+  "paths": [
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+      "sha256": "be6f97ab7e84116fbd22a0328f245dbd45a0b209f1e4a85d5815ffd21845614f"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-config-BhBc-hVt.js",
+      "sha256": "34fce8be0bf22d9603bec258ea6e0cc34c79d334381a29f8d233c8a74f06e587"
+    }
+  ]
+}

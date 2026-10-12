@@ -1,0 +1,40 @@
+{
+  "passedFiles": 74,
+  "failedFiles": 2,
+  "skippedFiles": 0,
+  "otherFiles": 0,
+  "rawFileStatusCounts": {
+    "passed": 74,
+    "failed": 2
+  },
+  "skippedWholeFiles": [],
+  "unhandledErrorsFromOriginalLog": 0,
+  "package": "contract",
+  "actualExitCode": 1,
+  "files": 76,
+  "totalTests": 499,
+  "passedTests": 456,
+  "failedTests": 43,
+  "pendingTests": 0,
+  "todoTests": 0,
+  "success": false,
+  "firstStartedAt": "2026-10-11T14:45:47.300Z",
+  "endedAt": "2026-10-11T14:46:48.486Z",
+  "elapsedMs": 61187,
+  "failedSuites": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/contract/tests/endpoint-bootstrap.test.mjs",
+      "message": "",
+      "failedAssertions": 42,
+      "totalAssertions": 42
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator/contract/tests/registry.test.ts",
+      "message": "",
+      "failedAssertions": 1,
+      "totalAssertions": 4
+    }
+  ],
+  "rawLog": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/contract.log",
+  "rawJson": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/contract.json"
+}

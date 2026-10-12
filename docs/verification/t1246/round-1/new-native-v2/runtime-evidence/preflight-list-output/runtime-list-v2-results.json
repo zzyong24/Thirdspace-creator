@@ -1,0 +1,1365 @@
+{
+  "config": {
+    "configFile": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/new-driver/playwright.config.ts",
+    "rootDir": "/private/tmp/t1246-native-runtime-533/frontend/tests-t1246-new",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/private/tmp/t1246-native-runtime-533/frontend/tests-t1246-generated/visual/__setup__.ts",
+    "globalTeardown": "/private/tmp/t1246-native-runtime-533/frontend/tests-t1246-generated/visual/__teardown__.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "e2e",
+        "name": "e2e",
+        "testDir": "/private/tmp/t1246-native-runtime-533/frontend/tests-t1246-new",
+        "testIgnore": [],
+        "testMatch": [
+          "e2e/**/*.spec.ts"
+        ],
+        "timeout": 21600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1/html"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "none",
+    "updateSourceMethod": "patch",
+    "version": "1.60.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node ../docs/verification/t1246/driver/start-isolated-next.cjs",
+      "env": {
+        "STARSHIP_SHELL": "fish",
+        "RUST_LOG": "warn",
+        "CODEX_TASK_WORKSPACE_VERIFYING_IDENTITY": "MCowBQYDK2VwAyEAE2fq5GXMdQnht+8Dqg3MZLx0MwOeHNp2jzzHkqmcKSo=",
+        "TERM": "dumb",
+        "SHELL": "/opt/homebrew/bin/fish",
+        "HOMEBREW_REPOSITORY": "/opt/homebrew",
+        "TMPDIR": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/",
+        "REDFOX_API_KEY": "ak_a1c2979c626a449496d0ee084ef0c8da",
+        "BROWSER_USE_ACCESS_VERIFYING_IDENTITY": "MCowBQYDK2VwAyEAE2fq5GXMdQnht+8Dqg3MZLx0MwOeHNp2jzzHkqmcKSo=",
+        "FPATH": "/opt/homebrew/share/zsh/site-functions:/usr/local/share/zsh/site-functions:/usr/share/zsh/site-functions:/usr/share/zsh/5.9/functions",
+        "MallocNanoZone": "0",
+        "LC_ALL": "C.UTF-8",
+        "USER": "zyongzhu",
+        "CREATOROS_T1246_RUN_DIR": "/private/tmp/t1246-native-runtime-533/docs/verification/t1246/round-1-new-v1",
+        "COMMAND_MODE": "unix2003",
+        "SSH_AUTH_SOCK": "/private/tmp/com.apple.launchd.JcxXXWhOyM/Listeners",
+        "__CF_USER_TEXT_ENCODING": "0x1F5:0x19:0x34",
+        "TOKENTRACKER_HTTP_TIMEOUT_MS": "15000",
+        "CODEX_PERMISSION_PROFILE": ":danger-full-access",
+        "PAGER": "cat",
+        "NDI_RUNTIME_DIR_V6": "/opt/homebrew/lib",
+        "npm_config_verify_deps_before_run": "false",
+        "CREATOROS_TEST_PORT": "61347",
+        "PATH": "/opt/homebrew/Cellar/node/25.9.0_2/bin:./node_modules/.bin:/private/tmp/t1246-native-runtime-533/node_modules/.bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/pmk/env/global/bin:/Library/Apple/usr/bin:/Users/zyongzhu/.cargo/bin:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/zyongzhu/.codex/tmp/arg0/codex-arg0O57fEJ:/Users/zyongzhu/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/zyongzhu/google-cloud-sdk/bin:/Users/zyongzhu/bin:/Users/zyongzhu/Workbase/skills-manager/binaries:/opt/homebrew/opt/node@22/bin:/Users/zyongzhu/.opencode/bin:/Users/zyongzhu/Downloads/multica-cli-0.3.0-darwin-arm64:/Users/zyongzhu/.local/bin:/Users/zyongzhu/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS:/Applications/Obsidian.app/Contents/MacOS",
+        "ZSH_TMUX_AUTOSTART": "false",
+        "CODEX_THREAD_ID": "01a12a5d-7ee2-7d30-82a5-981f84b71920",
+        "npm_command": "exec",
+        "PWD": "/private/tmp/t1246-native-runtime-533/frontend",
+        "DISABLE_AUTO_UPDATE": "true",
+        "LANG": "C.UTF-8",
+        "NODE_PATH": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/node_modules:/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules:/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/node_modules",
+        "XPC_FLAGS": "0x0",
+        "CODEX_CLI_PATH": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "CODEX_CI": "1",
+        "ZSH_TMUX_AUTOSTARTED": "true",
+        "HTTPS_PROXY": "http://127.0.0.1:7890",
+        "pnpm_config_verify_deps_before_run": "false",
+        "XPC_SERVICE_NAME": "application.com.openai.codex.328885244.328885250",
+        "CODEX_VERSION": "0.162.0-alpha.2",
+        "SHLVL": "1",
+        "HOME": "/Users/zyongzhu",
+        "CODEX_SHELL": "1",
+        "HOMEBREW_PREFIX": "/opt/homebrew",
+        "LOG_FORMAT": "json",
+        "HTTP_PROXY": "http://127.0.0.1:7890",
+        "GH_PAGER": "cat",
+        "CODEX_SAGE_BACKFILL_TRACKER_TAB_REUSE": "1",
+        "STARSHIP_SESSION_KEY": "3194311626176158",
+        "LOGNAME": "zyongzhu",
+        "CODEX_MCP_NODE_PATH": "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node",
+        "PNPM_PACKAGE_NAME": "creatoros-frontend",
+        "LC_CTYPE": "C.UTF-8",
+        "CODEX_TECTONIC_PATH": "/Applications/ChatGPT.app/Contents/Resources/tectonic/tectonic",
+        "npm_config_user_agent": "pnpm/10.32.1 npm/? node/v25.9.0 darwin arm64",
+        "NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S": "8e86beb821b9afc846211798e0113bd4b9e79312dfcd135eb447bdb154f64071",
+        "INFOPATH": "/opt/homebrew/share/info:",
+        "HOMEBREW_CELLAR": "/opt/homebrew/Cellar",
+        "CREATOROS_PLAYWRIGHT_DATA_ROOT": "/tmp/t1246-new-native-data-533-v1",
+        "OSLogRateLimit": "64",
+        "GIT_PAGER": "cat",
+        "CODEX_SESSION_ID": "01a1299a-a95f-75e1-8637-879d7239bdc0",
+        "CODEX_APP_TOOLS_PIPE_PATH": "/tmp/codex-browser-use/f745a65e-0451-412a-a5cf-cb26b0251332.sock",
+        "COLORTERM": "",
+        "CODEX_INTERNAL_ORIGINATOR_OVERRIDE": "Codex Desktop",
+        "NO_PROXY": "127.0.0.1,localhost",
+        "no_proxy": "127.0.0.1,localhost",
+        "CREATOROS_MEDIA_ROOT": "/tmp/t1246-new-native-data-533-v1/media",
+        "DATABASE_URL": "",
+        "PGLITE_DATA_DIR": "/tmp/t1246-new-native-data-533-v1/pglite",
+        "CREATOROS_DOUYIN_AUTH_DIR": "/tmp/t1246-new-native-data-533-v1/auth-douyin",
+        "CREATOROS_WEB_AUTH_DIR": "/tmp/t1246-new-native-data-533-v1/auth-web",
+        "CREATOROS_DISABLE_SCHEDULER": "1",
+        "CREATOROS_DEV_MODE": "1"
+      },
+      "reuseExistingServer": false,
+      "timeout": 300000,
+      "url": "http://127.0.0.1:61347",
+      "stdout": "pipe",
+      "stderr": "pipe",
+      "cwd": "/private/tmp/t1246-native-runtime-533/frontend",
+      "gracefulShutdown": {
+        "signal": "SIGTERM",
+        "timeout": 120000
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "e2e/integrated-browser.spec.ts",
+      "file": "e2e/integrated-browser.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "INT-ROUTES：全部现有静态入口与真实项目各阶段宽窄、空态、刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-0de18d67ec39826d0c92",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 6,
+          "column": 5
+        },
+        {
+          "title": "INT-ENGINE：免独立API配置、真实偏好切换、刷新及第二窗口同步",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-34dd8349650ff853d0af",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 12,
+          "column": 5
+        },
+        {
+          "title": "INT-ENGINE-FAIL：真实GET透传等待、PATCH故障保服务原值、能力fixture明确分界",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-3f9b60c1f67a6d8e13dc",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "INT-GROUP：真实A/B组、项目与知识错组404、刷新同ID且B列表诚实空",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-5f8b3b61fa14f46551be",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 28,
+          "column": 5
+        },
+        {
+          "title": "INT-KNOWLEDGE：窄窗真实创建编辑、公开新旧版本、目录移动、CAS与组隔离",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-14fb55cacbcf5fcd8659",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 33,
+          "column": 5
+        },
+        {
+          "title": "INT-T1245：稳定390/900/1536和低高度筛选、可达关闭按钮、保真实状态",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-fc0cc0e6f3c04f739a0f",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 39,
+          "column": 5
+        },
+        {
+          "title": "INT-NAV：同页编导弹层与返回、真实链接宽窄、保持本项目已保存文稿",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-e814e558573c2b4d2f3e",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 47,
+          "column": 5
+        },
+        {
+          "title": "INT-FREEZE：Codex原任务在途切Pi、原ID候选读回、不重新提交",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-b196664086218cc0caf4",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 50,
+          "column": 5
+        },
+        {
+          "title": "INT-RECOVERY：原公共恢复入口及真实绑定准入，不伪造unknown历史",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-7c54ec444d93f9a0bf13",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 53,
+          "column": 5
+        },
+        {
+          "title": "INT-PI：合法Pi入口与Codex切换，原HTTP模型配置仅独立fixture批次允许",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e001182671dd9993fecb-f861c03aeb3a262c2ca7",
+          "file": "e2e/integrated-browser.spec.ts",
+          "line": 58,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/integrated-dependent.spec.ts",
+      "file": "e2e/integrated-dependent.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "INT-TEXT-DISCOVERY / topic.enrich：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-8dd0bab15ea280d21f90",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / topic.preference：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-9fa46b534683a898514b",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / calibration.diagnose：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-2edcbe1c48e37c62d8c6",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / calibration.score：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-366f0ad10bf538bc2b75",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-MOMENTS / moments text：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-499c04eee2e99bfa9607",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-MOMENTS / work review：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-596664f584e1413c6e41",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-VIDEO / video.decisions：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-d44bfab8e0b33d9eba66",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-VIDEO / reconstruct.project：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-d6f57ee72c9b5996b112",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-KNOWLEDGE-AI / comment.qa-sift：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-95513ea51f6e7b0e3a99",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-RESEARCH / script.source_similarity：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-cf9175ae94d765127f5b",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-INTELLIGENCE / intelligence generation：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-2b1dc2b77d87e0c163d6",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-INTELLIGENCE / intelligence.rewrite-text：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-459aade45d1509a071de",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-BACKGROUND / scheduled.topic.daily：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-50180723d693cada691c",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-BACKGROUND / scheduled flywheel：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-db57cb5df6bf8003c660",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-TEXT-TRANSCRIBE / transcribe postprocess：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-2d4693048e322256eb0d",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        },
+        {
+          "title": "INT-VISION / video.visual-review：真实前置检查、原公开入口和任务读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "05d77e355062c9acafd9-b9dbd73a2d12175fa241",
+          "file": "e2e/integrated-dependent.spec.ts",
+          "line": 39,
+          "column": 27
+        }
+      ]
+    },
+    {
+      "title": "e2e/integrated-native.spec.ts",
+      "file": "e2e/integrated-native.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "INT-TEXT-PLAN / planning.thesis：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-930d35a3b8f66ec42eb1",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-PLAN / planning.contract：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-7511a1e9cac45bc7c720",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-PLAN / planning.outline：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-8b5fba27e88e0fe2a08a",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-WRITE / script.draft：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-9501803d6a28e88f1b88",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-WRITE / wechat.article-draft：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-1eb41ae827c5b5ea58a9",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-REVIEW / script.review：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-133e5b4a70cf5659370f",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-REVIEW / publish.platform_adapt：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-3546bacb2a57e4c1e458",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-REVIEW / review.analyze：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-f418b249a3f920779e0d",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-POST / graphic.post-text：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-84a0f88adaaa24bdee36",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-POST / wechat.article-text：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-ffad95aeaa3eaf171541",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-POST / publication.text：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-2711bcf65030783a2541",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / positioning.generate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-d94d9d4c9e530c89baa7",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-DISCOVERY / topic.generate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-62b9a96fafe3e83634af",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-RESEARCH / research.gather_material：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-742f7f25462a5a1c68e0",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-RESEARCH / copilot.assist：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-2f85c83aaaa580a66b72",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-MEDIA / asset.classify：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-acb821ed4bd220c6d755",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-MEDIA / material.extract：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-7ddd64f60b391b81d083",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-MEDIA / material.match：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-124c94821ebb6b9d96a6",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.classify：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-7157b1d87ace3d85afbb",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.distill：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-d9611ad52372ff28716d",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-TEXT-KNOWLEDGE-AI / knowledge.relate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-8f5a2b3ee47d091d0ef8",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-ASSET / asset.generate image：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-1cca3297cea84856a044",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-REF / asset.generate image_to_image：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-b3af33cbc1068f25f5ca",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-COVER / cover.generate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-936401fd7d7c6bb9525d",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-CARDS / graphic.card.generate：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-8eee9d2a1bf062a5f76c",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-CARDS / 系列图：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-57f319aa75f8257974ba",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-IMAGE-CARDS / 文章配图：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-84d4868a7b9746b462a0",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-VISION / asset.classify vision：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-444ee92e91b229361d4b",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / chat.run Codex：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-41312c2739516058a028",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / worker.structured-node/proposal：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-e6688edd41196e9c1135",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / worker.script-hooks/proposal：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-14f7f96049555961b20f",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / worker.script-draft/committed：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-396dceac5ddf640cc2a1",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        },
+        {
+          "title": "INT-CHAT / chat image generation：真实公共生成、宽窄截图、原ID读回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 21600000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "142fc0dc372ec88486cf-21e52c7152354ae33a61",
+          "file": "e2e/integrated-native.spec.ts",
+          "line": 97,
+          "column": 28
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T15:35:10.082Z",
+    "duration": 483.381,
+    "expected": 0,
+    "skipped": 59,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

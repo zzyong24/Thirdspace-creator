@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "完整首评未发现阻断：当前真实git清单1114935字节、17741路径，默认execFileSync真实ENOBUFS；只添加有限32MiB缓冲和120000ms预算保留NUL切分、全库存扫描与原失败退出。完整verify仍须真实执行，当前审核不代签门通过。",
+  "findings": []
+}

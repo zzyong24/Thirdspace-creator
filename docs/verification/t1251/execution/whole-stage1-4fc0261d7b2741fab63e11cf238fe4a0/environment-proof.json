@@ -1,0 +1,35 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "-e",
+    "const net=require('node:net');let denied=false;try{new net.Socket().connect({host:'127.0.0.1',port:55422})}catch(e){denied=e.message.startsWith('T1246_ENV_NOT_OWNED_PG')}const proof={nativeAbsent:!Object.hasOwn(process.env,'NODE_PG_FORCE_NATIVE'),noPGURL:!Object.keys(process.env).some(k=>k.startsWith('PG')||k.endsWith('POSTGRES_URL')||k==='DATABASE_URL'||k==='TEST_DATABASE_URL'),guarded:net.Socket.prototype.connect.name==='t1246OwnedPgConnect',foreignDenied:denied};console.log(JSON.stringify(proof));if(!Object.values(proof).every(value=>value===true))process.exitCode=1;"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "pid": 93310,
+  "identity": {
+    "pid": 93310,
+    "pgid": 93310,
+    "uid": 501,
+    "birth": "Mon Oct 12 05:30:38 2026",
+    "startedAt": 1791754238837
+  },
+  "startedAt": "2026-10-11T21:30:38.837Z",
+  "endedAt": "2026-10-11T21:30:39.056Z",
+  "elapsedMs": 219,
+  "budgetMs": 900000,
+  "deadlineAt": "2026-10-11T21:45:38.837Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "{\"nativeAbsent\":true,\"noPGURL\":true,\"guarded\":true,\"foreignDenied\":true}\n",
+  "stderr": "",
+  "ownedDir": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1251-generation-4fc0261d7b2741fab63e11cf238fe4a0-dhij9u"
+}

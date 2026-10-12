@@ -1,0 +1,824 @@
+{
+  "scope": "只读源码/结果分诊；没有测试执行",
+  "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+  "files": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/runtime/browser/chromium-guard.ts",
+      "relativePath": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "sha256": "1cd4ced2481f5f4b69b757fa077d1a502924554dff77d41bd257cb9f017eac9f",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/ai-worker/src/runtime/browser/chromium-guard.ts",
+      "unitSha256": "1cd4ced2481f5f4b69b757fa077d1a502924554dff77d41bd257cb9f017eac9f",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/drizzle/0133_assistant_execution_engine.sql",
+      "relativePath": "backend/drizzle/0133_assistant_execution_engine.sql",
+      "sha256": "0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/drizzle/0133_assistant_execution_engine.sql",
+      "unitSha256": "0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/drizzle/meta/_journal.json",
+      "relativePath": "backend/drizzle/meta/_journal.json",
+      "sha256": "641f9122d5efdc1f33ea31cda12f9df95f2537b1862582b7438afde0217f2bb0",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/drizzle/meta/_journal.json",
+      "unitSha256": "641f9122d5efdc1f33ea31cda12f9df95f2537b1862582b7438afde0217f2bb0",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/chat-receipt-projection.ts",
+      "relativePath": "backend/src/modules/ai/chat-receipt-projection.ts",
+      "sha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/ai/chat-receipt-projection.ts",
+      "unitSha256": "426c4cbfb2b1ce8d7ae0845dce7ed942198df41fca9b15ec43df7b7507c5ea44",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/analytics/analytics.transport.ts",
+      "relativePath": "backend/src/modules/analytics/analytics.transport.ts",
+      "sha256": "28c1b1ed428b9b745437e24c0887daa42d5944726f945adeac0f51f4ccca9aac",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/analytics/analytics.transport.ts",
+      "unitSha256": "28c1b1ed428b9b745437e24c0887daa42d5944726f945adeac0f51f4ccca9aac",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/analytics/comment-diagnosis.service.ts",
+      "relativePath": "backend/src/modules/analytics/comment-diagnosis.service.ts",
+      "sha256": "bf01c7cb94944f6530204d747f0cd8efaadd13fbaa6cdfe988c6a9e038b46680",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/analytics/comment-diagnosis.service.ts",
+      "unitSha256": "bf01c7cb94944f6530204d747f0cd8efaadd13fbaa6cdfe988c6a9e038b46680",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/analytics/traffic.service.ts",
+      "relativePath": "backend/src/modules/analytics/traffic.service.ts",
+      "sha256": "1911630dd42ebb9dff081c3b639c55ac3a33b358a22d3cdc612697f593db3e50",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/analytics/traffic.service.ts",
+      "unitSha256": "1911630dd42ebb9dff081c3b639c55ac3a33b358a22d3cdc612697f593db3e50",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/assets/assets.transport.ts",
+      "relativePath": "backend/src/modules/assets/assets.transport.ts",
+      "sha256": "705d27c26c9c53a749058b979c3edc966d3709508af581ee02fd11c376f14843",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/assets/assets.transport.ts",
+      "unitSha256": "705d27c26c9c53a749058b979c3edc966d3709508af581ee02fd11c376f14843",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/content-calendar/content-calendar.transport.ts",
+      "relativePath": "backend/src/modules/content-calendar/content-calendar.transport.ts",
+      "sha256": "f0448d6ee252c3496262b747f9bbe1e567d27a5a3193d17d096b024252f2a864",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/content-calendar/content-calendar.transport.ts",
+      "unitSha256": "f0448d6ee252c3496262b747f9bbe1e567d27a5a3193d17d096b024252f2a864",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts",
+      "relativePath": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts",
+      "unitSha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/intelligence/share-import-runner.ts",
+      "relativePath": "backend/src/modules/intelligence/share-import-runner.ts",
+      "sha256": "ca2451e9bad2c5cc2cca5cee0c6289d41c76f8d1f48a730512fbb369b8835bff",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/intelligence/share-import-runner.ts",
+      "unitSha256": "ca2451e9bad2c5cc2cca5cee0c6289d41c76f8d1f48a730512fbb369b8835bff",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/platform-account/account-binding.service.ts",
+      "relativePath": "backend/src/modules/platform-account/account-binding.service.ts",
+      "sha256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/platform-account/account-binding.service.ts",
+      "unitSha256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/platform-account/platform-account.transport.ts",
+      "relativePath": "backend/src/modules/platform-account/platform-account.transport.ts",
+      "sha256": "3b88e3121e9f30f56e886ec83aad9557826415033db2b5001c917f2fc489c43a",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/platform-account/platform-account.transport.ts",
+      "unitSha256": "3b88e3121e9f30f56e886ec83aad9557826415033db2b5001c917f2fc489c43a",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/publishing/publishing.repository.ts",
+      "relativePath": "backend/src/modules/publishing/publishing.repository.ts",
+      "sha256": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/publishing/publishing.repository.ts",
+      "unitSha256": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/publishing/publishing.service.ts",
+      "relativePath": "backend/src/modules/publishing/publishing.service.ts",
+      "sha256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/publishing/publishing.service.ts",
+      "unitSha256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/publishing/publishing.transport.ts",
+      "relativePath": "backend/src/modules/publishing/publishing.transport.ts",
+      "sha256": "569b4d4d67319ba3c6e7232c6397e497e4b42ebd11f40e70d41c33dddd2fa807",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/publishing/publishing.transport.ts",
+      "unitSha256": "569b4d4d67319ba3c6e7232c6397e497e4b42ebd11f40e70d41c33dddd2fa807",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/query-services/query-services.transport.ts",
+      "relativePath": "backend/src/modules/query-services/query-services.transport.ts",
+      "sha256": "d493fcb0632a2fc0a9afca0483829a0add30776466c496c31348e45b4b0ede30",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/query-services/query-services.transport.ts",
+      "unitSha256": "d493fcb0632a2fc0a9afca0483829a0add30776466c496c31348e45b4b0ede30",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/contract/src/internal/execution-engine.ts",
+      "relativePath": "contract/src/internal/execution-engine.ts",
+      "sha256": "057e5cddaa8542fc2cca2431c798491d406c8baeb96a50d012ad2da6f8108c0c",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/contract/src/internal/execution-engine.ts",
+      "unitSha256": "057e5cddaa8542fc2cca2431c798491d406c8baeb96a50d012ad2da6f8108c0c",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/contract/src/resources/platform-accounts.ts",
+      "relativePath": "contract/src/resources/platform-accounts.ts",
+      "sha256": "dc9510c917245cc0f71d9e91783fb166d9a68444de05c9baf80ee576dead2dab",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/contract/src/resources/platform-accounts.ts",
+      "unitSha256": "dc9510c917245cc0f71d9e91783fb166d9a68444de05c9baf80ee576dead2dab",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1050-multi-format-project-creation.md",
+      "relativePath": "docs/features/t1050-multi-format-project-creation.md",
+      "sha256": "6d8af35d62df0699e60a38af93df03c29e9d2119a4219f47ba48a8dc76d76185",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/docs/features/t1050-multi-format-project-creation.md",
+      "unitSha256": "6d8af35d62df0699e60a38af93df03c29e9d2119a4219f47ba48a8dc76d76185",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1051-script-first-workbench.md",
+      "relativePath": "docs/features/t1051-script-first-workbench.md",
+      "sha256": "937e46b1e31f544ac3345a8d9fd45a4386ae533b42294b3feba64f60fb5ad1d4",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/docs/features/t1051-script-first-workbench.md",
+      "unitSha256": "937e46b1e31f544ac3345a8d9fd45a4386ae533b42294b3feba64f60fb5ad1d4",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1228-chat-child-partial-verification.md",
+      "relativePath": "docs/features/t1228-chat-child-partial-verification.md",
+      "sha256": "edec26bc79c452dbefa6f18c04981c95a154c6d1fb630903cb41b7eb4646a4b6",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/docs/features/t1228-chat-child-partial-verification.md",
+      "unitSha256": "edec26bc79c452dbefa6f18c04981c95a154c6d1fb630903cb41b7eb4646a4b6",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1238-codex-unified-text-image-engine.md",
+      "relativePath": "docs/features/t1238-codex-unified-text-image-engine.md",
+      "sha256": "1c2f0e33bcedd10af9dd18d52b6e1d181fca314f59711eaa532b2693d6f2fbc7",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/docs/features/t1238-codex-unified-text-image-engine.md",
+      "unitSha256": "1c2f0e33bcedd10af9dd18d52b6e1d181fca314f59711eaa532b2693d6f2fbc7",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1246-integrated-dev-package-acceptance.md",
+      "relativePath": "docs/features/t1246-integrated-dev-package-acceptance.md",
+      "sha256": "8a4e5ed7ace44905c885410f02e9d1475d49383ff854856342bdea62b8416635",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/docs/features/t1246-integrated-dev-package-acceptance.md",
+      "unitSha256": "8a4e5ed7ace44905c885410f02e9d1475d49383ff854856342bdea62b8416635",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/(creator)/layout.guard.test.tsx",
+      "relativePath": "frontend/src/app/(creator)/layout.guard.test.tsx",
+      "sha256": "645a23af709ed99362179c7d9d34a38b0ddfa26b54bdeae91819919eb5bba155",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/(creator)/layout.guard.test.tsx",
+      "unitSha256": "645a23af709ed99362179c7d9d34a38b0ddfa26b54bdeae91819919eb5bba155",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/api/v1/auth/auth-routes.test.ts",
+      "relativePath": "frontend/src/app/api/v1/auth/auth-routes.test.ts",
+      "sha256": "fc7f4e2c415ac345584a04b17a10b36cbf507946593801c519e6a75c512fc42a",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/auth/auth-routes.test.ts",
+      "unitSha256": "fc7f4e2c415ac345584a04b17a10b36cbf507946593801c519e6a75c512fc42a",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/api/v1/dispatch/route.ts",
+      "relativePath": "frontend/src/app/api/v1/dispatch/route.ts",
+      "sha256": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/dispatch/route.ts",
+      "unitSha256": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/plan.ts",
+      "relativePath": "frontend/src/app/api/v1/local/reset-workspace/plan.ts",
+      "sha256": "3bc6f395c2d9e6bcbd3ad246bcc1ab44e3dae35ca6f9e93c07807ed4a1277ef4",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/plan.ts",
+      "unitSha256": "3bc6f395c2d9e6bcbd3ad246bcc1ab44e3dae35ca6f9e93c07807ed4a1277ef4",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/route.test.ts",
+      "relativePath": "frontend/src/app/api/v1/local/reset-workspace/route.test.ts",
+      "sha256": "070b63c49329af2a48fc6befa3e0bc5778dd329d73bec92ad9888e5449f20875",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/route.test.ts",
+      "unitSha256": "070b63c49329af2a48fc6befa3e0bc5778dd329d73bec92ad9888e5449f20875",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/route.ts",
+      "relativePath": "frontend/src/app/api/v1/local/reset-workspace/route.ts",
+      "sha256": "97a05464f6ce9ce29ea4f850cb903e65ad154a8b914c9116f5713b4553cf4e06",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/app/api/v1/local/reset-workspace/route.ts",
+      "unitSha256": "97a05464f6ce9ce29ea4f850cb903e65ad154a8b914c9116f5713b4553cf4e06",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/overlays/new-project-dialog.prefill.test.tsx",
+      "relativePath": "frontend/src/components/overlays/new-project-dialog.prefill.test.tsx",
+      "sha256": "31d3d42b299befabf402343e1b22e609f44608f22ea0502e0209b81f726a0008",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/overlays/new-project-dialog.prefill.test.tsx",
+      "unitSha256": "31d3d42b299befabf402343e1b22e609f44608f22ea0502e0209b81f726a0008",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/overlays/new-project-dialog.tsx",
+      "relativePath": "frontend/src/components/overlays/new-project-dialog.tsx",
+      "sha256": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/overlays/new-project-dialog.tsx",
+      "unitSha256": "2d99258d9a26f3cb219b5973c839ebaaea0255e05f7185882489a2f20b73040f",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/zero-account-guidance.test.tsx",
+      "relativePath": "frontend/src/components/shell/zero-account-guidance.test.tsx",
+      "sha256": "2125077db72bf5a39c6ae17d56181dd72df0170ceb7da17aed6bd6565b9c85a6",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/shell/zero-account-guidance.test.tsx",
+      "unitSha256": "2125077db72bf5a39c6ae17d56181dd72df0170ceb7da17aed6bd6565b9c85a6",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/ui/creator-date-picker-antd.test.tsx",
+      "relativePath": "frontend/src/components/ui/creator-date-picker-antd.test.tsx",
+      "sha256": "bbe0e44635d260d02ede9cba06b7335dd6cab83c6656576a1e002d83a2a93078",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/components/ui/creator-date-picker-antd.test.tsx",
+      "unitSha256": "bbe0e44635d260d02ede9cba06b7335dd6cab83c6656576a1e002d83a2a93078",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/article/article-workbench.test.tsx",
+      "relativePath": "frontend/src/features/article/article-workbench.test.tsx",
+      "sha256": "ebd11cf898eb5d8ece2771e8634dcaac69973d1aacc3ca2972b863dda33aa783",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/article/article-workbench.test.tsx",
+      "unitSha256": "ebd11cf898eb5d8ece2771e8634dcaac69973d1aacc3ca2972b863dda33aa783",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/copilot/assistant-engine.ts",
+      "relativePath": "frontend/src/features/copilot/assistant-engine.ts",
+      "sha256": "165be316c772d1e2bc16ee73e5344301e4b1b96930d124351eeaca3380251bcd",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/copilot/assistant-engine.ts",
+      "unitSha256": "165be316c772d1e2bc16ee73e5344301e4b1b96930d124351eeaca3380251bcd",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/copilot/chat-diagnosis-card.test.tsx",
+      "relativePath": "frontend/src/features/copilot/chat-diagnosis-card.test.tsx",
+      "sha256": "086c4cf03c38c2d83b5819f5c7879188a5c443a2aeef67eb808768a97116097f",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/copilot/chat-diagnosis-card.test.tsx",
+      "unitSha256": "086c4cf03c38c2d83b5819f5c7879188a5c443a2aeef67eb808768a97116097f",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/copilot/use-assistant-engine.ts",
+      "relativePath": "frontend/src/features/copilot/use-assistant-engine.ts",
+      "sha256": "e7648ba1eea7c6dd91e5467ac5168c444c182f2424a39d91031ef7858899da09",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/copilot/use-assistant-engine.ts",
+      "unitSha256": "e7648ba1eea7c6dd91e5467ac5168c444c182f2424a39d91031ef7858899da09",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/projects/moments-workbench.tsx",
+      "relativePath": "frontend/src/features/projects/moments-workbench.tsx",
+      "sha256": "2445f7eea32200aacad2150cfd8b0a1221d13a78770087c38936d28f141c799b",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/moments-workbench.tsx",
+      "unitSha256": "2445f7eea32200aacad2150cfd8b0a1221d13a78770087c38936d28f141c799b",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/projects/new-project-form.tsx",
+      "relativePath": "frontend/src/features/projects/new-project-form.tsx",
+      "sha256": "d10f68907e9280999164bd5a47d1026accbfe0e61a9f4a74b40460c8ee4c1d2b",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/new-project-form.tsx",
+      "unitSha256": "d10f68907e9280999164bd5a47d1026accbfe0e61a9f4a74b40460c8ee4c1d2b",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/projects/project-creation.ts",
+      "relativePath": "frontend/src/features/projects/project-creation.ts",
+      "sha256": "4a6075931ed3f142fd5905e8ca67a7212cc4e1b994b5690447626675ad6439e2",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/project-creation.ts",
+      "unitSha256": "4a6075931ed3f142fd5905e8ca67a7212cc4e1b994b5690447626675ad6439e2",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/projects/publication-result-actions.test.tsx",
+      "relativePath": "frontend/src/features/projects/publication-result-actions.test.tsx",
+      "sha256": "e6d79cda51993379b128eecbe8c23e6ab61679cba553a01ce1bcf35d23391e41",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/publication-result-actions.test.tsx",
+      "unitSha256": "e6d79cda51993379b128eecbe8c23e6ab61679cba553a01ce1bcf35d23391e41",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/projects/publication-result-actions.tsx",
+      "relativePath": "frontend/src/features/projects/publication-result-actions.tsx",
+      "sha256": "c2b88d6c5184762b580831b6520cd3c3c10d4ab047a76b938261b467bf1bbb43",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/publication-result-actions.tsx",
+      "unitSha256": "c2b88d6c5184762b580831b6520cd3c3c10d4ab047a76b938261b467bf1bbb43",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/projects/quick-create-work.test.tsx",
+      "relativePath": "frontend/src/features/projects/quick-create-work.test.tsx",
+      "sha256": "ba3f8276c5c1f5316c624f792eb7224e14e39f80c1e5edabc7b5df56c25c27e5",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/quick-create-work.test.tsx",
+      "unitSha256": "ba3f8276c5c1f5316c624f792eb7224e14e39f80c1e5edabc7b5df56c25c27e5",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/projects/quick-create-work.tsx",
+      "relativePath": "frontend/src/features/projects/quick-create-work.tsx",
+      "sha256": "fa2b541e66598aac8b40ebec1756e199d45994781abc82d204e8ec17674efe8d",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/quick-create-work.tsx",
+      "unitSha256": "fa2b541e66598aac8b40ebec1756e199d45994781abc82d204e8ec17674efe8d",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/projects/work-editing-recovery.test.tsx",
+      "relativePath": "frontend/src/features/projects/work-editing-recovery.test.tsx",
+      "sha256": "a744b940e39fce83fa3978688009479934856b5b90feb6e25bc49213c050eace",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/projects/work-editing-recovery.test.tsx",
+      "unitSha256": "a744b940e39fce83fa3978688009479934856b5b90feb6e25bc49213c050eace",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+      "relativePath": "frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+      "sha256": "58916cb4c38b4e1acd3c8f87259e0ff12bff7e1f0a95b3bc6ae83c5b43bbfe92",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/reference-editors/noterelay/native-bundle.test.ts",
+      "unitSha256": "58916cb4c38b4e1acd3c8f87259e0ff12bff7e1f0a95b3bc6ae83c5b43bbfe92",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+      "relativePath": "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+      "sha256": "7c4391845aafe2e40908a1f7f5edd16ee0590a2789a3d78b3a332768dea43582",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+      "unitSha256": "7c4391845aafe2e40908a1f7f5edd16ee0590a2789a3d78b3a332768dea43582",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/settings/check-update-card.test.tsx",
+      "relativePath": "frontend/src/features/settings/check-update-card.test.tsx",
+      "sha256": "a6bfeacdc1101fa5b92dcfdbea8dba566ef13a5ff4e2c3335639f325d1707619",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/check-update-card.test.tsx",
+      "unitSha256": "a6bfeacdc1101fa5b92dcfdbea8dba566ef13a5ff4e2c3335639f325d1707619",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/settings/identity-section.test.tsx",
+      "relativePath": "frontend/src/features/settings/identity-section.test.tsx",
+      "sha256": "2018a4f89ed7cd533a12a6f18888bfb6b2475a9bcdd55f4cdf5bbe28ecf5b453",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/identity-section.test.tsx",
+      "unitSha256": "2018a4f89ed7cd533a12a6f18888bfb6b2475a9bcdd55f4cdf5bbe28ecf5b453",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "relativePath": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "sha256": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "unitSha256": "9f3c017892c8f5c8dbd3e9473e533f0508879a65dbbb26e4601dc2d444943606",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.tsx",
+      "relativePath": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "sha256": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.tsx",
+      "unitSha256": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/settings/settings-model-region.tsx",
+      "relativePath": "frontend/src/features/settings/settings-model-region.tsx",
+      "sha256": "8df4495477a0a336def085c2f0562cf7fe6243aff89b6ff71f80737fd2add9e8",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/features/settings/settings-model-region.tsx",
+      "unitSha256": "8df4495477a0a336def085c2f0562cf7fe6243aff89b6ff71f80737fd2add9e8",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/lib/creation-workspace-scope.ts",
+      "relativePath": "frontend/src/lib/creation-workspace-scope.ts",
+      "sha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/lib/creation-workspace-scope.ts",
+      "unitSha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/lib/request-context.server.ts",
+      "relativePath": "frontend/src/lib/request-context.server.ts",
+      "sha256": "b4b218b8ad70fa4c627bb11e9c5f60f6de39a3afd8f7e6dd851210ac842b0c31",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/lib/request-context.server.ts",
+      "unitSha256": "b4b218b8ad70fa4c627bb11e9c5f60f6de39a3afd8f7e6dd851210ac842b0c31",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/assets.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/assets.persistence-client.test.ts",
+      "sha256": "bf9efb76a9f928e5a69da19a8ce2cbc99a3b5b0e60f138f406991636cf372fd3",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/assets.persistence-client.test.ts",
+      "unitSha256": "bf9efb76a9f928e5a69da19a8ce2cbc99a3b5b0e60f138f406991636cf372fd3",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/content-calendar.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/content-calendar.persistence-client.test.ts",
+      "sha256": "61f767a3f0eb4b5ba66f3cd67f20008aa98157b882086ecca406673522de25e8",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/content-calendar.persistence-client.test.ts",
+      "unitSha256": "61f767a3f0eb4b5ba66f3cd67f20008aa98157b882086ecca406673522de25e8",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts",
+      "sha256": "45abee8a414db68f9694d3af1f0e29772ff51a9597cc165d318d428da2300686",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts",
+      "unitSha256": "45abee8a414db68f9694d3af1f0e29772ff51a9597cc165d318d428da2300686",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts",
+      "sha256": "a4427b419b85f78afff2fcc86aaa1ef85d3eb2d0ecd6ec9c9c0908df8cfb6885",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/knowledge.persistence-client.test.ts",
+      "unitSha256": "a4427b419b85f78afff2fcc86aaa1ef85d3eb2d0ecd6ec9c9c0908df8cfb6885",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+      "sha256": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+      "unitSha256": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/platform-account.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/platform-account.persistence-client.test.ts",
+      "sha256": "347588e5ce867019d130a49a60f8a5cd64389829e5a1065aabb67855361627da",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/platform-account.persistence-client.test.ts",
+      "unitSha256": "347588e5ce867019d130a49a60f8a5cd64389829e5a1065aabb67855361627da",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/publication-cover-bytes.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/publication-cover-bytes.persistence-client.test.ts",
+      "sha256": "11b22a934369949ed2570c17409d113224e6523e2cc6e18a03bf36d1b8f888cf",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/publication-cover-bytes.persistence-client.test.ts",
+      "unitSha256": "11b22a934369949ed2570c17409d113224e6523e2cc6e18a03bf36d1b8f888cf",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/publishing.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/publishing.persistence-client.test.ts",
+      "sha256": "2d7895cf662bfc27ef00f45b2c8750674f13128fcf1392bd5e5cc370bd73cc7c",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/publishing.persistence-client.test.ts",
+      "unitSha256": "2d7895cf662bfc27ef00f45b2c8750674f13128fcf1392bd5e5cc370bd73cc7c",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/query-services.contract.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/query-services.contract.test.ts",
+      "sha256": "64eaf2d6fbff99041f40ab59ec4c8d00de2aca0da6573471a0016855f3cad9a1",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/query-services.contract.test.ts",
+      "unitSha256": "64eaf2d6fbff99041f40ab59ec4c8d00de2aca0da6573471a0016855f3cad9a1",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/__module_integration__/search-indexing.persistence-client.test.ts",
+      "relativePath": "frontend/src/server/__module_integration__/search-indexing.persistence-client.test.ts",
+      "sha256": "e97df3faa9e4fbdd1864b09925758f0c4cd8d7e1aa820cde80095873890c1bf6",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/__module_integration__/search-indexing.persistence-client.test.ts",
+      "unitSha256": "e97df3faa9e4fbdd1864b09925758f0c4cd8d7e1aa820cde80095873890c1bf6",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/chat-task-submission.integration.test.ts",
+      "relativePath": "frontend/src/server/chat-task-submission.integration.test.ts",
+      "sha256": "55350e1cc89623996b6b891d5b1788b4d1eddfe60569d8b56534e3b388d90832",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/chat-task-submission.integration.test.ts",
+      "unitSha256": "55350e1cc89623996b6b891d5b1788b4d1eddfe60569d8b56534e3b388d90832",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+      "relativePath": "frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+      "sha256": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+      "unitSha256": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/chromium-guard.test.ts",
+      "relativePath": "frontend/src/server/ingestion/chromium-guard.test.ts",
+      "sha256": "64398cc8bd849301b479ab20bcf07ce2a8910f3be7199a2e5a707e1f264b3be6",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/chromium-guard.test.ts",
+      "unitSha256": "64398cc8bd849301b479ab20bcf07ce2a8910f3be7199a2e5a707e1f264b3be6",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "relativePath": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "sha256": "3d9380877c76c39da124dc646575aa91244de0e25e81886b70d412caf1cd3779",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+      "unitSha256": "3d9380877c76c39da124dc646575aa91244de0e25e81886b70d412caf1cd3779",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/ingestion/douyin-throttle-integration.test.ts",
+      "relativePath": "frontend/src/server/ingestion/douyin-throttle-integration.test.ts",
+      "sha256": "66b8db85d662fa454abe9cad102e2fb59d14a7aa8adcff2afd3bd6acdf0ccc49",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/douyin-throttle-integration.test.ts",
+      "unitSha256": "66b8db85d662fa454abe9cad102e2fb59d14a7aa8adcff2afd3bd6acdf0ccc49",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/intelligence/share-import-runner.test.ts",
+      "relativePath": "frontend/src/server/intelligence/share-import-runner.test.ts",
+      "sha256": "dc3bd0192199a68a6b96d0c6ce017417d3c1b224b218b239f2bbf7425fdb9ab1",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/intelligence/share-import-runner.test.ts",
+      "unitSha256": "dc3bd0192199a68a6b96d0c6ce017417d3c1b224b218b239f2bbf7425fdb9ab1",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+      "relativePath": "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+      "sha256": "cfa9e53e4ed52a6a0708f997a840e7740504bfd1daa28846e54a7bb4f1bd084b",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+      "unitSha256": "cfa9e53e4ed52a6a0708f997a840e7740504bfd1daa28846e54a7bb4f1bd084b",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/persistence-client.favorites-diagnostics.test.ts",
+      "relativePath": "frontend/src/server/persistence-client.favorites-diagnostics.test.ts",
+      "sha256": "c63ba22bbe95bedef67adee7bd3aa983d2e5b985f65cd90df1c9a45733956cd8",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/persistence-client.favorites-diagnostics.test.ts",
+      "unitSha256": "c63ba22bbe95bedef67adee7bd3aa983d2e5b985f65cd90df1c9a45733956cd8",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/persistence-client.ts",
+      "relativePath": "frontend/src/server/persistence-client.ts",
+      "sha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/persistence-client.ts",
+      "unitSha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/platform-worker-entry.integration.test.ts",
+      "relativePath": "frontend/src/server/platform-worker-entry.integration.test.ts",
+      "sha256": "2632c48cb0fe6cca31f318add3f8a78a99ef44a8151352a460cf771154da3045",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/platform-worker-entry.integration.test.ts",
+      "unitSha256": "2632c48cb0fe6cca31f318add3f8a78a99ef44a8151352a460cf771154da3045",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/review-insights-worker-entry.integration.test.ts",
+      "relativePath": "frontend/src/server/review-insights-worker-entry.integration.test.ts",
+      "sha256": "17e0ea70278efd1da071515b722a84af061fe1ead1804eb6705b91d8383d534b",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/review-insights-worker-entry.integration.test.ts",
+      "unitSha256": "17e0ea70278efd1da071515b722a84af061fe1ead1804eb6705b91d8383d534b",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/server/script-worker-entry.integration.test.ts",
+      "relativePath": "frontend/src/server/script-worker-entry.integration.test.ts",
+      "sha256": "9be37e3ba4e797d9af0b7efbb79e28eb1fea6d954b0c75bc85d438491d095314",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/script-worker-entry.integration.test.ts",
+      "unitSha256": "9be37e3ba4e797d9af0b7efbb79e28eb1fea6d954b0c75bc85d438491d095314",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/test/function-key-invariant.test.ts",
+      "relativePath": "frontend/src/test/function-key-invariant.test.ts",
+      "sha256": "4def088daa3fba0f548a74446b0245df50ba34019c026f139dc54defa9135de0",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/test/function-key-invariant.test.ts",
+      "unitSha256": "4def088daa3fba0f548a74446b0245df50ba34019c026f139dc54defa9135de0",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/test/icons.test.ts",
+      "relativePath": "frontend/src/test/icons.test.ts",
+      "sha256": "d0b0930c2f182de4f3bb16cfc5023a3964d1ca85fb13078ba6df3e13fc5c3cc0",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/test/icons.test.ts",
+      "unitSha256": "d0b0930c2f182de4f3bb16cfc5023a3964d1ca85fb13078ba6df3e13fc5c3cc0",
+      "unitMatchesCandidate": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/ai/ai.service.ts",
+      "relativePath": "backend/src/modules/ai/ai.service.ts",
+      "sha256": "b0f336496e9e58cbd0bc60f11997838b0374718173b587c5c54b907f5de7d756",
+      "frozenCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "matchesFrozenSource": true,
+      "unitPath": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/backend/src/modules/ai/ai.service.ts",
+      "unitSha256": "b0f336496e9e58cbd0bc60f11997838b0374718173b587c5c54b907f5de7d756",
+      "unitMatchesCandidate": true
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/frontend-failures.json",
+      "sha256": "be1af99a9b34d3584065cd508b7dec1da6c06ce394429f1ee014677a145e9e86"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/frontend-summary.json",
+      "sha256": "4ddd3fbd2018711b007d974db35fd4a520f5f4324246637d3574bd36110c2b73"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/unit-first/frontend.log",
+      "sha256": "9327cc8dd14625cd3e37d1bec9d704f0c89e73f32b33aab019158bb618ff5bfa"
+    }
+  ],
+  "privateRunner": {
+    "path": "/tmp/t1246-unit/run-frontend-first.cjs",
+    "sha256": "6d2d53ef18581de6059fcb0727992331e2dc2970cd6caa4299ce34b2000674ff"
+  }
+}

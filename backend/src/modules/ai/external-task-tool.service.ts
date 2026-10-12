@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import { and, asc, eq, aiConversations, aiTasks, executionCalls, executionTasks, type Db } from "@creatoros/backend";
-import { agenticToolOutcomeSchema, chatWorkerInputSchema, externalChatStartSchema, externalTaskToolCallSchema, externalTaskToolListSchema, externalTaskToolResultSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { externalToolInputProofSchema, agenticToolOutcomeSchema, chatWorkerInputSchema, externalChatStartSchema, externalTaskToolCallSchema, externalTaskToolListSchema, externalTaskToolResultSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import type { ChatBackendTool } from "../execution/execution-chat-tool-ports.service";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { ConflictError, ExecutionBudgetError } from "../execution/execution.errors";
@@ -67,6 +67,8 @@ export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
    if((typeof maxCalls==="number"&&rows.length>=maxCalls)||rows.length>=1000)throw new ExecutionBudgetError("外部工具调用次数已达上限");
    const stamp=now(),[call]=await tx.insert(executionCalls).values({id:`call_${randomUUID()}`,executionTaskId:task.id,sequence:rows.length+1,operationKey,parentCallId:turn.id,kind:"external_tool",inputDigest:digest,status:"started",startedAttempt:ref.attempt,reservedTokens:0,accountingBasis:"requests",providerResult:identity,createdAt:stamp,updatedAt:stamp}).returning();
    if(!call)throw new ConflictError("外部工具预留失败");
+   const proof=externalToolInputProofSchema.parse({schemaVersion:1,callId:call.id,turnCallId:turn.id,toolCallId:request.toolCallId,toolName:def.name,toolVersion:def.version,inputDigest:digest,input});
+   await tx.update(executionTasks).set({payload:{...object(task.payload),externalToolInputs:{...object(object(task.payload).externalToolInputs),[call.id]:proof}},updatedAt:stamp}).where(eq(executionTasks.id,task.id));
    return {call,input,replayed:false};
   });
  }

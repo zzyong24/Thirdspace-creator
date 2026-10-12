@@ -1,0 +1,278 @@
+[
+  {
+    "schemaVersion": 1,
+    "testId": "66d28c9c49bf28775f51-234ab65402bd8d1f3b8d",
+    "titlePath": [
+      "e2e/all-routes.spec.ts",
+      "Whole-system route matrix (Task 26)",
+      "route project-overview (/projects/ai-native-browser) renders with single shell and correct active state"
+    ],
+    "title": "route project-overview (/projects/ai-native-browser) renders with single shell and correct active state",
+    "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+    "url": "http://127.0.0.1:61346/projects/ai-native-browser",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-project-overview-projects-ai-nat--a07312b283a9c97d88aa65e6ddb0a3ea68173fcb4739801e8f12a80eba4c3ebb.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-slot=\"app-top-header\"]')\nExpected: \u001b[32m\"project-\u001b[7moverview\u001b[27m\"\u001b[39m\nReceived: \u001b[31m\"project-\u001b[7mworkspace\u001b[27m\"\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"app-top-header\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to <header data-layout=\"flow\" data-masked=\"false\" data-slot=\"app-top-header\" data-testid=\"app-top-header\" data-mode=\"project-workspace\" class=\"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface\">…</header>\u001b[22m\n\u001b[2m        - unexpected value \"project-workspace\"\u001b[22m\n",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-slot=\"app-top-header\"]')\nExpected: \u001b[32m\"project-\u001b[7moverview\u001b[27m\"\u001b[39m\nReceived: \u001b[31m\"project-\u001b[7mworkspace\u001b[27m\"\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"app-top-header\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to <header data-layout=\"flow\" data-masked=\"false\" data-slot=\"app-top-header\" data-testid=\"app-top-header\" data-mode=\"project-workspace\" class=\"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface\">…</header>\u001b[22m\n\u001b[2m        - unexpected value \"project-workspace\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:35:28"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "testId": "66d28c9c49bf28775f51-a9d66ebd122c84407a70",
+    "titlePath": [
+      "e2e/all-routes.spec.ts",
+      "Whole-system route matrix (Task 26)",
+      "route analytics-review (/projects/ai-native-browser/review) renders with single shell and correct active state"
+    ],
+    "title": "route analytics-review (/projects/ai-native-browser/review) renders with single shell and correct active state",
+    "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+    "url": "http://127.0.0.1:61346/projects/ai-native-browser/review",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-analytics-review-projects-ai-nat--71d4d620f468a1b26152e6f43e9bbb1cc57f4ea2721b593fd94e7b1008087710.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 28\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"%c%s%c [review] readReviewHistory 读失败(诚实空,但这不是正常态): background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   AccountRequiredError: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)\u001b[39m\n\u001b[31m+     at requireAccountId (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?23:1549:15)\u001b[39m\n\u001b[31m+     at workspaceKey (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?24:1676:158)\u001b[39m\n\u001b[31m+     at requireWorkspace (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?25:1680:5)\u001b[39m\n\u001b[31m+     at Object.listOutputIdsByProject (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_projects_1yng5d3._.js?26:1215:170)\u001b[39m\n\u001b[31m+     at Object.verifyProjectOwned (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/frontend_src_server_persistence-client_ts_15iwk1j._.js?27:2729:39)\u001b[39m\n\u001b[31m+     at Object.listReviews (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?28:6751:28)\u001b[39m\n\u001b[31m+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?29:6876:55)\u001b[39m\n\u001b[31m+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_application_0pvo0v6._.js?30:9668:45)\u001b[39m\n\u001b[31m+     at resolveErrorDev (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1919:105)\u001b[39m\n\u001b[31m+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1469:28)\u001b[39m\n\u001b[31m+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1584:50)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\u001b[39m\n\u001b[31m+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\u001b[39m\n\u001b[31m+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\u001b[39m\n\u001b[31m+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1407:17)\u001b[39m\n\u001b[31m+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1639:50)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2525:61)\u001b[39m\n\u001b[31m+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\u001b[39m\n\u001b[31m+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\u001b[39m\n\u001b[31m+     at resolveConsoleEntry (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2047:96)\u001b[39m\n\u001b[31m+     at processFullStringRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2453:17)\u001b[39m\n\u001b[31m+     at processFullBinaryRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2393:9)\u001b[39m\n\u001b[31m+     at processBinaryChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2502:221)\u001b[39m\n\u001b[31m+     at progress (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2676:20)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 28\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"%c%s%c [review] readReviewHistory 读失败(诚实空,但这不是正常态): background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   AccountRequiredError: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)\u001b[39m\n\u001b[31m+     at requireAccountId (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?23:1549:15)\u001b[39m\n\u001b[31m+     at workspaceKey (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?24:1676:158)\u001b[39m\n\u001b[31m+     at requireWorkspace (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_1xlke06._.js?25:1680:5)\u001b[39m\n\u001b[31m+     at Object.listOutputIdsByProject (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_projects_1yng5d3._.js?26:1215:170)\u001b[39m\n\u001b[31m+     at Object.verifyProjectOwned (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/frontend_src_server_persistence-client_ts_15iwk1j._.js?27:2729:39)\u001b[39m\n\u001b[31m+     at Object.listReviews (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?28:6751:28)\u001b[39m\n\u001b[31m+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_modules_13ncmje._.js?29:6876:55)\u001b[39m\n\u001b[31m+     at Object.request (about://React/Server/file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/.next/t1246-e2dc90c2e1c3f867/server/chunks/ssr/backend_src_application_0pvo0v6._.js?30:9668:45)\u001b[39m\n\u001b[31m+     at resolveErrorDev (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1919:105)\u001b[39m\n\u001b[31m+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1469:28)\u001b[39m\n\u001b[31m+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1584:50)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\u001b[39m\n\u001b[31m+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\u001b[39m\n\u001b[31m+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\u001b[39m\n\u001b[31m+     at getOutlinedModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1407:17)\u001b[39m\n\u001b[31m+     at parseModelString (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1639:50)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2522:66)\u001b[39m\n\u001b[31m+     at reviveModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2525:61)\u001b[39m\n\u001b[31m+     at parseModel (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2517:16)\u001b[39m\n\u001b[31m+     at initializeModelChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:1084:25)\u001b[39m\n\u001b[31m+     at resolveConsoleEntry (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2047:96)\u001b[39m\n\u001b[31m+     at processFullStringRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2453:17)\u001b[39m\n\u001b[31m+     at processFullBinaryRow (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2393:9)\u001b[39m\n\u001b[31m+     at processBinaryChunk (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2502:221)\u001b[39m\n\u001b[31m+     at progress (http://127.0.0.1:61346/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js:2676:20)\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:49:29"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "testId": "66d28c9c49bf28775f51-5839d001c13f1e01acb5",
+    "titlePath": [
+      "e2e/all-routes.spec.ts",
+      "Whole-system route matrix (Task 26)",
+      "route experience (/experience) renders with single shell and correct active state"
+    ],
+    "title": "route experience (/experience) renders with single shell and correct active state",
+    "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+    "url": "http://127.0.0.1:61346/knowledge",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-experience-experience-renders-wi--15ecdf978e8123b80eab8b9383835820df1ce5ed3c38db407eec09cf84edd422.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"/\u001b[7mexperienc\u001b[27me\"\u001b[39m\nReceived: \u001b[31m\"/\u001b[7mknowledg\u001b[27me\"\u001b[39m",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"/\u001b[7mexperienc\u001b[27me\"\u001b[39m\nReceived: \u001b[31m\"/\u001b[7mknowledg\u001b[27me\"\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:46:26"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "testId": "66d28c9c49bf28775f51-f186a8ca4c212fd720d3",
+    "titlePath": [
+      "e2e/all-routes.spec.ts",
+      "Whole-system route matrix (Task 26)",
+      "route search (/search) renders with single shell and correct active state"
+    ],
+    "title": "route search (/search) renders with single shell and correct active state",
+    "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+    "url": "http://127.0.0.1:61346/search",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-search-search-renders-with-singl--9ac05c8d94c5578eee5d42e0f1111f90a4b2c7f4086649eb6b2bc48287c37b47.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:40:28"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "testId": "66d28c9c49bf28775f51-d79ab2f37da89909c2fc",
+    "titlePath": [
+      "e2e/all-routes.spec.ts",
+      "Whole-system route matrix (Task 26)",
+      "route settings (/settings) renders with single shell and correct active state"
+    ],
+    "title": "route settings (/settings) renders with single shell and correct active state",
+    "spec": "frontend/tests-t1246-generated/e2e/all-routes.spec.ts",
+    "url": "http://127.0.0.1:61346/settings",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/all-routes--Whole-system-route-matrix-Task-26-route-settings-settings-renders-with-s--ad51719822f06d3755706e1143f79844c00a9872a7497123389188d1e1105172.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current=\"page\"]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts:40:28"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "testId": "8cf1aa680fa498b7616c-970fa63bd6a10887733c",
+    "titlePath": [
+      "e2e/automations-group-media-jobs.spec.ts",
+      "账号组内多平台定时任务可见性（T-1199）",
+      "切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同"
+    ],
+    "title": "切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同",
+    "spec": "frontend/tests-t1246-generated/e2e/automations-group-media-jobs.spec.ts",
+    "url": "http://127.0.0.1:61346/automations",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/automations-group-media-jobs--账号组内多平台定时任务可见性-T-1199-切换账号组只改变工作区列表-回到原组后原-job-ID-与排期仍相同--21413cb7b7a6986cc776adc504a213000dfc9dd3e96138ba996c45be6bdceca0.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-slot=\"automations-list\"] li[data-job-id]')\nExpected: \u001b[32m2\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"automations-list\"] li[data-job-id]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('[data-slot=\"automations-list\"] li[data-job-id]')\nExpected: \u001b[32m2\u001b[39m\nReceived: \u001b[31m0\u001b[39m\nTimeout:  120000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveCount\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-slot=\"automations-list\"] li[data-job-id]')\u001b[22m\n\u001b[2m    242 × locator resolved to 0 elements\u001b[22m\n\u001b[2m        - unexpected value \"0\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/automations-group-media-jobs.spec.ts:139:82"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "testId": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+    "titlePath": [
+      "e2e/automations-run-now-public.spec.ts",
+      "组内真实作业通过立即运行准入并保原任务显示待扫码"
+    ],
+    "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+    "spec": "frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts",
+    "url": "http://127.0.0.1:61346/automations",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/automations-run-now-public--组内真实作业通过立即运行准入并保原任务显示待扫码--4c83cfc4891336584a6d18f5f6f9fe57ea7c6fb261be338409a5cc32a0cbfed9.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('automations-current-group')\nExpected substring: \u001b[32m\"T1244 无绑定媒体组 t1244-908de3a4-9440-41b5-b16b-ae856a6444d9\"\u001b[39m\nReceived string:    \u001b[31m\"@t1022-1 · 全组任务\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('automations-current-group')\u001b[22m\n\u001b[2m    239 × locator resolved to <span data-testid=\"automations-current-group\">@t1022-1 · 全组任务</span>\u001b[22m\n\u001b[2m        - unexpected value \"@t1022-1 · 全组任务\"\u001b[22m\n",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('automations-current-group')\nExpected substring: \u001b[32m\"T1244 无绑定媒体组 t1244-908de3a4-9440-41b5-b16b-ae856a6444d9\"\u001b[39m\nReceived string:    \u001b[31m\"@t1022-1 · 全组任务\"\u001b[39m\nTimeout: 120000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('automations-current-group')\u001b[22m\n\u001b[2m    239 × locator resolved to <span data-testid=\"automations-current-group\">@t1022-1 · 全组任务</span>\u001b[22m\n\u001b[2m        - unexpected value \"@t1022-1 · 全组任务\"\u001b[22m\n\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts:253:63"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "testId": "41050249d47ab09b44f8-452e9ace5f8248c451ed",
+    "titlePath": [
+      "e2e/group-skill-customization.spec.ts",
+      "空账号组通过设置页定制官方 Skill 的首写入口可用"
+    ],
+    "title": "空账号组通过设置页定制官方 Skill 的首写入口可用",
+    "spec": "frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts",
+    "url": "http://127.0.0.1:61346/",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/group-skill-customization--空账号组通过设置页定制官方-Skill-的首写入口可用--c1e9245b2e80759ea81ea10d348ec369d8a175879feaf8f7cc38ca7140ca6a8d.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: 初始活动组选项必须是本例公开创建的真实组\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeDefined\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m",
+        "stack": "Error: 初始活动组选项必须是本例公开创建的真实组\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeDefined\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts:201:48"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "testId": "37c0a50c9e3744722adf-720e6f026bb155ed6457",
+    "titlePath": [
+      "e2e/media-root-isolation.spec.ts",
+      "T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根"
+    ],
+    "title": "T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根",
+    "spec": "frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts",
+    "url": "about:blank",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/media-root-isolation--T-1226-上传-公开下载与错组拒绝都使用本轮隔离媒体根--a288d1cd277759942e6df98e2b54363340d83b0538a5e7d0dcaa3bb689f1910e.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: 隔离数据根必须位于系统临时目录\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m",
+        "stack": "Error: 隔离数据根必须位于系统临时目录\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts:93:85"
+      }
+    ]
+  }
+]

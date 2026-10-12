@@ -1,0 +1,4103 @@
+[playwright.config] Isolated test data root: /tmp/creatoros-playwright-t1246-original-list-static-v3
+[playwright.config] Isolated media root: /tmp/creatoros-playwright-t1246-original-list-static-v3/media
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+{
+  "config": {
+    "configFile": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/driver/playwright.config.ts",
+    "rootDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__setup__.ts",
+    "globalTeardown": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original/visual/__teardown__.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/browser-original/reviews/list-static-v3/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "e2e",
+        "name": "e2e",
+        "testDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-round2-original",
+        "testIgnore": [],
+        "testMatch": [
+          "e2e/**/*.spec.ts"
+        ],
+        "timeout": 672660000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "none",
+    "updateSourceMethod": "patch",
+    "version": "1.60.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "e2e/ai-copilot.spec.ts",
+      "file": "e2e/ai-copilot.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "AI Copilot dialog",
+          "file": "e2e/ai-copilot.spec.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "opens the centered dialog from any page via ?copilot=open",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 29460000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "398e1e2dd9ad70ed36f5-fcf91ee232c21f1ceebf",
+              "file": "e2e/ai-copilot.spec.ts",
+              "line": 19,
+              "column": 7
+            },
+            {
+              "title": "close button removes only ?copilot=open and preserves the pathname",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 29460000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "398e1e2dd9ad70ed36f5-dcc4b7fd4af8e8e4743c",
+              "file": "e2e/ai-copilot.spec.ts",
+              "line": 46,
+              "column": 7
+            },
+            {
+              "title": "Escape closes the dialog",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 29460000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "398e1e2dd9ad70ed36f5-d52cda08622f4d2279b0",
+              "file": "e2e/ai-copilot.spec.ts",
+              "line": 55,
+              "column": 7
+            },
+            {
+              "title": "browser Back closes the dialog",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 29460000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "398e1e2dd9ad70ed36f5-64566ff6a53827201d07",
+              "file": "e2e/ai-copilot.spec.ts",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "submit button does not post a real network request",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 29460000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "398e1e2dd9ad70ed36f5-1f5c45fadccdf95473d0",
+              "file": "e2e/ai-copilot.spec.ts",
+              "line": 69,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/ai-nonblocking-recovery.spec.ts",
+      "file": "e2e/ai-nonblocking-recovery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "E2E-T1022-01 没有模型时保留输入并直达模型设置",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 25140000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b1917f7e2b85c508f785-fa5c03a7fb79a3aa1d14",
+          "file": "e2e/ai-nonblocking-recovery.spec.ts",
+          "line": 113,
+          "column": 5
+        },
+        {
+          "title": "E2E-T1022-02 / E2E-T1023-01 临时失败沿同一轮自动恢复并交付完整结果",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 25140000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b1917f7e2b85c508f785-4b56b8ddb7222c079be9",
+          "file": "e2e/ai-nonblocking-recovery.spec.ts",
+          "line": 137,
+          "column": 5
+        },
+        {
+          "title": "E2E-T1023-02 / E2E-T1023-03 持续提交失败会停止自动请求，继续恢复仍沿原轮完成",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 25140000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b1917f7e2b85c508f785-ec6e814c8a555c2f4cf3",
+          "file": "e2e/ai-nonblocking-recovery.spec.ts",
+          "line": 192,
+          "column": 5
+        },
+        {
+          "title": "E2E-T1023-04 已收到持久任务回执时停止重连也明确保留后台任务",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 25140000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b1917f7e2b85c508f785-2ac94144d655b91b3cd1",
+          "file": "e2e/ai-nonblocking-recovery.spec.ts",
+          "line": 253,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/ai-recovery-guidance.spec.ts",
+      "file": "e2e/ai-recovery-guidance.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "E2E-T913-01 模型未配置时直接打开模型配置",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 24180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "34fe78d5587cd6d38cdf-a95b439cd207b9efcf26",
+          "file": "e2e/ai-recovery-guidance.spec.ts",
+          "line": 115,
+          "column": 5
+        },
+        {
+          "title": "E2E-T913-02 定位缺失时直达定位中心",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 24180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "34fe78d5587cd6d38cdf-9fbc761a49eb05a433db",
+          "file": "e2e/ai-recovery-guidance.spec.ts",
+          "line": 149,
+          "column": 5
+        },
+        {
+          "title": "E2E-T913-03 自带 AI 额度不足时只显示真实额度入口",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 24180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "34fe78d5587cd6d38cdf-7ed48ed2efeb2c28dd37",
+          "file": "e2e/ai-recovery-guidance.spec.ts",
+          "line": 194,
+          "column": 5
+        },
+        {
+          "title": "E2E-T913-04 / E2E-T913-05 未知故障自动恢复且不泄露内部状态",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 24180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "34fe78d5587cd6d38cdf-896fe501bb45d5efcf9b",
+          "file": "e2e/ai-recovery-guidance.spec.ts",
+          "line": 217,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/ai-reliability-recovery.spec.ts",
+      "file": "e2e/ai-reliability-recovery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "视频决策失败可见、终态停轮询，重新运行显式携带来源任务",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 14820000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "78c95fd594dd575ec449-d42c1ed4c6ebb279cf35",
+          "file": "e2e/ai-reliability-recovery.spec.ts",
+          "line": 57,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/all-routes.spec.ts",
+      "file": "e2e/all-routes.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Whole-system route matrix (Task 26)",
+          "file": "e2e/all-routes.spec.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "route dashboard (/) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-67c15989f50e97164845",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route projects (/projects) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-92b2647822eadf543845",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route project-overview (/projects/ai-native-browser) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-234ab65402bd8d1f3b8d",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route research-workspace (/projects/ai-native-browser/research) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-d1e7b905f02d26278af5",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route planning-workspace (/projects/ai-native-browser/planning) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-c4cb33277646a5d72cf8",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route script-workspace (/projects/ai-native-browser/script) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-0d1ac67893fd59194950",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route publishing-workspace (/projects/ai-native-browser/publishing) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-214866cec8ea74931171",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route analytics-review (/projects/ai-native-browser/review) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-a9d66ebd122c84407a70",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route knowledge (/knowledge) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-857476dbb8d6bfd34698",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route assets (/assets) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-96c450daccfc6cb44d8f",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route publishing-center (/publishing) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-b6820805ebca3a365cb1",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route experience (/experience) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-5839d001c13f1e01acb5",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route search (/search) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-f186a8ca4c212fd720d3",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route settings (/settings) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-d79ab2f37da89909c2fc",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route new-project-overlay (/projects/new) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-fde9726edb9abcc80bb9",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            },
+            {
+              "title": "route ai-copilot-overlay (/?copilot=open) renders with single shell and correct active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7860000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66d28c9c49bf28775f51-54df8791a1e014b0dc24",
+              "file": "e2e/all-routes.spec.ts",
+              "line": 19,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/app-shell.spec.ts",
+      "file": "e2e/app-shell.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "AppShell",
+          "file": "e2e/app-shell.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders one Sidebar and one TopHeader on the root route",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "826b944a90800335c80d-11865233906ffda9b84e",
+              "file": "e2e/app-shell.spec.ts",
+              "line": 17,
+              "column": 7
+            },
+            {
+              "title": "lists the seven approved primary nav items",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "826b944a90800335c80d-29f41b2bbed70474183c",
+              "file": "e2e/app-shell.spec.ts",
+              "line": 31,
+              "column": 7
+            },
+            {
+              "title": "derives the active nav item from the pathname",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "826b944a90800335c80d-373e840ad52875d01d6f",
+              "file": "e2e/app-shell.spec.ts",
+              "line": 43,
+              "column": 7
+            },
+            {
+              "title": "focus order: sidebar -> top header -> page content",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "826b944a90800335c80d-9f1ba789128856c63381",
+              "file": "e2e/app-shell.spec.ts",
+              "line": 54,
+              "column": 7
+            },
+            {
+              "title": "the page scroll area is the only scrollable region in the main frame",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "826b944a90800335c80d-e8c81f6af7fb459ed9ec",
+              "file": "e2e/app-shell.spec.ts",
+              "line": 75,
+              "column": 7
+            },
+            {
+              "title": "dashboard wheel scroll stays inside the Radix viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "826b944a90800335c80d-fc8e67a63249257a738e",
+              "file": "e2e/app-shell.spec.ts",
+              "line": 85,
+              "column": 7
+            },
+            {
+              "title": "applies shared page spacing tokens in the browser",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "826b944a90800335c80d-4077f0e7e007a8275809",
+              "file": "e2e/app-shell.spec.ts",
+              "line": 153,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/asr-configuration.spec.ts",
+      "file": "e2e/asr-configuration.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "ASR 建议配置与小米 MiMo 轻量配置",
+          "file": "e2e/asr-configuration.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "普通路径只需预设、模型与 Key，高级字段可按需展开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 8580000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a3f64115f61a11ac1a8-84fcdda1872075fc24e4",
+              "file": "e2e/asr-configuration.spec.ts",
+              "line": 16,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/assets.spec.ts",
+      "file": "e2e/assets.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Assets Center page",
+          "file": "e2e/assets.spec.ts",
+          "line": 263,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders the assets gallery with toolbar, type sidebar, and detail panel",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 41700000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7d95edad6f617a74a29d-605171d5500a33bc7afb",
+              "file": "e2e/assets.spec.ts",
+              "line": 264,
+              "column": 7
+            },
+            {
+              "title": "clicking a different card updates the AssetDetailPanel",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 41700000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7d95edad6f617a74a29d-425739d7596a7f96ed34",
+              "file": "e2e/assets.spec.ts",
+              "line": 374,
+              "column": 7
+            },
+            {
+              "title": "真实空账号组显示零素材并能打开系统文件选择器",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 41700000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7d95edad6f617a74a29d-2617a317b34fe013a71a",
+              "file": "e2e/assets.spec.ts",
+              "line": 486,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/audience-task-topics.spec.ts",
+      "file": "e2e/audience-task-topics.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "九宫格退役、普通选题入口保留及历史配置无损 1366",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 11220000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6184addb0cd8981bb6c2-68b1edfa312c6923fb95",
+          "file": "e2e/audience-task-topics.spec.ts",
+          "line": 5,
+          "column": 79
+        },
+        {
+          "title": "九宫格退役、普通选题入口保留及历史配置无损 1024",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 11220000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6184addb0cd8981bb6c2-12680378b152e77ba038",
+          "file": "e2e/audience-task-topics.spec.ts",
+          "line": 5,
+          "column": 79
+        }
+      ]
+    },
+    {
+      "title": "e2e/automations-group-media-jobs.spec.ts",
+      "file": "e2e/automations-group-media-jobs.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "账号组内多平台定时任务可见性（T-1199）",
+          "file": "e2e/automations-group-media-jobs.spec.ts",
+          "line": 83,
+          "column": 6,
+          "specs": [
+            {
+              "title": "组总览读到真实多平台作业，平台与账号筛选只收窄私有作业并保留共享项",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 33780000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8cf1aa680fa498b7616c-8a4197f04152371ff15a",
+              "file": "e2e/automations-group-media-jobs.spec.ts",
+              "line": 84,
+              "column": 7
+            },
+            {
+              "title": "切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 33780000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8cf1aa680fa498b7616c-970fa63bd6a10887733c",
+              "file": "e2e/automations-group-media-jobs.spec.ts",
+              "line": 127,
+              "column": 7
+            },
+            {
+              "title": "归档账号的历史作业仍可读，按账号筛选会标明归档状态",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 33780000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8cf1aa680fa498b7616c-988eac3021af476e0a81",
+              "file": "e2e/automations-group-media-jobs.spec.ts",
+              "line": 165,
+              "column": 7
+            },
+            {
+              "title": "没有作业的账号组显示真实无计划空态和账号入口",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 33780000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8cf1aa680fa498b7616c-7efb87b1497819a89281",
+              "file": "e2e/automations-group-media-jobs.spec.ts",
+              "line": 183,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/automations-run-now-public.spec.ts",
+      "file": "e2e/automations-run-now-public.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 128820000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+          "file": "e2e/automations-run-now-public.spec.ts",
+          "line": 229,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/built-in-ip-course.spec.ts",
+      "file": "e2e/built-in-ip-course.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "内置 IP 课程从目录到学习进度形成连续真实旅程",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 12660000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0c19a94c4dee15d00a09-2f4f76eb4edf677320f5",
+          "file": "e2e/built-in-ip-course.spec.ts",
+          "line": 48,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/channel-public-links.spec.ts",
+      "file": "e2e/channel-public-links.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T-729/T-871 当前桌面包公开入口",
+          "file": "e2e/channel-public-links.spec.ts",
+          "line": 27,
+          "column": 6,
+          "specs": [
+            {
+              "title": "设置页不展示常驻官网入口，人工反馈仍只使用包级链接",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 7140000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d7e70427cf33679d6c34-95715f11c70794614609",
+              "file": "e2e/channel-public-links.spec.ts",
+              "line": 28,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/content-radar-one-click-project.spec.ts",
+      "file": "e2e/content-radar-one-click-project.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "内容雷达只有改写初稿和局部选题字段时仍可一键升级项目",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 36420000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "24be249374a0952f42fe-4c8c214b8ca5c531b6bf",
+          "file": "e2e/content-radar-one-click-project.spec.ts",
+          "line": 488,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/copilot-project-reference.spec.ts",
+      "file": "e2e/copilot-project-reference.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Copilot 项目引用直读（T-642）",
+          "file": "e2e/copilot-project-reference.spec.ts",
+          "line": 53,
+          "column": 6,
+          "specs": [
+            {
+              "title": "长标题只显示一次，正文不重复，窄屏不溢出",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 9300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "149f4ad961637238c6cf-0e89f9a09ec8bf9ced86",
+              "file": "e2e/copilot-project-reference.spec.ts",
+              "line": 54,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/creative-canvas.spec.ts",
+      "file": "e2e/creative-canvas.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-993 画布可保存、重开，切换账号后列表和直链隔离",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-f3f77e01e6626b73f7ce",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 40,
+          "column": 5
+        },
+        {
+          "title": "T-993 首次自动选账号后画布可创建，新增节点不会重叠",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-c377daf519fe86936a1d",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 91,
+          "column": 5
+        },
+        {
+          "title": "T-993 视口缩放只保存在本地，不改画布内容版本",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-74c16b866a7ab5fac87e",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 153,
+          "column": 5
+        },
+        {
+          "title": "T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚动",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-9a2455f979ec9d89792b",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 176,
+          "column": 5
+        },
+        {
+          "title": "T-993 旧版无尺寸画布可读，保存后补默认尺寸且连线不丢",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-0c2be7164b5e6d6531d6",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 194,
+          "column": 5
+        },
+        {
+          "title": "T-993 当前账号图片与视频能插入画布并实际预览",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-17b9336c087792b5462c",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 220,
+          "column": 5
+        },
+        {
+          "title": "T-994 作品素材入口、项目画布过滤与安全返回",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-eeceae934f9613508ba9",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 246,
+          "column": 5
+        },
+        {
+          "title": "T-994 画布版本冲突时不离开并给出恢复动作",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-06e15471e2014b5b29f7",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 310,
+          "column": 5
+        },
+        {
+          "title": "T-994 生成结果就地保留并加入当前作品（模拟任务回执）",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-94eb7feef0961e85b381",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 328,
+          "column": 5
+        },
+        {
+          "title": "T-1021 首页案例独立浏览、取消无写入，多页模板创建原画布并可重新读取",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-a73e5da40497e2dd126e",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 373,
+          "column": 5
+        },
+        {
+          "title": "T-1021 资产独立上传，选用追加原画布并冻结真实文件",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-840c89ee9bbc88375ed1",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 395,
+          "column": 5
+        },
+        {
+          "title": "T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-5e9f5b3f91aef02174a2",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 416,
+          "column": 5
+        },
+        {
+          "title": "T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 447780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "23f3a61ee9d7cd098d2f-3197831785de5363598f",
+          "file": "e2e/creative-canvas.spec.ts",
+          "line": 508,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/draft-ammo-media-preview.spec.ts",
+      "file": "e2e/draft-ammo-media-preview.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 15060000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f676eec36554c6fe6d79-3013d162e18de07e3592",
+          "file": "e2e/draft-ammo-media-preview.spec.ts",
+          "line": 49,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/experience.spec.ts",
+      "file": "e2e/experience.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "经验裁决台 page",
+          "file": "e2e/experience.spec.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders the adjudication workbench on the /experience route",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 8580000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b64559fc4465ec32f46c-c9e4a01ada78a3a6ab2c",
+              "file": "e2e/experience.spec.ts",
+              "line": 19,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/group-skill-customization.spec.ts",
+      "file": "e2e/group-skill-customization.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "空账号组通过设置页定制官方 Skill 的首写入口可用",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 166500000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "41050249d47ab09b44f8-452e9ace5f8248c451ed",
+          "file": "e2e/group-skill-customization.spec.ts",
+          "line": 124,
+          "column": 5
+        },
+        {
+          "title": "账号组 Skill 首写、刷新、二次 CAS、历史与跨组版本归属",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 166500000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "41050249d47ab09b44f8-02c8831d8b2cee5f6098",
+          "file": "e2e/group-skill-customization.spec.ts",
+          "line": 587,
+          "column": 5
+        },
+        {
+          "title": "同组双页面保存只接受一个 CAS revision 并保留冲突草稿",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 166500000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "41050249d47ab09b44f8-423785e0a5cb655ecee8",
+          "file": "e2e/group-skill-customization.spec.ts",
+          "line": 948,
+          "column": 5
+        },
+        {
+          "title": "切组 RSC 与原组保存回执迟到时阻止旧写并通过 ABA 保持归属",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 166500000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "41050249d47ab09b44f8-5f46a3ee6f7111f081eb",
+          "file": "e2e/group-skill-customization.spec.ts",
+          "line": 1177,
+          "column": 5
+        },
+        {
+          "title": "组内 Skill 历史回滚与恢复默认通过真实按钮新增版本并刷新保留",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 166500000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "41050249d47ab09b44f8-dad7adaf2e2937b1a61b",
+          "file": "e2e/group-skill-customization.spec.ts",
+          "line": 1598,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/knowledge-library.spec.ts",
+      "file": "e2e/knowledge-library.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "library-journey 1366 真实读写、整理与项目引用",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 258420000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "667626e4230c44a2bab0-bf779f39a876596898c0",
+          "file": "e2e/knowledge-library.spec.ts",
+          "line": 53,
+          "column": 7
+        },
+        {
+          "title": "library-journey 1024 真实读写、整理与项目引用",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 258420000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "667626e4230c44a2bab0-f63dc0db3360905efac3",
+          "file": "e2e/knowledge-library.spec.ts",
+          "line": 53,
+          "column": 7
+        }
+      ]
+    },
+    {
+      "title": "e2e/media-root-isolation.spec.ts",
+      "file": "e2e/media-root-isolation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 18660000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "37c0a50c9e3744722adf-720e6f026bb155ed6457",
+          "file": "e2e/media-root-isolation.spec.ts",
+          "line": 79,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/new-project.spec.ts",
+      "file": "e2e/new-project.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "New Project dialog",
+          "file": "e2e/new-project.spec.ts",
+          "line": 101,
+          "column": 6,
+          "specs": [
+            {
+              "title": "opens from the dashboard, follows the current form contract, and creates selected formats",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 20820000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "f30027fcc96d9590b2b9-c0e38d85bf30c9fec284",
+              "file": "e2e/new-project.spec.ts",
+              "line": 102,
+              "column": 7
+            },
+            {
+              "title": "creates and enters the new project workspace when requested",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 20820000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "f30027fcc96d9590b2b9-ece4258bfdc42c5be84b",
+              "file": "e2e/new-project.spec.ts",
+              "line": 145,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "新手成果路径与低高度侧栏",
+          "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+          "line": 52,
+          "column": 6,
+          "specs": [
+            {
+              "title": "重新打开后真实回到首页，并保留新号/已有作品两条连续路径",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 15540000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d9613b8836b17a7105de-3b722d27bb7db20a75f4",
+              "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+              "line": 53,
+              "column": 7
+            },
+            {
+              "title": "低高度窗口始终保留账号和用户身份",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 15540000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d9613b8836b17a7105de-a7193d0e41768ab0a6a4",
+              "file": "e2e/onboarding-and-small-sidebar.spec.ts",
+              "line": 134,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/overlay-routing.spec.ts",
+      "file": "e2e/overlay-routing.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "overlay routing",
+          "file": "e2e/overlay-routing.spec.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "direct visit to /projects/new renders the new-project overlay shell",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 16980000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "04168072137409ba112a-9fd1f1d10870da9c9fb1",
+              "file": "e2e/overlay-routing.spec.ts",
+              "line": 18,
+              "column": 7
+            },
+            {
+              "title": "?copilot=open on / opens the copilot overlay and preserves pathname",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 16980000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "04168072137409ba112a-7da84ce1a70e08ced86a",
+              "file": "e2e/overlay-routing.spec.ts",
+              "line": 39,
+              "column": 7
+            },
+            {
+              "title": "pressing Back closes the copilot overlay before leaving the page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 16980000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "04168072137409ba112a-dad8f109d41ef77c11e7",
+              "file": "e2e/overlay-routing.spec.ts",
+              "line": 65,
+              "column": 7
+            },
+            {
+              "title": "Tab focus stays inside an open overlay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 16980000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "04168072137409ba112a-f5ff83adad25db7da8dd",
+              "file": "e2e/overlay-routing.spec.ts",
+              "line": 83,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/platform-work-catalog.spec.ts",
+      "file": "e2e/platform-work-catalog.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "平台作品页按当前账号显示真实空目录和待核验能力",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 22740000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ff88aeb912d54d19c019-07fb539b46563c1a126c",
+          "file": "e2e/platform-work-catalog.spec.ts",
+          "line": 19,
+          "column": 5
+        },
+        {
+          "title": "本地账号完成多平台目标项目与发布草稿，账号归属隔离",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 22740000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ff88aeb912d54d19c019-cfdcf5687c7b5f5352b8",
+          "file": "e2e/platform-work-catalog.spec.ts",
+          "line": 31,
+          "column": 5
+        },
+        {
+          "title": "账号页绑定成功后可直接切换到对应的小红书与快手作品页",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 22740000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ff88aeb912d54d19c019-9d7913f6044d65d5c8a4",
+          "file": "e2e/platform-work-catalog.spec.ts",
+          "line": 48,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/production-broll-remove.spec.ts",
+      "file": "e2e/production-broll-remove.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧素材",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 12900000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "90d32f0826f75e4378df-34912ade6a99810c4747",
+          "file": "e2e/production-broll-remove.spec.ts",
+          "line": 95,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/production-empty-workbench.spec.ts",
+      "file": "e2e/production-empty-workbench.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "新项目无视频作品时可进入剪辑备料并导入人物视频",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 7620000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "20ea0347a1df44d423e8-76c6176d2221a3299127",
+          "file": "e2e/production-empty-workbench.spec.ts",
+          "line": 43,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/projects.spec.ts",
+      "file": "e2e/projects.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "项目排期闭环（T-599）",
+          "file": "e2e/projects.spec.ts",
+          "line": 44,
+          "column": 6,
+          "specs": [
+            {
+              "title": "可在项目行新增、修改并取消发布排期",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 10740000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4006612928a30a3362ae-63e0b017fc277dba3b3a",
+              "file": "e2e/projects.spec.ts",
+              "line": 45,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/publish-package-readback.spec.ts",
+      "file": "e2e/publish-package-readback.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "查看发布物料优先回读完整简介与标签，刷新和小窗口仍保持",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 15540000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "4d98bac62d9459c5a6a9-ad96dd2c675272c67454",
+          "file": "e2e/publish-package-readback.spec.ts",
+          "line": 48,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/publishing-center.spec.ts",
+      "file": "e2e/publishing-center.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "发布中心日历主视图（T-599）",
+          "file": "e2e/publishing-center.spec.ts",
+          "line": 48,
+          "column": 6,
+          "specs": [
+            {
+              "title": "真实项目排期出现在 70/30 日历视图，旧重复列表已移除",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 11220000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4f3e74964b66d244a3b5-d02911a1d5be5b1c6704",
+              "file": "e2e/publishing-center.spec.ts",
+              "line": 49,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/publishing-workspace.spec.ts",
+      "file": "e2e/publishing-workspace.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "旧发布阶段链接进入当前项目稿面的发布区",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 6180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "96482d79af88e131e91d-a71372ae3e6a2359652e",
+          "file": "e2e/publishing-workspace.spec.ts",
+          "line": 16,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/qwen-asr-configuration.spec.ts",
+      "file": "e2e/qwen-asr-configuration.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Qwen 方言 ASR 设置预设",
+          "file": "e2e/qwen-asr-configuration.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "选择 Qwen 后带出可直接保存的真实 provider、模型与接口",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 5940000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a7b16870f8e2fd2cb44c-7552c77e3cc3c4bf51db",
+              "file": "e2e/qwen-asr-configuration.spec.ts",
+              "line": 4,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/recent-data-safety.spec.ts",
+      "file": "e2e/recent-data-safety.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "已有定位进入从零前采时，正式母版和历史始终可见，搜索默认国内中文",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 17220000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "8e7a9a57a62b196b6936-eead317e609b857c2ca4",
+          "file": "e2e/recent-data-safety.spec.ts",
+          "line": 82,
+          "column": 5
+        },
+        {
+          "title": "信源确认删除后从工作台消失，并展示真实级联清理结果",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 17220000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "8e7a9a57a62b196b6936-226b8af6859976b93629",
+          "file": "e2e/recent-data-safety.spec.ts",
+          "line": 199,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T-1239 无指标项目复盘入口与诚实空态",
+          "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+          "line": 274,
+          "column": 6,
+          "specs": [
+            {
+              "title": "真实同组稿件在桌面、窄屏与刷新后显示内容诊断入口",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 86400000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "06662ba4d91dfb67c911-cb7606d38df3caad6f63",
+              "file": "e2e/review-empty-diagnosis-entry.spec.ts",
+              "line": 275,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/review-history.spec.ts",
+      "file": "e2e/review-history.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "项目复盘记录闭环（T-634）",
+          "file": "e2e/review-history.spec.ts",
+          "line": 43,
+          "column": 6,
+          "specs": [
+            {
+              "title": "手动洞察可从历史记录读回，时间友好且窄屏不溢出",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 10500000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64d21a6f38bdb458c529-ad1e002797a4b6dd36c7",
+              "file": "e2e/review-history.spec.ts",
+              "line": 44,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/search.spec.ts",
+      "file": "e2e/search.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Global Search page",
+          "file": "e2e/search.spec.ts",
+          "line": 20,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders the global search structure on the /search route",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12660000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "f4a36a9939d689d57a9d-16a12204dc96e9f901a5",
+              "file": "e2e/search.spec.ts",
+              "line": 21,
+              "column": 7
+            },
+            {
+              "title": "URL ?q=... is reflected in the search input value",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 12660000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "f4a36a9939d689d57a9d-45aa1522353ea5990897",
+              "file": "e2e/search.spec.ts",
+              "line": 117,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/semantic-material-generation.spec.ts",
+      "file": "e2e/semantic-material-generation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "图片按确认稿需要预填多个候选，视频默认预填一个候选，点击不自动发送",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 13380000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ab4ba88af7a7cf4851d3-7777bc4d99ffaf6b4a45",
+          "file": "e2e/semantic-material-generation.spec.ts",
+          "line": 48,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/settings-responsive-layout.spec.ts",
+      "file": "e2e/settings-responsive-layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "[T-1237] 设置在窄屏与桌面保持分类可达、正文完整和未提交草稿",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 51780000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ef59e2dd8c06c89eb461-ae977654a04f5ceaa6c2",
+          "file": "e2e/settings-responsive-layout.spec.ts",
+          "line": 292,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/settings.spec.ts",
+      "file": "e2e/settings.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Settings page",
+          "file": "e2e/settings.spec.ts",
+          "line": 133,
+          "column": 6,
+          "specs": [
+            {
+              "title": "[T-606] 模型来源状态在桌面与 390px 都可辨认且本地表单可用",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 74100000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "87418b536bb3b16b9965-1ee4cd8caf242f0696b5",
+              "file": "e2e/settings.spec.ts",
+              "line": 139,
+              "column": 7
+            },
+            {
+              "title": "renders the settings structure on the /settings route",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 74100000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "87418b536bb3b16b9965-9d167bbc2a2b29b9bb07",
+              "file": "e2e/settings.spec.ts",
+              "line": 158,
+              "column": 7
+            },
+            {
+              "title": "[T-1232] 账户昵称由真实 UI 保存并公开读回同用户及刷新",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 74100000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "87418b536bb3b16b9965-704b26032c057270be80",
+              "file": "e2e/settings.spec.ts",
+              "line": 243,
+              "column": 7
+            },
+            {
+              "title": "[T-1232] 自动保存偏好由真实开关保存并读回 userId 及刷新",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 74100000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "87418b536bb3b16b9965-e9339554743858848790",
+              "file": "e2e/settings.spec.ts",
+              "line": 261,
+              "column": 7
+            },
+            {
+              "title": "[T-1232] 外观主题与密度按本地消费者持久并返回刷新",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 74100000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "87418b536bb3b16b9965-1daf9239c5bf49000f59",
+              "file": "e2e/settings.spec.ts",
+              "line": 283,
+              "column": 7
+            },
+            {
+              "title": "[T-1232] 默认本地模型真实保存及正式流式文本探针并脱敏读回",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 74100000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "87418b536bb3b16b9965-1a438f56dfd094b5ed4d",
+              "file": "e2e/settings.spec.ts",
+              "line": 309,
+              "column": 7
+            },
+            {
+              "title": "[T-1232] RedFox 密钥真实保存及移除公开脱敏读回并刷新",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 74100000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "87418b536bb3b16b9965-7b3de1d78b1ff07a6009",
+              "file": "e2e/settings.spec.ts",
+              "line": 368,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/shared-resource-lifecycle.spec.ts",
+      "file": "e2e/shared-resource-lifecycle.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "TEST-T1105-RESOURCE 共享资源真实空态、刷新返回与失败重读",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 17460000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cfc5b60c2cb0888570de-9564b1608ee1f78c5ffa",
+          "file": "e2e/shared-resource-lifecycle.spec.ts",
+          "line": 5,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/smoke.spec.ts",
+      "file": "e2e/smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "root route exposes the CreatorOS application container",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 4020000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aa58ad17b2d44b8d86cc-1535904401b123820abf",
+          "file": "e2e/smoke.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1062-group-native-rough.spec.ts",
+      "file": "e2e/t1062-group-native-rough.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "真实首载组列表延迟时不发创建，根就绪后文章可创建保存刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 672660000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "a8c4891f095c8a8e2a8e-27798052ec77527dde65",
+          "file": "e2e/t1062-group-native-rough.spec.ts",
+          "line": 640,
+          "column": 5
+        },
+        {
+          "title": "真实首次RSC同步中手动切B：旧A完成不能放行，B就绪才可创建保存刷新",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 672660000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "a8c4891f095c8a8e2a8e-3a798597e406b074f466",
+          "file": "e2e/t1062-group-native-rough.spec.ts",
+          "line": 697,
+          "column": 5
+        },
+        {
+          "title": "真实首载RSC一直未交付：有界超时后显式整页重试，同B根可创建保存回读",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 672660000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "a8c4891f095c8a8e2a8e-e6085f74588844d59da3",
+          "file": "e2e/t1062-group-native-rough.spec.ts",
+          "line": 822,
+          "column": 5
+        }
+      ],
+      "suites": [
+        {
+          "title": "T1062 账号组真实原生粗剪",
+          "file": "e2e/t1062-group-native-rough.spec.ts",
+          "line": 353,
+          "column": 6,
+          "specs": [
+            {
+              "title": "纯组无平台账号仍可通过真实创建弹层创建项目、保存画布和打开原生剪辑",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 672660000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a8c4891f095c8a8e2a8e-78c06f6ccaa7f5fd8b4e",
+              "file": "e2e/t1062-group-native-rough.spec.ts",
+              "line": 362,
+              "column": 7
+            },
+            {
+              "title": "同组多个账号/平台筛选保留dirty和真实native实例，公共保存始终冻结组根",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 672660000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a8c4891f095c8a8e2a8e-4a616b4b5d877c355ca2",
+              "file": "e2e/t1062-group-native-rough.spec.ts",
+              "line": 398,
+              "column": 7
+            },
+            {
+              "title": "跨组时取消真实在途素材响应，旧组晚到结果不能回写或继续保存",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 672660000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a8c4891f095c8a8e2a8e-ca78d653a89a51c55966",
+              "file": "e2e/t1062-group-native-rough.spec.ts",
+              "line": 420,
+              "column": 7
+            },
+            {
+              "title": "真实迁组历史画布保留account出处，group归属可读写；错误组读回明确结束loading",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 672660000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a8c4891f095c8a8e2a8e-408b513e0317a7efece3",
+              "file": "e2e/t1062-group-native-rough.spec.ts",
+              "line": 446,
+              "column": 7
+            },
+            {
+              "title": "真实默认ASR与原生原声：普通AAC完整自然播放、单独核对、明确采用与保存刷新",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 672660000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a8c4891f095c8a8e2a8e-d6ac7f086c19a59f1b17",
+              "file": "e2e/t1062-group-native-rough.spec.ts",
+              "line": 484,
+              "column": 57
+            },
+            {
+              "title": "真实默认ASR与原生原声：非零视频起点仅此项手工降级，原工程仍可保存",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 672660000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a8c4891f095c8a8e2a8e-6dc193773c32133c3858",
+              "file": "e2e/t1062-group-native-rough.spec.ts",
+              "line": 484,
+              "column": 57
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1069-asset-picker.spec.ts",
+      "file": "e2e/t1069-asset-picker.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "公共全库分页与模板照片选择：后页可见、搜索和取消保留精确照片",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 259200000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "a844202c27c9dc804afd-b543d2def1d2dfcba95f",
+          "file": "e2e/t1069-asset-picker.spec.ts",
+          "line": 20,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1069-media-tab-session.spec.ts",
+      "file": "e2e/t1069-media-tab-session.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "本地视频逐个导入、未保存切Tab返回、保存刷新保留原素材和工程",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 135660000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bec6dd24d6704d74c8bc-c95c18a2c57a62b37b3a",
+          "file": "e2e/t1069-media-tab-session.spec.ts",
+          "line": 12,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1070-director-editor.spec.ts",
+      "file": "e2e/t1070-director-editor.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "真实文章保存、指定版本刷新、同项目编导窄屏打开、NoteRelay HTML交付",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 27300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e350765340916b502f9a-1807c0969f844b2c0026",
+          "file": "e2e/t1070-director-editor.spec.ts",
+          "line": 83,
+          "column": 5
+        },
+        {
+          "title": "真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片入口与历史保留",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 27300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e350765340916b502f9a-3a87c779b994624d42ef",
+          "file": "e2e/t1070-director-editor.spec.ts",
+          "line": 178,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-1136 当前真实排期长名称的四种窗口尺寸",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 55380000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0789b69f45c48df93765-8d46cbb69cfde0e39461",
+          "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+          "line": 78,
+          "column": 5
+        },
+        {
+          "title": "T-1136 真实保存回读重开、目标转组重选与失败保留输入",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 55380000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0789b69f45c48df93765-a0869a92237df750e6ab",
+          "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+          "line": 97,
+          "column": 5
+        },
+        {
+          "title": "T-1136 读取中及共享反馈、参考素材弹窗仍可操作",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 55380000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0789b69f45c48df93765-1fb2a504b47adb6bf2f1",
+          "file": "e2e/t1136-calendar-dialog-layout.spec.ts",
+          "line": 144,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1140-picker-low-height.spec.ts",
+      "file": "e2e/t1140-picker-low-height.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-1140 六种窗口完整预览、统一滚动、搜索与取消不写",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 40500000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "4d465cd2e835f006a450-34c54146f98a25d12b23",
+          "file": "e2e/t1140-picker-low-height.spec.ts",
+          "line": 86,
+          "column": 1
+        },
+        {
+          "title": "T-1140 精确选用、正式回读、刷新返回与原gallery流程",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 40500000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "4d465cd2e835f006a450-21ae226b8aa891abca06",
+          "file": "e2e/t1140-picker-low-height.spec.ts",
+          "line": 114,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1149-cover-aspect-group.spec.ts",
+      "file": "e2e/t1149-cover-aspect-group.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T1149 共同支持画幅同步、正式保存、刷新返回及重复修改",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 38820000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "2488b20c9ad12e397088-d4ef0804d3ce6c7f23d2",
+          "file": "e2e/t1149-cover-aspect-group.spec.ts",
+          "line": 52,
+          "column": 5
+        },
+        {
+          "title": "T1149 能力禁用、两个模式入口保引用与保存失败后公开重试",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 38820000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "2488b20c9ad12e397088-fa21bc99a682f802086d",
+          "file": "e2e/t1149-cover-aspect-group.spec.ts",
+          "line": 69,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1159-wechat-native-report.spec.ts",
+      "file": "e2e/t1159-wechat-native-report.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T1159 两微信账号从组成员进入真实0报告，刷新返回与身份拒绝",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 25200000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "10645feaadfc4eb9725d-37a520db61507269907f",
+          "file": "e2e/t1159-wechat-native-report.spec.ts",
+          "line": 22,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/t1207-supplemental-route-matrix.spec.ts",
+      "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "T-1207 补充真实页面路由矩阵",
+          "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+          "line": 61,
+          "column": 6,
+          "specs": [
+            {
+              "title": "侧栏入口「首页」/ 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-f1470f5b0d9b347b5b79",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「创作者总览」/overview 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-687be6bffc0f4477ae55",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「定位中心」/positioning 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-3fc60d737042980b2942",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「内容雷达」/intelligence 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-531d725bd3960b33aade",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「选题」/topics 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-690d27b4028991544aa4",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「项目」/projects 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-e683780a124832f9601f",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「知识库」/knowledge 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-2ca4ee6ea87296e1d08d",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「素材中心」/assets 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-87e06a567997de69a4d1",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「创作画布」/canvases 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-c42decb86b0f8bfd755d",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「发布中心」/publishing 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-b52ad0cac3b256ec7ac8",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「运营分析」/daily-report 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-3ad7b42d606113be7e08",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「自动化」/automations 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-3a6ed74bb12244425a68",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "侧栏入口「设置」/settings 显示真实主内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-bb8a7a6b121c23d6c33a",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 131,
+              "column": 9
+            },
+            {
+              "title": "账号管理页可以打开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-1b011beb30842b02f9bf",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 143,
+              "column": 7
+            },
+            {
+              "title": "当前账号的作品目录页可以打开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-8914979c80f32118fbd9",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "项目快速创建路由显示真实内容",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-ace9d2b018a1c172f4cf",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 151,
+              "column": 7
+            },
+            {
+              "title": "发布中心日历子页可以打开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-72f55b8042d75cf6cfb4",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 155,
+              "column": 7
+            },
+            {
+              "title": "项目「主稿面」路由显示真实内容或有效重定向",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-5817fd6024763db7d32f",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 171,
+              "column": 9
+            },
+            {
+              "title": "项目「选题兼容入口」路由显示真实内容或有效重定向",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-a3e9de20528fbbd8b790",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 171,
+              "column": 9
+            },
+            {
+              "title": "项目「计划兼容入口」路由显示真实内容或有效重定向",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-8e6a3f963f11b86d97ad",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 171,
+              "column": 9
+            },
+            {
+              "title": "项目「脚本兼容入口」路由显示真实内容或有效重定向",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-855240d3a89c97574275",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 171,
+              "column": 9
+            },
+            {
+              "title": "项目「发布兼容入口」路由显示真实内容或有效重定向",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-4fa2aca38e46f3883838",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 171,
+              "column": 9
+            },
+            {
+              "title": "项目「复盘页」路由显示真实内容或有效重定向",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-ef3a0af1a8175dfc224b",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 171,
+              "column": 9
+            },
+            {
+              "title": "项目「组合创作工作台」路由显示真实内容或有效重定向",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-f7088906b3f7ed12beee",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 171,
+              "column": 9
+            },
+            {
+              "title": "项目「视频剪辑工作台」路由显示真实内容或有效重定向",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-54a04dba81ddb46ea7f4",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 171,
+              "column": 9
+            },
+            {
+              "title": "文章工作台读取真实隔离文章作品",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-d50f4826421787e95c08",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 181,
+              "column": 7
+            },
+            {
+              "title": "图文工作台按真实隔离作品 ID 打开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-a858671eb52484737af8",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 186,
+              "column": 7
+            },
+            {
+              "title": "图文深链按真实隔离作品 ID 打开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-ca1938cd81655d82de81",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 191,
+              "column": 7
+            },
+            {
+              "title": "视频工作台按真实隔离作品 ID 打开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-a41b8bde1f8353957ac3",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 196,
+              "column": 7
+            },
+            {
+              "title": "项目画布详情按真实隔离画布 ID 打开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-e51b77fa0bf635ea2626",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 201,
+              "column": 7
+            },
+            {
+              "title": "朋友圈工作台按真实隔离稿件 ID 打开",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-926f8c289cabf8aad325",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 205,
+              "column": 7
+            },
+            {
+              "title": "旧入口「/login」有效回到本地首页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-fba0f66284639b385ea4",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 211,
+              "column": 9
+            },
+            {
+              "title": "旧入口「/register」有效回到本地首页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-e5035f946ac04632678e",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 211,
+              "column": 9
+            },
+            {
+              "title": "旧入口「/activate」有效回到本地首页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 21060000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "004934eeae7d0ea4287b-f3852e7d166522dfe97d",
+              "file": "e2e/t1207-supplemental-route-matrix.spec.ts",
+              "line": 211,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/t954-director-review.spec.ts",
+      "file": "e2e/t954-director-review.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T954 无发布数据的真实复盘页面可用，补采返回空结果，诊断入口不强制成功经验",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 11220000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6eea6190f7b2a3d02786-4f1facc9b1626026cf85",
+          "file": "e2e/t954-director-review.spec.ts",
+          "line": 10,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/web-material-read-save.spec.ts",
+      "file": "e2e/web-material-read-save.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "联网素材先阅读后保存",
+          "file": "e2e/web-material-read-save.spec.ts",
+          "line": 35,
+          "column": 6,
+          "specs": [
+            {
+              "title": "搜索线索只能阅读全文，成功后才允许按稳定素材保存到当前项目",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 16500000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7f0461e286892a25ab19-99f23174ab217f753f6a",
+              "file": "e2e/web-material-read-save.spec.ts",
+              "line": 36,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e2e/wechat-article-workbench.spec.ts",
+      "file": "e2e/wechat-article-workbench.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "公众号文章从项目目标到手写版本、刷新回读和跨账号隔离",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 54180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bf4a1cd0b0748cf23b48-ba8301bc8ce865d8fb04",
+          "file": "e2e/wechat-article-workbench.spec.ts",
+          "line": 39,
+          "column": 5
+        },
+        {
+          "title": "公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 54180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "e2e",
+              "projectName": "e2e",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bf4a1cd0b0748cf23b48-209b5f7d65fc4e79a89e",
+          "file": "e2e/wechat-article-workbench.spec.ts",
+          "line": 119,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "e2e/zz-account-isolation.spec.ts",
+      "file": "e2e/zz-account-isolation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "双号切换端到端隔离(T-332 S6)",
+          "file": "e2e/zz-account-isolation.spec.ts",
+          "line": 76,
+          "column": 6,
+          "specs": [
+            {
+              "title": "A 号只见 A 的项目;切到 B 号后只见 B 的(无残影)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 16020000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e",
+                  "projectName": "e2e",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c30d334f01c06de6caf2-2d95b5b12af54537ace8",
+              "file": "e2e/zz-account-isolation.spec.ts",
+              "line": 77,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T19:48:03.501Z",
+    "duration": 578.597,
+    "expected": 0,
+    "skipped": 170,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

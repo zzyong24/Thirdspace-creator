@@ -1,0 +1,202 @@
+{
+  "task": "T-1246",
+  "kind": "actual-once-final-source-stage-audit-v6-PASS-full-natural-EOF-not-final-build-seal",
+  "observedAt": "2026-10-12T10:12:46.465738+00:00",
+  "nonce": "14122ad1de6c950199e1c9ec",
+  "session": 95729,
+  "wrapperNaturalEOF": 0,
+  "childPID": 32361,
+  "childCode": 0,
+  "childClosed": true,
+  "groupAfter": [],
+  "signals": [],
+  "childElapsedMs": 6144,
+  "positiveElapsedMs": 6018.771375,
+  "budgetExhausted": false,
+  "wrapperStatus": "complete-stage-source-audit-not-final-seal",
+  "failure": null,
+  "actualAuditReport": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audits/stage-source-v6-14122ad1de6c950199e1c9ec.json",
+  "actualAuditReportSHA": "f70fb8817204b544e80dad365a4cfe60fd6bc11c016b626a9812e6a6e4ffcc7f",
+  "archivedFullReport": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/ACTUAL_STAGE_SOURCE_AUDIT_PASS_REPORT.json",
+  "actualErrors": [],
+  "unknown": [],
+  "unexpected": [],
+  "unstagedRaw": "",
+  "sourceCount": 348,
+  "driverCount": 100,
+  "deleteCount": 53,
+  "legacyCount": 253,
+  "originalFirst100Unchanged": true,
+  "head": "533224f334c43cdb81a344424e420cad93784dd1",
+  "statusRows": 449,
+  "actualProductInventoryCount": 6369,
+  "actualGitRenameProjection": {
+    "file": "docs/verification/t1246/round-2/final-source-audit-provenance-v6/EXACT_52_APPROVED_GIT_RENAME_PROJECTIONS.json",
+    "sha256": "da5a68a70f0ee2aafd6ae895429da7b848f5cae4d0012d420de44a9dd905b486",
+    "approvedPinnedPairs": 52,
+    "observedApprovedRenamePairs": 52,
+    "GitOriginalRRowsPreserved": true,
+    "interpretation": "exact-approved-delete-plus-write-display",
+    "copyStatusRejected": true,
+    "originalActualFAILSha256": "96958f03e431314836fb313f83c3cfd211264ef4b456b34c1314a54e836c42c0"
+  },
+  "beforeFullSource556NodeGit": {
+    "sourceRows": 556,
+    "sourceDrift": 0,
+    "nodeFiles": 82,
+    "nodeLinks": 37,
+    "nodeEdges": 51,
+    "gitFiles": 4,
+    "gitLinks": 4,
+    "gitEdges": 3,
+    "gitHistoricalRaw": 4,
+    "runtimeDrift": 0,
+    "newMetadataCollected": false
+  },
+  "afterFullSource556NodeGit": {
+    "sourceRows": 556,
+    "sourceDrift": 0,
+    "nodeFiles": 82,
+    "nodeLinks": 37,
+    "nodeEdges": 51,
+    "gitFiles": 4,
+    "gitLinks": 4,
+    "gitEdges": 3,
+    "gitHistoricalRaw": 4,
+    "runtimeDrift": 0,
+    "newMetadataCollected": false
+  },
+  "privateRawFiles": [
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/PRE_DISPATCH.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/PRE_DISPATCH.json",
+      "sha256": "b6fc4ba848b2873cd1cb421aaee82d40678e5f8618e7a39aacf5f8bac8269de8",
+      "size": 3373,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/actual-audit-report-receipt.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/actual-audit-report-receipt.json",
+      "sha256": "293db2a86af189759bfaaf3407a61e3c6366b7e2afc57a0318f5193bd21e6bf1",
+      "size": 1057,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/actual-child-receipt.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/actual-child-receipt.json",
+      "sha256": "ddbc65c8c5b3778bf9268ad935d3283f1c28c4d191b48be2ffa39e1da466b100",
+      "size": 1850,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/actual-final-group.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/actual-final-group.json",
+      "sha256": "afb3410c7aab8130c483df82561f39fda84bfbf08233976a2b2a083eaca18f4d",
+      "size": 57,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/actual-final-process-snapshot.txt",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/actual-final-process-snapshot.txt",
+      "sha256": "f6b64a6bf102bb1322a927976d52583fdfd3f673f2ba3a6611f5f878e0b4d417",
+      "size": 263947,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/after-full-source-node-git-runtime-raw.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/after-full-source-node-git-runtime-raw.json",
+      "sha256": "9996b374ae3164a9cbe66a4db3c9c3854c2ad0f2ae0f2fb0382cad417e98a062",
+      "size": 998260,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/after.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/after.json",
+      "sha256": "01b06a6bc655793e2828a5061ce5abf2656f67ae638c405c9fe0552eb8c11b41",
+      "size": 231,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/audit-child.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/audit-child.log",
+      "sha256": "7b2c1c05522f35755e26c6eed90864d0ba11a5963c61ff3012796a9d35aee004",
+      "size": 388,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/before-full-source-node-git-runtime-raw.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/before-full-source-node-git-runtime-raw.json",
+      "sha256": "afff1e6ead23e194ec21e7e986b0ed9d99e4e932cc3e883894dfbcf0ade41662",
+      "size": 998261,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/before.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/before.json",
+      "sha256": "01b06a6bc655793e2828a5061ce5abf2656f67ae638c405c9fe0552eb8c11b41",
+      "size": 231,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/dispatch-once.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/dispatch-once.json",
+      "sha256": "b5bee3e4cfae275c62a1acd28b11b2d5965968b30cab98fd70fed89883aa1f59",
+      "size": 821,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/final.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/final.json",
+      "sha256": "e2c1f11451a5a4f325bee02a79906c4e65dfa0c6d6eecc28bdbe8af9af21f343",
+      "size": 3608,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/parser.stderr",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/parser.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/parser.stdout",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/parser.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "original": "/private/tmp/t1246-final-source-audit-v6-14122ad1de6c950199e1c9ec/run-once.cjs",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/actual-final-source-audit-v6-14122ad1de6c950199e1c9ec/raw-private/run-once.cjs",
+      "sha256": "cd4ede74308408e051dcd00c5f081b8d86fd260c335d35d44701bcbd1d495471",
+      "size": 13934,
+      "mode": 384,
+      "uid": 501
+    }
+  ],
+  "allPrivateBytesArchivedSameSHA": true,
+  "exactApprovalSHA": "d5ded2742faf3cede47159111d13573e226eacd0808d6f79f78ab370ce0a22a5",
+  "dispatches": 1,
+  "automaticRetry": false,
+  "scopeStageAuditPassed": true,
+  "oldV5FAILReportSHA": "96958f03e431314836fb313f83c3cfd211264ef4b456b34c1314a54e836c42c0",
+  "oldV5FAILAndOldPartialAndAllOriginalSpecRowsUnchanged": true,
+  "newPureTestsRunByThisWrapper": false,
+  "finalSealCommitPackageWorkersBrowserAppSigned": false,
+  "sourceAfterReceiptAndFinalGroupPresent": true,
+  "App": false
+}

@@ -1,0 +1,68 @@
+{
+  "task": "T-1246",
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "kind": "actual-packaged-worker-startup-only",
+  "entry": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/runtime/execution-worker.cjs",
+  "node": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+  "entrySha256": "9455603a4df623a302983c80226c74316cf136abe24b48b88e35d77c8ae0ff0b",
+  "nodeSha256": "5ed0e129e708e36048981aed983f7302b0c18139f5a174e4b8d5fabbacb6d59d",
+  "archiveSha256": "07b9351c8e2f2e49c6ac7c9f50560addf3b6cfb9562bae45a279d01398aa055c",
+  "tarMembersMatched": 680,
+  "packagedWorkerCount": 10,
+  "preloadSha256": "0d31b89541b04fa254877cd9edad3641af2d264be622ac8f856e6fa93b592bac",
+  "environmentKeys": [
+    "PATH",
+    "HOME",
+    "LANG",
+    "NODE_ENV",
+    "CI",
+    "TMPDIR",
+    "NODE_OPTIONS",
+    "CREATOROS_APP_DATA_DIR",
+    "CREATOROS_DB_DIR",
+    "CREATOROS_MEDIA_ROOT",
+    "CREATOROS_BROWSER_POOL_DIR",
+    "CREATOROS_WORKBENCH_ROOT",
+    "CREATOROS_DOUYIN_AUTH_DIR",
+    "CREATOROS_WEB_AUTH_DIR",
+    "CREATOROS_DATABASE_BACKUP_DIR"
+  ],
+  "taskMessagesSent": 0,
+  "nativeAppAcceptance": false,
+  "modelGenerationAcceptance": false,
+  "observationMs": 120000,
+  "cleanupMs": 120000,
+  "startedAt": "2026-10-11T15:50:06.275Z",
+  "messages": [
+    {
+      "type": "ready",
+      "capabilities": [
+        "model.generate",
+        "asset.asr",
+        "transcribe.douyin",
+        "asset.generate",
+        "model.structured",
+        "chat.run",
+        "chat.script-draft",
+        "chat.hooks",
+        "chat.structured",
+        "chat.research",
+        "chat.web-read"
+      ]
+    }
+  ],
+  "reason": "ready_received",
+  "pid": 17123,
+  "ipcDisconnected": true,
+  "observedExit": {
+    "code": 0,
+    "signal": null,
+    "at": "2026-10-11T15:50:07.712Z"
+  },
+  "exitCode": 0,
+  "signal": null,
+  "endedAt": "2026-10-11T15:50:07.712Z",
+  "elapsedMs": 1437,
+  "status": "PASS_STARTUP_ONLY",
+  "ownedTemporaryRuntimeCleaned": true
+}

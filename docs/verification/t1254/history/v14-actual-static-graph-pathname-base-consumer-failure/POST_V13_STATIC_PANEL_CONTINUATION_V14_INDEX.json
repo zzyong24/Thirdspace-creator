@@ -1,0 +1,113 @@
+{
+  "status": "STATIC_EXACT_CANDIDATE_PREPARE_ONLY_EOF0_CHILDREN_NOT_EXECUTED_PANEL_NOT_APPLIED",
+  "sourceDigest": "42ba082e18c46ef3378807edf2a3dc03e678c0d561387017a3978772289929f7",
+  "toolDigest": "1724b9b96eae4f890e189539fecb98231249b407c97630b465d912c6a6c1f0b0",
+  "sourceCount": 1837,
+  "toolCount": 141614,
+  "fullAllRowsZeroDrift": true,
+  "steps": [
+    [
+      "static-original-build",
+      3600000
+    ],
+    [
+      "static-delivery-graph",
+      900000
+    ],
+    [
+      "native-original-lease4",
+      1440000
+    ],
+    [
+      "native-original-dom",
+      900000
+    ],
+    [
+      "native-original-dom-no-process",
+      900000
+    ],
+    [
+      "native-original-image-variants",
+      900000
+    ],
+    [
+      "native-repro-original-static-patch",
+      180000
+    ],
+    [
+      "native-repro-combined-patch-check",
+      180000
+    ],
+    [
+      "static-repro-combined-patch-check",
+      180000
+    ]
+  ],
+  "budget": 36720000,
+  "generatedNativeConsumerClosure": {
+    "manifest": "/tmp/t1254-readonly/V13_ACTUAL_NATIVE_GENERATED_GRAPH.json",
+    "manifestSha256": "72333d489389f50828383cdd585bf8bb1632b805f83074d52b6ba8a604ae3c55",
+    "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-two-source-install-6d5352cae24244b586ad3ae094717bba-jrA7Ig/native/apps/web/dist-native",
+    "files": 395,
+    "previousV13BuildAndVerifyActualClosedExit0": true,
+    "fullFileSetBytesModeUIDEveryBinding": true
+  },
+  "staticCandidateHistory": [
+    "history/v14-static-original-panel-mode-0644-contract-concerns",
+    "history/v14-static-native-generated-graph-binding-concerns",
+    "history/v14-native-graph-prepare-only-reference-error",
+    "history/v14-native-graph-full-seal-array-omission"
+  ],
+  "files": [
+    {
+      "file": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_PREPARE.json",
+      "sha256": "57ceee241c854b73d7e9da3cf90036b41f574d8c7eb1f834d2c51af0679d85ad",
+      "size": 56572651
+    },
+    {
+      "file": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_FULL_SEAL.json",
+      "sha256": "37512ddaa83918292b35bd55bde8fab397185a6993b398e5be1bb53fea9faa20",
+      "size": 8734
+    },
+    {
+      "file": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_DELTA.json",
+      "sha256": "3ace3a9a6f3a5861f979f56f05154d3c51987e9838b33537700f5594f80f7ce2",
+      "size": 190310
+    },
+    {
+      "file": "/tmp/t1254-readonly/POST_V13_STATIC_PANEL_CONTINUATION_V14_HANDOFF.md",
+      "sha256": "452d797b54e02c9cb5ce992f91b5d4ef6f591f3bfa813434ecfe541209dc811b",
+      "size": 4473
+    },
+    {
+      "file": "/tmp/t1254-readonly/run-owned-doocs-post-v13-static-panel-continuation-v14.cjs",
+      "sha256": "7a5a33c0f67ba70da3d93e337f6e52f87bde260cb0ff8fb64d84c8b6fcb67c7e",
+      "size": 46616
+    },
+    {
+      "file": "/tmp/t1254-readonly/doocs-source-provenance-v14.cjs",
+      "sha256": "cb40021bc45985b522abdca9c3b887247aa97abd46b8d802966eb79dbd97071f",
+      "size": 5584
+    },
+    {
+      "file": "/tmp/t1254-readonly/V14_CONTINUATION_EXACT_DIFF.diff",
+      "sha256": "4aa54248a1f0da7bcc08caed02d6d3da6c6cde0f13e89202b7edfcdec3a1802b",
+      "size": 65310
+    },
+    {
+      "file": "/tmp/t1254-readonly/V14_PROVENANCE_EXACT_DIFF.diff",
+      "sha256": "93771843e6b045d7b9a93c4ca43c5d91866989176eed27acb6aa6fd021288bbe",
+      "size": 8251
+    },
+    {
+      "file": "/tmp/t1254-readonly/V13_ACTUAL_NATIVE_GENERATED_GRAPH.json",
+      "sha256": "72333d489389f50828383cdd585bf8bb1632b805f83074d52b6ba8a604ae3c55",
+      "size": 165058
+    },
+    {
+      "file": "/tmp/t1254-readonly/snapshot-v13-actual-native-generated-graph.py",
+      "sha256": "ea2e85fdc02f3a3316f0e5f2655ef4d84a23c34e766779856380b1655461b233",
+      "size": 2472
+    }
+  ]
+}

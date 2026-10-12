@@ -1,0 +1,42 @@
+{
+  "task": "T-1254",
+  "scope": "T1256_STATIC_PANEL_CLEANUP_POST_V13_REMAINING9_ORIGINAL_BUILD_GRAPH_PROVENANCE_ONLY",
+  "exitCode": 1,
+  "startedAt": "2026-10-12T05:49:07.952Z",
+  "elapsedMs": 179108.132166,
+  "totalBudgetMs": 36720000,
+  "segmentStepComplete": 1,
+  "segmentStepTotal": 9,
+  "originalPrefixStages": 16,
+  "originalTotalStages": 25,
+  "combinedStagesObserved": 17,
+  "continuedFrom": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-907bb885eb0fd4f595b8d1f2b70fc29b",
+  "originalV12Run": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1254/execution/request-build-14bcbffb7152bdb2b58cd5a252c2d27e",
+  "originalExitCodeUnchanged": 1,
+  "v13ExitCodeUnchanged": 1,
+  "originalV12WallDeadline": "2026-10-13T10:50:47.959Z",
+  "originalV13WallDeadline": "2026-10-13T05:18:07.699Z",
+  "effectiveInheritedWallDeadline": "2026-10-13T05:18:07.699Z",
+  "signals": [],
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-request-build-ba7a4e28f106fe98777e78428b4fb135-8qjJec",
+  "rootRetained": true,
+  "appliedToPrivateOnly": true,
+  "records": [
+    {
+      "name": "static-original-build",
+      "code": 0,
+      "elapsedMs": 16973,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    },
+    {
+      "name": "static-delivery-graph",
+      "code": 1,
+      "elapsedMs": 2995,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": []
+    }
+  ],
+  "noProductCopy": true,
+  "noApp": true
+}

@@ -1,0 +1,50 @@
+{
+  "task": "T-1254",
+  "scope": "T1254_POST_V14_GRAPH_PATHNAME_CONSUMER_REPAIR_COMBINED_RED_GREEN_REMAINING8_ONLY",
+  "at": "2026-10-12T06:26:41.225654+00:00",
+  "prepareSha256": "98daeb9bbca495568bcbae1c26e85feaf7839e42d99d2fc1ba097a579eafc5ca",
+  "sealSha256": "a2bf07aeb7eeec907f68b2befc2d0c5c737cf23b5ea17e89410861fca6899cae",
+  "indexSha256": "e55a7dc471089f667f8fd30bb3796da8f0c283082154d2b44fdcae89cafaf893",
+  "sourceSnapshotDigest": "e0a4f71454a2e794a2fdc2cd0cb46cb78773360de6ce29c24833dc6ee3c397ce",
+  "toolDigest": "4deaac8de48aab3c60d6028a41362f6df14cbf7b7847e17d179793e2dda37dc8",
+  "counts": {
+    "inputs": 1867,
+    "tools": 141918
+  },
+  "artifactRows": 22,
+  "indexRows": 14,
+  "actualNativeFiles": 395,
+  "actualStaticFiles": 304,
+  "fullBytesRead": 3794972198,
+  "symbolicLinksVerified": 7525,
+  "bootstrapRealPathRows": [
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/.bin/pn",
+      "actualLink": "../pnpm/pn",
+      "exactRealPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/pn"
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/.bin/pnpm",
+      "actualLink": "../pnpm/pnpm",
+      "exactRealPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/pnpm"
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/.bin/pnpx",
+      "actualLink": "../pnpm/pnpx",
+      "exactRealPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/pnpx"
+    },
+    {
+      "file": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/.bin/pnx",
+      "actualLink": "../pnpm/pnx",
+      "exactRealPath": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA/tools/node_modules/pnpm/pnx"
+    }
+  ],
+  "elapsedMs": 26577.33904197812,
+  "zeroDrift": true,
+  "allPreviousToolRowsSame": true,
+  "actualFullOutputFileSetsSame": true,
+  "modeUIDInodeAndActualDyldFirstRpathSame": true,
+  "originalEightTailAndNineFixtureBodiesPreserved": true,
+  "runtimeExecuted": false,
+  "initialRootSchemaErrorPreservedSha256": "478997d98662f0a74d411b333435a916f8001d573d9524f5d7a6a49e6ee0e5a0"
+}

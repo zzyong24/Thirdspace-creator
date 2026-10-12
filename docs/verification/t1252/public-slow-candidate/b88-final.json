@@ -1,0 +1,57 @@
+{
+  "at": "2026-10-12T00:00:39.665Z",
+  "scope": "只运行真实b88 --list；未执行ignored正文/Cargo/App/PG/服务",
+  "runRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-b88-list-fIBboh",
+  "outerMs": 2700000,
+  "elapsedMs": 306.57175,
+  "node": {
+    "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85"
+  },
+  "binary": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/target/debug/deps/creatoros_workbench_test-4492fe5165c214f3",
+    "sha256": "b88eec4446f78c6bc3b2e94b936b1a91651b28dae4352eece12aaa135b06295d"
+  },
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "toolSha256": "1ef3c9555fb0140894f2f4cb53c8b98c03e249113762444f2c3357132e2fa9eb",
+  "receipt": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/target/debug/deps/creatoros_workbench_test-4492fe5165c214f3",
+    "args": [
+      "--list"
+    ],
+    "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-b88-list-fIBboh",
+    "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1252-b88-list-fIBboh/actual-list.log",
+    "pid": 44101,
+    "identity": {
+      "pid": 44101,
+      "pgid": 44101,
+      "uid": 501,
+      "birth": "Mon Oct 12 08:00:39 2026",
+      "startedAt": 1791763239441
+    },
+    "startedAt": "2026-10-12T00:00:39.441Z",
+    "endedAt": "2026-10-12T00:00:39.620Z",
+    "elapsedMs": 179,
+    "budgetMs": 120000,
+    "deadlineAt": "2026-10-12T00:02:39.441Z",
+    "budgetExhausted": false,
+    "termGraceMs": 180000,
+    "killGraceMs": 180000,
+    "signals": [],
+    "processClosed": true,
+    "remainingOwnedGroupMembers": [],
+    "persistentOwnedServer": false,
+    "outerAbort": false,
+    "code": 0,
+    "signal": null,
+    "spawnError": null,
+    "stdout": "",
+    "stderr": ""
+  },
+  "inputAfter": {
+    "nodeSame": true,
+    "binarySame": true,
+    "helperSame": true
+  },
+  "error": null
+}

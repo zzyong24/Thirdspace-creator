@@ -1,0 +1,14 @@
+{
+  "verdict": "PASS_SPEC_ONLY",
+  "observedAt": "2026-10-11T20:46:26.056586+00:00",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "independentPacketSha256": "cd9ecba8dc54428efc1b9891f34d2b6044f4375b07b7ff7c06925043f343fd80",
+  "sourceBinding": "SPEC_REGISTERED_SOURCE_BINDING.json",
+  "findings": [],
+  "facts": [
+    "root已读完整SPEC、真实artifact-host callback/context与backend receipt消费者；完整串行deadline/取消与unknown、stop proof不降级，限定24路径。",
+    "independent reviewer与SPEC作者分离，真实22红与24SHA来源均保持；当前不签实施/运行/Windows/App。",
+    "元数据历史ba618保留，新来源binding明确最新0c9468；标准frontend四错保实际非零，不删首轮库存。"
+  ],
+  "writerWindow": "可先frontend server/scanner与三个Rust模块；backend信号点保持原bcad直到PG27/78 EOF，所有运行工具另行独评，不build共享dist。"
+}

@@ -1,0 +1,39 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/bin/tsc",
+    "--noEmit"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/frontend-standard-types-attempt2.txt",
+  "pid": 55286,
+  "identity": {
+    "pid": 55286,
+    "pgid": 55286,
+    "uid": 501,
+    "birth": "Mon Oct 12 04:23:48 2026",
+    "startedAt": 1791750228399
+  },
+  "startedAt": "2026-10-11T20:23:48.399Z",
+  "endedAt": "2026-10-11T20:24:48.498Z",
+  "elapsedMs": 60099,
+  "budgetMs": 600000,
+  "deadlineAt": "2026-10-11T20:33:48.399Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 2,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": "",
+  "outerBudgetMs": 960000,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-frontend-types-JeBpkg",
+  "standardTsconfigUnmodified": true,
+  "firstEvidencePreserved": true
+}

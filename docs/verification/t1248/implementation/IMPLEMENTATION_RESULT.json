@@ -1,0 +1,150 @@
+{
+  "task": "T-1248",
+  "status": "implementation-focused-pass_global-and-real-PG-pending",
+  "formalSpecSHA256": "a815e5da23ef92579ae722ba9bd4227259d0bb9d14960d6c9dffa626395195de",
+  "formalThirdReceipts": {
+    "integration": "657048db2fb1",
+    "canonical": "2d9887301cb3"
+  },
+  "source": {
+    "contract/src/resources/assistant-system.ts": "81e4606d8de01a300df955e7f344c4f36838db278a8fd8aaa5e7328cad3ac178",
+    "backend/src/modules/ai-runtime/chat-tools.ts": "8b691e3e3a1732bd7af8147658c35f5d96b2e9be20d3c4e56cc605ace8157f8d",
+    "backend/src/modules/ai-runtime/chat-system-tool-host.ts": "512966ceab46ef91bfa39ba8081b9a05af3671c0854fe4136e40b6c4dc144049",
+    "backend/src/application/chat/assistant-system-root.ts": "831d4f007d6b11249ab1154e9b6dbd942927d1f6c87214cf4f5408fbe65305b9",
+    "backend/src/modules/ai/chat-proposal-source.service.ts": "b710ae2442eb8532a33d7cdb4bf12b1cb68b9f5ba42a718b93c7de8b9adbc1f4",
+    "contract/src/assistant-system.test.ts": "d9a0d2c988ccac3918465ca6dbfbf0525f87c8241f3938f3080d02079a54d1b4",
+    "backend/src/modules/ai-runtime/chat-tools.test.ts": "501761fd45d032f461af6ecbee3d06a1abd1f7dc2f929924dc5e5f2589e9e185",
+    "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts": "1ec1beb1eaeb8895600f6079e020cdabab4fb86c47af238d9173ab217147c89c",
+    "backend/src/application/chat/assistant-system-root.integration.test.ts": "44c031cac341b9b1c0e8986d3bd363fd7eec9c69d806a7d91affa39eeb853c59",
+    "backend/src/modules/ai/chat-proposal-source.service.test.ts": "fde056441c4ab3f3c357d37419c402bd33e1227993fdd6091bdfb40c00b8b9e5"
+  },
+  "wholeKnown": {
+    "files": 5,
+    "total": 347,
+    "passed": 344,
+    "failed": 0,
+    "skipped": 3,
+    "skippedReason": "原3个PG锁竞争用例需fresh owned真实PG；此次明确PGlite，不代签",
+    "testDurationMs": 52770,
+    "receipt": {
+      "exitCode": 0,
+      "durationMs": 53304,
+      "outerMs": 500000000,
+      "bodyUpperBound": 347,
+      "perBodyConservativeUpperMs": 1200000,
+      "hookPairs": 5,
+      "eachHookPairMs": 360000,
+      "startupMs": 180000,
+      "cleanupMs": 180000,
+      "timedOut": false,
+      "processClosed": true,
+      "before": {
+        "contract/src/resources/assistant-system.ts": "81e4606d8de01a300df955e7f344c4f36838db278a8fd8aaa5e7328cad3ac178",
+        "backend/src/modules/ai-runtime/chat-tools.ts": "8b691e3e3a1732bd7af8147658c35f5d96b2e9be20d3c4e56cc605ace8157f8d",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.ts": "512966ceab46ef91bfa39ba8081b9a05af3671c0854fe4136e40b6c4dc144049",
+        "backend/src/application/chat/assistant-system-root.ts": "831d4f007d6b11249ab1154e9b6dbd942927d1f6c87214cf4f5408fbe65305b9",
+        "backend/src/modules/ai/chat-proposal-source.service.ts": "b710ae2442eb8532a33d7cdb4bf12b1cb68b9f5ba42a718b93c7de8b9adbc1f4",
+        "contract/src/assistant-system.test.ts": "d9a0d2c988ccac3918465ca6dbfbf0525f87c8241f3938f3080d02079a54d1b4",
+        "backend/src/modules/ai-runtime/chat-tools.test.ts": "501761fd45d032f461af6ecbee3d06a1abd1f7dc2f929924dc5e5f2589e9e185",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts": "1ec1beb1eaeb8895600f6079e020cdabab4fb86c47af238d9173ab217147c89c",
+        "backend/src/application/chat/assistant-system-root.integration.test.ts": "44c031cac341b9b1c0e8986d3bd363fd7eec9c69d806a7d91affa39eeb853c59",
+        "backend/src/modules/ai/chat-proposal-source.service.test.ts": "fde056441c4ab3f3c357d37419c402bd33e1227993fdd6091bdfb40c00b8b9e5"
+      },
+      "after": {
+        "contract/src/resources/assistant-system.ts": "81e4606d8de01a300df955e7f344c4f36838db278a8fd8aaa5e7328cad3ac178",
+        "backend/src/modules/ai-runtime/chat-tools.ts": "8b691e3e3a1732bd7af8147658c35f5d96b2e9be20d3c4e56cc605ace8157f8d",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.ts": "512966ceab46ef91bfa39ba8081b9a05af3671c0854fe4136e40b6c4dc144049",
+        "backend/src/application/chat/assistant-system-root.ts": "831d4f007d6b11249ab1154e9b6dbd942927d1f6c87214cf4f5408fbe65305b9",
+        "backend/src/modules/ai/chat-proposal-source.service.ts": "b710ae2442eb8532a33d7cdb4bf12b1cb68b9f5ba42a718b93c7de8b9adbc1f4",
+        "contract/src/assistant-system.test.ts": "d9a0d2c988ccac3918465ca6dbfbf0525f87c8241f3938f3080d02079a54d1b4",
+        "backend/src/modules/ai-runtime/chat-tools.test.ts": "501761fd45d032f461af6ecbee3d06a1abd1f7dc2f929924dc5e5f2589e9e185",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts": "1ec1beb1eaeb8895600f6079e020cdabab4fb86c47af238d9173ab217147c89c",
+        "backend/src/application/chat/assistant-system-root.integration.test.ts": "44c031cac341b9b1c0e8986d3bd363fd7eec9c69d806a7d91affa39eeb853c59",
+        "backend/src/modules/ai/chat-proposal-source.service.test.ts": "fde056441c4ab3f3c357d37419c402bd33e1227993fdd6091bdfb40c00b8b9e5"
+      }
+    }
+  },
+  "legacyOriginal": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "testDurationMs": 61180,
+    "runnerDurationMs": 61682,
+    "source2101Drift": [],
+    "ownedProcessGroupSurvivors": [],
+    "oldProducer": "6e4689b3180f91189110208267708ad72b03ae64",
+    "oldFixtureUnchangedSHA256": "df8a7f33f5d1a13ee88cdf92daa8f24b7edd6be1ac5939ce719b58a5a92b5d0d",
+    "elevenBundleSHA256": {
+      "agentic-worker.cjs": "c4c8445bb2d233e43dea841e09fac0e8881a964c5606eaf07b3a4f7792d14b32",
+      "browser-runtime.cjs": "494f692a7af153bfe0bcf6eed5ac8a03332e43acd27723da861ef34cc375de38",
+      "codex-acp.cjs": "5d47280b293761e56ab265de90cf5ae1bee0b28ed79e798c8797598ba6fbc1a6",
+      "codex-status-worker.cjs": "f776c602d495062c298d1d3cf70406db5498c432da47c0f27aeda9922820ca38",
+      "embedding-worker.cjs": "fec8f10c4ee78f5883294e0031ed8faea550862861d4302bb7d46dc1bdda17be",
+      "execution-worker.cjs": "73683b74413fe524222f6850ae77044d9c8e0e39a70399cd99dd5a55a51c7364",
+      "flywheel-generation-worker.cjs": "deec6ad7d4895e51b6043790615d636cde18bbe7c779ef70bf76514f975fca0c",
+      "intelligence-generation-worker.cjs": "45c4b0dfb108c447d23bb11d35af2861b2d27dfc4079e93376e2a2004b3d50e9",
+      "intelligence-transcript-worker.cjs": "2b77036c0f959f65bc82e7cd50d96f6b8cadfa3465c36fc6df440cdc81054174",
+      "model-probe-worker.cjs": "3aa57569081c1ac4e128b1dee8081563cd796e47d3e87efce25e4ba4ef807d17",
+      "video-visual-review-worker.cjs": "d6e9c0d5b30a1c614fd74735608bc25e9677fbb71cae513cababc3c87a04e4ff"
+    },
+    "scope": "真实旧源码合成104库→current完整migrator/真实Worker受控HTTP模型fixture；不是历史用户库、官方模型或App"
+  },
+  "staticGates": [
+    {
+      "gate": "contract-types-final",
+      "exitCode": 0,
+      "durationMs": 5190,
+      "commandMs": 180000
+    },
+    {
+      "gate": "backend-types-final",
+      "exitCode": 0,
+      "durationMs": 42381,
+      "commandMs": 180000
+    },
+    {
+      "gate": "boundary",
+      "exitCode": 0,
+      "durationMs": 374,
+      "commandMs": 180000
+    },
+    {
+      "gate": "orphan",
+      "exitCode": 0,
+      "durationMs": 140,
+      "commandMs": 180000
+    }
+  ],
+  "timeoutVerify": {
+    "receipt": {
+      "exitCode": 1,
+      "durationMs": 31957,
+      "outerMs": 500000000,
+      "cleanupMs": 180000,
+      "timedOut": false,
+      "pid": 51447,
+      "processClosed": true
+    },
+    "failures": 22,
+    "files": 9,
+    "selectedTestGroups": "后7测试组全PASS（6+5+20+37+68+27+5）",
+    "verdict": "FAIL_GLOBAL_GATE_NOT_ACCEPTED_RISK"
+  },
+  "pending": [
+    "fresh owned PG原3锁case+兼容新增真实PG覆盖",
+    "global timeout命中22项归因/修复或正式范围判断；未complete",
+    "root最终源码冻结/11包统一构建/开发包/原170与官方模型49；本局部11包不是newpackage"
+  ],
+  "scopePreserved": [
+    "no newpublic API/versionchooser/owner/DB schema/migration/supplier",
+    "no frozen byte/old hash/task/call/tool ID/budget/deadline rewrite",
+    "no App/auth/activation/install/foreign PG/official model calls",
+    "AI候选仅host seal；采纳沿原source身份/定义/ack/digest/CAS/receipt"
+  ],
+  "evidenceLimitations": [
+    "full-first outer9M不足覆盖全已声明串行，保真实341/1/3但不是预算Gate；formal full-third保守347×1.2M+hooks/startup/cleanup,500M外层",
+    "wholefirst三源完整bytes未当场归档，只有真实patch和记录SHA；恢复hostSHA599d8ca与该记录一致，不伪历史archive",
+    "临时候选full-second343/3在owner0补强前不当formal新版本Gate",
+    "controlled ledger与localhost SSE调用不当官方模型或49验收成功"
+  ]
+}

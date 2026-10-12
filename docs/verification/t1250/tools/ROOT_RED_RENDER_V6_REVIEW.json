@@ -1,0 +1,19 @@
+{
+  "approved": true,
+  "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "phase": "red",
+  "group": "render",
+  "toolSha256": "9ed9d747a44ccf947a837486e8b17b9f1d93cdd20ef0f555ef261eb5798eb5e2",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "selectedInputDigest": "d992905375254b003b758fb8212556008282a56505645bd622563297d48ab7cc",
+  "reviewer": "root",
+  "reviewedAt": "2026-10-11T21:31:56.458221+00:00",
+  "constraints": [
+    "仅T1250实际新增body；其它原cases过滤不能签原全组",
+    "真实import闭包含worker源码、不读dist、不build；跟whole22同只读源码",
+    "源/工具绑定与真实EOF/group0；红后才能修改对应frontend消费者",
+    "保原任务scope/operation/停止证明/隔离双dispatch，不运行App/模型/PG"
+  ]
+}

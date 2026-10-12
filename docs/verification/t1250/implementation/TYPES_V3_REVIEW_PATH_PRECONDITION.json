@@ -1,0 +1,10 @@
+{
+  "kind": "真实工具调用前置失败记录",
+  "command": "node docs/verification/t1250/tools/run-frontend-types.cjs --review docs/verification/t1250/tools/ROOT_PROPER_FRONTEND_TYPES_V3_PUBLIC_BODY_REVIEW.json",
+  "actualExitCode": 1,
+  "actualError": "ENOENT: no such file or directory, open /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/tools/ROOT_PROPER_FRONTEND_TYPES_V3_PUBLIC_BODY_REVIEW.json",
+  "compilerChildStarted": false,
+  "correctReceipt": "docs/verification/t1250/ROOT_PROPER_FRONTEND_TYPES_V3_PUBLIC_BODY_REVIEW.json",
+  "correctedActualSession": 4690,
+  "notCompilerFailure": true
+}

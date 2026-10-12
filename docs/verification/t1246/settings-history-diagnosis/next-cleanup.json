@@ -1,0 +1,16 @@
+{
+  "cleanupRecords": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tsconfig.json",
+      "removedOnlyRuntimePath": ".next/t1246-4ca7851d82ba5343",
+      "preservedConcurrentOtherEdits": true
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/next-env.d.ts",
+      "removedOnlyRuntimePath": ".next/t1246-4ca7851d82ba5343",
+      "preservedConcurrentOtherEdits": true
+    }
+  ],
+  "isolatedDistDir": ".next/t1246-4ca7851d82ba5343",
+  "preservedRuntimeCache": true
+}

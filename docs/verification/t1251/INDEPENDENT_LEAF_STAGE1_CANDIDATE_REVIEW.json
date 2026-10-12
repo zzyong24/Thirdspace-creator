@@ -1,0 +1,48 @@
+{
+  "schema": "t1251-independent-candidate-review/v1",
+  "status": "PASS_TEST_CANDIDATE_ONLY",
+  "specSha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84",
+  "bindings": [
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.ts",
+      "sha256": "de1a62340a7ec38d7b1a51fa00bce27acfcd9af86f679f504c0faf44b2a1b273"
+    },
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.test.ts",
+      "sha256": "3758fa3b71a58e3a3238467491233f6ae6efa73c3145f449961259dbf88b2fb8"
+    },
+    {
+      "path": "/tmp/t1251-candidate/leaf.diff",
+      "sha256": "e7e793feeb9074d96e92347a02c68bc2d52e65175f56b283161393e546316344"
+    },
+    {
+      "path": "/tmp/t1251-candidate/leaf-binding.json",
+      "sha256": "d4c145c5b83ee9745a9b5535e724f86874030fcda15113a15910ebedb9ef3b16"
+    },
+    {
+      "path": "/tmp/t1251-candidate/chat-generation-worker.integration-stage1.test.ts",
+      "sha256": "0d5bbe422401b03959c1e5ac40f9b451a2b13f0872f5765527ffbf151eb4c15d"
+    },
+    {
+      "path": "/tmp/t1251-candidate/integration-stage1.diff",
+      "sha256": "6a9d33d42b21afee58eb04b27d50b6738b76ad19d89403f57ffe2935392e2872"
+    },
+    {
+      "path": "/tmp/t1251-candidate/integration-stage1-binding.json",
+      "sha256": "75d7bbd89ee5bfd2ff6ad3cce0a62d85e93c114ab3fc079079c081c0e529a2fe"
+    }
+  ],
+  "findings": [],
+  "closedFindings": [
+    "ACK drop/crash/hooks effects限定原taskID；原21完整模式与关键断言保持",
+    "所有host.stop/ownedHTTP关闭与当前draining均真实await；拒绝AggregateError留存，不跳过关闭"
+  ],
+  "limits": [
+    "原子HTTP429/unknown/partial计数及finite链未运行",
+    "finite受控generic使用真实public账户/组/AIowner与persistent enqueue，固定原180000deadline；不伪造executionTaskId、不宣称正式AI候选成功",
+    "unknown stage2/partial新断言/5或6HTTP/31或38tokens未纳本准入",
+    "运行工具/sharedsource window另审，未启动PG/model/build"
+  ],
+  "model": "unknown/inherited",
+  "testsExecuted": false
+}

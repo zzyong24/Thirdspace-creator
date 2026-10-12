@@ -1,0 +1,50 @@
+{
+  "task": "T-1253",
+  "status": "EXACT_THREE_TEST_APPLIED_NOT_RUN_NOT_BUILT",
+  "at": "2026-10-11T23:25:39.367805+00:00",
+  "rootApplyReview": {
+    "file": "docs/verification/t1253/ROOT_COMBINED_V3_FINAL_APPLY_REVIEW.json",
+    "sha256": "92da511c18e0d357df5b72ca8c639fbc5fa1237f7e53e6dd4d72efb15745d727"
+  },
+  "candidatePacket": {
+    "file": "/tmp/t1253-candidate/all-families-combined-v3-source-binding.json",
+    "sha256": "01301d8fd107583636bea9565c6c30b41f93e23838126dc7e6bcb60d9e36abc3"
+  },
+  "spec": {
+    "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+    "sha256": "3cb9dd0b8302e0a377800518bdc59e5da3e4dc57fe4484866fc9fd7a7245e484"
+  },
+  "sources": [
+    {
+      "file": "backend/src/integration/chat-hooks-worker.test.ts",
+      "beforeSha256": "f9fe46310f1f18a5185a4bc56c84cf3906bb27e13f8c734ee0e35fd722d72bc0",
+      "preservedFile": "docs/verification/t1253/approved-v3-source-preserved/backend/src/integration/chat-hooks-worker.test.ts",
+      "preservedSha256": "f9fe46310f1f18a5185a4bc56c84cf3906bb27e13f8c734ee0e35fd722d72bc0",
+      "afterSha256": "9f9505eca46c1fd6d929e8f22cf21dd4890427e5c58c682a9a8163ec3a02f1f3",
+      "candidateSha256": "9f9505eca46c1fd6d929e8f22cf21dd4890427e5c58c682a9a8163ec3a02f1f3"
+    },
+    {
+      "file": "backend/src/integration/chat-script-draft-worker.test.ts",
+      "beforeSha256": "44be1b5c2e3834bcc957aa6330a5d3065f8f985a7d480bcc95b65347a525ddd0",
+      "preservedFile": "docs/verification/t1253/approved-v3-source-preserved/backend/src/integration/chat-script-draft-worker.test.ts",
+      "preservedSha256": "44be1b5c2e3834bcc957aa6330a5d3065f8f985a7d480bcc95b65347a525ddd0",
+      "afterSha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60",
+      "candidateSha256": "bdc39567ac00a7293458dcbe50c14725b40ef3c119e1e5991e79c6ab7b5cbe60"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "beforeSha256": "0d758bfa7ce0bbae6b16aeb9db39e3e3c5bd4c1decdd3c1dc8a9ea8fc061752e",
+      "preservedFile": "docs/verification/t1253/approved-v3-source-preserved/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "preservedSha256": "0d758bfa7ce0bbae6b16aeb9db39e3e3c5bd4c1decdd3c1dc8a9ea8fc061752e",
+      "afterSha256": "17de16b8a1234dcff377a3c4b1c01b3e65af5cf53f59b8131798f0b2b5ab02f6",
+      "candidateSha256": "17de16b8a1234dcff377a3c4b1c01b3e65af5cf53f59b8131798f0b2b5ab02f6"
+    }
+  ],
+  "productionChanged": false,
+  "workerDistBuilt": false,
+  "testsRun": false,
+  "networkStarted": false,
+  "originalFailuresPreserved": true,
+  "original25And46DenominatorsPreserved": true,
+  "pending": "ROOT+peer fresh source/toolseal review and shared-dist window before actual whole25→46/types."
+}

@@ -1,0 +1,44 @@
+{
+  "recordedAt": "2026-10-11T18:17:03.094Z",
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "reviewedBodyRows": 205,
+  "sourceAndFirstBlockerBound": 202,
+  "causalOrPolicyPending": 3,
+  "unmapped": 0,
+  "uniqueRows": 205,
+  "duplicateRows": 0,
+  "groups": 46,
+  "sourceBindings": 169,
+  "allSourcesMatchFrozenObject": true,
+  "newProductCandidateWriteSets": [
+    {
+      "group": "B016",
+      "files": [
+        "backend/src/modules/ai-runtime/chat-tools.ts",
+        "backend/src/modules/ai-runtime/chat-host-tool-adapter.ts"
+      ],
+      "status": "requires_independent_review"
+    },
+    {
+      "group": "B043/B044",
+      "files": [
+        "ai-worker/src/execution/chat-text-node-worker.ts"
+      ],
+      "status": "typed_failure_preservation_requires_independent_review; unknown_authorization_policy_pending"
+    }
+  ],
+  "pending": [
+    "B044 授权模型未知可丢政策待独评",
+    "B045 两子何以未齐仍需原整文件真实trace",
+    "B046 前timeout后running无完整每任务trace"
+  ],
+  "targetedSeparateReceipt": {
+    "path": "../round-2/unit/focused-ff001-pb001.json",
+    "sha256": "5a778dd3be7ba9c9dd0e50ff1b012660bdbf95978ce77dd75a7dd6c9302d5fc1",
+    "passed": 41,
+    "failed": 0,
+    "exitCode": 0,
+    "doesNotReplaceFirstFailedAssertions": true
+  },
+  "productOrOriginalTestsModifiedByThisDiagnosis": false
+}

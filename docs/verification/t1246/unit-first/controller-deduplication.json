@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-10-11T15:12:08.915Z",
+  "oldControllerPid": 92667,
+  "oldExactCommand": "node /tmp/t1246-unit/continue-first.cjs",
+  "oldAction": "stop_waiting_controller_only_after_fresh_frontend_started",
+  "backendNotInterrupted": true,
+  "freshFrontendPid": 98159,
+  "freshFrontendStartedAt": "2026-10-11T15:11:18.804Z",
+  "freshFrontendCwd": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend",
+  "newAction": "wait_same_existing_frontend_receipt_before_all_four_typechecks",
+  "noDuplicateFrontendRun": true,
+  "oldControllerActualToolExitCode": 143,
+  "oldControllerExitMeaning": "only idle sequential controller deliberately stopped after independent frontend actually started; not a product test exit"
+}

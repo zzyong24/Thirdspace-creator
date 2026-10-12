@@ -1,0 +1,40 @@
+{
+  "task": "T-1246",
+  "at": "2026-10-12T09:41:34.061628+00:00",
+  "status": "PASS_SOURCE_FA001_EXACT_31_PROVENANCE_ADAPTER_V5_ONLY_NOT_AUDIT_EXECUTED",
+  "bindingSha256": "0190d05186bb71138e543526cf7ec77dfcae83148f622b3611b3df087fc0f3b7",
+  "auditSha256": "6564c1f87e26e779fcffa63380424165f78b0a4a421c93da58deb0f20c6c5b0d",
+  "adapterSha256": "8f8d3399137bee36e5116fe2caeeb9d13aba4cf430e1b4cdc643cbebaf4cc504",
+  "supplementSha256": "95a8648f2805a96a87f564ec0fff389f92cd56562ac4ba8674b5136f516c05e2",
+  "fullProof": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/final-source-audit-provenance-v5/INDEPENDENT_V5_0190_FULL_INPUT_AND_PROVENANCE_RECHECK.json",
+    "sha256": "32f43be9da357fc2ee1ef9eabcdef2baf2e4f53b3246eaeadbae0413f36f1479",
+    "fullBindings": 531,
+    "drift": []
+  },
+  "closedFindings": [
+    "FA-001 原31条无规格字段经真实父规格正文、引用链与冻结JSON位置精确绑定；原f5d0保持，只有内存31副本补充exactSpecPaths。",
+    "V4 budget suffix 长度误差只有 -8 改字面实际length=7，原审计和补充31证据全部同字节，正逆机械复原通过。"
+  ],
+  "sourceReview": [
+    "全文读原162审计、6564完整delta、新8f8 adapter及31项证据结构。原checkSpec非空、全部ROOTS零未暂存、五次Git、first100、legacy253和完整709/5冻结交付检查保留。",
+    "独立只读核531完整SHA/size；27 map来源、4同目录短名、3 legacy原封相等/28非legacy、29 formal198写集、2 ASR真实原字节严格预算差均核。25条PG两跳链、484路径JSON指针和243历史SHA行逐字段严格相同。历史合同评审只证明规格，不替代当前实施或测试通过。",
+    "两ASR全文正逆diff只3处60000→180000和1处60000→720000；其他正文断言和真实首轮源文件SHA相同，B004 offset缺失原FAIL明确保留。",
+    "supplement固定95a SHA，证据完整SHA/size、原31 row和当前源SHA、原规格行原文、实际map成员及历史指针全部成立后才内存补充；结束前再核同一完整证据。未知来源继续拒绝。",
+    "原3M单出生完整槽保持：entryIO600k + 5×240k Git + afterIO600k + margin600k；新增adapter两次只读开销计入原entry/after槽，原Git未来门和最终同步截止保持。没有新持久deadline续期。"
+  ],
+  "runtimeInputs": {
+    "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "actualCopyStageReceipt": "docs/verification/t1254/ROOT_EXACT_COPY_AND_STAGE_COMPLETE.json",
+    "actualCopyStageReceiptSHA": "94838ee358d4991786e7c639f6fd522cc81f5164d966dd0523aa13dc746dedc9",
+    "T1254SPEC_SHA": "4066ef913b7ba03f0032401bb2ffa5b2e27bf87f82d011e4d5c206ce42318bad",
+    "newOutputOnly": "docs/verification/t1246/round-2/final-source-audits/<unique>.json",
+    "auditMs": 3000000
+  },
+  "findings": [],
+  "recommendation": "PASS SOURCE：ROOT 可在当前产品、Gitindex和控制面冻结且固定Node/实际动态依赖守卫已闭合的独立wrapper范围内，签上述唯一v5审计一次准入；本报告不预签wrapper或审计结果，输出仍只stage-source审计不是最终HEAD/包封印。",
+  "reviewerExecutedAdapterAuditGitOrProductMutation": false,
+  "actualAuditPASS": false,
+  "finalHEADPackage11WorkerBrowserAcceptancePASS": false,
+  "nativeAppAcceptance": "用户暂不授权，保留未完成。"
+}

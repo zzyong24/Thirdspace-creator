@@ -1,0 +1,35 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "cause": "Vitest JSON把仅有一个skipped assertion的timeout-browser-public文件raw status标passed；报告层把整文件未执行单列SKIP",
+  "rawJsonSha256": "feecdb733b4b25071d7f8e844b4a9e5352bb5a02faef2f0bcdaf8fb25217f587",
+  "rawFileStatusCounts": {
+    "passed": 521,
+    "failed": 38
+  },
+  "derivedFiles": {
+    "files": 559,
+    "passedFiles": 520,
+    "failedFiles": 38,
+    "skippedFiles": 1,
+    "otherFiles": 0
+  },
+  "skippedWholeFiles": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator/frontend/src/server/ingestion/timeout-browser-public.test.ts",
+      "rawStatus": "passed",
+      "assertionStatuses": [
+        "skipped"
+      ]
+    }
+  ],
+  "caseCounts": {
+    "totalTests": 5078,
+    "passedTests": 4911,
+    "failedTests": 158,
+    "pendingTests": 8,
+    "todoTests": 1
+  },
+  "unhandledErrorsFromOriginalLog": 1,
+  "originalJsonAndAssertionsModified": false,
+  "testRerun": false
+}

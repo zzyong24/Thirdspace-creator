@@ -1,0 +1,22 @@
+{
+  "approved": true,
+  "scope": "T1250-owned-focused-no-app-no-model-no-pg",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "phase": "red",
+  "group": "clients",
+  "toolSha256": "62256e49806cb77e2d3759d0dcffa38468e3f8ccfd0bffffaadbe47f512789d9",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "specSha256": "0c9468d57923af45971f54b3e3500ff82936e74aded1af9363ad37cfc477bcc4",
+  "selectedInputDigest": "ba8291b81b0e761c9ab0a2fefafc38d2cf240528c1450971f0c3b855acd31cd8",
+  "reviewer": "root",
+  "at": "2026-10-11T21:10:03.295938+00:00",
+  "status": "PASS_TOOL_RED_ONLY",
+  "inputCount": 13,
+  "facts": [
+    "完整v3及ed30精确diff已读：仅realpath(/tmp)短ct1250独立根",
+    "新增真实Unixpartial写入、同operation单请求与活动不续期限失败用例已读",
+    "原EINVAL第一轮未到生产；全部真实失败保留，不签预算RED",
+    "13输入当前SHA/digest/tool一致；无共享build或PG，GREEN依赖必须新绑定"
+  ],
+  "actualRunsByThisReview": 0
+}

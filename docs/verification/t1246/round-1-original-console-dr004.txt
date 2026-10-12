@@ -1,0 +1,1676 @@
+[playwright.config] Isolated test data root: /tmp/t1246-original-533224f-20261012
+[playwright.config] Isolated media root: /tmp/t1246-original-533224f-20261012/media
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:61346
+[2m[WebServer] [22m- Network:       http://127.0.0.1:61346
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 417ms
+[2m[WebServer] [22m
+[2m[WebServer] [22m[37m[1m [22m[39m We detected TypeScript in your project and reconfigured your [36mtsconfig.json[39m file for you.
+[2m[WebServer] [22m[37m[1m [22m[39m The following suggested values were added to your [36mtsconfig.json[39m. These values [36mcan be changed[39m to fit your project's needs:
+[2m[WebServer] [22m
+[2m[WebServer] [22m[37m[1m [22m[39m 	- [36minclude[39m was updated to add [1m'.next/t1246-2f063c1473a16cf0/types/**/*.ts'[22m
+[2m[WebServer] [22m[37m[1m [22m[39m 	- [36minclude[39m was updated to add [1m'.next/t1246-2f063c1473a16cf0/types/**/*.ts'[22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling / ...
+[2m[WebServer] [22m[db] PGlite 落盘目录**损坏**打不开(Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite');移至 /tmp/t1246-original-533224f-20261012/pglite.corrupt-1791730512380 并全新初始化。原数据保留可人工恢复。
+[2m[WebServer] [22m[db] 隔离坏目录失败,放弃降级: Error: ENOENT: no such file or directory, rename '/tmp/t1246-original-533224f-20261012/pglite' -> '/tmp/t1246-original-533224f-20261012/pglite.corrupt-1791730512380'
+[2m[WebServer] [22m    at async quarantineAndRebuild (../backend/src/db.ts:297:5)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m295 |[0m [32m  );[0m
+[2m[WebServer] [22m  [90m296 |[0m [32m  try {[0m
+[2m[WebServer] [22m[31m[1m>[0m [90m297 |[0m [32m    await rename(dataDir, quarantine);[0m
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m298 |[0m [32m  } catch (mvErr) {[0m
+[2m[WebServer] [22m  [90m299 |[0m [32m    console.error(`[0m[db] 隔离坏目录失败,放弃降级:[32m`, mvErr);[0m
+[2m[WebServer] [22m  [90m300 |[0m [32m    throw cause;[0m {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'rename'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  dest: [32m'/tmp/t1246-original-533224f-20261012/pglite.corrupt-1791730512380'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 11.2s[2m (next.js: 9.2s, proxy.ts: 114ms, application-code: 1913ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 150ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 144ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 139ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 131ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 152ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 147ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 141ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 137ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 154ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 147ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 139ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 133ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 154ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 146ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 137ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 131ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 151ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 145ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 131ms[2m (next.js: 1757µs, proxy.ts: 1880µs, application-code: 128ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 124ms[2m (next.js: 1585µs, proxy.ts: 1784µs, application-code: 120ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 132ms[2m (next.js: 1815µs, proxy.ts: 2ms, application-code: 128ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 138ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 132ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 148ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 142ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 130ms[2m (next.js: 1696µs, proxy.ts: 2ms, application-code: 126ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 130ms[2m (next.js: 1566µs, proxy.ts: 1933µs, application-code: 126ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 136ms[2m (next.js: 1479µs, proxy.ts: 2ms, application-code: 132ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 124ms[2m (next.js: 1671µs, proxy.ts: 1705µs, application-code: 121ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 130ms[2m (next.js: 1785µs, proxy.ts: 1850µs, application-code: 127ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 130ms[2m (next.js: 1915µs, proxy.ts: 1885µs, application-code: 126ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 125ms[2m (next.js: 1656µs, proxy.ts: 1546µs, application-code: 122ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 140ms[2m (next.js: 1732µs, proxy.ts: 1528µs, application-code: 137ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 131ms[2m (next.js: 1827µs, proxy.ts: 1400µs, application-code: 128ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 130ms[2m (next.js: 1533µs, proxy.ts: 1494µs, application-code: 127ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 150ms[2m (next.js: 2ms, proxy.ts: 1735µs, application-code: 146ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 283ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 274ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 200ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 195ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 129ms[2m (next.js: 1705µs, proxy.ts: 1373µs, application-code: 126ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 138ms[2m (next.js: 1711µs, proxy.ts: 1374µs, application-code: 135ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 135ms[2m (next.js: 1709µs, proxy.ts: 1771µs, application-code: 131ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 130ms[2m (next.js: 1539µs, proxy.ts: 1775µs, application-code: 127ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 131ms[2m (next.js: 1850µs, proxy.ts: 1880µs, application-code: 127ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 135ms[2m (next.js: 1738µs, proxy.ts: 1690µs, application-code: 132ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 131ms[2m (next.js: 1424µs, proxy.ts: 1460µs, application-code: 128ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 149ms[2m (next.js: 1921µs, proxy.ts: 1783µs, application-code: 146ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 139ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 134ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 128ms[2m (next.js: 1795µs, proxy.ts: 1458µs, application-code: 125ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET / [31m500[39m in 134ms[2m (next.js: 1520µs, proxy.ts: 4ms, application-code: 129ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: ENOENT: no such file or directory, mkdir '/tmp/t1246-original-533224f-20261012/pglite'
+[2m[WebServer] [22m    at async openPglite (../backend/src/db.ts:192:5)
+[2m[WebServer] [22m    at async createDb (../backend/src/db.ts:246:14)
+[2m[WebServer] [22m    at async createConfiguredDb (../backend/src/db.ts:447:26)
+[2m[WebServer] [22m    at async buildPersistence (src/server/persistence-client.ts:1201:35)
+[2m[WebServer] [22m    at async getIdentityService (src/server/persistence-client.ts:7426:11)
+[2m[WebServer] [22m    at async resolveSessionUncached (src/lib/session.server.ts:64:20)
+[2m[WebServer] [22m  [90m190 |[0m   [36mconst[0m client = dataDir ? [36mnew[0m [33mPGlite[0m(dataDir) : [36mnew[0m [33mPGlite[0m();
+[2m[WebServer] [22m  [90m191 |[0m   [36mtry[0m {
+[2m[WebServer] [22m[31m[1m>[0m [90m192 |[0m     [36mawait[0m client.waitReady;
+[2m[WebServer] [22m  [90m    |[0m     [31m[1m^[0m
+[2m[WebServer] [22m  [90m193 |[0m     [36mawait[0m client.query([33mDB_OPEN_PROBE_SQL[0m);
+[2m[WebServer] [22m  [90m194 |[0m     [36mreturn[0m client;
+[2m[WebServer] [22m  [90m195 |[0m   } [36mcatch[0m (err) { {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'mkdir'[39m,
+[2m[WebServer] [22m  path: [32m'/tmp/t1246-original-533224f-20261012/pglite'[39m,
+[2m[WebServer] [22m  digest: [32m'3188948770'[39m
+[2m[WebServer] [22m}

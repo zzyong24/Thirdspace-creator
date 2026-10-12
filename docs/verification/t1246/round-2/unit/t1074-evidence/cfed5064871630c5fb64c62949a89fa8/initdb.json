@@ -1,0 +1,39 @@
+{
+  "file": "/opt/homebrew/Cellar/postgresql@16/16.13/bin/initdb",
+  "args": [
+    "-D",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3/data",
+    "--username",
+    "t1246_cfed50648716",
+    "--auth-local=trust",
+    "--auth-host=trust",
+    "--encoding=UTF8",
+    "--no-locale"
+  ],
+  "pid": 87465,
+  "identity": {
+    "pid": 87465,
+    "pgid": 87465,
+    "uid": 501,
+    "birth": "Mon Oct 12 05:15:07 2026",
+    "startedAt": 1791753307562
+  },
+  "startedAt": "2026-10-11T21:15:07.562Z",
+  "endedAt": "2026-10-11T21:15:08.196Z",
+  "elapsedMs": 634,
+  "budgetMs": 300000,
+  "deadlineAt": "2026-10-11T21:20:07.562Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "The files belonging to this database system will be owned by user \"zyongzhu\".\nThis user must also own the server process.\n\nThe database cluster will be initialized with locale \"C\".\nThe default text search configuration will be set to \"english\".\n\nData page checksums are disabled.\n\ncreating directory /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3/data ... ok\ncreating subdirectories ... ok\nselecting dynamic shared memory implementation ... posix\nselecting default max_connections ... 100\nselecting default shared_buffers ... 128MB\nselecting default time zone ... Asia/Shanghai\ncreating configuration files ... ok\nrunning bootstrap script ... ok\nperforming post-bootstrap initialization ... ok\nsyncing data to disk ... ok\n\nSuccess. You can now start the database server using:\n\n    '/opt/homebrew/Cellar/postgresql@16/16.13/bin/pg_ctl' -D /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-owned-pg-IvjQZ3/data -l logfile start\n\n",
+  "stderr": ""
+}

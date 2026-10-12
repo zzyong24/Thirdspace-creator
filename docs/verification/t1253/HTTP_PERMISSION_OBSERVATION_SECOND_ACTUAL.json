@@ -1,0 +1,2901 @@
+{
+  "task": "T-1253",
+  "status": "ACTUAL_OBSERVATION_ONLY_17_PASS_8_FAIL",
+  "scope": "真实独立Worker/PGlite/受控HTTP协议夹具，原25body/118expect/res.destroy/模型回复不变；非官方模型或原生App验收。",
+  "evidence": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141",
+  "actualCounts": {
+    "total": 25,
+    "passed": 17,
+    "failed": 8,
+    "skip": 0,
+    "files": 3,
+    "passedFiles": 0,
+    "failedFiles": 3
+  },
+  "childExitCode": 1,
+  "childElapsedMs": 64376,
+  "wrapperElapsedMs": 65372.220708,
+  "sourceDigest": "f63f0ae63ee6c1ebccf5833a323d8d4eef8850ac089d4d3a55152db922e003a3",
+  "toolDigest": "ffc6b7ada9a61d85943d3ffae3bd349b53deb3b79e6f52077a655b56f85797ef",
+  "sourceUnchanged": true,
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "ownedRootCleaned": true,
+  "budgetMs": 23220000,
+  "slots": {
+    "body": 15300000,
+    "prepare": 2400000,
+    "cleanup": 1200000,
+    "processCleanup": 4320000
+  },
+  "rawArtifacts": [
+    {
+      "file": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141/run.log",
+      "sha256": "2d429fe988ed9ffb6cbb6d968f2cb06958963f3180b194065763ba266acab08d"
+    },
+    {
+      "file": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141/result.json",
+      "sha256": "9307c296f0cdfc98fd179a86ecf91cbe9fe5178be723405977f64d1db9bdb32d"
+    },
+    {
+      "file": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141/source-before.json",
+      "sha256": "2a3ba22072955693886033c43e6af212572fe305290df8f499ac149b43e9ad1e"
+    },
+    {
+      "file": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141/source-after.json",
+      "sha256": "f2824599fcc204f091d0f79bdd17f954e4b2c52b59225fd105733a9699df337c"
+    },
+    {
+      "file": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141/exit.json",
+      "sha256": "85604662b22313be37305671c0f0c229867c688ac76ab445cb5ad5c16ba20f29"
+    },
+    {
+      "file": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141/summary.json",
+      "sha256": "952af8ecc8c16d595d4def3799d94b8cd559d628aed6c8e624936738a2a089ab"
+    },
+    {
+      "file": "docs/verification/t1253/execution/observation-whole25-0e8ee87284ee067412fbd01ab4ea3141/environment-proof.json",
+      "sha256": "1435a55506bc2fba22c541eb21758fc7ef36a811bb335fa742eec1521ac0e245"
+    }
+  ],
+  "actualSnapshots": [
+    {
+      "rawLine": 44,
+      "snapshot": {
+        "stage": "during-http-1",
+        "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+        "aiTaskId": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.187Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_hooks"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          }
+        ],
+        "task": {
+          "id": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-25",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:27.332Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:47:27.335Z",
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 1,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_567f747a-745b-48e8-9fde-ec91c49b0412",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-27/model/1",
+            "status": "started",
+            "inputDigest": "sha256:5635c4b2cea2ed6a7b43679b7f7aaca8487d438e09dbf3a527edc14065a46cae",
+            "reservedTokens": 2268,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.160Z",
+            "updatedAt": "2026-10-11T22:46:28.172Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+          "status": "queued",
+          "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c"
+        }
+      }
+    },
+    {
+      "rawLine": 47,
+      "snapshot": {
+        "stage": "during-http-2",
+        "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+        "aiTaskId": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.187Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_hooks"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.482Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          }
+        ],
+        "task": {
+          "id": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-25",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:27.332Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:47:27.335Z",
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 1,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_567f747a-745b-48e8-9fde-ec91c49b0412",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-27/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:5635c4b2cea2ed6a7b43679b7f7aaca8487d438e09dbf3a527edc14065a46cae",
+            "reservedTokens": 2268,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.160Z",
+            "updatedAt": "2026-10-11T22:46:28.202Z"
+          },
+          {
+            "id": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ee6b540a3e95fb17295871e042a88bc09cb1e4bba81e99e8dab8b44bd0d75a98",
+            "status": "started",
+            "inputDigest": "sha256:a72b083064f4f32c082b890ce5af59ab0745ffb38beeddf90d8b133d99a9f84a",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.279Z",
+            "updatedAt": "2026-10-11T22:46:28.289Z"
+          },
+          {
+            "id": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+            "kind": "model",
+            "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+            "status": "started",
+            "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+            "reservedTokens": 6889,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.413Z",
+            "updatedAt": "2026-10-11T22:46:28.479Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+          "status": "queued",
+          "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c"
+        }
+      }
+    },
+    {
+      "rawLine": 50,
+      "snapshot": {
+        "stage": "before-recovery",
+        "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+        "aiTaskId": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.187Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_hooks"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.482Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.484Z"
+          }
+        ],
+        "task": {
+          "id": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-25",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:27.332Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:47:27.335Z",
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 1,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_567f747a-745b-48e8-9fde-ec91c49b0412",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-27/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:5635c4b2cea2ed6a7b43679b7f7aaca8487d438e09dbf3a527edc14065a46cae",
+            "reservedTokens": 2268,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.160Z",
+            "updatedAt": "2026-10-11T22:46:28.202Z"
+          },
+          {
+            "id": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ee6b540a3e95fb17295871e042a88bc09cb1e4bba81e99e8dab8b44bd0d75a98",
+            "status": "started",
+            "inputDigest": "sha256:a72b083064f4f32c082b890ce5af59ab0745ffb38beeddf90d8b133d99a9f84a",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.279Z",
+            "updatedAt": "2026-10-11T22:46:28.289Z"
+          },
+          {
+            "id": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+            "kind": "model",
+            "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+            "status": "unknown",
+            "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+            "reservedTokens": 6889,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.413Z",
+            "updatedAt": "2026-10-11T22:46:28.492Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+          "status": "queued",
+          "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c"
+        }
+      }
+    },
+    {
+      "rawLine": 59,
+      "snapshot": {
+        "stage": "during-http-3",
+        "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+        "aiTaskId": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.187Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_hooks"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.482Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.484Z"
+          },
+          {
+            "type": "http_request",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:30.024Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          }
+        ],
+        "task": {
+          "id": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-25",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:27.332Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:48:28.032Z",
+          "retryAt": null,
+          "retryOfCallId": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_567f747a-745b-48e8-9fde-ec91c49b0412",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-27/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:5635c4b2cea2ed6a7b43679b7f7aaca8487d438e09dbf3a527edc14065a46cae",
+            "reservedTokens": 2268,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.160Z",
+            "updatedAt": "2026-10-11T22:46:28.202Z"
+          },
+          {
+            "id": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ee6b540a3e95fb17295871e042a88bc09cb1e4bba81e99e8dab8b44bd0d75a98",
+            "status": "started",
+            "inputDigest": "sha256:a72b083064f4f32c082b890ce5af59ab0745ffb38beeddf90d8b133d99a9f84a",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.279Z",
+            "updatedAt": "2026-10-11T22:47:28.454Z"
+          },
+          {
+            "id": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+            "kind": "model",
+            "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+            "status": "superseded",
+            "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+            "reservedTokens": 6889,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.413Z",
+            "updatedAt": "2026-10-11T22:47:27.336Z"
+          },
+          {
+            "id": "call_8d41e551-6efd-4f2d-aa82-6120971ac591",
+            "kind": "model",
+            "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+            "status": "started",
+            "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+            "reservedTokens": 6889,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+            "createdAt": "2026-10-11T22:47:28.576Z",
+            "updatedAt": "2026-10-11T22:47:28.641Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+          "status": "queued",
+          "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c"
+        }
+      }
+    },
+    {
+      "rawLine": 65,
+      "snapshot": {
+        "stage": "after-cleanup",
+        "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+        "aiTaskId": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.187Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_hooks"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.482Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.484Z"
+          },
+          {
+            "type": "http_request",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:30.024Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:30.027Z"
+          }
+        ],
+        "task": {
+          "id": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-25",
+          "groupId": null,
+          "status": "unknown_result",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:27.332Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": null,
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": null,
+          "lastErrorCode": "TOOL_REQUIRES_RECONCILIATION",
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_567f747a-745b-48e8-9fde-ec91c49b0412",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-27/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:5635c4b2cea2ed6a7b43679b7f7aaca8487d438e09dbf3a527edc14065a46cae",
+            "reservedTokens": 2268,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.160Z",
+            "updatedAt": "2026-10-11T22:46:28.202Z"
+          },
+          {
+            "id": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ee6b540a3e95fb17295871e042a88bc09cb1e4bba81e99e8dab8b44bd0d75a98",
+            "status": "unknown",
+            "inputDigest": "sha256:a72b083064f4f32c082b890ce5af59ab0745ffb38beeddf90d8b133d99a9f84a",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.279Z",
+            "updatedAt": "2026-10-11T22:47:28.734Z"
+          },
+          {
+            "id": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+            "kind": "model",
+            "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+            "status": "superseded",
+            "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+            "reservedTokens": 6889,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:28.413Z",
+            "updatedAt": "2026-10-11T22:47:27.336Z"
+          },
+          {
+            "id": "call_8d41e551-6efd-4f2d-aa82-6120971ac591",
+            "kind": "model",
+            "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+            "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+            "status": "unknown",
+            "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+            "reservedTokens": 6889,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+            "createdAt": "2026-10-11T22:47:28.576Z",
+            "updatedAt": "2026-10-11T22:47:28.666Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+          "status": "queued",
+          "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c"
+        }
+      }
+    },
+    {
+      "rawLine": 101,
+      "snapshot": {
+        "stage": "during-http-1",
+        "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+        "aiTaskId": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:53.869Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          }
+        ],
+        "task": {
+          "id": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-33",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:53.002Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:47:53.007Z",
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 1,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_9c1f74a6-b974-4fd2-b2fc-cd54f2371304",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-36/model/1",
+            "status": "started",
+            "inputDigest": "sha256:49f05bb46c6b0a19f94eeda6939201abeb34b56946fa318c1d21edfe00589e53",
+            "reservedTokens": 7200,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.840Z",
+            "updatedAt": "2026-10-11T22:46:53.854Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+          "status": "queued",
+          "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b"
+        }
+      }
+    },
+    {
+      "rawLine": 104,
+      "snapshot": {
+        "stage": "during-http-2",
+        "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+        "aiTaskId": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:53.869Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.171Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          }
+        ],
+        "task": {
+          "id": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-33",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:53.002Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:47:53.007Z",
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 1,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_9c1f74a6-b974-4fd2-b2fc-cd54f2371304",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-36/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:49f05bb46c6b0a19f94eeda6939201abeb34b56946fa318c1d21edfe00589e53",
+            "reservedTokens": 7200,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.840Z",
+            "updatedAt": "2026-10-11T22:46:53.883Z"
+          },
+          {
+            "id": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ae45ead59f47c5c1be3be39153a580ccca82aaf36334020c9847a92e717d4c3f",
+            "status": "started",
+            "inputDigest": "sha256:382e48dd124d1ec4366f35dd72b0cd74a347f2eec928eae805223a6719dee19b",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.966Z",
+            "updatedAt": "2026-10-11T22:46:53.976Z"
+          },
+          {
+            "id": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+            "kind": "model",
+            "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+            "status": "started",
+            "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+            "reservedTokens": 5324,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:54.104Z",
+            "updatedAt": "2026-10-11T22:46:54.169Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+          "status": "queued",
+          "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b"
+        }
+      }
+    },
+    {
+      "rawLine": 107,
+      "snapshot": {
+        "stage": "before-recovery",
+        "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+        "aiTaskId": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:53.869Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.171Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.173Z"
+          }
+        ],
+        "task": {
+          "id": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-33",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:53.002Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:47:53.007Z",
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 1,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_9c1f74a6-b974-4fd2-b2fc-cd54f2371304",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-36/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:49f05bb46c6b0a19f94eeda6939201abeb34b56946fa318c1d21edfe00589e53",
+            "reservedTokens": 7200,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.840Z",
+            "updatedAt": "2026-10-11T22:46:53.883Z"
+          },
+          {
+            "id": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ae45ead59f47c5c1be3be39153a580ccca82aaf36334020c9847a92e717d4c3f",
+            "status": "started",
+            "inputDigest": "sha256:382e48dd124d1ec4366f35dd72b0cd74a347f2eec928eae805223a6719dee19b",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.966Z",
+            "updatedAt": "2026-10-11T22:46:53.976Z"
+          },
+          {
+            "id": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+            "kind": "model",
+            "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+            "status": "unknown",
+            "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+            "reservedTokens": 5324,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:54.104Z",
+            "updatedAt": "2026-10-11T22:46:54.183Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+          "status": "queued",
+          "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b"
+        }
+      }
+    },
+    {
+      "rawLine": 110,
+      "snapshot": {
+        "stage": "during-http-3",
+        "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+        "aiTaskId": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:53.869Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.171Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.173Z"
+          },
+          {
+            "type": "http_request",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:55.375Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          }
+        ],
+        "task": {
+          "id": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-33",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:53.002Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:48:53.013Z",
+          "retryAt": null,
+          "retryOfCallId": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_9c1f74a6-b974-4fd2-b2fc-cd54f2371304",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-36/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:49f05bb46c6b0a19f94eeda6939201abeb34b56946fa318c1d21edfe00589e53",
+            "reservedTokens": 7200,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.840Z",
+            "updatedAt": "2026-10-11T22:46:53.883Z"
+          },
+          {
+            "id": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ae45ead59f47c5c1be3be39153a580ccca82aaf36334020c9847a92e717d4c3f",
+            "status": "started",
+            "inputDigest": "sha256:382e48dd124d1ec4366f35dd72b0cd74a347f2eec928eae805223a6719dee19b",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.966Z",
+            "updatedAt": "2026-10-11T22:47:53.788Z"
+          },
+          {
+            "id": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+            "kind": "model",
+            "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+            "status": "superseded",
+            "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+            "reservedTokens": 5324,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:54.104Z",
+            "updatedAt": "2026-10-11T22:47:53.008Z"
+          },
+          {
+            "id": "call_05946461-8bc3-4d0e-aad9-672b3041dae9",
+            "kind": "model",
+            "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+            "status": "started",
+            "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+            "reservedTokens": 5324,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+            "createdAt": "2026-10-11T22:47:53.915Z",
+            "updatedAt": "2026-10-11T22:47:53.979Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+          "status": "queued",
+          "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b"
+        }
+      }
+    },
+    {
+      "rawLine": 113,
+      "snapshot": {
+        "stage": "during-http-4",
+        "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+        "aiTaskId": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:53.869Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.171Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.173Z"
+          },
+          {
+            "type": "http_request",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:55.375Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 4,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:55.801Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              },
+              {
+                "role": "assistant"
+              },
+              {
+                "role": "tool",
+                "toolCallId": "hooks"
+              }
+            ]
+          }
+        ],
+        "task": {
+          "id": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-33",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:53.002Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:48:53.013Z",
+          "retryAt": null,
+          "retryOfCallId": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_9c1f74a6-b974-4fd2-b2fc-cd54f2371304",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-36/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:49f05bb46c6b0a19f94eeda6939201abeb34b56946fa318c1d21edfe00589e53",
+            "reservedTokens": 7200,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.840Z",
+            "updatedAt": "2026-10-11T22:46:53.883Z"
+          },
+          {
+            "id": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ae45ead59f47c5c1be3be39153a580ccca82aaf36334020c9847a92e717d4c3f",
+            "status": "settled",
+            "inputDigest": "sha256:382e48dd124d1ec4366f35dd72b0cd74a347f2eec928eae805223a6719dee19b",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": 0,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": false,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": "{\"schemaVersion\":1,\"kind\":\"tool\",\"toolCallId\":\"hooks\",\"toolName\":\"script_draft\",\"output\":{\"status\":\"error\",\"summary\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\",\"evidence\":[],\"data\":{\"kind\":\"script.draft\",\"draftMode\":\"verbatim\",\"taskId\":null,\"projectId\":null,\"error\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\"},\"error\":{\"code\":\"no_evidence\",\"retryable\":false,\"recovery\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\"},\"continuation\":null,\"sideEffect\":\"none\"}}",
+            "startedAttempt": 2,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.966Z",
+            "updatedAt": "2026-10-11T22:47:54.142Z"
+          },
+          {
+            "id": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+            "kind": "model",
+            "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+            "status": "superseded",
+            "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+            "reservedTokens": 5324,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:54.104Z",
+            "updatedAt": "2026-10-11T22:47:53.008Z"
+          },
+          {
+            "id": "call_05946461-8bc3-4d0e-aad9-672b3041dae9",
+            "kind": "model",
+            "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+            "reservedTokens": 5324,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+            "createdAt": "2026-10-11T22:47:53.915Z",
+            "updatedAt": "2026-10-11T22:47:54.011Z"
+          },
+          {
+            "id": "call_f241aff8-1237-4a17-b575-051c82915cb6",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-36/model/2",
+            "status": "started",
+            "inputDigest": "sha256:35612bbabfb10f495053c9b5161355c93b91b88a1a38c1c3c8de7602f81d9b41",
+            "reservedTokens": 8177,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:47:54.404Z",
+            "updatedAt": "2026-10-11T22:47:54.417Z"
+          }
+        ],
+        "formal": [],
+        "business": {
+          "id": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+          "status": "queued",
+          "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b"
+        }
+      }
+    },
+    {
+      "rawLine": 116,
+      "snapshot": {
+        "stage": "after-cleanup",
+        "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+        "aiTaskId": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:53.869Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.171Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.173Z"
+          },
+          {
+            "type": "http_request",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:55.375Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 4,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:55.801Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              },
+              {
+                "role": "assistant"
+              },
+              {
+                "role": "tool",
+                "toolCallId": "hooks"
+              }
+            ]
+          }
+        ],
+        "task": {
+          "id": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-33",
+          "groupId": null,
+          "status": "partial",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:53.002Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": null,
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": null,
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "calls": [
+          {
+            "id": "call_9c1f74a6-b974-4fd2-b2fc-cd54f2371304",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-36/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:49f05bb46c6b0a19f94eeda6939201abeb34b56946fa318c1d21edfe00589e53",
+            "reservedTokens": 7200,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.840Z",
+            "updatedAt": "2026-10-11T22:46:53.883Z"
+          },
+          {
+            "id": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "kind": "tool",
+            "parentCallId": null,
+            "operationKey": "tool:ae45ead59f47c5c1be3be39153a580ccca82aaf36334020c9847a92e717d4c3f",
+            "status": "settled",
+            "inputDigest": "sha256:382e48dd124d1ec4366f35dd72b0cd74a347f2eec928eae805223a6719dee19b",
+            "reservedTokens": 0,
+            "accountingBasis": "tokens",
+            "totalTokens": 0,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": false,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": "{\"schemaVersion\":1,\"kind\":\"tool\",\"toolCallId\":\"hooks\",\"toolName\":\"script_draft\",\"output\":{\"status\":\"error\",\"summary\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\",\"evidence\":[],\"data\":{\"kind\":\"script.draft\",\"draftMode\":\"verbatim\",\"taskId\":null,\"projectId\":null,\"error\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\"},\"error\":{\"code\":\"no_evidence\",\"retryable\":false,\"recovery\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\"},\"continuation\":null,\"sideEffect\":\"none\"}}",
+            "startedAttempt": 2,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:53.966Z",
+            "updatedAt": "2026-10-11T22:47:54.142Z"
+          },
+          {
+            "id": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+            "kind": "model",
+            "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+            "status": "superseded",
+            "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+            "reservedTokens": 5324,
+            "accountingBasis": "tokens",
+            "totalTokens": null,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": false,
+            "providerResultNull": true,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": null,
+            "usageNull": true,
+            "resultText": null,
+            "startedAttempt": 1,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:46:54.104Z",
+            "updatedAt": "2026-10-11T22:47:53.008Z"
+          },
+          {
+            "id": "call_05946461-8bc3-4d0e-aad9-672b3041dae9",
+            "kind": "model",
+            "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+            "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+            "status": "settled",
+            "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+            "reservedTokens": 5324,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": null,
+            "resultRefNull": true,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+            "createdAt": "2026-10-11T22:47:53.915Z",
+            "updatedAt": "2026-10-11T22:47:54.011Z"
+          },
+          {
+            "id": "call_f241aff8-1237-4a17-b575-051c82915cb6",
+            "kind": "model",
+            "parentCallId": null,
+            "operationKey": "chat:ai-msg-36/model/2",
+            "status": "settled",
+            "inputDigest": "sha256:35612bbabfb10f495053c9b5161355c93b91b88a1a38c1c3c8de7602f81d9b41",
+            "reservedTokens": 8177,
+            "accountingBasis": "tokens",
+            "totalTokens": 5,
+            "providerJobPresent": false,
+            "providerJobNull": true,
+            "providerReceiptPresent": true,
+            "providerResultNull": false,
+            "resultRef": {
+              "present": true
+            },
+            "resultRefNull": false,
+            "resultTextNull": true,
+            "usage": {
+              "present": true
+            },
+            "usageNull": false,
+            "resultText": null,
+            "startedAttempt": 2,
+            "retryOfCallId": null,
+            "createdAt": "2026-10-11T22:47:54.404Z",
+            "updatedAt": "2026-10-11T22:47:54.472Z"
+          }
+        ],
+        "formal": [
+          {
+            "id": "chat:ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+            "resultType": "conversation_reply",
+            "assetId": null,
+            "artifactId": null,
+            "knowledgeItemId": null,
+            "resultData": {
+              "messageId": "chat:ai-msg-36",
+              "stopReason": "stop",
+              "actualEngine": "pi",
+              "completeness": "partial",
+              "checkpointRef": 3,
+              "conversationId": "ai-conv-35",
+              "sourceMessageId": "ai-msg-36"
+            }
+          }
+        ],
+        "business": {
+          "id": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+          "status": "partial",
+          "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b"
+        }
+      }
+    }
+  ],
+  "chains": [
+    {
+      "family": "hooks",
+      "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+      "aiTaskId": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+      "rawObservationLines": [
+        44,
+        47,
+        50,
+        59,
+        65
+      ],
+      "originalChild": {
+        "id": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+        "kind": "model",
+        "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+        "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+        "status": "unknown",
+        "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+        "reservedTokens": 6889,
+        "accountingBasis": "tokens",
+        "totalTokens": null,
+        "providerJobPresent": false,
+        "providerJobNull": true,
+        "providerReceiptPresent": false,
+        "providerResultNull": true,
+        "resultRef": null,
+        "resultRefNull": true,
+        "resultTextNull": true,
+        "usage": null,
+        "usageNull": true,
+        "resultText": null,
+        "startedAttempt": 1,
+        "retryOfCallId": null,
+        "createdAt": "2026-10-11T22:46:28.413Z",
+        "updatedAt": "2026-10-11T22:46:28.492Z"
+      },
+      "duringHttp3": {
+        "task": {
+          "id": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-25",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:27.332Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:48:28.032Z",
+          "retryAt": null,
+          "retryOfCallId": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "oldChild": {
+          "id": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+          "kind": "model",
+          "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+          "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+          "status": "superseded",
+          "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+          "reservedTokens": 6889,
+          "accountingBasis": "tokens",
+          "totalTokens": null,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": null,
+          "usageNull": true,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:46:28.413Z",
+          "updatedAt": "2026-10-11T22:47:27.336Z"
+        },
+        "newChild": {
+          "id": "call_8d41e551-6efd-4f2d-aa82-6120971ac591",
+          "kind": "model",
+          "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+          "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+          "status": "started",
+          "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+          "reservedTokens": 6889,
+          "accountingBasis": "tokens",
+          "totalTokens": null,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": null,
+          "usageNull": true,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+          "createdAt": "2026-10-11T22:47:28.576Z",
+          "updatedAt": "2026-10-11T22:47:28.641Z"
+        }
+      },
+      "final": {
+        "task": {
+          "id": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-25",
+          "groupId": null,
+          "status": "unknown_result",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:27.332Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": null,
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": null,
+          "lastErrorCode": "TOOL_REQUIRES_RECONCILIATION",
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "business": {
+          "id": "ai-task-33d2b8b8-7624-4244-8ae5-d9f8b6298e98",
+          "status": "queued",
+          "executionTaskId": "execution-task-a8bc7f6d-22e2-4fdd-9d29-8a11ff6a2a7c"
+        },
+        "parentTool": {
+          "id": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:ee6b540a3e95fb17295871e042a88bc09cb1e4bba81e99e8dab8b44bd0d75a98",
+          "status": "unknown",
+          "inputDigest": "sha256:a72b083064f4f32c082b890ce5af59ab0745ffb38beeddf90d8b133d99a9f84a",
+          "reservedTokens": 0,
+          "accountingBasis": "tokens",
+          "totalTokens": null,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": null,
+          "usageNull": true,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:46:28.279Z",
+          "updatedAt": "2026-10-11T22:47:28.734Z"
+        },
+        "oldChild": {
+          "id": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+          "kind": "model",
+          "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+          "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+          "status": "superseded",
+          "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+          "reservedTokens": 6889,
+          "accountingBasis": "tokens",
+          "totalTokens": null,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": null,
+          "usageNull": true,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:46:28.413Z",
+          "updatedAt": "2026-10-11T22:47:27.336Z"
+        },
+        "newChild": {
+          "id": "call_8d41e551-6efd-4f2d-aa82-6120971ac591",
+          "kind": "model",
+          "parentCallId": "call_66096aa6-f74b-41a5-84d9-43f1020ecc62",
+          "operationKey": "hooks:call_66096aa6-f74b-41a5-84d9-43f1020ecc62:dcffbbaee4ffe9cae669156939d60d7686d4b5f68b0a4dd00248dd5161b4aa9c/model/1",
+          "status": "unknown",
+          "inputDigest": "sha256:e1b92a3699d71d0db6077adeae855c81ccd2ee5d64f7f5cfeabe5bbc359319af",
+          "reservedTokens": 6889,
+          "accountingBasis": "tokens",
+          "totalTokens": null,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": null,
+          "usageNull": true,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": "call_a58f6569-e04a-4a05-9d7d-90e851955387",
+          "createdAt": "2026-10-11T22:47:28.576Z",
+          "updatedAt": "2026-10-11T22:47:28.666Z"
+        },
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.187Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_hooks"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.482Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:28.484Z"
+          },
+          {
+            "type": "http_request",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:30.024Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:30.027Z"
+          }
+        ],
+        "formal": []
+      },
+      "actualSnapshotChecks": {
+        "originalUnknownBeforeRecovery": true,
+        "sameOriginalTask": true,
+        "frozenPiBothFields": true,
+        "routeVersion1Preference": true,
+        "originalContinuousBudgetAndDeadlineUnchanged": true,
+        "taskAttempt1To2": true,
+        "taskRetryPermissionAtHttp3": true,
+        "newRetryOfExactOldChild": true,
+        "sameParentKeyDigestReservedAndAccounting": true,
+        "oldSupersededWithOldAttempt1": true,
+        "newStartedWithNewAttempt2": true,
+        "oldNoJobResultRefUsageAtRetry": true,
+        "newNoJobResultRefUsageBeforeReply": true,
+        "oldReservationNeverZeroed": true,
+        "thirdHttpIsResumedChild": true,
+        "originalSecondHttpDestroyed": true,
+        "finalLeaseReleased": true,
+        "allFormalProductRefsNull": true
+      },
+      "derivedNotRuntimeInspect": {
+        "source": "backend/src/modules/execution/execution-call-ledger.service.ts:37-45",
+        "knownSpentTokens": 5,
+        "heldReservationTokens": 13778,
+        "unknownUsage": true,
+        "spentTokens": null,
+        "method": "仅按已记录行和现有totals公式计算；该轮未调用ledger.inspect，不伪称独立公共port回执。"
+      }
+    },
+    {
+      "family": "draft",
+      "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+      "aiTaskId": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+      "rawObservationLines": [
+        101,
+        104,
+        107,
+        110,
+        113,
+        116
+      ],
+      "originalChild": {
+        "id": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+        "kind": "model",
+        "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+        "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+        "status": "unknown",
+        "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+        "reservedTokens": 5324,
+        "accountingBasis": "tokens",
+        "totalTokens": null,
+        "providerJobPresent": false,
+        "providerJobNull": true,
+        "providerReceiptPresent": false,
+        "providerResultNull": true,
+        "resultRef": null,
+        "resultRefNull": true,
+        "resultTextNull": true,
+        "usage": null,
+        "usageNull": true,
+        "resultText": null,
+        "startedAttempt": 1,
+        "retryOfCallId": null,
+        "createdAt": "2026-10-11T22:46:54.104Z",
+        "updatedAt": "2026-10-11T22:46:54.183Z"
+      },
+      "duringHttp3": {
+        "task": {
+          "id": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-33",
+          "groupId": null,
+          "status": "running",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:53.002Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": "2026-10-11T22:48:53.013Z",
+          "retryAt": null,
+          "retryOfCallId": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": "hooks-host",
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "oldChild": {
+          "id": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+          "kind": "model",
+          "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+          "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+          "status": "superseded",
+          "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+          "reservedTokens": 5324,
+          "accountingBasis": "tokens",
+          "totalTokens": null,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": null,
+          "usageNull": true,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:46:54.104Z",
+          "updatedAt": "2026-10-11T22:47:53.008Z"
+        },
+        "newChild": {
+          "id": "call_05946461-8bc3-4d0e-aad9-672b3041dae9",
+          "kind": "model",
+          "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+          "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+          "status": "started",
+          "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+          "reservedTokens": 5324,
+          "accountingBasis": "tokens",
+          "totalTokens": null,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": null,
+          "usageNull": true,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+          "createdAt": "2026-10-11T22:47:53.915Z",
+          "updatedAt": "2026-10-11T22:47:53.979Z"
+        }
+      },
+      "final": {
+        "task": {
+          "id": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b",
+          "userId": "hooks-worker-u",
+          "accountId": "hooks-worker-a-33",
+          "groupId": null,
+          "status": "partial",
+          "executionBudget": {
+            "policy": "continuous",
+            "maxCalls": null,
+            "maxTokens": null,
+            "deadlineMs": null
+          },
+          "createdAt": "2026-10-11T22:46:53.002Z",
+          "deadlineAt": null,
+          "leaseExpiresAt": null,
+          "retryAt": null,
+          "retryOfCallId": null,
+          "attempt": 2,
+          "maxAttempts": 3,
+          "leaseOwner": null,
+          "lastErrorCode": null,
+          "frozen": {
+            "modelInputEnginePresent": true,
+            "modelInputExecutionEngine": "pi",
+            "executionRouteEnginePresent": true,
+            "executionRouteEngine": "pi",
+            "executionRouteSchemaVersion": 1,
+            "executionRouteSource": "preference"
+          }
+        },
+        "business": {
+          "id": "ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+          "status": "partial",
+          "executionTaskId": "execution-task-f52d300b-154c-4762-89fa-0c4660469d9b"
+        },
+        "parentTool": {
+          "id": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+          "kind": "tool",
+          "parentCallId": null,
+          "operationKey": "tool:ae45ead59f47c5c1be3be39153a580ccca82aaf36334020c9847a92e717d4c3f",
+          "status": "settled",
+          "inputDigest": "sha256:382e48dd124d1ec4366f35dd72b0cd74a347f2eec928eae805223a6719dee19b",
+          "reservedTokens": 0,
+          "accountingBasis": "tokens",
+          "totalTokens": 0,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": false,
+          "usage": {
+            "present": true
+          },
+          "usageNull": false,
+          "resultText": "{\"schemaVersion\":1,\"kind\":\"tool\",\"toolCallId\":\"hooks\",\"toolName\":\"script_draft\",\"output\":{\"status\":\"error\",\"summary\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\",\"evidence\":[],\"data\":{\"kind\":\"script.draft\",\"draftMode\":\"verbatim\",\"taskId\":null,\"projectId\":null,\"error\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\"},\"error\":{\"code\":\"no_evidence\",\"retryable\":false,\"recovery\":\"没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。\"},\"continuation\":null,\"sideEffect\":\"none\"}}",
+          "startedAttempt": 2,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:46:53.966Z",
+          "updatedAt": "2026-10-11T22:47:54.142Z"
+        },
+        "oldChild": {
+          "id": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+          "kind": "model",
+          "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+          "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+          "status": "superseded",
+          "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+          "reservedTokens": 5324,
+          "accountingBasis": "tokens",
+          "totalTokens": null,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": false,
+          "providerResultNull": true,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": null,
+          "usageNull": true,
+          "resultText": null,
+          "startedAttempt": 1,
+          "retryOfCallId": null,
+          "createdAt": "2026-10-11T22:46:54.104Z",
+          "updatedAt": "2026-10-11T22:47:53.008Z"
+        },
+        "newChild": {
+          "id": "call_05946461-8bc3-4d0e-aad9-672b3041dae9",
+          "kind": "model",
+          "parentCallId": "call_b30f242a-3490-4f3f-9d34-0bb30c070406",
+          "operationKey": "script-draft:call_b30f242a-3490-4f3f-9d34-0bb30c070406:e9f00f66dba2d31ef4f327444b752d4845b3b222a2a9cb242527e6f55fb8390b/model/1",
+          "status": "settled",
+          "inputDigest": "sha256:f5c0c4725dcd51ceaa3d7e636d7a6f967409e39244bb04bd003f56a9f00414ff",
+          "reservedTokens": 5324,
+          "accountingBasis": "tokens",
+          "totalTokens": 5,
+          "providerJobPresent": false,
+          "providerJobNull": true,
+          "providerReceiptPresent": true,
+          "providerResultNull": false,
+          "resultRef": null,
+          "resultRefNull": true,
+          "resultTextNull": true,
+          "usage": {
+            "present": true
+          },
+          "usageNull": false,
+          "resultText": null,
+          "startedAttempt": 2,
+          "retryOfCallId": "call_d4bdfddb-811a-4208-823f-e8857ad5b306",
+          "createdAt": "2026-10-11T22:47:53.915Z",
+          "updatedAt": "2026-10-11T22:47:54.011Z"
+        },
+        "httpTrace": [
+          {
+            "type": "http_request",
+            "ordinal": 1,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:53.869Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.171Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "res_destroy",
+            "ordinal": 2,
+            "phase": "initial",
+            "at": "2026-10-11T22:46:54.173Z"
+          },
+          {
+            "type": "http_request",
+            "ordinal": 3,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:55.375Z",
+            "rootRequest": false,
+            "stream": true,
+            "toolNames": [],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              }
+            ]
+          },
+          {
+            "type": "http_request",
+            "ordinal": 4,
+            "phase": "resumed",
+            "at": "2026-10-11T22:46:55.801Z",
+            "rootRequest": true,
+            "stream": true,
+            "toolNames": [
+              "script_draft"
+            ],
+            "messageRoles": [
+              {
+                "role": "system"
+              },
+              {
+                "role": "user"
+              },
+              {
+                "role": "assistant"
+              },
+              {
+                "role": "tool",
+                "toolCallId": "hooks"
+              }
+            ]
+          }
+        ],
+        "formal": [
+          {
+            "id": "chat:ai-task-3bb33f17-e7b5-4a02-9d32-16e8608d372b",
+            "resultType": "conversation_reply",
+            "assetId": null,
+            "artifactId": null,
+            "knowledgeItemId": null,
+            "resultData": {
+              "messageId": "chat:ai-msg-36",
+              "stopReason": "stop",
+              "actualEngine": "pi",
+              "completeness": "partial",
+              "checkpointRef": 3,
+              "conversationId": "ai-conv-35",
+              "sourceMessageId": "ai-msg-36"
+            }
+          }
+        ]
+      },
+      "actualSnapshotChecks": {
+        "originalUnknownBeforeRecovery": true,
+        "sameOriginalTask": true,
+        "frozenPiBothFields": true,
+        "routeVersion1Preference": true,
+        "originalContinuousBudgetAndDeadlineUnchanged": true,
+        "taskAttempt1To2": true,
+        "taskRetryPermissionAtHttp3": true,
+        "newRetryOfExactOldChild": true,
+        "sameParentKeyDigestReservedAndAccounting": true,
+        "oldSupersededWithOldAttempt1": true,
+        "newStartedWithNewAttempt2": true,
+        "oldNoJobResultRefUsageAtRetry": true,
+        "newNoJobResultRefUsageBeforeReply": true,
+        "oldReservationNeverZeroed": true,
+        "thirdHttpIsResumedChild": true,
+        "originalSecondHttpDestroyed": true,
+        "finalLeaseReleased": true,
+        "allFormalProductRefsNull": true
+      },
+      "derivedNotRuntimeInspect": {
+        "source": "backend/src/modules/execution/execution-call-ledger.service.ts:37-45",
+        "knownSpentTokens": 15,
+        "heldReservationTokens": 5324,
+        "unknownUsage": false,
+        "spentTokens": 15,
+        "method": "仅按已记录行和现有totals公式计算；该轮未调用ledger.inspect，不伪称独立公共port回执。"
+      }
+    }
+  ],
+  "actualFailures": [
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "name": "同一真实Worker内部开场生成：reject429",
+      "failureMessages": [
+        "AssertionError: expected { …(22) } to match object { status: 'rejected' }\n(21 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:117:49\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "name": "同一真实Worker内部开场生成：reject429drop",
+      "failureMessages": [
+        "AssertionError: expected { …(22) } to match object { status: 'rejected' }\n(21 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:117:49\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "name": "同一真实Worker内部开场生成：crashUnknownChild",
+      "failureMessages": [
+        "AssertionError: expected [ { model: 'fixture', …(7) }, …(2) ] to have a length of 2 but got 3\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:127:21\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts",
+      "name": "同一真实Worker内部开场生成：crashDeadline",
+      "failureMessages": [
+        "RangeError: Invalid time value\n    at Date.toISOString (<anonymous>)\n    at now (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:47:155)\n    at Object.recoverExpiredLeases (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts:954:21)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:470:19\n    at Object.drainOnce (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:572:5)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:104:59\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20",
+        "RangeError: Invalid time value\n    at Date.toISOString (<anonymous>)\n    at now (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:47:155)\n    at Object.recoverExpiredLeases (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts:954:21)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:470:19\n    at Object.drainOnce (/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/model-worker-dispatcher.ts:572:5)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-hooks-worker.test.ts:104:59\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+      "name": "真实 Worker 整稿授权与原子提交：unauthorized",
+      "failureMessages": [
+        "AssertionError: expected '候选已准备好\\n\\n本次部分完成。最后一次工具操作未成功，尚未交付可采用候…' to be '候选已准备好' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts:133:109\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+      "name": "真实 Worker 整稿授权与原子提交：reject429",
+      "failureMessages": [
+        "AssertionError: expected { …(22) } to match object { status: 'rejected' }\n(21 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1700:25)\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts:109:49\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts",
+      "name": "真实 Worker 整稿授权与原子提交：crashUnknownChild",
+      "failureMessages": [
+        "AssertionError: expected 'partial' to be 'unknown_result' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/integration/chat-script-draft-worker.test.ts:116:25\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+      "name": "真实 Worker 与后端持久调用端口 真实进程检查点恢复不重放供应商（缺少usage=true）",
+      "failureMessages": [
+        "AssertionError: expected 'unknown_result' to be 'completed' // Object.is equality\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/src/modules/execution/execution-worker-call-ports.integration.test.ts:93:61\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    }
+  ],
+  "readOnlyPermissionConsumers": [
+    {
+      "file": "docs/features/t1022-nonblocking-agent-recovery.md",
+      "sha256": "5eb3f4069a9e5601a05c46e5cd5a709e0254338e64078a351d526fa1209b7363"
+    },
+    {
+      "file": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "6128fde1253f28f7de60ccee181307abc54c52e9de3c555952b9b5969dfc5a7d"
+    },
+    {
+      "file": "backend/src/modules/execution/model-worker-dispatcher.ts",
+      "sha256": "843405d9faed7880be042171995ae64f1415f25fb4e659c161d8adec7d7dbd08"
+    },
+    {
+      "file": "backend/src/modules/execution/model-call-recovery.ts",
+      "sha256": "a96b971c39046008560bbb3d3ad5d6a1bf07645454b4afe3d2b570042659041b"
+    },
+    {
+      "file": "backend/src/modules/execution/chat-generation-recovery.ts",
+      "sha256": "5dc872fa71297d23c85c767983cae1e60ce4d89fb1b9d1fce41f18112d13f69c"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-chat-text-node.service.ts",
+      "sha256": "9c566881592905c537635a7ec09a8c8d8da84f44d15ad5706844ca80ea761ef7"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-call-ledger.service.ts",
+      "sha256": "1d4971f923a1559f37d476eb781bea848a37a530d1ba33e08d3a84ea99499a6a"
+    },
+    {
+      "file": "backend/src/modules/execution/execution-chat-script-draft.service.ts",
+      "sha256": "ca2fd5772f61377cd4cfca6372cf002e6916108a63b3982e01afd40c9ba8d006"
+    },
+    {
+      "file": "ai-worker/src/execution/chat-text-node-worker.ts",
+      "sha256": "5d42306ef1bf139d70858495ed30b42a81c9ac5d9eb79bade3bfa9bd38117526"
+    },
+    {
+      "file": "ai-worker/src/execution/durable-generation-model.ts",
+      "sha256": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff"
+    },
+    {
+      "file": "ai-worker/src/execution/chat-worker-run.ts",
+      "sha256": "62185e6992aba1af332644a2b2a622ccd627c7f8553b9c77b92df7bd19c40434"
+    },
+    {
+      "file": "backend/src/modules/ai/chat-turn-completion.service.ts",
+      "sha256": "567c80e015a9b03292cbae0b35c4740eb27bf3ccbf111171811d79dd50520fc4"
+    }
+  ],
+  "limits": [
+    "首轮8红及第一/第二观察25各17/8全部保留，不相加重复分母。",
+    "第二轮首次实际采到引擎/retryOf/摘要/预留/usage等字段，不回填第一轮缺失。",
+    "直接查询了同task calls与aiTaskResults；本轮未额外查询artifacts或新script.draft业务任务数量，formal产品refs全null不能替代整库0的实际断言。",
+    "归因方向符合既有T1022纯候选Pi恢复许可，仍需独立合同澄清/正式recheck后才改变旧验收；本报告不是修复GREEN。",
+    "未执行额外未知/外效/Codex负例，不签无授权重发全面保护；existing producer约束只读绑定。",
+    "第二tool独立23.22M外层含两child2.16M额外生命周期槽；不回签第一工具18.06M理论缺口。",
+    "不操作原生App/真实用户PG/用户配置或真实模型供应商。"
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "config": {
+    "configFile": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/driver/playwright.config.ts",
+    "rootDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/visual/__setup__.ts",
+    "globalTeardown": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/visual/__teardown__.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "e2e",
+        "name": "e2e",
+        "testDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated",
+        "testIgnore": [],
+        "testMatch": [
+          "e2e/**/*.spec.ts"
+        ],
+        "timeout": 672660000
+      },
+      {
+        "outputDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "visual",
+        "name": "visual",
+        "testDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated",
+        "testIgnore": [],
+        "testMatch": [
+          "visual/**/*.spec.ts"
+        ],
+        "timeout": 672660000
+      },
+      {
+        "outputDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "accessibility",
+        "name": "accessibility",
+        "testDir": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated",
+        "testIgnore": [],
+        "testMatch": [
+          "accessibility/**/*.spec.ts"
+        ],
+        "timeout": 672660000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original/results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original/html"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "none",
+    "updateSourceMethod": "patch",
+    "version": "1.60.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node ../docs/verification/t1246/driver/start-isolated-next.cjs",
+      "env": {
+        "STARSHIP_SHELL": "fish",
+        "RUST_LOG": "warn",
+        "CODEX_TASK_WORKSPACE_VERIFYING_IDENTITY": "MCowBQYDK2VwAyEAE2fq5GXMdQnht+8Dqg3MZLx0MwOeHNp2jzzHkqmcKSo=",
+        "TERM": "dumb",
+        "SHELL": "/opt/homebrew/bin/fish",
+        "HOMEBREW_REPOSITORY": "/opt/homebrew",
+        "TMPDIR": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/",
+        "REDFOX_API_KEY": "ak_a1c2979c626a449496d0ee084ef0c8da",
+        "BROWSER_USE_ACCESS_VERIFYING_IDENTITY": "MCowBQYDK2VwAyEAE2fq5GXMdQnht+8Dqg3MZLx0MwOeHNp2jzzHkqmcKSo=",
+        "FPATH": "/opt/homebrew/share/zsh/site-functions:/usr/local/share/zsh/site-functions:/usr/share/zsh/site-functions:/usr/share/zsh/5.9/functions",
+        "MallocNanoZone": "0",
+        "LC_ALL": "C.UTF-8",
+        "CREATOROS_T1246_PACKAGE_READY": "1",
+        "USER": "zyongzhu",
+        "CREATOROS_T1246_RUN_DIR": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-1/533224f/browser-original",
+        "CREATOROS_T1246_FROZEN_CANDIDATE": "533224f334c43cdb81a344424e420cad93784dd1",
+        "COMMAND_MODE": "unix2003",
+        "SSH_AUTH_SOCK": "/private/tmp/com.apple.launchd.JcxXXWhOyM/Listeners",
+        "__CF_USER_TEXT_ENCODING": "0x1F5:0x19:0x34",
+        "TOKENTRACKER_HTTP_TIMEOUT_MS": "15000",
+        "CODEX_PERMISSION_PROFILE": ":danger-full-access",
+        "PAGER": "cat",
+        "NDI_RUNTIME_DIR_V6": "/opt/homebrew/lib",
+        "npm_config_verify_deps_before_run": "false",
+        "CREATOROS_TEST_PORT": "61346",
+        "PATH": "/opt/homebrew/Cellar/node/25.9.0_2/bin:./node_modules/.bin:/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/pmk/env/global/bin:/Library/Apple/usr/bin:/Users/zyongzhu/.cargo/bin:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/zyongzhu/.codex/tmp/arg0/codex-arg0O57fEJ:/Users/zyongzhu/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/zyongzhu/google-cloud-sdk/bin:/Users/zyongzhu/bin:/Users/zyongzhu/Workbase/skills-manager/binaries:/opt/homebrew/opt/node@22/bin:/Users/zyongzhu/.opencode/bin:/Users/zyongzhu/Downloads/multica-cli-0.3.0-darwin-arm64:/Users/zyongzhu/.local/bin:/Users/zyongzhu/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS:/Applications/Obsidian.app/Contents/MacOS",
+        "ZSH_TMUX_AUTOSTART": "false",
+        "CODEX_THREAD_ID": "01a12a5d-7ee2-7d30-82a5-981f84b71920",
+        "npm_command": "exec",
+        "PWD": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",
+        "DISABLE_AUTO_UPDATE": "true",
+        "LANG": "C.UTF-8",
+        "NODE_PATH": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/node_modules:/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules:/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/node_modules",
+        "XPC_FLAGS": "0x0",
+        "CODEX_CLI_PATH": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "CODEX_CI": "1",
+        "CREATOROS_T1246_PACKAGE_SHA256": "e63202df379c8c39f6470b4153f8b06100ff8aceed5f46be3c6bab3eb686f402",
+        "ZSH_TMUX_AUTOSTARTED": "true",
+        "HTTPS_PROXY": "http://127.0.0.1:7890",
+        "pnpm_config_verify_deps_before_run": "false",
+        "XPC_SERVICE_NAME": "application.com.openai.codex.328885244.328885250",
+        "CODEX_VERSION": "0.162.0-alpha.2",
+        "SHLVL": "1",
+        "HOME": "/Users/zyongzhu",
+        "CODEX_SHELL": "1",
+        "HOMEBREW_PREFIX": "/opt/homebrew",
+        "LOG_FORMAT": "json",
+        "HTTP_PROXY": "http://127.0.0.1:7890",
+        "GH_PAGER": "cat",
+        "CODEX_SAGE_BACKFILL_TRACKER_TAB_REUSE": "1",
+        "STARSHIP_SESSION_KEY": "3194311626176158",
+        "LOGNAME": "zyongzhu",
+        "CODEX_MCP_NODE_PATH": "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node",
+        "PNPM_PACKAGE_NAME": "creatoros-frontend",
+        "LC_CTYPE": "C.UTF-8",
+        "CODEX_TECTONIC_PATH": "/Applications/ChatGPT.app/Contents/Resources/tectonic/tectonic",
+        "npm_config_user_agent": "pnpm/10.32.1 npm/? node/v25.9.0 darwin arm64",
+        "NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S": "8e86beb821b9afc846211798e0113bd4b9e79312dfcd135eb447bdb154f64071",
+        "INFOPATH": "/opt/homebrew/share/info:",
+        "HOMEBREW_CELLAR": "/opt/homebrew/Cellar",
+        "CREATOROS_PLAYWRIGHT_DATA_ROOT": "/tmp/t1246-original-533224f-20261012",
+        "OSLogRateLimit": "64",
+        "GIT_PAGER": "cat",
+        "CODEX_SESSION_ID": "01a1299a-a95f-75e1-8637-879d7239bdc0",
+        "CODEX_APP_TOOLS_PIPE_PATH": "/tmp/codex-browser-use/f745a65e-0451-412a-a5cf-cb26b0251332.sock",
+        "COLORTERM": "",
+        "CODEX_INTERNAL_ORIGINATOR_OVERRIDE": "Codex Desktop",
+        "NO_PROXY": "127.0.0.1,localhost",
+        "no_proxy": "127.0.0.1,localhost",
+        "CREATOROS_MEDIA_ROOT": "/tmp/t1246-original-533224f-20261012/media",
+        "DATABASE_URL": "",
+        "PGLITE_DATA_DIR": "/tmp/t1246-original-533224f-20261012/pglite",
+        "CREATOROS_DOUYIN_AUTH_DIR": "/tmp/t1246-original-533224f-20261012/auth-douyin",
+        "CREATOROS_WEB_AUTH_DIR": "/tmp/t1246-original-533224f-20261012/auth-web",
+        "CREATOROS_DISABLE_SCHEDULER": "1",
+        "CREATOROS_DEV_MODE": "1"
+      },
+      "reuseExistingServer": false,
+      "timeout": 300000,
+      "url": "http://127.0.0.1:61346",
+      "stdout": "pipe",
+      "stderr": "pipe",
+      "gracefulShutdown": {
+        "signal": "SIGTERM",
+        "timeout": 120000
+      }
+    }
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "Error: Process from config.webServer was not able to start. Exit code: 1",
+      "stack": "Error: Process from config.webServer was not able to start. Exit code: 1"
+    }
+  ],
+  "stats": {
+    "startTime": "2026-10-11T14:52:59.612Z",
+    "duration": 97.52199999999993,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

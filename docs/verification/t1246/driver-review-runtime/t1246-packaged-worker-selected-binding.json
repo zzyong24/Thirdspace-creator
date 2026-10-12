@@ -1,0 +1,4089 @@
+{
+  "actualAppArchive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app/Contents/Resources/sidecar.tar.gz",
+  "sha256": "07b9351c8e2f2e49c6ac7c9f50560addf3b6cfb9562bae45a279d01398aa055c",
+  "expandedRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/sidecar",
+  "selectedCount": 680,
+  "errors": [],
+  "files": [
+    {
+      "path": "lib/libsimdjson.33.dylib",
+      "sha256": "b20534a5fc84bb6172e0f9e2c24c0246f52fd4a98125a01c60102aef4924ebc2",
+      "bytes": 112704,
+      "match": true
+    },
+    {
+      "path": "lib/libbrotlidec.1.dylib",
+      "sha256": "2cbde2889f1ab3cac76feeb8135c204b0ddc34749c82d9849e8b2a6566b008a5",
+      "bytes": 87728,
+      "match": true
+    },
+    {
+      "path": "lib/libbrotlicommon.1.dylib",
+      "sha256": "47ab6d744baf61213132aadf32cf74c53897b894760ba77a040e4f09a3c2eac9",
+      "bytes": 167264,
+      "match": true
+    },
+    {
+      "path": "lib/libllhttp.9.3.dylib",
+      "sha256": "0c13e98967d28ba65a29100cc5dc652eec003860bd0da0a6df1e7c394432dd43",
+      "bytes": 95008,
+      "match": true
+    },
+    {
+      "path": "lib/libnbytes.dylib",
+      "sha256": "803ca225c8189ef7551a8bfa07f84512e1fdae25d31bc4fb81cd9d43d3c3e3a6",
+      "bytes": 52944,
+      "match": true
+    },
+    {
+      "path": "lib/libbrotlienc.1.dylib",
+      "sha256": "5d04dad135f0acb969ccad7ca360a34d7cc683a1d18b213681967c615c20b176",
+      "bytes": 653328,
+      "match": true
+    },
+    {
+      "path": "lib/libuv.1.dylib",
+      "sha256": "849b5a0fb5eb8320e0fffecfca2605745ec21a0296cd455cac4b6d026d24c5b6",
+      "bytes": 206320,
+      "match": true
+    },
+    {
+      "path": "lib/libmerve.1.dylib",
+      "sha256": "68851fa5a4b24c846730fb42f15eb0c4cdaca8227568347eff96a78569f30851",
+      "bytes": 95328,
+      "match": true
+    },
+    {
+      "path": "lib/libssl.3.dylib",
+      "sha256": "1b347e6b9937f46df2252d24c6685d3a751cddba44a4a556964f4d0dd7e92cfa",
+      "bytes": 884992,
+      "match": true
+    },
+    {
+      "path": "lib/libnode.141.dylib",
+      "sha256": "4672ebf1894497bcc5b694d36dabac20b9dcbeb0af8a73618a94de2f7dc3c69b",
+      "bytes": 65894560,
+      "match": true
+    },
+    {
+      "path": "lib/libngtcp2.16.dylib",
+      "sha256": "c00e90c597c72d6575d06e826312ccc1b5d855dc65474f5b9a2785cd83e1166d",
+      "bytes": 366128,
+      "match": true
+    },
+    {
+      "path": "lib/libcares.2.dylib",
+      "sha256": "72751bb5fad1ff0f177b72a31b03cb62f775a13b68011028f141a355d30a56c3",
+      "bytes": 243456,
+      "match": true
+    },
+    {
+      "path": "lib/libcrypto.3.dylib",
+      "sha256": "ee15f5db6bb71aaa4fe86c3d3dba5e29c938601ee99fca2797a88f528371cbde",
+      "bytes": 4846032,
+      "match": true
+    },
+    {
+      "path": "lib/libhdr_histogram.6.dylib",
+      "sha256": "0879d45c133e9447240fd36c5896b8591cf263db28a8a19f8c2ad3f4d12f08e5",
+      "bytes": 75600,
+      "match": true
+    },
+    {
+      "path": "lib/libada.3.dylib",
+      "sha256": "3ba3a34f0af2c59f90890064197d80038f7d04a7f6f42bb2c22b34d238279e33",
+      "bytes": 613248,
+      "match": true
+    },
+    {
+      "path": "lib/libicudata.78.dylib",
+      "sha256": "6777ae8363fc87c819233d4193778ad87fd52ae180efe295cec6eee9a72d9ad9",
+      "bytes": 33195120,
+      "match": true
+    },
+    {
+      "path": "lib/libnghttp2.14.dylib",
+      "sha256": "09dcc9bed4d6bdcfc9c94562e7971fe75d16880bd0fa79fab5f3ed6cacf298d9",
+      "bytes": 201232,
+      "match": true
+    },
+    {
+      "path": "lib/libsimdutf.34.dylib",
+      "sha256": "83856a23713e13157e9a48dd5ac756ca8ca83a795976400a9e588eefa8a37148",
+      "bytes": 238768,
+      "match": true
+    },
+    {
+      "path": "lib/libzstd.1.dylib",
+      "sha256": "82bba464f7b254e8dfe58f7a69fd68a2b095af3c554f79810cacdf0c808f1b0e",
+      "bytes": 649648,
+      "match": true
+    },
+    {
+      "path": "lib/libicui18n.78.dylib",
+      "sha256": "1f4a5dc3f86de34f3d4c17adff5944335a747bec2b724a273f668a42cf3d7d77",
+      "bytes": 3168272,
+      "match": true
+    },
+    {
+      "path": "lib/libsqlite3.dylib",
+      "sha256": "e8855955933903d509ac26d90d7b7b01c2b534d7732bba0fd01d7708b6f8f58a",
+      "bytes": 1270496,
+      "match": true
+    },
+    {
+      "path": "lib/libnghttp3.9.dylib",
+      "sha256": "e2b32800a8fe70f29b5e4ebdf0f643a114218b1085dcbb4ec78ed8af3310b39d",
+      "bytes": 200688,
+      "match": true
+    },
+    {
+      "path": "lib/libicuuc.78.dylib",
+      "sha256": "82ee603c9acbe7de6221b653901aea7e9328939713ff83d9d9c4ab30cb70f38f",
+      "bytes": 1866592,
+      "match": true
+    },
+    {
+      "path": "lib/libuvwasi.dylib",
+      "sha256": "64540c501e3beabc179d037cc2816a87be5d0e32aa3971e8da9b76209c3838f4",
+      "bytes": 83232,
+      "match": true
+    },
+    {
+      "path": "server.app/Contents/MacOS/creatoros-server",
+      "sha256": "5ed0e129e708e36048981aed983f7302b0c18139f5a174e4b8d5fabbacb6d59d",
+      "bytes": 68416,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/jszip",
+      "type": "symlink",
+      "target": "../../jszip@3.10.2/node_modules/jszip",
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe-darwin-arm64",
+      "type": "symlink",
+      "target": "../../../@openclaw+fs-safe-darwin-arm64@0.21.3/node_modules/@openclaw/fs-safe-darwin-arm64",
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/LICENSE",
+      "sha256": "8d703995c48aeb3726ab83f111a10ee696835e096802ee0329ac50216ab9434e",
+      "bytes": 1137,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/CHANGELOG.md",
+      "sha256": "69e3a6e921086004a1f71f681c1918b0cadc2a630a6ad54e36844ff9d799e13e",
+      "bytes": 179206,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/README.md",
+      "sha256": "9706145b02cebf21372913bde0954e21d0071bb2a011906ba20da43c89a319f6",
+      "bytes": 39335,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/package.json",
+      "sha256": "4dff6aeb0d0927b3dba6695db95e2805942707a4652a15240caad6c8b9cf5802",
+      "bytes": 6870,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/SECURITY.md",
+      "sha256": "e63fc2436add1ec8f30a5be2b7a5bd197c76ecc68c13a9fb03762182e9965918",
+      "bytes": 1526,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/path-case.md",
+      "sha256": "d50aa95c5074de76abfffd2098ec7a52ac9b6bb476d4e04617e62c2f9385ac01",
+      "bytes": 3222,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/native-helper.md",
+      "sha256": "83439ef87d9eaf82d97ac366e19d978460e99229142b335b9769f781a3e7b5a7",
+      "bytes": 14146,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/public-api.md",
+      "sha256": "85bf3def5d7c595beaaa226758f39d8fbe144bdf363c81190272cbebe2b44773",
+      "bytes": 9701,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/temp.md",
+      "sha256": "ac822aec83da192036316f503ef9949998744e97b70d56c3311a8a3506c2e34f",
+      "bytes": 39754,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/regular-file.md",
+      "sha256": "d51c2368bbbf5cd86af6d8ac5cc7d8217b9047f089e04141b1117a20f310bc69",
+      "bytes": 6575,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/file-store.md",
+      "sha256": "83a8902ae0d724087952ef4aa490eb8e1651bc79b27a6b9f1972360b4cbfc420",
+      "bytes": 17167,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/guest.md",
+      "sha256": "010bc6c07481481d6090060270de9376cae5b9ffefa0203177cc5a501afa3689",
+      "bytes": 8659,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/permissions.md",
+      "sha256": "915b6f9815fac9267d4bb7355dcf7aedcaebae968a2e23a2160b12ffcecac625",
+      "bytes": 18755,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/archive.md",
+      "sha256": "b260775c3b1667d713ac74122563d7e8d08147ef54393161a32e356ac10ccf68",
+      "bytes": 54680,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/durability.md",
+      "sha256": "4483ba7e194c8a92d2c186a738e30276731fc2fdd4e57b7c0ca886e8e163cabd",
+      "bytes": 21242,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/migrating-to-0.5.md",
+      "sha256": "ec0bba8bb89c26926aa75a92990d5f7ee0164b0772f83a4fb7e9ac75ef1f48c8",
+      "bytes": 8668,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/install-path.md",
+      "sha256": "9d735bfc13fa3115342c1796fa5c972c9343c65689b235bc37a195962431ceea",
+      "bytes": 9062,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/timing.md",
+      "sha256": "1e465ef5b5778c7f8f088fb96fe15f544c39fe54e3c806abe204149339ffad4c",
+      "bytes": 3684,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/positional-read.md",
+      "sha256": "60fc3096b7086b75d3ec4a5d037036a67374054b6e2369d7dd7e81e474dd6d90",
+      "bytes": 2560,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/staged-symlink.md",
+      "sha256": "0f1b2fd5d9d86accc0ce8722c51d1f54604eab9fc7ca5f6a2d4660719a51a1c2",
+      "bytes": 6912,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/walk.md",
+      "sha256": "b81dcc85c3059da074da9eb5bcee951fac0de8d05d14542e519b6cf5214e50df",
+      "bytes": 16352,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/path-suffix-aliases.md",
+      "sha256": "95d5a34429c9e880095d0ffff239f32d4b1bbc224be508cbe643049d198514c3",
+      "bytes": 10090,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/entries.md",
+      "sha256": "6c9bea10b5107018e26d0ff7c7d710008b95554faee0d85aa2a45f0a69d5eb20",
+      "bytes": 5360,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/json.md",
+      "sha256": "9e67423f133f4a38c88362a84f2f8fc542fe39c015a0af0587f16c46a3d076b6",
+      "bytes": 8442,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/path.md",
+      "sha256": "4c25f0e246b0522889bbf68e02c9ddc416d46ad7d002be092e2f9c6ffd7aea60",
+      "bytes": 8705,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/filename.md",
+      "sha256": "e7877fa48418e21aa38d5c907b2c60b42199b931fa477030b1e80b7aafdbe202",
+      "bytes": 5639,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/output.md",
+      "sha256": "81304121b90a175873de68eac5c95b43922f57e8109d3be0efa084e33d579f8b",
+      "bytes": 9940,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/quickstart.md",
+      "sha256": "e1971262d9f2b41f2e5877e7146f81f9c50dd7cc8c450975c0f55471aef840a7",
+      "bytes": 6761,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/root.md",
+      "sha256": "1e9be629d0c56d31352d9737dce2128850868e749fbcb5d09cea831a822c4c36",
+      "bytes": 33136,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/watch.md",
+      "sha256": "c7f6ff71bbd64fe30ac298a19d48dd180baea8134701f0b2f6692432673d7fe3",
+      "bytes": 18017,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/errors.md",
+      "sha256": "1970d2e9468456ef7ee004095116092ed200f7f1174a98e2a5ac99eca7d0204e",
+      "bytes": 14977,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/install.md",
+      "sha256": "fb6f9cecbde212a3e668850f4908c7dc3578101aaa709f2d6cdcecf4012de262",
+      "bytes": 12832,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/in-place-write.md",
+      "sha256": "b9d53a78c31351e3b9d9ec795ea21fd79ff80e40214e383a44846f338bccf125",
+      "bytes": 3786,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/testing.md",
+      "sha256": "d0a4bb55a87de7e2170980dfe2bed615581ff8c3dea7cd5c9cd316c50530980a",
+      "bytes": 20104,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/json-store.md",
+      "sha256": "0468a5788fb6bb278cf0d70b87b986e2d5f447b40591c77ede33383316af32c9",
+      "bytes": 9154,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/atomic.md",
+      "sha256": "674bd5c5a127deb94f42a68a596f38a7f5a6564a2dc580628ba1388fea4e374d",
+      "bytes": 36742,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/path-prefix.md",
+      "sha256": "b177d1fb449a10dea5a3d12e793cfc4910d5cfbe73327f01a2e591826f4ccbd0",
+      "bytes": 4191,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/config.md",
+      "sha256": "4133e5bcff29b7018cd1484439cf63faf0ce74fb499d22796a2cee9663925a44",
+      "bytes": 5375,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/sidecar-lock.md",
+      "sha256": "6b579f081b12b4018fc1665e92c6bf4f77cdcb5c0a385771944cdf1fe5701b43",
+      "bytes": 35821,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/secure-file.md",
+      "sha256": "51ec57ff5f1ed79d5d7cb5ebbb4e715e3384f1fc7d1c4a9db81d4385813f7f17",
+      "bytes": 9712,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/writing.md",
+      "sha256": "2421d0605fa8de5017baee7b956f2a310bfc1b34a2a5ef544f3b877fcc64b0a2",
+      "bytes": 41981,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/creation.md",
+      "sha256": "4b6a9f0c991c42add448724d80d2b698f3347eb498221c384c68b657559e868e",
+      "bytes": 7701,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/index.md",
+      "sha256": "28874d213df52876f798531665c0ae437caf7dc8c55199aff6e4af60bb4b4f60",
+      "bytes": 7289,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/advanced.md",
+      "sha256": "867906d61474ed35518a20bb7452c8febaaecd64e637f8fd18308a82fae8e193",
+      "bytes": 19524,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/path-scope.md",
+      "sha256": "3b17d49432a04f5eaee010b753d5c312e8c637fb79d2cb34c790ea6b7fc75cac",
+      "bytes": 6569,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/store.md",
+      "sha256": "154079d3211eccbd786d8902aa7a85207612ca8d8631dd3e32789543a6b5021d",
+      "bytes": 10264,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/secret-file.md",
+      "sha256": "0558be93c5b729237e17a8897a1e37e0fd0136e86fe3c58c758f75db22cbe494",
+      "bytes": 15666,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/contributing.md",
+      "sha256": "d8f15bc28291fd71d06c7695d255755d4d55cd89ef02a70f22ac36aeae2f1fc7",
+      "bytes": 18825,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/directory-identity.md",
+      "sha256": "ebc468922b8edcba093b47fef170559807b4eb60e4a7d1043a09a11634631462",
+      "bytes": 3440,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/test-hooks.md",
+      "sha256": "4401de5be9c6c4accffa04d09e77e0140a6436dd0e3a91453fee48b3f9a5064e",
+      "bytes": 6120,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/file-contents.md",
+      "sha256": "54483d8e4eab426e236c3b0a1919fe6daf1315b84fd2652ba154b86258de4e47",
+      "bytes": 2803,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/local-roots.md",
+      "sha256": "69bb5c8a34e533ba98790ccedee808e39606d93003faf37acd0457decb222490",
+      "bytes": 5414,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/mutation-policy-proof.md",
+      "sha256": "4558975b6b8e7f5f01cd125dbb2fdd4db7acd1eace49b30e61c2ca102ae88f58",
+      "bytes": 4392,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/native.md",
+      "sha256": "52d8766429ea37224a49564217d4a4b8f6487039e44cb564b9fa43f9fb9fb6eb",
+      "bytes": 24320,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/copy.md",
+      "sha256": "076f23e6aeeb442b33a2753dde80cced3bed03b8caf5e79515f84be602fcc012",
+      "bytes": 22161,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/migrating-to-0.6.md",
+      "sha256": "ebcec52475f130c66d4db4adf77e6f985ed773d5c861ec0ee0e780370230d912",
+      "bytes": 2242,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/reading.md",
+      "sha256": "6960749f643c43658949ac058c70cbdc1c35b3091a186499f648a437171ac6a1",
+      "bytes": 8942,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/security-model.md",
+      "sha256": "d1d64c230e07b6a364b15fd01fd4c31449afe91dd1863e91c58a49c3daf29644",
+      "bytes": 29045,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/types.md",
+      "sha256": "06f678de865637c5d843a28f1820a95c8736482bdadb531caaf2e1f492240a3a",
+      "bytes": 8273,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/retained-file.md",
+      "sha256": "1fbc9705a4787ad4b70d19e7dd10c0c8b200701e44491a84e38a1deff925942e",
+      "bytes": 6610,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/staged-file.md",
+      "sha256": "053c21b021bbcb3dc7123ecd887cff6860e2c4cf7a26370abbf254a5998b028b",
+      "bytes": 10117,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/private-file-store.md",
+      "sha256": "917948f9fe27cd7fb3a5316eede3c94966ee517ed2d94cf69de40a716c3c88ce",
+      "bytes": 3124,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/docs/assets/readme-banner.jpg",
+      "sha256": "66c546c022f4f99ef45444ba31c46ef6315b51c55c037af900f92c8bc6dfd2a1",
+      "bytes": 44524,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path-stat.d.ts",
+      "sha256": "3a35e04aad24b6d6dab92e079dcfc7c2f8b65de4c1499e2b4f79f7af72894290",
+      "bytes": 310,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/publish-copy-stage.d.ts",
+      "sha256": "6d8b6a31305a2a64fc3d7d2321c2ce4cf1d036a6dac6c293034b43c1b3fee49d",
+      "bytes": 519,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-loader.d.ts",
+      "sha256": "5cfa9c8bfc98aee75d41b300f261df53c95c0d087ae48d2024d13bb43150b045",
+      "bytes": 677,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/effective-uid.d.ts",
+      "sha256": "9a20d09533c42d5d75a05fb682154eef8db638341fcb93f73339f171e48af553",
+      "bytes": 55,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-mode-node.d.ts",
+      "sha256": "bda8308ce30efd7d613798b7cea70be8d1580972aebf916922863b0af3fde27f",
+      "bytes": 1668,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/read-open-flags.js",
+      "sha256": "3f55efd546ebab437d8365fa828e683836dd1385d0f3d6fc434aa68c79b92075",
+      "bytes": 521,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-admission.js",
+      "sha256": "9e67575c4a02bc24dccbc2749f9b2564d14dc3e9b8c6c6707f2d2ab815fe8b2d",
+      "bytes": 4265,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-handle-transfer.js",
+      "sha256": "671cf99de27e7af6e5bdf0640ecaa382050c63aa89b3ccca990c12063a929776",
+      "bytes": 9173,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/owner-dacl-batch-worker.d.ts",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-gzip-tail.js",
+      "sha256": "5826a9b81d85819400b15ceef1b9ac08d317ffd5de1afb91a5867528c7d2f730",
+      "bytes": 3865,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path.d.ts",
+      "sha256": "e62758cdd6bf07dd971f80528c302741159447ab81ea40806ce45df913f2fa1e",
+      "bytes": 1555,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store-sync-directory.js",
+      "sha256": "fe5d354ea84a7682ba88518199c5bba0811c821d072de2659ef78fd0d1ded195",
+      "bytes": 13506,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/byte-budget.d.ts",
+      "sha256": "feb4c4ef660c300beb2cf1add78887038688ef6c9a02251e1cd2c0fd475c7dc3",
+      "bytes": 132,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/staged-directory.d.ts",
+      "sha256": "e335ef6c6a2f51ce688c8c8a871c28177ef12c50d135c273700c1d1d511d2a3f",
+      "bytes": 1611,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-deadline.js",
+      "sha256": "c7e3946f2697d9f19f382e33cd1920ebed1d7efac7da2c76b43c1d6722d92b32",
+      "bytes": 3701,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path-errors.js",
+      "sha256": "b8d9849c9e884713c21c44570596acde986d2897f618072a393fd28e2d9c3354",
+      "bytes": 909,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/opened-file-failure.d.ts",
+      "sha256": "0479d0e93d6e7dc10c6825b895b16a1fa0a4eb9d77c90e26debac45fb41de603",
+      "bytes": 677,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-read.d.ts",
+      "sha256": "597dc7bf045c60a5d86d06c7e8283ddbb31a9da8522ca5b0a83768d484096ed6",
+      "bytes": 213,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-stream.js",
+      "sha256": "ce422fee9a861cc16447483c841b5bd2b3713682f73c9048b929ebbc3949f089",
+      "bytes": 1363,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-arbitration.js",
+      "sha256": "398e602c30cce215c3a787cb9a63da2478a4e9c49507a8dbc1688b16fdef39f7",
+      "bytes": 2940,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-durable-queue-ownership.js",
+      "sha256": "6e3effdd34aae2b7dbee07ec89c2f4bf2ee3e70bf4f5d696d6f34241d60c707c",
+      "bytes": 15613,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store-prune.js",
+      "sha256": "e907863bff0844c118ceef45fcd8731b47ffa65cf526c1316907d2d896199ca2",
+      "bytes": 4874,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-admission.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-entry-path.d.ts",
+      "sha256": "3f728d59b3e4f425af080f15dc15892aa93ebeaacd539af32dc54cb4a1c4acde",
+      "bytes": 186,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-mutation-admission.d.ts",
+      "sha256": "052fee05ada34ed1ea9f10b8dd7f6fed8c334025377ca71292f20382b8c843a2",
+      "bytes": 1070,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/filename.d.ts",
+      "sha256": "de498316f358ee819f58716e36ac428b78ea6e0756e5d00a2df746219b04a1c7",
+      "bytes": 411,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/retained-file.d.ts",
+      "sha256": "4fd01b0537ed2bba3671cf6c087d71ce752b44cb4af9fb08e16cda69a4e54fa3",
+      "bytes": 296,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/owner-dacl.js",
+      "sha256": "66cd99bd8d4ee5b3eeb7d8ca27ec9f84499b5d2b556557cd8f8356964f992539",
+      "bytes": 1821,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-names.d.ts",
+      "sha256": "6ba4432d99c9a907ee609d83d9b528b39a7e8a14bd63d2cb4794388e2b0cd591",
+      "bytes": 582,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-guard.d.ts",
+      "sha256": "68d4b91b6e01a0810c0bfb8d7a5d2bccd8880dd1c0fc45a8984377f4d7dc2dcc",
+      "bytes": 3075,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive.d.ts",
+      "sha256": "359409376ff1c3b7ca1cdb7f2325492b43a2b01ea0b1b7564f8e73e02b780b56",
+      "bytes": 2155,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-copy-source.d.ts",
+      "sha256": "0f34f78137c92623225bb384fc0f93fca616ec7de5996c6c82f0a8e0a918b15e",
+      "bytes": 671,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-directory.js",
+      "sha256": "e8478c58368b7da492b53e2ccb53ef329778a65bbd4a417d4364abd75b60c908",
+      "bytes": 12644,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-create-native.d.ts",
+      "sha256": "2d1bd7f74c74d640988bf586c2a30574eb925719cc39cd4a85e2006bd25c9a17",
+      "bytes": 1953,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-compatibility.js",
+      "sha256": "7ad579be86e29ce5534b773f56bb01752053368120ada4e1152f79b271bb39d1",
+      "bytes": 1109,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-read-admission.d.ts",
+      "sha256": "83afdb2dd7b71c34d04b60920a3e6a3986b1b7f756f0fbaf566c0c0189a0c057",
+      "bytes": 944,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store-boundary.d.ts",
+      "sha256": "c6efa1a4dbec2c26edf904924d16269fba2a770f753aab802887b895e68fb931",
+      "bytes": 1586,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/permissions.d.ts",
+      "sha256": "e63b356d9c87f5692df1e27e5a501fa83b66ed3e9b0e5e5e2d3f42f6c58b8f96",
+      "bytes": 2127,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-admission.d.ts",
+      "sha256": "8aefbac40b16b47a8385dc55d8dab34d1482367d268625f90ded7a92fa278375",
+      "bytes": 713,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-errors.d.ts",
+      "sha256": "af291d1e449e8320b0017c29149f04af507a3490532a4d805f0e4c2ab53c80ca",
+      "bytes": 1172,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/device-path.js",
+      "sha256": "da2f1223469785af3605bbd6ef1df384d39438c5a2b24776fccfe373c68dabf4",
+      "bytes": 4580,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory.d.ts",
+      "sha256": "d18e2d95a6c4f0d37450e8e91d83a2d62a5207500f80779a03073dbc2fc9d92b",
+      "bytes": 616,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-acquire.js",
+      "sha256": "846ac296971d6365e8621a6c49fdd66718ec2f94dba9bbfa9de24913321ed083",
+      "bytes": 21439,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root.d.ts",
+      "sha256": "06dc72ac56d337eed5603ca162911f5a53594d8deb225bb5be0160f85c897b94",
+      "bytes": 1926,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-admission-parser.js",
+      "sha256": "d170586ffc1b24ab459a53541cecfd9a90995a9c1446d151ba2672342a62476e",
+      "bytes": 3796,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-reclaim.d.ts",
+      "sha256": "3279ade3add23808c38882998d3a6e2aac1379b8f7dbb7f7d7bd42ca741e4b24",
+      "bytes": 3517,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-observed-path.d.ts",
+      "sha256": "a55db44153df9ff05e2cf9b5acb271c176fa32eb778fa79ecbdec2d0283dfe03",
+      "bytes": 410,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sibling-temp.js",
+      "sha256": "7dd373a637c2fcce7955b62b70a84ba0a9e7e2dd1e0dcc881bf300ba1845cf00",
+      "bytes": 6014,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-security-bridge.ps1",
+      "sha256": "1ba2777243b174c2734cf17da6a741b2f49fe134553e155f3777496f794606df",
+      "bytes": 3698,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/create-owned-file.js",
+      "sha256": "00bce231a25cc3046e8c8b1856c2f4da333036b49c296a35c29c96a4e8dd41b9",
+      "bytes": 441,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-sync.js",
+      "sha256": "6d7485625782f21d32ec8efa4cfaab5fa897afa1fcea5acbeea9c41c2910c8f4",
+      "bytes": 410,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-staging.js",
+      "sha256": "acc9c07216900cc73c510e799b619eaef1e5545fa91b63b6d3412acaefc7e964",
+      "bytes": 12917,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-native.js",
+      "sha256": "ce84e9fd184a4e12214bc2645d60e1ffe8123f34e442af9d79c3f1beb5cc6748",
+      "bytes": 3839,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory-creation.d.ts",
+      "sha256": "8738eed3c42c80e918a5d7165ad05d809ff3464b3b8f824f60a5ea9d2f6eb994",
+      "bytes": 931,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-admission.js",
+      "sha256": "118eba09b95fe03d4f29d79c5c4ac7273bcdc6e31402f4ae8bb0cdafb4baf301",
+      "bytes": 2465,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-count.d.ts",
+      "sha256": "eaa7ba09b332f181a97a141937d8d41ee71298f30d04d1573a91e07282d745d0",
+      "bytes": 103,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/retained-directory-replacement.js",
+      "sha256": "d633f502161ca4a25b4a676d7909d95f03fd2109cb13280a2eea13cecd1d3db4",
+      "bytes": 7899,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-durable-queue-read.js",
+      "sha256": "9e27a73f998a54c5d995b4896120052f70638ce975983900eac48a3bc3b13c78",
+      "bytes": 3031,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-crc32.js",
+      "sha256": "71b1ff888514729b60f7e47f0944a5bcb25236df0bd6c7986f172171ccdbe2a2",
+      "bytes": 677,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-integrity.d.ts",
+      "sha256": "1833560d01df61d0b6ad140229c13ac9a430883b3b180d8bbff7c779b43f1683",
+      "bytes": 270,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-policy.js",
+      "sha256": "f911844d8d79e63d52ebad46b99c34cc90ac95292c612479dcc1d250d3e5de26",
+      "bytes": 1680,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-durable-queue.d.ts",
+      "sha256": "446c643ef8845fc086442829a78758391b70e350d21a8eafe917ebe5972a380a",
+      "bytes": 1741,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-tar-stream.js",
+      "sha256": "ca711104567f5da8bd254eaea964695600ce889d70d24e2fa6473225a186ca33",
+      "bytes": 6198,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-public-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/retained-file.js",
+      "sha256": "5f9913eaba454776e95012d4e8940b8401a6e36f02131fab70ce19d5062e256f",
+      "bytes": 5932,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file.d.ts",
+      "sha256": "f94ad573453f1fd7c29ac6d198a1e6ecaa35826d17424808752c98ad05484ac0",
+      "bytes": 814,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-directory.d.ts",
+      "sha256": "ab36a9a11195ea65b822f0526c6d31cb98473059b1919dba2b2b79180afd09d5",
+      "bytes": 225,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/publish-copy-stage.js",
+      "sha256": "0bcabac09b619f010448e28423150b83c8a8e0ece98e34d41aef11856eae0a76",
+      "bytes": 2884,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/create-owned-file.d.ts",
+      "sha256": "baf5b76284c0f06584967dd749d6d88a0ab28eabdda54da0caf93a855ece2033",
+      "bytes": 311,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-count.js",
+      "sha256": "1358821b671c60e26f9c344040bfc203c2229e7310c3d58c5adc3a8223298905",
+      "bytes": 7010,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path-errors.d.ts",
+      "sha256": "d63525ba1941724e9373cbd9e7e8aa1b2e066e740c17b5e0832f63119b1019c0",
+      "bytes": 434,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-copy-fallback.d.ts",
+      "sha256": "22934e52bd8f7daf59f4b2593db2230df042b766c107938a3bd695ef0172e2b7",
+      "bytes": 1693,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-types.d.ts",
+      "sha256": "2d291484d12ccabafeac3175e76215863569d8ec31b160046ceff30e2ca3de14",
+      "bytes": 2326,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store-sync-directory.d.ts",
+      "sha256": "23d75ee15c669412f5419fca67603f43c7c89f15528752c5a69da163a4b2259b",
+      "bytes": 520,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-verification.js",
+      "sha256": "52ff89d18ef177474bf063a3adf245dc9a1e32dac66f30d551b683a2f62121b6",
+      "bytes": 4586,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-registration.js",
+      "sha256": "00cfbeb953f568ba6e1409ef6bd86f72cc51900920753c17229078b8a3562a31",
+      "bytes": 4384,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-remove-native.d.ts",
+      "sha256": "6b117ad444511d767b8415dd723f2c4877cc15c91447bc1939646858dbed17d6",
+      "bytes": 348,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/timing.d.ts",
+      "sha256": "0a86bee53f4bca408fbffec481e2fd1ebe1f25a8769b7ff14828fab905fc376d",
+      "bytes": 394,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-durable-queue-read.d.ts",
+      "sha256": "4fa7f28da14657b5e03ecf42087f0214a0697ae1fbcd75b731be51e7d7f86fa9",
+      "bytes": 332,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/permissions-windows.js",
+      "sha256": "3e7c03baa010340a9e0ca3ffdd12d89cb65bcd186530ad9adae0d41cf4cc4f86",
+      "bytes": 15012,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/deny-mutation-match.d.ts",
+      "sha256": "da12d2a4e36f5557d5f097c456c0ffd297840da28e3b24bbcc061468cac642be",
+      "bytes": 248,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-descriptor.d.ts",
+      "sha256": "50fe46a40f1b6e42c6d8a5eda739182b420d71edcaed4ecc2b174fea746002da",
+      "bytes": 1675,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-cleanup.js",
+      "sha256": "7e4339d62609e74988a0fa1c04c6c98ec31bde5be4e4d6f6a8def308bc1aa44a",
+      "bytes": 2945,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/walk.d.ts",
+      "sha256": "93b7ab937b8d7f33d2c002f9d02fea47b0418fe1d832a728547ccd0ea7f95867",
+      "bytes": 1488,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/retained-directory-replacement.d.ts",
+      "sha256": "185d3383a4d4b050e0216deeabe860b22c1c4ef2e8f472941a32eec8cf6aa134",
+      "bytes": 1199,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock.d.ts",
+      "sha256": "cf1bdb4b4dcc177063fbbf49dc1d10596be091ff907318b7e810f5680dbf9293",
+      "bytes": 1213,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/local-file-descriptor.d.ts",
+      "sha256": "41bb5306a7a6bb522756de1aaab2feb5f165aaeae3ee3f7b9f87d96175a809e6",
+      "bytes": 488,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-mutation-shared-route.js",
+      "sha256": "48a5404a2c39460b496ccf3b57a3c5685668be3c3460be7c44c2f640b91a81e8",
+      "bytes": 3488,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/publish-file.d.ts",
+      "sha256": "b6ccad9ace9d47a79c5795c035bb81f03bcbba1364e71ba841bc36f2a190c01e",
+      "bytes": 995,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-remove-native.js",
+      "sha256": "cbc2e37c27ebbc525787a880cba88fea658ab837e7ce3798f32afa13521bbc5c",
+      "bytes": 14341,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store-boundary.js",
+      "sha256": "8671ac082f06b30b7d0d40e72c267f944ae30dd76297ecf43442270420c60b30",
+      "bytes": 8148,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/local-file-descriptor.js",
+      "sha256": "b18731ab7703540e2f399af90838d5c33e366792cf784a6be8c41554c5a29f43",
+      "bytes": 3948,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-lock-binding.js",
+      "sha256": "e1919743ac464d500437def7bf295ccebf4eb0f7833936872b5d663f464ccec9",
+      "bytes": 7402,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secret-file.d.ts",
+      "sha256": "9f3b347de7e279b63739f1a2a23072225a88d20726a7777434ef180963c03811",
+      "bytes": 1436,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/lock-config.js",
+      "sha256": "bb9b589dc68a4841af6cb042f76441c30291156630a283297d38cc971fe88c29",
+      "bytes": 503,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/suppressed-error.d.ts",
+      "sha256": "d44b5aa6b9466f451d535c6e1d0b7b8223d5b1092e7c303bb5dd825fcd8d4522",
+      "bytes": 214,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-integrity.js",
+      "sha256": "3a2cac2f08b00af901450ab512048d38a29c680f2f1d9c8445927962b0f9fd61",
+      "bytes": 1264,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-pinned-write.js",
+      "sha256": "a9fa364f5a58c638458cec3f7f11915c3697a96131ce4c958c8b5205c13b08f3",
+      "bytes": 7784,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-document-store.js",
+      "sha256": "76efcb6d18f7108bde65cae7aaa1fee13dfa86b85b59a1317c03dca8439b40d5",
+      "bytes": 4598,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-cleanup.js",
+      "sha256": "62ed4a1a2acb7367857014b67bbd14f32b497673e410667cb54c402ad30009bb",
+      "bytes": 2666,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-move-noreplace.d.ts",
+      "sha256": "927ed5eaea117be1a4e6c1fc515fbc8013c25702d23b051274f6b670ff97c8d3",
+      "bytes": 762,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-durable-queue.js",
+      "sha256": "b6a834f9dce7810df4eaf77a1006dd0a9ead30363288bca52819ce1f8b6baea3",
+      "bytes": 8006,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secure-temp-dir.js",
+      "sha256": "c1a9987945911782371292c24670ac4ac9382986e8edfa8fe2981a074c4a9f4b",
+      "bytes": 9376,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-rescan.js",
+      "sha256": "1d91b73ad023cc3bc9ee5729d2445ae57a6ccfde5ca5baf433be2ae6c2424071",
+      "bytes": 5515,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-staged-symlink.js",
+      "sha256": "c6083ffb40ff1a79dc2d13d1ac5ea915584991c10c63d4b52fce50e08e67aa0a",
+      "bytes": 11785,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-types.d.ts",
+      "sha256": "135336d183ed931659632e3ed67b59dd1c492470f839bfbd6012b005f9cea47b",
+      "bytes": 2655,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-admission-context.js",
+      "sha256": "17aae5ad6d1c9ece976e8cd9d15213d305ac0eb23ddc18ab64e6fd4b2cd4a725",
+      "bytes": 2451,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-admission.d.ts",
+      "sha256": "d09e36c2cbe546df33ce463525e8855da1449954aa13719aa7cf1beb92b8787f",
+      "bytes": 714,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy.d.ts",
+      "sha256": "d2f3c73455414a1bdb00bb910dc566103ffb394ad3ee352f373064432d3c70b7",
+      "bytes": 971,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-target.js",
+      "sha256": "ada44213fa66a2d88a73d7c89ac8dc81598050bb23fb636edacaa26639954a25",
+      "bytes": 2463,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store.d.ts",
+      "sha256": "4757d62e7907852cef7efa75f3df28e3955e99308b9f95a9559275391c6e0b23",
+      "bytes": 3358,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-pinned-write.d.ts",
+      "sha256": "d2b719f289c05bb90847fb7c136ea587b74ae858a24a0739f8fcc8cb709c9fad",
+      "bytes": 300,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sibling-staged-file.d.ts",
+      "sha256": "889ee2a480d07d5aaa13e4cc893a581611aec25eed35da56ad11a2af9227b8d4",
+      "bytes": 588,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secret-read-policy.d.ts",
+      "sha256": "444c8f674a33c36662805c6cdf77d6d4ddabb75be5dc12b5ddc28756884af274",
+      "bytes": 1097,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-context.js",
+      "sha256": "21b9429816fbe7bd376e9ee2278d640533d5cb8d1e879e387a380c59ffde24bf",
+      "bytes": 10555,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/retained-file-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-durable-queue-directory.d.ts",
+      "sha256": "640a8b684bc657d4a2b3e0d95f6f4794af6e890b41f74cb5c2f062331b1c1ad1",
+      "bytes": 498,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/retained-file-types.d.ts",
+      "sha256": "079d4781972beeba2c8bef1a849e9675902f5fee1b7e015050bfbe67e59b9013",
+      "bytes": 2117,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guarded-mkdir.js",
+      "sha256": "5eb1adddcf819a5220d91fc63cc42ec55589ccbcc018d3603a101484ac50dd82",
+      "bytes": 13652,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-held.d.ts",
+      "sha256": "8257138d299e7d7ab8a147a46a076a2a2350bc36d17742ecbd6081b067ff2794",
+      "bytes": 1623,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/store.d.ts",
+      "sha256": "f699bbc8a80776086da54d935c17cdbf711f2e558976f27d534d3f0a36f8fafd",
+      "bytes": 774,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-rename-outcome.js",
+      "sha256": "dd4f0a4783a7a0fccbd8bf21b33f7044e339e815c11cfc0d5fc870cdf9a913e6",
+      "bytes": 498,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-owner.d.ts",
+      "sha256": "d5f3dcdc7f80a0b63b299d721d45a4ee597c01e9faa328ec14c45bf0ab7c6e78",
+      "bytes": 1439,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native.js",
+      "sha256": "29be2ed4afc31d22dc31d7d08aa113ef4823392d3fe144c576f9d9604b004a73",
+      "bytes": 7373,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy.js",
+      "sha256": "850f68a6f4b03c9da652c9116d3fb584894e136657ba579c21fee442ce9dfac7",
+      "bytes": 6194,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-target.d.ts",
+      "sha256": "d0d743bdd218404f04314692a8bbe0c0c84592911273f75a0aae1ee72769e1d9",
+      "bytes": 1093,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy-policy.d.ts",
+      "sha256": "e170f988c697cc872aa6b5c32bcb09cf835455caf09464759da05a6c6d55b9ed",
+      "bytes": 179,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-preflight.d.ts",
+      "sha256": "5ccfd16b7dd85ddf0bb4e875bd39ae3b8ef48b5f1034bff84295fa4e9be0c4e4",
+      "bytes": 445,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-errors.js",
+      "sha256": "0eba67f137cccadff6ede50bdf65d2c3f5386e06c80468678be1d53e75ab07f3",
+      "bytes": 5345,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-types.d.ts",
+      "sha256": "a7f562dd0cc9141aa0c7f6946e474dcfe195d2a502cad9f08feec14a1e30eb70",
+      "bytes": 2518,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/write-open-flags.d.ts",
+      "sha256": "ca2852b92755a08690c5f4e34371fbf47088505c9a38c5adf767405c09ab8301",
+      "bytes": 390,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-security-facts.d.ts",
+      "sha256": "4865bf1845a7b8cef4b9747e42df6109cc9c600176bb43e58cf0fb8fda6e278d",
+      "bytes": 869,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/write-file-handle.d.ts",
+      "sha256": "f73c39b5bb1e8e5c45d98cdb6546810973237469386eb92c53db57c4d31b8e9f",
+      "bytes": 740,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-preflight.js",
+      "sha256": "589a7da7c9818f2a28a0f0149f5e7deef047d05b8a166aaf9bf90a6190e9e8fd",
+      "bytes": 1003,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-types.d.ts",
+      "sha256": "be2ca39c01da8e6f7cea4f836107540b777e37cac64d4642e9a685fc22ef47e2",
+      "bytes": 1510,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-lock-binding.d.ts",
+      "sha256": "9d94488e9c54e77612e1f097609926edad9f8c325c90b5a1c6babb46bf97d01c",
+      "bytes": 623,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/errors.d.ts",
+      "sha256": "7fa66b42d23470fd73e179c13f08626fe48b79a63e392dedb61802ae1e645730",
+      "bytes": 1081,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/read-open-flags.d.ts",
+      "sha256": "7146930d6d344f5bd97b340e2b267618ce02f92d99b6a0cd47aeb2d1c4e8250d",
+      "bytes": 309,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-descriptor.js",
+      "sha256": "9ca3c2bca30012a6e70c100ad001368c3b98242b04228da84e7875afc9ed7eb1",
+      "bytes": 6252,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-root.d.ts",
+      "sha256": "bbf8ecca627002728f925718eb757a38afc3d2098439e65b50b69830cea0810e",
+      "bytes": 246,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-entries.d.ts",
+      "sha256": "ff24e4465b4a2f385921f809f4ea1d8bb2e8883a4795d539d3d5fbe7dcea6e96",
+      "bytes": 452,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-options.d.ts",
+      "sha256": "937ddd23124dfbc24aea4741d509259ffda698f54f3f02c977d33ebdd887daed",
+      "bytes": 3878,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/read-opened-file.js",
+      "sha256": "df213a20b22bb2416133d9c0e8e15607be90be78237e72219b65725b9206be52",
+      "bytes": 787,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-handle-context.d.ts",
+      "sha256": "e8680574023b65105d7948423895ab8e9e6b0ffdeef843db377cf82abb40e3b5",
+      "bytes": 308,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write-input.d.ts",
+      "sha256": "c33213902c441bf88c5215f0e8c442bef2eadfb0d7e45130acce59328df30720",
+      "bytes": 282,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory-list-types.d.ts",
+      "sha256": "da9fc17efe9db7ddda87451b0d28ac92f14ea53ae1c3ffcc797304152e3fca75",
+      "bytes": 1269,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-hash.d.ts",
+      "sha256": "8a27384d3aad1a4d830538905cc76c718a0a837e743ef2e0d3cd76a2f410d8f7",
+      "bytes": 856,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/staged-symlink-types.d.ts",
+      "sha256": "e802b40599371565f5c372eac2ea22625442e63e485080a00af92244cbace520",
+      "bytes": 1855,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/local-roots.d.ts",
+      "sha256": "3e59ea93719e3ffae06fa520f9a255d3bd5cde1acbc14e78b0d4a7c5b2447cc3",
+      "bytes": 807,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/types.d.ts",
+      "sha256": "ebc0a1b4b06a366f62c9d290765eb60c77d83e57b8cf79f17ebd12abf0fff060",
+      "bytes": 494,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-descriptor.d.ts",
+      "sha256": "07b334d7bd51d21f10c2b08125a75062e45eed0456dd693d11fc519918095115",
+      "bytes": 1984,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-contents.js",
+      "sha256": "775d54bd705c20fa185c997c8adb78bc7b973713864aedbfbfe6e3f9c566f982",
+      "bytes": 1952,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/atomic.d.ts",
+      "sha256": "db1d49fd07cf8787255ec915c64dfb5cfbe6163f0b032b6fc6d6336fa880b2db",
+      "bytes": 874,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-open.d.ts",
+      "sha256": "484e00bb61a62b2d59689aefb68d4c3686b8c85a74496635b9c2f9931e05ac67",
+      "bytes": 1050,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-command.js",
+      "sha256": "ffb8a2e56d8901e11ee81f7594c0c2aa8dd56458188c142a5f5c3a09a140fa94",
+      "bytes": 1131,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-manifest.d.ts",
+      "sha256": "f245177eca8cc3002d20de27823336ca9a3011af0dc0b13717adc7f57164f8c1",
+      "bytes": 333,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-target.d.ts",
+      "sha256": "f808542c4ea9a2d1ec34df64e7997ae9d3593de4c969243c1b58ef77a346fe77",
+      "bytes": 432,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/local-roots.js",
+      "sha256": "e51824a8bd62a84d87bb036aaae8d2cb16b04b53ffd5b031211e254d71f2e3c0",
+      "bytes": 6313,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/effective-uid.js",
+      "sha256": "7a703d316bb601660517a21321cceb959a1c304f37ca22adb992b046f57d7be2",
+      "bytes": 571,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-path-alias.js",
+      "sha256": "f0e13dfc3913353dc2c496b317794dbca5ed5c472c028864847b4157984de7ce",
+      "bytes": 4993,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-staging.d.ts",
+      "sha256": "002b818f520845428fd4eb09357f7ba95c4675769f6d16acc4ae6d31923bb58b",
+      "bytes": 1673,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/private-producer-handoff-sync.js",
+      "sha256": "1dc61c14412dc4630873ea0bd27aedff5635448a30c31f7faf6252d3e5c6daa1",
+      "bytes": 3014,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/local-file-access.js",
+      "sha256": "7530a957ca9d56f56deba8da1dd06be03c894c6f6472bc8571080937b57bfda8",
+      "bytes": 3135,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-kind.js",
+      "sha256": "2b98ab788cd89b3e5d3e11d22aa7d3a1accd5f242ac090fe02783d77e7b8b0ba",
+      "bytes": 2355,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-entries.js",
+      "sha256": "f6277d10db6b3f2207faa7d47a62391a085f21dcbb021e81f77a276b387837cc",
+      "bytes": 2326,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write-types.d.ts",
+      "sha256": "3b9ba5f7e50c2635232a59ffa819d1c1192a7d7d2f332776226a7105d8487d26",
+      "bytes": 3070,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-directory.d.ts",
+      "sha256": "d609d5945d12c7d318912a133775407bb04aa1dad05d32f237ffa85ab9a6646a",
+      "bytes": 721,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-stale-admission.d.ts",
+      "sha256": "ae2edcef0df8d18fe6d8c9048fb4189356b07937ce7ca65fb8be86aeea70e409",
+      "bytes": 1593,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-staged-symlink.d.ts",
+      "sha256": "31b03e48de8f305cae8889a345a2f60b8894aa28b8c57a462e4d5344eca00df6",
+      "bytes": 630,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory-list.d.ts",
+      "sha256": "a56309aec21c58ed3a636075ef33a36a5af1f61edd8a16129eeb3dcc0b72de20",
+      "bytes": 1945,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-stale-admission.d.ts",
+      "sha256": "ffde1f59f4b829ceebf4e5f1501798a2ad1539a423c1e5f1a10a527fc9dbc8a1",
+      "bytes": 1036,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-plan.js",
+      "sha256": "a592d9681a54c19e5eba67714a95e50d0642dacfd74e3feb8554157244e2c207",
+      "bytes": 5969,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-registration.d.ts",
+      "sha256": "9418fce2457e4db88c6e0e21ec952f3e0e845aad8626e97fa1342924b7bf579e",
+      "bytes": 103,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-handle.d.ts",
+      "sha256": "23bb3f5764f48766b9915bd9294d9bb4c1d6c066c29bf62648c4920a5a518c06",
+      "bytes": 787,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-create-native.js",
+      "sha256": "8bb4b5bca3c28ba85d378f2cc19fe68e1c85c48a95a88fc05bd717b0d5c0c9e2",
+      "bytes": 17883,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/config.d.ts",
+      "sha256": "d845b747686b985c612f383173e44ed5baa909b6ec99470b990f63d74fe7c702",
+      "bytes": 282,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy-publication.js",
+      "sha256": "9effa323f98ac428a3321f18ca1d255bbc0a0080d4d822eed1871b72aede25b9",
+      "bytes": 1308,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secret-file.js",
+      "sha256": "6e1b3726335138c8851e6f31be0a5a8cd9fe68e8e54a35ba193daff070423d17",
+      "bytes": 15299,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guest-native-python.js",
+      "sha256": "5e779e0b8582689a4d91a56843231116b02745ff05fe3f57370107a977771765",
+      "bytes": 6040,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/device-path.d.ts",
+      "sha256": "cb469854bcdfe5042f24ab27cdccbb10feb16efdce3eb16e2162ab8c31735895",
+      "bytes": 816,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-merge.js",
+      "sha256": "f4488f76b2175a44c6be89371c08c4997868afe30d3c4a186045b1b9d58a1efc",
+      "bytes": 14974,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-names.js",
+      "sha256": "424a1ea45660b4adbec749881f3408cdc7c47c76e03c553f8415833fffb6bb75",
+      "bytes": 7490,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-stream.d.ts",
+      "sha256": "9c31fb33724b66846b5b21541c3503c7587ac690a79d8e1f6c426635e167bfa9",
+      "bytes": 398,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/deny-mutations.js",
+      "sha256": "b00897cc914bc70dfab132e464c310ac7d755acae6e54eba40961b5535512995",
+      "bytes": 4859,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/mutation-authority.js",
+      "sha256": "ff1eb74ee03dacdd978f75899ae88acedaff7b30003329c59eb2cd54973654b0",
+      "bytes": 1808,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/advanced.js",
+      "sha256": "fe1bce14b7d9676230e77ccd06d3f1a9012c517f5752833b25d1cb6b9a6c6a9c",
+      "bytes": 3756,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-cleanup.d.ts",
+      "sha256": "2fff36f11b794c1b4ef7eebf43797d5a192d70b50a0a5a51078e55e4b49f4500",
+      "bytes": 838,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-reclaim.js",
+      "sha256": "a2077d5c0b6f561c6cd7eed4134d56723cfb00a5ab412a4b3e1496f3280e96a8",
+      "bytes": 14683,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/unicode-path.js",
+      "sha256": "aa20e4aab1eea107d62ae5b78c08033d2cf8c1c5c4fb69ffa55d527419aa1d7e",
+      "bytes": 842,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-policy-parent.js",
+      "sha256": "bebc98d2c8bcf1af60a10601678197f9c812cc9d3ad0667fa2d5b1dc4e057371",
+      "bytes": 21255,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-command.d.ts",
+      "sha256": "87eea30356431aead304c53cd648f3c25665caf6c76d8d53b0ed454e364f6132",
+      "bytes": 103,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-mutation-shared-route.d.ts",
+      "sha256": "3406eb25d97fd51a97c6ab462f0fab89c75007c0d8bbb818fb7f4be44226c05c",
+      "bytes": 739,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/bounded-read-stream.js",
+      "sha256": "6a5b8eb50dfbbc6ecde20450f2ac8ebe8fecb6c8798fda65b8e65c272b2f2010",
+      "bytes": 503,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/store.js",
+      "sha256": "6a588a74a3d0ef1efa697637a66b207f4a90a7c373985f8f5a4ea113136eec62",
+      "bytes": 439,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-io.d.ts",
+      "sha256": "a507920c6e5be9f3870cf45f7511b4f90c9a2a0201a498c48fd30e1a2baa6d65",
+      "bytes": 2105,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-deadline.d.ts",
+      "sha256": "e2982fc8c905ccc6200c0cb1e3099795deed7a44be684c53bb305e9b9648e0fc",
+      "bytes": 733,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/local-file-access.d.ts",
+      "sha256": "455807f9b25c20439eb970f13a2caa49043c21e67bf787e2798e6d4fc3ddea2c",
+      "bytes": 729,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-publication.js",
+      "sha256": "166b54262fbdb27d9f004a541259715991b414026f692945bf18107626f46171",
+      "bytes": 4060,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-stringify.d.ts",
+      "sha256": "debd4619164ec20bd678ed32912365ddd25bf60bc0095c37ebe0651ad62a8617",
+      "bytes": 166,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-native.d.ts",
+      "sha256": "287e66ad3e7ac221edfd1a309f807c7ed786f1ed89f74d71bd4cb427c4d91591",
+      "bytes": 1585,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/test-hooks.js",
+      "sha256": "207753c214f21d77c7cc82b947f24705c937009a73057ddb08a8ef058334e273",
+      "bytes": 420,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-complete-parent.js",
+      "sha256": "6f153395ad9f84aba043eb8bc5a3506b78bb01726765f081e87c54120e51e68b",
+      "bytes": 8213,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-parent-admission.d.ts",
+      "sha256": "8cb603678e7005934d122a60371250d3dde9367f0705ae486b6c3b9069567c39",
+      "bytes": 1396,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/output.d.ts",
+      "sha256": "35ab6b06b2f32c6978ebd607d4c5d2a9ed42f045927970b8bc89622b7f716066",
+      "bytes": 595,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-prefix.d.ts",
+      "sha256": "f306c2de620852bdbf2c3362555443620caec4be20e3bdd130c346c079349a51",
+      "bytes": 242,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-admission.d.ts",
+      "sha256": "56b9e407c8e3b9f8ce226cc1040d955691660d6f2a276945236ea942eff48777",
+      "bytes": 3867,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path-existing.js",
+      "sha256": "6727e67982660284816da961f120d83ff80511128f7dfa62293477cbe91826a7",
+      "bytes": 7496,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-kind.d.ts",
+      "sha256": "b415e25481c33f96105fee652955f5d37cd6eb42b414857e4b9b6e40dd324b39",
+      "bytes": 351,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy-tree-portable.d.ts",
+      "sha256": "dfc078e783968358f0a55a1219d2744bed2cb7bd697565410ffdcffb8deefe68",
+      "bytes": 456,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/string-coerce.js",
+      "sha256": "235838e43b0bd41533f87c9ba36fd067c37ee07a9977f55b7b75bb5114d2f477",
+      "bytes": 528,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-errors.js",
+      "sha256": "e43ac34e0d548c5206a6845a2bd4e26e9e240c1b83b65c78513b08666001ddd0",
+      "bytes": 792,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/advanced.d.ts",
+      "sha256": "e1251044bc4023005f81ef3306d8aedd0c357dcb0fd69dcc75f086da4602bf88",
+      "bytes": 5650,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secret-read-async.d.ts",
+      "sha256": "a8e3bcf051243eb1a80aa56ad97a33e115ed752bc129be9d9f7dc6f845da42c5",
+      "bytes": 343,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-policy.d.ts",
+      "sha256": "994022e2d417c35ba2c418bff4cf48475371023fa8b9a6ec25a59fbaf3c3ab0c",
+      "bytes": 1405,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-compatibility.d.ts",
+      "sha256": "06a93c071b88d48f856966633e03d044b9f2b204f513dc44e31d50f3a0870871",
+      "bytes": 400,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-boundary.js",
+      "sha256": "7839e0ef8d24683ab973e882541863db11c9543e4cdaa2f20cd140ce1dcd82b6",
+      "bytes": 7245,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-acquire.d.ts",
+      "sha256": "924978faa2d078952f92f7416c2e34cc6e76cd67d8da7587f1cea32089d2803a",
+      "bytes": 443,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-owner.js",
+      "sha256": "025dc90f612a72a0c532f8b8c572863c0fa3b4f4d94716965b0b0b2141d48195",
+      "bytes": 15133,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/move-path.d.ts",
+      "sha256": "d33755a9c76004238268e32888edd4a64aeb3609577a5bef119e1519ae3d94b4",
+      "bytes": 991,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/index.js",
+      "sha256": "36593d9721826bc14523e79ecf90d4c9fa9ae908e09660c19746108153181c55",
+      "bytes": 372,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-policy-directory-observation.js",
+      "sha256": "9b678f233ce0c60ade62cf2e1bdbe8c71a285e612877c164ac57e236beea06aa",
+      "bytes": 2897,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/safe-path-segment.d.ts",
+      "sha256": "6353b978a3dbd4d5a71edb1feef5230eafb598bd8a1a8c9884115b35ef6e58db",
+      "bytes": 708,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/create.js",
+      "sha256": "6d6c81811b5b44c72e30c082222ffe8b59bed54f216849d71fda6ea764336db9",
+      "bytes": 19067,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/symlink-parents.js",
+      "sha256": "e8f8329241a9286f0ee73ea677498677f55940b801cebd2ab390075691a32a79",
+      "bytes": 4936,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-registration.d.ts",
+      "sha256": "89345942c67acca2bbdf0e07a0f804ea482a6fc23b2139a98ed4b9cc7c2dc909",
+      "bytes": 448,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-alias.js",
+      "sha256": "5b286c83bd71ac3da43e29df70c388ac3ae4ae62d2b7e7d4678815f5cfeec7f6",
+      "bytes": 8431,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/move-path-cleanup.js",
+      "sha256": "d832b5c1b4802aefa8ad2cd18ff5956323359940932755d5b97ffdf4620f7007",
+      "bytes": 7959,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-scan.js",
+      "sha256": "221b18a4ec0c50b640a2ac1358c1159a9cab5b34c163133fcd95ae959d7bbbec",
+      "bytes": 15839,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock.js",
+      "sha256": "d4d328a40c277d26a64167b16ed1ece89309b24a2acefa997ce3cc32564f7361",
+      "bytes": 11680,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/permissions-public.js",
+      "sha256": "0c52d2364c02f2bcc6ec1570cec20c291d837a84a1f35a83e390ad5b720caaf0",
+      "bytes": 396,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-acquire.d.ts",
+      "sha256": "75deaf1dd5515bd5255bcd21f1a34829e1a1cba8109a5e7772674059af9ef77b",
+      "bytes": 338,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secure-file.js",
+      "sha256": "cefe0ec3008c15a0738b825354183f70bc96f1728f6b90a4a9227239a9664164",
+      "bytes": 13705,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-prefix.js",
+      "sha256": "e6e1d4fd341694910861cde089f6673245cb721a931f443c26072594821bc6a2",
+      "bytes": 5075,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-mutation.d.ts",
+      "sha256": "2a82f96c8d6e4059c30d4b7b46b157e13b1a158c1ab52d98deab23e8c81e32ea",
+      "bytes": 1418,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-owner.d.ts",
+      "sha256": "ffbf72bd7256c2507a3b846676808be4d4e0b57bbb43dae453601f11ba14868e",
+      "bytes": 703,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-create-input.js",
+      "sha256": "0d09dc20c35a34e0fcbe6131113ac0777b7fcf8d9a6afacef090df9717692220",
+      "bytes": 3689,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-durability.d.ts",
+      "sha256": "b86a75aeb8a675326eea75055ab10e06eb2608af3101306d03689a848a2d50a7",
+      "bytes": 879,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-complete-parent.d.ts",
+      "sha256": "b53976fa4143adc8a8b295f00da4bc899063a72604401ab9c98dee50e8a3c875",
+      "bytes": 1674,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secure-file-windows.d.ts",
+      "sha256": "47ea0aec31d7c47231d2444347095d92c95e212f54114564d60511141e53356e",
+      "bytes": 412,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-rescan.d.ts",
+      "sha256": "a3c35f63046f8fde0c837486a7ab5d0b2433a4b2255f6af78d076db0fab531d9",
+      "bytes": 654,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/config.js",
+      "sha256": "334a33df3b4a59e422284bdc20a614f66b4520ce2546579784f1245f02bbc9d0",
+      "bytes": 186,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path-observation.d.ts",
+      "sha256": "e576ba0940b15ea8a32117ad974a8e2a0558a5457e2d5c3a0630f627aaa7b5ac",
+      "bytes": 3063,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/permission-exec.d.ts",
+      "sha256": "76288d81d8881d8b019873208a646aa6ceed8d7f088cc4803f2e95da5130af0e",
+      "bytes": 1400,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/overwrite-file-handle.js",
+      "sha256": "9abe3f883870520d2d510c17335ff34796dd6c9ef1a7cdb677e7b7766fee9841",
+      "bytes": 2313,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-operations.d.ts",
+      "sha256": "fa4616f8fc18e51df1e56238d220be573fa8baa4a7da71e4f9816f433ad1ff5c",
+      "bytes": 648,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guest-dispatch-python.js",
+      "sha256": "6db281b4e5ef1047b7cc08eba877c465ec2605fa8679daceef294ec651003479",
+      "bytes": 3407,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-tar-wasm.d.ts",
+      "sha256": "12dbfd07587703cb4bbe9428a725b825e81fdc1a4584b99c34029abb04d7ea09",
+      "bytes": 1396,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-merge.d.ts",
+      "sha256": "efe5c1f71cdd5ef82361ba31c516c75a2fefd65a607afb94adb54985f662f8a1",
+      "bytes": 861,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/write-queue.d.ts",
+      "sha256": "071b9bdb8b986d3c56180752a4967a3e2deb291d40618fd0fc091c239e512e13",
+      "bytes": 95,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/write-queue.js",
+      "sha256": "87b49d5950578f7e38f6a4cec7bdbb376d0d1914399927dccff3a7b893f23c0c",
+      "bytes": 444,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-config.js",
+      "sha256": "11d99d1bf8a5061c3acadfa190b91f0ac38040641c692e3d84a4eea2b8480565",
+      "bytes": 3189,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/absolute-path.js",
+      "sha256": "ab7790076a3475e9343253d5bc33bedfb761481fb885f9c07721b9fa86ea085e",
+      "bytes": 11597,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native.d.ts",
+      "sha256": "4d24c562339407c4e18c81fc6f25707ca738b85a82545a64838ada551198fc69",
+      "bytes": 762,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-admission.js",
+      "sha256": "a9fbcb7854350340df5868eddc57565565cddb8659066db40f52af4f041d090d",
+      "bytes": 17312,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory-entry.js",
+      "sha256": "e12b99e4099e8136bc48994a7e6f0f0427eb8eed263c441314dfd67c99e9b62b",
+      "bytes": 1424,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/permissions-public.d.ts",
+      "sha256": "4232105b1205764cc663caf4635be249e3fb42af9551dd350c742284cfe66455",
+      "bytes": 653,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-remove-receipt.d.ts",
+      "sha256": "4a6adce16946ab50c11f981f2e3ad5d92d87988112bedec7e5e9887bb817ec05",
+      "bytes": 562,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-entry.js",
+      "sha256": "dfb00ae40d5dc2b379bba0b37978cf274ea7b8fdf8bd06c89b752948f9cd70a6",
+      "bytes": 728,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guarded-mkdir.d.ts",
+      "sha256": "98cbec551c44a6a77f7c93b37f62891ff28bb4b089acaee3891dbe7803de7dda",
+      "bytes": 1640,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-paths.d.ts",
+      "sha256": "2bf7e25572e114baa9bf80ed845119c1e7055d53bb4446699fa0363bec1c95f9",
+      "bytes": 2104,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-symlink-policy.d.ts",
+      "sha256": "0e1979901f7dee53491f334ad8d536084955ef826073bb2b4ba8233819b2f743",
+      "bytes": 706,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/error-detail.d.ts",
+      "sha256": "0d43ae0e37ae2fa371b48e6b1774049cb298c44d4f779ab6963b17da279838bb",
+      "bytes": 124,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-policy-parent-windows.d.ts",
+      "sha256": "db0264525ad9515617df20940d778c5f49f0841e0fec999c8f5594e4b469fb53",
+      "bytes": 1104,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/private-directory.d.ts",
+      "sha256": "a49ce128a26c1150b2b37699c17bbccd692de61a408cfcbc0bc82f8daba7e1e9",
+      "bytes": 205,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store-sync-write.js",
+      "sha256": "e45c7e02cd36f97fcac9771b4ea813be6e03ce918f62e28b48eb7773f1de764f",
+      "bytes": 5379,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/stat-observation.js",
+      "sha256": "57939a92b2d5f8807db05fb5ad2e940316f1cd814a08e30e21857c23e86a0078",
+      "bytes": 2974,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-durable-queue-ownership.d.ts",
+      "sha256": "98b25cdb2dd81d9a9cca014acfad540eea0ca508452dd4043b5d20c3cdca5c5e",
+      "bytes": 1195,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/permissions-windows.d.ts",
+      "sha256": "da2737734665ed86088927aec8331bfd9dbbbbecb27968bf8ed4344e7597bd20",
+      "bytes": 2165,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-parser.wasm",
+      "sha256": "182fc2e1ac12dfa06c4fc20d8e097b46b8481be1b5860a18aad16586d114dc94",
+      "bytes": 461974,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-hints.js",
+      "sha256": "e82144cf935cd2d65012560d8df2df320f27ef621936eca1e7cfae5af6c08149",
+      "bytes": 4797,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secure-file-windows.js",
+      "sha256": "c0101742824889b6b3315702ec23d8503b5aaf035093b21a4efd6e2b1842e5e0",
+      "bytes": 3427,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/opened-realpath.js",
+      "sha256": "3ce8eb41f05a80e0d0427a1507b679bf5f0b6f77c59c508a929f79f47e0fcff4",
+      "bytes": 3974,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-boundary.d.ts",
+      "sha256": "1bb3def4226ab59be8d5950bb5f8eaed5a48f3cbb18a995687e823332830d84b",
+      "bytes": 1066,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-store.js",
+      "sha256": "6096b13e091dcdf2ac2ad5b3da47e3f979b02689d9af48bd104e28d109ae2cc8",
+      "bytes": 619,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/private-producer-handoff-sync.d.ts",
+      "sha256": "d690c6f31159be01f7a1558cbb2ebde335056d7e8fc0d8b98e3422d69e87d480",
+      "bytes": 280,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/publish-file-failure.d.ts",
+      "sha256": "75008a5b366743ca514e25e82f2d6da2ce5d6452802c2354e5f6ea5d35ba2448",
+      "bytes": 1484,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-copy-fallback.js",
+      "sha256": "6fe1a287bba49031c85920f2566b7192de812157e2d39a161385f5424b6ae598",
+      "bytes": 16114,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-security-command.js",
+      "sha256": "2841c2c6eb9ee0b20fef684fb71537a11febcc964ad66a60b5d02c8577caef76",
+      "bytes": 18937,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-walk.d.ts",
+      "sha256": "ab752c03446f583ec43ac06a264db2ba0f36b243e328dcb77e72dcc673babe64",
+      "bytes": 2859,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-scope-lexical.js",
+      "sha256": "c84cf6d62adf02420dab5eda1b03db08dd685739d11a096c7d0a27014edd98a3",
+      "bytes": 1886,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-parser-errors.js",
+      "sha256": "847de35a126535fa2e05d47984372c78f48f3d1110e8c6d1fff080c39e761428",
+      "bytes": 544,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-binding.d.ts",
+      "sha256": "3b192d92f0d8f9e5f47edfd5bc80e2aca47a6d4acaf65d202c95545f08224e3d",
+      "bytes": 11036,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy-policy.js",
+      "sha256": "17315691632a07b537cc1c7d4c1b90913805e666e63eb3c544f78594c9ea712f",
+      "bytes": 361,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-handle-transfer.d.ts",
+      "sha256": "d46fccdaf4389ff8368ba3f989fbc922fa4cba9fd04fdc08bb4b8d40eb7ceb01",
+      "bytes": 848,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-acquire.js",
+      "sha256": "3c6fce729d5b6031059690999cb6d15f151218209ecf789cd313dfef49e629a0",
+      "bytes": 15114,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-copy-source.js",
+      "sha256": "e7b265ed09109f813d38529bf5991f0fe1e0f4c357970d2d4c724ba0e0a7162d",
+      "bytes": 4066,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-mutation.d.ts",
+      "sha256": "2fe3d3c72a3069e070d86607ed83b2215c93726f5ab247398a467fba0a620116",
+      "bytes": 925,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/install-path.d.ts",
+      "sha256": "6b759633c5d5c8055652106ac018663f3ce81d09aab26db51ebc3040aa9dbff9",
+      "bytes": 863,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-destination.d.ts",
+      "sha256": "7a867476f85085ccb70193cf098150e60e7e1bdc08a051576ab97a74329a5a87",
+      "bytes": 1040,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sibling-staged-file.js",
+      "sha256": "494aa245c6c14e7bf32af768060621ffff5176d40fbc1207ac9b78c3999bc898",
+      "bytes": 12496,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-loader.js",
+      "sha256": "a435ca767429f8bf03494c74b23e8e0085d5875d36239ec9162c583588785c87",
+      "bytes": 7424,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/write-file-handle.js",
+      "sha256": "fc39fb43c9a41658c24ac21d80fb3147375f6d82964542b2a6622c485b1af09b",
+      "bytes": 2399,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/private-producer-handoff.js",
+      "sha256": "a06245ee659b78dadfb8dab1e48e8e6d82df692d9b4786c61ee8cf59bbe9dead",
+      "bytes": 14339,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-admission.js",
+      "sha256": "8e0a4a2aebee8e0cb4352d15ac79fdd21b234a2c775d9a40a67174ad2ca093ba",
+      "bytes": 13175,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy-file-input.d.ts",
+      "sha256": "f979408572402d67358272951e8cb297452226b8f27442dc3788bbfe20f05317",
+      "bytes": 1150,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-remove.d.ts",
+      "sha256": "996fa66ee6ee642379c8af1cf42db8e0c67a5919c53d0f4daeb4e4e07cf2fd31",
+      "bytes": 1036,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-publication.d.ts",
+      "sha256": "9bdef6385e6511ba4845a9d348a95ec32f7260762328b85f887545ea744d5d5f",
+      "bytes": 778,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-buffer.d.ts",
+      "sha256": "2f1a93f6195e86ce322a352e211afefc863e3fbc8f4a72dcdcf5a3cb43b2041f",
+      "bytes": 474,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/owner-dacl-batch.d.ts",
+      "sha256": "d568b2ccd118a0df58359b0053a91936537f7ca4a81e0a78bc7d31e23b1671f1",
+      "bytes": 298,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-document-store.d.ts",
+      "sha256": "061a053b0366c05acc6be3eee184017a3f982006505020e3f9e26a7b3b9f01a7",
+      "bytes": 1247,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-admission.d.ts",
+      "sha256": "cb4586798841b1e3653ad78b5123c4f726051c82e29cdf8f6d1d46235c8b9f46",
+      "bytes": 931,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-owner.js",
+      "sha256": "592d8cccc06f591f071c3d6f717970a29d5ce73c1e26bbbe643be115ba55772d",
+      "bytes": 5762,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/atomic.js",
+      "sha256": "e2f2c978674bd3b21579cc3a9f351dd19b2a3a2411346ca1a7d8429714bc97e9",
+      "bytes": 256,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-entry.d.ts",
+      "sha256": "707ffe889a80533abadae205cd026a36a6a9124ec91d21b38b985e8d9292ccb6",
+      "bytes": 851,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/realpath.js",
+      "sha256": "6daa9478b8165bfdacd7215475367f7fe8f6519663be9087bd8b85b1aba80bc0",
+      "bytes": 2255,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-policy.d.ts",
+      "sha256": "acf2a695beecbd91995fc75864a52021e5269b039f9a04eb105a358552dc4ccf",
+      "bytes": 788,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-policy-directory-observation.d.ts",
+      "sha256": "a8e9e10c1ee818a95f985062a5197210eaff26dd6e9f35c67d1db7e88e60f96e",
+      "bytes": 634,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/regular-file.d.ts",
+      "sha256": "86f8fd1c202b7c913a236efd4f0e1943eb4709925b0c13f28507344f9d044268",
+      "bytes": 1331,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-scope-lexical.d.ts",
+      "sha256": "146529ccbb36f06b700d30a52abc849fd31bdaac322860b4aa1ff1b9a26ae1d3",
+      "bytes": 334,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/staged-file-settlement.d.ts",
+      "sha256": "53af11d0e487e600602d0b22e66191ab199f926903f20b649ac0b9be2d505ed3",
+      "bytes": 1054,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync.d.ts",
+      "sha256": "1f42b650ebbaf0232598e8fda3acf9ce28c15f1f2127ab2f9558a42b2704b6bb",
+      "bytes": 1076,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-pinned-write-windows.d.ts",
+      "sha256": "841ee7e8890ce6d92b149f39a23db7c226700514824a5b6bc207cb13c594e293",
+      "bytes": 494,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory.js",
+      "sha256": "8d40175d4c897ac89516006564d5dfa016e01947a5661cd49c97b8470451f1e8",
+      "bytes": 6399,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secure-temp-repair.js",
+      "sha256": "097934801db8ef99bb3062d55f5639953b347ee55b2db146751141dfffeedbac",
+      "bytes": 5052,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/absolute-path.d.ts",
+      "sha256": "176bdbee783d253916a9ae67ab1822ef4aec96c8660257574fee64d061e86468",
+      "bytes": 1309,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-parser-errors.d.ts",
+      "sha256": "b2d4769cbeff75f0086c3ef69b8db45f67a5521de52c139ae8233f35a162796c",
+      "bytes": 112,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-hash.js",
+      "sha256": "6e39223baa26202bd46c8c265b204bcae3107c5634cd87e93919c60799d8f4f0",
+      "bytes": 12272,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-buffer.js",
+      "sha256": "4186b16e64dd05de00122fcf73724a1ac14a406104e9b6c69bb5f56ee398ebca",
+      "bytes": 1305,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-identity.js",
+      "sha256": "7a402c9423810d389dd0c7f9574d076bc9319c60b14fb06247b5ffbef4034973",
+      "bytes": 2552,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-child-admission.js",
+      "sha256": "bb2d3418d95c2b0b61708a1b6a7f3e2f119e59fc9f88303a6997656fde87555c",
+      "bytes": 7651,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path-observation.js",
+      "sha256": "70c1381ef4861a9f91c422defd66279054029fd83ec5e7524fc866ad63fc0a1f",
+      "bytes": 7934,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write-staged.d.ts",
+      "sha256": "0a1e98da1327401f982d04cdab50f6fb9deb0f5ec385f8267ecfcaed5b2a5d1f",
+      "bytes": 402,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/realpath.d.ts",
+      "sha256": "3e7c4b541d8e3b2308ea8608641f633de0a62539123b1ec55a81c09187e1befd",
+      "bytes": 109,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root.js",
+      "sha256": "c13b886e66b7684d1025acb4993da8a11f07a82dd811241f14a47f84c2ed72dd",
+      "bytes": 142,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy-file-input.js",
+      "sha256": "999f6181a5d54b654f37e64ba0e10207736c75006db5afef85ece39ec81bfd2a",
+      "bytes": 3533,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-fallback-warning.d.ts",
+      "sha256": "7a1666a215ee1b219a3ad9a4cc387072007552157c6b4c66f4d68832bf4197da",
+      "bytes": 243,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-operation.d.ts",
+      "sha256": "087db1854246670c4ba672676edb44125d0cfd29794366902d061247e914d5ad",
+      "bytes": 81,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp.d.ts",
+      "sha256": "b9cbe52c1a007a0e6e7532d7be65532096220edc334a81d12c11f49a2a76b8fb",
+      "bytes": 462,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root.js",
+      "sha256": "146a37250fbea24b045cf7d24b74172ddf30217e9df0b4d5a7ffd216028a8a08",
+      "bytes": 13561,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-limits.js",
+      "sha256": "1a2923bd45b4285ac70cb1d9aa6f13a27e0b91df9355c31e0b9df0048e6ea2b1",
+      "bytes": 6284,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-rename-outcome.d.ts",
+      "sha256": "935e1480cecf662d589669c94de6752d89d4019baebc53068c60419af1351c2d",
+      "bytes": 285,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch.js",
+      "sha256": "643579d87b4e7288e6850830ffd4ce44146cf8de598335ba9b94bf5341652f42",
+      "bytes": 25443,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/test-hooks.d.ts",
+      "sha256": "65560f052fc9afc7392f2d3e86d282f56a93db84208d375bf5ffc72cc6874aa6",
+      "bytes": 2897,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/create.d.ts",
+      "sha256": "9aa1aa34a05e6e8e1554a2d84d19d49b8df6d3bd626be64df3f3bb1764196daa",
+      "bytes": 1249,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/bounded-read-stream.d.ts",
+      "sha256": "47c28f6601fe51ee159cf0b4b10fe31df6d7faf073126e57bd817b8388e8dfa7",
+      "bytes": 161,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-remove-identity.d.ts",
+      "sha256": "217a03e97071ead25bc45da8184eb365511578dd5c2d33aca9e719973fddc0c2",
+      "bytes": 609,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secret-read-policy.js",
+      "sha256": "94e9dda54bb6189f82c4ce9df9ac590b198e062df5fcabdbb7d106c389082ebc",
+      "bytes": 3459,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-admission.d.ts",
+      "sha256": "bda9fe206e617b16647ec0fcb92c858d7df182e204aba1ddf0a4c1f54fa0b6f3",
+      "bytes": 1113,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/errors.js",
+      "sha256": "3fd6400f3981c280d1f61f67555132ca0af47ed26ce50f85f13b2fcaca8d5b28",
+      "bytes": 725,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-sync.d.ts",
+      "sha256": "39914056046855456497fc463a4e857821d21170094872917bea194a6df2b37b",
+      "bytes": 278,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store-sync-write.d.ts",
+      "sha256": "6305e34aee48b251d9e58ebe6c677f352998f35883816850ac59736428f31008",
+      "bytes": 230,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/write-open-flags.js",
+      "sha256": "2be64d559cbf76c267393bef9fedfe95c77a4ae53be10dca83e684bfdff6eb1c",
+      "bytes": 1106,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/home-dir.js",
+      "sha256": "529f2c66f42fcc907f9f220dfa7c09494990fccb96505575a17d7a236b866939",
+      "bytes": 6197,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-remove.js",
+      "sha256": "5b351ac09ff56ffc53887eeb4c193b418644ad288c9727799bfff14b75dd84df",
+      "bytes": 21256,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-arbitration.d.ts",
+      "sha256": "1f501a0e73880c643ab51ebcd9c91e353cb3864007a5b4cbb42ae5d6b587581a",
+      "bytes": 1007,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory-creation.js",
+      "sha256": "bb0b6eb020da6354d6cb874a91ef4584c5ac55a3fe144338d5eaf9431b7f2611",
+      "bytes": 9945,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-mode.js",
+      "sha256": "33cfe17392a7275c5d8b545d91fc16b0d89e60e0991495f708b33a2024d27e14",
+      "bytes": 3324,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-options.d.ts",
+      "sha256": "cb79f4fd7f0117abdc944489e8379b188d1eb54c713c1614a3bd232e61da7910",
+      "bytes": 912,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-mutation.js",
+      "sha256": "1666361c7f42382aed355fa73b9b0bb4b7115d71bdb71e9874d9a783c9e4e295",
+      "bytes": 1439,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-operations.js",
+      "sha256": "08afa1da7a07bc040066edb14dc72a9135df380f945f1e6831ba5e6dd3455414",
+      "bytes": 4013,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write-mode.js",
+      "sha256": "ef2371a16b1d6ff4e98887c6099a86bad5737c02f0e0b6be7b993502dd0e56e6",
+      "bytes": 1473,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-operation.js",
+      "sha256": "e5cb1d79cecdc9efeaae188a93cc48c84d063259b173a91b6e234132575df0f3",
+      "bytes": 855,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-observed-path.js",
+      "sha256": "a87b807c36da355a0182b480600ebadbe3f311ca3256e0b9fb5f1a13b9b97f64",
+      "bytes": 4241,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-read.js",
+      "sha256": "626cf9e62e96b122ab7da04a22fb3f94ed5879ed92bde347359d72c09763ea8d",
+      "bytes": 11136,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/byte-view.js",
+      "sha256": "39a14ac4b82614f8a6cc158a86ca6719cd9437399b578e4aafaf79dcaf4ab06d",
+      "bytes": 751,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-options.js",
+      "sha256": "3b929da3867d7833a64092f1cb34bb169127d1d75640f2860ac67a1bbfcba094",
+      "bytes": 730,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-rename-policy.js",
+      "sha256": "eb5b2e4c6f2de549f5426d0953105110119493e1739af6920d88a4df7d698940",
+      "bytes": 1340,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/strict-file-identity.d.ts",
+      "sha256": "9069af47ad45f7ec74081dfcd89f8354a6c84c85a06659020b28b7b03e2c45b1",
+      "bytes": 579,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-guard.js",
+      "sha256": "d7dbd3eb66b6c3d5677f707f39f27e52c55525a2e91f4931efb945140b400c92",
+      "bytes": 8437,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-public-types.d.ts",
+      "sha256": "10dc1e6b9605d5cf906399ea505e05a17e8b2274822750a777df35db1d71951c",
+      "bytes": 1231,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-entry.d.ts",
+      "sha256": "90a5af95f7d68c6198a47d4325e4d1624160bb04f47713ce569726cf97f23154",
+      "bytes": 630,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-admission-parser.d.ts",
+      "sha256": "a63bf6083492751bf95a60f0633cd0a7a9327aa79c7f3f4b08a64bb170f9b7bc",
+      "bytes": 2378,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/creation-boundary.js",
+      "sha256": "0c0add7482121e7b57f553194f8b07f861e23756393e3b9edda9ea7cce245c79",
+      "bytes": 17253,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-durability.js",
+      "sha256": "c9ec75705ed0d2147cb354e34a1be1e0e7df9d5dafc707169549234c39f66fa7",
+      "bytes": 9004,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-durability.d.ts",
+      "sha256": "6c1e80b19b846f64127756ffafe9b0c76fd7a6f11033ad28766d9e53055e626d",
+      "bytes": 1675,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-alias.d.ts",
+      "sha256": "7ddca91979e78066bc300db78d68b551708bf38764d9ef0492fe3c23bd2e5610",
+      "bytes": 587,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path.d.ts",
+      "sha256": "9df4e8ca251511c67064b51a61c06fe371921c61a42d48db816876092c7214e6",
+      "bytes": 2739,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/fs.d.ts",
+      "sha256": "71112935965602c77ea48f57887074b135c850b29819fb923c74402f9ac93ab5",
+      "bytes": 413,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/deny-mutations.d.ts",
+      "sha256": "a8328f5f0d2ba6c20683e3041ccdd207e55e2d0493ae0697e754028715117743",
+      "bytes": 626,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/creation-boundary.d.ts",
+      "sha256": "76d211e22637d3b6977ce1c577738f4b25acfff46f812d29074063d58d7b2a33",
+      "bytes": 4084,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-durability.js",
+      "sha256": "1344b73f9e2fb9fe042b7f78420b41a5c3bc5691acd6ad312a8cf57dc7e9cb5f",
+      "bytes": 11141,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-context.d.ts",
+      "sha256": "8b42fd9695cf1c38d1d422b5cd56cad3ca629dd689a1a92d51f17200b3dea46c",
+      "bytes": 1899,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/move-path-stage.d.ts",
+      "sha256": "97c2f653715662b892b81cb2d92070103edae01c6dc5ce3526f0aa82ae843904",
+      "bytes": 244,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/output.js",
+      "sha256": "8e10202aebff9d5653643ea7d96066c888cfa94389be3baffe2090775c11a5cd",
+      "bytes": 5921,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/strict-file-identity.js",
+      "sha256": "6c6a03ceb1f4045b598a7f8f327a4c1c7049891b252f88bfe03d759b7abc1860",
+      "bytes": 3272,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write.js",
+      "sha256": "c7820a0425eaaa3d3345afa1a84a012f5ef443acf289140fe432453e4ab29a1c",
+      "bytes": 14718,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/bounded-read.d.ts",
+      "sha256": "7fd957217d27f25c0e81a38571e9b0369f5dbf619fa7833509c0b287c32429e3",
+      "bytes": 1414,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guest-native-python.d.ts",
+      "sha256": "1cfb1a98a1507f18d0ab778246b2902425d868d399a5b7446132613a0682a770",
+      "bytes": 212,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/filename.js",
+      "sha256": "b123cd79e49a5fa47656b3814a77880d17d7c339abe5be15a275378cc767b520",
+      "bytes": 5947,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-move-noreplace.js",
+      "sha256": "37f72a795448b8229d8df14710ee25dbdf32b2bd9171950445ce6ae7fd293cbf",
+      "bytes": 11612,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-staged-file.d.ts",
+      "sha256": "fdf7339d74ed9ec2bb226191f817a5444d12f883aa4392dd050d307b022b53a7",
+      "bytes": 2491,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-errors.d.ts",
+      "sha256": "137a688be44bb4e536d162326b8fc7f09274a439ad3a229890bab3e3f502f2e6",
+      "bytes": 751,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-move-preflight.d.ts",
+      "sha256": "882af33936bb05da43d06f6162aaf926201a1a09a63b183706fb443681686aa1",
+      "bytes": 305,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/byte-budget.js",
+      "sha256": "ce3affd8e4bd59fb130abcb297a8033de8c391726eb239785d2ff4e80e505a99",
+      "bytes": 406,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-staged-file.js",
+      "sha256": "dde7182e2831cb7887a92b7dca1d00a62bf05c2440620782058c8213676c8c5c",
+      "bytes": 21149,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-entry-path.js",
+      "sha256": "306c01781f932f9ada9316dd22bf4753ef4b9e4a7992997996bf206af6486a99",
+      "bytes": 1021,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/lock-config.d.ts",
+      "sha256": "2b54a9c600e05650ce28bcb83b28a0e6e649155cfe2a0ca70a024db445e14cf3",
+      "bytes": 408,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory-list-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-descriptor.js",
+      "sha256": "721d8d678fa86295e85e485a06ffa3c3da670b8a1c4eef74ef442c728626a969",
+      "bytes": 14806,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-temp-owner.js",
+      "sha256": "2c5c28174e0d29ece2ef574c99aa784f6cf1c4b79928cc5a79e2fbc5977322bc",
+      "bytes": 13392,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guarded-mutation.js",
+      "sha256": "4e9fa4b369696bfe534cbe1c03058872c5ccbcee68462796afe5fd1f1fd04f77",
+      "bytes": 3388,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-stale-admission.js",
+      "sha256": "650c91179e8216a81ad8361f38e0f1a53794b1cf94bbc991800cfa8128beda36",
+      "bytes": 6179,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guest.d.ts",
+      "sha256": "5094bfb9deb05984fdc67149ed828cd491b92cd01aef7d77e036184ded9f77d3",
+      "bytes": 596,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/trash.d.ts",
+      "sha256": "b3be932a480322989c017050f8d851baf2cc6fbeb8e5da1e4b4a4ff9fe3ac190",
+      "bytes": 191,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/private-directory.js",
+      "sha256": "79927b265af3cc8bd02e74ae77a838e0fd605385eb614e031d4c0b3ed1faf11c",
+      "bytes": 1824,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store-prune.d.ts",
+      "sha256": "5e5b048ce3260b81c8a351a26fd065fc877f2e53fba311771ccd2108c588f952",
+      "bytes": 294,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-suffix-aliases.js",
+      "sha256": "ca5386ccf1867ef8a84f0383e745c4cbd7f8570599b63c75cd2ecf85c38f85cd",
+      "bytes": 16673,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-policy-parent-windows.js",
+      "sha256": "90e9d799153bae968361bb8c1284827c6b5b935bf1f0d14200c6bcf08a508453",
+      "bytes": 3001,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-path-syntax.d.ts",
+      "sha256": "66ea6ec556ac519d94e7ec328dd03540e5fdf45ad38aa30de9f6c6dc7ccb6f3d",
+      "bytes": 405,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/text-atomic.d.ts",
+      "sha256": "6fe4acbfbb01fa249045d1b7060bf0dc17e81903478c01c75cae4ff225d80a71",
+      "bytes": 575,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-ownership.js",
+      "sha256": "dc3f7d3be66ae6102ab1802445b2038995eb20f04fc1320aa6876fc15b8f863f",
+      "bytes": 2268,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-segment-route.d.ts",
+      "sha256": "de9d843eed9a07c31bd55ec8f59d73f1990b926d227cdb9fb1aae9542ff639b1",
+      "bytes": 317,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-crc32.d.ts",
+      "sha256": "850497bbd94bc33ff05fdef4f9e0f0a8784a26d265c3f65bbdcc701f276c799b",
+      "bytes": 79,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-cleanup.d.ts",
+      "sha256": "f01137ddae030d855673f369169dd795c5821d42bbc354267e3e4a18dc1c6e06",
+      "bytes": 600,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/containment.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-mutation-observation.js",
+      "sha256": "225cb9e991008fe394283c20d88ac788e53e1486c090f52f70719f61d9473479",
+      "bytes": 9611,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/unicode-path.d.ts",
+      "sha256": "d94fc2384d569867aa2db4ededc0e6e4b999e3f9bd3d77c8cb9ee5837cee37f9",
+      "bytes": 154,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-walk.js",
+      "sha256": "830c6b9897b7fd56fc4dcb02d948c5c9b6bece9f5232c29a6fd973367f3deec4",
+      "bytes": 10348,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch.d.ts",
+      "sha256": "f2420559eb333b7b4fd01107130ff05cea225d595a01aca9526072f2d83f1468",
+      "bytes": 308,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/opened-file-failure.js",
+      "sha256": "6416a0f25bcecda5ba6b19b1061023a71ac6b3cd1d74eb7a9c30ac3aa78dd86e",
+      "bytes": 2225,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-stale-admission.js",
+      "sha256": "0acaa9a4ebb30b6503683e1b74de7ab6328437cf0b2622dc499f5a7502c32625",
+      "bytes": 8015,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-file.js",
+      "sha256": "f55f16460d63ba186053914c5b02d7707277836d276d9b23ed4a8606b1df2d87",
+      "bytes": 8071,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock.js",
+      "sha256": "1d5d0ddd401675289e5ec54dd5b128bbcb3997c87a6d497c0fffaf1a6b185be9",
+      "bytes": 2734,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path.js",
+      "sha256": "cf3c61a8a4b1f54903bd04c6342500c2667678f36b4e11b1dec77d558de37b73",
+      "bytes": 8109,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-mode-node.js",
+      "sha256": "616ec177233e5dd7e2c3b958bae4f361e199a8d1ef3496dc362b91c790f5cccb",
+      "bytes": 11996,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-options.js",
+      "sha256": "a82983d5ebf93700f2b335bde99fece2d59124c940eb0fe2372bfa904a4d4ec1",
+      "bytes": 2565,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write-mode.d.ts",
+      "sha256": "ef34551bf0865286254cfea1a1e75d387e7019e6c0e7251c763c1a52d11c414a",
+      "bytes": 494,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-create-input.d.ts",
+      "sha256": "ca2697dcab3d67f972b6797f15c482461c7acfdf9e09d9aca92b2737c8c10b61",
+      "bytes": 931,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write-staged.js",
+      "sha256": "74fb4f1b32072ce530a1b7ab12f7d9e3b6c8c245fde0ec34f2744d2783059c45",
+      "bytes": 9850,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/move-path-stage.js",
+      "sha256": "189a1a4b912aa3f66fc1501a8dcc603b87c66ae774aa1932816f4b3d4c7521f3",
+      "bytes": 2328,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json.d.ts",
+      "sha256": "a51c5b63ef6cbc6ea7be6d9312ac8f6683575643a46ce3707cb7f05849637a4e",
+      "bytes": 2412,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-move-preflight.js",
+      "sha256": "9fc068993085c4af7003b6a301a10c0c2cc0a099df5cb7f4e8aef13d8868aa29",
+      "bytes": 859,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json.js",
+      "sha256": "32b3ac732dc81de52af0c76a634a96636debe6c0309b13a50d961c8402d6d6ae",
+      "bytes": 10439,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secure-temp-repair.d.ts",
+      "sha256": "f0288c31acf9580bbd21a6649629a7aa24d8d0bf26deba157eb3041804571e30",
+      "bytes": 1588,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/owner-dacl-batch.js",
+      "sha256": "24a72c5f26bc3dc8e82d2f452ce9cecefcd72aba51d4d99c1a58048b6a020605",
+      "bytes": 3497,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secret.d.ts",
+      "sha256": "82a6c0d3164033f5a92d7edeb32bcc19a5db4150c6b2dc276d8e5889343c62ec",
+      "bytes": 354,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/symlink-parents.d.ts",
+      "sha256": "9474d8a2b48059a5b7d7538086dea1f1eb0911ba388381ff8faa11bb4b762907",
+      "bytes": 452,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock.d.ts",
+      "sha256": "4639393ba001b9fe433c3767fca7f3abb3c049e1b56d3675b01c8777f7965942",
+      "bytes": 1868,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/mutation-authority.d.ts",
+      "sha256": "b38dcc243e0e02042afab0551c7cdec2f478603e8d70a14065b30ab618cf4eb4",
+      "bytes": 590,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-pinned-write-windows.js",
+      "sha256": "dfd9e72bdbb0ae9f97a0ba4ad160a3c181d60a9eaee49a5af9d3d16017806c70",
+      "bytes": 11670,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-config.d.ts",
+      "sha256": "8cbbbc77b11334bc1892da667b8145563ac9eef18f1998d57240baeaf5788848",
+      "bytes": 769,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-stringify.js",
+      "sha256": "5f7a2769a58f3ddf602658f53d23f61aa9c28a2ed3ea35c45f2ae7210d0690ec",
+      "bytes": 260,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secret.js",
+      "sha256": "355ab48886b715804dc2a667b4ab8da68ce5b50568fba1839b3e349daf07cbe5",
+      "bytes": 326,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/staged-symlink-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-identity.d.ts",
+      "sha256": "fdf2db4795ee355c45d0cc64ec8be66d9e44949f838a4534453cd2c6c4c6693d",
+      "bytes": 447,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/opened-realpath.d.ts",
+      "sha256": "881f6b65ecf98ad13d02de6dc5534e59c08f6dd95130e3516ac10bfbe9f19e54",
+      "bytes": 651,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy-publication.d.ts",
+      "sha256": "c441822c7e29762f8c5c7a387a78d0d213342d98e6c30b105bf694912b567dbc",
+      "bytes": 820,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-child-admission.d.ts",
+      "sha256": "7e2589c99af76a73e3d55271792a39ac58bddef8898898a5cc90ee826a5431a9",
+      "bytes": 2064,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path.js",
+      "sha256": "6dab77a76f4fa33d3f9b09674addc9ecc3cba15d4cabfb1388f47345baeeab08",
+      "bytes": 20768,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sibling-temp.d.ts",
+      "sha256": "4ed356168cdb7d7126c8ec6154a666afc4875ac8ff7aa778887c5e3c555cefa7",
+      "bytes": 1130,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-durable-queue-directory.js",
+      "sha256": "d715dc69ba3db3265581953cd65f9bbdee63f472224c15642d01e9c69f53118c",
+      "bytes": 5871,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/async-lock.js",
+      "sha256": "5550bfc7729a21b9bccb00eedba9ef6fe735bdba9f84c03ef5e3c1da101e62da",
+      "bytes": 381,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-gzip-tail.d.ts",
+      "sha256": "9f376082f919d9fddbf222fc623d5cd8436fcf0f9f4f709a638ee9b4f640086d",
+      "bytes": 1219,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-zip-manifest.js",
+      "sha256": "08bf3167341678184c5dc22938bd157aaee4d63a0611693f27ae16e37698d8a3",
+      "bytes": 1453,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync.js",
+      "sha256": "43826b0049c0dfa8c4e0515ba52b6b0e7e818275934b88e01675821b0a8bfb49",
+      "bytes": 14694,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-policy-parent.d.ts",
+      "sha256": "509a27c3cdc5190825fc033d0efc7ae41a6befa413a242d0a79a7fdf2f18ee47",
+      "bytes": 977,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/durability.d.ts",
+      "sha256": "5799fa03978c97c2e85d8107d57b05bc7d43046fa62684b94b916c85fcbb8f57",
+      "bytes": 848,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/bounded-read.js",
+      "sha256": "5ea5f560f6104586c7b04e55e53bc367f1a2863b1e1c22ae7bf4b34d74035be6",
+      "bytes": 6592,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guarded-mutation.d.ts",
+      "sha256": "1e3364c8f509164f0832be10aee82a4687337615b8ea6a4c18d572f0dce77daa",
+      "bytes": 1221,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-handle.js",
+      "sha256": "a4812cbaba2e867eab92a965827e0b1b8a662bc3cef7c620fb23980d650ca622",
+      "bytes": 1562,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/walk.js",
+      "sha256": "0eef50403648a4834e898006d045a5dd8a6b0de3addfa0f9fc525d75e3e033e2",
+      "bytes": 9273,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path-existing.d.ts",
+      "sha256": "d1061516ea6316278181e7ae7b76d1b4ea769af9f43770af3b309c6e30fcec5c",
+      "bytes": 862,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/timing.js",
+      "sha256": "6d5fc90b7c5d7cc4fa5cf2d9c7a1c2b55e804649be016466074f532985918101",
+      "bytes": 1997,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-temp-owner.d.ts",
+      "sha256": "d7931f1e32ad575eb3d203377ba8b912015496cc555331b19cf0490efc9f6712",
+      "bytes": 2187,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-limits.d.ts",
+      "sha256": "d2ca806be26674965e64a55d0a2192f89883b632395fc4e2c14e5cfbb4889da4",
+      "bytes": 3100,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/positional-read.js",
+      "sha256": "c8834f261283273ca3fc5fad52a1037b1e8f0a2e7881142d2bdb75b2daebb122",
+      "bytes": 1536,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-path-syntax.js",
+      "sha256": "36d3c0e8a3e0fc41cf0412e3edbf085a2db8feade81c0a062049b79a226121e3",
+      "bytes": 958,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-paths-lexical.d.ts",
+      "sha256": "98354bb7efa1e244c8401bbc15d213d9b7e864718aa6ec855196f2b1be5376a2",
+      "bytes": 237,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/containment.d.ts",
+      "sha256": "8b4d2dade481f26e29946d64170a1d9a1727298d1f0395fa02d630903f632e1f",
+      "bytes": 68,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-segment-route.js",
+      "sha256": "9742aa5b940ae48a4f8f54f8f890d4a231749d6f192844a0201b5502a7f7af5a",
+      "bytes": 1090,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-receipt.js",
+      "sha256": "20c3f4300fe974e98a76727ca6f15c0acdd4c99d64a7016d0f5b5cff28b0a7cf",
+      "bytes": 6296,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-handle-context.js",
+      "sha256": "f3c57f2b0d469ba509d406543271a682ddc9325c1427e4a3326b4dc36c265f13",
+      "bytes": 474,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secret-read-async.js",
+      "sha256": "101c5bc8c6fdb448535789e0444e644f0387894c96079efbd40e234333fdacd1",
+      "bytes": 2718,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write.d.ts",
+      "sha256": "b0bfbf0a90976e3cb90b09d1d8db49d4f79faf8baf2e298d379234247ab9ba2f",
+      "bytes": 619,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-root.js",
+      "sha256": "94c9bc047101a9196379c187b7162886855e1877e083b27e70b4292977054ba3",
+      "bytes": 3494,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-file-final-admission.js",
+      "sha256": "3ebe544714de5a610b8fde4b586dfec09b62d8916425357fbbde19dd4adbb748",
+      "bytes": 3754,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-rename-policy.d.ts",
+      "sha256": "ecce26fc278a0f41fffb9f1ea9b4d7214ce31b555d54b08d3b39a7bd11c038ff",
+      "bytes": 512,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/private-producer-handoff.d.ts",
+      "sha256": "7defd74dacbd48f95f0df793d10d305a448aca85bf31a3bb2c340df113ebf1c1",
+      "bytes": 2125,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-plan.d.ts",
+      "sha256": "1d068b7ccb44fd52ed151b4e4a997f93f6f7ae680dcf440c6397a09c0e814efb",
+      "bytes": 3564,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-open.js",
+      "sha256": "2fda1f1d54df6eb760b3988fb13c59748a37dc9347ddfa73fd9764cfe7199e6a",
+      "bytes": 4264,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/error-detail.js",
+      "sha256": "4cc4daa79ecce9454f464bd1d66c37bd1800950587a80cc65e8f6a050fbff7c2",
+      "bytes": 638,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/staged-directory.js",
+      "sha256": "12ffc1c9a91c5633172ec8de8929cc8e9dd70145eac50f265e4a5036f8dd013e",
+      "bytes": 7106,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/durability.js",
+      "sha256": "2a9c105a960e36d3e4a429020e9bb7f77ffdf72a284e533d4208546e58655583",
+      "bytes": 317,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/string-coerce.d.ts",
+      "sha256": "1c7f96c3e4c8621c4ce8672cb514c92ea3328656d5a80a56b291a1de55bc4c3d",
+      "bytes": 340,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-mode.d.ts",
+      "sha256": "a21ae330f5f31acf1e6bce38c8ed86a8c23bdc99e2885854f87d8c0872beaeb6",
+      "bytes": 109,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-io.js",
+      "sha256": "2c90406de4369b1bea438a29388a3e4b37213f3b555217ffbb3bbb1e86be71e7",
+      "bytes": 8944,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/owner-dacl-batch-worker.js",
+      "sha256": "a767ae4d201611eed68f6d7427f16be34f565e79c1b904c004802a1fc8ed6f72",
+      "bytes": 2593,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-case.d.ts",
+      "sha256": "0dff52b9246d14731ce67cb80fc727279b3ac754ca9f9b7de3b9dce97ca41f9e",
+      "bytes": 417,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/trash.js",
+      "sha256": "034c1e2419abbffbbc179e756346be2823ce0ab4484ce06c547ec33ac118ffaf",
+      "bytes": 10922,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/recursive-mkdir-path.d.ts",
+      "sha256": "55a9da6c39129ffb3ea6a537100e6e5957158170930b180a45be215744dd686e",
+      "bytes": 157,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-parent-admission.js",
+      "sha256": "0032bfcc849fe32dc4fcc6a8302c31fa1ec5caa72fa3f702c1e6640c667d31a8",
+      "bytes": 7522,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/index.d.ts",
+      "sha256": "829cfbbc6dbc6b7002fb7052ffd51a13962459f69b74eaa995e182eb85285836",
+      "bytes": 530,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-fallback-warning.js",
+      "sha256": "fb52b3218178ad75d2f9b1de9dbc1351c337ec9d0be1c243cb1629df381069d4",
+      "bytes": 548,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/overwrite-file-handle.d.ts",
+      "sha256": "19d12cd090219c855d7849f97f09c5b0a9289ae5687f8e16f27d7c6dde9532e4",
+      "bytes": 448,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/suppressed-error.js",
+      "sha256": "12f7a3b6f12b1f735525e638dcf70f17a7eb9704e4a3bc3ef4b105b45da6d224",
+      "bytes": 544,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-hints.d.ts",
+      "sha256": "6c9930aa4f74ccbb5d3476da39635a1383d8d94e6d5ee5c0253e39129ea5e524",
+      "bytes": 1057,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/directory-receipt.d.ts",
+      "sha256": "764cd18c124e4f28a12423d9ea187223a8010b31be70d3762ad5a1f6d4aab9dd",
+      "bytes": 1643,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-security-command.d.ts",
+      "sha256": "3526b74c33d67a720c8fb7f69c2e4b5beeb7f2b7e679554293886332f8e4a2c7",
+      "bytes": 2130,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/clone-metadata.js",
+      "sha256": "dd9c6747432b32cb16be4fdcbe31789956c42a1186a3823b69193dfc34dc568b",
+      "bytes": 1625,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/publish-file-failure.js",
+      "sha256": "bc29fea51f17e9522faf8a09894c8e74efec555c6f93893a12d5181e5e3476c3",
+      "bytes": 1100,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/json-store.d.ts",
+      "sha256": "3de5fa563ac6549feaf09b8b4f8b248837ae1e51d2d575f46c82b36e74f7ff1e",
+      "bytes": 391,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-workspace-ownership.d.ts",
+      "sha256": "f8afeb3d67c6fafda60779b152f7379ebd9c7236b001c1b15e33ba0793c7c741",
+      "bytes": 347,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/home-dir.d.ts",
+      "sha256": "e894838718574484b45239f01bcb0635977745935ad19b50988e8d0e67e84c88",
+      "bytes": 517,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/install-path.js",
+      "sha256": "7ed73baa6846d2ca8a1505af07590a6050a93e5b9ba348e3a6d59482640428a8",
+      "bytes": 5693,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-file-final-admission.d.ts",
+      "sha256": "e4e00aaaaa3590aff97fbb73992b74059bb824d9b758a7ce2f5609807bc9cd19",
+      "bytes": 742,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/staged-file-types.d.ts",
+      "sha256": "550665985557a243e8df5160a8c89a6a760c4f5c99b5beaaf3eb37197afd8232",
+      "bytes": 1637,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/read-opened-file.d.ts",
+      "sha256": "ae2eabe455a56c7493be39fcbaf5ef5fd91254854a575cba58e8e4ff5dee2e67",
+      "bytes": 494,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-input.d.ts",
+      "sha256": "368e9967c93b1120b0685d04dba52300b2e37d8682c5a569e6055215245a4aa8",
+      "bytes": 647,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-store.js",
+      "sha256": "344d15cde5a7ca3354b95e474004f0bc40de04aae9910019c668437a1449e212",
+      "bytes": 16916,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/stat-observation.d.ts",
+      "sha256": "d8296203fe7ff43f0efa0b61cd5979b190fc2767b2d5d235a03cec439af65bad",
+      "bytes": 832,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-acquisition.js",
+      "sha256": "1c68f11fccd2c9742c06f72d2d0957b9f1ec7f1cbca683eeb3c4f0966881696e",
+      "bytes": 3488,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-remove-receipt.js",
+      "sha256": "cdb914530b697bce07c134ca37547f6ef861cd5e15f16efe712b9c460d5de555",
+      "bytes": 1573,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-remove-identity.js",
+      "sha256": "bab8e25d0c692404d49b46ec407bd913fb8f24cb5c6e0d3053475b2375981456",
+      "bytes": 3585,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-tar-wasm.js",
+      "sha256": "c8e922b532845d8242285a74b7785b50ecde6057a865b93ed62e94a6ba922790",
+      "bytes": 8261,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-impl.js",
+      "sha256": "9b9db76dad41ca662bb36fee20a1e0e0b7a4d664dbebaa3b332c005f4bbd64e8",
+      "bytes": 72874,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/text-atomic.js",
+      "sha256": "03d6db979771948a6644e4463b6e082700bc56636a86b90e13ffc743849bcdc4",
+      "bytes": 805,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-mutation.js",
+      "sha256": "f6efb26931b3d7ce2ec8c9d4c5d9940214bfd3f33eaa1c0299da4892d8cadbf5",
+      "bytes": 12639,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/permission-exec.js",
+      "sha256": "f73245b269e5029f60a27307241778a1fbb1bdac4033a0fa373931a39ddcfd44",
+      "bytes": 8519,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-admission-context.d.ts",
+      "sha256": "2c0be8c776789164ccc76e72667334ccc3313df20173f63fa46f2f9c4e5d5a73",
+      "bytes": 844,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-entry.js",
+      "sha256": "6cee36fb87edd64d7950f95e81fce1fc224abfd2fa831ff8bf1b7ed28fac4691",
+      "bytes": 4425,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-input.js",
+      "sha256": "40fde6434d9ebd002ccc5f2736f03ffeab12b2d8cdaa949cf81549e3f5ee39d1",
+      "bytes": 4183,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-directory-observation.d.ts",
+      "sha256": "14f311c400ef841828e7147e599359469fc57b5d0131067a6b60b6276398958a",
+      "bytes": 1175,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-binding.js",
+      "sha256": "0e08d01eb6eee9bc2ccd3bcb855393302cd18f0f91f398069f1f63b9c7d8f720",
+      "bytes": 386,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive.js",
+      "sha256": "bafad3e5876853d4ff7fc8a0e7ea01a99b53b91bd296ada9d117475946845c06",
+      "bytes": 17055,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-security-facts.js",
+      "sha256": "b48d8a0ee861a7b9f9f6b6f1bd78ffa73426965dc9c9d738befe3b1616437fd2",
+      "bytes": 5388,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/safe-path-segment.js",
+      "sha256": "c0ebc02594f7cfaf6186204eaf3687cf66fd7c0b01f16057fa3f50962cb13410",
+      "bytes": 3215,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/clone-metadata.d.ts",
+      "sha256": "41d03d455156d5797c8650f144d853b6b3fa4cfb30a916542d0dd7d42867a291",
+      "bytes": 612,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory-list.js",
+      "sha256": "87c9345cbe7a544ee3c11f09927d5bfced2b865477db732bd6c51bd8f6cc053a",
+      "bytes": 18026,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root.d.ts",
+      "sha256": "3c3146feef305cb74e0ff13a2063748b2711ec3e551c7218989898c54d6db266",
+      "bytes": 198,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/copy-tree-portable.js",
+      "sha256": "30b1bd36d9168aaf1fe7451752cd859c49f43969c94743c1ccadd2db6b0d0360",
+      "bytes": 10699,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/move-path-cleanup.d.ts",
+      "sha256": "2c8b1bebfcda30b4494d9ae2ef06302ad107eb6e970015f28cd7855f85bde7cb",
+      "bytes": 1655,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-symlink-policy.js",
+      "sha256": "927ee3c723ad833469a8a024bce0cc642e74078880954726918376a0154b755b",
+      "bytes": 1326,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-policy.js",
+      "sha256": "ff64c266b6dbe8e769622f79dc4aff5056243e3856cb17a88f25e0edf0ee1d3f",
+      "bytes": 5241,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-suffix-aliases.d.ts",
+      "sha256": "2368821c03bff4646f78e1b3db84de4a8127e5a4efd23213d2b0ce669404c2f6",
+      "bytes": 579,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guest.js",
+      "sha256": "5a5e6a16a835af919724a8c5cce20d19ba59878f0a716b1dec6a071123e87cc5",
+      "bytes": 19309,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/permissions.js",
+      "sha256": "3bfb1fe0cdd435dc0897856224c7a3563c54af81b275e076cf746fa85b1a3207",
+      "bytes": 4599,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-impl.d.ts",
+      "sha256": "451c22ca542e2fdc3013e20b369b799fc34d13b9ee4cb4bb9e949721868db502",
+      "bytes": 7028,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-path-stat.js",
+      "sha256": "a0e26ebb6aeaafe3a0e63d6d0414768ad5f65d5bd776b9cbe26ed07b9b8f2488",
+      "bytes": 7248,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-observation.d.ts",
+      "sha256": "dcce6bafbacd4e42ea593fd714df11ff9c50e456340c42cf89b25fc6adebf938",
+      "bytes": 541,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-paths.js",
+      "sha256": "29f13cbccadb5648ce878fe4f129dc2d6de766817af2e9441b81380b0395574f",
+      "bytes": 11463,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/positional-read.d.ts",
+      "sha256": "9ecfc46583817dca3b22d6e9b9f147b9fb694e20fa7a891dcd6e43d64c7cfbbe",
+      "bytes": 540,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-acquisition.d.ts",
+      "sha256": "4890a0318d25554e8681a2a8884511e342956ea5efe9561170b7005fe8d0aff5",
+      "bytes": 1041,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-paths-lexical.js",
+      "sha256": "edf43bae85214a36be62c6a0c2fcd396f9791083e6b12815f7a31f44a289530b",
+      "bytes": 1053,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp-target.js",
+      "sha256": "00c143fdf7d0e29247aad2976ce7c13a79fb1df953f5bded0b6890f74528829e",
+      "bytes": 10519,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-mutation-admission.js",
+      "sha256": "48fd6ff7cc35112a3af17e277c402736fee0bc2006f7539e72f62073aa47bec9",
+      "bytes": 20938,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file.js",
+      "sha256": "ee02805fb04856879c7c027b64566ef7b7004926d64d961703cfee70f1e6f4c3",
+      "bytes": 15542,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-verification.d.ts",
+      "sha256": "6aaf181cda65bdbf2d32eeef8fe9cdb9ecdd62ab9dd28866c25a1dbd39b24a7d",
+      "bytes": 447,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secure-temp-dir.d.ts",
+      "sha256": "8900daca94653feed239244437511716805d18f5bbe5989baf437b8a1c1c39d9",
+      "bytes": 1119,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/sidecar-lock-registration.js",
+      "sha256": "d2a641a0743dde804f698e40460d0944f07e009b91f12fbd90b015d428e375a7",
+      "bytes": 1605,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-lock-sync-root-held.js",
+      "sha256": "4bf1fdf926bb8a1ac940ddea61cf85a81efbfd154a71c2e4fbab67857c0eba1b",
+      "bytes": 15877,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/watch-scan.d.ts",
+      "sha256": "9fd751b5512a08ad711aba8a85d2c70ed49be3d55973e1fa4b0205acc70f33c7",
+      "bytes": 1856,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-write-mode.d.ts",
+      "sha256": "12b5767bab6bf24057b8a194d2a6974cf42ee7eea60520d96b59badd16683881",
+      "bytes": 260,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-observation.js",
+      "sha256": "2b53ff0f253462eed943c2e9003e261d2c257509b48c160299ba181892476d93",
+      "bytes": 792,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/archive-tar-stream.d.ts",
+      "sha256": "21d61a49cba9356eecb2adea877e0de59da6147159d5c045c616755aebd0fa6d",
+      "bytes": 1054,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-destination.js",
+      "sha256": "f4c8aa2f61ae41b54abb3219a7580400b6b40297fc5e44685cd17830c2d6e362",
+      "bytes": 4929,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/deny-mutation-match.js",
+      "sha256": "1f914f2c78ea69fe4cb07f5ff585791ded95c15292563d4b707a2b8aab81e2a6",
+      "bytes": 3839,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/byte-view.d.ts",
+      "sha256": "a8247a4bf12d7ac59a35a7693981c1e924515dfe93f7f8e685ad59963a7785df",
+      "bytes": 149,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/path-case.js",
+      "sha256": "626ceead2861e76dec85747f75ed896e644fd9da62424264926a2c0d93e8b22c",
+      "bytes": 5227,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-directory-entry.d.ts",
+      "sha256": "456b0b60d4514dd3688120ae6d165791af0c616648b024d49cf4fd4a62b1d68a",
+      "bytes": 539,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-read-admission.js",
+      "sha256": "8888979ca9386959bea4e93fa1667f17e04b75a0226411c80360b7a600feab15",
+      "bytes": 4108,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/staged-file-types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/private-temp-workspace.d.ts",
+      "sha256": "076dab8828b32305a00527144155c4c8705dfe8b4969b8155eb3e3f648831e92",
+      "bytes": 765,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/publish-file.js",
+      "sha256": "37ac0cc109152e3470b1973be933a4d344cdf892ec85fd999c4fe660da086818",
+      "bytes": 16465,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/root-file.d.ts",
+      "sha256": "6d495734646bdd4342c4477b6ca22193b83224589e921cdf65cfb1ac3e8cf55b",
+      "bytes": 1802,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-security-bridge.cs",
+      "sha256": "ae0c736fe981d96cef3571528c3f58da0130f643e55298c7cf849fe416215f2e",
+      "bytes": 22136,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/secure-file.d.ts",
+      "sha256": "9472609a18893e253c794923ec99f91f4d8d7a9a0035313e7215fedfcf2c588d",
+      "bytes": 986,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/windows-path-alias.d.ts",
+      "sha256": "9b3543206ff200215dbc2240c5dc92fc722e8155f1b94a20f28150e77f20ae9a",
+      "bytes": 2531,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-write-input.js",
+      "sha256": "eb296cf4b3b22db2d5fc0e02e2e390f7ccacd4dbed1317d960267db73d230dcd",
+      "bytes": 1378,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/recursive-mkdir-path.js",
+      "sha256": "b30dd60fa97e203778e00b00ec2b01ce22849f62e2c1262616100e61aeadaf76",
+      "bytes": 495,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/file-contents.d.ts",
+      "sha256": "33582ea77d19ea4180e90743b61693834f574633479e4e9ebb4982badd3f7c0f",
+      "bytes": 290,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/owner-dacl.d.ts",
+      "sha256": "df39d622c06081f7d90d4b9b2688d0cba4e8511306c1c06dc091d62a72c7cc7b",
+      "bytes": 961,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/async-lock.d.ts",
+      "sha256": "8526e5a7e5d17f8f5999abf7fc98ad2900239cde7d1ae61c6fe14755a0727fd5",
+      "bytes": 84,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/move-path.js",
+      "sha256": "bc537b9f201d3b5a0b2326dd6e53113f9953bff0c7e314f67dc86f57ee03551d",
+      "bytes": 17664,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-file-mode.js",
+      "sha256": "0b14605c39e40066ffa2a1e6d67adf3a8f1a5b579ec2f3efdfaafd2a4fc42aae",
+      "bytes": 391,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/pinned-mutation-observation.d.ts",
+      "sha256": "74d86b77a1bc3e206cac67b9bf5d4d0f26274063a2ceed9f5d8c26990ef96ca9",
+      "bytes": 2021,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/guest-dispatch-python.d.ts",
+      "sha256": "625cb204688ae5a01d7f3abe417e11ad0c4cc2821bf5097450449aba566286ba",
+      "bytes": 63,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/staged-file-settlement.js",
+      "sha256": "a1e4a89e3d4f9b8f121d421730d0816fef201f73d6c0a8e34cdbf88a2c735913",
+      "bytes": 2373,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/temp.js",
+      "sha256": "9561cd47b874e0bbdd6bf249f8ce91bbd5093106f7f632277eafb9473c64a1b0",
+      "bytes": 186,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/native-directory-observation.js",
+      "sha256": "e55af3d6283dab8bdf82062835fa374eb3cb27d4336563bd4b0ce370ab55337c",
+      "bytes": 1712,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/fs.js",
+      "sha256": "84fdfd717ce617b52cf8c6477d1ecfb72fc1c9540a31814668bfd778ed1f7ee8",
+      "bytes": 728,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/replace-directory.js",
+      "sha256": "72b332a8d7fc15d574f8ec1d3c1c213fe5042c493e003272dccbe238f757a1ed",
+      "bytes": 12424,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/regular-file.js",
+      "sha256": "efdf1803f14f9ae22689d9709c835219a5b4afd0f88c723f2ccbf61d3150a3e9",
+      "bytes": 11948,
+      "match": true
+    },
+    {
+      "path": "node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe/dist/private-temp-workspace.js",
+      "sha256": "cc35a7f3995410a39b3d37d9d8e995426010afac73f856d8cdd26aec8d7e7e39",
+      "bytes": 14877,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/intelligence-transcript-worker.cjs",
+      "sha256": "1cadc620676957f8477d81116417930cd6985182323e40de636303f6a5da6e1d",
+      "bytes": 1377179,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/codex-acp.cjs",
+      "sha256": "a12a2b5f89e0ab8310e5c9283d0f3b0a8da5e834b470d425531d28b780954631",
+      "bytes": 1325662,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/flywheel-generation-worker.cjs",
+      "sha256": "1650aef2baf075c62489a0a6b09ced4bf2d1748f2b114c0c35130f44ae2c9c56",
+      "bytes": 3395947,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/execution-worker.cjs",
+      "sha256": "9455603a4df623a302983c80226c74316cf136abe24b48b88e35d77c8ae0ff0b",
+      "bytes": 5552216,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/embedding-worker.cjs",
+      "sha256": "3f0c39a204b47f8e938d3a8f6ad351f95ef212cd003b77e4d8d838c0a82b5cba",
+      "bytes": 988450,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/video-visual-review-worker.cjs",
+      "sha256": "8df97184a427f0f75024b3eaf1cd4e3c748e41672002a85b992b43deb5c4fc07",
+      "bytes": 2628936,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/agentic-worker.cjs",
+      "sha256": "6c93101b0aa10aa72751538c37afeb08e02cc459e3427a955dfbfc0a93615f9c",
+      "bytes": 1490871,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/intelligence-generation-worker.cjs",
+      "sha256": "2a8ebece46858e2f177a8123d0e7bc458bb7bd6111c16710ceff917d10c8e7fa",
+      "bytes": 3355529,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/codex-status-worker.cjs",
+      "sha256": "faa3beeaa9f049886450583a8245787cc2dbc857cbc5a7e38f922e5f0306b11d",
+      "bytes": 772839,
+      "match": true
+    },
+    {
+      "path": "frontend/runtime/model-probe-worker.cjs",
+      "sha256": "72e075faebc81e8a5840e81ec12218de76fb6c99af32eb6cbdb12c29e9d37422",
+      "bytes": 1996447,
+      "match": true
+    },
+    {
+      "path": "frontend/node_modules/@openclaw/fs-safe",
+      "type": "symlink",
+      "target": "../../../node_modules/.pnpm/@openclaw+fs-safe@0.21.3/node_modules/@openclaw/fs-safe",
+      "match": true
+    }
+  ]
+}

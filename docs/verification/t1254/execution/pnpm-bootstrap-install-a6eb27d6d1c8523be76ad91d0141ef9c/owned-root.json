@@ -1,0 +1,9 @@
+{
+  "task": "T-1254",
+  "nonce": "a6eb27d6d1c8523be76ad91d0141ef9c",
+  "root": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1254-pnpm-bootstrap-install-a6eb27d6d1c8523be76ad91d0141ef9c-5l5oxA",
+  "uid": 501,
+  "inode": 351191037,
+  "createdAt": "2026-10-12T00:54:54.182Z",
+  "purpose": "owned pinned pnpm12.6 download/install only, scripts disabled, no downloaded PNPM execution"
+}

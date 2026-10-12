@@ -1,17 +1,16 @@
 // @vitest-environment node
-import {expect,it,vi} from 'vitest';
+import {afterAll,beforeAll,expect,it,vi} from 'vitest';
 import {ENDPOINTS,type RequestContext} from '@creatoros/contract';
 import type {Db,ConfiguredDb} from '@creatoros/backend';
 import type {ExecutionRef,WorkerPort} from '@creatoros/contract/execution-worker';
 import type {ChatBackendTool} from '../../../backend/src/modules/execution/execution-chat-tool-ports.service';
 import type {ChatWorkbenchCapabilityHost} from '../../../backend/src/modules/ai-runtime/chat-workbench-capability-host';
 import {createServer} from 'node:http';
-import {createRequire} from 'node:module';
 import {execFileSync} from 'node:child_process';
-import {cp,mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
+import {mkdir,mkdtemp,readFile,readdir,realpath,rm,symlink,writeFile} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 const fixture=vi.hoisted(()=>({db:undefined as Db|undefined,historical:undefined as ConfiguredDb|undefined}));
 vi.mock('@creatoros/backend',async original=>{
@@ -28,6 +27,64 @@ vi.mock('@creatoros/backend/modules/assets',async original=>{
 import {getChatRuntime,compositeTransport,__resetPersistenceForTests} from './persistence-client';
 import {resolveRequestContext} from '../lib/request-context.server';
 import {prepareChatReply} from './prepare-chat-reply';
+
+// 这是明确旧版本的合成 fixture producer，不是历史用户库实测。
+const oldProducerCommit='6e4689b3180f91189110208267708ad72b03ae64';
+let oldProducerRoot:string,oldProducerModule:string,oldPiCoreBinding:{version:string;agentPath:string;sha256:string};
+beforeAll(async()=>{
+ const projectRoot=fileURLToPath(new URL('../../../',import.meta.url));
+ // 第一例也依赖真实 Worker；不再依赖其他测试先完成构建。
+ execFileSync(process.execPath,[join(projectRoot,'ai-worker/scripts/build.mjs')],{stdio:'pipe',timeout:1200000});
+ oldProducerRoot=await realpath(await mkdtemp(join(tmpdir(),'t1089-old-producer-')));
+ const archive=execFileSync('git',['archive',oldProducerCommit,'backend','contract','ai-worker','frontend/src','frontend/tsconfig.json','frontend/package.json','frontend/product-identity.json','frontend/public/courses'],{cwd:projectRoot,maxBuffer:128*1024*1024,timeout:180000});
+ execFileSync('tar',['-x','-C',oldProducerRoot],{input:archive,timeout:180000});
+ // 外部依赖复用已安装版本；所有 CreatorOS workspace 链接指向旧源，禁止落回当前模块。
+ for(const pkg of ['backend','contract','ai-worker','frontend']){
+  const target=join(oldProducerRoot,pkg,'node_modules');await mkdir(target,{recursive:true});
+  for(const entry of await readdir(join(projectRoot,pkg,'node_modules'))){
+   if(entry==='@creatoros')continue;
+   await symlink(join(projectRoot,pkg,'node_modules',entry),join(target,entry));
+  }
+  await mkdir(join(target,'@creatoros'));
+  for(const workspace of ['backend','contract','ai-worker'])await symlink(join(oldProducerRoot,workspace),join(target,'@creatoros',workspace));
+ }
+ // 旧 Pi 真消费者按 cwd 的两级 node_modules 寻找 core；复用锁定同版本实物，不造 Agent。
+ const store=join(projectRoot,'node_modules/.pnpm');
+ const pinned=JSON.parse(await readFile(join(oldProducerRoot,'ai-worker/package.json'),'utf8')).dependencies['@earendil-works/pi-coding-agent'];
+ const coreEntries=(await readdir(store)).filter(name=>name.startsWith('@earendil-works+pi-agent-core@'+pinned+'_') || name==='@earendil-works+pi-agent-core@'+pinned);
+ expect(coreEntries).toHaveLength(1);
+ const core=join(store,coreEntries[0]!,'node_modules/@earendil-works/pi-agent-core');
+ const coreVersion=JSON.parse(await readFile(join(core,'package.json'),'utf8')).version;
+ expect(coreVersion).toBe(pinned);
+ await mkdir(join(oldProducerRoot,'node_modules/@earendil-works'),{recursive:true});
+ await symlink(core,join(oldProducerRoot,'node_modules/@earendil-works/pi-agent-core'));
+ oldPiCoreBinding={version:coreVersion,agentPath:await realpath(join(oldProducerRoot,'node_modules/@earendil-works/pi-agent-core/dist/agent.js')),sha256:createHash('sha256').update(await readFile(join(core,'dist/agent.js'))).digest('hex')};
+ const original=execFileSync('git',['show',oldProducerCommit+':frontend/src/server/legacy-frozen-source-read.integration.test.ts'],{cwd:projectRoot,maxBuffer:4*1024*1024,timeout:180000}).toString();
+ const firstStart=original.indexOf("it('已登记账号"),firstEnd=original.indexOf('const recoveryBudget=');
+ const loopStart=original.indexOf('let recoveryWorkerBuilt=false;');
+ const bodyStart=original.indexOf("  const {createDb,eq,executionTasks",loopStart);
+ const split=original.indexOf('   const upgraded=await createDb({dataDir:old.dataDir});',bodyStart);
+ const cleanupStart=original.indexOf('  }finally{',split),cleanupEnd=original.lastIndexOf('\n });');
+ expect([firstStart,firstEnd,loopStart,bodyStart,split,cleanupStart,cleanupEnd].every(n=>n>=0)).toBe(true);
+ const prelude=original.slice(0,firstStart)+original.slice(firstEnd,loopStart);
+ const producer=original.slice(bodyStart,split)
+  .replace("resolve('../ai-worker/dist/execution-worker.cjs')",JSON.stringify(join(oldProducerRoot,'ai-worker/dist/execution-worker.cjs')))
+  .replace('void result.catch(()=>undefined);return {result};',"void result.then(value=>console.info('[T1089-old-worker-result]',value),error=>console.error('[T1089-old-worker-error]',error));return {result};")
+  .replace('await phase;const current=ports!;',"await phase;const current=ports!;console.info('[T1089-old-port]',port);")
+  .replace("default:throw Error('本只读回合不允许未绑定端口:'+port);","default:console.error('[T1089-old-unbound-port]',port,JSON.stringify(raw));throw Error('本只读回合不允许未绑定端口:'+port);");
+ const cleanup=original.slice(cleanupStart,cleanupEnd).replace('  }finally{','  }catch(error){').replace(/\n  }\s*$/, '\n process.chdir(producerCwd);throw error;\n }');
+ const producerWithSchemaProof=producer.replace('   await (globalThis as typeof globalThis&{__creatorosDisposePersistence?',`   const historicalEngineColumns=(await old.client.query("SELECT column_name FROM information_schema.columns WHERE table_name='user_preferences' AND column_name='assistant_execution_engine'")).rows;expect(historicalEngineColumns).toEqual([]);\n   await (globalThis as typeof globalThis&{__creatorosDisposePersistence?`);
+ expect(producerWithSchemaProof).not.toBe(producer);
+ const result=`\n   const producerBindings={frontendModule:import.meta.url,backendResolved:createRequire(new URL('../../../backend/package.json',import.meta.url)).resolve('@creatoros/backend'),backendPreferenceColumns:Object.keys((await import('@creatoros/backend')).schema.userPreferences)};expect(producerBindings.backendPreferenceColumns).not.toContain('assistantExecutionEngine');\n   process.chdir(producerCwd);\n   return {old,historicalEngineColumns,producerBindings,supervisors,commits,requests,modelErrors,state,server,ctx,canonical,originalArticle,originalGraphic,articleId,graphicId,projectId,readKind,outputIds,sourceCtx,conversation,source,submitted,submittedTask,frozen,ref,before,beforeRequests,beforeHandlers,workerRuns,resume:(next:typeof ports)=>{ports=next;releasePhase?.();releasePhase=undefined;}};\n`;
+ oldProducerModule=join(oldProducerRoot,'frontend/src/server/t1089-owned-old-producer.ts');
+ await writeFile(oldProducerModule,prelude+'\nexport async function produce(family:RecoveryFamily){\nconst producerCwd=process.cwd();process.chdir('+JSON.stringify(join(oldProducerRoot,'frontend'))+');\ntry{\n'+producerWithSchemaProof+result+cleanup+'\n}finally{process.chdir(producerCwd);}}\n');
+ // 源码原字节来自指定 Git 对象；只机械拆出旧测试的迁移前阶段，不改旧生产消费者。
+ const oldJournal=JSON.parse(await readFile(join(oldProducerRoot,'backend/drizzle/meta/_journal.json'),'utf8'));
+ expect(oldJournal.entries).toHaveLength(105);expect(oldJournal.entries.at(-1).tag).toBe('0130_legacy_source_ownership');
+ expect(await readFile(join(oldProducerRoot,'backend/src/schema/settings.ts'),'utf8')).not.toContain('assistantExecutionEngine');
+ execFileSync(process.execPath,[join(oldProducerRoot,'ai-worker/scripts/build.mjs')],{cwd:join(oldProducerRoot,'frontend'),stdio:'pipe',timeout:1200000});
+},3300000);
+afterAll(async()=>{if(oldProducerRoot)await rm(oldProducerRoot,{recursive:true,force:true});},180000);
 
 /** 原公开resolver及合同transport，不在测试中给账号入口补group。 */
 async function publicData(operation:string,accountId:string|null,params?:unknown,body?:unknown,query?:unknown){
@@ -84,30 +141,7 @@ async function ownedData(operation:string,ctx:RequestContext,params?:unknown,bod
  return endpoint.isList?endpoint.response.array().parse(response.data):endpoint.response.parse(response.data);
 }
 
-/** 真实旧104正常migrator，仅在本例临时目录裁掉尚未存在的0130；不改项目journal/receipt。 */
-async function historical104(){
- const {schema}=await import('@creatoros/backend');
- const backendRequire=createRequire(new URL('../../../backend/package.json',import.meta.url));
- type Client=Awaited<ReturnType<typeof import('@creatoros/backend')['createDb']>>['client'];
- const {PGlite}=backendRequire('@electric-sql/pglite') as {PGlite:new(dataDir:string)=>Client};
- const {drizzle}=backendRequire('drizzle-orm/pglite') as {drizzle:(client:Client,options:{schema:typeof schema})=>Db};
- const {migrate}=backendRequire('drizzle-orm/pglite/migrator') as {migrate:(db:Db,options:{migrationsFolder:string})=>Promise<void>};
- const root=await mkdtemp(join(tmpdir(),'t1089-frozen-'));
- const staged=join(root,'104'),folder=fileURLToPath(new URL('../../../backend/drizzle',import.meta.url));
- await cp(folder,staged,{recursive:true});
- const journal=JSON.parse(await readFile(join(staged,'meta/_journal.json'),'utf8'));
- expect(journal.entries.length).toBeGreaterThanOrEqual(104);
- journal.entries=journal.entries.slice(0,104);
- await writeFile(join(staged,'meta/_journal.json'),JSON.stringify(journal));
- await rm(join(staged,'0130_legacy_source_ownership.sql'),{force:true});
- const dataDir=join(root,'db'),client=new PGlite(dataDir),db=drizzle(client,{schema});
- await migrate(db,{migrationsFolder:staged});
- const ledger=(await client.query<{hash:string;created_at:number}>('SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id')).rows;
- expect(ledger).toHaveLength(104);expect(Number(ledger.at(-1)!.created_at)).toBe(1791043200002);
- let closed=false;
- const configured:ConfiguredDb={db,driver:{kind:'file-pglite',target:dataDir},dispose:async()=>{if(!closed){closed=true;await client.close();}}};
- return {root,dataDir,db,client,configured,ledger};
-}
+type Historical104={root:string;dataDir:string;db:Db;client:Awaited<ReturnType<typeof import('@creatoros/backend')['createDb']>>['client'];configured:ConfiguredDb;ledger:Array<{hash:string;created_at:number}>};
 
 async function frozenRows(db:Db){
  const {sql}=await import('@creatoros/backend');
@@ -200,10 +234,8 @@ async function recoveryPorts(runtime:Awaited<ReturnType<typeof getChatRuntime>>,
   complete:(raw:unknown)=>completion.commitResult(ref,raw,(row,all,call)=>binding.forCall(row,all,call))};
 }
 
-let recoveryWorkerBuilt=false;
 it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] as const)(
  '104→0130 %s 原冻结/完整子进程Worker/已结算回执/原completion与同source重放',{timeout:1200000,retry:0},async(family:RecoveryFamily)=>{
-  if(!recoveryWorkerBuilt){execFileSync(process.execPath,[resolve('../ai-worker/scripts/build.mjs')],{stdio:'pipe',timeout:1200000});recoveryWorkerBuilt=true;}
   const {createDb,eq,executionTasks,executionCalls,aiMessages,aiTasks,aiTaskResults,executionStreamEvents,sql}=await import('@creatoros/backend');
   const {createAiRepository}=await import('../../../backend/src/modules/ai/ai.repository');
   const {createChatTurnSubmissionService}=await import('../../../backend/src/modules/ai/chat-turn-submission.service');
@@ -211,84 +243,27 @@ it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] a
   const {createPersistentTaskService}=await import('../../../backend/src/modules/execution/persistent-task.service');
   const {createWorkerSupervisor}=await import('../../../backend/src/modules/execution/worker-supervisor');
   const {workerPortInputSchemas,workerToolResultReceiptSchema,agenticToolOutcomeSchema,chatWorkerInputSchema}=await import('@creatoros/contract/execution-worker');
-  const old=await historical104(),supervisors:Array<ReturnType<typeof createWorkerSupervisor>>=[];
-  fixture.historical=old.configured;vi.stubEnv('DATABASE_URL','');vi.stubEnv('PGLITE_DATA_DIR','');__resetPersistenceForTests();
+  type Produced={
+   old:Historical104;historicalEngineColumns:unknown[];producerBindings:{frontendModule:string;backendResolved:string;backendPreferenceColumns:string[]};supervisors:Array<ReturnType<typeof createWorkerSupervisor>>;
+   commits:Array<{body:ReturnType<typeof workerPortInputSchemas.commitChatResult.parse>;reply:ReturnType<typeof deferred<unknown>>}>;
+   requests:unknown[];modelErrors:string[];state:{handlers:number};server:ReturnType<typeof createServer>;
+   ctx:RequestContext;canonical:string;originalArticle:unknown;originalGraphic:unknown;articleId:string|undefined;graphicId:string|undefined;
+   projectId:string|undefined;readKind:string;outputIds:string[];sourceCtx:RequestContext;
+   conversation:typeof ENDPOINTS.createConversation.response._output;
+   source:Awaited<ReturnType<ReturnType<typeof createAiRepository>['createMessage']>>;
+   submitted:Awaited<ReturnType<ReturnType<typeof createChatTurnSubmissionService>['submit']>>;
+   submittedTask:typeof executionTasks.$inferSelect;frozen:ReturnType<typeof chatWorkerInputSchema.parse>;ref:ExecutionRef;
+   before:Record<string,unknown[]>;beforeRequests:number;beforeHandlers:number;workerRuns:Array<{result:Promise<string>}>;
+   resume:(next:Awaited<ReturnType<typeof recoveryPorts>>|undefined)=>void;
+  };
+  const module=await import(/* @vite-ignore */ pathToFileURL(oldProducerModule).href) as {produce:(family:RecoveryFamily)=>Promise<Produced>};
+  const producer=await module.produce(family);
+  const {old,supervisors,commits,requests,modelErrors,state,server,ctx,canonical,originalArticle,originalGraphic,articleId,graphicId,projectId,readKind,outputIds,sourceCtx,conversation,source,submitted,submittedTask,frozen,ref,before,beforeRequests,beforeHandlers,workerRuns}=producer;
   let ports:Awaited<ReturnType<typeof recoveryPorts>>|undefined;
+  let runtime:Awaited<ReturnType<typeof getChatRuntime>>,db:Db;
   let phase=Promise.resolve(),releasePhase:(()=>void)|undefined;
-  const commits:Array<{body:ReturnType<typeof workerPortInputSchemas.commitChatResult.parse>;reply:ReturnType<typeof deferred<unknown>>}>=[];
-  const requests:unknown[]=[],modelErrors:string[]=[],state={handlers:0};
-  let projectId:string|undefined,readKind='projects.list',outputIds:string[]=[];
-  const server=createServer(async(req,res)=>{
-   try{
-    let raw='';for await(const chunk of req)raw+=chunk.toString();
-    const body=JSON.parse(raw);requests.push(body);
-    if(!body.tools?.some((t:{function?:{name?:string}})=>t.function?.name==='system_read'))throw Error('完整冻结system.read声明缺失');
-    let delta:unknown,finish:string;
-    if(requests.length===1){
-     delta={tool_calls:[{index:0,id:'legacy-original-read',type:'function',function:{name:'system_read',arguments:JSON.stringify({request:projectId?{kind:readKind,params:{projectId}}:{kind:readKind,query:{page:1,pageSize:5}}})}}]};finish='tool_calls';
-    }else if(requests.length===2){
-     const observed=readResults(body.messages).find(r=>r.requestKind===readKind&&r.complete);
-     if(!observed)throw Error('前一轮原owner读取回执未完整');
-     const endpoint=projectId?ENDPOINTS.listOutputs:ENDPOINTS.listProjects;
-     const values=endpoint.response.array().parse(JSON.parse(observed.text));
-     if(projectId)expect(values.map(row=>row.id).sort()).toEqual([...outputIds].sort());else expect(values).toEqual([]);
-     delta={content:'已按原owner读取原项目；未写入、生成或创建候选。'};finish='stop';
-    }else throw Error('已结算回放禁止新增模型请求');
-    res.writeHead(200,{'content-type':'text/event-stream'});
-    const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:finish}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
-    res.end(chunks.map(chunk=>'data: '+JSON.stringify({id:'t1089-fixture',object:'chat.completion.chunk',created:1,model:'fixture',...chunk})+'\n\n').join('')+'data: [DONE]\n\n');
-   }catch(error){modelErrors.push(error instanceof Error?error.message:String(error));res.writeHead(500);res.end('FIXTURE_PROTOCOL_ERROR');}
-  });
-  try{
-   await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
-   let runtime=await getChatRuntime();await runtime.durable.stop();let db=old.db;
-   let ctx=await resolveRequestContext(null,null,{rejectInvalidToken:true});
-   if(family==='null-frozen'){
-    const {createPlatformAccountRepository}=await import('@creatoros/backend/modules/platform-account');
-    const now=()=>new Date().toISOString();
-    const account=await createPlatformAccountRepository(db,{userId:ctx.userId,now,nextId:p=>p+'-t1089-null'}).createAccount({platform:'xiaohongshu',accountHandle:'原无成员账号'});
-    ctx=await resolveRequestContext(null,account.id,{rejectInvalidToken:true});
-    expect((await db.execute(sql.raw('SELECT * FROM account_group_memberships'))).rows).toHaveLength(0);
-   }else{
-    const account=ENDPOINTS.createAccount.response.parse(await ownedData('accounts.create',ctx,undefined,{platform:'xiaohongshu',accountHandle:'原登记账号',idempotencyKey:'original-'+family}));
-    ctx=await resolveRequestContext(null,account.id,{rejectInvalidToken:true});
-   }
-   expect(ctx.groupId??null).toBeNull();
-   const canonical='grp_legacy_'+ctx.accountId;
-   let originalArticle:unknown,originalGraphic:unknown,articleId:string|undefined,graphicId:string|undefined;
-   if(family!=='null-frozen'){
-    const project=ENDPOINTS.createProject.response.parse(await ownedData('projects.create',ctx,undefined,{title:'原104项目'}));projectId=project.id;readKind='projects.outputs.list';
-    const article=ENDPOINTS.createOutput.response.parse(await ownedData('projects.outputs.create',ctx,{projectId},{title:'原文章作品',contentType:'article',clientRequestId:'original-article-'+family}));
-    const graphic=ENDPOINTS.createOutput.response.parse(await ownedData('projects.outputs.create',ctx,{projectId},{title:'原图文作品',contentType:'image',clientRequestId:'original-graphic-'+family}));
-    articleId=article.id;graphicId=graphic.id;outputIds=[article.id,graphic.id];
-    const a=ENDPOINTS.getArticle.response.parse(await ownedData('articles.get',ctx,{outputId:article.id}));
-    await ownedData('articles.versions.create',ctx,{outputId:article.id},{expectedCurrentVersionId:a.currentVersionId,document:{...a.current,title:'原正式文章',summary:'原正文不变'},clientRequestId:'original-article-version-'+family});
-    const g=ENDPOINTS.getGraphicPost.response.parse(await ownedData('graphicPosts.get',ctx,{outputId:graphic.id}));
-    await ownedData('graphicPosts.versions.create',ctx,{outputId:graphic.id},{expectedCurrentVersionId:g.currentVersionId,document:{...g.current,title:'原正式图文',body:'原图文正文不变'},clientRequestId:'original-graphic-version-'+family});
-    originalArticle=await ownedData('articles.get',ctx,{outputId:article.id});originalGraphic=await ownedData('graphicPosts.get',ctx,{outputId:graphic.id});
-    expect((await db.execute(sql.raw('SELECT group_id FROM article_anchors UNION ALL SELECT group_id FROM graphic_post_anchors'))).rows).toEqual([{group_id:null},{group_id:null}]);
-   }
-   const sourceCtx=family==='canonical-null-anchors'?{...ctx,groupId:canonical}:ctx;
-   const conversation=ENDPOINTS.createConversation.response.parse(await ownedData('ai.conversations.create',sourceCtx,undefined,{title:'原冻结会话',...(projectId?{projectId}:{}),scope:projectId?'project:'+projectId:'global'}));
-   expect(conversation.groupId??null).toBe(family==='canonical-null-anchors'?canonical:null);
-   const now=()=>new Date().toISOString(),repo=createAiRepository(db,{userId:sourceCtx.userId,accountId:sourceCtx.accountId??null,groupId:sourceCtx.groupId,now,nextId:p=>p+'-original-source-'+family});
-   const source=await repo.createMessage(conversation.id,{role:'user',content:'只读取原项目，不写入、不生成、不提出候选。',attachments:[],modelMetadata:{}});
-   const submitFor=(actualDb:Db,actualRuntime:typeof runtime)=>createChatTurnSubmissionService(actualDb,{now,assertProject:async(c,id)=>{await ownedData('projects.get',c,{projectId:id});},assemble:(c,snapshot,options)=>prepareChatReply(actualRuntime,c,snapshot,options)});
-   const submitted=await submitFor(db,runtime).submit(sourceCtx,{conversationId:conversation.id,sourceMessageId:source.id});
-   const [submittedTask]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));
-   const frozen=chatWorkerInputSchema.parse((submittedTask!.payload as {modelInput:unknown}).modelInput);
-   expect(frozen.groupId??null).toBe(family==='null-frozen'?null:canonical);
-   expect(submittedTask!.groupId).toBe(frozen.groupId??null);expect(frozen.tools.length).toBeGreaterThan(20);
-   const claim=await createPersistentTaskService(db,{now}).claimTask({taskId:submitted.executionTaskId,workerId:'t1089-owned-worker',leaseSeconds:1800});
-   expect(claim).not.toBeNull();
-   const ref={executionTaskId:submitted.executionTaskId,attempt:claim!.lease.attempt,fenceToken:claim!.lease.fenceToken};
-   if(family==='canonical-null-conversation'){
-    await expect(createChatHostContextReader(db,{now}).read(ref)).rejects.toThrow('会话不存在或不可访问');
-    expect(await db.select().from(executionCalls)).toHaveLength(0);expect(requests).toHaveLength(0);expect(state.handlers).toBe(0);
-   }else{
-    ports=await recoveryPorts(runtime,db,ref,join(old.root,'media'),state);
-    expect((await ports.reader.read(ref)).modelInput).toEqual(frozen);
-   }
+  const now=()=>new Date().toISOString();
+  const submitFor=(actualDb:Db,actualRuntime:typeof runtime)=>createChatTurnSubmissionService(actualDb,{now,assertProject:async(c,id)=>{await ownedData('projects.get',c,{projectId:id});},assemble:(c,snapshot,options)=>prepareChatReply(actualRuntime,c,snapshot,options)});
    async function startWorker(){
     const supervisor=createWorkerSupervisor({entryPath:resolve('../ai-worker/dist/execution-worker.cjs'),startupTimeoutMs:120000,ports:{
      async validate(execution,mode){await phase;await ports!.leases.withLease(execution,mode,async()=>{});},
@@ -320,37 +295,25 @@ it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] a
     const result=supervisor.run(ref,submittedTask!.deadlineAt===null?null:Date.parse(submittedTask!.deadlineAt!));
     void result.catch(()=>undefined);return {result};
    }
-   const workerRuns:Array<{result:Promise<string>}>=[];
-   if(family!=='canonical-null-conversation'){
-    workerRuns.push(await startWorker());await vi.waitFor(()=>{expect(commits.length,JSON.stringify({requests:requests.length,modelErrors})).toBe(1);},{timeout:120000});
-    expect(requests).toHaveLength(2);expect(state.handlers).toBe(1);expect(modelErrors).toEqual([]);
-    expect((await ports!.checkpoint.read(ref)).recovery).toBe('ready');
-    const calls=await db.select().from(executionCalls);expect(calls).toHaveLength(3);expect(calls.every(c=>c.status==='settled')).toBe(true);
-    const tool=calls.find(c=>c.kind==='tool')!,receipt=workerToolResultReceiptSchema.parse(JSON.parse(tool.resultText!));
-    expect(agenticToolOutcomeSchema.parse(receipt.output)).toMatchObject({status:'ok',sideEffect:'none'});
-    expect((await db.select().from(executionStreamEvents)).some(e=>e.chunk.type==='tool-output-available')).toBe(true);
-   }
-   if(family==='null-frozen'){
-    const [beforeRegistration]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));
-    const [beforeBusinessRegistration]=await db.select().from(aiTasks).where(eq(aiTasks.id,submitted.taskId));
-    const groups=ENDPOINTS.listAccountGroups.response.array().parse(await ownedData('accountGroups.list',ctx,undefined,undefined,{page:1,pageSize:100}));
-    expect(groups.filter(g=>g.id===canonical&&g.members.some(m=>m.accountId===ctx.accountId&&m.version===1))).toHaveLength(1);
-    const [afterRegistration]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));
-    const [afterBusinessRegistration]=await db.select().from(aiTasks).where(eq(aiTasks.id,submitted.taskId));
-    expect(afterRegistration!.payload).toEqual(beforeRegistration!.payload);
-    expect(afterBusinessRegistration!.inputData).toEqual(beforeBusinessRegistration!.inputData);
-    expect(afterRegistration).toMatchObject({id:beforeRegistration!.id,attempt:beforeRegistration!.attempt,fenceToken:beforeRegistration!.fenceToken,groupId:null,groupVersion:null,membershipVersion:null});
-   }
-   const hold=deferred<void>();phase=hold.promise;releasePhase=()=>hold.resolve();
-   const before=await frozenRows(db),beforeRequests=requests.length,beforeHandlers=state.handlers;
-   await (globalThis as typeof globalThis&{__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();fixture.historical=undefined;
+  try{
+  expect(producer.historicalEngineColumns).toEqual([]);
+  expect(producer.producerBindings.backendResolved).toBe(join(oldProducerRoot,'backend/src/index.ts'));
+  expect(producer.producerBindings.frontendModule).toBe(pathToFileURL(oldProducerModule).href);
+  expect(producer.producerBindings.backendPreferenceColumns).not.toContain('assistantExecutionEngine');
    const upgraded=await createDb({dataDir:old.dataDir});db=upgraded.db;
    const after=await frozenRows(db);
    for(const [table,rows] of Object.entries(before)){
     expect(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?withoutGroup(after[table]!):after[table]).toEqual(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?withoutGroup(rows):rows);
    }
    const migrationLedger=(await upgraded.client.query<{hash:string;created_at:number}>('SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id')).rows;
-   expect(migrationLedger.slice(0,104)).toEqual(old.ledger);expect(migrationLedger).toHaveLength(105);expect(Number(migrationLedger.at(-1)!.created_at)).toBe(1791043200003);
+   expect(migrationLedger.slice(0,104)).toEqual(old.ledger);
+   const migrationFolder=fileURLToPath(new URL('../../../backend/drizzle',import.meta.url));
+   const currentJournal=JSON.parse(await readFile(join(migrationFolder,'meta/_journal.json'),'utf8')) as {entries:Array<{tag:string;when:number}>};
+   const expectedLedger=await Promise.all(currentJournal.entries.map(async entry=>({hash:createHash('sha256').update(await readFile(join(migrationFolder,entry.tag+'.sql'),'utf8')).digest('hex'),created_at:entry.when})));
+   expect(migrationLedger.map((row:{hash:string;created_at:number})=>({...row,created_at:Number(row.created_at)}))).toEqual(expectedLedger);
+   expect(currentJournal.entries.at(104)!.tag).toBe('0130_legacy_source_ownership');
+   expect(currentJournal.entries.at(-1)!.tag).toBe('0133_assistant_execution_engine');
+   expect((await upgraded.client.query<{column_name:string}>("SELECT column_name FROM information_schema.columns WHERE table_name='user_preferences' AND column_name='assistant_execution_engine'")).rows).toEqual([{column_name:'assistant_execution_engine'}]);
    expect((await db.execute(sql.raw('SELECT group_id FROM ai_conversations'))).rows).toEqual([{group_id:canonical}]);
    if(family!=='null-frozen')expect((await db.execute(sql.raw('SELECT group_id FROM article_anchors UNION ALL SELECT group_id FROM graphic_post_anchors'))).rows).toEqual([{group_id:canonical},{group_id:canonical}]);
    fixture.historical={db,driver:{kind:'file-pglite',target:old.dataDir},dispose:()=>upgraded.client.close()};
@@ -366,7 +329,7 @@ it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] a
     await expect(ownedData('articles.get',{...grouped,groupId:'foreign-group'},{outputId:articleId})).rejects.toThrow();
    }
    expect(requests).toHaveLength(beforeRequests);expect(state.handlers).toBe(beforeHandlers);
-   releasePhase();releasePhase=undefined;
+   producer.resume(ports);
    const settledBeforeReplay=await db.select().from(executionCalls);
    workerRuns.push(await startWorker());
    const expectedCommits=family==='canonical-null-conversation'?1:2;
@@ -404,7 +367,7 @@ it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] a
      family,layer:'原子进程WorkerSupervisor/真实服务/PGlite/local SSE；不是实际模型或用户库',
      source:{conversationId:conversation.id,sourceMessageId:source.id,aiTaskId:submitted.taskId,executionTaskId:submitted.executionTaskId,groupBefore:conversation.groupId??null,groupAfter:canonical},
      frozen:{inputDigest:chatInputDigest(frozen),payloadBefore:chatInputDigest((before.execution_tasks[0] as {payload:unknown}).payload),payloadAfter:chatInputDigest((after.execution_tasks[0] as {payload:unknown}).payload),groupId:frozen.groupId??null,groupVersion:frozen.groupVersion??null,membershipVersion:frozen.membershipVersion??null,attempt:ref.attempt,fenceToken:ref.fenceToken},
-     migration:{receiptBefore:old.ledger,receiptAfter:migrationLedger,preservation:migrationPreservation,sqlSHA256:createHash('sha256').update(await readFile(join(folder,'0130_legacy_source_ownership.sql'))).digest('hex')},
+     migration:{oldProducerCommit,producerBindings:producer.producerBindings,oldPiCoreBinding,oldProducerModuleSHA256:createHash('sha256').update(await readFile(oldProducerModule)).digest('hex'),oldWorkerSHA256:createHash('sha256').update(await readFile(join(oldProducerRoot,'ai-worker/dist/execution-worker.cjs'))).digest('hex'),historicalEngineColumns:producer.historicalEngineColumns,currentJournal,expectedLedger,receiptBefore:old.ledger,receiptAfter:migrationLedger,preservation:migrationPreservation,sqlSHA256:createHash('sha256').update(await readFile(join(folder,'0130_legacy_source_ownership.sql'))).digest('hex')},
      requests:{beforeUpgrade:beforeRequests,afterWorkerReplay:requests.length,handlersBeforeUpgrade:beforeHandlers,handlersAfterReplay:state.handlers,modelErrors},
      existingCalls:completed.execution_calls,commitBodies:commits.map(entry=>entry.body),completion:receipt,replay,
      counts:{messages:completed.ai_messages.length,aiTasks:completed.ai_tasks.length,executionTasks:completed.execution_tasks.length,results:completed.ai_task_results.length,calls:completed.execution_calls.length,finishes:events.filter(e=>e.chunk.type==='finish').length},
@@ -413,7 +376,7 @@ it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] a
    }
    console.info('[T1089-recovery]',JSON.stringify({family,originalTaskId:submitted.taskId,executionTaskId:submitted.executionTaskId,attempt:ref.attempt,frozenGroup:frozen.groupId??null,modelRequests:requests.length,handlerExecutions:state.handlers,settledCalls:3,completionResults:1,replayed:true}));
   }finally{
-   releasePhase?.();for(const entry of commits)entry.reply.resolve({resultId:'cleanup',aiTaskId:'cleanup',messageId:'cleanup',outcome:'failed'});
+   producer.resume(ports);releasePhase?.();for(const entry of commits)entry.reply.resolve({resultId:'cleanup',aiTaskId:'cleanup',messageId:'cleanup',outcome:'failed'});
    await Promise.allSettled(supervisors.map(supervisor=>supervisor.stop()));
    server.closeAllConnections();if(server.listening)await new Promise<void>(done=>server.close(()=>done()));
    await (globalThis as typeof globalThis&{__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.().catch(()=>{});

@@ -1,0 +1,39 @@
+[
+  {
+    "label": "tests",
+    "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "args": [
+      "--test",
+      "--test-timeout=120000",
+      "tools/timeout-policy/check.test.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1250/runs/creatoros-t1250-red-scanner-UKCvSj/tests.log",
+    "pid": 73793,
+    "identity": {
+      "pid": 73793,
+      "pgid": 73793,
+      "uid": 501,
+      "birth": "Mon Oct 12 05:05:39 2026",
+      "startedAt": 1791752739934
+    },
+    "startedAt": "2026-10-11T21:05:39.934Z",
+    "endedAt": "2026-10-11T21:05:40.421Z",
+    "elapsedMs": 487,
+    "budgetMs": 960000,
+    "deadlineAt": "2026-10-11T21:21:39.934Z",
+    "budgetExhausted": false,
+    "termGraceMs": 180000,
+    "killGraceMs": 180000,
+    "signals": [],
+    "processClosed": true,
+    "remainingOwnedGroupMembers": [],
+    "persistentOwnedServer": false,
+    "outerAbort": false,
+    "code": 1,
+    "signal": null,
+    "spawnError": null,
+    "stdout": "",
+    "stderr": ""
+  }
+]

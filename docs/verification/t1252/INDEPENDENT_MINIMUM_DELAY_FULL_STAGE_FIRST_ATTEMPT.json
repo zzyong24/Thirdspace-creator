@@ -1,0 +1,7 @@
+{
+  "result": "FAIL_STATIC_REVIEW_HARNESS_PARSE",
+  "exit": 1,
+  "cause": "完整stage抽取器还漏删new Promise<void>类型",
+  "candidateExecuted": false,
+  "fix": "仅静态harness删去类型泛型<void>，候选不变"
+}

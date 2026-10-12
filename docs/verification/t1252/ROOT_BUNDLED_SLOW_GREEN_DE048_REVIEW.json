@@ -1,0 +1,22 @@
+{
+  "schema": "root-tool-review/v1",
+  "at": "2026-10-11T23:28:15.386499+00:00",
+  "result": "ROOT_STATIC_PASS_AWAIT_INDEPENDENT_SLOW_GREEN_TOOL_REVIEW",
+  "toolSha256": "de048571a626864a14b2e590be84b5847bb87664c2ea1931e67d214f8e9d6642",
+  "bindingSha256": "e5d37451ddad1968a624894775c5f701b8f1ae86799b9da2dce0f635b5afb003",
+  "actualSourceInputCount": 212,
+  "drift": [],
+  "actualNodeAndBundleShaMatch": true,
+  "readFullToolAndREADME": true,
+  "absoluteEntryMs": 22560000,
+  "twoIndependentProtocolFixturesDelayEachMs": 310000,
+  "dispatchOriginalObservationMs": 8280000,
+  "childMs": 8400000,
+  "helperLifecyclePerChildMs": 2160000,
+  "requirePostOneAndCompleteJsonEofAndEnvelopeHashAndScope": true,
+  "noPublicBusinessTaskProof": true,
+  "noApp": true,
+  "noOfficialModels": true,
+  "actualSlowGreenRuns": 0,
+  "executionRequiresIndependentReview": true
+}

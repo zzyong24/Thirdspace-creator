@@ -1,0 +1,19 @@
+{
+  "specSha256": "79ea6f30b8e09b092457e08384ff67632a6f216f034f841790bc97fbef713f84",
+  "phase": "whole-stage1",
+  "scope": "original-source-generation-whole-phase",
+  "sourceSnapshotDigest": "c6d6a2f14eb7272a81556fcf65763fa63168a77f40fbfa6e8aa2b25f6f8f6fb0",
+  "toolDigest": "6fbbb9dabef69aa380d082f69d9ed5c03b13a311ac6e7c048dce4d54bd3ee42f",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "runtimeDistExclusive": true,
+  "approved": true,
+  "reviewer": "root",
+  "reviewedAt": "2026-10-11T21:45:10.457065+00:00",
+  "candidateWholeSha256": "04de9f2dea309594fc8f9db46fa8b7ccbec9644bcdc45d73f549877e7f19ae24",
+  "constraints": [
+    "已实际读18/4完整原JSON及双rawreceipt/ledger；两独复候选/source0漂移",
+    "fa4f完整首次及旧850b原字节归档后exact04de；完整22，不过滤/retry",
+    "新增finite初次未到deadline不得借原18通过签到期；本次要真正执行HTTP与frozen截止",
+    "保原4失败/raw最后messages待这次真实采；不签App/全系统"
+  ]
+}

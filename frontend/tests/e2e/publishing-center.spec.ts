@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Page } from "@playwright/test";
 import { expect, test } from "../helpers/test-environment";
 
@@ -10,11 +11,13 @@ async function dispatch(
   id: string,
   input: unknown,
   accountId?: string,
+  groupId?: string,
 ): Promise<{ id: string }> {
   const response = await page.request.post("/api/v1/dispatch", {
     headers: {
       "content-type": "application/json",
       ...(accountId ? { "x-account-id": accountId } : {}),
+      ...(groupId ? { "x-group-id": groupId } : {}),
     },
     data: { id, input },
   });
@@ -27,18 +30,19 @@ async function selectAccount(
   page: Page,
   accountId: string,
   baseURL: string | undefined,
+  groupId: string,
 ) {
-  await page.context().addCookies([
+  await page.context().addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(groupId), url: baseURL! },
     {
       name: CURRENT_ACCOUNT_COOKIE,
       value: encodeURIComponent(accountId),
       url: baseURL ?? "http://127.0.0.1",
     },
   ]);
-  await page.addInitScript(
-    ([key, id]) => window.localStorage.setItem(key!, id!),
-    [CURRENT_ACCOUNT_KEY, accountId],
-  );
+  await page.addInitScript(({ accountId, groupId }) => {
+    localStorage.setItem("creatoros:current-account", accountId);
+    localStorage.setItem("creatoros:current-group", groupId);
+  }, { accountId, groupId });
 }
 
 test.describe("发布中心日历主视图（T-599）", () => {
@@ -46,6 +50,7 @@ test.describe("发布中心日历主视图（T-599）", () => {
     page,
     baseURL,
   }) => {
+    const group = await dispatch(page, "accountGroups.create", { body: { name: "T599 真实排期组", idempotencyKey: randomUUID() } });
     const account = await dispatch(page, "accounts.create", {
       params: undefined,
       query: undefined,
@@ -53,7 +58,7 @@ test.describe("发布中心日历主视图（T-599）", () => {
         platform: "douyin",
         accountHandle: `@e2e-t599-publishing-${Date.now()}`,
       },
-    });
+    }, undefined, group.id);
     const project = await dispatch(
       page,
       "projects.create",
@@ -63,8 +68,9 @@ test.describe("发布中心日历主视图（T-599）", () => {
         body: { title: PROJECT_TITLE, brief: "" },
       },
       account.id,
+      group.id,
     );
-    await dispatch(
+    const originalEntry = await dispatch(
       page,
       "accounts.calendar.entries.create",
       {
@@ -73,8 +79,9 @@ test.describe("发布中心日历主视图（T-599）", () => {
         body: { projectId: project.id, plannedDate: "2099-12-31" },
       },
       account.id,
+      group.id,
     );
-    await selectAccount(page, account.id, baseURL);
+    await selectAccount(page, account.id, baseURL, group.id);
 
     await page.goto("/publishing?month=2099-12");
 
@@ -120,5 +127,13 @@ test.describe("发布中心日历主视图（T-599）", () => {
       .getByRole("navigation", { name: "主要导航" })
       .locator('[aria-current="page"]');
     await expect(activeNav).toHaveAttribute("href", "/publishing");
+    await page.getByTestId("calendar-day-2099-12-31").click();
+    const detail = page.getByTestId("calendar-day-drawer");
+    await expect(detail).toHaveAttribute("data-date", "2099-12-31");
+    const originalRow = detail.locator(`[data-entry-id="${originalEntry.id}"]`);
+    await expect(originalRow).toContainText(PROJECT_TITLE);
+    await expect(originalRow.getByRole("link", { name: "打开项目" })).toHaveAttribute("href", `/projects/${project.id}`);
+    await detail.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(detail).not.toBeVisible();
   });
 });

@@ -1,0 +1,171 @@
+{
+  "candidate": "533224f334c43cdb81a344424e420cad93784dd1",
+  "facts": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/settings.spec.ts",
+      "sha256": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/app-shell.spec.ts",
+      "sha256": "b4f525af6bf0e90914ba32284356d989f604fe0897d0633e2541339694286d0b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.tsx",
+      "sha256": "f28a433c2fba7c88f3d6e8771a6ede80fdbc680672c9b51512f8aeac25372edd"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/use-primary-navigation.ts",
+      "sha256": "824161e234864db367a532363c443842d714858ed724661fe6c12ea46fa61206"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/sidebar.tsx",
+      "sha256": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/reference-editors/project-video-session-host.tsx",
+      "sha256": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/dashboard/dashboard-page.tsx",
+      "sha256": "1cea85fda4564279dd18419f40cf4fd1efb2a42d060fc6e83d47eebd45a18e3a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/app-shell.tsx",
+      "sha256": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/app/(creator)/shell-router.tsx",
+      "sha256": "a57e9da3d474ff111a9fc400452521d34d544f302c337e5642470b221bf1f3fa"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/components/shell/workspace-initialization.tsx",
+      "sha256": "a70c883b68a2c9e13aae29304d90205ac7821f7e3ee0aac68a5ccf3a84281b99"
+    }
+  ],
+  "actualCases": [
+    {
+      "schemaVersion": 1,
+      "testId": "826b944a90800335c80d-9f1ba789128856c63381",
+      "titlePath": [
+        "e2e/app-shell.spec.ts",
+        "AppShell",
+        "focus order: sidebar -> top header -> page content"
+      ],
+      "title": "focus order: sidebar -> top header -> page content",
+      "spec": "frontend/tests-t1246-generated/e2e/app-shell.spec.ts",
+      "url": "http://127.0.0.1:61346/",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "status": "failed",
+      "acceptanceStatus": "review",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "screenshot": "screenshots/app-shell--AppShell-focus-order-sidebar-top-header-page-content--655a5b554f7ce62af7138aec8b4c7e45be657ef1f41cf51d0d18f79b8af151ee.png",
+      "screenshotStatus": "captured",
+      "screenshotError": null,
+      "pageClosedBeforeCapture": false,
+      "externalNetworkAttempts": [],
+      "errors": [
+        {
+          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+          "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/app-shell.spec.ts:83:22"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "testId": "826b944a90800335c80d-4077f0e7e007a8275809",
+      "titlePath": [
+        "e2e/app-shell.spec.ts",
+        "AppShell",
+        "applies shared page spacing tokens in the browser"
+      ],
+      "title": "applies shared page spacing tokens in the browser",
+      "spec": "frontend/tests-t1246-generated/e2e/app-shell.spec.ts",
+      "url": "http://127.0.0.1:61346/",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "status": "failed",
+      "acceptanceStatus": "review",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "screenshot": "screenshots/app-shell--AppShell-applies-shared-page-spacing-tokens-in-the-browser--db37cd9c5f34b35e0dd088e5ef866bc447aedf1ab3d7e17f44adf41f0ff67de4.png",
+      "screenshotStatus": "captured",
+      "screenshotError": null,
+      "pageClosedBeforeCapture": false,
+      "externalNetworkAttempts": [],
+      "errors": [
+        {
+          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[32m-   \"gap\": \"20px\",\u001b[39m\n\u001b[31m+   \"gap\": \"normal\",\u001b[39m\n\u001b[2m    \"paddingLeft\": \"24px\",\u001b[22m\n\u001b[2m    \"paddingRight\": \"24px\",\u001b[22m\n\u001b[2m  }\u001b[22m",
+          "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[32m-   \"gap\": \"20px\",\u001b[39m\n\u001b[31m+   \"gap\": \"normal\",\u001b[39m\n\u001b[2m    \"paddingLeft\": \"24px\",\u001b[22m\n\u001b[2m    \"paddingRight\": \"24px\",\u001b[22m\n\u001b[2m  }\u001b[22m\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/app-shell.spec.ts:202:20"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "testId": "87418b536bb3b16b9965-9d167bbc2a2b29b9bb07",
+      "titlePath": [
+        "e2e/settings.spec.ts",
+        "Settings page",
+        "renders the settings structure on the /settings route"
+      ],
+      "title": "renders the settings structure on the /settings route",
+      "spec": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+      "url": "about:blank",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "status": "failed",
+      "acceptanceStatus": "review",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "screenshot": "screenshots/settings--Settings-page-renders-the-settings-structure-on-the-settings-route--3bbd8db718cbc889382b928e65341a5271f7da93d3867f172e612644b18c2964.png",
+      "screenshotStatus": "captured",
+      "screenshotError": null,
+      "pageClosedBeforeCapture": false,
+      "externalNetworkAttempts": [],
+      "errors": [
+        {
+          "message": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================",
+          "stack": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/settings.spec.ts:233:16"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "testId": "87418b536bb3b16b9965-1daf9239c5bf49000f59",
+      "titlePath": [
+        "e2e/settings.spec.ts",
+        "Settings page",
+        "[T-1232] 外观主题与密度按本地消费者持久并返回刷新"
+      ],
+      "title": "[T-1232] 外观主题与密度按本地消费者持久并返回刷新",
+      "spec": "frontend/tests-t1246-generated/e2e/settings.spec.ts",
+      "url": "about:blank",
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "status": "failed",
+      "acceptanceStatus": "review",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "screenshot": "screenshots/settings--Settings-page-T-1232-外观主题与密度按本地消费者持久并返回刷新--d5365957c511f405ee9c0f4c97406aa620490a547284b73502b3f1e4a4fa94d6.png",
+      "screenshotStatus": "captured",
+      "screenshotError": null,
+      "pageClosedBeforeCapture": false,
+      "externalNetworkAttempts": [],
+      "errors": [
+        {
+          "message": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================",
+          "stack": "TimeoutError: page.waitForURL: Timeout 120000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n    at /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/settings.spec.ts:298:16"
+        }
+      ]
+    }
+  ]
+}

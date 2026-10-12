@@ -1,7 +1,7 @@
 import { createHash,randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { and, asc, eq, aiTasks, aiMessages, aiConversations, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, type Db } from "@creatoros/backend";
-import { agenticToolOutcomeSchema, chatWorkerInputSchema, externalChatReceiptSchema, externalChatStartSchema, externalChatTurnStateSchema, externalTaskToolCallSchema, executionBudgetSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import {externalToolInputProofSchema, agenticToolOutcomeSchema, chatWorkerInputSchema, externalChatReceiptSchema, externalChatStartSchema, externalChatTurnStateSchema, externalTaskToolCallSchema, executionBudgetSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { ConflictError, ExecutionBudgetError } from "../execution/execution.errors";
 import { createAiRepository } from "./ai.repository";
@@ -207,7 +207,10 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
       // 候选与读取结果来自已结算的宿主工具回执，不能只依赖 Agent 正文自述。
       const output=outcome.data && typeof outcome.data==="object" && !Array.isArray(outcome.data)
         ? outcome.data : {kind:identity.toolName,error:outcome.summary};
-      const part:Record<string,z.infer<ReturnType<typeof z.json>>>={type:`tool-${identity.toolName}`,toolCallId:identity.toolCallId,state:"output-available",input:{},output:z.json().parse(output)};
+      const rawProof=object(object(task.payload).externalToolInputs)[tool.id];
+      let originalInput:z.infer<ReturnType<typeof z.json>>={};
+      if(rawProof!==undefined){const proof=externalToolInputProofSchema.parse(rawProof),definition=frozen.tools.find(def=>def.name===identity.toolName);if(!definition||proof.callId!==tool.id||proof.turnCallId!==call.id||proof.toolCallId!==identity.toolCallId||proof.toolName!==identity.toolName||proof.toolVersion!==definition.version||proof.inputDigest!==tool.inputDigest||tool.inputDigest!==`sha256:${chatInputDigest({turnCallId:call.id,toolCallId:identity.toolCallId,toolName:identity.toolName,version:definition.version,input:proof.input})}`)throw new ConflictError('外部工具原参数证明无效');originalInput=proof.input;}
+      const part:Record<string,z.infer<ReturnType<typeof z.json>>>={type:`tool-${identity.toolName}`,toolCallId:identity.toolCallId,state:"output-available",input:originalInput,output:z.json().parse(output)};
       if(frozen.toolOutcomeProjectionVersion===1)applyChatToolOutcome(part,tool.id,outcome,false,undefined,1);
       toolCards.push({callId:tool.id,toolCallId:identity.toolCallId,toolName:identity.toolName,output:part.output,part});
     }
@@ -237,7 +240,7 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
        const chunk=output[0]!.chunk;if((card.part.state==='output-denied'&&chunk.type!=='tool-output-denied')||(card.part.state==='output-error'&&(chunk.type!=='tool-input-error'||chunk.errorText!==card.part.errorText))||(!['output-denied','output-error'].includes(String(card.part.state))&&(chunk.type!=='tool-output-available'||!isDeepStrictEqual(chunk.output,card.output))))throw new ConflictError('普通工具最终卡与已保存流事实不符');
        return [];
       }
-      const input=append(call.id,{type:"tool-input-available",toolCallId:card.toolCallId,toolName:card.toolName,input:{}});
+      const input=append(call.id,{type:"tool-input-available",toolCallId:card.toolCallId,toolName:card.toolName,input:card.part.input??{}});
       if(card.part.state==="output-denied"){
         const approval=card.part.approval as {id:string;reason:string};
         return [input,append(card.callId,{type:"tool-approval-request",toolCallId:card.toolCallId,approvalId:approval.id}),append(card.callId,{type:"tool-approval-response",approvalId:approval.id,approved:false,reason:approval.reason}),append(card.callId,{type:"tool-output-denied",toolCallId:card.toolCallId})];

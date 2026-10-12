@@ -1,0 +1,35 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "orchestrator/process/pmem.mjs",
+    "sync"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-control-close-BnnjQZ/pmem.log",
+  "pid": 34182,
+  "identity": {
+    "pid": 34182,
+    "pgid": 34182,
+    "uid": 501,
+    "birth": "Mon Oct 12 18:15:48 2026",
+    "startedAt": 1791800148846
+  },
+  "startedAt": "2026-10-12T10:15:48.846Z",
+  "endedAt": "2026-10-12T10:15:56.684Z",
+  "elapsedMs": 7838,
+  "budgetMs": 1800000,
+  "deadlineAt": "2026-10-12T10:45:48.846Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

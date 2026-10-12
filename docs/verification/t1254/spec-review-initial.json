@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立读取86bc宪法、20df完整SPEC、两原归档21个精确成员与真实fetch/测试、两原构建适配差异、当前两30秒压缩块及原Gate失败。共享请求预算、各自原锁重建/对应源/完整图、CSP与宿主上传边界可实施；发现一个实际static根index.html不在写集的必要消费者缺口REV-001。未安装、构建、请求或浏览器运行，未签候选/功能/App通过；原22/2红、symlink提取首失败与历史类型错误保留。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-OUTPUT",
+        "quote": "所有HTML src/href、JS imports、CSS URL保持存在且本地"
+      },
+      "acceptance_anchor": {
+        "id": "AC-DELIVERY",
+        "quote": "所有产物导入/HTML/CSS本地归属、CSP、native manifest/source/patch与static新增精确manifest一致"
+      },
+      "where": "精确写集族4（SPEC:42），实际static入口frontend/public/reference-editors/doocs-md/index.html",
+      "failure_mode": "族4仅准native/与static/两个目录生成族，实际static根index.html不在其中；真实CSP及入口module/preload新hash引用都由根HTML消费。只复制目录生成族会留下旧HTML引用/旧预算链，更新根HTML则越当前写集，无法同时满足完整重建图与精确复制限制。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "frontend/public/reference-editors/doocs-md/index.html:3及module src/static hash；docs/features/t1254-doocs-request-budget-and-source-closure.md:32,42,50；docs/verification/t1254/INDEPENDENT_SPEC_SOURCE_BINDING.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review of exact20df0b3e",
+      "suggestion": "闭合实际唯一根HTML的授权与生成/图校验；必要外置脚本仍限static内实际清单双审。保持原CSP、其它根assets/favicon/bridge冻结，若实际构建出现其它根变化先列精确合同，不能自动扩大复制。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

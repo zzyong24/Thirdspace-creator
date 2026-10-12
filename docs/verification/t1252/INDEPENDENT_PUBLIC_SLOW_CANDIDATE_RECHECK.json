@@ -1,0 +1,66 @@
+{
+  "schema": "independent-source-candidate-review/v1",
+  "at": "2026-10-12T00:14:54.733213+00:00",
+  "result": "PASS_PRIVATE_PUBLIC_SOURCE_CANDIDATE_ONLY",
+  "packet": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1252/public-slow-candidate/PUBLIC_SOURCE_CANDIDATE_BINDING.json",
+    "sha256": "82bc117fbb7f07a57747eaa8b1424d92b3d9ea84042c7de264f9191fb65e784a"
+  },
+  "candidate": {
+    "path": "docs/verification/t1252/public-slow-candidate/file-recovery-public-slow-candidate.test.ts",
+    "sha256": "2a15d551104954495159b036035c9c1198d7305e7906051d81a003ab6851071d"
+  },
+  "diff": {
+    "path": "docs/verification/t1252/public-slow-candidate/public-slow.diff",
+    "sha256": "03907cf051256a8fbbc932aed262287ff380cbe3fb115d9dc51a5137ed5a72c6"
+  },
+  "sourceChecks": {
+    "items": 26,
+    "hashDrift": [],
+    "originalFullFileInverseEquals71c0": true,
+    "originalNative8BodyAndAssertionsUnchanged": true
+  },
+  "findings": [],
+  "closedFinding": {
+    "id": "PC001",
+    "constraint": "HTTPclose/done独立allSettled，错误均收集，后续observeExit始终attempt；原body异常原样透传，清理错误独立脱敏；真实Native exit0才清目录，未知保目录/owned工具收尾，不signal陌生PID",
+    "evidence": "精确2a15候选535-544，仅新Native cleanup修正，不修改队列/服务/CAS/读回/费用/持久deadline/原断言"
+  },
+  "bodyContracts": [
+    {
+      "name": "T1252 新出生原ID公共Rust对账在owned队列310秒后仍回原证据，不重复写或续期",
+      "testMs": 36000000,
+      "newBornDeadlineMs": 36000000,
+      "queueMs": 310000,
+      "maxHttpCalls": 3,
+      "nativeRpcSetupCalls": 4,
+      "httpAlreadyIncludesNativeRecovery": true,
+      "proof": "真实enqueue有限budget，数据库原executionTasks行在claim/reserve前读出生deadline；unknown原call经公共HTTP/真实Rust receipt CAS结算，再原IDresume仅回放保存receipt。原8不延时/不续期。"
+    },
+    {
+      "name": "T1252 原注册版本真实CLI公共render三合法Chromium阶段累计超过300秒，PNG/PDF仍同sourceHash有效字节",
+      "testMs": 42000000,
+      "newBornDeadlineMs": 36000000,
+      "maxHttpCalls": 4,
+      "actualChromiumStagesPerFormat": 3,
+      "parallelFixedDelayPerStageMs": 110000,
+      "stageOriginalPositiveMs": 120000,
+      "proof": "实际artifact.register事务/currentVersion/sourceHash；受控file source按旧35s fixture明确标注，真实SDK立即开始与固定stage延迟并行；2格式各累计330s，原HTTP/JSON/PNG像素/PDF文字/MIME/hash/跨账号/错版本及原D不续。"
+    }
+  ],
+  "actualEvidenceLimits": [
+    "私有noemit overlay0，不是标准frontendtypes全绿（四历史错仍保）",
+    "b88只list72/唯一exactjournal，未执行任何ignored正文；two310s bundledHTTP实际绿不能代这些业务链",
+    "受控Native fixture有真Rust字节/原unknown/CAS/resume；输入AI modelreceipt仍明确协议fixture，不签官方AI生成",
+    "render controlled file/blob source，真实artifact register/currentversion以及Chromium/PNG/PDF字节，不签App或外部网站"
+  ],
+  "requiredNextToolReview": [
+    "独立ownedchild/source闭包与真实Node/undici/b88 SHA/compiled exactfilter/peer PID，原HOME/CODEX_HOME保留",
+    "每childowned失效CONNECTION_FILE/CLI_ACCESS_FILE，explicitloopback fixture每次才临时synthetic credentials；不得默认发现用户连接",
+    "新36M Nativebody对应Rustfixture WAIT须覆盖ready→完整body/串行请求以及done前cleanup；原8不延原Task60k，不改原assert或skip伪前置",
+    "原native regex在机械copy里须实际sha-verified给定binary路径，完整inverse/statics与实际list分母",
+    "original/new allcases更长test/hook声明与entryprepare/每393f2.16M lifecycle/childcleanup/outer完整相加，不用大outer缩内层",
+    "实际新sourceapply/fullprepare/ROOT与独评双准入后才run；source/code/App未由本审修改或运行"
+  ],
+  "runtimePermission": false
+}
