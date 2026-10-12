@@ -1,0 +1,28 @@
+{
+  "budgets": {
+    "prepare": 3600000,
+    "green": 77400000,
+    "syntax": 540000,
+    "lifecycle": 2160000,
+    "after": 3600000,
+    "total": 89460000
+  },
+  "rows": [
+    {
+      "path": "frontend/scripts/desktop/package.mjs",
+      "sha256": "dbe1d99ba82ee80bfd48b617810f5edcc2eb46facf7e344a16a11682e8c727d0"
+    },
+    {
+      "path": "frontend/scripts/desktop/local-dmg-layout-env.mjs",
+      "sha256": "a3ace9ea3c8af57744134ed54a203cafe2c7fab97614930efa7ba01e12c5c86c"
+    },
+    {
+      "path": "frontend/scripts/desktop/local-dmg-layout-env.test.mjs",
+      "sha256": "5827b06c559d48187d218ab6abe8822ccbcfbf88a8b7290d32c93708d9bd0aba"
+    }
+  ],
+  "greenCount": 107,
+  "budgetFormula": "107*3*(120k test +120k global afterEach)+120k teardown+240k startup/exit=77.4M；syntax3*120k+180k exit=540k；父含prepare3.6+green77.4+2.16LC+syntax.54+2.16LC+after3.6=89.46M",
+  "priorActualGreenFailureRetained": "tdd-green-e6137d1bc708b6ff",
+  "deltaOnlyNewTestSourceReadPath": true
+}

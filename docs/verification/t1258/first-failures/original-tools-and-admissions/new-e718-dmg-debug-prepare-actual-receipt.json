@@ -1,0 +1,28 @@
+{
+  "session": 6378,
+  "naturalExit": 0,
+  "prepareOnly": true,
+  "noBuild": true,
+  "head": "e7182d90325e522967a49cfaee6df5279843da92",
+  "freeze": "/private/tmp/t1246-package-final-source/v2/new-e718-dmg-debug-freeze.json",
+  "sha256": "ed7b564b1abdda1aa59c54cba95ca21ec4c1f4a88519dad5b561b571684b9e2c",
+  "bytes": 61685037,
+  "originalFreeze": "/private/tmp/t1246-package-final-source/v2/new-e718-freeze.json",
+  "completeBytesIdenticalToOriginalEd7b": true,
+  "jsonFieldDeltaCount": 0,
+  "rowDeltaCount": 0,
+  "prepareReceipt": {
+    "name": "prepare-all-seven-Git-and-IO",
+    "cliCount": 7,
+    "cliBudgetMs": 840000,
+    "cliElapsedMs": 8025.221791,
+    "ioBudgetMs": 3600000,
+    "ioElapsedMs": 59073.822167000006,
+    "budgetMs": 4440000,
+    "elapsedMs": 67099.046917,
+    "fullAfterFutureMs": 0
+  },
+  "runnerSHA256": "fb93fa321f0a3e618a21df3f0e1059c46e90b0c0e275191b1296ceb60bc4b39e",
+  "onlyExecutionEnvDelta": "TAURI_CLI_VERBOSITY=1",
+  "noProductOrHeadChange": true
+}

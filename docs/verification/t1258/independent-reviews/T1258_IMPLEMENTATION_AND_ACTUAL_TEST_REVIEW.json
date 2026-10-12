@@ -1,0 +1,1352 @@
+{
+  "kind": "PRIVATE T1258_IMPLEMENTATION_AND_ACTUAL_TEST_REVIEW",
+  "at": "2026-10-12T15:09:23.344592+00:00",
+  "status": "PASS",
+  "headAtReview": "e7182d90325e522967a49cfaee6df5279843da92",
+  "SPEC_SHA": "d4a4a22e6d0c2d363257f032935512a82aa72c0a66c5084f543dee30d199fa10",
+  "sourceRows": [
+    {
+      "path": "frontend/scripts/desktop/package.mjs",
+      "sha256": "dbe1d99ba82ee80bfd48b617810f5edcc2eb46facf7e344a16a11682e8c727d0",
+      "bytes": 27963
+    },
+    {
+      "path": "frontend/scripts/desktop/local-dmg-layout-env.mjs",
+      "sha256": "a3ace9ea3c8af57744134ed54a203cafe2c7fab97614930efa7ba01e12c5c86c",
+      "bytes": 624
+    },
+    {
+      "path": "frontend/scripts/desktop/local-dmg-layout-env.test.mjs",
+      "sha256": "5827b06c559d48187d218ab6abe8822ccbcfbf88a8b7290d32c93708d9bd0aba",
+      "bytes": 5133
+    }
+  ],
+  "original49AssertionsSourceUnchanged": [
+    {
+      "path": "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+      "sha256": "eefab4994621bea0fad12b6a6628d4a704b3f5a6ce02a8c224135defbfdbbab6",
+      "bytesUnchanged": true
+    },
+    {
+      "path": "frontend/scripts/desktop/dmg-install-guide.test.mjs",
+      "sha256": "40cbdf8133d85e59183db495ce14da183fcb4f791ee641b7b91103629aa371bd",
+      "bytesUnchanged": true
+    },
+    {
+      "path": "frontend/scripts/desktop/notarize.test.mjs",
+      "sha256": "a5268de2b431885730e6610fbc1997dcf0ea29ee0fdd16f768a0332273278837",
+      "bytesUnchanged": true
+    },
+    {
+      "path": "frontend/scripts/desktop/package-local.test.mjs",
+      "sha256": "7fb699dafb1488e22a06b44c21a01519e3faab60a24df81a07b53a1935255129",
+      "bytesUnchanged": true
+    },
+    {
+      "path": "frontend/scripts/desktop/tauri-signing-config.test.mjs",
+      "sha256": "3d7aee34bc455a3fa6ea0c402e3d8a93f5d73947f398b7acefdc06486a01440b",
+      "bytesUnchanged": true
+    }
+  ],
+  "scope": "产品只有package import+T975后spread两插入，以及新纯配置helper/newtest；配置严格darwin/buildOnly真/nonrelease假/四flag字面1，父环境不写，原T975 literal/正式默认/原签名step不动",
+  "sourceReadAdjustmentOnly": true,
+  "actualRounds": [
+    {
+      "round": "tdd-red-b2e3c0d1cc906786",
+      "childExit": 1,
+      "counts": {
+        "total": 58,
+        "passed": 0,
+        "failed": 1,
+        "pending": 57
+      },
+      "caseRows": [
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 显式本地开发包返回 Tauri 专用配置",
+          "status": "failed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 只返回两项配置，不修改父环境或入参",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_DMG_HEADLESS 时保留默认布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"true\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"0\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"01\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \" 1\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"1 \"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 1",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 true",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 null",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_ADHOC_SIGN 时保留默认布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"true\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"0\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"01\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \" 1\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"1 \"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 1",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 true",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 null",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_SKIP_INSTALL 时保留默认布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"true\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"0\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"01\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \" 1\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"1 \"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 1",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 true",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 null",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_PACKAGE_BUILD_ONLY 时保留默认布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"true\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"0\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"01\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \" 1\"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"1 \"",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 1",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 true",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 null",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 win32 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 linux 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 undefined 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly false 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly undefined 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly 1 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly true 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease true 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease undefined 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease 1 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease false 不启用本地无界面布局",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 默认正式 CI 保留原有 Finder 安装引导",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少配置时返回空对象",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 空环境时返回空对象",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 真实 Tauri 步骤在原 T975 之后覆盖两项环境，父环境不变",
+          "status": "skipped"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 真实正式发布步骤即使四标志齐全也保留 T975 引导",
+          "status": "skipped"
+        }
+      ],
+      "failedNames": [
+        "T-1258 显式本地无界面 DMG 配置 显式本地开发包返回 Tauri 专用配置"
+      ],
+      "receiptSHA": "b60f25e4bb553541036911c4f1d854b82462f3bd901fc436f5936b2f2378658e",
+      "elapsedMs": 1962
+    },
+    {
+      "round": "tdd-green-e6137d1bc708b6ff",
+      "childExit": 1,
+      "counts": {
+        "total": 107,
+        "passed": 105,
+        "failed": 2,
+        "pending": 0
+      },
+      "caseRows": [
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-1063 两端出包无项目超时，额外验收显式选择且不阻断上传",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 桌面版本权威统一为 1.2.0，且不直接覆盖公共更新清单",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 草稿 Release 在无需 checkout 的 job 中显式绑定当前仓库",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 tag 测试发行默认只构建 macOS，Windows 必须手动显式选择",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-575 remote sidecar ACL 放行领取命令，并与 invoke handler 同名",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-748 本地激活重置的 invoke、handler 与 remote sidecar ACL 同步",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-635 可分发包固定关闭领取，反馈仍由受控双门开启",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-575 config.pull 只把构建期 origin、公钥与开关注入 server-only sidecar",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-635 release 与 release-fast 候选包均注入 exact CreatorOS projectKey",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-635 将 canonical identity 固化进统一安装包，release runtime 不接受覆盖",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 所有可安装包在重活前校验 verdict 密钥对，Rust 壳只嵌入构建期拆分材料",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 正式 runner 先精确恢复/构建并立即保存 clean runtime",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 缓存键隔离平台、架构、Node ABI 和所有 runtime 输入",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 cache hit 后用缓存 Node 和已烘焙 verdict 公钥做二次硬校验",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 macOS 即使命中 clean runtime 缓存也会在冒烟前安装 host Chromium",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 release 复用已恢复的 clean sidecar，不再重复跑 Next/闭包组装",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 clean runtime 阶段不提前压大 tar，最终变换后只由 beforeBuild 压一次",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 本地 release-fast 与正式 release 的最终产物自检读取各自 profile",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 本地无 updater 私钥时只跳过更新制品，不阻断可安装包",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 Windows 安装包先上传，安装与卸载为可选验收",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 Windows 上传后真启动 GUI，并等待 WebView 主页面完成加载",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 Windows 首启冒烟覆盖旧 appData runtime 与新安装 runtime 并存的升级机器",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 macOS 安装包先上传，可单独选择归档回放和真启动验收",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 macOS 正式 job 从 Secrets 建一次性钥匙串，签名公证验收后清理",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-565 候选制品先上传，可单独选择真安装与 WebView DOM 验收",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-565 Windows 候选包与 macOS 正式 build 可在同一提交并行验证",
+          "status": "passed"
+        },
+        {
+          "name": "CreatorOS macOS DMG 安装引导 官方包使用与 Finder 坐标严格对应的 2× Retina 背景",
+          "status": "passed"
+        },
+        {
+          "name": "CreatorOS macOS DMG 安装引导 高清源图包含品牌、拖动说明和完整三步文案",
+          "status": "passed"
+        },
+        {
+          "name": "CreatorOS macOS DMG 安装引导 正式 CI 构建保留 Finder 安装引导，不受 Tauri 默认跳过逻辑影响",
+          "status": "passed"
+        },
+        {
+          "name": "CreatorOS macOS DMG 安装引导 渠道包显式关闭官方 CreatorOS 背景，避免安装阶段串品牌",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 显式本地开发包返回 Tauri 专用配置",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 只返回两项配置，不修改父环境或入参",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_DMG_HEADLESS 时保留默认布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"true\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"0\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"01\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \" 1\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"1 \"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 1",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 null",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_ADHOC_SIGN 时保留默认布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"true\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"0\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"01\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \" 1\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"1 \"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 1",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 null",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_SKIP_INSTALL 时保留默认布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"true\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"0\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"01\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \" 1\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"1 \"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 1",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 null",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_PACKAGE_BUILD_ONLY 时保留默认布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"true\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"0\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"01\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \" 1\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"1 \"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 1",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 null",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 win32 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 linux 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 undefined 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly false 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly undefined 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly 1 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly true 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease true 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease undefined 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease 1 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease false 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 默认正式 CI 保留原有 Finder 安装引导",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少配置时返回空对象",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 空环境时返回空对象",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 真实 Tauri 步骤在原 T975 之后覆盖两项环境，父环境不变",
+          "status": "failed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 真实正式发布步骤即使四标志齐全也保留 T975 引导",
+          "status": "failed"
+        },
+        {
+          "name": "T-640 macOS 公证凭据 优先使用 macOS 钥匙串 profile，命令行不携带明文密码",
+          "status": "passed"
+        },
+        {
+          "name": "T-640 macOS 公证凭据 本机登录钥匙串 profile 未指定路径时保持原有调用",
+          "status": "passed"
+        },
+        {
+          "name": "T-640 macOS 公证凭据 继续兼容 Apple ID + app-specific password",
+          "status": "passed"
+        },
+        {
+          "name": "T-640 macOS 公证凭据 凭据不完整时如实标记未配置",
+          "status": "passed"
+        },
+        {
+          "name": "buildLocalPackageEnv 一次补齐 CreatorOS 本地包所需的固定配置和安全密钥",
+          "status": "passed"
+        },
+        {
+          "name": "buildLocalPackageEnv 尊重显式传入的环境，不读取或覆盖现有密钥",
+          "status": "passed"
+        },
+        {
+          "name": "buildLocalPackageEnv 可显式选择原有额外验证且保留本机密钥与 ad-hoc 签名",
+          "status": "passed"
+        },
+        {
+          "name": "buildLocalPackageEnv 缺少本机安全密钥时在重型构建前给出明确错误",
+          "status": "passed"
+        },
+        {
+          "name": "本地验收包交付名 只暴露产品名和版本号，不把架构、任务号或时间戳塞给用户",
+          "status": "passed"
+        },
+        {
+          "name": "本地验收包交付名 把最新构建产物复制到 Downloads 下的唯一固定名称",
+          "status": "passed"
+        },
+        {
+          "name": "本地验收包交付名 渠道包使用渠道展示名生成独立验收包名",
+          "status": "passed"
+        },
+        {
+          "name": "macOS 本地验收包安装交付 默认原子替换唯一 CreatorOS.app，启动后确认真实应用进程",
+          "status": "passed"
+        },
+        {
+          "name": "macOS 本地验收包安装交付 找不到本轮构建的 App 时禁止碰 /Applications",
+          "status": "passed"
+        },
+        {
+          "name": "macOS 本地验收包安装交付 非 macOS 只交付安装包，不擅自运行平台安装器",
+          "status": "passed"
+        },
+        {
+          "name": "macOS 本地验收包安装交付 渠道包安装到独立应用名并按渠道二进制确认真实进程",
+          "status": "passed"
+        },
+        {
+          "name": "本地出包媒体资源完整性 ffmpeg和ffprobe显式源拒绝空文件及目录，允许非空普通文件",
+          "status": "passed"
+        },
+        {
+          "name": "Tauri macOS 构建期签名配置 把 Developer ID identity 注入 Tauri bundle，确保 DMG 内 app 在封盘前已签名",
+          "status": "passed"
+        },
+        {
+          "name": "Tauri macOS 构建期签名配置 非 macOS 或未配置证书时不注入",
+          "status": "passed"
+        },
+        {
+          "name": "Tauri macOS 构建期签名配置 本地支持包在 DMG 封盘前使用 ad-hoc 签名，但不冒充 Developer ID",
+          "status": "passed"
+        }
+      ],
+      "failedNames": [
+        "T-1258 显式本地无界面 DMG 配置 真实 Tauri 步骤在原 T975 之后覆盖两项环境，父环境不变",
+        "T-1258 显式本地无界面 DMG 配置 真实正式发布步骤即使四标志齐全也保留 T975 引导"
+      ],
+      "receiptSHA": "a81830952f053695e86f890037060496f65a3a46554191077707f45725dba03d",
+      "elapsedMs": 5182
+    },
+    {
+      "round": "tdd-green-v2-88ac6b821af0db3b",
+      "childExit": 0,
+      "counts": {
+        "total": 107,
+        "passed": 107,
+        "failed": 0,
+        "pending": 0
+      },
+      "caseRows": [
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-1063 两端出包无项目超时，额外验收显式选择且不阻断上传",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 桌面版本权威统一为 1.2.0，且不直接覆盖公共更新清单",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 草稿 Release 在无需 checkout 的 job 中显式绑定当前仓库",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 tag 测试发行默认只构建 macOS，Windows 必须手动显式选择",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-575 remote sidecar ACL 放行领取命令，并与 invoke handler 同名",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-748 本地激活重置的 invoke、handler 与 remote sidecar ACL 同步",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-635 可分发包固定关闭领取，反馈仍由受控双门开启",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-575 config.pull 只把构建期 origin、公钥与开关注入 server-only sidecar",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-635 release 与 release-fast 候选包均注入 exact CreatorOS projectKey",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-635 将 canonical identity 固化进统一安装包，release runtime 不接受覆盖",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 所有可安装包在重活前校验 verdict 密钥对，Rust 壳只嵌入构建期拆分材料",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 正式 runner 先精确恢复/构建并立即保存 clean runtime",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 缓存键隔离平台、架构、Node ABI 和所有 runtime 输入",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 cache hit 后用缓存 Node 和已烘焙 verdict 公钥做二次硬校验",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 macOS 即使命中 clean runtime 缓存也会在冒烟前安装 host Chromium",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 release 复用已恢复的 clean sidecar，不再重复跑 Next/闭包组装",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 clean runtime 阶段不提前压大 tar，最终变换后只由 beforeBuild 压一次",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 本地 release-fast 与正式 release 的最终产物自检读取各自 profile",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 本地无 updater 私钥时只跳过更新制品，不阻断可安装包",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 Windows 安装包先上传，安装与卸载为可选验收",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 Windows 上传后真启动 GUI，并等待 WebView 主页面完成加载",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 Windows 首启冒烟覆盖旧 appData runtime 与新安装 runtime 并存的升级机器",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 macOS 安装包先上传，可单独选择归档回放和真启动验收",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 macOS 正式 job 从 Secrets 建一次性钥匙串，签名公证验收后清理",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-565 候选制品先上传，可单独选择真安装与 WebView DOM 验收",
+          "status": "passed"
+        },
+        {
+          "name": "桌面正式构建的 Runtime Image 缓存契约 T-565 Windows 候选包与 macOS 正式 build 可在同一提交并行验证",
+          "status": "passed"
+        },
+        {
+          "name": "CreatorOS macOS DMG 安装引导 官方包使用与 Finder 坐标严格对应的 2× Retina 背景",
+          "status": "passed"
+        },
+        {
+          "name": "CreatorOS macOS DMG 安装引导 高清源图包含品牌、拖动说明和完整三步文案",
+          "status": "passed"
+        },
+        {
+          "name": "CreatorOS macOS DMG 安装引导 正式 CI 构建保留 Finder 安装引导，不受 Tauri 默认跳过逻辑影响",
+          "status": "passed"
+        },
+        {
+          "name": "CreatorOS macOS DMG 安装引导 渠道包显式关闭官方 CreatorOS 背景，避免安装阶段串品牌",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 显式本地开发包返回 Tauri 专用配置",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 只返回两项配置，不修改父环境或入参",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_DMG_HEADLESS 时保留默认布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"true\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"0\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"01\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \" 1\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 \"1 \"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 1",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_DMG_HEADLESS 不接受字面 null",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_ADHOC_SIGN 时保留默认布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"true\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"0\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"01\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \" 1\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 \"1 \"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 1",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_ADHOC_SIGN 不接受字面 null",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_LOCAL_SKIP_INSTALL 时保留默认布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"true\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"0\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"01\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \" 1\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 \"1 \"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 1",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_LOCAL_SKIP_INSTALL 不接受字面 null",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少 CREATOROS_PACKAGE_BUILD_ONLY 时保留默认布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"true\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"0\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"01\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \" 1\"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 \"1 \"",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 1",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 true",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 CREATOROS_PACKAGE_BUILD_ONLY 不接受字面 null",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 win32 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 linux 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 平台 undefined 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly false 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly undefined 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly 1 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 buildOnly true 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease true 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease undefined 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease 1 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 isFullRelease false 不启用本地无界面布局",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 默认正式 CI 保留原有 Finder 安装引导",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 缺少配置时返回空对象",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 空环境时返回空对象",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 真实 Tauri 步骤在原 T975 之后覆盖两项环境，父环境不变",
+          "status": "passed"
+        },
+        {
+          "name": "T-1258 显式本地无界面 DMG 配置 真实正式发布步骤即使四标志齐全也保留 T975 引导",
+          "status": "passed"
+        },
+        {
+          "name": "T-640 macOS 公证凭据 优先使用 macOS 钥匙串 profile，命令行不携带明文密码",
+          "status": "passed"
+        },
+        {
+          "name": "T-640 macOS 公证凭据 本机登录钥匙串 profile 未指定路径时保持原有调用",
+          "status": "passed"
+        },
+        {
+          "name": "T-640 macOS 公证凭据 继续兼容 Apple ID + app-specific password",
+          "status": "passed"
+        },
+        {
+          "name": "T-640 macOS 公证凭据 凭据不完整时如实标记未配置",
+          "status": "passed"
+        },
+        {
+          "name": "buildLocalPackageEnv 一次补齐 CreatorOS 本地包所需的固定配置和安全密钥",
+          "status": "passed"
+        },
+        {
+          "name": "buildLocalPackageEnv 尊重显式传入的环境，不读取或覆盖现有密钥",
+          "status": "passed"
+        },
+        {
+          "name": "buildLocalPackageEnv 可显式选择原有额外验证且保留本机密钥与 ad-hoc 签名",
+          "status": "passed"
+        },
+        {
+          "name": "buildLocalPackageEnv 缺少本机安全密钥时在重型构建前给出明确错误",
+          "status": "passed"
+        },
+        {
+          "name": "本地验收包交付名 只暴露产品名和版本号，不把架构、任务号或时间戳塞给用户",
+          "status": "passed"
+        },
+        {
+          "name": "本地验收包交付名 把最新构建产物复制到 Downloads 下的唯一固定名称",
+          "status": "passed"
+        },
+        {
+          "name": "本地验收包交付名 渠道包使用渠道展示名生成独立验收包名",
+          "status": "passed"
+        },
+        {
+          "name": "macOS 本地验收包安装交付 默认原子替换唯一 CreatorOS.app，启动后确认真实应用进程",
+          "status": "passed"
+        },
+        {
+          "name": "macOS 本地验收包安装交付 找不到本轮构建的 App 时禁止碰 /Applications",
+          "status": "passed"
+        },
+        {
+          "name": "macOS 本地验收包安装交付 非 macOS 只交付安装包，不擅自运行平台安装器",
+          "status": "passed"
+        },
+        {
+          "name": "macOS 本地验收包安装交付 渠道包安装到独立应用名并按渠道二进制确认真实进程",
+          "status": "passed"
+        },
+        {
+          "name": "本地出包媒体资源完整性 ffmpeg和ffprobe显式源拒绝空文件及目录，允许非空普通文件",
+          "status": "passed"
+        },
+        {
+          "name": "Tauri macOS 构建期签名配置 把 Developer ID identity 注入 Tauri bundle，确保 DMG 内 app 在封盘前已签名",
+          "status": "passed"
+        },
+        {
+          "name": "Tauri macOS 构建期签名配置 非 macOS 或未配置证书时不注入",
+          "status": "passed"
+        },
+        {
+          "name": "Tauri macOS 构建期签名配置 本地支持包在 DMG 封盘前使用 ad-hoc 签名，但不冒充 Developer ID",
+          "status": "passed"
+        }
+      ],
+      "failedNames": [],
+      "receiptSHA": "c859c58e42f0ac4ff9402cfa599e8733144e067969533a639d4c0fc2b4f22ea1",
+      "elapsedMs": 5250
+    }
+  ],
+  "rawFilesAllRead": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/actual-red.json",
+      "bytes": 5610,
+      "sha256": "94700f758b6a852a7a65725b345cccd54170ba78cbb4812a2c477a26b9fd6df1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/actual-test-before-red.mjs",
+      "bytes": 5090,
+      "sha256": "d0712dbe6582ccb342edbb80d9a06b1b38232cf597344002cda8809a5ed350b7"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/actual-unimplemented-helper.mjs",
+      "bytes": 145,
+      "sha256": "434f11b1a3c5c2e20092354e89552017520f351d8e077e80ae20661409ddc56e"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/before.json",
+      "bytes": 467,
+      "sha256": "591ad1fcb82a441b93a615fa95aae4af6ae24865f13d7c3b17156ed1af8eeead"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/receipt.json",
+      "bytes": 1718,
+      "sha256": "b60f25e4bb553541036911c4f1d854b82462f3bd901fc436f5936b2f2378658e"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/summary.json",
+      "bytes": 374,
+      "sha256": "a007170701a04f520ffe91f9a11c34171162cf9788e371ca9b7bf228f7160b6c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/vitest.json",
+      "bytes": 22367,
+      "sha256": "1562a0f65c83ddb273675d3d0aa70931b5d2ced0cb66e11c5bc42df29e35129a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/vitest.log",
+      "bytes": 312,
+      "sha256": "e17ae57c650700e256a8bb7c5b6487c74720a811bf625b68429861142618c1a4"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/full-body-green-receipt.json",
+      "bytes": 1907,
+      "sha256": "a81830952f053695e86f890037060496f65a3a46554191077707f45725dba03d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/full-body-green.log",
+      "bytes": 1064,
+      "sha256": "bf90101af0334e32bf87425e4be8ccb90486e6bcc033aadbf81625ab561c8313"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/local-dmg-layout-env.mjs",
+      "bytes": 624,
+      "sha256": "a3ace9ea3c8af57744134ed54a203cafe2c7fab97614930efa7ba01e12c5c86c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/local-dmg-layout-env.test.mjs",
+      "bytes": 5090,
+      "sha256": "d0712dbe6582ccb342edbb80d9a06b1b38232cf597344002cda8809a5ed350b7"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/package.mjs",
+      "bytes": 27963,
+      "sha256": "dbe1d99ba82ee80bfd48b617810f5edcc2eb46facf7e344a16a11682e8c727d0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/source-before.json",
+      "bytes": 880,
+      "sha256": "cd156f97a6a1dd9b16b5bd9549f03d2d0402d3659233ff06daa23abd2ce6e521"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/summary.json",
+      "bytes": 792,
+      "sha256": "d0127e05703ca56ca16edb6fb60a0e1cccf11772c883c29fdccf5d7c54347297"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/vitest.json",
+      "bytes": 46495,
+      "sha256": "dbec4ecce51edaa811762c0a9dbd9bc9ccac137161884dc3e0b8fe73ef36c52d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/actual-green.json",
+      "bytes": 1500,
+      "sha256": "bd78216a2247eac37d6e20d46612d0610fcaca9564adc8a54b29ff57e76a5ea4"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/full-body-green-receipt.json",
+      "bytes": 1913,
+      "sha256": "c859c58e42f0ac4ff9402cfa599e8733144e067969533a639d4c0fc2b4f22ea1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/full-body-green.log",
+      "bytes": 1067,
+      "sha256": "55f6600b8dbd2d998f5e826c94fdb0f11fc6ec57ae173196e384ee1c9abd6e4c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/local-dmg-layout-env.mjs",
+      "bytes": 624,
+      "sha256": "a3ace9ea3c8af57744134ed54a203cafe2c7fab97614930efa7ba01e12c5c86c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/local-dmg-layout-env.test.mjs",
+      "bytes": 5133,
+      "sha256": "5827b06c559d48187d218ab6abe8822ccbcfbf88a8b7290d32c93708d9bd0aba"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/package.mjs",
+      "bytes": 27963,
+      "sha256": "dbe1d99ba82ee80bfd48b617810f5edcc2eb46facf7e344a16a11682e8c727d0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/source-after.json",
+      "bytes": 519,
+      "sha256": "b79ac6e5b151585ffce25e84f45069d9b4694825d67ef0c5b92f30439d0b9d63"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/source-before.json",
+      "bytes": 989,
+      "sha256": "5880f44c4c94685fbd492399371be77f9005cf8e4b202517250c6e6fb68b9c7a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/summary.json",
+      "bytes": 1094,
+      "sha256": "aeb99a37331c457b9f486e2f359e0e5ddad74b9121d956dad5107af1bf3655a5"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/three-node-syntax-receipt.json",
+      "bytes": 1436,
+      "sha256": "acb8bc56d14dbc559566b915776e10392e457ebba77f0ca3cfe0412d8454f5ba"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/three-node-syntax.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/vitest.json",
+      "bytes": 37832,
+      "sha256": "7b2794866af06adfbf5b56855b9a54cace61786854dc288cdd15a99646399568"
+    }
+  ],
+  "final107PerFile": {
+    "desktop-release-workflow.test.mjs": 26,
+    "dmg-install-guide.test.mjs": 4,
+    "local-dmg-layout-env.test.mjs": 58,
+    "notarize.test.mjs": 4,
+    "package-local.test.mjs": 12,
+    "tauri-signing-config.test.mjs": 3
+  },
+  "syntaxReceiptSHA": "acb8bc56d14dbc559566b915776e10392e457ebba77f0ca3cfe0412d8454f5ba",
+  "sourceBeforeAfterMatchesCurrent": true,
+  "errors": [],
+  "TDDLimit": "当场RED只执行正路一例，57因name filter pending，不称全58 RED；first GREEN 105PASS2FAIL保留，最终source读路校准后107PASS0FAIL",
+  "integrationLimit": "两真实生产Tauri step对象展开用例实际执行且passed，但spawn被替换，仅签接线单测；必须新HEAD固定package入口真实--skip-jenkins/签名/DMG verify/11dist10public另验",
+  "packagePASS": false,
+  "AppOrWindowsPASS": false,
+  "globalOld23DebtNotCleared": true,
+  "noReviewerTestBuildProductWrites": true
+}

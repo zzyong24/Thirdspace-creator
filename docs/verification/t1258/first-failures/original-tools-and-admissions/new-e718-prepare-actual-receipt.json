@@ -1,0 +1,70 @@
+{
+  "prepareOnly": true,
+  "noBuild": true,
+  "session": 2038,
+  "naturalExit": 0,
+  "freeze": "/private/tmp/t1246-package-final-source/v2/new-e718-freeze.json",
+  "freezeSha256": "ed7b564b1abdda1aa59c54cba95ca21ec4c1f4a88519dad5b561b571684b9e2c",
+  "head": "e7182d90325e522967a49cfaee6df5279843da92",
+  "prepareReceipt": {
+    "name": "prepare-all-seven-Git-and-IO",
+    "cliCount": 7,
+    "cliBudgetMs": 840000,
+    "cliElapsedMs": 6066.880293000003,
+    "ioBudgetMs": 3600000,
+    "ioElapsedMs": 47541.995039999994,
+    "budgetMs": 4440000,
+    "elapsedMs": 53608.878249999994,
+    "fullAfterFutureMs": 0
+  },
+  "sourceRows": 26233,
+  "dependencyRoots": [
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules",
+      "rows": 111692
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/node_modules",
+      "rows": 91
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/node_modules",
+      "rows": 38
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/node_modules",
+      "rows": 33
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/contract/node_modules",
+      "rows": 7
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/mcp-server/node_modules",
+      "rows": 15
+    }
+  ],
+  "toolRows": 10,
+  "pnpmRows": 1077,
+  "installedApp": {
+    "path": "/Applications/CreatorOS.app",
+    "present": true,
+    "rowCount": 7
+  },
+  "preservedFirstDMG": {
+    "file": "/private/tmp/t1246-package-first-preserved/CreatorOS-1.2.0.dmg",
+    "mode": 420,
+    "uid": 501,
+    "kind": "file",
+    "size": 864213887,
+    "sha256": "e63202df379c8c39f6470b4153f8b06100ff8aceed5f46be3c6bab3eb686f402"
+  },
+  "versions": {
+    "frontend": "1.2.0",
+    "tauri": "1.2.0",
+    "cargoToml": "1.2.0",
+    "cargoLock": "1.2.0"
+  },
+  "noRepoWrite": true,
+  "noExecuteBasicBuild": true
+}

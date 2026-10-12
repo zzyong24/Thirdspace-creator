@@ -34,6 +34,7 @@ import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 import { verifyPackagedVerdictHardening } from "./verdict-artifact-hardening.mjs";
 import { assertClientConfigBuildEnv } from "./client-config-release.mjs";
 import { tauriMacSigningOverride } from "./tauri-signing-config.mjs";
+import { resolveLocalDmgLayoutEnv } from "./local-dmg-layout-env.mjs";
 
 // 必须早于预清 DMG、写构建报告和任何重型构建步骤。Homebrew node@22 抢 PATH 时，
 // 入口会自动重启到已验证的 Node 25；找不到则硬失败，禁止继续产错 V8 字节码包。
@@ -501,6 +502,12 @@ step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs,
   // T-975: Tauri 在 CI=true 时默认跳过 Finder 布局，背景虽入包却无法显示。
   // 仅覆盖 DMG 的布局分支，保留 CI 对其他构建步骤的语义。
   ...(platform === "darwin" ? { TAURI_BUNDLER_DMG_IGNORE_CI: "true" } : {}),
+  ...resolveLocalDmgLayoutEnv({
+    platform,
+    buildOnly,
+    isFullRelease: process.env.CREATOROS_RELEASE === "1",
+    env: process.env,
+  }),
   CREATOROS_SKIP_SIDECAR_REBUILD: "1",
   CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
 });

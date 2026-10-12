@@ -1,0 +1,31 @@
+{
+  "out": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff",
+  "error": "Error: ACTUAL_GREEN_CHILD_FAILED full-body-green",
+  "elapsedMs": 5191.854167,
+  "budgets": {
+    "prepare": 3600000,
+    "green": 77400000,
+    "syntax": 540000,
+    "lifecycle": 2160000,
+    "after": 3600000,
+    "total": 89460000
+  },
+  "records": [
+    {
+      "pid": 23374,
+      "identity": {
+        "pid": 23374,
+        "pgid": 23374,
+        "uid": 501,
+        "birth": "Mon Oct 12 23:02:46 2026",
+        "startedAt": 1791817366183
+      },
+      "code": 1,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "signals": [],
+      "budgetExhausted": false
+    }
+  ],
+  "noAppNoPackageNoWorker": true
+}

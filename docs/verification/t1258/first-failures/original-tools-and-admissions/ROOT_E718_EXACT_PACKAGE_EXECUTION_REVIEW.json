@@ -1,0 +1,18 @@
+{
+  "task": "T-1246",
+  "scope": "FROZEN_HEAD_LOCAL_PACKAGE_ONLY",
+  "head": "e7182d90325e522967a49cfaee6df5279843da92",
+  "runnerSha256": "504bd7d18b8ba0f51745451fecf2ccbc68921da49fe8fe8138408529676e0cb5",
+  "artifactVerifierSha256": "3482fadf977840cd386beef943db2bdbea0ad99466f97f84b27eb666f631d22f",
+  "freezeSha256": "ed7b564b1abdda1aa59c54cba95ca21ec4c1f4a88519dad5b561b571684b9e2c",
+  "approved": true,
+  "independentApproved": true,
+  "cleanCommittedHeadApproved": true,
+  "secretsAuditPassed": true,
+  "noConcurrentBuildWriter": true,
+  "rootFullFreezeProofSha256": "8b98e5f67d86e9b83bec1f4003741f03acc3913056d088322c56a02759ca726c",
+  "independentReviewSha256": "9a21cd188c011bf9acde73a7d0fe9d3f54309f847615fabef50eaeeb3e5917aa",
+  "secretAuditSha256": "b04311e85477612a12e44573ad296b97c1e8dbef967f6181b51a5fc21cfa5e51",
+  "authorizedScope": "Only original basic45, fixed local package entry, readonly artifact verification; no install/start/App/Windows/push/release",
+  "sourceIndexSha256": "3162e9e3cf941681677745c8872040c8b8a6e43ed36a000b57f344a0fead1ab5"
+}

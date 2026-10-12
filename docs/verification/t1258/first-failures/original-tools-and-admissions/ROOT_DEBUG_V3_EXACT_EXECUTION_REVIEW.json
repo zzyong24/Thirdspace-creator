@@ -1,0 +1,21 @@
+{
+  "task": "T-1246",
+  "scope": "FROZEN_HEAD_LOCAL_PACKAGE_ONLY",
+  "head": "e7182d90325e522967a49cfaee6df5279843da92",
+  "runnerSha256": "fb93fa321f0a3e618a21df3f0e1059c46e90b0c0e275191b1296ceb60bc4b39e",
+  "artifactVerifierSha256": "3482fadf977840cd386beef943db2bdbea0ad99466f97f84b27eb666f631d22f",
+  "freezeSha256": "ed7b564b1abdda1aa59c54cba95ca21ec4c1f4a88519dad5b561b571684b9e2c",
+  "approved": true,
+  "independentApproved": true,
+  "cleanCommittedHeadApproved": true,
+  "secretsAuditPassed": true,
+  "noConcurrentBuildWriter": true,
+  "rootFullFreezeProofSha256": "8eefe5a966f6a5f79978f43022c864146cfea415fe80c1175a74ee148fed2fab",
+  "independentReviewSha256": "a6d1cf8a1bceb48ac85780f0192d07eb2a1bd993defd76b69b9615466651b8c4",
+  "secretAuditSha256": "b04311e85477612a12e44573ad296b97c1e8dbef967f6181b51a5fc21cfa5e51",
+  "authorizedScope": "Only original basic45, fixed local package entry, readonly artifact verification; no install/start/App/Windows/push/release",
+  "sourceIndexSha256": "3162e9e3cf941681677745c8872040c8b8a6e43ed36a000b57f344a0fead1ab5",
+  "diagnosticSourceReviewSha256": "cddf4b7df8e28cc9211cf13e852010b62f10da9952621b627a78c8f0d5095bd2",
+  "diagnosticOnlyEnv": "TAURI_CLI_VERBOSITY=1",
+  "old90012FAILPreserved": true
+}

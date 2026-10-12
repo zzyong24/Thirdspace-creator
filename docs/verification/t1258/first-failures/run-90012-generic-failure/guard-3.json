@@ -1,0 +1,11 @@
+{
+  "name": "after-basic-tests",
+  "cliCount": 5,
+  "cliBudgetMs": 600000,
+  "cliElapsedMs": 462.20987499997136,
+  "ioBudgetMs": 3600000,
+  "ioElapsedMs": 74152.92587500004,
+  "budgetMs": 4200000,
+  "elapsedMs": 74615.13662500001,
+  "fullAfterFutureMs": 57720000
+}

@@ -1,0 +1,46 @@
+{
+  "out": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b",
+  "error": null,
+  "elapsedMs": 5574.209833,
+  "budgets": {
+    "prepare": 3600000,
+    "green": 77400000,
+    "syntax": 540000,
+    "lifecycle": 2160000,
+    "after": 3600000,
+    "total": 89460000
+  },
+  "records": [
+    {
+      "pid": 24261,
+      "identity": {
+        "pid": 24261,
+        "pgid": 24261,
+        "uid": 501,
+        "birth": "Mon Oct 12 23:06:11 2026",
+        "startedAt": 1791817571912
+      },
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "signals": [],
+      "budgetExhausted": false
+    },
+    {
+      "pid": 24291,
+      "identity": {
+        "pid": 24291,
+        "pgid": 24291,
+        "uid": 501,
+        "birth": "Mon Oct 12 23:06:17 2026",
+        "startedAt": 1791817577162
+      },
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "signals": [],
+      "budgetExhausted": false
+    }
+  ],
+  "noAppNoPackageNoWorker": true
+}

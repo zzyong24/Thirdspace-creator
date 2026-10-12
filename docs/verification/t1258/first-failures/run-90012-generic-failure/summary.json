@@ -1,0 +1,104 @@
+{
+  "task": "T-1246",
+  "head": "e7182d90325e522967a49cfaee6df5279843da92",
+  "exitCode": 1,
+  "startedAt": "2026-10-12T13:52:24.031Z",
+  "elapsedMs": 789053.239041,
+  "totalObservationMs": 109680000,
+  "budgets": {
+    "PREPARE": 4440000,
+    "PREPARE_CLI": 840000,
+    "PREPARE_IO": 3600000,
+    "BASIC": 32760000,
+    "PACKAGE": 21600000,
+    "VERIFY": 7200000,
+    "LIFECYCLE": 2160000,
+    "GUARD": 4200000,
+    "GUARD_CLI": 600000,
+    "GUARD_IO": 3600000,
+    "GUARD_COUNT": 8,
+    "AFTER": 3600000
+  },
+  "completeGuards": [
+    {
+      "name": "initial-complete-binding",
+      "cliCount": 5,
+      "cliBudgetMs": 600000,
+      "cliElapsedMs": 444.54962500000033,
+      "ioBudgetMs": 3600000,
+      "ioElapsedMs": 72145.362666,
+      "budgetMs": 4200000,
+      "elapsedMs": 72589.9155,
+      "fullAfterFutureMs": 101040000
+    },
+    {
+      "name": "before-basic-tests",
+      "cliCount": 5,
+      "cliBudgetMs": 600000,
+      "cliElapsedMs": 450.2961249999935,
+      "ioBudgetMs": 3600000,
+      "ioElapsedMs": 71970.17525,
+      "budgetMs": 4200000,
+      "elapsedMs": 72420.47220799999,
+      "fullAfterFutureMs": 96840000
+    },
+    {
+      "name": "after-basic-tests",
+      "cliCount": 5,
+      "cliBudgetMs": 600000,
+      "cliElapsedMs": 462.20987499997136,
+      "ioBudgetMs": 3600000,
+      "ioElapsedMs": 74152.92587500004,
+      "budgetMs": 4200000,
+      "elapsedMs": 74615.13662500001,
+      "fullAfterFutureMs": 57720000
+    },
+    {
+      "name": "before-package-local",
+      "cliCount": 5,
+      "cliBudgetMs": 600000,
+      "cliElapsedMs": 478.74091700001736,
+      "ioBudgetMs": 3600000,
+      "ioElapsedMs": 73029.55754100002,
+      "budgetMs": 4200000,
+      "elapsedMs": 73508.299333,
+      "fullAfterFutureMs": 53520000
+    },
+    {
+      "name": "after-package-local",
+      "cliCount": 5,
+      "cliBudgetMs": 600000,
+      "cliElapsedMs": 529.7105829999782,
+      "ioBudgetMs": 3600000,
+      "ioElapsedMs": 81952.09870899993,
+      "budgetMs": 4200000,
+      "elapsedMs": 82481.80991699989,
+      "fullAfterFutureMs": 25560000
+    }
+  ],
+  "unfinishedGuard": null,
+  "closedRecords": 2,
+  "records": [
+    {
+      "pid": 88686,
+      "code": 0,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "budgetExhausted": false
+    },
+    {
+      "pid": 89003,
+      "code": 1,
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "budgetExhausted": false
+    }
+  ],
+  "installed": false,
+  "appLaunched": false,
+  "noAutomaticRetryOrRollback": true,
+  "error": {
+    "message": "Expected values to be strictly equal:\n\n1 !== 0\n",
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n1 !== 0\n\n    at child (/private/tmp/t1246-package-final-source/v2/run-owned-local-package-v2.cjs:35:658)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async execute (/private/tmp/t1246-package-final-source/v2/run-owned-local-package-v2.cjs:38:23)\n    at async /private/tmp/t1246-package-final-source/v2/run-owned-local-package-v2.cjs:41:622"
+  }
+}

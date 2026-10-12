@@ -1,0 +1,35 @@
+{
+  "utc": "2026-10-12T14:05:00.999933+00:00",
+  "authorizedScope": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/cargo-target",
+  "nonce": "b76860261e08f6c832bbff6f45fe25ca",
+  "rootUID": 501,
+  "rootInode": 352746191,
+  "targetInode": 352746193,
+  "targetMode": 448,
+  "fileCount": 11633,
+  "directoryCount": 950,
+  "fileBytes": 5896911808,
+  "links": [],
+  "processCommandTargetHits": [],
+  "lsof": {
+    "code": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "dfBefore": "Filesystem   1024-blocks      Used Available Capacity iused     ifree %iused  Mounted on\n/dev/disk3s5   482797652 431195868  11415396    98% 8172476 114153960    7%   /System/Volumes/Data\n",
+  "retainedTopRegularSHA": {
+    "LED-018.log": "97a47648315a1bddfe12954c1289380d1230594a138f85ec905d11a48b7c6897",
+    "summary.json": "92bb9426fb7e5a5de4be7589f5ea3ee3d4c680a9f5ca58c8fa587611ef3f7e27",
+    "LED-057-receipt.json": "e2c3d4851305081a7f3c502a40e1d518294bef0dd599ea63edd34e30d18cd2f5",
+    "source-before.json": "01cf52ad6cdcabf75729366b7f406a6d1b79d2bbf4ef778ad433f7781218bc85",
+    "source-after.json": "060053d8ed44ca0a97d4a295289a6bab99c0525622057e48281588fd6cf93b7e",
+    "owner.json": "7195c6f70e188a968fe7f6ca3e94acec4b0e924b76c086924befd9bbcff5fed7",
+    "LED-018-counts.json": "740de32f63903bb1f7e92ad7f7aae55b95c0663c9023bba730d7a8d2ff711697",
+    "LED-057.log": "aabebc9ac11663096b9d6399a44811b7cef4d67ea5cbf45993b5a3453999591d",
+    "no-creatoros-app.sb": "9fb198b2342b8cb25363c5d9bf34892d51d04060cd4d5358ee44b9831b1ea6ee",
+    "LED-018-receipt.json": "2d8d7887e37b2084ac36382b2b940d1213f950961a3792499f7ecdb3d9031cee",
+    "LED-057-counts.json": "c5182db50a231650880929bdb76d3f0255532be36c9cf8c62f837417aa5cef73"
+  },
+  "oldLeavesAllClosedGroup0": true,
+  "currentPackageRootUntouched": true
+}

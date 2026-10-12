@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 110,
+    "verticals": 111,
     "tasks_done": 62,
-    "tasks_total": 212,
-    "tasks_pending": 150,
+    "tasks_total": 213,
+    "tasks_pending": 151,
     "verticals_complete": 18
   },
   "verticals": [
@@ -8959,6 +8959,59 @@
           "status": "pending"
         }
       ],
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1258",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1258-local-dev-dmg-headless.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t975-dmg-install-guide.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "frontend/scripts/desktop/package.mjs",
+        "frontend/scripts/desktop/local-dmg-layout-env.mjs",
+        "frontend/scripts/desktop/local-dmg-layout-env.test.mjs",
+        "docs/features/t1258-local-dev-dmg-headless.md",
+        "docs/features/t1258-local-dev-dmg-headless.review.md",
+        "docs/features/t1258-local-dev-dmg-headless.review.history.json",
+        "docs/verification/t1258/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1258.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "用户App/DB/media/auth/AutomationMode",
+        "旧90012/66832原FAIL与T1246 first冻结来源",
+        "其他会话T1255/T1257以及Worker并发构建"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm -C frontend exec vitest run scripts/desktop/local-dmg-layout-env.test.mjs scripts/desktop/dmg-install-guide.test.mjs",
+          "pnpm -C frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "显式本地headless标志下固定desktop:package-local实际构建与同HEAD11dist/10public/DMG只读完整产物复核"
+        ]
+      },
+      "id": "T-1258",
       "blocked_reason": null
     }
   ],

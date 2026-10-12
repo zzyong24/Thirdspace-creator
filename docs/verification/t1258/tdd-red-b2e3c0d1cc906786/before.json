@@ -1,0 +1,14 @@
+{
+  "kind": "actualT1258FirstRedWithUnimplementedRealHelper",
+  "helperSha": "434f11b1a3c5c2e20092354e89552017520f351d8e077e80ae20661409ddc56e",
+  "testSha": "d0712dbe6582ccb342edbb80d9a06b1b38232cf597344002cda8809a5ed350b7",
+  "budgets": {
+    "prepare": 3600000,
+    "positive": 1080000,
+    "lifecycle": 2160000,
+    "after": 3600000,
+    "total": 10440000
+  },
+  "selectedOnly": "显式本地开发包返回 Tauri 专用配置",
+  "full58BodyNotYetGreen": true
+}

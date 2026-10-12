@@ -1,0 +1,4 @@
+{
+  "message": "Expected values to be strictly equal:\n\n1 !== 0\n",
+  "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n1 !== 0\n\n    at child (/private/tmp/t1246-package-final-source/v2/run-owned-local-package-dmg-debug-v3.cjs:35:658)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async execute (/private/tmp/t1246-package-final-source/v2/run-owned-local-package-dmg-debug-v3.cjs:38:23)\n    at async /private/tmp/t1246-package-final-source/v2/run-owned-local-package-dmg-debug-v3.cjs:41:622"
+}

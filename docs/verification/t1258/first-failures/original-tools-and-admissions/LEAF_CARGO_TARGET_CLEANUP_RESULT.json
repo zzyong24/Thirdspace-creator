@@ -1,0 +1,11 @@
+{
+  "utc": "2026-10-12T14:05:08.287223+00:00",
+  "removedOnly": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH/cargo-target",
+  "rootRetained": true,
+  "tmpInputsRetained": true,
+  "allTopRegularBytesUnchanged": true,
+  "dfAfter": "Filesystem   1024-blocks      Used Available Capacity iused     ifree %iused  Mounted on\n/dev/disk3s5   482797652 426066680  16544584    97% 8162562 165445840    5%   /System/Volumes/Data\n",
+  "preflightSHA256": "5d636f21bcbf78e5fb639a04918568f4053202a68e073c013bb3deb0bcfed1aa",
+  "freedFileBytesBefore": 5896911808,
+  "noOtherDeletion": true
+}

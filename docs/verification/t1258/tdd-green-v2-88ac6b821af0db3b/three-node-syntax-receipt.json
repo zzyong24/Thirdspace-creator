@@ -1,0 +1,38 @@
+{
+  "file": "/usr/bin/sandbox-exec",
+  "args": [
+    "-f",
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/no-app-write-or-exec.sb",
+    "/bin/bash",
+    "-c",
+    "/opt/homebrew/Cellar/node/25.9.0_2/bin/node --check frontend/scripts/desktop/package.mjs && /opt/homebrew/Cellar/node/25.9.0_2/bin/node --check frontend/scripts/desktop/local-dmg-layout-env.mjs && /opt/homebrew/Cellar/node/25.9.0_2/bin/node --check frontend/scripts/desktop/local-dmg-layout-env.test.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/three-node-syntax.log",
+  "pid": 24291,
+  "identity": {
+    "pid": 24291,
+    "pgid": 24291,
+    "uid": 501,
+    "birth": "Mon Oct 12 23:06:17 2026",
+    "startedAt": 1791817577162
+  },
+  "startedAt": "2026-10-12T15:06:17.162Z",
+  "endedAt": "2026-10-12T15:06:17.477Z",
+  "elapsedMs": 315,
+  "budgetMs": 540000,
+  "deadlineAt": "2026-10-12T15:15:17.162Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

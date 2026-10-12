@@ -1,0 +1,17 @@
+{
+  "phase": "boundary",
+  "code": 0,
+  "elapsedMs": 2790.0754580000003,
+  "totalMs": 7680000,
+  "expired": false,
+  "cancelled": false,
+  "recordsClosed": true,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-final-gate-2d05d60580a07008b37bdf15038cdb04-RFVrWy",
+  "ownedRootRemoved": true,
+  "cleanupError": null,
+  "cleanupElapsedMs": 1.7133340000000317,
+  "sourceAndGateNonzeroNeverHidden": true,
+  "noApp": true,
+  "noPG": true,
+  "noPublish": true
+}

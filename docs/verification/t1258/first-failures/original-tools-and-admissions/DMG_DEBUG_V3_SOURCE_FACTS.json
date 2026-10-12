@@ -1,0 +1,37 @@
+{
+  "schema": "creatoros-package-dmg-debug-only-source/v1",
+  "originalRunnerSha256": "504bd7d18b8ba0f51745451fecf2ccbc68921da49fe8fe8138408529676e0cb5",
+  "newRunner": "/private/tmp/t1246-package-final-source/v2/run-owned-local-package-dmg-debug-v3.cjs",
+  "newRunnerSha256": "fb93fa321f0a3e618a21df3f0e1059c46e90b0c0e275191b1296ceb60bc4b39e",
+  "diff": "/private/tmp/t1246-package-final-source/v2/DMG_DEBUG_V3_FROM_504BD_FORWARD.diff",
+  "diffSha256": "9d5ead13e47be77dfab77687161a34b110e2e844cf0c6f8b8504bb271c2e61b1",
+  "inverse": "/private/tmp/t1246-package-final-source/v2/DMG_DEBUG_V3_TO_504BD_INVERSE.diff",
+  "changeOnly": "cleanEnv Object.assign 增 TAURI_CLI_VERBOSITY:'1'；所有原budgets、入口、45tests、3child、sandbox/App拒绝、源和closure guard原字节保持。",
+  "actualInstalledCLI": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@tauri-apps+cli-darwin-arm64@2.11.4/node_modules/@tauri-apps/cli-darwin-arm64/cli.darwin-arm64.node",
+    "sha256": "a4537b8db7de55e5c988d47c6c0be8d345178a9ae7d42a87da1112b5322d83ee",
+    "bytes": 14526936,
+    "verbosityTokenByteOffset": 10590519,
+    "verbosityTokenObserved": true,
+    "bundlerConsumerPathsObserved": true
+  },
+  "primarySources": [
+    {
+      "url": "https://raw.githubusercontent.com/tauri-apps/tauri/tauri-cli-v2.11.4/crates/tauri-bundler/src/bundle/macos/dmg/mod.rs",
+      "evidence": "172-176为generatedscript+current_dir(bundle/macos)+output_ok；不执行单独script。"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/tauri-apps/tauri/tauri-cli-v2.11.4/crates/tauri-bundler/src/utils/mod.rs",
+      "evidence": "43-99捕获stdout/stderr；62/80仅debug日志逐行打印；非0只generic failed to run program，未附子stderr。"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/tauri-apps/tauri/tauri-cli-v2.11.4/crates/tauri-cli/src/lib.rs",
+      "evidence": "167-172 get_verbosity读TAURI_CLI_VERBOSITY；215-220设verbosity并全局filter；288-293数值1=Debug。"
+    }
+  ],
+  "originalProductEnvPropagation": "package-local resolveLocalPackageEnv baseEnv与package.mjs childEnv spread process.env保留该未知env；未改产品。",
+  "scope": "仅提高下一原固定入口的日志可见性以收敛真实DMG首因；未修根因，不能保证通过；原90012exit1/缺artifact保留",
+  "notExecuted": true,
+  "noProductOrHeadChange": true,
+  "noIndependentWorkerBuild": true
+}

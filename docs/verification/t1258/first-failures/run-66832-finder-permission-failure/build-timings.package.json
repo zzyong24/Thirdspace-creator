@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "pipeline": "desktop:package",
+  "startedAt": "2026-10-12T14:27:16.996Z",
+  "generatedAt": "2026-10-12T14:34:27.135Z",
+  "summary": {
+    "stepCount": 6,
+    "passed": 5,
+    "failed": 1,
+    "totalDurationMs": 429816
+  },
+  "steps": [
+    {
+      "name": "sidecar 二进制化",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-12T14:27:17.311Z",
+      "endedAt": "2026-10-12T14:28:33.436Z",
+      "durationMs": 76125
+    },
+    {
+      "name": "sidecar JS 混淆(§3.1)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-12T14:28:33.439Z",
+      "endedAt": "2026-10-12T14:30:44.724Z",
+      "durationMs": 131285
+    },
+    {
+      "name": "sidecar V8 字节码化(§5,L1→L3)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-12T14:30:44.727Z",
+      "endedAt": "2026-10-12T14:30:46.808Z",
+      "durationMs": 2081
+    },
+    {
+      "name": "sidecar 反 AI 诱饵注入(T-399a)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-12T14:30:46.809Z",
+      "endedAt": "2026-10-12T14:30:47.437Z",
+      "durationMs": 628
+    },
+    {
+      "name": "sidecar 版权/专有声明盖章",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-12T14:30:47.437Z",
+      "endedAt": "2026-10-12T14:30:48.015Z",
+      "durationMs": 578
+    },
+    {
+      "name": "tauri build(含 updater 签名/占位)",
+      "status": "failed",
+      "exitCode": 1,
+      "startedAt": "2026-10-12T14:30:48.016Z",
+      "endedAt": "2026-10-12T14:34:27.135Z",
+      "durationMs": 219119
+    }
+  ]
+}

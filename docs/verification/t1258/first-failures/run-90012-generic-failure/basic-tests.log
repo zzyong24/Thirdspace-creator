@@ -1,0 +1,9 @@
+(node:88701) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:88706) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:88707) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:88708) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+JSON report written to /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/basic-tests-results.json

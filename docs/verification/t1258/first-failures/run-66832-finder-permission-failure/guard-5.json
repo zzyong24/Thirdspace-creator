@@ -1,0 +1,11 @@
+{
+  "name": "after-package-local",
+  "cliCount": 5,
+  "cliBudgetMs": 600000,
+  "cliElapsedMs": 483.99158300005365,
+  "ioBudgetMs": 3600000,
+  "ioElapsedMs": 79232.39116699994,
+  "budgetMs": 4200000,
+  "elapsedMs": 79716.38383299997,
+  "fullAfterFutureMs": 25560000
+}

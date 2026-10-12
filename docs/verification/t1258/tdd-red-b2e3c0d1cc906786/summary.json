@@ -1,0 +1,14 @@
+{
+  "out": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786",
+  "error": null,
+  "elapsedMs": 1973.636125,
+  "actualChildCode": 1,
+  "noAppNoBuild": true,
+  "budgets": {
+    "prepare": 3600000,
+    "positive": 1080000,
+    "lifecycle": 2160000,
+    "after": 3600000,
+    "total": 10440000
+  }
+}

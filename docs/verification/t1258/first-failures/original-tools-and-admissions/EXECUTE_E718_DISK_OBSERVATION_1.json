@@ -1,0 +1,16 @@
+{
+  "utc": "2026-10-12T14:01:54.320246+00:00",
+  "session": 90012,
+  "availableKiB": 12378744,
+  "dataVolumeUsedKiB": 430232536,
+  "readonlyDuKiB": {
+    "frontend/src-tauri/target": 5110648,
+    "frontend/src-tauri/sidecar": 2227952,
+    "node_modules": 2349152,
+    "/private/tmp/t1246-package-final-source": 2018144,
+    "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-two-led-leaf-SUuJiH": 5294568
+  },
+  "noDeletion": true,
+  "noPredictedFailure": true,
+  "packageRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc"
+}

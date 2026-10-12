@@ -5232,3 +5232,12 @@ root b2951412和独立route f469a7e4实际18输入闭包核无漂移，reviewctl
 ## DEC-1256：原static三无用声明的编译清理（2026-10-12）
 
 用户T1246集中修复/整合/打包/逐项自动验收与“继续”的既有授权覆盖V13当场完整build三TS6133的最小清理。仅owned static EditorPanel.vue三个无用声明，保V6实际0644/inode/UID、模板/样式/操作/原命令/类型策略；对应新source/combined patch经T1254exact清单双审交付。首SPEC模式描述CONCERNS真实保留，第二轮ed320dba0189/b3d116e19a48 PASS；候选仍待V14精确工具准入。原V12/V13失败/missing不补，App仍未授权未验，不新增发布或系统权限。
+
+
+## DEC-T1258-LOCAL-DMG-001（2026-10-12）
+
+沿T1246用户整合/开发包/实际验收/真实失败后集中修复的授权，保用户暂不授权App原生自动化的决定。e718两轮90012/66832基础45均通过、包均自然退出1；第二轮仅增强日志，证实hdiutil创建/挂载与资源复制成功，Finder外观AppleScript open权限错误-10004，detach成功。原58文件411610B归档及PRIVATE原件全部保留，不把未知首轮直接改写成已知根因或洗成PASS。
+
+项目T975真实Tauri step强制IGNORE_CI=true，因此单独父CI变量无效。选择显式本地安全输出：仅macOS、buildOnly、非完整release、四local标志字面1时，在原T975环境后叠CI=true/IGNORE_CI=false，仅影响Tauri步骤；正式默认背景/图标位置合同与原guide4断言保持。无界面本地包明确未应用自定义Finder背景/位置，完整封盘/签名/产物校验仍必验；不改系统权限、不启App、不公证或发布、不新增模型配置。
+
+T1258 SPEC d4a4a22e6d0c2d363257f032935512a82aa72c0a66c5084f543dee30d199fa10，独立packet9a79f82a1022d938df06c350b087847ec84145ecc407b90b3e6b8863db60244e；reviewctl当场PASS[REV:fb5a6d98ce63]、taskctl start及context-compile当场0。仅package.mjs接线、新配置函数与其测试三源码路径。此为实施准入，不签TDD/新包/Worker/browser/App已通过；新修复提交与全部实际回执闭合后再报告结果。

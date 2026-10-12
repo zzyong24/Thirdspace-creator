@@ -1,0 +1,3 @@
+(node:22235) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+JSON report written to /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/vitest.json

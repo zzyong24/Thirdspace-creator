@@ -1,0 +1,18 @@
+{
+  "out": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-dmg-init-readonly-ydPvTe",
+  "uid": 501,
+  "budgets": {
+    "PREPARE": 120000,
+    "POSITIVE": 120000,
+    "LIFECYCLE": 2160000,
+    "AFTER": 120000,
+    "TOTAL": 2520000
+  },
+  "script": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/bundle_dmg.sh",
+  "scriptSha256": "3b21448e5eef9b7c4f6bd8593e6c5f577ee5c64db2a237a4908e63fb6d81a89e",
+  "profile": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/no-app-write-or-exec.sb",
+  "command": "bash --version\ncommand -v bash sw_vers sed cut tr\nset -x\n#!/usr/bin/env bash\n# Copyright 2019-2024 Tauri Programme within The Commons Conservancy\n# SPDX-License-Identifier: Apache-2.0\n# SPDX-License-Identifier: MIT\n\n# Create a read-only disk image of the contents of a folder\n# forked from https://github.com/create-dmg/create-dmg\n\n# Bail out on any unhandled errors\nset -e;\n# Any command that exits with non-zero code will cause the pipeline to fail\nset -o pipefail;\n\nCDMG_VERSION='1.2.1'\n\n# The full path to the \"support/\" directory this script is using\n# (This will be set up by code later in the script.)\nCDMG_SUPPORT_DIR=\"\"\n\nOS_FULL_VERSION=\"$(sw_vers | sed -n 2p | cut -d : -f 2 | tr -d '[:space:]' | cut -c1-)\"\nOS_MAJOR_VERSION=\"$(echo $OS_FULL_VERSION | cut -d . -f 1)\"\nOS_MINOR_VERSION=\"$(echo $OS_FULL_VERSION | cut -d . -f 2)\"\nprintf \"OS_FULL_VERSION=%s\\nOS_MAJOR_VERSION=%s\\nOS_MINOR_VERSION=%s\\n\" \"$OS_FULL_VERSION\" \"$OS_MAJOR_VERSION\" \"$OS_MINOR_VERSION\"\nbash -n \"$1\"\n",
+  "exactOriginalParentCleanEnv": true,
+  "noDmgScriptExecution": true,
+  "noApp": true
+}

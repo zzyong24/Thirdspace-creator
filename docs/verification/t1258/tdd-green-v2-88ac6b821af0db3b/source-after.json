@@ -1,0 +1,17 @@
+{
+  "rows": [
+    {
+      "path": "frontend/scripts/desktop/package.mjs",
+      "sha256": "dbe1d99ba82ee80bfd48b617810f5edcc2eb46facf7e344a16a11682e8c727d0"
+    },
+    {
+      "path": "frontend/scripts/desktop/local-dmg-layout-env.mjs",
+      "sha256": "a3ace9ea3c8af57744134ed54a203cafe2c7fab97614930efa7ba01e12c5c86c"
+    },
+    {
+      "path": "frontend/scripts/desktop/local-dmg-layout-env.test.mjs",
+      "sha256": "5827b06c559d48187d218ab6abe8822ccbcfbf88a8b7290d32c93708d9bd0aba"
+    }
+  ],
+  "matches": true
+}

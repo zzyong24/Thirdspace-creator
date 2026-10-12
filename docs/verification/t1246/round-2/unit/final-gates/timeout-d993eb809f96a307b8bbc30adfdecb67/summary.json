@@ -1,0 +1,17 @@
+{
+  "phase": "timeout",
+  "code": 0,
+  "elapsedMs": 44464.982083,
+  "totalMs": 1581240000,
+  "expired": false,
+  "cancelled": false,
+  "recordsClosed": true,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-final-gate-d993eb809f96a307b8bbc30adfdecb67-frqzwL",
+  "ownedRootRemoved": true,
+  "cleanupError": null,
+  "cleanupElapsedMs": 2.102041999998619,
+  "sourceAndGateNonzeroNeverHidden": true,
+  "noApp": true,
+  "noPG": true,
+  "noPublish": true
+}

@@ -1,0 +1,151 @@
+{
+  "files": [
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-d993eb809f96a307b8bbc30adfdecb67/summary.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/timeout-d993eb809f96a307b8bbc30adfdecb67/summary.json",
+      "size": 481,
+      "sha256": "cb5b985968cb9261f55764d1a4b34a1c9e2dbe4135a4b01e4f6015bf348a176a"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-d993eb809f96a307b8bbc30adfdecb67/exit.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/timeout-d993eb809f96a307b8bbc30adfdecb67/exit.json",
+      "size": 1030,
+      "sha256": "be30bf6ff490d8de0623656422507b0135a2af7f5232abc53514cccd1f8c19bd"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-d993eb809f96a307b8bbc30adfdecb67/source-before.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/timeout-d993eb809f96a307b8bbc30adfdecb67/source-before.json",
+      "size": 1758107,
+      "sha256": "af2eb4f65a1b56183015022113bb8c4a2c36f3e4ae0c58907a09b3f784d7d127"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-d993eb809f96a307b8bbc30adfdecb67/environment-proof.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/timeout-d993eb809f96a307b8bbc30adfdecb67/environment-proof.json",
+      "size": 1488,
+      "sha256": "899591ea0a683389edc738da1fa0834606d87036c819ccac3688e9ceb6c4589a"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-d993eb809f96a307b8bbc30adfdecb67/source-after.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/timeout-d993eb809f96a307b8bbc30adfdecb67/source-after.json",
+      "size": 1758128,
+      "sha256": "7ab26fd55731a866a1ea681a7d85fb03e0809eaaef927ee2cbff869285276986"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-d993eb809f96a307b8bbc30adfdecb67/review.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/timeout-d993eb809f96a307b8bbc30adfdecb67/review.json",
+      "size": 937,
+      "sha256": "c09cf60131ba35376af4a09f6940b7d149581d6442c2568efa8e942c9d0b9246"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-d993eb809f96a307b8bbc30adfdecb67/environment-proof.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/timeout-d993eb809f96a307b8bbc30adfdecb67/environment-proof.log",
+      "size": 51,
+      "sha256": "6bb18c7be870097f42bac3af3a7ab69bb2771622d011605fb4caf4c363d880ae"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/timeout-d993eb809f96a307b8bbc30adfdecb67/gate.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/timeout-d993eb809f96a307b8bbc30adfdecb67/gate.log",
+      "size": 5877,
+      "sha256": "61f01ca570f98cc10679ef07f1893e6aaed803002d413f44bf0ac313d9377991"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-2d05d60580a07008b37bdf15038cdb04/summary.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/boundary-2d05d60580a07008b37bdf15038cdb04/summary.json",
+      "size": 486,
+      "sha256": "4583a09933253473f86799beadf673514f6c51e7a7da09c5320fe99b72645e92"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-2d05d60580a07008b37bdf15038cdb04/exit.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/boundary-2d05d60580a07008b37bdf15038cdb04/exit.json",
+      "size": 1033,
+      "sha256": "b9c8c69f5b27e5768163b1998996fa724e6c53cfb4156cb9028aaef5136524a1"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-2d05d60580a07008b37bdf15038cdb04/source-before.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/boundary-2d05d60580a07008b37bdf15038cdb04/source-before.json",
+      "size": 1758102,
+      "sha256": "76508c57e1d200254e528e588e769aa3f1e155cb318f84c59b7e79c2a64819c1"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-2d05d60580a07008b37bdf15038cdb04/environment-proof.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/boundary-2d05d60580a07008b37bdf15038cdb04/environment-proof.json",
+      "size": 1489,
+      "sha256": "d85240b232ceaab1099005b6b5bc816a640687ed68b59ef851013746ab3135b9"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-2d05d60580a07008b37bdf15038cdb04/source-after.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/boundary-2d05d60580a07008b37bdf15038cdb04/source-after.json",
+      "size": 1758123,
+      "sha256": "5576c7963c04e4d269550d5f399674577f7d10e3ab9e14bc8c7e95f02fb79de3"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-2d05d60580a07008b37bdf15038cdb04/review.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/boundary-2d05d60580a07008b37bdf15038cdb04/review.json",
+      "size": 935,
+      "sha256": "93583e40a1b3fe3842027fad655941acd0c78f4c429d4da7a26bd7cb0df11616"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-2d05d60580a07008b37bdf15038cdb04/environment-proof.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/boundary-2d05d60580a07008b37bdf15038cdb04/environment-proof.log",
+      "size": 51,
+      "sha256": "6bb18c7be870097f42bac3af3a7ab69bb2771622d011605fb4caf4c363d880ae"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/boundary-2d05d60580a07008b37bdf15038cdb04/gate.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/boundary-2d05d60580a07008b37bdf15038cdb04/gate.log",
+      "size": 779,
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-4c49d213a063700af91c50a550e25a44/summary.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/orphan-4c49d213a063700af91c50a550e25a44/summary.json",
+      "size": 476,
+      "sha256": "acc85a7da7dc2def8cbf9c5f36c72105384739913e33cc8fee686a4cb82e4438"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-4c49d213a063700af91c50a550e25a44/exit.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/orphan-4c49d213a063700af91c50a550e25a44/exit.json",
+      "size": 1029,
+      "sha256": "cb715627b0dc70e627bcc1ed7bb75181ed21cca571fd70f1409c25dbbd3aa936"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-4c49d213a063700af91c50a550e25a44/source-before.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/orphan-4c49d213a063700af91c50a550e25a44/source-before.json",
+      "size": 1758100,
+      "sha256": "ccb6119b8e4b97499449d3f966db59bd99d17d50775519d44c3f2346f1f75dc0"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-4c49d213a063700af91c50a550e25a44/environment-proof.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/orphan-4c49d213a063700af91c50a550e25a44/environment-proof.json",
+      "size": 1487,
+      "sha256": "64b7776563026ae2edcb6ca1b321a425313aff2d2d23f4495f14e7971ac0e606"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-4c49d213a063700af91c50a550e25a44/source-after.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/orphan-4c49d213a063700af91c50a550e25a44/source-after.json",
+      "size": 1758121,
+      "sha256": "3fd2c2ccc52b486a65d8cccee523300f37775da2bda08c2a21cadbb10f118162"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-4c49d213a063700af91c50a550e25a44/review.json",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/orphan-4c49d213a063700af91c50a550e25a44/review.json",
+      "size": 933,
+      "sha256": "043301607c278b007b539da6c8731dfe347bd5b49e80757fdbd0ba019ef52f97"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-4c49d213a063700af91c50a550e25a44/environment-proof.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/orphan-4c49d213a063700af91c50a550e25a44/environment-proof.log",
+      "size": 51,
+      "sha256": "6bb18c7be870097f42bac3af3a7ab69bb2771622d011605fb4caf4c363d880ae"
+    },
+    {
+      "original": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/final-gates/orphan-4c49d213a063700af91c50a550e25a44/gate.log",
+      "archive": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/gates/orphan-4c49d213a063700af91c50a550e25a44/gate.log",
+      "size": 15862,
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    }
+  ],
+  "originalsPreserved": true,
+  "allThreeNaturalEOF0": true,
+  "sourceDigest": "c8fd5d33f11db8bb19691fb833485528c37bb4841a925e138aa70374e94bd903"
+}

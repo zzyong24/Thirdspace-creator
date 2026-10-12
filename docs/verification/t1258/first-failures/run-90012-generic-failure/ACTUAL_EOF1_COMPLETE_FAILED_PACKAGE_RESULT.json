@@ -1,0 +1,435 @@
+{
+  "schema": "creatoros-package-e718-actual-failure/v1",
+  "session": 90012,
+  "naturalExit": 1,
+  "head": "e7182d90325e522967a49cfaee6df5279843da92",
+  "nonce": "636a1bf9e229262d4c560c6912099cd9",
+  "actualRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc",
+  "summary": {
+    "task": "T-1246",
+    "head": "e7182d90325e522967a49cfaee6df5279843da92",
+    "exitCode": 1,
+    "startedAt": "2026-10-12T13:52:24.031Z",
+    "elapsedMs": 789053.239041,
+    "totalObservationMs": 109680000,
+    "budgets": {
+      "PREPARE": 4440000,
+      "PREPARE_CLI": 840000,
+      "PREPARE_IO": 3600000,
+      "BASIC": 32760000,
+      "PACKAGE": 21600000,
+      "VERIFY": 7200000,
+      "LIFECYCLE": 2160000,
+      "GUARD": 4200000,
+      "GUARD_CLI": 600000,
+      "GUARD_IO": 3600000,
+      "GUARD_COUNT": 8,
+      "AFTER": 3600000
+    },
+    "completeGuards": [
+      {
+        "name": "initial-complete-binding",
+        "cliCount": 5,
+        "cliBudgetMs": 600000,
+        "cliElapsedMs": 444.54962500000033,
+        "ioBudgetMs": 3600000,
+        "ioElapsedMs": 72145.362666,
+        "budgetMs": 4200000,
+        "elapsedMs": 72589.9155,
+        "fullAfterFutureMs": 101040000
+      },
+      {
+        "name": "before-basic-tests",
+        "cliCount": 5,
+        "cliBudgetMs": 600000,
+        "cliElapsedMs": 450.2961249999935,
+        "ioBudgetMs": 3600000,
+        "ioElapsedMs": 71970.17525,
+        "budgetMs": 4200000,
+        "elapsedMs": 72420.47220799999,
+        "fullAfterFutureMs": 96840000
+      },
+      {
+        "name": "after-basic-tests",
+        "cliCount": 5,
+        "cliBudgetMs": 600000,
+        "cliElapsedMs": 462.20987499997136,
+        "ioBudgetMs": 3600000,
+        "ioElapsedMs": 74152.92587500004,
+        "budgetMs": 4200000,
+        "elapsedMs": 74615.13662500001,
+        "fullAfterFutureMs": 57720000
+      },
+      {
+        "name": "before-package-local",
+        "cliCount": 5,
+        "cliBudgetMs": 600000,
+        "cliElapsedMs": 478.74091700001736,
+        "ioBudgetMs": 3600000,
+        "ioElapsedMs": 73029.55754100002,
+        "budgetMs": 4200000,
+        "elapsedMs": 73508.299333,
+        "fullAfterFutureMs": 53520000
+      },
+      {
+        "name": "after-package-local",
+        "cliCount": 5,
+        "cliBudgetMs": 600000,
+        "cliElapsedMs": 529.7105829999782,
+        "ioBudgetMs": 3600000,
+        "ioElapsedMs": 81952.09870899993,
+        "budgetMs": 4200000,
+        "elapsedMs": 82481.80991699989,
+        "fullAfterFutureMs": 25560000
+      }
+    ],
+    "unfinishedGuard": null,
+    "closedRecords": 2,
+    "records": [
+      {
+        "pid": 88686,
+        "code": 0,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "budgetExhausted": false
+      },
+      {
+        "pid": 89003,
+        "code": 1,
+        "processClosed": true,
+        "remainingOwnedGroupMembers": [],
+        "budgetExhausted": false
+      }
+    ],
+    "installed": false,
+    "appLaunched": false,
+    "noAutomaticRetryOrRollback": true,
+    "error": {
+      "message": "Expected values to be strictly equal:\n\n1 !== 0\n",
+      "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n1 !== 0\n\n    at child (/private/tmp/t1246-package-final-source/v2/run-owned-local-package-v2.cjs:35:658)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async execute (/private/tmp/t1246-package-final-source/v2/run-owned-local-package-v2.cjs:38:23)\n    at async /private/tmp/t1246-package-final-source/v2/run-owned-local-package-v2.cjs:41:622"
+    }
+  },
+  "allTwoChildrenClosedGroupsEmpty": true,
+  "rawRows": [
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/basic-tests-proof.json",
+      "bytes": 142,
+      "sha256": "4a5657202a9186682f66f8091682e2c18f69656df97a76759288c3cf9590c724",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813367877.0488
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/basic-tests-receipt.json",
+      "bytes": 1789,
+      "sha256": "97b2c4d85c83fcf04e637114a1a2fcaa6f239de3ba6be246fd712f0f325184a6",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813293259.3706
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/basic-tests-results.json",
+      "bytes": 17646,
+      "sha256": "3857d61feaceb2f6724feec5914c8a05159405c8a3bfe47ab5b93271ff7d5ccc",
+      "uid": 501,
+      "mode": 420,
+      "mtimeMs": 1791813293052.2002
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/basic-tests.log",
+      "bytes": 765,
+      "sha256": "a6c076124370e680de95cd7eab1b7ffdb09b49fcd0e3ea72b475e39581cc9deb",
+      "uid": 501,
+      "mode": 420,
+      "mtimeMs": 1791813293052.4165
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/guard-2.json",
+      "bytes": 259,
+      "sha256": "4b6e22f3e0cced9721ca0cc217b33d1d80903a21aa3ec56fa2f7f5d8a13db52f",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813289281.5037
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/guard-3.json",
+      "bytes": 265,
+      "sha256": "b71df521d854565696bbf68ed847e77987355ede836a418a9b6b3bd2c14c4615",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813367875.7083
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/guard-4.json",
+      "bytes": 263,
+      "sha256": "42058e5dd848760b6706bd4f7e45b638bcaf204d524021955fb1b39da301801f",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813441411.942
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/guard-5.json",
+      "bytes": 266,
+      "sha256": "6fcf2ebccf022349bc6459212d78e285d98f1da6f998b13f8d1f52c3c82036d1",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813933089.4194
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/no-app-write-or-exec.sb",
+      "bytes": 401,
+      "sha256": "223ee07d0b7e125b2fc42501be88a0fc185761464a46b3f1abae244f6011f091",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813216857.7625
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/owner.json",
+      "bytes": 265,
+      "sha256": "66922c5712e3a76f26db2393f8aea2d7cea7ca1be34d68454fd01df8c1543469",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813216857.3623
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/package-local-receipt.json",
+      "bytes": 1246,
+      "sha256": "c9b8f54882ba9f77ad7da929d6c367353022965f625fae382ece791ba415b0e9",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813850606.175
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/package-local.log",
+      "bytes": 103244,
+      "sha256": "3c63c2b795f4303e3449086f6e3631f20ed9b5a6c075f20a8d9fdeba73472e50",
+      "uid": 501,
+      "mode": 420,
+      "mtimeMs": 1791813850319.406
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/review.json",
+      "bytes": 1070,
+      "sha256": "12eeaf3e701bc34776ece6b923e5e597bb2cb71bd346b980511cf21f04599348",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813216857.5344
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/runner-error.json",
+      "bytes": 547,
+      "sha256": "d8e3fea18a20f2bb28ef3f90db33c9591fdee557c30b1ed5a0dedbd3c17d25cb",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813933090.6387
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/source-before.json",
+      "bytes": 175,
+      "sha256": "72407eb7fd415cc89e92fd1cfd303bc25f995b04b40040c9b105f8d943da1729",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813216857.6455
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/summary.json",
+      "bytes": 3094,
+      "sha256": "5e0a326e55ffb3aa7df81915c98b919cdb15d733d865b717aa1d39b63455eadc",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813933090.8303
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1246-local-package-636a1bf9e229262d4c560c6912099cd9-UtOxPc/worker-dist-before.json",
+      "bytes": 3457,
+      "sha256": "5e4b639cd2dc6c716824f29518cd4b7044fa354772a24a15fc746fe8c4c60f60",
+      "uid": 501,
+      "mode": 384,
+      "mtimeMs": 1791813367901.8938
+    }
+  ],
+  "script": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/bundle_dmg.sh",
+    "bytes": 19300,
+    "sha256": "3b21448e5eef9b7c4f6bd8593e6c5f577ee5c64db2a237a4908e63fb6d81a89e",
+    "uid": 501,
+    "mode": 511,
+    "mtimeMs": 1791813828980.0334
+  },
+  "timings": {
+    "schemaVersion": 1,
+    "pipeline": "desktop:package",
+    "startedAt": "2026-10-12T13:57:21.834Z",
+    "generatedAt": "2026-10-12T14:04:10.296Z",
+    "summary": {
+      "stepCount": 6,
+      "passed": 5,
+      "failed": 1,
+      "totalDurationMs": 408192
+    },
+    "steps": [
+      {
+        "name": "sidecar 二进制化",
+        "status": "passed",
+        "exitCode": 0,
+        "startedAt": "2026-10-12T13:57:22.096Z",
+        "endedAt": "2026-10-12T13:58:31.312Z",
+        "durationMs": 69216
+      },
+      {
+        "name": "sidecar JS 混淆(§3.1)",
+        "status": "passed",
+        "exitCode": 0,
+        "startedAt": "2026-10-12T13:58:31.315Z",
+        "endedAt": "2026-10-12T14:00:45.370Z",
+        "durationMs": 134055
+      },
+      {
+        "name": "sidecar V8 字节码化(§5,L1→L3)",
+        "status": "passed",
+        "exitCode": 0,
+        "startedAt": "2026-10-12T14:00:45.371Z",
+        "endedAt": "2026-10-12T14:00:47.265Z",
+        "durationMs": 1894
+      },
+      {
+        "name": "sidecar 反 AI 诱饵注入(T-399a)",
+        "status": "passed",
+        "exitCode": 0,
+        "startedAt": "2026-10-12T14:00:47.267Z",
+        "endedAt": "2026-10-12T14:00:47.823Z",
+        "durationMs": 556
+      },
+      {
+        "name": "sidecar 版权/专有声明盖章",
+        "status": "passed",
+        "exitCode": 0,
+        "startedAt": "2026-10-12T14:00:47.824Z",
+        "endedAt": "2026-10-12T14:00:48.320Z",
+        "durationMs": 496
+      },
+      {
+        "name": "tauri build(含 updater 签名/占位)",
+        "status": "failed",
+        "exitCode": 1,
+        "startedAt": "2026-10-12T14:00:48.321Z",
+        "endedAt": "2026-10-12T14:04:10.296Z",
+        "durationMs": 201975
+      }
+    ]
+  },
+  "scriptFirstConsumer": "set -e; set -o pipefail; OS_FULL_VERSION=$(sw_vers | sed -n 2p | cut -d : -f 2 | tr -d [:space:] | cut -c1-)",
+  "failureObserved": "Rust release-fast与App ad-hoc签成功；Tauri Running bundle_dmg.sh之后仅generic failed to run，没有脚本stdout/hdiutil/ENOSPC leaf信息。尚未定位首因。",
+  "originalMissing": [
+    "worker-dist-after.json",
+    "artifact-verification-result.json",
+    "source-after.json",
+    "result.json"
+  ],
+  "workerOutputsActualAfterFailedParent": {
+    "rows": [
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/agentic-worker.cjs",
+        "bytes": 1497446,
+        "sha256": "cef5d47034c73024ed3b7d701ac5599fc48494b226edbd015a9cce4989158a3d",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493109.791
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/browser-runtime.cjs",
+        "bytes": 90450,
+        "sha256": "09638165516f4e1d7bc94507542169c5c08c40bd5a196898ec180e1703211827",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493119.9119
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/codex-acp.cjs",
+        "bytes": 1325662,
+        "sha256": "a12a2b5f89e0ab8310e5c9283d0f3b0a8da5e834b470d425531d28b780954631",
+        "uid": 501,
+        "mode": 493,
+        "mtimeMs": 1791813493731.6968
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/codex-status-worker.cjs",
+        "bytes": 773436,
+        "sha256": "483290a5edccc1c105188f2d3404eaaac0b46ba81930d63a6e228c31d5b610d3",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493680.8633
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/embedding-worker.cjs",
+        "bytes": 988450,
+        "sha256": "3f0c39a204b47f8e938d3a8f6ad351f95ef212cd003b77e4d8d838c0a82b5cba",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493445.3784
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/execution-worker.cjs",
+        "bytes": 5560050,
+        "sha256": "f0019e0452ce32b00e7ef2962c41b08bcfdf5f90b6b19f81074135f983430fa0",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493073.2354
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/flywheel-generation-worker.cjs",
+        "bytes": 3402475,
+        "sha256": "ad9cb4443bbf0ceaf88400ff5e4025da1d751df58aa3b29300453783d9668756",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493568.6838
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/intelligence-generation-worker.cjs",
+        "bytes": 3362104,
+        "sha256": "f80e739de48f1f457dc53554d07703297a146c0a50e0c74e1e86e0d57f19bbf5",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493246.3296
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/intelligence-transcript-worker.cjs",
+        "bytes": 1383754,
+        "sha256": "734ebb18bf44f1361f7597911125a4ab64561487f6d66c2ff3e1c5d9326e5b66",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493346.9282
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/model-probe-worker.cjs",
+        "bytes": 1996447,
+        "sha256": "72e075faebc81e8a5840e81ec12218de76fb6c99af32eb6cbdb12c29e9d37422",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493661.0837
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist/video-visual-review-worker.cjs",
+        "bytes": 2635511,
+        "sha256": "a59a19f858d11a6fc50486b6f8dad6d161011b9ad6731fb66b84e145bd9c5480",
+        "uid": 501,
+        "mode": 420,
+        "mtimeMs": 1791813493839.585
+      }
+    ],
+    "count": 11,
+    "head": "e7182d90325e522967a49cfaee6df5279843da92",
+    "parentPackageExit": 1,
+    "parentPackageStartedAt": "2026-10-12T13:57:21.412Z",
+    "internalSourceBuildContract": "frontend/scripts/desktop/execution-worker-runtime.mjs → ai-worker/scripts/build.mjs；输入HEAD frozen/after-package binding完成",
+    "independentWorkerChildReceiptAvailable": false,
+    "publicCopyCountExpectedByOriginalContract": 10,
+    "noIndependentRebuild": true,
+    "notAWholePackagePass": true
+  },
+  "noAppLaunchedInstalled": true,
+  "noAutomaticRetry": true,
+  "noProductFix": true,
+  "diskNotDiagnosedAsCause": true,
+  "oldFirstDMGPreserved": true
+}

@@ -1,0 +1,18 @@
+{
+  "kind": "PRIVATE scope-extension SE003最窄SOURCE复评，未运行",
+  "at": "2026-10-12T15:40:38.299824+00:00",
+  "status": "PASS",
+  "wrapperSHA": "a10674a5f713b8a9d4c1afc6adc51a1cafd6f8e3561f12950ac0bec39a82e791",
+  "bindingSHA": "a4a33e5ce0bfd172602233145d1529664c3a419592b094f75e8eeb38d6714385",
+  "indexSHA": "82790445e3551120bb60a9b6f85f5bc37f409c931e3b0738fc0fd08f5d42bffc",
+  "bindingRows": 11,
+  "fullSingleSourceHunkForwardInverseAppliedEqual": true,
+  "oldE597And53e9HistoryPreserved": true,
+  "originScopeSchemaAnd30_48MBudgetUnchanged": true,
+  "SE003": "closed SOURCE：r/actualClose/capture先push+wx原raw回执；logSHA=null并明确未算。失败判定先于future admission及sha；成功后完整剩余准入才另写log-integrity wx，不覆盖raw。父中断不再以SHA失败抹掉真实receipt。",
+  "findings": [],
+  "syntaxOnlyExit": 0,
+  "sourceOnlyActualInputExecutionAdmissionStillPending": true,
+  "newHEADPackageWorkerMetadataAppNotSigned": true,
+  "noReviewerBodyOrProductWrites": true
+}

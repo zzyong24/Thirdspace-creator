@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立初评 PASS；精确绑定 T-1258 SPEC SHA d4a4a22e6d0c2d363257f032935512a82aa72c0a66c5084f543dee30d199fa10。已完整读取产品宪法、T975原SPEC、当前package.mjs真实step及原DMG引导四断言，并核官方tauri-cli-v2.11.4 dmg/mod.rs与bundle_dmg。只在darwin/buildOnly/非完整release且四local标志字面1时，于原T975 true literal后spread仅Tauri step的CI=true/IGNORE_CI=false，官方分支确实跳过Finder外观，创建/复制/Applications入口/权限/卸载/压缩及签名保持；正式默认未扩大。三个实现/测试路径及本任务初始控制绑定写集明确，需真实RED→GREEN、原45+4完整回归、真实原入口同新HEAD出包/11dist+10public闭包，不能由helper或旧包代签。原90012/66832失败保留、App/Windows未验，未要求新增权限、未执行实现或打包。无阻断finding。",
+  "findings": []
+}

@@ -1,0 +1,455 @@
+{
+  "schema": "creatoros-t1258-exact-three-source-and-actual-tdd/v1",
+  "task": "T-1258",
+  "headBeforeImplementation": "e7182d90325e522967a49cfaee6df5279843da92",
+  "spec": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/features/t1258-local-dev-dmg-headless.md",
+    "sha256": "d4a4a22e6d0c2d363257f032935512a82aa72c0a66c5084f543dee30d199fa10",
+    "size": 4390,
+    "mode": 420,
+    "uid": 501
+  },
+  "context": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/orchestrator/context/T-1258.md",
+    "sha256": "afc8a327a152e6fe0c2cec81d8169109d0dde8154b9d2945f12fd66bf4d87d75",
+    "size": 7841,
+    "mode": 420,
+    "uid": 501
+  },
+  "formalSpecReview": "PASS[REV:fb5a6d98ce63]",
+  "sourceRows": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/package.mjs",
+      "sha256": "dbe1d99ba82ee80bfd48b617810f5edcc2eb46facf7e344a16a11682e8c727d0",
+      "size": 27963,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/local-dmg-layout-env.mjs",
+      "sha256": "a3ace9ea3c8af57744134ed54a203cafe2c7fab97614930efa7ba01e12c5c86c",
+      "size": 624,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/local-dmg-layout-env.test.mjs",
+      "sha256": "5827b06c559d48187d218ab6abe8822ccbcfbf88a8b7290d32c93708d9bd0aba",
+      "size": 5133,
+      "mode": 420,
+      "uid": 501
+    }
+  ],
+  "fullDiff": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/COMPLETE_THREE_SOURCE_FROM_E718.diff",
+    "sha256": "e5fe9d34c2154cb51ad4e82a5c09161c87bf037b9d972c791dfb781f35e3225a",
+    "size": 7242,
+    "mode": 420,
+    "uid": 501
+  },
+  "originalFiveTestFilesWholeBytesUnchanged": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/package-local.test.mjs",
+      "sha256": "7fb699dafb1488e22a06b44c21a01519e3faab60a24df81a07b53a1935255129",
+      "size": 9594,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+      "sha256": "eefab4994621bea0fad12b6a6628d4a704b3f5a6ce02a8c224135defbfdbbab6",
+      "size": 25622,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/notarize.test.mjs",
+      "sha256": "a5268de2b431885730e6610fbc1997dcf0ea29ee0fdd16f768a0332273278837",
+      "size": 2441,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/tauri-signing-config.test.mjs",
+      "sha256": "3d7aee34bc455a3fa6ea0c402e3d8a93f5d73947f398b7acefdc06486a01440b",
+      "size": 1208,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/dmg-install-guide.test.mjs",
+      "sha256": "40cbdf8133d85e59183db495ce14da183fcb4f791ee641b7b91103629aa371bd",
+      "size": 2639,
+      "mode": 420,
+      "uid": 501
+    }
+  ],
+  "actualTDD": [
+    {
+      "classification": "actualTDDRedUnimplementedRealHelper",
+      "directory": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786",
+      "summary": {
+        "out": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786",
+        "error": null,
+        "elapsedMs": 1973.636125,
+        "actualChildCode": 1,
+        "noAppNoBuild": true,
+        "budgets": {
+          "prepare": 3600000,
+          "positive": 1080000,
+          "lifecycle": 2160000,
+          "after": 3600000,
+          "total": 10440000
+        }
+      },
+      "rawRows": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/actual-red.json",
+          "sha256": "94700f758b6a852a7a65725b345cccd54170ba78cbb4812a2c477a26b9fd6df1",
+          "size": 5610,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/actual-test-before-red.mjs",
+          "sha256": "d0712dbe6582ccb342edbb80d9a06b1b38232cf597344002cda8809a5ed350b7",
+          "size": 5090,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/actual-unimplemented-helper.mjs",
+          "sha256": "434f11b1a3c5c2e20092354e89552017520f351d8e077e80ae20661409ddc56e",
+          "size": 145,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/before.json",
+          "sha256": "591ad1fcb82a441b93a615fa95aae4af6ae24865f13d7c3b17156ed1af8eeead",
+          "size": 467,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/receipt.json",
+          "sha256": "b60f25e4bb553541036911c4f1d854b82462f3bd901fc436f5936b2f2378658e",
+          "size": 1718,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/summary.json",
+          "sha256": "a007170701a04f520ffe91f9a11c34171162cf9788e371ca9b7bf228f7160b6c",
+          "size": 374,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/vitest.json",
+          "sha256": "1562a0f65c83ddb273675d3d0aa70931b5d2ced0cb66e11c5bc42df29e35129a",
+          "size": 22367,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-red-b2e3c0d1cc906786/vitest.log",
+          "sha256": "e17ae57c650700e256a8bb7c5b6487c74720a811bf625b68429861142618c1a4",
+          "size": 312,
+          "mode": 420,
+          "uid": 501
+        }
+      ]
+    },
+    {
+      "classification": "initialFullGreenHarnessSourcePathFailure",
+      "directory": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff",
+      "summary": {
+        "out": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff",
+        "error": "Error: ACTUAL_GREEN_CHILD_FAILED full-body-green",
+        "elapsedMs": 5191.854167,
+        "budgets": {
+          "prepare": 3600000,
+          "green": 77400000,
+          "syntax": 540000,
+          "lifecycle": 2160000,
+          "after": 3600000,
+          "total": 89460000
+        },
+        "records": [
+          {
+            "pid": 23374,
+            "identity": {
+              "pid": 23374,
+              "pgid": 23374,
+              "uid": 501,
+              "birth": "Mon Oct 12 23:02:46 2026",
+              "startedAt": 1791817366183
+            },
+            "code": 1,
+            "processClosed": true,
+            "remainingOwnedGroupMembers": [],
+            "signals": [],
+            "budgetExhausted": false
+          }
+        ],
+        "noAppNoPackageNoWorker": true
+      },
+      "rawRows": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/full-body-green-receipt.json",
+          "sha256": "a81830952f053695e86f890037060496f65a3a46554191077707f45725dba03d",
+          "size": 1907,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/full-body-green.log",
+          "sha256": "bf90101af0334e32bf87425e4be8ccb90486e6bcc033aadbf81625ab561c8313",
+          "size": 1064,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/local-dmg-layout-env.mjs",
+          "sha256": "a3ace9ea3c8af57744134ed54a203cafe2c7fab97614930efa7ba01e12c5c86c",
+          "size": 624,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/local-dmg-layout-env.test.mjs",
+          "sha256": "d0712dbe6582ccb342edbb80d9a06b1b38232cf597344002cda8809a5ed350b7",
+          "size": 5090,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/package.mjs",
+          "sha256": "dbe1d99ba82ee80bfd48b617810f5edcc2eb46facf7e344a16a11682e8c727d0",
+          "size": 27963,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/source-before.json",
+          "sha256": "cd156f97a6a1dd9b16b5bd9549f03d2d0402d3659233ff06daa23abd2ce6e521",
+          "size": 880,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/summary.json",
+          "sha256": "d0127e05703ca56ca16edb6fb60a0e1cccf11772c883c29fdccf5d7c54347297",
+          "size": 792,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-e6137d1bc708b6ff/vitest.json",
+          "sha256": "dbec4ecce51edaa811762c0a9dbd9bc9ccac137161884dc3e0b8fe73ef36c52d",
+          "size": 46495,
+          "mode": 420,
+          "uid": 501
+        }
+      ]
+    },
+    {
+      "classification": "full107GreenAndThreeNodeSyntax",
+      "directory": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b",
+      "summary": {
+        "out": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b",
+        "error": null,
+        "elapsedMs": 5574.209833,
+        "budgets": {
+          "prepare": 3600000,
+          "green": 77400000,
+          "syntax": 540000,
+          "lifecycle": 2160000,
+          "after": 3600000,
+          "total": 89460000
+        },
+        "records": [
+          {
+            "pid": 24261,
+            "identity": {
+              "pid": 24261,
+              "pgid": 24261,
+              "uid": 501,
+              "birth": "Mon Oct 12 23:06:11 2026",
+              "startedAt": 1791817571912
+            },
+            "code": 0,
+            "processClosed": true,
+            "remainingOwnedGroupMembers": [],
+            "signals": [],
+            "budgetExhausted": false
+          },
+          {
+            "pid": 24291,
+            "identity": {
+              "pid": 24291,
+              "pgid": 24291,
+              "uid": 501,
+              "birth": "Mon Oct 12 23:06:17 2026",
+              "startedAt": 1791817577162
+            },
+            "code": 0,
+            "processClosed": true,
+            "remainingOwnedGroupMembers": [],
+            "signals": [],
+            "budgetExhausted": false
+          }
+        ],
+        "noAppNoPackageNoWorker": true
+      },
+      "rawRows": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/actual-green.json",
+          "sha256": "bd78216a2247eac37d6e20d46612d0610fcaca9564adc8a54b29ff57e76a5ea4",
+          "size": 1500,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/full-body-green-receipt.json",
+          "sha256": "c859c58e42f0ac4ff9402cfa599e8733144e067969533a639d4c0fc2b4f22ea1",
+          "size": 1913,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/full-body-green.log",
+          "sha256": "55f6600b8dbd2d998f5e826c94fdb0f11fc6ec57ae173196e384ee1c9abd6e4c",
+          "size": 1067,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/local-dmg-layout-env.mjs",
+          "sha256": "a3ace9ea3c8af57744134ed54a203cafe2c7fab97614930efa7ba01e12c5c86c",
+          "size": 624,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/local-dmg-layout-env.test.mjs",
+          "sha256": "5827b06c559d48187d218ab6abe8822ccbcfbf88a8b7290d32c93708d9bd0aba",
+          "size": 5133,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/package.mjs",
+          "sha256": "dbe1d99ba82ee80bfd48b617810f5edcc2eb46facf7e344a16a11682e8c727d0",
+          "size": 27963,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/source-after.json",
+          "sha256": "b79ac6e5b151585ffce25e84f45069d9b4694825d67ef0c5b92f30439d0b9d63",
+          "size": 519,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/source-before.json",
+          "sha256": "5880f44c4c94685fbd492399371be77f9005cf8e4b202517250c6e6fb68b9c7a",
+          "size": 989,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/summary.json",
+          "sha256": "aeb99a37331c457b9f486e2f359e0e5ddad74b9121d956dad5107af1bf3655a5",
+          "size": 1094,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/three-node-syntax-receipt.json",
+          "sha256": "acb8bc56d14dbc559566b915776e10392e457ebba77f0ca3cfe0412d8454f5ba",
+          "size": 1436,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/three-node-syntax.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0,
+          "mode": 420,
+          "uid": 501
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/tdd-green-v2-88ac6b821af0db3b/vitest.json",
+          "sha256": "7b2794866af06adfbf5b56855b9a54cace61786854dc288cdd15a99646399568",
+          "size": 37832,
+          "mode": 420,
+          "uid": 501
+        }
+      ]
+    }
+  ],
+  "finalGreen": {
+    "numTotalTests": 107,
+    "numPassedTests": 107,
+    "numFailedTests": 0,
+    "success": true,
+    "perFile": [
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "total": 26,
+        "passed": 26,
+        "failed": 0
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/dmg-install-guide.test.mjs",
+        "total": 4,
+        "passed": 4,
+        "failed": 0
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/local-dmg-layout-env.test.mjs",
+        "total": 58,
+        "passed": 58,
+        "failed": 0
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/notarize.test.mjs",
+        "total": 4,
+        "passed": 4,
+        "failed": 0
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/package-local.test.mjs",
+        "total": 12,
+        "passed": 12,
+        "failed": 0
+      },
+      {
+        "file": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/tauri-signing-config.test.mjs",
+        "total": 3,
+        "passed": 3,
+        "failed": 0
+      }
+    ],
+    "original45AndGuide4AssertUnchanged": true,
+    "fullActualStepWiringTestsExecuted": true
+  },
+  "currentSemantics": "严格darwin/buildOnly true/isFullRelease false/四标志字面1，仅在原T975后叠Tauri步骤CItrue/IGNOREfalse；父Next/Worker/basic环境不改",
+  "sourcePathFailurePreserved": "第一全GREEN为105pass/2fail，fs.readFileSync的import.meta URL被jsdom/Vite转换成非file方案；新测试只改为项目既有cwdjoin路径，断言/代码不改，第二全107实际PASS。",
+  "realStepWiringBoundary": "从实际package.mjs读取当前Tauri step调用，VM执行其真实对象展开和真实helper；只stub step spawn边界防真实构建。随后必须原入口同新HEAD真实build验证，不以此代签包。",
+  "redBoundary": "只有新正路1failed/57pending，实际真实prod helper骨架return{}；非旧历史补拍，骨架/原test字节均保",
+  "noPackageOrWorkerOrAppExecution": true,
+  "noGitStageCommit": true,
+  "noControlPlaneEdit": true,
+  "boundaryAndTimeoutGatesStillForRootAfterExactStaging": true,
+  "twoOriginalPackageFailuresRetained": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1258/first-failures/ORIGINAL_BYTE_ARCHIVE_INDEX.json",
+    "sha256": "0e042d83477157f7231d61dfce23068550d58ef835b19b1ab38301291508afc3",
+    "size": 40182,
+    "mode": 420,
+    "uid": 501
+  }
+}

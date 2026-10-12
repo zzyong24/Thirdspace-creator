@@ -1,0 +1,21 @@
+{
+  "phase": "orphan",
+  "runtimeRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "toolSha256": "b5a32eadc6aa2bf429c058e4bc95ea4b287296c159f4e797e95abff3e7006bcc",
+  "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "nodePath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "sourceDigest": "c8fd5d33f11db8bb19691fb833485528c37bb4841a925e138aa70374e94bd903",
+  "totalMs": 7680000,
+  "approved": true,
+  "independentReviewSha256": "fd80452ea30b4f5803b681718c1489e7ad544305cee1ae42c11eb9f5afa3c102",
+  "sharedDistExclusive": true,
+  "task": "T-1258",
+  "rootPhysicalProof": {
+    "sourceDigest": "c8fd5d33f11db8bb19691fb833485528c37bb4841a925e138aa70374e94bd903",
+    "rows": 8314,
+    "readBytes": 458212629,
+    "drift": [],
+    "sameExactThreeSourceStaged": true
+  }
+}

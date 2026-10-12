@@ -1,0 +1,28 @@
+GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)
+Copyright (C) 2007 Free Software Foundation, Inc.
+/bin/bash
+/usr/bin/sw_vers
+/usr/bin/sed
+/usr/bin/cut
+/usr/bin/tr
++ set -e
++ set -o pipefail
++ CDMG_VERSION=1.2.1
++ CDMG_SUPPORT_DIR=
+++ sw_vers
+++ sed -n 2p
+++ cut -d : -f 2
+++ tr -d '[:space:]'
+++ cut -c1-
++ OS_FULL_VERSION=26.2
+++ echo 26.2
+++ cut -d . -f 1
++ OS_MAJOR_VERSION=26
+++ echo 26.2
+++ cut -d . -f 2
++ OS_MINOR_VERSION=2
++ printf 'OS_FULL_VERSION=%s\nOS_MAJOR_VERSION=%s\nOS_MINOR_VERSION=%s\n' 26.2 26 2
+OS_FULL_VERSION=26.2
+OS_MAJOR_VERSION=26
+OS_MINOR_VERSION=2
++ bash -n /Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/bundle_dmg.sh
