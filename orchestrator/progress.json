@@ -66,11 +66,12 @@
         "frontend/src-tauri/src/logging.rs",
         "frontend/src-tauri/src/lib.rs",
         "frontend/tests/e2e/encrypted-log-reporting.spec.ts",
-        "backend/drizzle/lineages/root/0123_client_observability.sql",
-        "backend/drizzle/lineages/root/meta/_journal.json",
         "backend/package.json",
         "contract/package.json",
-        "pnpm-lock.yaml"
+        "pnpm-lock.yaml",
+        "backend/drizzle/0134_client_observability.sql",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/migration-convergence.ts"
       ],
       "read_set": [
         "docs/features/t1255-reporting-full-delivery.md",

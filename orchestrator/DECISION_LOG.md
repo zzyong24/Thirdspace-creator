@@ -5237,3 +5237,7 @@ root b2951412和独立route f469a7e4实际18输入闭包核无漂移，reviewctl
 ## DEC-T1255-OWNER-ADMIN-IMPLEMENT（2026-10-12）
 
 用户确认每日无感观测方案并授权开始执行，指定Growth日志查看管理端只允许Admin手机号17362936917。server真实官方登录+现有Admin角色+phone hash候选定位统一保护日志、指标、异常、下载、解密与配置，其他Admin也不可读；可复用MIT社区日志虚拟列表，沿当前Shell与oil-ui-pro。最新范围并入原T1255，旧PASS不代签新合同；Activity排除，生产/私钥配置待具体候选就绪后交接。
+
+### T1255实际迁移消费者库存落实
+
+writer核定原root lineage冻结，禁止改该历史journal。已确认增量DDL沿canonical迁移消费者：新backend/drizzle/0134_client_observability.sql、canonical meta/_journal.json及migration-convergence.ts当前108条校验更新；这落实原合同要求的实际lineage门，不新增产品用途或改原哈希锚。IPC实际窄入口为worker-supervisor.ts和model-worker-dispatcher.ts，取代不存在的application虚拟路径。
