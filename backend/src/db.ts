@@ -1,3 +1,4 @@
+import * as observabilitySchema from "./schema/observability";
 import {repairConvergenceSchema,inspectMigrationConvergence} from './migration-convergence';
 import {backupBeforeGroupUpgrade,backupPostgresBeforeGroupUpgrade,verifyGroupUpgradeCounts} from "./group-upgrade-backup";
 import * as publicationCoverSchema from "./schema/publication-cover";
@@ -87,6 +88,7 @@ const MIGRATIONS_FOLDER = resolve(
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
 const schema = {
+  ...observabilitySchema,
   ...publicationCoverSchema,
   ...creativeCanvasSchema,
   ...workCompositionsSchema,

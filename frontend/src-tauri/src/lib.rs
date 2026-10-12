@@ -10,6 +10,7 @@
 use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+static OBSERVABILITY_EXIT_EXPECTED:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
 use std::time::Duration;
 
 // [T-372 L2] Rust 校验门纵切:激活校验决策链(验签/防重放/防回拨/.license 放行权威)见 license.rs。
@@ -2393,6 +2394,7 @@ pub fn run() {
             // 初始化前 panic，用户只得到白窗且没有可交付证据。
             let logs_dir = app_data_dir.join("logs");
             let logger = logging::init_sidecar_logger(&logs_dir);
+            if let Some(panic_logger) = logger.clone() {logging::install_exception_panic_hook(panic_logger);}
             let log_dir_str = logs_dir.to_string_lossy().to_string();
 
             // [T-332 S5] 「重置工作区」归档 —— **必须在 spawn sidecar 之前、建 db 目录之前**:
@@ -2848,6 +2850,8 @@ pub fn run() {
                     .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
                     // [T-259] 诊断日志目录(设置页「导出诊断日志」route 据此定位 logs/)。
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
+                    .env("CREATOROS_APP_VERSION", app.package_info().version.to_string())
+                    .env("CREATOROS_LOG_SESSION_ID",logger.as_ref().map(|l|l.session_id().to_string()).unwrap_or_default())
                     // [T-372 L2] 握手 token / .license 路径 / 强验签开关(见上方注释)。
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_CLI_ACCESS_FILE", &cli_access_file_str)
@@ -3002,11 +3006,13 @@ pub fn run() {
                 let watched_child = shared_child.clone();
                 let startup_tx_exit = startup_tx.clone();
                 let bridge_handle = handle.clone();
+                let exit_logger = logger.clone();
                 std::thread::spawn(move || {
                     let reason = match watched_child.watch_exit() {
                         Ok(()) => "sidecar 已退出，受控进程组已停止".to_string(),
                         Err(error) => format!("sidecar 退出状态读取失败({error})"),
                     };
+                    if !OBSERVABILITY_EXIT_EXPECTED.load(std::sync::atomic::Ordering::Acquire) {if let Some(l) = &exit_logger {l.capture_exception("SIDECAR_EXIT", &reason);}}
                     // Close the listener before the child PID could ever be reused.
                     bridge_handle.state::<workbench::ipc::BridgeState>()
                         .0.lock().unwrap().take();
@@ -3063,6 +3069,8 @@ pub fn run() {
                     .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
                     // [T-259] 诊断日志目录(设置页「导出诊断日志」route 据此定位 logs/)。
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
+                    .env("CREATOROS_APP_VERSION", app.package_info().version.to_string())
+                    .env("CREATOROS_LOG_SESSION_ID",logger.as_ref().map(|l|l.session_id().to_string()).unwrap_or_default())
                     // [T-372 L2] 握手 token / .license 路径 / 强验签开关(与 macOS 分支一致)。
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_CLI_ACCESS_FILE", &cli_access_file_str)
@@ -3226,7 +3234,7 @@ pub fn run() {
                                     .0.lock().unwrap().take();
                                 eprintln!("[sidecar] terminated: {payload:?}");
                                 if let Some(l) = &logger {
-                                    l.log("shell", &format!("sidecar terminated: {payload:?}"));
+                                    if !OBSERVABILITY_EXIT_EXPECTED.load(std::sync::atomic::Ordering::Acquire) {l.capture_exception("SIDECAR_EXIT", &format!("sidecar terminated: {payload:?}"));}
                                 }
                                 let _ = startup_tx_events.send(StartupSignal::Exited(format!(
                                     "sidecar 已退出({payload:?})"
@@ -3365,6 +3373,7 @@ pub fn run() {
             //   take() 幂等,两处都到也只 kill 一次。崩溃/强退(SIGKILL 壳)两者都不到 —— 由
             //   sidecar 侧孤儿自检(instrumentation 轮询 ppid==1 优雅自退)兜底,双保险。
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
+                OBSERVABILITY_EXIT_EXPECTED.store(true,std::sync::atomic::Ordering::Release);
                 cli_access::revoke_on_exit(&app_handle.state::<cli_access::CliAccessState>());
                 #[cfg(target_os = "macos")]
                 app_handle.state::<workbench::ipc::BridgeState>().0.lock().unwrap().take();

@@ -70,6 +70,8 @@ export type PersistentTaskCommand = "pause" | "resume" | "cancel" | "retry";
 type TaskRow = typeof executionTasks.$inferSelect;
 
 export interface PersistentTaskServiceDeps {
+  observeSettlement?: (event:{taskId:string;userId:string;attempt:number;kind:string;status:string;occurredAt:string})=>Promise<void>;
+  observeAttempt?: (event: import("../observability/task-ledger").AttemptObservation) => Promise<void>;
   now?: () => string;
   nextId?: (prefix: string) => string;
 }
@@ -98,6 +100,9 @@ export interface PersistentTaskClaim {
 }
 
 export interface PersistentTaskService {
+  hasActiveTasks(ctx:RequestContext):Promise<boolean>;
+  readObservabilityLedger(ctx:RequestContext,cursor:{updatedAt:string;taskId:string}):Promise<Array<{id:string;user_id:string;kind:string;status:string;attempt:number;created_at:string;updated_at:string}>>;
+
   enqueue(
     ctx: RequestContext,
     input: EnqueuePersistentTaskInput,
@@ -327,6 +332,8 @@ export function createPersistentTaskService(
   }
 
   return {
+    async hasActiveTasks(ctx){return (await db.execute(sql`SELECT id FROM execution_tasks WHERE user_id=${ctx.userId} AND status IN('running','pause_requested','cancel_requested') LIMIT 1`)).rows.length>0;},
+    async readObservabilityLedger(ctx,cursor){return (await db.execute(sql`SELECT id,user_id,kind,status,attempt,created_at,updated_at FROM execution_tasks WHERE user_id=${ctx.userId} AND (updated_at>${cursor.updatedAt} OR (updated_at=${cursor.updatedAt} AND id>${cursor.taskId})) ORDER BY updated_at,id LIMIT 100`)).rows as Array<{id:string;user_id:string;kind:string;status:string;attempt:number;created_at:string;updated_at:string}>;},
     async enqueue(ctx, input) {
       requireWorkspace(ctx);
       return db.transaction(async tx => {
@@ -745,7 +752,7 @@ export function createPersistentTaskService(
           }
         }
         return null;
-      });
+      }).then(result=>{if(result){try{void deps.observeAttempt?.({taskId:result.task.id,userId:result.task.userId,attempt:result.lease.attempt,createdAt:result.task.createdAt,startedAt:stamp}).catch(()=>{});}catch{/* 观测失败不改变租约 */}}return result;});
     },
 
     async claimTask(input) {
@@ -788,7 +795,7 @@ export function createPersistentTaskService(
           fenceToken: claimed.fenceToken!,
         },
       };
-      });
+      }).then(result=>{if(result){try{void deps.observeAttempt?.({taskId:result.task.id,userId:result.task.userId,attempt:result.lease.attempt,createdAt:result.task.createdAt,startedAt:stamp}).catch(()=>{});}catch{/* 观测失败不改变租约 */}}return result;});
     },
 
     async heartbeat(input) {
@@ -910,7 +917,7 @@ export function createPersistentTaskService(
             lastErrorMessage:status==='failed'?(continuousGeneration?'生成恢复策略已停止，请保留原任务并查看诊断':'分享读取重试次数已用尽，请检查网络或原链接'):input.errorMessage??null,updatedAt:stamp,
           }).where(and(eq(executionTasks.id,row.id),eq(executionTasks.fenceToken,input.fenceToken))).returning();
           if(!updated)throw new ConflictError('分享读取恢复时执行凭证已变化');return toResource(updated);
-        });
+        }).then(result=>{try{void deps.observeSettlement?.({taskId:result.id,userId:result.userId,attempt:result.attempt,kind:result.kind,status:result.runtimeStatus??result.status,occurredAt:result.updatedAt}).catch(()=>{});}catch{/* 观察者隔离 */}return result;});
       }
       if(input.fenceToken&&input.fenceToken!==current.fenceToken)throw new ConflictError("任务完成时 fence 已变化");
       const legal =
@@ -947,6 +954,7 @@ export function createPersistentTaskService(
         )
         .returning();
       if (!updated) throw new ConflictError("任务完成时租约已变化");
+      try{void deps.observeSettlement?.({taskId:updated.id,userId:updated.userId,attempt:updated.attempt,kind:updated.kind,status:updated.status,occurredAt:updated.updatedAt}).catch(()=>{});}catch{/* 观察者隔离 */}
       return toResource(updated);
     },
 

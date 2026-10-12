@@ -5,6 +5,7 @@ import { OwnedDeviceConnection } from "./owned-device-connection";
 
 import { SettingsFormRow } from "./settings-form-row";
 import { RedfoxConfiguration } from "./redfox-configuration";
+import {EncryptedLogReportingCard} from "./encrypted-log-reporting-card";
 import { ReportingConsentCard } from "./reporting-consent-card";
 import { SettingsModelRegion } from "./settings-model-region";
 import { useSettingsMutation } from "./use-settings-mutation";
@@ -365,6 +366,7 @@ export function SettingsDialog({
             <SettingsPanel tabId="preferences" active={tab}>
               <div className="flex flex-col gap-card-gap">
                 <PreferenceSettingsCard viewModel={viewModel} />
+                <EncryptedLogReportingCard />
                 <ReportingConsentCard />
               </div>
             </SettingsPanel>
