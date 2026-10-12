@@ -391,3 +391,27 @@ it("continuous metrics grant survives log-only edits; re-enabling excludes revok
     }),
   ).toBe(false);
 });
+
+it.each(["HOST_PANIC", "SIDECAR_EXIT", "NODE_UNCAUGHT_EXCEPTION"])("原生补读同样遵守采集模块范围：%s", async code => {
+  const pg = new PGlite(); opened.push(pg); await pg.exec(OBSERVABILITY_DDL);
+  const collector = createObservabilityCollector(drizzle(pg) as never, { now: () => "2026-10-12T12:00:00.000Z", uploadAvailable: () => true, writeEncryptedContext: () => {} });
+  await collector.setConsent(ctx, { enabled: false, metricsEnabled: true, consentVersion: 2 });
+  const { DEFAULT_OBSERVABILITY_CONFIG } = await import("@creatoros/contract");
+  await collector.saveConfig({ ...DEFAULT_OBSERVABILITY_CONFIG, revision: 1, scopeModules: ["ui"], expiresAt: "2026-10-19T00:00:00.000Z" });
+  const event = { eventId: "a".repeat(64), code, occurredAt: "2026-10-12T12:01:00.000Z", logSessionId: "b".repeat(64) };
+  expect(await collector.recordNativeException(ctx, event)).toBe(false);
+  expect((await pg.query("SELECT * FROM observability_events")).rows).toHaveLength(0);
+  await collector.saveConfig({ ...DEFAULT_OBSERVABILITY_CONFIG, revision: 2, scopeModules: [code === "NODE_UNCAUGHT_EXCEPTION" ? "backend" : "host"], expiresAt: "2026-10-19T00:00:00.000Z" });
+  expect(await collector.recordNativeException(ctx, event)).toBe(true);
+  expect(await collector.recordNativeException(ctx, event)).toBe(false);
+});
+
+it("关闭collector模块仍清理失效待发日志，但不把内部诊断计为异常", async () => {
+  const pg = new PGlite(); opened.push(pg); await pg.exec(OBSERVABILITY_DDL);
+  const collector = createObservabilityCollector(drizzle(pg) as never, { now:()=>"2026-10-12T12:00:00.000Z",uploadAvailable:()=>true,writeEncryptedContext:()=>{} });
+  await collector.setConsent(ctx,{enabled:true,metricsEnabled:true,consentVersion:2});
+  const {DEFAULT_OBSERVABILITY_CONFIG}=await import("@creatoros/contract");await collector.saveConfig({...DEFAULT_OBSERVABILITY_CONFIG,revision:1,scopeModules:["ui"],expiresAt:"2026-10-19T00:00:00.000Z"});
+  await collector.enqueueLog(ctx,{fileName:"sidecar-2026-10-12.log.enc",sessionId:"a".repeat(64),sha256:"b".repeat(64),byteLength:200,logDate:"2026-10-12"});
+  await collector.dropPendingLog(ctx,"b".repeat(64),"LOG_PENDING_SOURCE_UNAVAILABLE");
+  expect(await collector.pendingLogs(ctx)).toHaveLength(0);expect((await pg.query("SELECT * FROM observability_events")).rows).toHaveLength(0);
+});

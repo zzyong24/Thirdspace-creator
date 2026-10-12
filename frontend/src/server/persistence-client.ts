@@ -210,7 +210,7 @@ import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creato
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, registerPersistentTaskObserver, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
@@ -1339,6 +1339,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     writeEncryptedContext:event=>console.error(`[observability-exception] ${JSON.stringify(event)}`),
   });
   const observabilityLedger=createObservabilityTaskLedger(db,observability);
+  const observabilityObserver=registerPersistentTaskObserver(db,{observeAttempt:async event=>{observabilityHost?.pause();await observabilityLedger.observeAttempt(event);},observeSettlement:observabilityLedger.observeSettlement});
   (globalThis as {__creatorosCaptureException?:(event:unknown)=>void}).__creatorosCaptureException=event=>{
     void observability.recordException(observabilityCtx,event).catch(()=>{});
   };
@@ -3885,8 +3886,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     abortRun: abortExecutionTask,
   });
   const persistentTaskService = createPersistentTaskService(db, {
-    observeAttempt:async event=>{observabilityHost?.pause();await observabilityLedger.observeAttempt(event);},
-    observeSettlement:observabilityLedger.observeSettlement,
     now: deps.now,
     nextId: deps.nextId,
   });
@@ -6318,7 +6317,7 @@ FAVORITES_PROMOTE_PER_RUN
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{observabilityHost?.stop();stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),videoVisualReviewService.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{observabilityHost?.stop();stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),videoVisualReviewService.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);await observabilityObserver.drain();observabilityObserver.dispose();};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -7480,6 +7479,7 @@ export async function getSettingsService(): Promise<SettingsService> {
 
 /** 仅供可信服务端故障边界写入已授权的结构化诊断；浏览器无此端口。 */
 export async function getObservabilityCollector(){return (await getBundle()).observability;}
+export async function setObservabilityConnectivity(online:boolean){(await getBundle()).observabilityHost.setConnectivity(online);}
 
 export async function getReportingLocal() {
   return (await getBundle()).reportingLocal;

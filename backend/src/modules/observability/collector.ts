@@ -544,6 +544,7 @@ export function createObservabilityCollector(db: Db, ports: Ports) {
       });
     },
     async dropPendingLog(ctx: RequestContext, sha256: string, reason: string) {
+      const config = effective((await installation()).config);
       await db.transaction(async (tx) => {
         const removed = await tx.execute(
           sql`DELETE FROM observability_log_pending WHERE user_id=${ctx.userId} AND snapshot_sha256=${sha256} RETURNING metadata`,
@@ -552,10 +553,11 @@ export function createObservabilityCollector(db: Db, ports: Ports) {
         await tx.execute(
           sql`UPDATE observability_installation SET dropped_log_count=dropped_log_count+1,last_error_code=${reason} WHERE id='installation'`,
         );
+        if (!config.scopeModules.includes("collector")) return;
         const metadata = removed.rows[0]!.metadata as { sessionId: string };
         const eventId = hash(`log-discard:${sha256}`);
         await tx.execute(
-          sql`INSERT INTO observability_events(id,user_id,occurred_at,kind,payload) SELECT ${eventId},${ctx.userId},${ports.now()},'exception',${JSON.stringify({ eventId, code: reason, module: "collector", occurredAt: ports.now(), count: 1, logSessionId: metadata.sessionId, referenceId: null })}::jsonb WHERE EXISTS(SELECT 1 FROM observability_consents WHERE user_id=${ctx.userId} AND metrics_enabled=TRUE) ON CONFLICT(id) DO NOTHING`,
+          sql`INSERT INTO observability_events(id,user_id,occurred_at,kind,payload) SELECT ${eventId},${ctx.userId},${ports.now()},'exception',${JSON.stringify({ eventId, code: reason, module: "collector", occurredAt: ports.now(), count: 1, logSessionId: metadata.sessionId, referenceId: null })}::jsonb WHERE EXISTS(SELECT 1 FROM observability_consents WHERE user_id=${ctx.userId} AND metrics_enabled=TRUE AND consent_version=2) ON CONFLICT(id) DO NOTHING`,
         );
       });
     },
@@ -625,8 +627,11 @@ export function createObservabilityCollector(db: Db, ports: Ports) {
         occurredAt: new Date(Date.parse(event.occurredAt)).toISOString(),
       };
       const grant = await consent(ctx);
+      const module = event.code === "NODE_UNCAUGHT_EXCEPTION" ? "backend" : "host";
+      const config = effective((await installation()).config);
       if (
-        !grant?.metrics_enabled ||
+        !grant?.metrics_enabled || grant.consent_version !== 2 ||
+        !config.scopeModules.includes(module) ||
         Date.parse(event.occurredAt) <
           Date.parse(grant.metrics_granted_at ?? grant.changed_at)
       )
@@ -637,7 +642,7 @@ export function createObservabilityCollector(db: Db, ports: Ports) {
         );
         if (!claimed.rows.length) return false;
         await tx.execute(
-          sql`INSERT INTO observability_events(id,user_id,occurred_at,kind,payload) VALUES(${event.eventId},${ctx.userId},${event.occurredAt},'exception',${JSON.stringify({ ...event, module: event.code === "NODE_UNCAUGHT_EXCEPTION" ? "backend" : "host", count: 1, referenceId: null })}::jsonb) ON CONFLICT(id) DO NOTHING`,
+          sql`INSERT INTO observability_events(id,user_id,occurred_at,kind,payload) VALUES(${event.eventId},${ctx.userId},${event.occurredAt},'exception',${JSON.stringify({ ...event, module, count: 1, referenceId: null })}::jsonb) ON CONFLICT(id) DO NOTHING`,
         );
         return true;
       });

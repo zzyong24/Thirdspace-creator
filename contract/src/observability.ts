@@ -637,3 +637,8 @@ export function boundedExceptionContext<T extends ExceptionCapture>(
     value.stack = value.stack.slice(0, -256);
   return value;
 }
+
+// 本地被动状态载体，仅受控loopback端口消费，不进入Growth指标或日志正文。
+export const localObservabilityConnectivity = z.object({
+  kind: z.literal("connectivity"), online: z.boolean(),
+}).strict();

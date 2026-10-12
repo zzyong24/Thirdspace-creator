@@ -46,7 +46,7 @@ export function EncryptedLogReportingCard() {
       if (token === generation.current) await load();
     } catch {
       if (token === generation.current)
-        setError("保存失败，授权状态没有改变，请重试。");
+        setError("保存结果暂时无法确认，请刷新状态后再操作。");
     } finally {
       if (generation.current === token || generation.current === token + 1)
         setPending(false);

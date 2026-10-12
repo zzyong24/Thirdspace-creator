@@ -4,8 +4,8 @@ import {
 } from "@/lib/loopback-guard.server";
 import { resolveRequestContext } from "@/lib/request-context.server";
 import { readSessionCookie } from "../../auth/_session";
-import { getObservabilityCollector } from "@/server/persistence-client";
-import { exceptionCapture } from "@creatoros/contract";
+import { getObservabilityCollector, setObservabilityConnectivity } from "@/server/persistence-client";
+import { exceptionCapture, localObservabilityConnectivity } from "@creatoros/contract";
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "private, no-store" };
 export async function POST(request: Request) {
@@ -44,9 +44,13 @@ export async function POST(request: Request) {
         );
       chunks.push(next.value);
     }
-    const parsed = exceptionCapture.safeParse(
-      JSON.parse(Buffer.concat(chunks).toString("utf8")),
-    );
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    const network = localObservabilityConnectivity.safeParse(body);
+    if (network.success) {
+      await setObservabilityConnectivity(network.data.online);
+      return Response.json({ accepted: true }, { headers });
+    }
+    const parsed = exceptionCapture.safeParse(body);
     if (!parsed.success)
       return Response.json(
         { error: "INVALID_CONTEXT" },

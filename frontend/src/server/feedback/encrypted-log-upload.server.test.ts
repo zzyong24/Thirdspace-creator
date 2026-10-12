@@ -195,3 +195,22 @@ it("native outbox accepts closed metadata only, ignores incomplete tail and refu
     "HOST_EXCEPTION_OUTBOX_INVALID",
   );
 });
+
+it("服务端前body拒绝后，真实限速泵立即停止，不留孤儿发送", async () => {
+  let received = 0;
+  const server = createServer((request, response) => {
+    request.on("data", chunk => { received += chunk.length; });
+    response.writeHead(429, { "Connection": "keep-alive", "Content-Type": "application/json" }); response.end('{"error":"quota"}');
+  });
+  await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+  const controller = new AbortController();
+  try {
+    const payload = Buffer.alloc(262144); const sha256 = createHash("sha256").update(payload).digest("hex");
+    const transport = createGrowthObservabilityTransport({ testOrigin: `http://127.0.0.1:${(server.address() as {port:number}).port}` });
+    await expect(transport.uploadLog({ installationAlias: crypto.randomUUID(), appVersion: "1.2.0", osName: "macos" }, { body: payload, byteLength: payload.length, sessionId: "a".repeat(64), sha256, logDate: "2026-10-12" }, 16384, controller.signal)).rejects.toThrow("OBSERVABILITY_HTTP_429");
+    const afterReply = received;
+    // 观察原1秒限速边界后的字节变化；这不是执行预算，测试仍留两分钟。
+    await new Promise(resolve => setTimeout(resolve, 1400));
+    expect(received).toBe(afterReply);
+  } finally { controller.abort(); server.closeAllConnections(); await new Promise<void>(resolve => server.close(()=>resolve())); }
+},120000);

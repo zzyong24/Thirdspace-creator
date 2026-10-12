@@ -45,12 +45,13 @@ export function createObservabilityHost(ports: {
   let active: AbortController | null = null;
   let timer: ReturnType<typeof setInterval> | null = null;
   let stopped = false;
+  let knownOnline = true;
   const allowed = async () => {
     const grant = await ports.collector.status(ports.ctx);
     return (
       (grant.enabled || grant.metricsEnabled) &&
       !stopped &&
-      ports.online() &&
+      knownOnline && ports.online() &&
       !(await ports.ledger.isBusy(ports.ctx))
     );
   };
@@ -226,6 +227,10 @@ export function createObservabilityHost(ports: {
     }
   }
   return {
+    setConnectivity(online: boolean) {
+      knownOnline = online;
+      if (!online) active?.abort(new Error("OBSERVABILITY_OFFLINE"));
+    },
     tick() {
       if (stopped) return Promise.resolve();
       if (running) return running;

@@ -169,75 +169,59 @@ async function coreRequest(
   rate: number,
 ) {
   return new Promise<unknown>((resolve, reject) => {
+    const transfer = new AbortController();
+    const transferSignal = AbortSignal.any([signal, transfer.signal]);
+    let settled = false;
     const address = new URL(url);
     const headers = {
       ...Object.fromEntries(new Headers(init.headers).entries()),
       "Accept-Encoding": "identity",
       ...(body ? { "Content-Length": String(body.length) } : {}),
     };
-    const request = (
-      address.protocol === "https:" ? httpsRequest : httpRequest
-    )(
-      address,
-      {
-        method: init.method ?? "GET",
-        headers,
-        signal,
+    function finish(error: unknown, value?: unknown) {
+      if (settled) return;
+      settled = true;
+      if (error) reject(error); else resolve(value);
+      // 回执/拒绝结束即停止限速泵，不能让已结束日轮留下孤儿上传。
+      transfer.abort(error ?? new Error("OBSERVABILITY_TRANSFER_COMPLETE"));
+      request.destroy();
+    }
+    const request = (address.protocol === "https:" ? httpsRequest : httpRequest)(
+      address, { method: init.method ?? "GET", headers, signal: transferSignal,
         ...(address.protocol === "https:" ? { rejectUnauthorized: true } : {}),
-      },
-      (response) => {
-        if (
-          !response.statusCode ||
-          response.statusCode < 200 ||
-          response.statusCode >= 300
-        ) {
-          response.resume();
-          reject(Error(`OBSERVABILITY_HTTP_${response.statusCode ?? 0}`));
-          return;
+      }, response => {
+        if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300) {
+          const error = new Error(`OBSERVABILITY_HTTP_${response.statusCode ?? 0}`);
+          response.destroy(); finish(error); return;
         }
-        const chunks: Buffer[] = [];
-        let length = 0;
-        response.on("data", (chunk) => {
+        const chunks: Buffer[] = []; let length = 0;
+        response.on("data", chunk => {
           length += chunk.length;
-          if (length > 8192) {
-            request.destroy(Error("OBSERVABILITY_RESPONSE_TOO_LARGE"));
-            return;
-          }
+          if (length > 8192) { response.destroy(); finish(new Error("OBSERVABILITY_RESPONSE_TOO_LARGE")); return; }
           chunks.push(chunk);
         });
-        response.on("error", reject);
+        response.on("error", error => finish(error));
         response.on("end", () => {
-          try {
-            resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
-          } catch (error) {
-            reject(error);
-          }
+          try { finish(null, JSON.parse(Buffer.concat(chunks).toString("utf8"))); }
+          catch (error) { finish(error); }
         });
       },
     );
-    request.on("error", reject);
+    request.on("error", error => finish(error));
     void (async () => {
       if (body) {
         let nextAt = Date.now();
         for (let offset = 0; offset < body.length; offset += 16384) {
           const wait = nextAt - Date.now();
-          if (wait > 0) await delay(wait, undefined, { signal });
-          if (signal.aborted) throw signal.reason;
-          const chunk = body.subarray(
-            offset,
-            Math.min(offset + 16384, body.length),
-          );
-          if (!request.write(chunk)) await once(request, "drain", { signal });
+          if (wait > 0) await delay(wait, undefined, { signal: transferSignal });
+          if (transferSignal.aborted) throw transferSignal.reason;
+          const chunk = body.subarray(offset, Math.min(offset + 16384, body.length));
+          if (!request.write(chunk)) await once(request, "drain", { signal: transferSignal });
           nextAt = Date.now() + (chunk.length / rate) * 1000;
         }
       }
       request.end();
-    })().catch((error) => {
-      request.destroy(
-        error instanceof Error ? error : Error("OBSERVABILITY_ABORTED"),
-      );
-      reject(error);
-    });
+    })().catch(error => finish(error));
   });
 }
 

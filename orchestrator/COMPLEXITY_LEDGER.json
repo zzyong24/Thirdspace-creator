@@ -7637,14 +7637,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "690d682345d335ad281c0aa67190ef80c9c0513d6fc08f135a54fc0ea3499552",
+      "file_sha256": "0214d8053eded302225dfcc050080de43a7454f4227e791106efd4be7ea3e097",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
+      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
     },
     {
@@ -7652,14 +7652,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "7057344bc467ae84521c610450f40c2f24e30cf607a2226663f1e118eaae350f",
+      "file_sha256": "2646f74b2e48618cd31152a18b4846abf35be2adc5d520d385af391e6e7c7df7",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
+      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
     },
     {
@@ -7667,14 +7667,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+      "file_sha256": "2a22f61d3d7e4539e8222635e837524a86b64e2602bcc4f79a6fdc4384292d22",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
+      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
     },
     {
@@ -7682,14 +7682,14 @@
       "files": [
         "frontend/src/instrumentation.ts"
       ],
-      "file_sha256": "d49a12ce777eaf23cee649a4960538fe51a6b9bb5bcaf791c8dc66392ce0b86e",
+      "file_sha256": "5c27c19c2556abc22589cc19413da82a529d6de2c29b35fc2c1cf4da9a0241f3",
       "categories": [
         "language_toolchain"
       ],
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
+      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
     },
     {
@@ -7697,7 +7697,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "1a1b90f4acce497cc4a532612b77802865e12cc4b82fa044c50820b701bf1e2d",
+      "file_sha256": "c1f32a017a316c3064619af385906446ed05a285d6a6182237317b408bc7d39a",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -7706,7 +7706,7 @@
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
+      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
     },
     {
@@ -7714,7 +7714,7 @@
       "files": [
         "frontend/src-tauri/src/lib.rs"
       ],
-      "file_sha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
+      "file_sha256": "ff81188852a5026b68905ab32fadf40ae60a852a6a37f9ad289848d8f181f065",
       "categories": [
         "credential_store",
         "installer_deploy",
@@ -7725,7 +7725,7 @@
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
+      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
     },
     {
@@ -7733,14 +7733,14 @@
       "files": [
         "frontend/src-tauri/src/logging.rs"
       ],
-      "file_sha256": "2f31f93557c3177d50bb79e8caa9ae3f3bdf9b1d91a34e5862ad5b0687160196",
+      "file_sha256": "f48e70c7781e845fd08d3da4e85a38ac95b7d4f979ec350c6eb702f5e1883649",
       "categories": [
         "language_toolchain"
       ],
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
+      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
     },
     {
@@ -7755,7 +7755,7 @@
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
+      "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
     },
     {
@@ -7763,15 +7763,30 @@
       "files": [
         "backend/src/migration-convergence.ts"
       ],
-      "file_sha256": "1e01d81c027dfb956aa97dcb5ec2c3124cf2892ac0182e41cbb725e9c108d006",
+      "file_sha256": "718a8ae2f28df575c5133b6b408eda3b4f877af9a36279377817922ce8d8768c",
       "categories": [
         "credential_store"
       ],
       "disposition": "in-budget",
       "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
-      "reason": "只追加本任务canonical增量迁移校验；原消费者凭据迁移字样属于现存代码，禁止改冻结历史/真实密钥。",
+      "reason": "只追加本任务canonical增量迁移校验；原消费者凭据迁移字样属于现存代码，禁止改冻结历史/真实密钥。 2026-10-12 root真实集成后复核：只重绑当前已授权窄注入源码SHA，原工具链/签名/凭据复杂度未新增授权。",
       "acceptance": "只登记必要复杂度；不是产品/全局验收。"
+    },
+    {
+      "task_id": "T-1255",
+      "files": [
+        "frontend/src/server/observability-host.server.ts"
+      ],
+      "file_sha256": "79540b919b61d7f1dba7ef1bdd59f8dba539e071929258c3981f906545445815",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1255-REAL-PRODUCERS",
+      "scope_source": "docs/features/t1255-reporting-full-delivery.md",
+      "reason": "每日上报Host原Node运行时适配与终止清理，为已确认日志/指标用途的必要装配；不引入第二运行时、不安装工具、不修改业务期限。",
+      "acceptance": "复杂度登记不替代独立评审、测试、安装或正式密钥验收。"
     }
   ],
   "historical_baselines": []

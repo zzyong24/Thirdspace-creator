@@ -447,3 +447,14 @@ it("fatal child exits1, next startup imports closed metadata once and preserves 
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+it("本地被动离线信号阻止领取日轮；重新联网沿原排期继续", async () => {
+  const f = fixture(); f.enable();
+  f.host.setConnectivity(false);
+  await f.host.tick();
+  expect(f.collector.claimRound).not.toHaveBeenCalled();
+  expect(f.transport.getConfig).not.toHaveBeenCalled();
+  f.host.setConnectivity(true);
+  await f.host.tick();
+  expect(f.transport.getConfig).toHaveBeenCalledTimes(1);
+});

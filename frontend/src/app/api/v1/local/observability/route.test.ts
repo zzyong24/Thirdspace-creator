@@ -3,6 +3,7 @@ const mocks = vi.hoisted(() => ({
   trusted: vi.fn(),
   resolve: vi.fn(),
   capture: vi.fn(),
+  connectivity: vi.fn(),
 }));
 vi.mock("@/lib/loopback-guard.server", () => ({
   isTrustedLocalRequest: mocks.trusted,
@@ -15,6 +16,7 @@ vi.mock("@/lib/request-context.server", () => ({
 vi.mock("../../auth/_session", () => ({ readSessionCookie: () => null }));
 vi.mock("@/server/persistence-client", () => ({
   getObservabilityCollector: async () => ({ recordException: mocks.capture }),
+  setObservabilityConnectivity: mocks.connectivity,
 }));
 import { POST } from "./route";
 const event = {
@@ -83,4 +85,13 @@ describe("T1255 actual local exception route", () => {
     expect(await response.json()).toEqual({ captured: true });
     expect(mocks.capture).toHaveBeenCalledTimes(1);
   });
+});
+
+it("被动联网状态经同受控本地端口，不当作异常计数", async () => {
+  mocks.trusted.mockReturnValue(true); mocks.resolve.mockResolvedValue({ userId: "local", requestId: "network-fixture", source: "user" });
+  mocks.capture.mockClear(); mocks.connectivity.mockResolvedValue(undefined);
+  const response = await POST(new Request("http://127.0.0.1/api/v1/local/observability", { method: "POST", body: JSON.stringify({ kind: "connectivity", online: false }) }));
+  expect(response.status).toBe(200); expect(mocks.connectivity).toHaveBeenCalledWith(false); expect(mocks.capture).not.toHaveBeenCalled();
+  const invalid = await POST(new Request("http://127.0.0.1/api/v1/local/observability", { method: "POST", body: JSON.stringify({ kind: "connectivity", online: false, url: "https://invalid.example" }) }));
+  expect(invalid.status).toBe(422);
 });
