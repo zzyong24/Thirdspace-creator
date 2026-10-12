@@ -12,6 +12,7 @@ process.on('message',async raw=>{
  if(active.size>=2||active.has(request.requestId))return;
  const controller=new AbortController();active.set(request.requestId,controller);
  const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(Math.max(1,request.deadlineAt-Date.now()))]);
+ let reply:unknown;
  let installed=false,owned:Awaited<ReturnType<typeof createControlledCodexSession>>|undefined,cwd:string|undefined;
  try{
   await resolveBundledCodex();installed=true;signal.throwIfAborted();
@@ -26,10 +27,14 @@ process.on('message',async raw=>{
     catch(error){capabilities.imageErrorCode=error instanceof CodexHostError?error.code:'CODEX_IMAGE_CAPABILITY_UNAVAILABLE';}
     finally{await images?.rpc.close();}
   }
-  process.send!({type:'result',requestId:request.requestId,value:localCodexStatusSchema.parse({engine:'codex',installed,available:owned.authenticated,version:CODEX_RUNTIME_VERSION,loginStatus:owned.loginStatus,capabilities,...(!owned.authenticated?{errorCode:'CODEX_LOGIN_REQUIRED'}:{})})});
+  reply={type:'result',requestId:request.requestId,value:localCodexStatusSchema.parse({engine:'codex',installed,available:owned.authenticated,version:CODEX_RUNTIME_VERSION,loginStatus:owned.loginStatus,capabilities,...(!owned.authenticated?{errorCode:'CODEX_LOGIN_REQUIRED'}:{})})};
  }catch(error){
-  if(process.connected)process.send!({type:'result',requestId:request.requestId,value:{engine:'codex',installed,available:false,version:installed?CODEX_RUNTIME_VERSION:null,loginStatus:'unchecked',errorCode:error instanceof CodexHostError?error.code:signal.aborted?'CODEX_STATUS_CANCELLED':'CODEX_STATUS_UNAVAILABLE'}});
- }finally{await owned?.rpc.close();if(cwd)await rm(cwd,{recursive:true,force:true});active.delete(request.requestId);}
+  reply={type:'result',requestId:request.requestId,value:{engine:'codex',installed,available:false,version:installed?CODEX_RUNTIME_VERSION:null,loginStatus:'unchecked',errorCode:error instanceof CodexHostError?error.code:signal.aborted?'CODEX_STATUS_CANCELLED':'CODEX_STATUS_UNAVAILABLE'}};
+ }finally{
+  // The parent pumps the next FIFO request on result; retain the slot until owned cleanup completes.
+  await owned?.rpc.close();if(cwd)await rm(cwd,{recursive:true,force:true});active.delete(request.requestId);
+ }
+ if(process.connected&&reply)process.send!(reply as never);
 });
 process.on('disconnect',()=>{for(const controller of active.values())controller.abort();setTimeout(()=>process.exit(0),1200).unref();});
 process.send!({type:'ready'});

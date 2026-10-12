@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-12T22:14:57.809Z",
+  "file": "/opt/homebrew/bin/pnpm",
+  "args": [
+    "-C",
+    "ai-worker",
+    "exec",
+    "vitest",
+    "run",
+    "src/execution/codex-native-turn.test.ts",
+    "--retry=0",
+    "--testTimeout=120000",
+    "--hookTimeout=120000",
+    "--teardownTimeout=120000",
+    "--no-file-parallelism"
+  ],
+  "budgetMs": 10680000,
+  "fullRemainingFutureMs": 73440000,
+  "retry": 0
+}

@@ -1,0 +1,173 @@
+{
+  "schema": "T1261-round3-tool-package-independent-source-review/v1",
+  "reviewer": "final_runtime_review",
+  "task": "T-1261",
+  "verdict": "PASS",
+  "reviewScope": "当前工具与输入源码审；不签未来实际执行",
+  "findings": [],
+  "summary": "当前工具变化保持真实ID、源码归属、原任务期限、历史证据及串行闭合门。两项本轮发现已修正并按现值独立复核；允许ROOT进入新干净HEAD、实际包与新metadata输入准备阶段，实际执行仍依既有当场准入。",
+  "reviewedBindings": [
+    {
+      "path": "docs/verification/t1246/round-3/inputs/SOURCE_INPUT_MAP.json",
+      "sha256": "cb6bbdb84c03902b6bde36a77378ab4e65c003dba8ddd784ec72d8f0ce4f7808",
+      "size": 90031
+    },
+    {
+      "path": "docs/verification/t1246/round-3/inputs/PRIVATE_TOOL_REVISION_BINDING.json",
+      "sha256": "170b0f0a7210d3c5057f3430a2db402279861fb644deb74dd9435d17b36361d6",
+      "size": 2330
+    },
+    {
+      "path": "docs/verification/t1246/round-3/inputs/COMPLETE_CONSUMER_BUDGETS.json",
+      "sha256": "f11eb1b3da3f041de3c03708b579afcb6da299619423386761e73bb01dc5c6a2",
+      "size": 54768
+    },
+    {
+      "path": "docs/verification/t1246/round-3/inputs/ACTUAL_STATIC_VALIDATION.json",
+      "sha256": "90080ead83431a9944f8b07a39c62d8f7f194a09210c9f5c85f37c176014ecbb",
+      "size": 13010
+    },
+    {
+      "path": "docs/verification/t1246/round-3/inputs/FINAL_CURRENT_NODE_PARSE.json",
+      "sha256": "c93c46e33163f771976c7fcf4ed357cf901c465f602bd4164d90e6346ee0ba62",
+      "size": 4721
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/prepare-dispatch-inputs.cjs",
+      "sha256": "46943772b7b2ca6cce7842c82e1c39908937f549a244e1fccc1d7dc8149042a2",
+      "size": 6053
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/dispatch-once.cjs",
+      "sha256": "71d895c9a4c8b7ce4207a20ddca2186f6f9d4af305f723fedce1b9ee6e194c26",
+      "size": 4725
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/common.cjs",
+      "sha256": "c73f58cd3dc9b419f3bf05d7c6761c701be16b582848c6d8fd558519b302fca5",
+      "size": 22768
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/reseal-legacy253-lineage.cjs",
+      "sha256": "2fe4b03088166138dbc93a37b1a5821eed5a3d906413e2227cbf16eada041231",
+      "size": 16796
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/run.cjs",
+      "sha256": "cee6b6f445124d98c8939c21f28897bcdbf26013ff72cf50f2ee26a9a732f48e",
+      "size": 10937
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/supervise.cjs",
+      "sha256": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4",
+      "size": 4385
+    },
+    {
+      "path": "docs/verification/t1246/round-3/package-preparation/run-owned-round3-local-package.cjs",
+      "sha256": "a28891934156e95db46c52ae70261a2ef54be91dc01a1ff1a1bb8de94301a306",
+      "size": 18621
+    },
+    {
+      "path": "docs/verification/t1246/round-3/package-preparation/verify-local-artifact-v1.cjs",
+      "sha256": "b66d5101b2e4100801b5c5532d12081fb43c2642014634d8bb82205b90e09614",
+      "size": 9862
+    }
+  ],
+  "physicalVerification": {
+    "sourceMapRows": 150,
+    "bytes": 26525440,
+    "currentHashSizeMismatches": 0,
+    "originalByteEqualityDeclarationMismatches": 0,
+    "modifiedExistingSources": 11,
+    "newRound3Sources": [
+      "tool/prepare-dispatch-inputs.cjs",
+      "tool/dispatch-once.cjs"
+    ],
+    "completeForwardInversePairsVerified": 11,
+    "staticOriginalRawCopiesVerified": 36,
+    "currentCjsParserBindingsVerified": 26,
+    "largePackageDependencyFreezeRepeated": false
+  },
+  "resolvedFindings": [
+    {
+      "id": "R3-TOOL-RECEIPT",
+      "file": "tool/dispatch-once.cjs",
+      "resolution": "supervisionAttempted在调用S.supervise前置true；未调用才childNotStarted；调用后无返回receipt明确receiptUnavailable和childStartUnconfirmed，不把抛异常代签为未启动。下个profile仍需前个真实closed receipt。",
+      "currentSha256": "71d895c9a4c8b7ce4207a20ddca2186f6f9d4af305f723fedce1b9ee6e194c26"
+    },
+    {
+      "id": "R3-TOOL-DIFF",
+      "file": "diffs/tool__reseal-legacy253-lineage.cjs.diff",
+      "resolution": "完整正逆差异包含acceptanceRound:3、round2AllGeneratedTestFiles保存、current round3 generated array及严格nameset相等。两份差异完整hunk与旧/现源码逐字匹配。",
+      "forwardSha256": "b53a9d217347ead8d9ef1b648647c3dc4157f6de7bc7852bfd83a4dac71a98f4",
+      "inverseSha256": "ee961b083cfe2fde77ca23c17daf50ac1845baa6973ac1d61f752fd76a70da98"
+    }
+  ],
+  "sourceChecks": [
+    "原170/103/7/1与独立Doocs2名称集合和断言保留；原253、旧9工具及旧manifest保持原字节与来源，新增round3 source inventory不冒旧测试未改。",
+    "chat仅捕获实际/api/chat请求及四个响应ID，并公开读取同task/conversation/source message；project前提来自正式选择，禁止tasks[0]替代、重发或猜owner。response观察在input填写后、click前注册，独立预算覆盖click和原有限观察。",
+    "正常view/成功after图等待真实workspace和account switcher ready及loading消失；失败或loading诊断图即时保留，ready失败先保现象再FAIL。截图不能代模型或视觉PASS。",
+    "protocol PGsocket仅缩owned子路径为s；最大端点由109B降至101B，nonce、0700、UID/birth、动态独占端口、loopback、lsof及受保护端口门保持。",
+    "Doocs九driver及f57 case与已审私人候选整字节一致；许可定位到最近details的直属summary，原1366/390保存刷新/真实资源和receipt断言不减；inline attachment严格校验原SHA/base64/PNG/JSON，缺失或非法FAIL。",
+    "dispatch固定nonce/Node/source/manifest/approval/工具SHA，outer只覆盖既有完整future与cleanup；SIGINT/TERM走有限owned归属清理，不续期、不自动再模型请求。",
+    "package parent只在原45基本测试调用显式retry=0并更新证明字段，不降低原容量；verifier全字节等20108已修b66d数据输出文件版本，保原断言。新包仍需实际新HEAD freeze及原3child/守卫/11dist10public闭合，不沿旧50c包代签。"
+  ],
+  "actualStaticEvidence": {
+    "sourceInputMapBindingMatched": true,
+    "typescriptRootCount": 93,
+    "typescriptDiagnostics": 0,
+    "noEmit": true,
+    "listCounts": {
+      "original": 170,
+      "official": 103,
+      "protocol": 7,
+      "pi": 1,
+      "doocs": 2
+    },
+    "actualListCliCodes": [
+      0,
+      0,
+      0
+    ],
+    "actualOperatorParentCodes": {
+      "40377": 1,
+      "78832": 1,
+      "94640": 0
+    },
+    "originalOperatorFailuresPreserved": true,
+    "receiptsProcessClosed": true,
+    "remainingOwnedGroups": [],
+    "signals": [],
+    "budgetExhausted": false,
+    "servicesSdkModelsBrowsersExecuted": false
+  },
+  "budgetLimits": [
+    "creative.value图片数组及model ledger分页没有静态输入上界；当前机械截图增量和72M窗口不能表述为完整动态链路容量证明。保持原期限，耗尽停止并记录真实状态，禁止截断数据来制造PASS。",
+    "nativeAvailable测试APIRequestContext仍120k；requestIO真实无队列readiness120k+worker120k+margin10k为250k，有FIFO前序则动态更长。当前未修成已证明full，不能把生产浏览器fetch或ACK窄修等同该测试外层覆盖。",
+    "磁盘门保持串行真实检查，不足先保inputs并NOT_RUN；不能删除活跃runtime、用户缓存、唯一graph、raw或历史FAIL腾空间。"
+  ],
+  "pendingActual": [
+    "新干净候选HEAD与新包完整实际receipt",
+    "新HEAD实际metadata/discovery与closure绑定",
+    "新joint/Doocs actual manifests按现值准入",
+    "170/103/7/1和Doocs2完整真实运行、逐项视觉与操作证据"
+  ],
+  "preservation": {
+    "oldPackageParent30046Exit": 1,
+    "independentSameDmgVerification20108Exit": 0,
+    "oldProfileFailuresAndIncompleteDenominatorsUnchanged": true,
+    "global23DebtNotCleared": true,
+    "AppVerified": false,
+    "WindowsVerified": false
+  },
+  "reviewOperations": {
+    "candidateBodiesExecuted": false,
+    "collectorExecuted": false,
+    "packageExecuted": false,
+    "runtimeExecuted": false,
+    "productionSourceModified": false,
+    "formalSpecReviewChanged": false,
+    "reportsOnly": "docs/verification/t1246/round-3/tool-review/**"
+  },
+  "createdAt": "2026-10-12T22:51:14.019580+00:00"
+}

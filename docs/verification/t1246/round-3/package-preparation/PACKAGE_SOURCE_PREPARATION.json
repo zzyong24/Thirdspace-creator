@@ -1,0 +1,121 @@
+{
+  "kind": "SOURCE准备；未prepare/fullfreeze/build/安装/App",
+  "parentOriginal": "/private/tmp/t1246-package-final-source/v2/run-owned-local-package-headless-v4.cjs",
+  "parentOriginalSha256": "6483a6fdb7deb3f16119ad2f28d7fa7bbb0bf1897fbccde76d3c8244f216c348",
+  "parentCandidate": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/package-preparation/run-owned-round3-local-package.cjs",
+  "parentCandidateSha256": "a28891934156e95db46c52ae70261a2ef54be91dc01a1ff1a1bb8de94301a306",
+  "parentChanges": [
+    "basic45 CLI明确--retry=0",
+    "basic proof字段retry0Explicit=true"
+  ],
+  "parentExactInverseRestored": true,
+  "verifierOriginal": "/private/tmp/t1246-package-final-source/v2/verify-local-artifact-data-v2.cjs",
+  "verifierSourceSha256": "b66d5101b2e4100801b5c5532d12081fb43c2642014634d8bb82205b90e09614",
+  "verifierConsumerBasename": "verify-local-artifact-v1.cjs",
+  "verifierCandidateSameBytes": true,
+  "priorActualIndependentVerification": "20108整体0/1child/2guards/12command、peer2692f031；原30046 overall1保留",
+  "budgetMs": 109680000,
+  "BASICbudgetPreserves45times3Attempts": true,
+  "PACKAGEpositiveMs": 21600000,
+  "VERIFYpositiveMs": 7200000,
+  "sameFixedEntry": [
+    "CREATOROS_LOCAL_SKIP_INSTALL=1",
+    "pnpm -C frontend desktop:package-local"
+  ],
+  "headPendingRootCleanCommit": true,
+  "toolMirrorMustBePrivateBeforePrepare": "parent HERE约束freeze只能写HERE；实际执行复制上述同SHA两个工具到fresh PRIVATE，freeze写PRIVATE，保持HEAD clean",
+  "sameHeadReceipt": "内部actual ai-worker/dist11和publiccopy10分列；不伪独立Workerchild receipt，不额外重建Worker",
+  "artifactHistory": "50c7原67df开发DMG已先完整SHA复制并全量回读确认；Downloads原inode/UID/mode/mtime/ctime无变化，未构建新包。新commit包构建后再存唯一DMG且核同artifact/downloadSHA。",
+  "resources": [
+    {
+      "path": "/private/tmp/t1246-package-final-source/v2/run-owned-local-package-headless-v4.cjs",
+      "sha256": "6483a6fdb7deb3f16119ad2f28d7fa7bbb0bf1897fbccde76d3c8244f216c348",
+      "size": 18610,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/private/tmp/t1246-package-final-source/v2/verify-local-artifact-data-v2.cjs",
+      "sha256": "b66d5101b2e4100801b5c5532d12081fb43c2642014634d8bb82205b90e09614",
+      "size": 9862,
+      "mode": 384,
+      "uid": 501
+    },
+    {
+      "path": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "sha256": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+      "size": 68384,
+      "mode": 365,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs",
+      "sha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+      "size": 15668,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/opt/homebrew/lib/node_modules/pnpm/bin/pnpm.cjs",
+      "sha256": "b276da51dc8ca5b0d3ee3371695b50fc8b3244b281b091c63a3f082a88dadeb9",
+      "size": 1102,
+      "mode": 493,
+      "uid": 501
+    },
+    {
+      "path": "/private/tmp/t1254-readonly/NODE_DYLD_CLOSURE_V10.json",
+      "sha256": "3bc9de0dd3135128322e827c09060159115ad1e30058233ef58daec4b1dd8491",
+      "size": 253472,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/package.json",
+      "sha256": "5b4aa71a1e29ca0682f023c6c45a870ade2deacc42342530c9fefdb193648fda",
+      "size": 5641,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/package-local.mjs",
+      "sha256": "a24193b83f19f7217421838d1128e4156b2b4ccb7725da0732f021d0de2b7881",
+      "size": 9116,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/scripts/desktop/execution-worker-runtime.mjs",
+      "sha256": "08d84b28d16b60f8050b4802caaa211f494f800dd5ce563dc616298230f9151f",
+      "size": 3990,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/scripts/build.mjs",
+      "sha256": "8ab8b672e2c73e5085fc91522d4ca13568159313bdaec4e53027f6cdba763ae8",
+      "size": 4754,
+      "mode": 420,
+      "uid": 501
+    }
+  ],
+  "preserved50c7DMG": {
+    "kind": "原50c7已验开发包完整字节保全，不覆盖旧Downloads或旧证据",
+    "source": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "sourceInode": 353469037,
+    "sourceMode": 420,
+    "uid": 501,
+    "target": "/private/tmp/t1261-preserved-50c7-dmg-1d5zpe2y/CreatorOS-1.2.0-50c7be39.dmg",
+    "targetInode": 354884566,
+    "bytes": 887540202,
+    "sha256": "67dfe8aa072a344be770a8b9bb00b76ba049999cdbc6d168bf6e3db1527bfeae",
+    "copyHashAndCompleteRereadSame": true,
+    "sourceFdIdentityUnchanged": true,
+    "positiveBudgetMs": 300000,
+    "elapsedMs": 1598.7891250988469,
+    "diskFreeBefore": 19416190976,
+    "diskFreeAfter": 18519859200,
+    "newPackageBuilt": false,
+    "appExecuted": false
+  },
+  "preserved50c7DMGReceiptSha256": "67823dfdaf8b9031d2c486b65d980477a072600387bb7c9a9f010b6975ca3c47"
+}

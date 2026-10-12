@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-12T22:15:20.810Z",
+  "oneBirth": true,
+  "budgetMs": 73560000,
+  "elapsedMs": 23018.266666,
+  "retry": 0,
+  "records": [
+    {
+      "name": "native",
+      "expected": 43,
+      "actual": {
+        "passed": 43,
+        "total": 43
+      },
+      "complete": true,
+      "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/native-receipt.json",
+      "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/native.log"
+    },
+    {
+      "name": "copilot",
+      "expected": 49,
+      "actual": {
+        "passed": 49,
+        "total": 49
+      },
+      "complete": true,
+      "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/copilot-receipt.json",
+      "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/copilot.log"
+    },
+    {
+      "name": "confirm-topic",
+      "expected": 12,
+      "actual": {
+        "passed": 12,
+        "total": 12
+      },
+      "complete": true,
+      "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/confirm-topic-receipt.json",
+      "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/confirm-topic.log"
+    },
+    {
+      "name": "status-handoff",
+      "expected": 5,
+      "actual": {
+        "passed": 5,
+        "total": 5
+      },
+      "complete": true,
+      "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/status-handoff-receipt.json",
+      "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/status-handoff.log"
+    }
+  ],
+  "notRun": [],
+  "code": 0,
+  "externalModelFixtureOnly": true,
+  "appExecuted": false,
+  "productDistBuild": false
+}

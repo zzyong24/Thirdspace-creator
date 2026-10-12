@@ -1,0 +1,54 @@
+{
+  "schema": "private-known-led047-fixture-repair-proposal/v1",
+  "task": "T-1261",
+  "status": "PRIVATE_NOT_APPLIED_NOT_RUN_SCOPE_RECHECK_REQUIRED",
+  "sourcePath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+  "originalSha256": "4a6b70155a20e5f061b610eace37e92493a2a19460c80e7c0e67b36a15e25068",
+  "candidatePath": "/private/tmp/t1261-led047-scope-fixture-5dwwrudc/candidate-ai-copilot-interactions.test.tsx",
+  "candidateSha256": "4751d19290728bdad289cb15118026d788e2d357650d3935931a2d2cc0de8b65",
+  "forwardSha256": "c3e528cfb88de2715eeaf8a2b5e37f7b032fac1bae6a5dc93a7fe9a533a2f814",
+  "actualFirstGate": {
+    "receiptPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/gates/LED-047.json",
+    "receiptSha256": "c62983a04d93fd5b6df6662414020e5fd09690e8d96d5c132cac922a492424c0",
+    "logPath": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/gates/LED-047.log",
+    "logSha256": "0233f1dccc01febb01f5ec43a57fdf0de25d70abd6604769e7916da12d04a6d3",
+    "exitCode": 1,
+    "passed": 162,
+    "failed": 12,
+    "total": 174,
+    "failedFileRuntimeCases": 61,
+    "failedTitles": [
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > submit is disabled when empty, enabled after typing",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > submitting calls sendMessage({text}) and clears the composer",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-233] Shift+Enter 也发送(宽容两种修饰键)",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车)",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 局部改稿失败保留段落锚点，成功后仍可围绕同一段连续修订",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-732] provider 失败后普通新消息不复用局部命令",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断",
+      " FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > clicking a suggested-action chip fills the composer with its label"
+    ]
+  },
+  "staticCause": "旧beforeEach:190清空storage，61发送交互fixture无group/account前提；现hasCreationWorkspace/原CreationWorkspace禁止no-scope为正确产品行为。12原失败包含disabled、sendMessage未调用、旧局改清理未达到，下游链需正式新run验证，不能仅据静态前提把12全部签闭合。",
+  "minimalChanges": [
+    "beforeEach清storage后添加明确neutral empty-group fixture ID，原各测试引擎/mock服务继续原样",
+    "唯一account-1显式case在设置旧account前remove默认group，使原legacy account-only输入族真正保持；只fixture前置，不改其所有断言"
+  ],
+  "assertionPreservation": {
+    "allOriginalLinesPreserved": true,
+    "allDetectedItTitlesSame": true,
+    "originalCaseCountByActualLog": 61,
+    "noAddedRemovedSkippedAssertionsCases": true,
+    "noChangedBudgetsRetriesOrProductionGuard": true
+  },
+  "scopeJustification": "LED047是T1261实施必跑门，本轮真实非绿不得归范围外；这是让既有发送测试满足已批准group/legacy workspace合同，不放松产品guard/owner或把无scope变可发送。正式SPEC/write_set当前未包含此测试，须ROOT按T1261自身合法recheck精确增此fixture修法后才apply。",
+  "legacyBoundary": "默认group否则会遮蔽唯一原account-only case；因此需同文件第二个只加removeItem的fixture hunk，避免让61绿色却丢legacy覆盖。没有依case名字在beforeEach写条件分支。",
+  "notClaimed": [
+    "未执行原baseline/新test/Gate，不声称12已通过",
+    "不把fixture组ID当实际backend创建/授权成功",
+    "原LED047 162/12和整个源码原物保，当前产品9写集不增"
+  ]
+}

@@ -58,6 +58,7 @@ const protocol = vi.hoisted(() => ({
   setMessages: vi.fn(),
   listMessages: vi.fn(async (..._args: unknown[]) => []),
   fetch: vi.fn(),
+  upload: vi.fn(),
   live: null as any,
   actualSdk: false,
   attachmentIds: [] as string[],
@@ -97,6 +98,7 @@ vi.mock("./live-chat-session", () => ({
     });
   },
 }));
+vi.mock("@/features/draft-workbench/upload-to-project",async()=>{const actual=await vi.importActual<any>("@/features/draft-workbench/upload-to-project");return {...actual,uploadFileForCopilot:(...args:any[])=>protocol.upload(...args)};});
 vi.mock("@ai-sdk/react", async () => {
   const actual=await vi.importActual<{useChat:(options:any)=>any;Chat:new(options:any)=>any}>("@ai-sdk/react");
   return {useChat: (options:any) => protocol.actualSdk?actual.useChat(options):({
@@ -113,10 +115,11 @@ vi.mock("./copilot-attachment-picker",async()=>{
   const actual=await vi.importActual<typeof import("./copilot-attachment-picker")>("./copilot-attachment-picker");
   const react=await vi.importActual<typeof import("react")>("react");
   return {...actual,CopilotAttachmentPicker:react.forwardRef((props:any,ref:any)=>{
+    const innerRef=react.useRef<any>(null);
     protocol.attachmentChanged = props.onStateChange;
     react.useEffect(()=>{if(protocol.actualSdk&&protocol.attachmentIds.length)props.onStateChange({ids:[...protocol.attachmentIds],count:protocol.attachmentIds.length,uploading:false});},[]);
-    react.useImperativeHandle(ref,()=>({clear:()=>props.onStateChange({ids:[],count:0,uploading:false})}));
-    return protocol.actualSdk?null:<actual.CopilotAttachmentPicker {...props} ref={ref}/>;
+    react.useImperativeHandle(ref,()=>({clear:()=>{if(!protocol.actualSdk)innerRef.current?.clear();props.onStateChange({ids:[],count:0,uploading:false});},readDraft:()=>innerRef.current?.readDraft?.()??[]}));
+    return protocol.actualSdk?null:<actual.CopilotAttachmentPicker {...props} ref={innerRef}/>;
   })};
 });
 
@@ -148,10 +151,13 @@ beforeEach(() => {
   protocol.setMessages.mockReset();
   protocol.listMessages.mockReset();
   protocol.listMessages.mockResolvedValue([]);
+  protocol.upload.mockReset();protocol.upload.mockResolvedValue({assetId:"fixture-existing-owned-upload"});
   protocol.fetch.mockReset();
   protocol.fetch.mockResolvedValue(new Response("", { status: 200 }));
   sessionStorage.clear();
   localStorage.clear();
+  // 合法发送原断言所需的明确中立空组fixture（只localStorage归属意图，无平台账号/模型fixture）。
+  localStorage.setItem("creatoros:current-group", "fixture-valid-empty-group");
 });
 
 function renderDialog() {
@@ -792,6 +798,86 @@ describe("T-1070 actual composer component / SDK boundary", () => {
       expect(protocol.regenerate).toHaveBeenCalledTimes(3);
     } finally { vi.useRealTimers(); }
   });
+
+  it("T1246 coreAdmission no-scope禁发且原草稿/附件留在公共composer",async()=>{
+    localStorage.clear();
+    render(<Composer/>);const user=userEvent.setup();
+    await user.type(screen.getByLabelText("我能帮你做什么"),"未发送的原草稿");
+    await act(async()=>protocol.attachmentChanged!({ids:["fixture-owned-upload"],count:1,uploading:false}));
+    expect(screen.getByLabelText("提交提示给 Copilot")).toBeDisabled();
+    expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("未发送的原草稿");
+    expect(protocol.send).not.toHaveBeenCalled();expect(protocol.regenerate).not.toHaveBeenCalled();expect(prepare).not.toHaveBeenCalled();
+    expect(screen.getByRole("link",{name:"选择或创建账号组"})).toHaveAttribute("href","/accounts");
+    const {writeCurrentGroupId}=await import("@/lib/http-transport");await act(async()=>writeCurrentGroupId("fixture-neutral-empty-group"));
+    await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    await waitFor(()=>expect(protocol.send).toHaveBeenCalledOnce(),{timeout:120000});
+    expect(protocol.send.mock.calls[0][1].body.attachmentIds).toEqual([]);
+    expect(localStorage.getItem("creatoros:current-account")).toBeNull();
+  });
+  it.each(["empty-group","legacy-account"])("T1246 coreAdmission %s真实workspace准入不要求平台/模型配置",async(kind)=>{
+    localStorage.clear();localStorage.setItem(kind==="empty-group"?"creatoros:current-group":"creatoros:current-account",kind==="empty-group"?"fixture-empty-group":"fixture-legacy-account");
+    render(<Composer/>);const user=userEvent.setup();await user.type(screen.getByLabelText("我能帮你做什么"),"合法原请求");await user.click(screen.getByLabelText("提交提示给 Copilot"));await waitFor(()=>expect(protocol.send).toHaveBeenCalledOnce(),{timeout:120000});expect(prepare).toHaveBeenCalledOnce();
+  });
+  it("T1246 coreAdmission prepare期间同batch A-B-A不能提交旧owner",async()=>{
+    let resolve!:(value:any)=>void;prepare.mockImplementationOnce(()=>new Promise(done=>resolve=done));
+    const {writeCurrentGroupId}=await import("@/lib/http-transport");localStorage.setItem("creatoros:current-group","fixture-group-A");render(<Composer/>);const user=userEvent.setup();await user.type(screen.getByLabelText("我能帮你做什么"),"旧A原输入");await user.click(screen.getByLabelText("提交提示给 Copilot"));expect(prepare).toHaveBeenCalledOnce();
+    await act(async()=>{writeCurrentGroupId("fixture-group-B");writeCurrentGroupId("fixture-group-A");});
+    await act(async()=>resolve(structuredClone(target)));expect(protocol.send).not.toHaveBeenCalled();expect(protocol.regenerate).not.toHaveBeenCalled();expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("旧A原输入");
+  });
+  it("T1246 coreAdmission accounts卸载回来原草稿不丢",async()=>{
+    localStorage.clear();const view=render(<Composer/>);const user=userEvent.setup();await user.type(screen.getByLabelText("我能帮你做什么"),"去账号组之前的草稿");
+    fireEvent.click(screen.getByRole("link",{name:"选择或创建账号组"}));
+    view.unmount(); // 当前/accounts Link令Overlay(!open)return null的真实React卸载生命周期；不是实际浏览器路由通过。
+    render(<Composer/>);expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("去账号组之前的草稿");expect(protocol.send).not.toHaveBeenCalled();
+  });
+
+
+  it("T1246 coreAdmission accounts回来真实picker已上传附件标签/原ID保留且零重复上传",async()=>{
+    localStorage.clear();const view=render(<Composer/>);const user=userEvent.setup();await user.type(screen.getByLabelText("我能帮你做什么"),"待选择组的原输入");
+    fireEvent.drop(view.container.querySelector('[data-slot="copilot-attachment-picker"]')!,{dataTransfer:{files:[new File(["fixture上传的真实文件bytes"],"原文档.md",{type:"text/markdown",lastModified:1})]}});
+    await waitFor(()=>expect(screen.getByText("已就绪")).toBeInTheDocument(),{timeout:120000});expect(protocol.upload).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("link",{name:"选择或创建账号组"}));view.unmount();const back=render(<Composer/>);
+    expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("待选择组的原输入");expect(screen.getByText("原文档.md")).toBeInTheDocument();expect(screen.getByText("已就绪")).toBeInTheDocument();expect(protocol.upload).toHaveBeenCalledOnce();
+    const {writeCurrentGroupId}=await import("@/lib/http-transport");await act(async()=>writeCurrentGroupId("fixture-selected-neutral-empty-group"));expect(screen.getByText("请核对原工作区附件")).toBeInTheDocument();await user.click(screen.getByLabelText("提交提示给 Copilot"));await waitFor(()=>expect(protocol.send).toHaveBeenCalledOnce(),{timeout:120000});expect(protocol.send.mock.calls[0][1].body.attachmentIds).toEqual([]);expect(protocol.upload).toHaveBeenCalledOnce();
+  });
+  it("T1246 coreAdmission own exact500真实SDK任务未建立不auto-regenerate，输入保留",async()=>{
+    const {Chat}=await vi.importActual<any>("@ai-sdk/react");protocol.actualSdk=true;
+    const live:any={control:{fetch:(...args:any[])=>protocol.fetch(...args),cancel:async()=>{},currentTaskId:()=>null},conversationId:null,epoch:0,executionEngine:"pi",sourceEngines:new Map(),transport:null};live.chat=new Chat({id:"fixture-own500",transport:{sendMessages:(options:any)=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});protocol.live=live;
+    protocol.fetch.mockResolvedValueOnce(Response.json({error:"消息保存失败，请重试。"},{status:500}));render(<Composer/>);const user=userEvent.setup();await user.type(screen.getByLabelText("我能帮你做什么"),"没有建立任务的原话");await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    await waitFor(()=>expect(live.chat.status).toBe("error"),{timeout:120000});expect(screen.getByText("本轮尚未启动任务")).toBeInTheDocument();expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("没有建立任务的原话");
+    vi.useFakeTimers();try{await act(async()=>vi.advanceTimersByTimeAsync(9000));expect(protocol.fetch).toHaveBeenCalledOnce();expect(protocol.regenerate).not.toHaveBeenCalled();expect(screen.queryByText("自动恢复中")).toBeNull();expect(screen.queryByText("正在恢复原任务")).toBeNull();}finally{vi.useRealTimers();}
+  });
+  it.each(["generic500","transport-loss"])("T1246 coreAdmission %s保持未知，不伪尚未启动",async(kind)=>{
+    const {Chat}=await vi.importActual<any>("@ai-sdk/react");protocol.actualSdk=true;const live:any={control:{fetch:(...args:any[])=>protocol.fetch(...args),cancel:async()=>{},currentTaskId:()=>null},conversationId:null,epoch:0,executionEngine:"pi",sourceEngines:new Map(),transport:null};live.chat=new Chat({id:"fixture-unknown",transport:{sendMessages:(options:any)=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});protocol.live=live;
+    if(kind==="generic500")protocol.fetch.mockResolvedValueOnce(Response.json({error:"未知装配错误"},{status:500}));else protocol.fetch.mockRejectedValueOnce(Error("fixture断网，可能已入场"));render(<Composer/>);const user=userEvent.setup();await user.type(screen.getByLabelText("我能帮你做什么"),"状态未确认的原话");await user.click(screen.getByLabelText("提交提示给 Copilot"));await waitFor(()=>expect(live.chat.status).toBe("error"),{timeout:120000});expect(screen.queryByText("本轮尚未启动任务")).toBeNull();expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();expect(protocol.fetch).toHaveBeenCalledOnce();
+  });
+
+  it("T1246 draftBoundary 顶部workspace错误入口保留autoSend未发草稿",async()=>{
+    localStorage.clear();const request={nonce:9001,prefill:"稿面按钮原autoSend草稿",autoSend:true};const view=render(<Composer request={request}/>);
+    await waitFor(()=>expect(view.container.querySelector('[data-slot="copilot-error-workspace-link"]')).not.toBeNull(),{timeout:120000});
+    fireEvent.click(view.container.querySelector('[data-slot="copilot-error-workspace-link"]')!);view.unmount();render(<Composer/>);
+    expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("稿面按钮原autoSend草稿");expect(protocol.send).not.toHaveBeenCalled();expect(protocol.regenerate).not.toHaveBeenCalled();expect(prepare).not.toHaveBeenCalled();
+  });
+  it("T1246 draftBoundary restored同File重选不碰撞localId或删除原ready附件",async()=>{
+    const {CopilotAttachmentPicker}=await import("./copilot-attachment-picker");const ref=React.createRef<any>(),onState=vi.fn();const file=new File(["同一真实file bytes"],"同File.md",{type:"text/markdown",lastModified:123});
+    protocol.upload.mockResolvedValue({assetId:"fixture-same-owned-asset",deduplicated:true});const first=render(<CopilotAttachmentPicker ref={ref} onStateChange={onState}/>);
+    fireEvent.drop(first.container.querySelector('[data-slot="copilot-attachment-picker"]')!,{dataTransfer:{files:[file]}});await waitFor(()=>expect(onState).toHaveBeenLastCalledWith({ids:["fixture-same-owned-asset"],uploading:false,count:1}),{timeout:120000});const draft=ref.current.readDraft();first.unmount();
+    const second=render(<CopilotAttachmentPicker initialDraft={draft} onStateChange={onState}/>);fireEvent.drop(second.container.querySelector('[data-slot="copilot-attachment-picker"]')!,{dataTransfer:{files:[file]}});
+    await waitFor(()=>expect(protocol.upload).toHaveBeenCalledTimes(2),{timeout:120000});await act(async()=>{});
+    expect(onState).toHaveBeenLastCalledWith({ids:["fixture-same-owned-asset"],uploading:false,count:1});expect(screen.getAllByText("同File.md")).toHaveLength(1);
+    fireEvent.click(screen.getByLabelText("移除附件 同File.md"));expect(onState).toHaveBeenLastCalledWith({ids:[],uploading:false,count:0});
+  });
+  it("T1246 draftBoundary 原A附件切B不自动迁移或发送ID，不再上传",async()=>{
+    const {CopilotAttachmentPicker}=await import("./copilot-attachment-picker");const {writeCurrentGroupId}=await import("@/lib/http-transport");localStorage.setItem("creatoros:current-group","fixture-origin-A");const ref=React.createRef<any>(),onState=vi.fn(),view=render(<CopilotAttachmentPicker ref={ref} onStateChange={onState}/>);fireEvent.drop(view.container.querySelector('[data-slot="copilot-attachment-picker"]')!,{dataTransfer:{files:[new File(["A文件"],"A原文件.md",{type:"text/markdown",lastModified:1})]}});await waitFor(()=>expect(onState).toHaveBeenLastCalledWith({ids:["fixture-existing-owned-upload"],uploading:false,count:1}),{timeout:120000});await act(async()=>writeCurrentGroupId("fixture-new-B"));expect(onState).toHaveBeenLastCalledWith({ids:[],uploading:false,count:1});expect(protocol.upload).toHaveBeenCalledOnce();expect(screen.getByText("A原文件.md")).toBeInTheDocument();expect(screen.getByText("请核对原工作区附件")).toBeInTheDocument();
+  });
+
+  it("T1246 draftBoundary 网络已提交后切owner不得把原输入移作未提交draft",async()=>{
+    const {Chat}=await vi.importActual<any>("@ai-sdk/react");protocol.actualSdk=true;const live:any={control:{fetch:(...args:any[])=>protocol.fetch(...args),cancel:async()=>{},currentTaskId:()=>null},conversationId:null,epoch:0,executionEngine:"pi",sourceEngines:new Map(),transport:null};live.chat=new Chat({id:"fixture-no-task-transfer",transport:{sendMessages:(options:any)=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});protocol.live=live;
+    protocol.fetch.mockResolvedValueOnce(Response.json({error:"消息保存失败，请重试。"},{status:500}));const view=render(<Composer/>);const user=userEvent.setup();await user.type(screen.getByLabelText("我能帮你做什么"),"已交网络的旧owner原话");await user.click(screen.getByLabelText("提交提示给 Copilot"));await waitFor(()=>expect(live.chat.status).toBe("error"),{timeout:120000});
+    const {writeCurrentGroupId}=await import("@/lib/http-transport");await act(async()=>writeCurrentGroupId(null));fireEvent.click(view.container.querySelector('[data-slot="copilot-workspace-required"] a')!);view.unmount();render(<Composer/>);
+    expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("");expect(protocol.fetch).toHaveBeenCalledOnce();
+  });
+
 });
 
 

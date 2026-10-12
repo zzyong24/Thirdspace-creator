@@ -1,0 +1,39 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/cli.js",
+    "test",
+    "--config",
+    "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/static-driver/original/playwright.config.ts",
+    "--list",
+    "--reporter=json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",
+  "log": "/private/tmp/t1246-round3-static-resolved-1jx5173_/original-list.log",
+  "pid": 31085,
+  "identity": {
+    "pid": 31085,
+    "pgid": 31085,
+    "uid": 501,
+    "birth": "Tue Oct 13 06:40:05 2026",
+    "startedAt": 1791844805721
+  },
+  "startedAt": "2026-10-12T22:40:05.721Z",
+  "endedAt": "2026-10-12T22:40:08.711Z",
+  "elapsedMs": 2990,
+  "budgetMs": 240000,
+  "deadlineAt": "2026-10-12T22:44:05.721Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 0,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

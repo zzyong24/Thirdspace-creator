@@ -1,0 +1,26 @@
+[
+  {
+    "command": [
+      "node",
+      "orchestrator/process/boundary-scan.mjs"
+    ],
+    "exitCode": 0,
+    "elapsedMs": 659
+  },
+  {
+    "command": [
+      "node",
+      "orchestrator/process/orphan-scan.mjs"
+    ],
+    "exitCode": 0,
+    "elapsedMs": 148
+  },
+  {
+    "command": [
+      "node",
+      "orchestrator/process/semantic-boundary-scan.mjs"
+    ],
+    "exitCode": 0,
+    "elapsedMs": 368
+  }
+]

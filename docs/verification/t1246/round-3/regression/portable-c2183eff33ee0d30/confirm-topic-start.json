@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-12T22:15:09.743Z",
+  "file": "/opt/homebrew/bin/pnpm",
+  "args": [
+    "-C",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts",
+    "--retry=0",
+    "--testTimeout=120000",
+    "--hookTimeout=120000",
+    "--teardownTimeout=120000",
+    "--no-file-parallelism"
+  ],
+  "budgetMs": 3000000,
+  "fullRemainingFutureMs": 20760000,
+  "retry": 0
+}

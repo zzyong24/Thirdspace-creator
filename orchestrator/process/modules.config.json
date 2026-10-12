@@ -11591,6 +11591,73 @@
           "显式本地headless标志下固定desktop:package-local实际构建与同HEAD11dist/10public/DMG只读完整产物复核"
         ]
       }
+    },
+    "T-1261": {
+      "task_id": "T-1261",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1261-runtime-acceptance-defect-closure.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "ai-worker/src/execution/codex-native-turn.ts",
+        "ai-worker/src/execution/codex-agentic-worker-run.ts",
+        "ai-worker/src/execution/codex-acp-worker-run.ts",
+        "ai-worker/src/execution/codex-status-entry.ts",
+        "backend/src/modules/intelligence/intelligence.transport.ts",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/copilot-attachment-picker.tsx",
+        "frontend/src/features/article/doocs-article-editor.tsx",
+        "frontend/src/features/article/article-workbench.tsx",
+        "ai-worker/src/execution/codex-native-turn.test.ts",
+        "backend/src/modules/ai-runtime/local-codex-status-handoff.public.test.ts",
+        "backend/src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts",
+        "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+        "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+        "docs/features/t1261-runtime-acceptance-defect-closure.md",
+        "docs/features/t1261-runtime-acceptance-defect-closure.review.md",
+        "docs/features/t1261-runtime-acceptance-defect-closure.review.history.json",
+        "docs/verification/t1246/round-3/**",
+        "BACKLOG.md",
+        "orchestrator/progress.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1261.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx"
+      ],
+      "isolated_from": [
+        "用户App/DB/auth/媒体与系统AutomationMode",
+        "原round1/round2失败/receipt/driver字节",
+        "canonical其他会话代码和T1258日志任务"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm -C ai-worker exec vitest run src/execution/codex-native-turn.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000 --no-file-parallelism",
+          "pnpm -C frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000 --no-file-parallelism",
+          "pnpm -C backend exec vitest run src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000 --no-file-parallelism",
+          "pnpm -C backend exec vitest run src/modules/ai-runtime/local-codex-status-handoff.public.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000 --no-file-parallelism",
+          "pnpm -C frontend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "新干净源码实际开发打包并核验；子Agent完整170/103/7/1及Doocs2留图和同ID账本，App未验"
+        ]
+      }
     }
   }
 }

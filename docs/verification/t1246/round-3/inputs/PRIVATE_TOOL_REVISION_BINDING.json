@@ -1,0 +1,43 @@
+{
+  "task": "T-1261",
+  "changes": [
+    {
+      "source": "docs/verification/t1246/round-2/browser-original/driver/launch.cjs",
+      "sourceSha256": "6b7d9b532eab7eeca9a71db3fd04c2d3032d9737c93b94f93aa3d0a534c5e15b",
+      "candidate": "docs/verification/t1246/round-3/browser-original/driver/launch.cjs",
+      "candidateSha256": "a8f01bfe19fb3e18ca12a1e6238ba8f912124e00e5a66799de73b3c02a56449d"
+    },
+    {
+      "source": "docs/verification/t1246/round-2/browser-original/driver/prepare-runtime.cjs",
+      "sourceSha256": "c0cef4eeaae77fb66569442870b06250a1e59c72ffe62b67a50f21d30493a712",
+      "candidate": "docs/verification/t1246/round-3/browser-original/driver/prepare-runtime.cjs",
+      "candidateSha256": "13d040c7b32600e7173cb03b695fc0ff7321690ed4307776cffb1fec700a7380"
+    },
+    {
+      "source": "docs/verification/t1246/round-2/browser-original/driver/verify-binding.cjs",
+      "sourceSha256": "e159718f4d3ef197612e67ed33d1843ebffb8a362b5b4ec091df06ade390dbe6",
+      "candidate": "docs/verification/t1246/round-3/browser-original/driver/verify-binding.cjs",
+      "candidateSha256": "233ee60a423f26fa86ef898f76759122a009f7f359ddb6d203dc03aa818e8686"
+    },
+    {
+      "source": "docs/verification/t1246/round-2/new-v3/driver/launch.cjs",
+      "sourceSha256": "b8f699445e3264a4b602977ce320f7990381c6c4073409961ed34bcf9a26d6cf",
+      "candidate": "docs/verification/t1246/round-3/new-v3/driver/launch.cjs",
+      "candidateSha256": "27c789896bd1424636e5c9078e9c0c9d45546771961cd9385d8763727892cb62"
+    },
+    {
+      "source": "docs/verification/t1246/round-2/new-v3/driver/prepare-runtime.cjs",
+      "sourceSha256": "6d7706baaa4f9272d1cf64572689395bc9cbd14573470a8030e98fd711f31962",
+      "candidate": "docs/verification/t1246/round-3/new-v3/driver/prepare-runtime.cjs",
+      "candidateSha256": "54630c8a3ad49280aac8f737132f828aad59ea332c06448d8ad1fc84cb59ee67"
+    },
+    {
+      "source": "docs/verification/t1246/round-2/new-v3/driver/verify-binding.cjs",
+      "sourceSha256": "92b653b3ac3cfe34610f158d1488c52737bbb622e78d283a5703d03f442f0d55",
+      "candidate": "docs/verification/t1246/round-3/new-v3/driver/verify-binding.cjs",
+      "candidateSha256": "b59cda1363fa4061b57532f0f36426be87d3c608b073105ac2eb4b3444af01b9"
+    }
+  ],
+  "oldDriverBytesPreserved": true,
+  "noRuntimePass": true
+}

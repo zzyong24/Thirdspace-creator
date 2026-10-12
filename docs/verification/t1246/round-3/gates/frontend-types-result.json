@@ -1,0 +1,9 @@
+{
+  "command": "pnpm -C frontend exec tsc --noEmit --incremental false",
+  "actualExecSession": 25329,
+  "exitCode": 0,
+  "diagnosticsLog": "frontend-types.log",
+  "diagnosticsLogBytes": 0,
+  "overlay": false,
+  "oldTypeFailureRetained": true
+}

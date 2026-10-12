@@ -1,0 +1,27 @@
+{
+  "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "round3": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3",
+  "out": "/private/tmp/t1246-round3-static-resolved-1jx5173_",
+  "newTestRoot": "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/tests-t1246-v3",
+  "originalConfig": "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/static-driver/original/playwright.config.ts",
+  "originalConfigCopiedSha": "57ca9614fd0d2cabe7150774ec1d2e8eec381e26e26747df40810d45f6c74dfe",
+  "node": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "nodeSha": "32e234a5b6bec67d72a016f2baadf7fadf3afd328470b395b73af473fdee0d85",
+  "helperSha": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+  "listPositiveMs": 240000,
+  "typePositiveMs": 900000,
+  "eachLifecycleMs": 2160000,
+  "staticParentPositiveMs": 11460000,
+  "staticParentFullMs": 14220000,
+  "noRuntimeOrServices": true,
+  "sourceMapSha": "52b436e1dd728a53983f2263daf7f11f4ff0d6eb9514d1cd861e0cffef8c1c6f",
+  "originalTestRoot": "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/tests-t1246-round2-original",
+  "newConfig": "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/static-driver/new-v3/playwright.config.ts",
+  "doocsConfig": "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/static-driver/doocs/playwright.config.ts",
+  "doocsTestRoot": "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/doocs-source",
+  "staticFirstFailure": {
+    "path": "/private/tmp/t1246-round3-static-gates-91s_4emq",
+    "actualExitCode": 1,
+    "reason": "bare module resolution of files outside frontend did not use frontend dependencies; cannot require undeclared playwright package; compiler diagnostics preserved, no SOURCE source modified"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-12T22:15:18.615Z",
+  "file": "/opt/homebrew/bin/pnpm",
+  "args": [
+    "-C",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/ai-runtime/local-codex-status-handoff.public.test.ts",
+    "--retry=0",
+    "--testTimeout=120000",
+    "--hookTimeout=120000",
+    "--teardownTimeout=120000",
+    "--no-file-parallelism"
+  ],
+  "budgetMs": 11280000,
+  "fullRemainingFutureMs": 14760000,
+  "retry": 0
+}

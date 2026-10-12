@@ -1,0 +1,113 @@
+{
+  "kind": "current-final-actual-Node-vm-CJS-parse",
+  "node": "v25.9.0",
+  "rows": [
+    {
+      "path": "docs/verification/t1246/round-3/tool/common.cjs",
+      "sha256": "c73f58cd3dc9b419f3bf05d7c6761c701be16b582848c6d8fd558519b302fca5"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/dispatch-once.cjs",
+      "sha256": "71d895c9a4c8b7ce4207a20ddca2186f6f9d4af305f723fedce1b9ee6e194c26"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/owned-dyld.cjs",
+      "sha256": "fcec1e56489a0ad69bbabca9ff65d28541335c167a613992a7b957594ecb0cb9"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/prepare-dispatch-inputs.cjs",
+      "sha256": "46943772b7b2ca6cce7842c82e1c39908937f549a244e1fccc1d7dc8149042a2"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/prepare-metadata-input.cjs",
+      "sha256": "b5bf7f6b63d8065c1c9615f0cf661c537ba71156b20b783f86cc58790b93238d"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/reseal-legacy253-lineage.cjs",
+      "sha256": "2fe4b03088166138dbc93a37b1a5821eed5a3d906413e2227cbf16eada041231"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/reseal.cjs",
+      "sha256": "05825374a61c5c10e95d8f0d4319994da804dac289638b21745f8d42610495bb"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/run.cjs",
+      "sha256": "cee6b6f445124d98c8939c21f28897bcdbf26013ff72cf50f2ee26a9a732f48e"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/supervise.cjs",
+      "sha256": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/tool/types-noemit.cjs",
+      "sha256": "dd1296980dd7374ff9c91437f3d6a4f2efb18c15b863958703b64d85a4a0ee53"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/launch.cjs",
+      "sha256": "27c789896bd1424636e5c9078e9c0c9d45546771961cd9385d8763727892cb62"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/prepare-runtime.cjs",
+      "sha256": "54630c8a3ad49280aac8f737132f828aad59ea332c06448d8ad1fc84cb59ee67"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/driver/verify-binding.cjs",
+      "sha256": "b59cda1363fa4061b57532f0f36426be87d3c608b073105ac2eb4b3444af01b9"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/fixtures/codex-protocol.cjs",
+      "sha256": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/launch.cjs",
+      "sha256": "a8f01bfe19fb3e18ca12a1e6238ba8f912124e00e5a66799de73b3c02a56449d"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/prepare-browser-driver.cjs",
+      "sha256": "22535480f510e8d94544182b987af068ed1f784824c7ea05eff0b1ede4f2d091"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/prepare-runtime.cjs",
+      "sha256": "13d040c7b32600e7173cb03b695fc0ff7321690ed4307776cffb1fec700a7380"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/browser-original/driver/verify-binding.cjs",
+      "sha256": "233ee60a423f26fa86ef898f76759122a009f7f359ddb6d203dc03aa818e8686"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/complete-run.cjs",
+      "sha256": "45b47b7d516c2350ff543976ced966a47aa483710b950056899efd43d1794122"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/driver-types.cjs",
+      "sha256": "5204c3a70756835fb4639aa56b5ec829914882e58e2653ae24867689b22f9149"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/launch.cjs",
+      "sha256": "4ff8ac0f2b9d21048a850300092f6e42371e5cb8cede6faefeb1a24c4da4f6df"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/prepare-runtime.cjs",
+      "sha256": "56ee05cedb8b1e69d693f47bb5a1adcc16aca0d2309b628b189c5de9a688e277"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/reporter-attachment.cjs",
+      "sha256": "a696a340369b6888aa6db9ae66b6fdfa1099534719e4fb9969883ebb46e0c320"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/runtime-dyld.cjs",
+      "sha256": "2a872b3ffef2cf10c4d43f08312ceb52568a2d8cfcb2e3ae3d51d52ae8bf6aaa"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/seal.cjs",
+      "sha256": "c2c28b15544d20633e5d719e36d154cd02807cdd87e7416c2a8b2da349cfd42a"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/doocs/driver/verify-binding.cjs",
+      "sha256": "044dd5003a1eda8595f76a4328e30d41e8a4851bc9d0927bb7d62b46357c7c08"
+    }
+  ],
+  "errors": [],
+  "bodiesExecuted": false,
+  "modelsServicesBrowsersExecuted": false
+}

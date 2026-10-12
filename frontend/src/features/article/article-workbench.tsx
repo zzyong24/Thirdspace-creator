@@ -501,7 +501,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     </section>
   );
 
-  return <main data-page="article-workbench" className="mx-auto w-full max-w-[1600px] @container space-y-4 px-5 py-4 text-sm md:px-8">
+  return <main data-page="article-workbench" className="mx-auto w-full max-w-[1600px] @container space-y-4 px-3 py-4 text-sm sm:px-5 md:px-8">
     {showArticleControls && articleControls}
     {pendingSwitch && <section role="alertdialog" aria-label="当前文章有未保存修改" className="space-y-3 rounded-xl border border-border bg-surface p-4">
       <p>当前文章有未保存的修改。保存后继续，或明确放弃这些修改。</p>
@@ -519,7 +519,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     {message && <p role="status" className="rounded-md bg-success-soft p-3 text-sm text-success">{message}</p>}
     {busy === "load" && <p className="text-sm text-muted-foreground">正在读取已保存的文章…</p>}
     {state && draft && <>
-      <section className="rounded-xl border p-5">
+      <section className="rounded-xl border p-3 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <h2 className="text-[13.5px] font-semibold">当前稿件</h2>
           <div className="flex flex-wrap gap-3">
@@ -582,7 +582,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
             </>}
           </div>}
         </fieldset>
-        <div className="min-w-0 space-y-4">        {(scope.groupId||accountId) && <NoteRelayEditor projectId={projectId} accountId={accountId??null} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="wechat" value={draft} disabled={Boolean(busy)} onLayoutChange={layout=>setDraft(current=>current?{...current,nativeLayout:layout}:current)}/>}
+        <div className="min-w-0 space-y-4 [&>details]:p-2 sm:[&>details]:p-4">        {(scope.groupId||accountId) && <NoteRelayEditor projectId={projectId} accountId={accountId??null} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="wechat" value={draft} disabled={Boolean(busy)} onLayoutChange={layout=>setDraft(current=>current?{...current,nativeLayout:layout}:current)}/>}
         <LazyDisclosure label="使用 Doocs 编辑器（保留原版式）">{()=>(scope.groupId||accountId) && <DoocsArticleEditor projectId={projectId} key={`${workspaceOwner}:${state.outputId}`} accountId={accountId??null}
           outputId={state.outputId} sourceVersionId={state.currentVersionId} value={draft} savedDocument={state.current} onChange={setDraft} onSave={save} />}</LazyDisclosure>
 </div></div>

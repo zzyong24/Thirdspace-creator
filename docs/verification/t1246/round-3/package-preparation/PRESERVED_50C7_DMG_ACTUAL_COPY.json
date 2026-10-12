@@ -1,0 +1,19 @@
+{
+  "kind": "原50c7已验开发包完整字节保全，不覆盖旧Downloads或旧证据",
+  "source": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "sourceInode": 353469037,
+  "sourceMode": 420,
+  "uid": 501,
+  "target": "/private/tmp/t1261-preserved-50c7-dmg-1d5zpe2y/CreatorOS-1.2.0-50c7be39.dmg",
+  "targetInode": 354884566,
+  "bytes": 887540202,
+  "sha256": "67dfe8aa072a344be770a8b9bb00b76ba049999cdbc6d168bf6e3db1527bfeae",
+  "copyHashAndCompleteRereadSame": true,
+  "sourceFdIdentityUnchanged": true,
+  "positiveBudgetMs": 300000,
+  "elapsedMs": 1598.7891250988469,
+  "diskFreeBefore": 19416190976,
+  "diskFreeAfter": 18519859200,
+  "newPackageBuilt": false,
+  "appExecuted": false
+}

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { unzipSync } from "fflate";
 import type { Page } from "@playwright/test";
 import { ENDPOINTS } from "@creatoros/contract";

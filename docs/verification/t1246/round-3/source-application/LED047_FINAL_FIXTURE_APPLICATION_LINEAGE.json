@@ -1,0 +1,40 @@
+{
+  "schema": "private-concentrated-led047-pointer-fixture-proposal/v1",
+  "task": "T-1261",
+  "status": "PRIVATE_NOT_APPLIED_NOT_RUN_SPEC_ROUND3_REQUIRED",
+  "source": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+  "previousSha256": "4751d19290728bdad289cb15118026d788e2d357650d3935931a2d2cc0de8b65",
+  "candidate": "/private/tmp/t1261-led047-pointer-fixture-final-hxvn6wsl/candidate-ai-copilot-interactions.test.tsx",
+  "candidateSha256": "da90829298a9502d6bf646d8372cb5ad91d4557e2c42c963caffdd6c709732da",
+  "actualSecondLED047": {
+    "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/gates/LED-047-fixture-corrected.log",
+    "logSha256": "76fd1fb3c9fea4cae08dbaa5e89623db5280b33227ab6141a103e770518f0ad7",
+    "passed": 169,
+    "failed": 5,
+    "total": 174,
+    "failureTitles": [
+      "[T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)",
+      "[T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档",
+      "[T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治)",
+      "[T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖)",
+      "新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)"
+    ]
+  },
+  "sourceBasis": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/src/features/copilot/conversation-persistence.ts",
+    "sha256": "0d7d99ecb589b7c88d156f985515ea58cec3b1aa4c3f05fc39734c275f08d7be",
+    "line25": "conversationStorageOwner group > account > null",
+    "line26": "convKey adds owner prefix only if owner exists"
+  },
+  "repairScope": "仅在五个原会话持久化/服务兜底/清指针case setup中remove beforeEach新增的默认group，还原各原无owner bucket。不提交新消息/生成任务；第一候选默认空组仍供12发送/其余发送测试，原account-1例仍已有remove组以真实legacy account-only，总6个专属归属族保。",
+  "preservationProof": {
+    "path": "/private/tmp/t1261-led047-pointer-fixture-final-hxvn6wsl/ORIGINAL_61_ASSERTION_AND_SCOPE_PRESERVATION_PROOF.json",
+    "sha256": "5bcf566a3b454e6f1641e433f1c7215eff1705a0168b91216f9917079d371431"
+  },
+  "specRecommendation": "当前T1261已登记唯一test路径，此为本任务第二轮真实5FAIL暴露的同fixture归属修正。把五case题名/不发请求/原bucket断言不改明确纳SPEC当前最后recheck后才apply；不改storageowner、guard或旧key，不把此fixture当范围外欠债。",
+  "notClaimed": [
+    "第一162/12、第二169/5与原source完整保留；新候选未GREEN",
+    "没有运行test/baseline/model/browser/Gate，repo未写",
+    "未更改生产/预算/所有原assertion或给旧failure改状态"
+  ]
+}

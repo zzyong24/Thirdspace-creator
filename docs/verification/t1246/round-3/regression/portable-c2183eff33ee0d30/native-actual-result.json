@@ -1,0 +1,11 @@
+{
+  "name": "native",
+  "expected": 43,
+  "actual": {
+    "passed": 43,
+    "total": 43
+  },
+  "complete": true,
+  "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/native-receipt.json",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/native.log"
+}

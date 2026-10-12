@@ -420,11 +420,7 @@ export function createIntelligenceTransport(
             editedDraftContentText?: string;
             idempotencyKey?: string;
           };
-          if (!b.editedCandidate && b.editedDraftContentText === undefined) {
-            throw new UnsupportedOperationError(
-              "intelligence.transforms.confirmTopic.invalid",
-            );
-          }
+          // rewrite_only允许采纳已保存原稿；来源、正文与旧卡片校验仍由service执行。
           return {
             data: await service.confirmTopic(
               ctx,

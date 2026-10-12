@@ -1,0 +1,211 @@
+{
+  "task": "T-1261",
+  "kind": "真实正式项目Vitest回归，不是overlay",
+  "actualSession": 13228,
+  "naturalOuterExit": 0,
+  "actualTotalCases": 109,
+  "retry": 0,
+  "allFourClosedAndGroupsEmpty": true,
+  "allAppliedSourceBeforeAfterSame": true,
+  "singleBirthFullBudgetMs": 73560000,
+  "elapsedMs": 23018.266666,
+  "results": [
+    {
+      "name": "native",
+      "expected": 43,
+      "actual": {
+        "passed": 43,
+        "total": 43
+      },
+      "complete": true,
+      "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/native-receipt.json",
+      "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/native.log"
+    },
+    {
+      "name": "copilot",
+      "expected": 49,
+      "actual": {
+        "passed": 49,
+        "total": 49
+      },
+      "complete": true,
+      "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/copilot-receipt.json",
+      "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/copilot.log"
+    },
+    {
+      "name": "confirm-topic",
+      "expected": 12,
+      "actual": {
+        "passed": 12,
+        "total": 12
+      },
+      "complete": true,
+      "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/confirm-topic-receipt.json",
+      "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/confirm-topic.log"
+    },
+    {
+      "name": "status-handoff",
+      "expected": 5,
+      "actual": {
+        "passed": 5,
+        "total": 5
+      },
+      "complete": true,
+      "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/status-handoff-receipt.json",
+      "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/status-handoff.log"
+    }
+  ],
+  "rawFiles": [
+    {
+      "path": "SUMMARY.json",
+      "size": 2356,
+      "sha256": "dc2cfe5331a8726cdd313188cd39be06798ea1382bd739cbbd7f48267af1a103"
+    },
+    {
+      "path": "confirm-topic-actual-result.json",
+      "size": 488,
+      "sha256": "4b6b5989212837d898b573ac453cb85696393664225051931541b74273294113"
+    },
+    {
+      "path": "confirm-topic-receipt.json",
+      "size": 1236,
+      "sha256": "3a56fb26d2ee55690c4982e17f3f418008ebd4b4fbc218a4c50bbd9f6e54d213"
+    },
+    {
+      "path": "confirm-topic-source-after.json",
+      "size": 3503,
+      "sha256": "8155afdae3dc9626b80f184cf84a8f76533377cbef07222d6294d638cc459887"
+    },
+    {
+      "path": "confirm-topic-source-before.json",
+      "size": 3503,
+      "sha256": "d2a19107e505fda281c73b91b4611bad4b8aca6e86c2cefb21c40edd4d904ef6"
+    },
+    {
+      "path": "confirm-topic-start.json",
+      "size": 447,
+      "sha256": "68d10be801e1a52e1e437ca6fd0d3edd48dafd81d4eec2bcb8f10a69551d584a"
+    },
+    {
+      "path": "confirm-topic.log",
+      "size": 271,
+      "sha256": "6aca412e66c753bfb9800de5072597ee9f9111c03cfa5e37d23b45242f9c2723"
+    },
+    {
+      "path": "copilot-actual-result.json",
+      "size": 470,
+      "sha256": "bdedf73e6843223319b2146527b633954f244609d3a75d3360f0dea21745828c"
+    },
+    {
+      "path": "copilot-receipt.json",
+      "size": 1203,
+      "sha256": "ae5b485daca4c5aa40d2fd45cb51a7562387a518dd501661136734f4f7f57146"
+    },
+    {
+      "path": "copilot-source-after.json",
+      "size": 3503,
+      "sha256": "e1a8a8c09062dd0dffde5e10af35e6b046aa8f54e26a3332a1837d1c4e510cc5"
+    },
+    {
+      "path": "copilot-source-before.json",
+      "size": 3503,
+      "sha256": "4602c7e76c660b5db551d490a9094ef37422ea8411c0e160a49d6eb876ee90f1"
+    },
+    {
+      "path": "copilot-start.json",
+      "size": 419,
+      "sha256": "a2c2264063112fd5043c91a8e16c0ff2ef8e9fbc3b95a171f5d9bc49f00d4c77"
+    },
+    {
+      "path": "copilot.log",
+      "size": 618,
+      "sha256": "2715485b15f7fb7657b69796f90acaf1dd05efdbed61b64439cdf1c5de8dcaaa"
+    },
+    {
+      "path": "input.json",
+      "size": 2376,
+      "sha256": "c2e3c2770405b9d7ccb5e542e511d9080cc32d759918de46a1d94c21de866fa7"
+    },
+    {
+      "path": "native-actual-result.json",
+      "size": 467,
+      "sha256": "2df11625ed39e706b2585bd68032425410f8c15d610c1cb4d262eaa407b050ee"
+    },
+    {
+      "path": "native-receipt.json",
+      "size": 1193,
+      "sha256": "44020668e263d6d5a82622592b4ca677b253ffa05222ba91480be1064475ff9c"
+    },
+    {
+      "path": "native-source-after.json",
+      "size": 3503,
+      "sha256": "7d342c790b6b6255fde8253c0511bfd1e5bd53722d630c87232848d0beba3e18"
+    },
+    {
+      "path": "native-source-before.json",
+      "size": 3503,
+      "sha256": "33b320d051a7ebdb8dc3b77e291e1cfa212000523de022db0efa75f91712023b"
+    },
+    {
+      "path": "native-start.json",
+      "size": 411,
+      "sha256": "ea3f902aea19f99fa1a222d67483f086ee99884038a784574982fb07cb87245e"
+    },
+    {
+      "path": "native.log",
+      "size": 272,
+      "sha256": "09d39c551ddacc3ee916cd727753676a44788b493f37b540c89223c481fdce77"
+    },
+    {
+      "path": "observe.cjs",
+      "size": 4585,
+      "sha256": "8230b332e5ce459702e0e66ba771b57322ee9e440ac6d817f7b2b399e714ef5e"
+    },
+    {
+      "path": "source-after.json",
+      "size": 3503,
+      "sha256": "54a6f2c8e48737f5da17c06f90ce64b3e17a4766048bdf0a5100d6f5d6ff4bb5"
+    },
+    {
+      "path": "source-before.json",
+      "size": 3503,
+      "sha256": "a603b4cbee71c7d34bc130350dd6c0209aa66b1323c9be09fc7ff1d42b48e2fd"
+    },
+    {
+      "path": "status-handoff-actual-result.json",
+      "size": 488,
+      "sha256": "7ccf2c9ff7d563971c8d3dda8b990fdbe4cf4bd6f647925127e9af7bafd29763"
+    },
+    {
+      "path": "status-handoff-receipt.json",
+      "size": 1224,
+      "sha256": "07c8bddfc8a53e477e959a18a4324919d9d4f86c3a1ce81771e08467befd0d2d"
+    },
+    {
+      "path": "status-handoff-source-after.json",
+      "size": 3503,
+      "sha256": "ce44e0d9b42d8a906ff28e676a24e53288ae5fb4ff1c2c410286f57845b5eb61"
+    },
+    {
+      "path": "status-handoff-source-before.json",
+      "size": 3503,
+      "sha256": "3fdca53793f13c929c1d8eaef41af2df12cba0e09610d9bb20027d80b07d048b"
+    },
+    {
+      "path": "status-handoff-start.json",
+      "size": 434,
+      "sha256": "97d7bc511ae6a0449849a2fa3012077b8e55826069be4f2a3fde9b653e4de682"
+    },
+    {
+      "path": "status-handoff.log",
+      "size": 269,
+      "sha256": "3a95b3e746d43580b9033578028c0978cb015dcead49b53ea9af6eb31ad71ed9"
+    }
+  ],
+  "limits": [
+    "只有外部模型/SDK协议fixture，无真实模型执行或费用证明",
+    "没有App执行、安装、自动化授权或产品dist重建",
+    "所有历史失败保留；不能以当前回归替换旧运行结果",
+    "未干净提交，开发包准备等ROOT新commit准入"
+  ]
+}

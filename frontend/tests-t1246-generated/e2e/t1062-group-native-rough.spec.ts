@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { basename, join, relative } from 'node:path';
 import type { Locator, Page, Request, TestInfo } from '@playwright/test';
-import { ENDPOINTS, productionReferencePlan, projectProductionRoughPlan } from '@creatoros/contract';
+import { ENDPOINTS, articleManualVersionBody, productionReferencePlan, projectProductionRoughPlan } from '@creatoros/contract';
 import { expect, test } from '../helpers/test-environment';
 
 // 本文件只验证真实浏览器、公共服务和原生剪辑工作流。loopback粗剪输出是协议夹具，
@@ -612,7 +612,7 @@ async function saveInitializedArticle(page: Page, article: Locator, outputId: st
       () => article.getByRole('button', { name: '保存修改', exact: true }).click());
     expect(saveRequest.headers()['x-group-id']).toBe(groupId);
     expect(saveRequest.headers()['x-account-id']).toBeUndefined();
-    const command = ENDPOINTS.createArticleVersion.body!.parse(requestInput(saveRequest)!.input.body);
+    const command = articleManualVersionBody.parse(requestInput(saveRequest)!.input.body);
     expect(command.document.title).toBe(title); expect(command.expectedCurrentVersionId).toBeTruthy();
     expect(command.clientRequestId).toBeTruthy();
     const saveResponse = await saveRequest.response();

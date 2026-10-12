@@ -23,7 +23,7 @@ export async function runCodexAcpInWorker(input:z.infer<typeof chatWorkerInputSc
   const cwd=await externalAgentWorkingDirectory(input),session=await createControlledCodexSession(cwd,signal);
   try{
    await recoverExternalChatChildren(signal,call);
-   const recovered=await recoverCodexNativeTurn(session.rpc,reservation.sessionId,reservation.providerTurnId),imageResult=await saveNativeChatImages(recovered,reservation.callId,signal,call,'acp');
+   const recovered=await recoverCodexNativeTurn(session.rpc,reservation.sessionId,reservation.providerTurnId,signal),imageResult=await saveNativeChatImages(recovered,reservation.callId,signal,call,'acp');
    const receipt=externalChatReceiptSchema.parse({schemaVersion:1,engine:'codex',protocolKind:'acp',protocolVersion:reservation.protocolVersion??1,sessionId:reservation.sessionId,turnId:reservation.callId,providerTurnId:reservation.providerTurnId,stopReason:'end_turn',text:recovered.text,...imageResult,usage:null});
    const saved=externalChatTurnStateSchema.parse(await call('settleExternalChatTurn',{callId:reservation.callId,status:'settled',receipt},signal));
    if(saved.callId!==reservation.callId||saved.status!=='settled')throw new CodexHostError('CODEX_SETTLEMENT_RECEIPT_UNKNOWN');

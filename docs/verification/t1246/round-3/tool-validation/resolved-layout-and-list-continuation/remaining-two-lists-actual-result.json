@@ -1,0 +1,88 @@
+{
+  "status": "PASS",
+  "receipts": [
+    {
+      "phase": "new-v3",
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/static-driver/new-v3/playwright.config.ts",
+        "--list",
+        "--reporter=json"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",
+      "log": "/private/tmp/t1246-round3-static-resolved-1jx5173_/new-v3-list.log",
+      "pid": 31608,
+      "identity": {
+        "pid": 31608,
+        "pgid": 31608,
+        "uid": 501,
+        "birth": "Tue Oct 13 06:42:06 2026",
+        "startedAt": 1791844926411
+      },
+      "startedAt": "2026-10-12T22:42:06.411Z",
+      "endedAt": "2026-10-12T22:42:07.670Z",
+      "elapsedMs": 1259,
+      "budgetMs": 240000,
+      "deadlineAt": "2026-10-12T22:46:06.411Z",
+      "budgetExhausted": false,
+      "termGraceMs": 180000,
+      "killGraceMs": 180000,
+      "signals": [],
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "persistentOwnedServer": false,
+      "outerAbort": false,
+      "code": 0,
+      "signal": null,
+      "spawnError": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "phase": "doocs",
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/private/tmp/t1246-round3-static-resolved-1jx5173_/frontend/static-driver/doocs/playwright.config.ts",
+        "--list",
+        "--reporter=json"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",
+      "log": "/private/tmp/t1246-round3-static-resolved-1jx5173_/doocs-list.log",
+      "pid": 31614,
+      "identity": {
+        "pid": 31614,
+        "pgid": 31614,
+        "uid": 501,
+        "birth": "Tue Oct 13 06:42:07 2026",
+        "startedAt": 1791844927671
+      },
+      "startedAt": "2026-10-12T22:42:07.671Z",
+      "endedAt": "2026-10-12T22:42:08.329Z",
+      "elapsedMs": 658,
+      "budgetMs": 240000,
+      "deadlineAt": "2026-10-12T22:46:07.671Z",
+      "budgetExhausted": false,
+      "termGraceMs": 180000,
+      "killGraceMs": 180000,
+      "signals": [],
+      "processClosed": true,
+      "remainingOwnedGroupMembers": [],
+      "persistentOwnedServer": false,
+      "outerAbort": false,
+      "code": 0,
+      "signal": null,
+      "spawnError": null,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "originalListNaturalChild0Retained": true,
+  "initialOperatorParent1Preserved": true,
+  "notRuntimePass": true
+}

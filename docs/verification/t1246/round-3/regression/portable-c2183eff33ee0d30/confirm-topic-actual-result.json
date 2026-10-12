@@ -1,0 +1,11 @@
+{
+  "name": "confirm-topic",
+  "expected": 12,
+  "actual": {
+    "passed": 12,
+    "total": 12
+  },
+  "complete": true,
+  "receipt": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/confirm-topic-receipt.json",
+  "log": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/regression/portable-c2183eff33ee0d30/confirm-topic.log"
+}

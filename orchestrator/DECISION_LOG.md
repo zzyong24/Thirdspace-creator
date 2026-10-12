@@ -5241,3 +5241,9 @@ root b2951412和独立route f469a7e4实际18输入闭包核无漂移，reviewctl
 项目T975真实Tauri step强制IGNORE_CI=true，因此单独父CI变量无效。选择显式本地安全输出：仅macOS、buildOnly、非完整release、四local标志字面1时，在原T975环境后叠CI=true/IGNORE_CI=false，仅影响Tauri步骤；正式默认背景/图标位置合同与原guide4断言保持。无界面本地包明确未应用自定义Finder背景/位置，完整封盘/签名/产物校验仍必验；不改系统权限、不启App、不公证或发布、不新增模型配置。
 
 T1258 SPEC d4a4a22e6d0c2d363257f032935512a82aa72c0a66c5084f543dee30d199fa10，独立packet9a79f82a1022d938df06c350b087847ec84145ecc407b90b3e6b8863db60244e；reviewctl当场PASS[REV:fb5a6d98ce63]、taskctl start及context-compile当场0。仅package.mjs接线、新配置函数与其测试三源码路径。此为实施准入，不签TDD/新包/Worker/browser/App已通过；新修复提交与全部实际回执闭合后再报告结果。
+
+## DEC-T1261-CONCENTRATED-REPAIR-001（2026-10-13）
+
+用户T1246授权记录实际问题后集中修复、整合源码、开发打包并由子Agent完整Playwright留图。当前T1261为50c7运行真正关闭后发现故障的合法叶任务，原母任务三轮审核与所有旧失败不迁移/重置。正式SPEC初评4bca、仅LED047旧fixture前置两次复审07444/45b4均实际记录。产品严格9源，便携回归4文件，旧generated仅2类型修正；LED047旧61测试只补空组发送前提并恢复6个legacy/无owner族，保原断言、budget和两次实际失败。正式当前SPEC fc0b5ff07d6ae357e6a7c80a96d2eb0d93a32bafc24d3d3fb756165b45263899。
+
+真实正常命令109聚焦（43/49/12/5）retry0通过，LED047最终174通过；全前端类型及boundary/orphan/semantic/timeout相关门已通过，原162/12和169/5保留。此处只是源码回归，不签官方模型、全功能浏览器、Doocs新视觉、新包或App通过。新round3工具使用新源与同ID四header读回/正确项目入口/严格schema/正常就绪截图与PG短socket；旧round1/2驱动原字节保持。原发布、安装、认证授权未增加；App按用户暂不授权继续未完成。新干净提交后固定本地入口实际打包，再完整170/103/7/1和Doocs2复验。

@@ -1,0 +1,20 @@
+{
+  "counts": {
+    "doocs": 2
+  },
+  "titles": [
+    {
+      "title": "T1254 Doocs真实公开加载编辑宿主上传保存刷新和对应源码 1366",
+      "file": "doocs-public.spec.ts",
+      "project": "doocs"
+    },
+    {
+      "title": "T1254 Doocs真实公开加载编辑宿主上传保存刷新和对应源码 390",
+      "file": "doocs-public.spec.ts",
+      "project": "doocs"
+    }
+  ],
+  "wholeRawSha256": "333faa55e31f6d5b4e3f9498367590056dd5e9de8ead38669139495cfe9d0c68",
+  "staticOnly": true,
+  "bodyExecuted": false
+}

@@ -1,0 +1,6 @@
+{
+  "command": "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000",
+  "exitCode": 1,
+  "elapsedMs": 15397,
+  "retry": 0
+}

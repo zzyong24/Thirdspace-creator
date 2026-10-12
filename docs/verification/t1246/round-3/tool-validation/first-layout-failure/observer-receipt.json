@@ -1,0 +1,34 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/private/tmp/t1246-round3-static-gates-91s_4emq/gates.cjs"
+  ],
+  "cwd": "/private/tmp/t1246-round3-static-gates-91s_4emq",
+  "log": "/private/tmp/t1246-round3-static-gates-91s_4emq/gates.log",
+  "pid": 30675,
+  "identity": {
+    "pid": 30675,
+    "pgid": 30675,
+    "uid": 501,
+    "birth": "Tue Oct 13 06:37:32 2026",
+    "startedAt": 1791844652929
+  },
+  "startedAt": "2026-10-12T22:37:32.929Z",
+  "endedAt": "2026-10-12T22:37:34.840Z",
+  "elapsedMs": 1911,
+  "budgetMs": 11460000,
+  "deadlineAt": "2026-10-13T01:48:32.929Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 1,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}

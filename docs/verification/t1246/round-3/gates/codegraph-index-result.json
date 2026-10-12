@@ -1,0 +1,8 @@
+{
+  "command": "codegraph index --force --quiet .",
+  "execSession": 67452,
+  "exitCode": 0,
+  "indexIgnoredByGit": true,
+  "purpose": "跨层调用索引刷新",
+  "sourceFreezeStarted": false
+}

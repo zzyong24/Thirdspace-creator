@@ -1,0 +1,105 @@
+{
+  "task": "T-1261",
+  "originalHead": "50c7be39afb61b179bc599763f2b0f452fd6bf69",
+  "applied": true,
+  "rows": [
+    {
+      "path": "ai-worker/src/execution/codex-native-turn.ts",
+      "before": "b49c847997c3d00c6f3ba314d95bcf38ee2a1e315d6d1d9b6858920b32791070",
+      "candidate": "/private/tmp/t1238-native-turn-protocol-v3-4sxpm98t/candidate/ai-worker/src/execution/codex-native-turn.ts",
+      "after": "cde306b3311304239e6e02a4ce9adf9d8a1aab4c56efd91d26f2576ccbdebc8e"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "before": "6863c7b5147dc66f57c08c50b242e2249a903b2d598c64351759f5534d5eb5e3",
+      "candidate": "/private/tmp/t1238-native-turn-protocol-v3-4sxpm98t/candidate/ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "after": "49b94a393fb1308ae44d4a0aaab2509eb2f2f38f7c638c97fafec9d4ad6c7476"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "before": "10d67b19bbdc7e31226566429938209226a4ac7cd90262115a304f7bb68b220b",
+      "candidate": "/private/tmp/t1238-native-turn-protocol-v3-4sxpm98t/candidate/ai-worker/src/execution/codex-acp-worker-run.ts",
+      "after": "49b442130ee20a7eb77464fc6353691260bc88908a3756db08c8057c6c078f96"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "before": "f53998894f80c65b4313cba62ecfe04a78abe26b15c504f64795ea9d971e94c8",
+      "candidate": "/private/tmp/t1246-copilot-workspace-v3-m7q3tjjx/candidate/frontend/src/features/copilot/ai-copilot-content.tsx",
+      "after": "9acabba689baf3acb9ffe75bf25715f06165bf9ae562a86402dbcc952dc35a89"
+    },
+    {
+      "path": "frontend/src/features/copilot/copilot-attachment-picker.tsx",
+      "before": "f5bdd5c019f3da5334f2a77df2ba6646c12c73680e521b3f2351da4d2c107b48",
+      "candidate": "/private/tmp/t1246-copilot-workspace-v3-m7q3tjjx/candidate/frontend/src/features/copilot/copilot-attachment-picker.tsx",
+      "after": "28aa14a5e22c8ffe78e6e877433219c99e8c834d509e277b963e26f367b7495e"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-status-entry.ts",
+      "before": "c7d88c9176e6b6be5ff41587973a0c62bc4dfd671bb944847d0a68d317ee7218",
+      "candidate": "/private/tmp/t1246-status-handoff-private-7564tetb/candidate.ts",
+      "after": "936daa5526331fa59554624362db0f3f731c8425676a1a80e421a7e00c21eb2c"
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence.transport.ts",
+      "before": "ee97dd3a5ae851b303359f00976cef2e603991239b4bb0d13dc9e593b0b0331c",
+      "candidate": "/private/tmp/t1246-confirm-topic-public-fix-c9b0prtw/candidate/intelligence.transport.ts",
+      "after": "fa672d97fd98d21ea0a194980f39c5e03cc7de6fd8aab9183dbe43cc7d5b460f"
+    },
+    {
+      "path": "frontend/src/features/article/doocs-article-editor.tsx",
+      "before": "18756ac113c0eff92714d7cef592faa6362a25376059f90c703d7100f0503877",
+      "candidate": "/private/tmp/t1254-doocs-ui-minimal-product-candidate-munl79ix/candidate/frontend/src/features/article/doocs-article-editor.tsx",
+      "after": "85d226051207a3760d58c5d9e90e4a706b8f58210620c32dd64def0e83bc251a"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "before": "51d9d93625b0bc7936e2dab01801ee6750266e09d9408a4027babfe757d1ebf4",
+      "candidate": "/private/tmp/t1254-doocs-ui-minimal-product-candidate-munl79ix/candidate/frontend/src/features/article/article-workbench.tsx",
+      "after": "3d3b46a435e7dee0a6e9f13a4c2c84365d41d023adf7a25354ebfa41c9d94f4e"
+    },
+    {
+      "path": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "before": "b7b069f9f732e4213368b33242461fbe153bc9799a03a117cdc70ddf4e921397",
+      "candidate": "/private/tmp/t1246-four-types-minimal-candidate-yw_lrkh7/candidate/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "after": "a69933f2f98992ee2ffab6f1c27e9f0e194d4e48af06474ffc27535e8e8c5e6c"
+    },
+    {
+      "path": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+      "before": "c162998fbcda7d51658269ebbf8fc5f8d5bafbb08bfc7c97d10cbd176b92c371",
+      "candidate": "/private/tmp/t1246-four-types-minimal-candidate-yw_lrkh7/candidate/frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+      "after": "1119ffa794910c17cb347977d981706a4ca7e2eca7d40e800fec4b2755c08523"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-native-turn.test.ts",
+      "before": "3dedbc0c8cd52109ef56472d7a0c833fcdb548efcdc74748ff07079c9d9e349d",
+      "candidate": "/private/tmp/t1246-portable-regression-candidates-fkwqp8km/candidate/ai-worker/src/execution/codex-native-turn.test.ts",
+      "after": "80f24cdea47c14ba450fa96885cb3f1280ab9e0ff71a36723924236326e2c9b4"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/local-codex-status-handoff.public.test.ts",
+      "before": null,
+      "candidate": "/private/tmp/t1246-portable-regression-candidates-fkwqp8km/candidate/backend/src/modules/ai-runtime/local-codex-status-handoff.public.test.ts",
+      "after": "4ba4d63070dcd2c42f84c27fcba338645eb269692b4e03bb9710c8ed29bb8d16"
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts",
+      "before": null,
+      "candidate": "/private/tmp/t1246-portable-regression-candidates-fkwqp8km/candidate/backend/src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts",
+      "after": "ddbc9e53a56446679efeb88a9b8feb3936fcc9dff15a550de8f8ccd105465eea"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "before": "a8b06cf05639e31858ba9190317ec58a20bac9785a4af4a5110d0a63869d3be1",
+      "candidate": "/private/tmp/t1246-portable-regression-candidates-fkwqp8km/candidate/frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "after": "07d2eb87ee355a0ffc85c32cf4c30cd1949b03d3708befbfd05e6736fff45b3b"
+    },
+    {
+      "path": "frontend/src/features/copilot/copilot-attachment-picker.tsx",
+      "before": "28aa14a5e22c8ffe78e6e877433219c99e8c834d509e277b963e26f367b7495e",
+      "candidate": "/private/tmp/t1246-portable-regression-candidates-fkwqp8km/candidate/frontend/src/features/copilot/copilot-attachment-picker.tsx",
+      "after": "141d819ad2b0b2033d47d4ae30e25a269f46f9e53e9ce36b870d789c2ae598c3"
+    }
+  ],
+  "historicalFailurePreserved": true,
+  "runtimePassClaimed": false
+}

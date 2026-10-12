@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1261|修复开发包验收暴露的运行时缺陷与用例合同|🔨 待办|PASS[REV:45b4b4cda579]|待验|[实际故障闭包](docs/features/t1261-runtime-acceptance-defect-closure.md)|T1246后续轮确认native结果/状态ACK/选题确认/Copilot/Doocs缺陷及旧聊天fixture失配；原回执保，独立初评后9源集中修、便携回归、新包全量复验，App未验。|
 |T-1258|本地开发包显式无界面封盘并保正式Finder引导|🔨 待办|PASS[REV:fb5a6d98ce63]|待验|[两轮真实失败与精确范围](docs/features/t1258-local-dev-dmg-headless.md)|T1246实际Finder -10004封盘失败；仅本地显式四标志/非release配置，Tauri step跳过外观，正式默认不变；独评后窄修并原入口重包。|
 |T-1256|修复Doocs静态原适配三处无用绑定编译失败|🔨 待办|PASS[REV:ed320dba0189]|待验|[真实类型红与精确范围](docs/features/t1256-doocs-static-unused-bindings-build-closure.md)|T1254 V13两根24/slow/types及nativebuild已过，static完整原build三TS6133真失败；仅核并删三无用声明，保模板/原命令/旧FAIL，独评后续原余步骤。|
 |T-1254|闭合内置Doocs两份真实请求30秒默认预算与源码交付一致性|🔨 待办|PASS[REV:433e70ede4d7]|待验|[当场两红与待评边界](docs/features/t1254-doocs-request-budget-and-source-closure.md)|完整Gate剩两真实网络abort；先核共享fetch原源/两包/使用路径与重建来源，独评后修，不扩动画豁免或只改产物洗绿。|

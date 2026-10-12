@@ -1,0 +1,577 @@
+{
+  "schema": "T1246-round3-complete-consumer-budget-template/v1",
+  "denominators": {
+    "original": 170,
+    "official": 103,
+    "protocol": 7,
+    "pi": 1,
+    "doocs": 2
+  },
+  "fixedPositiveRequestActionNavigationMs": 120000,
+  "finiteObservation": {
+    "admissionMs": 1980000,
+    "lastSerialRequestTailMs": 120000,
+    "completeMs": 2100000,
+    "maxInFlight": 1,
+    "noTaskResubmission": true,
+    "noPersistentDeadlineRenewal": true
+  },
+  "chatHandshake": {
+    "registered": "after input visible/fill and before click",
+    "clickMs": 120000,
+    "responseObservationMs": 1980000,
+    "marginMs": 10000,
+    "completeObserverMs": 2110000,
+    "readbackSameIds": [
+      "task",
+      "source",
+      "conversation",
+      "execution",
+      "group",
+      "project"
+    ]
+  },
+  "normalCapture": {
+    "jointReadyMs": 250000,
+    "screenshotMs": 120000,
+    "successOrDiagnosticFailureFullMs": 370000,
+    "ioMarginMs": 10000,
+    "completeWrapperMs": 380000,
+    "failureFinalDiagnosticScreenshotMs": 120000,
+    "normalCaptureReadyFailureStillSavesPhenomenon": true
+  },
+  "childLifecycle": {
+    "helper": "round-2/unit/owned-pg-runtime.cjs",
+    "helperSha256": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+    "fullLifecycleMs": 2160000,
+    "parentSegmentsMaxMs": 60000,
+    "birthOnce": true,
+    "outerAbortNotRelabelledAsActualDeadlineExhaustion": true
+  },
+  "phaseBudgetSource": [
+    "tool/run.cjs exact actual prepare+metadata+types+legacyRunner+2source+3runtime+3LC+rootProof+IOmargin",
+    "tool/prepare-dispatch-inputs.cjs computes against actual newly sealed graph and both verifier functions",
+    "doocs/driver/verify-binding.cjs completeBudgets; outer includes prepare+launch+two childLC+source/runtime/final/margin"
+  ],
+  "preservedExactLongValues": {
+    "originalStartupFullSlotsMs": 2400000,
+    "originalLegacyRunnerMs": 49182120000,
+    "prepareMs": 9960000,
+    "typesNoEmitMs": 900000,
+    "newV3BodyMs": 72000000,
+    "newV3IndependentFixtureTeardownPerBodyMs": 72000000,
+    "hooksPerBodyMs": 360000,
+    "originalT1097BodyMs": 18000000,
+    "doocsPrepareMs": 52440000,
+    "doocsLaunchMs": 391500000,
+    "doocsCompleteMs": 458580000
+  },
+  "knownAdditiveCaseDifferences": [
+    {
+      "caseFamily": "native-series-two-cards",
+      "knownNormalCaptureMax": 11,
+      "sourceCountFormula": "2 outerbefore + 2*(2 creativebefore+1 sameimage+1 afterreload)+1 successfinal",
+      "normalReadinessAdditiveMs": 2750000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 4070000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 0,
+      "totalKnownAdditiveMs": 2750000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 69250000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "INT-T1245",
+      "knownNormalCaptureMax": 10,
+      "sourceCountFormula": "1 view+4 filter+4 detail+1 successfinal",
+      "normalReadinessAdditiveMs": 2500000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 3700000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 0,
+      "totalKnownAdditiveMs": 2500000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 69500000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "route-width-reload",
+      "knownNormalCaptureMax": 5,
+      "sourceCountFormula": "2 widths*(1 ready+1 reload)+1 successfinal",
+      "normalReadinessAdditiveMs": 1250000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 1850000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 0,
+      "totalKnownAdditiveMs": 1250000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 70750000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "native-direct-text",
+      "knownNormalCaptureMax": 4,
+      "sourceCountFormula": "2 before+1 afterreload+1 successfinal",
+      "normalReadinessAdditiveMs": 1000000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 1480000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 0,
+      "totalKnownAdditiveMs": 1000000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 71000000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "native-direct-image-adopted",
+      "knownNormalCaptureMax": 6,
+      "sourceCountFormula": "2 before+2 adopted+1 afterreload+1 successfinal",
+      "normalReadinessAdditiveMs": 1500000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 2220000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 0,
+      "totalKnownAdditiveMs": 1500000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 70500000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "native-chat-project",
+      "knownNormalCaptureMax": 3,
+      "sourceCountFormula": "1 before+1 history+1 successfinal",
+      "normalReadinessAdditiveMs": 750000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 1110000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 0,
+      "totalKnownAdditiveMs": 750000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 71250000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "native-chat-entry",
+      "knownNormalCaptureMax": 5,
+      "sourceCountFormula": "2 before+1 opened+1 history+1 successfinal",
+      "normalReadinessAdditiveMs": 1250000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 1850000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 0,
+      "totalKnownAdditiveMs": 1250000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 70750000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "protocol-text-null-usage-image",
+      "knownNormalCaptureMax": 3,
+      "sourceCountFormula": "1 projectview+1 restored+1 successfinal",
+      "normalReadinessAdditiveMs": 750000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 1110000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 2050000,
+      "totalKnownAdditiveMs": 2800000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 69200000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "protocol-pending-settings",
+      "knownNormalCaptureMax": 5,
+      "sourceCountFormula": "1 projectview+2 pendingsettings+1 restored+1 successfinal",
+      "normalReadinessAdditiveMs": 1250000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 1850000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 2050000,
+      "totalKnownAdditiveMs": 3300000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 68700000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "protocol-incomplete-missing-owner",
+      "knownNormalCaptureMax": 2,
+      "sourceCountFormula": "1 projectview+1 successfinal",
+      "normalReadinessAdditiveMs": 500000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 740000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 2050000,
+      "totalKnownAdditiveMs": 2550000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 69450000,
+      "notProofOfOldWholeSerialMaximum": true
+    },
+    {
+      "caseFamily": "pi-compat",
+      "knownNormalCaptureMax": 3,
+      "sourceCountFormula": "1 projectview+1 samevisible+1 successfinal",
+      "normalReadinessAdditiveMs": 750000,
+      "captureTotalReadinessPlusOriginalScreenshotMs": 1110000,
+      "handshakeAdditionalAgainstOriginalUiOpMs": 2050000,
+      "totalKnownAdditiveMs": 2800000,
+      "bodySlotMs": 72000000,
+      "bodyCapacityAfterReservingKnownAdditionMs": 69200000,
+      "notProofOfOldWholeSerialMaximum": true
+    }
+  ],
+  "additiveTableIsNotOldWholeChainUpperBound": true,
+  "dynamicConsumersWithoutFiniteStaticInputCount": [
+    {
+      "path": "new-v3/source/e2e/integrated-native.spec.ts",
+      "consumer": "creative saved.value array: each original asset pending/adopted public read/download",
+      "sourceSchema": "contract/src/resources/creative-results.ts creativeResult.value z.unknown().nullable(); no declared array maximum",
+      "honestBound": "actual case fixed72M+independent teardown72M and parent covers both; iteration count has no justified static cap",
+      "doesNotInventInputCap": true
+    },
+    {
+      "path": "new-v3/source/e2e/protocol-support.ts",
+      "consumer": "allCalls hasMore pages; monotonic nextSequence checked but no global declared page maximum",
+      "honestBound": "current fixture2 MCP reads+one original external agent are checked in body; actual source ledger can include more rows, fixed case lifetime preserved; no arbitrary page cap or truncation"
+    },
+    {
+      "path": "new-v3/source/e2e/acceptance-support.ts",
+      "consumer": "nativeAvailable HTTP observation120k",
+      "knownActualOldFailure": "120003ms Playwright APIRequestContext timeout; product transport not declared120k by this fact",
+      "missing": "no stable whole dynamic status queue upper bound proved; unchanged120k here, newstatus ACK implementation still needs actual public chain",
+      "noFixedFIFOAssumption": true,
+      "productSource": "backend/src/modules/ai-runtime/request-io.service.ts",
+      "sourceSha256": "6e575f497348a24f427ee15e974d18bd9ea1cf96e822371e8373796c80a8dfad",
+      "unqueuedWholeStatusOuterMs": 250000,
+      "wholeStatusFormula": "readiness120k + execution120k + completion margin10k; FIFO aheadDeadline derives dynamic remaining, no fixed queue maximum",
+      "notProductFetchDefault120k": true
+    }
+  ],
+  "staticCompleteSourceConsumerInventory": [
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 11,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": "export const expect=baseExpect.configure({timeout:REQUEST});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 26,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": "  const read=async(id:string,input:any)=>{const response=await context.request.post('/api/v1/dispatch',{timeout:REQUEST,headers:{'x-group-id':original.groupId},data:{id,input}});expect(response.ok(),`${id} readonly attachment ${response.status()}`).toBe(true);return (await response.json()).data;};"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 39,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " for(;;){value=await read();if(done(value))return value;if(performance.now()>=end)throw Error('有限结果观察耗尽，保原任务ID，不重发/续期');await new Promise(r=>setTimeout(r,Math.min(1000,Math.max(1,end-performance.now()))));}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 53,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": "  const response=await this.page.request.post('/api/v1/dispatch',{timeout:REQUEST,headers:{...(group?{'x-group-id':group}:{}),...(this.accountId?{'x-account-id':this.accountId}:{})},data:{id,input}});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 77,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " async nativeAvailable(image=false){const r=await this.page.request.get('/api/chat/engines',{timeout:REQUEST}),body=await r.json();this.receipts.push({id:'/api/chat/engines',status:r.status(),body:redact(body),notGeneration:true});expect(r.ok()).toBe(true);const e=body.engines?.find((x:any)=>x.engine==='codex');if(!e?.available)throw new Blocked('原官方能力读回显示Codex未就绪',e??body);if(image&&e.capabilities?.imageGeneration!==true)throw new Blocked('原官方能力读回显示生图尚未就绪',e);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 80,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": "  const pending=this.page.waitForResponse(r=>{try{return new URL(r.url()).pathname==='/api/v1/dispatch'&&r.request().postDataJSON().id===id;}catch{return false;}},{timeout:UI_OPERATION});void pending.catch(()=>{});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 84,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " async readyPage(){const handle=await this.page.waitForFunction(()=>{const visible=(e:Element)=>e.getClientRects().length>0&&getComputedStyle(e).visibility!=='hidden';const switchers=[...document.querySelectorAll('[data-testid=\"account-switcher\"]')];return switchers.length===1&&switchers[0].getAttribute('data-state')==='ready'&&![...document.querySelectorAll('[data-testid=\"workspace-initialization-loading\"],[data-testid=\"workspace-initialization-error\"],[data-slot=\"route-loading\"]')].some(visible);},undefined,{timeout:WORKSPACE_READY_OBSERVE});await handle.dispose();}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 85,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " async diagnosticShot(label:string){const path=this.info.outputPath(`${label}.png`);await this.page.screenshot({path,fullPage:true,timeout:REQUEST});await this.info.attach(label,{path,contentType:'image/png'});this.captures.push({label,path,url:this.page.url(),viewport:this.page.viewportSize(),at:new Date().toISOString()});}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 86,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " async shot(label:string){try{await this.readyPage();}catch(error){this.events.push({kind:'normal-capture-not-ready',label,text:String(error)});try{await this.diagnosticShot(label);}catch(captureError){this.events.push({kind:'diagnostic-capture-error',label,text:String(captureError)});}throw error;}await this.diagnosticShot(label);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 92,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " async waitExecution(task:any){const original=this.track(task);const value=await observe(()=>this.inspectExecution(task.id),t=>['succeeded','failed','cancelled','blocked','paused'].includes(t.status));this.tasks.find(t=>t.created.id===original.id).observed=value;if(value.status==='blocked')throw new Blocked('原公共持久任务确实blocked，模型是否调用由原账本另核',value);expect(value.status).toBe('succeeded');return value;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 93,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " async waitTask(task:any,{resultsRequired=true,engine='codex'}={}){"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 94,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": "  this.track(task);let observed:any;try{observed=await observe(()=>this.op('ai.tasks.get',{params:{taskId:task.id}}),t=>['awaiting_confirmation','succeeded','failed','cancelled'].includes(t.status)||['unknown_result','waiting_user'].includes(t.runtimeStatus));}finally{this.tasks.find(t=>t.created.id===task.id).observed=observed;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 101,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " async imageBytes(assetId:string,fileId:string,label:string){const a=await this.op('assets.get',{params:{assetId}});expect(a.currentFileId).toBe(fileId);const d=await this.op('assets.fileDownloadUrl',{params:{assetId,assetFileId:fileId}}),u=new URL(d.url,this.page.url());expect(u.origin).toBe(new URL(this.page.url()).origin);const b=await this.page.request.get(u.href,{timeout:REQUEST});expect(b.status()).toBe(200);const bytes=await b.body(),mime=b.headers()['content-type'].split(';')[0];expect(bytes.length).toBe(a.fileSize);expect(mime).toBe(a.mimeType);expect(mime).toMatch(/^image\\//);const proof={id:label,assetId,fileId,status:200,bytes:bytes.length,mimeType:mime,sha256:createHash('sha256').update(bytes).digest('hex')};this.receipts.push(proof);return proof;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/acceptance-support.ts",
+      "line": 103,
+      "sha256": "e55a2b85e80fddcd2a027ced7ded8e42a8cbb93349bb83eef32cdf8b04ec5c43",
+      "consumer": " async generate(taskType:string,input:any,path:string){await this.noIndependentModels();await this.nativeAvailable(['asset.generate','cover.generate'].includes(taskType));await this.responsive(path,'before');const task=await this.task(taskType,input),o=await this.waitTask(task,{resultsRequired:!['reconstruct.project','asset.classify','material.extract'].includes(taskType)});this.receipts.push({id:'direct-generation-surface',surface:'public-backend-API',taskId:task.id,notUISuccess:true});if(['asset.generate','cover.generate'].includes(taskType))await this.verifyGeneratedAsset(o);await this.page.reload();await this.shot('after-original-id');return o;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 3,
+      "sha256": "ef3b64745064ee9c69b2f01afc1a9ce6a5fde8c37dfdbf0ce6dc6d2416a10b2b",
+      "consumer": "test.describe.configure({mode:'default',timeout:72000000});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 15,
+      "sha256": "ef3b64745064ee9c69b2f01afc1a9ce6a5fde8c37dfdbf0ce6dc6d2416a10b2b",
+      "consumer": " try{await page.goto('/settings');await page.getByRole('tab',{name:'模型配置'}).click();await expect.poll(()=>captured,{timeout:OBSERVE}).toBeGreaterThan(0);await expect(page.getByRole('combobox',{name:'编导引擎'})).toBeDisabled();await expect(page.locator('[data-slot=\"model-configuration-card\"]')).toHaveCount(0);await j.diagnosticShot('real-get-held');}finally{release();await page.unrouteAll({behavior:'wait'});}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 34,
+      "sha256": "ef3b64745064ee9c69b2f01afc1a9ce6a5fde8c37dfdbf0ce6dc6d2416a10b2b",
+      "consumer": " const account=await j.op('accounts.create',{body:{platform:'xiaohongshu',accountHandle:'未绑定的真实登记账号-'+key(),idempotencyKey:key()}});await j.useAccount(account.id);const job=await j.op('scheduledJobs.create',{body:{name:'真实无绑定同步任务-'+key(),sourceKind:'self.metrics',schedule:'17 4 * * *',target:{},prompt:'无绑定资格验收，不访问外部平台',toolGrants:[]}});await j.view('/automations','automation-owned-job');const row=page.locator(`[data-slot=\"automations-list\"] li[data-job-id=\"${job.id}\"]`);await expect(row).toBeVisible();const run=await j.uiOp('scheduledJobs.runNow',()=>row.getByTestId('automation-run-now').click());const original=await j.op('ai.tasks.get',{params:{taskId:run.aiTaskId}});j.track(original);await observe(()=>j.op('jobRuns.get',{params:{runId:run.jobRunId}}),r=>r.status==='needs_reconnect'||['failed','succeeded','cancelled'].includes(r.status));"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 35,
+      "sha256": "ef3b64745064ee9c69b2f01afc1a9ce6a5fde8c37dfdbf0ce6dc6d2416a10b2b",
+      "consumer": " for(const v of [narrow,{width:900,height:900},{width:1536,height:1024},{width:1600,height:500}]){await page.setViewportSize(v);const sidebar=page.getByTestId('app-sidebar');let previous:number|undefined;await expect.poll(async()=>{const width=await sidebar.evaluate(e=>e.getBoundingClientRect().width);const stable=previous!==undefined&&Math.abs(previous-width)<.1;previous=width;return stable;},{timeout:OBSERVE,intervals:[100,250,500]}).toBe(true);"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-browser.spec.ts",
+      "line": 44,
+      "sha256": "ef3b64745064ee9c69b2f01afc1a9ce6a5fde8c37dfdbf0ce6dc6d2416a10b2b",
+      "consumer": " await j.noIndependentModels();await j.nativeAvailable();await j.responsive(`/projects/${j.project.id}/planning`,'freeze-before');const task=await j.task('planning.thesis',{projectId:j.project.id,topic:'桌面整理三分类'});expect(task.modelKey).toBe('codex');await j.op('settings.preferences.patch',{body:{assistantExecutionEngine:'pi'}});let outcome;try{outcome=await j.waitTask(task);}finally{await j.op('settings.preferences.patch',{body:{assistantExecutionEngine:'codex'}});}expect(outcome.task.modelKey).toBe('codex');expect(outcome.task.retryOfTaskId).toBeNull();await j.op('settings.preferences.patch',{body:{assistantExecutionEngine:'codex'}});const current=await j.op('ai.tasks.get',{params:{taskId:task.id}});expect(current.executionTaskId).toBe(outcome.task.executionTaskId);await page.reload();await j.shot('same-task-after-switch');"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 3,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": "test.describe.configure({mode:'default',timeout:72000000});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 6,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": "async function attached(j:Journey,id:string){const task=await j.op('ai.tasks.get',{params:{taskId:id}});j.tasks.push({created:task});return j.waitTask(task);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 13,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": "  expect(source.run).not.toBeNull();let run:any;await expect.poll(async()=>{run=await j.op('intelligence.runs.get',{params:{runId:source.run.id}});return ['succeeded_with_items','succeeded_no_change','partial','blocked','failed'].includes(run.run.status);},{timeout:OBSERVE,intervals:[1000,2000,4000]}).toBe(true);"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 24,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": "async function sourceReference(j:Journey){const {detail,snapshot}=await originalSource(j);const preview=await j.op('intelligence.transforms.previewTopic',{body:{itemId:detail.item.id,sourceSnapshotId:snapshot.id,idempotencyKey:key()}});await j.waitExecution(preview.task);const confirmed=await j.op('intelligence.transforms.confirmTopic',{params:{transformId:preview.transform.id},body:{idempotencyKey:key()}});expect(confirmed.provenance.itemId).toBe(detail.item.id);expect(confirmed.provenance.sourceSnapshotId).toBe(snapshot.id);const reference=await j.op('projects.intelligence.attach',{params:{projectId:j.project.id},body:{topicId:confirmed.topicId,itemId:detail.item.id,sourceSnapshotId:snapshot.id,idempotencyKey:key()}});const saved=await j.op('projects.intelligence.list',{params:{projectId:j.project.id}});expect(saved.some((r:any)=>r.reference.id===reference.id&&r.transcript.text===TEXT)).toBe(true);return reference;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 25,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": "async function finishJob(j:Journey,run:any){expect(run.aiTaskId).toBeTruthy();const t=await j.op('ai.tasks.get',{params:{taskId:run.aiTaskId}});j.track(t);const settled=await observe(()=>j.op('jobRuns.get',{params:{runId:run.jobRunId}}),r=>['succeeded','failed','needs_reconnect','cancelled'].includes(r.status));expect(settled.aiTaskId).toBe(t.id);return settled;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 28,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": " {family:'INT-TEXT-DISCOVERY',key:'topic.preference',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();await j.responsive('/topics','preference-before');const c=await j.op('candidates.create',{body:{title:'重复的整理建议',source:'idea'}});await j.op('candidates.patch',{params:{candidateId:c.id},body:{status:'dropped',dropReason:'我明确希望多给可以在十分钟内操作的整理方法，少泛泛而谈。'}});let tasks:any[]=[];await expect.poll(async()=>{tasks=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,taskType:'topic.preference'}});return tasks.length;},{timeout:OBSERVE,intervals:[500,1000,2000]}).toBeGreaterThan(0);j.tasks.push({created:tasks[0]});await j.waitTask(tasks[0]);await j.page.reload();await j.shot('preference-real-task');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 36,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": " {family:'INT-TEXT-RESEARCH',key:'script.source_similarity',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const ref=await sourceReference(j);const candidate=await j.op('projects.scripts.generateCandidate',{params:{projectId:j.project.id},body:{referenceIds:[ref.id],strategy:'仅依据用户材料创作新表达，勿连续照抄来源',idempotencyKey:key()}});await j.waitExecution(candidate);const editedText='准备一张纸，写下今天正在推进的工作。把手边工具集中到容易拿取的位置，完成一件事再收回原处。将这个小步骤重复几天，记录找工具所花的实际时间。没有测量记录时不写提升比例，也不引用外部统计。';const acceptInput={params:{projectId:j.project.id,taskId:candidate.id},body:{editedText,idempotencyKey:key()}};let response;try{response=await j.raw('projects.scripts.acceptCandidate',acceptInput);}catch(e){j.events.push({kind:'original-accept-http-observation-ended',input:acceptInput,error:String(e),noNewTaskSubmission:true});}const tasks=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,projectId:j.project.id,taskType:'script.source_similarity'}});expect(tasks).toHaveLength(1);j.track(tasks[0]);expect(tasks[0].inputData.sourceTaskId).toBe(candidate.id);await j.waitTask(tasks[0]);if(!response?.response.ok())response=await j.raw('projects.scripts.acceptCandidate',acceptInput);expect(response.response.ok(),JSON.stringify(response.envelope.error)).toBe(true);expect(response.envelope.data.referenceIds).toContain(ref.id);j.receipts.push({id:'source-similarity-public-accept',candidateTaskId:candidate.id,similarityTaskId:tasks[0].id,referenceId:ref.id,artifactVersionId:response.envelope.data.artifactVersionId});}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 37,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": " {family:'INT-TEXT-INTELLIGENCE',key:'intelligence generation',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const {detail}=await originalSource(j);const statement=await strategy(j);const queued=await j.op('intelligence.projects.enqueue',{body:{itemIds:[detail.item.id],positioningVersionId:statement.id,idempotencyKey:key()}});expect(queued.tasks).toHaveLength(1);const parent=await j.waitExecution(queued.tasks[0]);expect(parent.kind).toBe('radar_project_upgrade');expect(parent.checkpoint.topicTaskId).toBeTruthy();const child=await j.inspectExecution(parent.checkpoint.topicTaskId);j.track(child);expect(child.kind).toBe('topic_preview');expect(child.status).toBe('succeeded');const original=await j.op('intelligence.items.get',{params:{itemId:detail.item.id}});const transform=original.transforms.find((t:any)=>t.id===parent.checkpoint.transformId);expect(transform.outputSnapshot.adaptedDraft.contentText).toBeTruthy();expect(transform.outputSnapshot.adaptationStrategy).toBeTruthy();j.receipts.push({id:'strategy-backed-parent-child',parentId:parent.id,childId:child.id,transformId:transform.id,positioningVersionId:statement.id,sourceItemId:detail.item.id});await j.responsive('/intelligence','strategy-original-source-ui');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 38,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": " {family:'INT-TEXT-INTELLIGENCE',key:'intelligence.rewrite-text',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const {detail,snapshot}=await originalSource(j);const preview=await j.op('intelligence.transforms.previewTopic',{body:{itemId:detail.item.id,sourceSnapshotId:snapshot.id,idempotencyKey:key()}});await j.waitExecution(preview.task);const read=await j.op('intelligence.items.get',{params:{itemId:detail.item.id}});const saved=read.transforms.find((t:any)=>t.id===preview.transform.id);expect(saved.outputSnapshot.adaptedDraft.contentText).toBeTruthy();j.receipts.push({id:'rewrite-only-original-source',taskId:preview.task.id,transformId:saved.id,itemId:detail.item.id,snapshotId:snapshot.id});await j.responsive('/intelligence','rewrite-original-source-ui');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 40,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": " {family:'INT-TEXT-BACKGROUND',key:'scheduled flywheel',run:async j=>{const account=await j.op('accounts.create',{body:{platform:'douyin',accountHandle:`t1246-${key()}`,idempotencyKey:key()}});await j.useAccount(account.id);const job=await j.op('scheduledJobs.create',{body:{name:'真实飞轮登录前置验收',sourceKind:'self.metrics',schedule:'0 10 * * *',target:{accountId:account.id,platform:'douyin'}}});await j.responsive('/automations','flywheel-before');const run=await j.op('scheduledJobs.runNow',{params:{jobId:job.id}});const task=await j.op('ai.tasks.get',{params:{taskId:run.aiTaskId}});j.tasks.push({created:task});const saved=await finishJob(j,run);if(saved.status!=='succeeded')throw new Blocked('真实flywheel原任务未通过平台资格，保原terminal/error；不代签后续模型',{jobId:job.id,runId:run.jobRunId,taskId:run.aiTaskId,saved});await j.waitTask(task);await j.shot('original-flywheel-finished');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 41,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": " {family:'INT-TEXT-TRANSCRIBE',key:'transcribe postprocess',run:async j=>{await j.responsive(path(j,'production'),'asr-public-qualification');const attemptId=key();const result=await j.raw('projects.transcribe',{params:{projectId:j.project.id},body:{attemptId}});if(!result.response.ok()){expect(result.response.status()).toBe(400);j.receipts.push({id:'transcribe-real-qualification',projectId:j.project.id,attemptId,taskCreated:false,error:result.envelope.error,notAsrSuccess:true});throw new Blocked('真实projects.transcribe拒绝无Douyin原work锚；本轮未授权新增aweme或扫码，不伪造ASR',{projectId:j.project.id,attemptId,error:result.envelope.error});}const task=await j.op('ai.tasks.get',{params:{taskId:result.envelope.data.taskId}});await j.waitTask(task);expect(task.taskType).toBe('transcribe.douyin');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-dependent.spec.ts",
+      "line": 42,
+      "sha256": "a8d510a377f39daa751609fe88996c0e6dd620a1ab15cf3e4f636597553712e5",
+      "consumer": " {family:'INT-VISION',key:'video.visual-review',run:async j=>{await j.noIndependentModels();await j.nativeAvailable();const fixture=process.env.CREATOROS_T1246_VIDEO_FIXTURE;if(!fixture)throw Error('driver未交付已审确定性短片fixture，不能当外部BLOCKED');const fs=await import('node:fs/promises');const bytes=await fs.readFile(fixture);const upload=await j.op('assets.uploads.create',{body:{assetType:'video',mimeType:'video/mp4',fileSize:bytes.length,projectId:j.project.id,fileName:'t1246-user-test-video.mp4'}});const url=new URL(upload.uploadUrl,j.page.url());expect(url.origin).toBe(new URL(j.page.url()).origin);const put=await j.page.request.put(url.href,{timeout:REQUEST,data:bytes,headers:{'content-type':'video/mp4'}});expect(put.ok()).toBe(true);const asset=await j.op('assets.uploads.complete',{params:{uploadId:upload.uploadId},body:{name:'用户明确测试短片，非平台采集'}});const task=await j.op('execution.tasks.create',{body:{projectId:j.project.id,contentOutputId:j.output.id,attemptId:key(),spec:{taskType:'video.render',goal:'渲染已提供测试片并执行原可选视觉审查',inputs:[{assetId:asset.id,assetFileId:asset.currentFileId,mountAs:'test-video.mp4'}],params:{props:{meta:{title:'真实渲染验收',brandLabel:''},talkingHead:{file:'test-video.mp4',durationSec:4},scenes:[{id:'s1',label:'TEST',title:'桌面整理',startSec:0,endSec:4,role:'body',cards:[]}],captions:[],broll:[],delivery:{width:1280,height:720,fps:30}}},constraints:{timeoutSec:null,network:'deny',maxOutputMB:512}}}});j.track(task);const done=await observe(()=>j.op('execution.tasks.get',{params:{taskId:task.id}}),t=>['awaiting_confirmation','succeeded','failed','cancelled'].includes(t.status));expect(['awaiting_confirmation','succeeded'],JSON.stringify(done)).toContain(done.status);expect(done.manifest.artifacts.some((a:any)=>a.mimeType==='video/mp4'||a.fileName.endsWith('.mp4'))).toBe(true);const executions=await j.op('execution.tasks.list',{query:{page:1,pageSize:100,kind:'ai_task',ownerId:task.id}});const children=executions.filter((t:any)=>t.kind==='ai_task'&&t.ownerId===task.id&&t.id!==done.executionTaskId);j.receipts.push({id:'real-render-visual-review',parentAiTaskId:task.id,parentExecutionTaskId:done.executionTaskId,children,renderManifest:done.manifest,fixtureSha256:(await import('node:crypto')).createHash('sha256').update(bytes).digest('hex'),surface:'public-backend-API'});if(!children.length)throw Error('成片完成但未发现原视觉子execution，需账本核查不能代签visual key');await j.responsive(path(j,'production'),'real-render-and-review');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 7,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": "test.describe.configure({mode:'default',timeout:72000000});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 29,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": " expect(result.taskId,'真实生成回执缺少任务').toBeTruthy();const task=await j.op('ai.tasks.get',{params:{taskId:result.taskId}});j.tasks.push({created:task});await j.waitTask(task);"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 35,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": "  if(j.articleOutput?.id===outputId){const image=j.page.getByRole('img',{name:/待审阅/}).first();await expect(image).toBeVisible();await expect.poll(()=>image.evaluate((e:HTMLImageElement)=>e.complete&&e.naturalWidth>0),{timeout:OBSERVE,intervals:[500,1000]}).toBe(true);await j.shot('same-image-candidate-visible');const button=j.page.getByRole('button',{name:'采纳到这一段',exact:true});await expect(button).toBeEnabled();adoption=await j.uiOp('creativeResults.adopt',()=>button.click());expect(adoption.resultId).toBe(saved.resultId);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 36,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": "  else if(preparedResult&&saved.targetSectionId){const target=await j.op('graphicPosts.get',{params:{outputId}});const index=target.current.cardBriefs.findIndex((card:any)=>card.cardId===saved.targetSectionId);expect(index).toBeGreaterThanOrEqual(0);const card=target.current.cardBriefs[index];await j.page.getByRole('button',{name:`查看第 ${index+1} 页：${card.title||'未命名'}`,exact:true}).click();const image=j.page.getByRole('img',{name:'待审阅的生成图卡',exact:true}).first();await expect(image).toBeVisible();const originalFile=await j.op('assets.fileDownloadUrl',{params:{assetId:saved.value[0].assetId,assetFileId:saved.value[0].assetFileId}});expect(new URL(await image.getAttribute('src') as string,j.page.url()).href).toBe(new URL(originalFile.url,j.page.url()).href);await expect.poll(()=>image.evaluate((e:HTMLImageElement)=>e.complete&&e.naturalWidth>0),{timeout:OBSERVE,intervals:[500,1000]}).toBe(true);await j.shot(`same-series-${saved.targetSectionId}-candidate`);const adopt=j.page.getByRole('button',{name:'采用到这一页',exact:true});await expect(adopt).toBeEnabled();adoption=await j.uiOp('creativeResults.adopt',()=>adopt.click());expect(adoption.resultId).toBe(saved.resultId);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 37,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": "  else if(j.graphicOutput?.id===outputId&&kind==='image_card'){const image=j.page.getByRole('img',{name:'待审阅的生成图卡',exact:true}).first();await expect(image).toBeVisible();const originalFile=await j.op('assets.fileDownloadUrl',{params:{assetId:saved.value[0].assetId,assetFileId:saved.value[0].assetFileId}});expect(new URL(await image.getAttribute('src') as string,j.page.url()).href).toBe(new URL(originalFile.url,j.page.url()).href);await expect.poll(()=>image.evaluate((e:HTMLImageElement)=>e.complete&&e.naturalWidth>0),{timeout:OBSERVE,intervals:[500,1000]}).toBe(true);await j.shot('original-single-card-ui');const adopt=j.page.getByRole('button',{name:'采纳这张图卡',exact:true});await expect(adopt).toBeEnabled();adoption=await j.uiOp('creativeResults.adopt',()=>adopt.click());expect(adoption.resultId).toBe(saved.resultId);}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 40,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": "  for(const use of saved.value){const asset=await j.op('assets.get',{params:{assetId:use.assetId}});expect(asset.status).toBe('active');expect(asset.currentFileId).toBe(use.assetFileId);const download=await j.op('assets.fileDownloadUrl',{params:{assetId:use.assetId,assetFileId:use.assetFileId}});const u=new URL(download.url,j.page.url());expect(u.origin).toBe(new URL(j.page.url()).origin);const blob=await j.page.request.get(u.toString(),{timeout:OBSERVE});expect(blob.status()).toBe(200);const bytes=await blob.body();expect(bytes.length).toBe(asset.fileSize);expect(blob.headers()['content-type'].split(';')[0]).toBe(asset.mimeType);j.receipts.push({id:'creative-original-image-adopted-blob',resultId:saved.resultId,taskId:task.id,assetId:use.assetId,assetFileId:use.assetFileId,bytes:bytes.length,mimeType:asset.mimeType,sha256:createHash('sha256').update(bytes).digest('hex')});}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 49,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": " const put=await j.page.request.put(url.toString(),{data:bytes,headers:{'content-type':mime},timeout:REQUEST});expect(put.ok()).toBe(true);"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 56,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": " const responsePromise=j.page.waitForResponse(r=>{const u=new URL(r.url());if(u.origin!==new URL(j.page.url()).origin||u.pathname!='/api/chat'||r.request().method()!=='POST')return false;try{const body=r.request().postDataJSON();const source=body.messages?.findLast((m:any)=>m.role==='user');return source?.parts?.filter((p:any)=>p.type==='text').map((p:any)=>p.text).join('')===prompt;}catch{return false;}},{timeout:completionWaitMs([REQUEST,OBSERVE])}).then(response=>({response}),error=>({error}));"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 60,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": " await expect.poll(async()=>{const tasks=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,...(!entry?{projectId:j.project.id}:{}),taskType:'copilot.assist'}});return tasks.some((t:any)=>t.id===binding.taskId);},{timeout:OBSERVE,intervals:[500,1000,2000]}).toBe(true);await j.waitTask(task);"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 61,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": " await expect.poll(()=>requestIds.length,{timeout:OBSERVE,intervals:[100,250,500]}).toBeGreaterThan(0);expect(requestIds).toContain(task.inputData.sourceMessageId);"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 65,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": " const assetId=receipt.output.asset?.id,fileId=receipt.output.fileId;expect(assetId).toBeTruthy();expect(fileId).toBeTruthy();const pending=await j.op('assets.get',{params:{assetId}});expect(pending.status).toBe('pending');expect(pending.currentFileId).toBe(fileId);await j.op('assets.commit',{params:{assetId}});const active=await j.op('assets.get',{params:{assetId}});expect(active.status).toBe('active');const download=await j.op('assets.fileDownloadUrl',{params:{assetId,assetFileId:fileId}});const url=new URL(download.url,j.page.url());expect(url.origin).toBe(new URL(j.page.url()).origin);const blob=await j.page.request.get(url.toString(),{timeout:OBSERVE});expect(blob.status()).toBe(200);const bytes=await blob.body();expect(bytes.length).toBe(active.fileSize);expect(blob.headers()['content-type'].split(';')[0]).toBe(active.mimeType);j.receipts.push({id:'original-native-chat-image-blob',taskId:task.id,sessionId:assistant.modelMetadata.sessionId,turnId:assistant.modelMetadata.providerTurnId,assetId,fileId,status:200,bytes:bytes.length,mimeType:active.mimeType,sha256:createHash('sha256').update(bytes).digest('hex')});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-native.spec.ts",
+      "line": 75,
+      "sha256": "16873efcdfce5521fdcf18412a0d0bd8b95a61fb6a5d6a35d837cb39673867c4",
+      "consumer": " {family:'INT-TEXT-WRITE',key:'wechat.article-draft',path:j=>projectPath(j,'article'),run:async j=>{const {output}=await article(j);await j.noIndependentModels();await j.nativeAvailable();await j.responsive(projectPath(j,'article'),'before');const r=await j.op('articles.candidates.generate',{params:{outputId:output.id},body:{clientRequestId:key()}});const t=await j.op('ai.tasks.get',{params:{taskId:r.taskId}});j.tasks.push({created:t});await j.waitTask(t);const candidate=await j.op('articles.candidates.get',{params:{candidateId:r.candidateId}});expect(candidate.outputId).toBe(output.id);expect(candidate.proposedSections.length).toBeGreaterThan(0);await j.page.reload();await j.shot('article-candidate');}},"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "line": 4,
+      "sha256": "b816261a31992f3fb860ecd2b62ca492b9b26e4101c6a41a544d30e9e4d1b4f6",
+      "consumer": "test.describe.configure({mode:'default',timeout:CASE_BUDGET});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "line": 14,
+      "sha256": "b816261a31992f3fb860ecd2b62ca492b9b26e4101c6a41a544d30e9e4d1b4f6",
+      "consumer": "test('INT-RECOVERY 首次read不完整保原unknown不爆重发',async({page},info)=>run(page,info,'INT-RECOVERY-INCOMPLETE',async j=>{const original=await originalUnknown(j,'incomplete');const before=await readProtocolLedger(original.executionId,j.groupId);await resumeOriginal(j,original);await observe(()=>allCalls(j,original.executionId),v=>v.task.runtimeStatus==='unknown_result');const after=await readProtocolLedger(original.executionId,j.groupId);expect(after.task.deadline_at).toBe(before.task.deadline_at);expect(after.calls.map((c:any)=>c.id)).toEqual(before.calls.map((c:any)=>c.id));const state:any=await fixtureState(original.state.threadId);expect(state.startCount).toBe(1);expect(state.readCount).toBe(1);j.receipts.push({id:'incomplete-original-preserved',before,after,state});}));"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-protocol.spec.ts",
+      "line": 17,
+      "sha256": "b816261a31992f3fb860ecd2b62ca492b9b26e4101c6a41a544d30e9e4d1b4f6",
+      "consumer": "test('INT-PI 公共UI文本真实HTTP fixture兼容同task/call/result',async({page},info)=>run(page,info,'INT-PI-COMPAT',async j=>{const fixture=await startPiFixture(j);try{const {source,task}=await submitChat(j,'请用一段话说明桌面物品三分类，不调用工具或外部网络。');const settled=await j.waitTask(task,{engine:'t1246-pi-fixture'});const messages=await j.op('ai.conversations.messages.list',{params:{conversationId:source.conversationId}});const assistant=messages.find((m:any)=>m.role==='assistant'&&m.modelMetadata?.chatTaskId===task.id);expect(assistant).toBeTruthy();expect(assistant.modelMetadata.sourceMessageId).toBe(source.id);expect(assistant.modelMetadata.actualEngine).toBe('pi');expect(assistant.modelMetadata.completeness).toBe('completed');expect(JSON.stringify(assistant)).toContain(fixture.text);expect(fixture.records.length).toBeGreaterThan(0);const inspection=await allCalls(j,settled.execution.id);expect(inspection.sourceMessageId).toBe(source.id);expect(inspection.calls.filter((c:any)=>c.kind==='model'&&c.status==='settled').length).toBe(fixture.records.length);await expect(page.getByText(fixture.text,{exact:false}).first()).toBeVisible();await j.shot('same-pi-result-visible');j.receipts.push({id:'actual-pi-http-compatibility',taskId:task.id,sourceMessageId:source.id,assistant,inspection,fixtureCalls:fixture.records,notOfficialModel:true});}finally{await fixture.close();}},false));"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/integrated-routes.spec.ts",
+      "line": 2,
+      "sha256": "7bdd1361f399ed76c4b41e5aa87bc4deb31f0ae2b5547f93cd4930d0d30bb58f",
+      "consumer": "test.describe.configure({mode:'default',timeout:72000000});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "line": 13,
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "consumer": " const captured=j.page.waitForResponse(r=>{const url=new URL(r.url());if(url.origin!==new URL(j.page.url()).origin||url.pathname!='/api/chat'||r.request().method()!=='POST')return false;try{const body=r.request().postDataJSON();const user=body.messages?.findLast((m:any)=>m.role==='user');return user?.parts?.filter((part:any)=>part.type==='text').map((part:any)=>part.text).join('')===prompt;}catch{return false;}},{timeout:completionWaitMs([REQUEST,OBSERVE])}).then(response=>({response}),error=>({error}));"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "line": 17,
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "consumer": " await observe(async()=>{const ts=await j.op('ai.tasks.list',{query:{page:1,pageSize:100,projectId:j.project.id,taskType:'copilot.assist'}});return ts.find((t:any)=>t.id===binding.taskId&&t.inputData?.sourceMessageId===binding.sourceMessageId);},t=>Boolean(t));"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "line": 24,
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "consumer": " const execution=await observe(()=>j.op('ai.tasks.get',{params:{taskId:task.id}}),t=>Boolean(t.executionTaskId));const executionId=execution.executionTaskId;"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "line": 26,
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "consumer": " const unknown=await observe(()=>j.op('ai.tasks.get',{params:{taskId:task.id}}),t=>t.runtimeStatus==='unknown_result');expect(unknown.id).toBe(task.id);expect(unknown.attemptId).toBe(task.attemptId);const inspection=await allCalls(j,executionId);expect(inspection.sourceMessageId).toBe(source.id);expect(inspection.conversationId).toBe(source.conversationId);"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "line": 34,
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "consumer": " const state:any=await observe(async()=>{const xs:any[]=await fixtureState();return xs.find(s=>s.projectId===j.project.id&&s.controlPort&&s.mcpReads.length===1);},Boolean);"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "line": 42,
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "consumer": " const marker=JSON.parse(await readFile(process.env.CREATOROS_T1246_FIXTURE_MARKER!,'utf8'));const response=await j.page.request.post(`http://127.0.0.1:${state.controlPort}/release`,{timeout:REQUEST,headers:{'x-t1246-control':marker.controlToken},data:{threadId:state.threadId,turnId:state.turnId}});expect(response.status()).toBe(200);expect(await response.json()).toEqual({released:true});"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "line": 45,
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "consumer": "export async function restoredMessage(j:Journey,original:any){const t=await j.waitTask(original.task);expect(t.task.id).toBe(original.task.id);const messages=await j.op('ai.conversations.messages.list',{params:{conversationId:original.source.conversationId}});const assistant=messages.find((m:any)=>m.role==='assistant'&&m.modelMetadata?.chatTaskId===original.task.id);expect(assistant).toBeTruthy();expect(assistant.modelMetadata.sourceMessageId).toBe(original.source.id);expect(assistant.modelMetadata.actualEngine).toBe('codex');expect(assistant.modelMetadata.protocolKind).toBe('acp');expect(assistant.modelMetadata.sessionId).toBe(original.state.threadId);expect(assistant.modelMetadata.providerTurnId).toBe(original.state.turnId);expect(assistant.modelMetadata.completeness).toBe('completed');const after=await allCalls(j,original.executionId);expect(after.calls.find((c:any)=>c.id===original.root.id).status).toBe('settled');expect(after.calls.filter((c:any)=>c.kind==='external_agent')).toHaveLength(1);expect(after.calls.filter((c:any)=>c.kind==='external_tool')).toHaveLength(original.inspection.calls.filter((c:any)=>c.kind==='external_tool').length);const state:any=await fixtureState(original.state.threadId);expect(state.startCount).toBe(1);expect(state.readCount).toBeGreaterThan(0);await j.page.reload();await expect(j.page.getByText('这是合成协议夹具恢复的原回合结果，非官方模型生成。',{exact:false}).first()).toBeVisible();await j.shot('same-original-source-restored-ui');j.receipts.push({id:'same-id-readonly-restoration',original,assistant,after,fixtureState:state,notOfficialSemantics:true});return assistant;}"
+    },
+    {
+      "path": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "line": 50,
+      "sha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "consumer": " const localRequire=createRequire(resolve(process.env.CREATOROS_T1246_RUNTIME_ROOT!,'backend/package.json'));const {Client}=localRequire('pg');const client=new Client({connectionString:url.toString(),connectionTimeoutMillis:REQUEST,query_timeout:REQUEST,statement_timeout:REQUEST});"
+    }
+  ],
+  "bodyTerminationVsTaskDeadline": "CASE_BUDGET is test lifetime; task original remaining deadline remains service truth, test end does not imply task failed/succeeded; original unknown IDs retained and only owner-proven cleanup/cancel",
+  "disk": {
+    "serialProfiles": true,
+    "minimumFreeGiB": {
+      "original": 18,
+      "official": 18,
+      "protocol": 12,
+      "pi": 12,
+      "doocs": 12
+    },
+    "actualHighWaterBasis": "old official 7,487,362,105B Turbopack +4,115,773,296B repeated dependency cache; source/docs, actualraw/data, filesystem margin additive; no simultaneous clones",
+    "onInsufficientSpace": "preclone NOT_RUN evidence; report actual free/required, no arbitrary body cancel, activecache/uniqueSource/auth/usercache never deleted",
+    "postProfileCleanup": "only actual closed/PID UID birth/stdio/log/group proof+refs0; exact derivedcache or fullbyteequal duplicates, preserve graph/nativeSDK/source/raw/data/screenshots/trace"
+  },
+  "status": "SOURCE_ONLY; actual noEmit/list/runtime/package and per-case outcomes separate; not model or visual PASS"
+}

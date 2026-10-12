@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-12T22:14:59.010Z",
+  "file": "/opt/homebrew/bin/pnpm",
+  "args": [
+    "-C",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/copilot/ai-copilot-content.test.tsx",
+    "--retry=0",
+    "--testTimeout=120000",
+    "--hookTimeout=120000",
+    "--teardownTimeout=120000",
+    "--no-file-parallelism"
+  ],
+  "budgetMs": 36000000,
+  "fullRemainingFutureMs": 59760000,
+  "retry": 0
+}

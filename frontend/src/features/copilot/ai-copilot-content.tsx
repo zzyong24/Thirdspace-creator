@@ -201,6 +201,7 @@ import {workCreationProposalResult,type WorkEditorTarget,type WorkCreationTarget
 import {ChatWorkEditorCard} from "./chat-work-editor-card";
 import {ChatWorkCreationCard} from "./chat-work-creation-card";
 import { creatorApiHeaders, readCurrentAccountId } from "@/lib/http-transport";
+import { createCreationWorkspace, readCreationScope, useCreationScope } from "@/lib/creation-workspace-scope";
 import { TranscribeTaskReceipt } from "./transcribe-task-progress";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
@@ -233,6 +234,7 @@ import { shouldResumeToolApprovalOnce } from "./tool-approval-resume-guard";
 import {
   CopilotAttachmentPicker,
   type CopilotAttachmentPickerHandle,
+  type CopilotAttachmentDraft,
   type CopilotAttachmentState,
 } from "./copilot-attachment-picker";
 import {
@@ -843,6 +845,10 @@ export function AICopilotContent({
   const liveSessionKey = JSON.stringify([sessionOwner, scope]);
   const assistantEngine = useAssistantEngine();
   const sessionAccountId = readCurrentAccountId();
+  const creationScope = useCreationScope();
+  const hasCreationWorkspace = Boolean(creationScope.groupId || creationScope.accountId);
+  const [workspaceReturnDraft] = React.useState(()=>typeof window!=="undefined"?workspaceReturnDrafts.get(scope):undefined);
+  React.useEffect(()=>{if(workspaceReturnDraft&&workspaceReturnDrafts.get(scope)===workspaceReturnDraft)workspaceReturnDrafts.delete(scope);},[scope,workspaceReturnDraft]);
   const liveSession = getLiveChatSession<Chat<UIMessage>, ChatTransport<UIMessage>, UIMessage>(
     liveSessionKey,
     session => new Chat<UIMessage>({
@@ -1071,8 +1077,10 @@ export function AICopilotContent({
     epoch:number;
     attachmentIds:string[];
     networkStarted:boolean;
-    preparationFailure:"engine_unavailable"|"preparation_failed"|null;
+    preparationFailure:"workspace_required"|"engine_unavailable"|"preparation_failed"|null;
+    taskNotCreated:boolean;
   }|null>(null);
+  const submittedDraft=React.useRef(false);
   const recoveryMounted=React.useRef(true);
   React.useEffect(()=>{recoveryMounted.current=true;return()=>{recoveryMounted.current=false;};},[]);
   const ownsSubmissionAttempt=React.useCallback((attempt:NonNullable<typeof submissionAttempt.current>)=>
@@ -1164,7 +1172,7 @@ export function AICopilotContent({
         fetch: async (input, init) => {
           const epoch = liveSession.epoch;
           const attempt=submissionAttempt.current;
-          if(attempt&&attempt.session===liveSession&&attempt.epoch===epoch&&liveSessionRef.current===liveSession&&conversationStorageOwner()===sessionOwner&&!attempt.networkStarted){attempt.networkStarted=true;attempt.request?.onCreationSubmission?.("submitted-unknown");}
+          if(attempt&&attempt.session===liveSession&&attempt.epoch===epoch&&liveSessionRef.current===liveSession&&conversationStorageOwner()===sessionOwner&&!attempt.networkStarted){attempt.networkStarted=true;submittedDraft.current=true;attempt.request?.onCreationSubmission?.("submitted-unknown");}
           const sourceHeaders=new Headers(init?.headers);
           const clientUserId=liveSession.chat.messages.filter(message=>message.role==='user').at(-1)?.id;
           const res = await liveSession.control.fetch(input as RequestInfo, init);
@@ -1178,6 +1186,13 @@ export function AICopilotContent({
             if (cid && liveSession.epoch === epoch) captureConversationId(cid);
           } catch {
             /* 读头失败不影响流式 */
+          }
+          // SEMANTIC_BOUNDARY_ALLOW: only the exact own persistence-stage error envelope; no provider or content classification.
+          // This route returns before durable.submit. Generic 500/503, transport loss, and regenerate remain UNKNOWN/original recovery.
+          if(res.status===500&&!res.headers.get("x-ai-task-id")&&!res.headers.get("x-source-message-id")&&attempt&&ownsSubmissionAttempt(attempt)){
+            try{const wire=typeof init?.body==="string"?JSON.parse(init.body):null;const payload=await res.clone().json();
+              if(wire?.trigger==="submit-message"&&wire?.messages?.at(-1)?.role==="user"&&payload?.error==="消息保存失败，请重试。"){attempt.taskNotCreated=true;setPrompt(attempt.text);setComposerLifecycleError("消息保存未完成，本轮尚未启动任务。");}
+            }catch{/* Unconfirmed response stays unconfirmed; never manufacture a source/task identity. */}
           }
           return res;
         },
@@ -1341,10 +1356,13 @@ export function AICopilotContent({
   const receiptForRecovery=preparedReceipt.current;
   const chatError = React.useMemo<{
     title:string;message:string;suggestSwitchModel:boolean;suggestOpenCredits:boolean;suggestOpenPositioning:boolean;
-    suggestOpenEngine?:boolean;canRetry:boolean;autoRecover:boolean;retryLabel?:string;retryDisabled?:boolean;canRetryWithoutMessages?:boolean;
+    suggestOpenEngine?:boolean;suggestOpenWorkspace?:boolean;canRetry:boolean;autoRecover:boolean;retryLabel?:string;retryDisabled?:boolean;canRetryWithoutMessages?:boolean;
   }|null>(() => {
     if (!error && !composerLifecycleError) return null;
     if(composerLifecycleError&&currentSubmissionAttempt&&!currentSubmissionAttempt.networkStarted&&currentSubmissionAttempt.preparationFailure){
+      if(currentSubmissionAttempt.preparationFailure==="workspace_required"){
+        return {title:"先选择账号组",message:"本轮尚未发送，原输入和附件已保留。请先选择或创建账号组；空组也可以创作，无需先绑定平台账号。",suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,suggestOpenWorkspace:!hasCreationWorkspace,canRetry:hasCreationWorkspace,autoRecover:false,retryLabel:"继续本轮",retryDisabled:!hasCreationWorkspace};
+      }
       const engineReady=selectedEngineAvailable&&!assistantEngine.checking;
       const engineFailure=currentSubmissionAttempt.preparationFailure==="engine_unavailable"||!engineReady;
       return {
@@ -1354,6 +1372,10 @@ export function AICopilotContent({
         suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,suggestOpenEngine:engineFailure,
         canRetry:true,autoRecover:false,retryLabel:"继续本轮",retryDisabled:!engineReady,
       };
+    }
+    if(currentSubmissionAttempt?.taskNotCreated){
+      const canRead=Boolean(conversationIdRef.current);
+      return {title:"本轮尚未启动任务",message:canRead?"消息保存未完成，输入已保留。请先核对当前对话，再决定是否重新发送。":"消息保存未完成，输入已保留。这轮尚未开始，请稍后再核对当前对话。",suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,canRetry:canRead,autoRecover:false,retryLabel:"核对原对话",retryDisabled:!canRead,canRetryWithoutMessages:true};
     }
     const receipt=receiptForRecovery;
     if(composerLifecycleError&&receipt&&(receipt.chatContext.editorTarget||receipt.chatContext.creationTarget)&&!receipt.sourceMessageId&&(!currentSubmissionAttempt||currentSubmissionAttempt.networkStarted)){
@@ -1458,6 +1480,7 @@ export function AICopilotContent({
   }, [
     composerLifecycleError,
     currentSubmissionAttempt,
+    hasCreationWorkspace,
     receiptForRecovery,
     conversationId,
     selectedEngineAvailable,
@@ -1487,7 +1510,8 @@ export function AICopilotContent({
   }, [openingCredits]);
 
   // 受控输入(useChat v7 不再托管 input;自管 + sendMessage({text}))。
-  const [prompt, setPrompt] = React.useState<string>(vm.prompt);
+  const [prompt, setPrompt] = React.useState<string>(workspaceReturnDraft?.text??vm.prompt);
+  const preserveWorkspaceReturnDraft = React.useCallback(()=>{const current=readCreationScope();if(!current.groupId&&!current.accountId&&!submittedDraft.current&&!submissionAttempt.current?.networkStarted&&!preparedReceipt.current&&!liveSession.conversationId&&!liveSession.control.currentTaskId())workspaceReturnDrafts.set(scope,{text:prompt,attachments:attachmentPickerRef.current?.readDraft?.()??[]});},[scope,prompt,liveSession]);
   const isEmpty = prompt.trim().length === 0 && attachmentState.ids.length === 0;
 
   const finishComposerRequest = React.useCallback((nonce: number) => {
@@ -1619,6 +1643,18 @@ export function AICopilotContent({
       finally{if(continuedAttempt&&ownsSubmissionAttempt(continuedAttempt))requestAttachmentIdsRef.current=[];}
       return;
     }
+    if(attempt?.taskNotCreated){
+      if(!ownsSubmissionAttempt(attempt))return;
+      const id=conversationIdRef.current;if(!id)return;
+      preparationPending.current.add(liveSession);refreshPreparation();
+      try{
+        const rows=await client.listMessages({params:{conversationId:id},query:undefined,body:undefined}) as unknown as WireAIMessage[];
+        if(!ownsSubmissionAttempt(attempt)||liveSession.chat.status==="streaming"||liveSession.chat.status==="submitted")return;
+        setMessages(toUIMessages(rows));setComposerLifecycleError("已核对原对话，未自动重新提交。原输入已保留，请确认当前记录后再操作。");
+      }catch(cause){if(ownsSubmissionAttempt(attempt))setComposerLifecycleError(cause instanceof Error?cause.message:"原对话尚未读回，输入已保留。");}
+      finally{preparationPending.current.delete(liveSession);if(recoveryMounted.current&&liveSessionRef.current===liveSession)refreshPreparation();}
+      return;
+    }
     setComposerLifecycleError(null);
     const request =
       pendingComposerRequestRef.current ?? retryableScriptPatchRequestRef.current;
@@ -1741,11 +1777,17 @@ export function AICopilotContent({
   React.useLayoutEffect(()=>{sendPreparedRef.current=async(text,request)=>{
     if(preparationPending.current.has(liveSession))throw Error("当前稿件仍在准备，请等待原保存结束。");
     preparationPending.current.add(liveSession);refreshPreparation();setComposerLifecycleError(null);
-    const attempt:NonNullable<typeof submissionAttempt.current>={text,request,session:liveSession,epoch:liveSession.epoch,attachmentIds:[...requestAttachmentIdsRef.current],networkStarted:false,preparationFailure:null};submissionAttempt.current=attempt;
+    submittedDraft.current=false;
+    const attempt:NonNullable<typeof submissionAttempt.current>={text,request,session:liveSession,epoch:liveSession.epoch,attachmentIds:[...requestAttachmentIdsRef.current],networkStarted:false,preparationFailure:null,taskNotCreated:false};submissionAttempt.current=attempt;
+    const ownedWorkspace=createCreationWorkspace(readCreationScope());ownedWorkspace.activate();
     try{
+      const workspace=readCreationScope();if(!workspace.groupId&&!workspace.accountId){attempt.preparationFailure="workspace_required";setPrompt(text);throw Error("请先选择或创建账号组，原输入已保留。");}
       if(!selectedEngineAvailable||assistantEngine.checking){attempt.preparationFailure="engine_unavailable";throw Error("当前编导引擎尚不可用，请到设置核对后恢复原请求。");}
+      const operation=ownedWorkspace.capture();operation.assertCurrent();
       const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();
+      operation.assertCurrent();
       if(!ownsSubmissionAttempt(attempt))return;
+      const currentWorkspace=readCreationScope();if(!currentWorkspace.groupId&&!currentWorkspace.accountId){attempt.preparationFailure="workspace_required";setPrompt(text);throw Error("请先选择或创建账号组，原输入已保留。");}
       const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
       if(!targets.editorTarget&&!targets.creationTarget){preparedReceipt.current=null;sessionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
       const requestedFn=quickFunctionKeyRef.current??entryFunctionKeyRef.current?.consume()??null;quickFunctionKeyRef.current=null;
@@ -1761,6 +1803,7 @@ export function AICopilotContent({
       }
       throw cause;
     }finally{
+      ownedWorkspace.dispose();
       preparationPending.current.delete(liveSession);
       if(recoveryMounted.current&&liveSessionRef.current===liveSession)refreshPreparation();
       if(ownsSubmissionAttempt(attempt)){
@@ -1820,7 +1863,7 @@ export function AICopilotContent({
       value.length === 0 ||
       streaming ||
       hasPendingApproval ||
-      attachmentState.uploading || !selectedEngineAvailable
+      attachmentState.uploading || !selectedEngineAvailable || !hasCreationWorkspace
     ) {
       return;
     }
@@ -1887,6 +1930,7 @@ export function AICopilotContent({
   }, [
     prompt,
     selectedEngineAvailable,
+    hasCreationWorkspace,
     liveSession,
     ownsSubmissionAttempt,
     streaming,
@@ -2082,7 +2126,7 @@ export function AICopilotContent({
   // (选题岛「新对话」动的是 surface:topics 桶,global 的指针纹丝不动)。
   // prefilledRef 复位,让「新对话」后一键岛预调仍可触发一次。
   const startNewConversation = React.useCallback(() => {
-    setHistoryOpen(false);
+    setHistoryOpen(false);submittedDraft.current=false;
     // 新对话必须同时结束上一条局部命令、可选段落锚点和失败重试；否则新会话第一句
     // 仍可能继承旧稿面的 script.patch，形成“什么都发不了”的跨会话阻断。
     quickFunctionKeyRef.current = null;
@@ -2280,7 +2324,7 @@ export function AICopilotContent({
   const handlePromptChange = React.useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
-      setPrompt(value);
+      submittedDraft.current=false;setPrompt(value);
       syncMentionState(value, e.target.selectionStart ?? value.length);
     },
     [syncMentionState],
@@ -3375,6 +3419,7 @@ export function AICopilotContent({
                     {chatError.message}
                   </span>
                   <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                    {chatError.suggestOpenWorkspace ? <Link href="/accounts" onClick={preserveWorkspaceReturnDraft} data-slot="copilot-error-workspace-link" className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white">选择或创建账号组</Link> : null}
                     {chatError.suggestOpenEngine ? (
                       <Link
                         href="/settings?highlight=assistant-engine"
@@ -3491,6 +3536,7 @@ export function AICopilotContent({
             className="flex flex-col gap-2.5"
             data-slot="prompt-form"
           >
+            {!hasCreationWorkspace && <p role="status" data-slot="copilot-workspace-required" className="text-sm text-muted-foreground">先选择或创建账号组，再发送新请求。空组也可以创作，无需先绑定平台账号。<Link href="/accounts" onClick={preserveWorkspaceReturnDraft} className="ml-2 text-brand underline underline-offset-4">选择或创建账号组</Link></p>}
             {assistantEngine.engine === "codex" && !assistantEngine.available && (
               <p role="status" data-slot="assistant-engine-status" className="text-sm text-muted-foreground">
                 {assistantEngine.status}。<Link href="/settings?highlight=assistant-engine" className="ml-2 text-brand underline underline-offset-4">设置编导引擎</Link>
@@ -3532,6 +3578,7 @@ export function AICopilotContent({
               />
             </div>
             <CopilotAttachmentPicker
+              initialDraft={workspaceReturnDraft?.attachments}
               ref={attachmentPickerRef}
               projectId={chatContextBody.chatContext.projectId}
               disabled={streaming || hasPendingApproval}
@@ -3608,7 +3655,7 @@ export function AICopilotContent({
                   <button
                     type="submit"
                     disabled={
-                      isEmpty || hasPendingApproval || attachmentState.uploading || !selectedEngineAvailable || preparationPending.current.has(liveSession)
+                      isEmpty || hasPendingApproval || attachmentState.uploading || !selectedEngineAvailable || !hasCreationWorkspace || preparationPending.current.has(liveSession)
                     }
                     data-slot="submit-button"
                     data-testid="submit-button"
@@ -3629,5 +3676,7 @@ export function AICopilotContent({
     </div>
   );
 }
+
+const workspaceReturnDrafts = new Map<string,{text:string;attachments:CopilotAttachmentDraft}>();
 
 export default AICopilotContent;

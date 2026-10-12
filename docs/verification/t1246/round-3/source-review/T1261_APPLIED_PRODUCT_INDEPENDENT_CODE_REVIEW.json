@@ -1,0 +1,110 @@
+{
+  "schema": "independent-applied-product-source-review/v1",
+  "task": "T-1261",
+  "verdict": "PASS",
+  "findings": [],
+  "summary": "当前九产品源与实际应用表/已审私人候选核对通过；picker当前仅比已审28aa多一行确定性ID边界注释，没有行为漂移。代码检查未发现实质问题，不代签正在执行的正式回归、Gate、干净提交、新开发包、完整浏览器/App验收。",
+  "applicationMap": {
+    "path": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/round-3/source-application/ACTUAL_APPLICATION.json",
+    "sha256": "3f11a36fdef683f7a671d18896a0a00ad69f1b32bc46e992bc9e03ac0a2b3527"
+  },
+  "productSources": [
+    {
+      "path": "ai-worker/src/execution/codex-native-turn.ts",
+      "originalHeadSha256": "b49c847997c3d00c6f3ba314d95bcf38ee2a1e315d6d1d9b6858920b32791070",
+      "currentSha256": "cde306b3311304239e6e02a4ce9adf9d8a1aab4c56efd91d26f2576ccbdebc8e",
+      "appliedCandidate": "/private/tmp/t1238-native-turn-protocol-v3-4sxpm98t/candidate/ai-worker/src/execution/codex-native-turn.ts",
+      "currentCandidateByteEqual": true
+    },
+    {
+      "path": "ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "originalHeadSha256": "6863c7b5147dc66f57c08c50b242e2249a903b2d598c64351759f5534d5eb5e3",
+      "currentSha256": "49b94a393fb1308ae44d4a0aaab2509eb2f2f38f7c638c97fafec9d4ad6c7476",
+      "appliedCandidate": "/private/tmp/t1238-native-turn-protocol-v3-4sxpm98t/candidate/ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "currentCandidateByteEqual": true
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "originalHeadSha256": "10d67b19bbdc7e31226566429938209226a4ac7cd90262115a304f7bb68b220b",
+      "currentSha256": "49b442130ee20a7eb77464fc6353691260bc88908a3756db08c8057c6c078f96",
+      "appliedCandidate": "/private/tmp/t1238-native-turn-protocol-v3-4sxpm98t/candidate/ai-worker/src/execution/codex-acp-worker-run.ts",
+      "currentCandidateByteEqual": true
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "originalHeadSha256": "f53998894f80c65b4313cba62ecfe04a78abe26b15c504f64795ea9d971e94c8",
+      "currentSha256": "9acabba689baf3acb9ffe75bf25715f06165bf9ae562a86402dbcc952dc35a89",
+      "appliedCandidate": "/private/tmp/t1246-copilot-workspace-v3-m7q3tjjx/candidate/frontend/src/features/copilot/ai-copilot-content.tsx",
+      "currentCandidateByteEqual": true
+    },
+    {
+      "path": "frontend/src/features/copilot/copilot-attachment-picker.tsx",
+      "originalHeadSha256": "f5bdd5c019f3da5334f2a77df2ba6646c12c73680e521b3f2351da4d2c107b48",
+      "currentSha256": "141d819ad2b0b2033d47d4ae30e25a269f46f9e53e9ce36b870d789c2ae598c3",
+      "appliedCandidate": "/private/tmp/t1246-portable-regression-candidates-fkwqp8km/candidate/frontend/src/features/copilot/copilot-attachment-picker.tsx",
+      "currentCandidateByteEqual": true,
+      "priorReviewedCandidateSha256": "28aa14a5e22c8ffe78e6e877433219c99e8c834d509e277b963e26f367b7495e",
+      "delta": "仅新增SEMANTIC_BOUNDARY_ALLOW中文注释，其余全文字节相同"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-status-entry.ts",
+      "originalHeadSha256": "c7d88c9176e6b6be5ff41587973a0c62bc4dfd671bb944847d0a68d317ee7218",
+      "currentSha256": "936daa5526331fa59554624362db0f3f731c8425676a1a80e421a7e00c21eb2c",
+      "appliedCandidate": "/private/tmp/t1246-status-handoff-private-7564tetb/candidate.ts",
+      "currentCandidateByteEqual": true
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence.transport.ts",
+      "originalHeadSha256": "ee97dd3a5ae851b303359f00976cef2e603991239b4bb0d13dc9e593b0b0331c",
+      "currentSha256": "fa672d97fd98d21ea0a194980f39c5e03cc7de6fd8aab9183dbe43cc7d5b460f",
+      "appliedCandidate": "/private/tmp/t1246-confirm-topic-public-fix-c9b0prtw/candidate/intelligence.transport.ts",
+      "currentCandidateByteEqual": true
+    },
+    {
+      "path": "frontend/src/features/article/doocs-article-editor.tsx",
+      "originalHeadSha256": "18756ac113c0eff92714d7cef592faa6362a25376059f90c703d7100f0503877",
+      "currentSha256": "85d226051207a3760d58c5d9e90e4a706b8f58210620c32dd64def0e83bc251a",
+      "appliedCandidate": "/private/tmp/t1254-doocs-ui-minimal-product-candidate-munl79ix/candidate/frontend/src/features/article/doocs-article-editor.tsx",
+      "currentCandidateByteEqual": true
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "originalHeadSha256": "51d9d93625b0bc7936e2dab01801ee6750266e09d9408a4027babfe757d1ebf4",
+      "currentSha256": "3d3b46a435e7dee0a6e9f13a4c2c84365d41d023adf7a25354ebfa41c9d94f4e",
+      "appliedCandidate": "/private/tmp/t1254-doocs-ui-minimal-product-candidate-munl79ix/candidate/frontend/src/features/article/article-workbench.tsx",
+      "currentCandidateByteEqual": true
+    }
+  ],
+  "allApplicationFinalRows": {
+    "uniquePaths": 15,
+    "currentShaMatchesFinalApplication": true
+  },
+  "checked_behavior": [
+    "Native full/partial入口必须items数组；full与completed事件同id/type/text/phase/image冲突UNKNOWN；notLoaded/summary不当正文，同thread/turn完成事件可用或一次只读同turn full；foreign/failed/partial不冒成功。恢复两个caller给原signal，读前后与完成时核abort，原parent期限不续。usage重复抑制保原累计，不造历史usage；terminal后不late resolve/工具重放。",
+    "status producer原close/cwd rm/active.delete完成后才同request result ACK，取消cleanup前不释放槽，cleanup失败不能send positive；runtimefailure/cancel保原unknown，未加缓存或改变IPC/schema/FIFO。",
+    "Copilot无scope新请求禁发，空group/legacy合法；原CreationWorkspace capture/assertCurrent前后及事件epoch守ABA；显式账号入口只当前window同scope未提交草稿，network/prepared/task/source/conversation不移。picker按原owner过滤旧assetID，保标签零自动上传、序号机械延续。精确own500保存失败新submit且无source/task头才停止regenerate，generic/断网/真实source保持原恢复。",
+    "confirmTopic仅移除违背已批准rewrite_only key-only的transport提前guard；原service仍核正文/来源hash/task/modelreceipt/legacy卡/错组/幂等，未改contract/repository/采纳边界。",
+    "Doocs只当前文章容器局部窄窗padding/action wrap，原保存/导出handlers及disabled资格完全保持。article-workbench直属details只有Doocs LazyDisclosure，NoteRelay顶层section及其嵌套details未命中该child选择器；无global toast或其他host编辑器改造。实际1366/390可达与截图仍待新包验证。"
+  ],
+  "priorEvidence": [
+    {
+      "path": "/private/tmp/t1246-final-source-independent-eg0bjpg0/T1246_NATIVE_FINAL_V3_CONCENTRATED_SOURCE_ACTUAL_REVIEW.json",
+      "sha256": "a28a979483d7dfdbe5bbed2a661588bd8b8539da4e5b547a81cb8d044d831dfe"
+    },
+    {
+      "path": "/private/tmp/t1246-final-source-independent-eg0bjpg0/T1246_STATUS_PRODUCER_FOUR_NEGATIVE_CURRENT_ACTUAL_REVIEW.json",
+      "sha256": "90a1594002e2b3b1d620cf47e6b2d5d712b8a6b6492a1c8f66232f9e90522d0c"
+    },
+    {
+      "path": "/private/tmp/t1246-confirm-topic-public-fix-c9b0prtw/ROOT_INDEPENDENT_REVIEW.json",
+      "sha256": "ce54c8bf7cdff1bf25bf95787e9c2fea415967b54bd72cbc5ad2a15a350102c0"
+    },
+    {
+      "path": "/private/tmp/t1246-final-source-independent-eg0bjpg0/T1246_COPILOT_FINAL_V3_SOURCE_PUBLIC_TDD_REVIEW.json",
+      "sha256": "a15c7232c12f14c7010eebf30242e10474955cf381817c046c1d0fa52dbb6529"
+    }
+  ],
+  "validationBoundary": "仅只读实际源码、原HEAD blob、diff/消费者及当前SHA。正式4portable正常命令由doocsagent执行，Root类型与结构/LED047/timeout门，本审不重复执行；历史fixtureTDD不是本轮正式命令已PASS。当前工作树已应用不宣称干净。",
+  "historyPreserved": "T1246 primary/review/SPEC原链不改；旧UNKNOWN原因未确证、原FAIL/partial/NOTRUN/缺失receipts与App未验保持。",
+  "reviewWritesOnly": "docs/verification/t1246/round-3/source-review/**"
+}

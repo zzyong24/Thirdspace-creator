@@ -1,0 +1,23 @@
+{
+  "version": "1.2.0",
+  "rows": [
+    [
+      "frontend/package.json",
+      "1.2.0"
+    ],
+    [
+      "frontend/src-tauri/tauri.conf.json",
+      "1.2.0"
+    ],
+    [
+      "frontend/src-tauri/Cargo.toml",
+      "1.2.0"
+    ],
+    [
+      "frontend/src-tauri/Cargo.lock",
+      "1.2.0"
+    ]
+  ],
+  "same": true,
+  "frozenHeadPending": true
+}

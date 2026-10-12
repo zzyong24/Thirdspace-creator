@@ -1,0 +1,110 @@
+{
+  "rows": [
+    {
+      "path": "ai-worker/src/execution/codex-native-turn.ts",
+      "sha256": "cde306b3311304239e6e02a4ce9adf9d8a1aab4c56efd91d26f2576ccbdebc8e",
+      "bytes": 10467,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "sha256": "49b94a393fb1308ae44d4a0aaab2509eb2f2f38f7c638c97fafec9d4ad6c7476",
+      "bytes": 11569,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "sha256": "49b442130ee20a7eb77464fc6353691260bc88908a3756db08c8057c6c078f96",
+      "bytes": 10623,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "9acabba689baf3acb9ffe75bf25715f06165bf9ae562a86402dbcc952dc35a89",
+      "bytes": 198577,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "frontend/src/features/copilot/copilot-attachment-picker.tsx",
+      "sha256": "141d819ad2b0b2033d47d4ae30e25a269f46f9e53e9ce36b870d789c2ae598c3",
+      "bytes": 10149,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "ai-worker/src/execution/codex-status-entry.ts",
+      "sha256": "936daa5526331fa59554624362db0f3f731c8425676a1a80e421a7e00c21eb2c",
+      "bytes": 3159,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence.transport.ts",
+      "sha256": "fa672d97fd98d21ea0a194980f39c5e03cc7de6fd8aab9183dbe43cc7d5b460f",
+      "bytes": 21291,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "frontend/src/features/article/doocs-article-editor.tsx",
+      "sha256": "85d226051207a3760d58c5d9e90e4a706b8f58210620c32dd64def0e83bc251a",
+      "bytes": 21451,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "sha256": "3d3b46a435e7dee0a6e9f13a4c2c84365d41d023adf7a25354ebfa41c9d94f4e",
+      "bytes": 57149,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+      "sha256": "a69933f2f98992ee2ffab6f1c27e9f0e194d4e48af06474ffc27535e8e8c5e6c",
+      "bytes": 73683,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+      "sha256": "1119ffa794910c17cb347977d981706a4ca7e2eca7d40e800fec4b2755c08523",
+      "bytes": 10935,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "ai-worker/src/execution/codex-native-turn.test.ts",
+      "sha256": "80f24cdea47c14ba450fa96885cb3f1280ab9e0ff71a36723924236326e2c9b4",
+      "bytes": 23712,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/local-codex-status-handoff.public.test.ts",
+      "sha256": "4ba4d63070dcd2c42f84c27fcba338645eb269692b4e03bb9710c8ed29bb8d16",
+      "bytes": 8097,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "backend/src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts",
+      "sha256": "ddbc9e53a56446679efeb88a9b8feb3936fcc9dff15a550de8f8ccd105465eea",
+      "bytes": 8763,
+      "mode": 420,
+      "uid": 501
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "07d2eb87ee355a0ffc85c32cf4c30cd1949b03d3708befbfd05e6736fff45b3b",
+      "bytes": 60545,
+      "mode": 420,
+      "uid": 501
+    }
+  ],
+  "elapsedMs": 13.909625000000005
+}

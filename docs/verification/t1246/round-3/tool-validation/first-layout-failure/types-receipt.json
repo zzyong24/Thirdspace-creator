@@ -1,0 +1,34 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/private/tmp/t1246-round3-static-gates-91s_4emq/types.cjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend",
+  "log": "/private/tmp/t1246-round3-static-gates-91s_4emq/types.log",
+  "pid": 30684,
+  "identity": {
+    "pid": 30684,
+    "pgid": 30684,
+    "uid": 501,
+    "birth": "Tue Oct 13 06:37:33 2026",
+    "startedAt": 1791844653054
+  },
+  "startedAt": "2026-10-12T22:37:33.054Z",
+  "endedAt": "2026-10-12T22:37:34.715Z",
+  "elapsedMs": 1661,
+  "budgetMs": 900000,
+  "deadlineAt": "2026-10-12T22:52:33.054Z",
+  "budgetExhausted": false,
+  "termGraceMs": 180000,
+  "killGraceMs": 180000,
+  "signals": [],
+  "processClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "persistentOwnedServer": false,
+  "outerAbort": false,
+  "code": 1,
+  "signal": null,
+  "spawnError": null,
+  "stdout": "",
+  "stderr": ""
+}
