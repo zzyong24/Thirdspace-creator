@@ -7757,6 +7757,21 @@
       "scope_source": "docs/features/t1255-reporting-full-delivery.md",
       "reason": "用户已授权每日观测/加密故障采集的原宿主与Worker IPC窄注入；文件包含原有桌面工具链、凭据保管和签名字样，此条不授权改变它们、部署或安装。保业务退出/期限与模块归属，根集成后按实际差异重新核哈希。",
       "acceptance": "只登记本任务真实必要复杂度，不代表测试/产品/历史门通过。"
+    },
+    {
+      "task_id": "T-1255",
+      "files": [
+        "backend/src/migration-convergence.ts"
+      ],
+      "file_sha256": "1e01d81c027dfb956aa97dcb5ec2c3124cf2892ac0182e41cbb725e9c108d006",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1255-OWNER-ADMIN-IMPLEMENT",
+      "scope_source": "docs/features/t1255-reporting-full-delivery.md",
+      "reason": "只追加本任务canonical增量迁移校验；原消费者凭据迁移字样属于现存代码，禁止改冻结历史/真实密钥。",
+      "acceptance": "只登记必要复杂度；不是产品/全局验收。"
     }
   ],
   "historical_baselines": []
