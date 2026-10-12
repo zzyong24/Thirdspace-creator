@@ -1,0 +1,15 @@
+{
+  "path": "/Users/zyongzhu/.creatoros/log-privkey.key",
+  "source": "项目tools/logdec/decrypt-log.sh与T484文档的实际默认路径",
+  "exists": true,
+  "privateValueEmitted": false,
+  "productionWritten": false,
+  "regularFile": true,
+  "mode": "0o600",
+  "uid": 501,
+  "byteLength": 45,
+  "format": "standard-base64/raw32 X25519",
+  "derivedPublicKeyId": "c01bada2",
+  "matchesCurrentKeyId": true,
+  "serverReadPermissionShapeValid": true
+}

@@ -1,0 +1,9 @@
+{
+  "files": 48,
+  "allChanged": [
+    "backend/src/modules/observability/real-outcome-observation.test.ts"
+  ],
+  "productionFiles": 36,
+  "productionChanged": [],
+  "boundary": "read-only browser agent wrote only /tmp artifacts; a parent-owned test changed during browser execution; no production source changed"
+}

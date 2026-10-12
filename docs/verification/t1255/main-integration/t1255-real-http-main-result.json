@@ -1,0 +1,19 @@
+{
+  "fixtureOnly": true,
+  "realCreateApplication": true,
+  "actualCreatorTransport": true,
+  "realPostgres": true,
+  "rustSourceEncryption": true,
+  "config": true,
+  "storedPrefix": true,
+  "grownPrefix": true,
+  "duplicate": true,
+  "supersededOriginalReceipt": true,
+  "metricIdempotence": true,
+  "realPasswordLogin": true,
+  "ownerDownloadSha": true,
+  "decryptedLineCount": 1204,
+  "otherAdminDenied": true,
+  "anonymousDenied": true,
+  "uploadedSha256": "ae3732b12f25daef15906216bdd2828be714c4f5747d934c31fb001491d6bcab"
+}

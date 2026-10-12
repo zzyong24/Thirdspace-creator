@@ -1,0 +1,36 @@
+{
+  "before": {
+    "consentVersion": 2,
+    "enabled": false,
+    "metricsEnabled": true,
+    "installationAlias": "10f1cd12-9d3b-4beb-b20e-d6c84aa83281",
+    "changedAt": "2026-10-12T10:51:57.333Z",
+    "lastAttemptAt": "2026-10-12T10:51:57.333Z",
+    "nextAttemptAt": "2026-10-13T10:51:57.333Z",
+    "lastUploadedAt": null,
+    "lastReceiptId": null,
+    "pendingCount": 0,
+    "lastErrorCode": null,
+    "uploadAvailable": false,
+    "remotePaused": false
+  },
+  "local": [
+    {
+      "online": false,
+      "status": 200,
+      "body": {
+        "accepted": true
+      }
+    },
+    {
+      "online": true,
+      "status": 200,
+      "body": {
+        "accepted": true
+      }
+    }
+  ],
+  "growth": [],
+  "invalidStatus": 422,
+  "boundary": "真实Page/local route/原每日排期；本例新授权尚未到24h，未启background drivers，不能单独代签due host.tick零claim"
+}

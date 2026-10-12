@@ -80,7 +80,10 @@
         "pnpm-lock.yaml",
         "backend/drizzle/0134_client_observability.sql",
         "backend/drizzle/meta/_journal.json",
-        "backend/src/migration-convergence.ts"
+        "backend/src/migration-convergence.ts",
+        "backend/src/modules/execution/index.ts",
+        "backend/src/modules/execution/execution-worker-outcome.service.ts",
+        "backend/src/modules/execution/execution-video-visual-review.service.ts"
       ],
       "exclusive_resources": [
         "t1255-client-schema",

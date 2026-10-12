@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "exitCode": 101,
+  "originalPanicPreserved": true,
+  "closedMetadataOnly": true,
+  "sessionMatchesOriginalHeaderSHA256": true,
+  "cipherBytes": 402,
+  "metadata": {
+    "code": "HOST_PANIC",
+    "eventId": "fd46a02f219e2760d5b0d048999a351590a09405160f81822d51145e7c84fcb9",
+    "logSessionId": "b761e38df41c905ae250beb19e68c10a4ce3adf668f4639cfe0fe083a63430e7",
+    "occurredAt": "2026-10-12T10:12:47.846Z"
+  },
+  "plaintextBodyInRuntimeFiles": false,
+  "privateKeyAccessed": false,
+  "scope": "原logging源码字节副本执行，不代表新App或双端安装验收"
+}

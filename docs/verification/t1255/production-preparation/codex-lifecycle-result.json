@@ -1,0 +1,11 @@
+{
+  "outerTimeoutSeconds": 240,
+  "outerProcessOutcome": "TimeoutExpired",
+  "finalStructuredReviewObserved": true,
+  "packetValidJson": true,
+  "candidateShaMatched": true,
+  "codeWriterDispatchedBeforeReview": false,
+  "cleanupStopHooksAndMcpWarningObserved": true,
+  "processExitNotClaimedAsPass": true,
+  "reviewModel": "gpt-6.1-sol (CLI configured default, no override)"
+}

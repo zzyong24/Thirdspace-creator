@@ -1,0 +1,65 @@
+[
+  {
+    "id": "C-F01",
+    "severity": "major",
+    "title": "原生异常补读忽略scopeModules",
+    "status": "resolved",
+    "red": "scope-red.log",
+    "green": "scope-green.log",
+    "resolution": "固定host/backend映射、有效v2授权与当前config.scopeModules同校验；3独立PGlite例GREEN。 同dropPendingLog：本地删除/状态留存，禁collector模块不新增指标；新增v2检查。",
+    "resolution_evidence": [
+      "scope-green.log",
+      "backend-final-r3.log",
+      "/tmp/t1255-client-root-full-feature-backend.log"
+    ]
+  },
+  {
+    "id": "C-F02",
+    "severity": "major",
+    "title": "真实客户端已知离线无被动载体",
+    "status": "resolved",
+    "red": "/tmp/t1255-client-root-passive-network-red.log",
+    "resolution": "navigator.onLine及online/offline事件经同受控local closed boolean传Host；不做OS/Growth探测；待冻结后相关producer/route专项复跑。",
+    "resolution_evidence": [
+      "frontend-final-r2.log",
+      "real-host-wire.log",
+      "/tmp/t1255-client-root-passive-public-green-r2.log"
+    ]
+  },
+  {
+    "id": "C-F03",
+    "severity": "major",
+    "title": "提前429结束后真实body泵仍发送",
+    "status": "resolved",
+    "red": "early-429-probe.log",
+    "green": "early-429-green.log",
+    "resolution": "私有transfer AbortController、所有finish路径abort并destroy；同真实HTTP例后续byte为0。",
+    "resolution_evidence": [
+      "early-429-green.log",
+      "real-host-wire.log",
+      "frontend-final-r2.log"
+    ]
+  },
+  {
+    "id": "C-F04",
+    "severity": "major",
+    "title": "正式独立task factories未获得中央observer，直接outcome提交未投递",
+    "status": "resolved",
+    "red": "actual-dispatcher-red.log",
+    "anchors": [
+      "backend/src/modules/execution/model-worker-dispatcher.ts:98",
+      "backend/src/modules/execution/model-worker-dispatcher.ts:481",
+      "backend/src/modules/execution/model-worker-dispatcher.ts:428",
+      "backend/src/modules/execution/execution-video-visual-review.service.ts:81"
+    ],
+    "details": "实际dispatcher领取并完成成功task，而clocks=0。只mock WorkerSupervisor进程边界，真实PGlite/AI authority/claim/ledger。必要修复同时覆盖同Db各factory、直接worker outcome commit后结算以及visual-review child外层tx commit后领取；不从attempt总数推断失败次数。",
+    "resolution": "按同Db typed WeakMap注册覆盖独立factory；同attempt claim/settle串行但业务不等待；原WorkerOutcome commit后投固定事实；visual child外层commit后投领取，catch commit后投终态；command/ackControl/recover提交后投真实更新行。退出首行取消网络，原本地清理窗口drain后dispose。",
+    "resolution_evidence": [
+      "actual-dispatcher-green.log",
+      "actual-outcome-green.log",
+      "registry-transaction.log",
+      "actual-visual-transaction.log",
+      "real-model-retry.log"
+    ]
+  }
+]

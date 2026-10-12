@@ -5241,3 +5241,7 @@ root b2951412和独立route f469a7e4实际18输入闭包核无漂移，reviewctl
 ### T1255实际迁移消费者库存落实
 
 writer核定原root lineage冻结，禁止改该历史journal。已确认增量DDL沿canonical迁移消费者：新backend/drizzle/0134_client_observability.sql、canonical meta/_journal.json及migration-convergence.ts当前108条校验更新；这落实原合同要求的实际lineage门，不新增产品用途或改原哈希锚。IPC实际窄入口为worker-supervisor.ts和model-worker-dispatcher.ts，取代不存在的application虚拟路径。
+
+## DEC-T1255-REAL-PRODUCERS（2026-10-12）
+
+依据用户已确认完整轻注入/真实指标范围，独立实际dispatcher RED证明central单实例不覆盖真实model/chat/agentic等factory；共享Db typed端口接所有正式生产者，真实outcome结算后及visual-review外层commit后窄观察，严格不记回滚、不得推断前attempt或改变业务事务/可用性。ROOT库存新增exact三路径execution/index.ts、execution-worker-outcome.service.ts、execution-video-visual-review.service.ts；不增加指标用途/Worker直写库/公网端点/任何部署许可。被动浏览器联网状态只经已受控本地strict布尔端口送Host，单在途合并，offline暂停，不探测网络、不立即上报、不重置24小时排期。共同SPEC先独评，RED与缺失证据保留。
