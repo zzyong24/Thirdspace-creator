@@ -23,6 +23,7 @@ it('线程预备和回合入场都先持久，再接受实际ID与动态工具�
  expect(f.callbacks.onTool).toHaveBeenCalledTimes(1);
  await f.rpc.onNotification('turn/completed',{threadId:'thread-actual',turn:{id:'turn-actual',status:'completed',items:[{type:'agentMessage',phase:'final_answer',text:'完成'}]}});
  expect(await running).toMatchObject({sessionId:'thread-actual',providerTurnId:'turn-actual',text:'完成',usage:null});
+ expect(f.rpc.request.mock.calls.find((call:any)=>call[0]==='thread/start')?.[1]).toMatchObject({ephemeral:true,cwd:'/tmp/owned-task',sandbox:'read-only'});
 });
 it('预备回执未保存不能启动模型；不接受原生审批和伪造用户回复',async()=>{
  const f=fixture();f.callbacks.onThread.mockRejectedValueOnce(Error('no receipt'));
@@ -41,4 +42,11 @@ it('未知回执只读取同一turn，缺ID或未完成保留未知，不重放�
  expect(await recoverCodexNativeTurn(f.rpc,'thread-actual','turn-actual')).toMatchObject({text:'原真实终态',providerTurnId:'turn-actual'});
  expect(f.rpc.request).toHaveBeenCalledTimes(1);expect(f.rpc.request).toHaveBeenCalledWith('thread/read',{threadId:'thread-actual',includeTurns:true});
  await expect(recoverCodexNativeTurn(f.rpc,'thread-actual',undefined)).rejects.toThrow();expect(f.rpc.request).toHaveBeenCalledTimes(1);
+});
+
+it('T1271 临时原会话已丢失时只读原ID，不能新建线程或回合',async()=>{
+ const f=fixture();f.rpc.request.mockRejectedValueOnce(new Error('原临时会话已不存在'));
+ await expect(recoverCodexNativeTurn(f.rpc,'original-ephemeral-thread','original-turn')).rejects.toThrow('原临时会话已不存在');
+ expect(f.rpc.request.mock.calls).toEqual([['thread/read',{threadId:'original-ephemeral-thread',includeTurns:true}]]);
+ expect(f.callbacks.onTool).not.toHaveBeenCalled();
 });

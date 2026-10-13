@@ -15,7 +15,7 @@ export function codexProcessArguments(mcpNames:readonly string[]=[]):string[]{
   return ['app-server','--stdio',...configs.flatMap(config=>['-c',config])];
 }
 export function codexThreadParameters(cwd:string,tools:readonly CodexDynamicTool[]){
-  return {cwd,ephemeral:false,approvalPolicy:'never',sandbox:'read-only',environments:[],
+  return {cwd,ephemeral:true,approvalPolicy:'never',sandbox:'read-only',environments:[],
     dynamicTools:tools.map(tool=>({name:tool.name,description:tool.description,inputSchema:tool.inputSchema}))};
 }
 /** SEMANTIC_BOUNDARY_ALLOW: protocol projection rejects permission overrides;

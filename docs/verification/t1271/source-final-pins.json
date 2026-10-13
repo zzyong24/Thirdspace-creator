@@ -1,0 +1,8 @@
+{
+  "ai-worker/src/execution/codex-app-server.ts": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a",
+  "ai-worker/vendor/codex-acp/src/CodexAcpClient.ts": "ce295df842535835fa424f0cb8c3bb81d15624554246b9bf3c8150ba6f1b920a",
+  "ai-worker/src/execution/codex-app-server.test.ts": "fdd294ba3709b4a5bb157ea04d27610bd48f3be5e2e8164f1a93adf626e532c7",
+  "ai-worker/src/execution/codex-native-turn.test.ts": "73a4c247e54c0154e3d6c92b65d00bff2dba772b1a63abc5aa1bb4babd149c04",
+  "ai-worker/src/execution/codex-acp-policy.test.ts": "f89945251afd9e67bde2f44a0c51970d177d7531deaf21fc77b54cd505eba9ca",
+  "ai-worker/src/execution/codex-acp-worker-run.test.ts": "3ac4d388d7958bce323db4822f9e464100ecae227f2a7ac6103054711bd510e9"
+}

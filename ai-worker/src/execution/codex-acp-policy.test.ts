@@ -93,7 +93,7 @@ it('原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才
   expect(await f.client.newSession(f.request)).toMatchObject({sessionId:'thread-actual'});
   expect(f.native.configRead).toHaveBeenCalledWith({includeLayers:true,cwd:'/tmp/task'});
   const submitted = f.native.threadStart.mock.calls[0][0];
-  expect(submitted).toMatchObject({approvalPolicy:'on-request',approvalsReviewer:'user',sandbox:'read-only',cwd:'/tmp/task',
+  expect(submitted).toMatchObject({ephemeral:true,approvalPolicy:'on-request',approvalsReviewer:'user',sandbox:'read-only',cwd:'/tmp/task',
     config:{mcp_servers:{personal:{enabled:false},creatoros_task:{url:f.request.mcpServers[0]!.url}}}});
   expect(f.native.listMcpServerStatus).toHaveBeenCalledTimes(2);
   expect(f.native.listMcpServerStatus).toHaveBeenLastCalledWith({threadId:'thread-actual',detail:'toolsAndAuthOnly',limit:100,cursor:'next'});
@@ -174,4 +174,15 @@ it('v2 声明只与原唯一任务 MCP 匹配，argv 不得沿旧布尔值或额
   const old=environment();
   expect(policyApi.readCreatorOsPolicy(old).profile).toBe('creatoros-acp-readonly-v1');
   expect(()=>policyApi.readCreatorOsPolicy({...old,CODEX_CONFIG:env.CODEX_CONFIG})).toThrow('CODEX_CAPABILITY_UNVERIFIED');
+});
+
+it('T1271 通用ACP会话保原默认，不替其他使用者改变历史策略',async()=>{
+ const f=clientFixture();vi.unstubAllEnvs();
+ const client=new CodexAcpClient(f.native,config());
+ vi.spyOn(client as any,'refreshSkills').mockResolvedValue(undefined);
+ vi.spyOn(client,'fetchAvailableModels').mockResolvedValue([{} as any]);
+ (client as any).createModelId=()=>({toString:()=>'gpt-model'});
+ await client.newSession(f.request);
+ expect(f.native.threadStart).toHaveBeenCalledTimes(1);
+ expect(f.native.threadStart.mock.calls[0]?.[0]).not.toHaveProperty('ephemeral');
 });

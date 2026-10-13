@@ -1,0 +1,61 @@
+{
+  "schema": "t1271-independent-spec-review-read-evidence/v1",
+  "reviewer": "/root/ephemeral_spec_review",
+  "model": "inherited",
+  "kind": "read-only source/contract initial review; no implementation or formal receipt",
+  "recordedAt": "2026-10-13T08:06:22.770173+00:00",
+  "sourcePins": {
+    "docs/features/t1271-codex-ephemeral-sessions.md": "bbc3c8fa837ed26d8d098dbf3bbfc0e0648369e025556f4165a7774acda3fd48",
+    "docs/产品定位.md": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+    "docs/features/t1261-runtime-acceptance-defect-closure.md": "fc0b5ff07d6ae357e6a7c80a96d2eb0d93a32bafc24d3d3fb756165b45263899",
+    "docs/features/t1265-codex-structured-output-schema-compatibility.md": "7f74bd8a982abcadf7917d20825a9eead66d68943d6c4e64debc4973a388582e",
+    "ai-worker/src/execution/codex-app-server.ts": "2eb2848449e4bff3689b207258b5910521523b5828035c20aa752b5616e2d674",
+    "ai-worker/vendor/codex-acp/src/CodexAcpClient.ts": "c7a7bc5d3ad2700309ea8fea69bc2a73c26b28f94ee02e66b66bfcb3950c91e6",
+    "ai-worker/vendor/codex-acp/src/TitleGenerator.ts": "cb7df0485999f2042bea16df7c760056db6f724a8b6c156317dae1b6180cbd5d",
+    "ai-worker/vendor/codex-acp/src/CreatorOsPolicy.ts": "a8c9ef518464afa9359eecb67fa950f4c5e58c994d5bd25493b9ce05767b8a95",
+    "ai-worker/src/execution/codex-acp-host.ts": "02055ad5d42d6472342d1b7bf988a536da6d53e0b74dbbdd5c922be15aa0f3ec",
+    "ai-worker/src/execution/codex-native-turn.ts": "cde306b3311304239e6e02a4ce9adf9d8a1aab4c56efd91d26f2576ccbdebc8e",
+    "ai-worker/src/execution/codex-acp-worker-run.ts": "49b442130ee20a7eb77464fc6353691260bc88908a3756db08c8057c6c078f96",
+    "ai-worker/src/execution/external-chat-worker-run.ts": "5548f8afc8a8e77e0c7df4047ee56c6ca9a6a01b9096e8eac5f55b14111cd6b5",
+    "ai-worker/src/execution/codex-agentic-worker-run.ts": "49b94a393fb1308ae44d4a0aaab2509eb2f2f38f7c638c97fafec9d4ad6c7476",
+    "ai-worker/src/execution/codex-image-generation.ts": "62d001c5b22f4f5f0ee5fd34eb79a9abc0b368952aa7244a2e1aa23805dfb646",
+    "ai-worker/src/execution/durable-generation-model.ts": "23a9daf339b4f5916abdf1b0e0f37d83ceeb436f1681b3d44b47288af3156eff",
+    "ai-worker/src/execution/generation-error.ts": "dfdc55847dc64b1d7ec03cb82bdd87a5303f967e7d96dcf32f62a36a4cb054d7",
+    "ai-worker/src/runtime/codex-provider.ts": "50599c81d3914b5da122aad950cf52464f70d608134c4e59e09ba37eed0fe7ec",
+    "orchestrator/process/reviewctl.mjs": "dde682e0ad114048daa5cfd8686a1450ccf902a8ab56a48411e88399a51ccc15"
+  },
+  "checks": [
+    {
+      "claim": "所有原生新thread共用codexThreadParameters，文本/结构化/生图/Agent/旧聊天消费者已核",
+      "result": "contract-compatible; actual initial source ephemeral:false"
+    },
+    {
+      "claim": "CreatorOS ACP两个受控policy都在newSession条件块；普通vendor无policy不改，TitleGenerator原本临时",
+      "result": "contract-compatible; actual initial source no ephemeral field in newSession"
+    },
+    {
+      "claim": "已settled generation、Agent、external native/ACP从backend既有receipt返回不创建模型thread",
+      "result": "verified existing source branches"
+    },
+    {
+      "claim": "原started/unknown仅recoverCodexNativeTurn读原thread/turn；缺失或读错时unknown；ACP恢复不调用createSession/prompt",
+      "result": "verified existing source branches; no new execution on missing thread"
+    },
+    {
+      "claim": "修改仅两处新建参数，旧持久resume/read、权限/取消/usage/DDL/auth路径不改",
+      "result": "scope-valid subject to narrow implementation and final source comparison"
+    },
+    {
+      "claim": "共享dirty基线含T1261/T1265及更早能力适配",
+      "result": "source hashes preserved; narrow diff mandatory"
+    }
+  ],
+  "limitations": [
+    "没有运行任何模型turn、Codex exec或个人Codex UI",
+    "没有安装、重启或替换在用App",
+    "未声称测试、真实RED/GREEN、协议探针或全局Gate已通过",
+    "无模型thread/start探针可验证该创建请求及list/文件/跨进程观测，但durable未prompt线程也可能尚无rollout，不能证明真实prompt后的个人UI历史行为",
+    "本任务按用户授权放弃未收到/未结算临时会话的跨进程结果恢复；保留unknown而不付费重发符合宪章诚实/幂等边界"
+  ]
+}

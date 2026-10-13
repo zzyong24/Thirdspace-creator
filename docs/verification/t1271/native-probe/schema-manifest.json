@@ -1,0 +1,35 @@
+{
+  "runtime": {
+    "version": "codex-cli 0.159.3",
+    "binary": "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@openai+codex@0.159.3-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex",
+    "sha256": "4d210f7c5a18fd0386434df23b5bdbb8c0e7257d3e8a2b30b0769c8bbe99a878"
+  },
+  "generation": {
+    "command": "app-server generate-json-schema --experimental --out <exclusive temporary schema directory>",
+    "realModelCalls": 0,
+    "exclusiveHome": true,
+    "warning": "一次schema生成指定的独占CODEX_HOME/home尚未创建；只输出PATH aliases警告，schema仍正常生成；正式app-server探针先创建独占CODEX_HOME。"
+  },
+  "schema": [
+    {
+      "file": "ThreadListParams.json",
+      "sha256": "5daf371b2852c409d4405c95f79cddb2d92a1ee89da808b2c5112ef16a57432c"
+    },
+    {
+      "file": "ThreadReadParams.json",
+      "sha256": "dfe040c6ac71d30795b8be3f3ff232e66f362a37f883b491e5d1ea367f470db4"
+    },
+    {
+      "file": "ThreadResumeParams.json",
+      "sha256": "cc5bb3b25f82073d24af5b6c09e4804ac307467f8400ba5f263fa86f9f0349e6"
+    },
+    {
+      "file": "ThreadStartParams.json",
+      "sha256": "80a40a7fac15b4bf70efb7f893fb353acc0a0d30c68f54aee4f01923deca85de"
+    },
+    {
+      "file": "ThreadStartResponse.json",
+      "sha256": "92f5ddc37717b922de1dc0b0405e9a6d463f370554e2091610c6e595bc2616d4"
+    }
+  ]
+}
