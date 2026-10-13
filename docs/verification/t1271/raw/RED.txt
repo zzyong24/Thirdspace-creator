@@ -1,0 +1,100 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-app-server.test.ts (4 tests | 1 failed) 29ms
+     × 后续turn只由宿主构造，不接模型的环境、目录、权限升级 18ms (retry x2)
+ ❯ src/execution/codex-native-turn.test.ts (44 tests | 1 failed) 462ms
+   × 线程预备和回合入场都先持久，再接受实际ID与动态工具；真实终态才完成 237ms (retry x2)
+ ❯ src/execution/codex-acp-policy.test.ts (12 tests | 1 failed) 323ms
+   × 原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才返回 16ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > 原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才返回
+ FAIL  src/execution/codex-acp-policy.test.ts > 原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才返回
+ FAIL  src/execution/codex-acp-policy.test.ts > 原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才返回
+AssertionError: expected { config: { …(6) }, …(6) } to match object { ephemeral: true, …(5) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -10,8 +10,7 @@
+          "enabled": false,
+        },
+      },
+    },
+    "cwd": "/tmp/task",
+-   "ephemeral": true,
+    "sandbox": "read-only",
+  }
+
+ ❯ src/execution/codex-acp-policy.test.ts:96:21
+     94|   expect(f.native.configRead).toHaveBeenCalledWith({includeLayers:true…
+     95|   const submitted = f.native.threadStart.mock.calls[0][0];
+     96|   expect(submitted).toMatchObject({ephemeral:true,approvalPolicy:'on-r…
+       |                     ^
+     97|     config:{mcp_servers:{personal:{enabled:false},creatoros_task:{url:…
+     98|   expect(f.native.listMcpServerStatus).toHaveBeenCalledTimes(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/execution/codex-app-server.test.ts > T-1044 Codex 原生接口权限边界 > 后续turn只由宿主构造，不接模型的环境、目录、权限升级
+ FAIL  src/execution/codex-app-server.test.ts > T-1044 Codex 原生接口权限边界 > 后续turn只由宿主构造，不接模型的环境、目录、权限升级
+ FAIL  src/execution/codex-app-server.test.ts > T-1044 Codex 原生接口权限边界 > 后续turn只由宿主构造，不接模型的环境、目录、权限升级
+AssertionError: expected { cwd: '/tmp/private-task', …(5) } to match object { environments: [], …(3) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "approvalPolicy": "never",
+    "environments": [],
+-   "ephemeral": true,
++   "ephemeral": false,
+    "sandbox": "read-only",
+  }
+
+ ❯ src/execution/codex-app-server.test.ts:16:18
+     14|  it("后续turn只由宿主构造，不接模型的环境、目录、权限升级",()=>{
+     15|   const thread=codexThreadParameters('/tmp/private-task',[{name:'read_…
+     16|   expect(thread).toMatchObject({environments:[],approvalPolicy:'never'…
+       |                  ^
+     17|   const turn=codexTurnParameters('thread-real','任务', {environments:['f…
+     18|   expect(turn).toEqual({threadId:'thread-real',input:[{type:'text',tex…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/execution/codex-native-turn.test.ts > 线程预备和回合入场都先持久，再接受实际ID与动态工具；真实终态才完成
+ FAIL  src/execution/codex-native-turn.test.ts > 线程预备和回合入场都先持久，再接受实际ID与动态工具；真实终态才完成
+ FAIL  src/execution/codex-native-turn.test.ts > 线程预备和回合入场都先持久，再接受实际ID与动态工具；真实终态才完成
+AssertionError: expected { cwd: '/tmp/owned-task', …(5) } to match object { ephemeral: true, …(2) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "cwd": "/tmp/owned-task",
+-   "ephemeral": true,
++   "ephemeral": false,
+    "sandbox": "read-only",
+  }
+
+ ❯ src/execution/codex-native-turn.test.ts:28:83
+     26|  await f.rpc.onNotification('turn/completed',{threadId:'thread-actual'…
+     27|  expect(await running).toMatchObject({sessionId:'thread-actual',provid…
+     28|  expect(f.rpc.request.mock.calls.find((call:any)=>call[0]==='thread/st…
+       |                                                                                   ^
+     29| });
+     30| it('预备回执未保存不能启动模型；不接受原生审批和伪造用户回复',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  3 failed | 57 passed (60)
+   Start at  16:12:45
+   Duration  1.68s (transform 1.17s, setup 0ms, import 1.58s, tests 814ms, environment 1ms)
+

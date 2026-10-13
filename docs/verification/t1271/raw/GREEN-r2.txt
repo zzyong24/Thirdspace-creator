@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+(node:50662) DeprecationWarning: AI SDK Warning: Deprecated: ""image" content part". The "image" content part type is deprecated. Use a "file" part with mediaType: 'image' (or a more specific image/* subtype) instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ Test Files  6 passed (6)
+      Tests  100 passed (100)
+   Start at  16:19:04
+   Duration  9.33s (transform 11.50s, setup 0ms, import 20.10s, tests 1.65s, environment 1ms)
+
