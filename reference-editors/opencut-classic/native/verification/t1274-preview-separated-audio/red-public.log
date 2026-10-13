@@ -1,0 +1,41 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview.test.ts:
+(pass) preview-scene public 命令使用候选独立 frozen 实际编码端口，活动工程/撤销/选区/epoch不变 [41.03ms]
+(pass) preview-scene owner拒绝在编码前，保留活动稿件 [3.97ms]
+(pass) preview-scene epoch拒绝在编码前，保留活动稿件 [0.74ms]
+(pass) preview-scene before拒绝在编码前，保留活动稿件 [0.71ms]
+(pass) preview-scene candidate拒绝在编码前，保留活动稿件 [1.96ms]
+(pass) preview-scene scene拒绝在编码前，保留活动稿件 [1.23ms]
+(pass) preview-scene file拒绝在编码前，保留活动稿件 [1.22ms]
+(pass) preview-scene duplicate media拒绝在编码前，保留活动稿件 [0.47ms]
+(pass) preview-scene missing media拒绝在编码前，保留活动稿件 [0.85ms]
+(pass) preview-scene request期间取消，迟到buffer不得返回且URL释放 [3.73ms]
+(pass) preview-scene selection epoch期间取消，迟到buffer不得返回且URL释放 [1.96ms]
+(pass) preview-scene owner lifetime期间取消，迟到buffer不得返回且URL释放 [1.59ms]
+(pass) preview-scene 编码失败不能伪造Blob，临时URL释放且旧seek/read命令仍可达 [1.61ms]
+(pass) 原公共load/context/snapshot/seek/apply-tracks/export仍沿真实controller命令入口成功 [2.19ms]
+(pass) preview-scene保留旧未知只读层、无时间字段扩展和其他scene，不按未知内容猜媒体 [0.96ms]
+41 |   candidateDigest: string;
+42 |   tracks: SceneTracks;
+43 |   media: PreviewMedia[];
+44 | };
+45 | const conflict: (message: string) => never = (message) => {
+46 |   throw new NativeOperationError(message);
+             ^
+error: 候选引用的真实素材文件缺失或类型不匹配。
+ status: 409,
+   code: "ConflictError"
+
+      at conflict (/private/tmp/creatoros-t1274-preview-separated-baseline/apps/web/src/embedded/preview-scene.ts:46:9)
+      at validateTracks (/private/tmp/creatoros-t1274-preview-separated-baseline/apps/web/src/embedded/preview-scene.ts:140:11)
+      at previewNativeScene (/private/tmp/creatoros-t1274-preview-separated-baseline/apps/web/src/embedded/preview-scene.ts:253:16)
+(fail) preview-scene public 支持原video及其已分离upload原声音轨，仅改主轨时音轨完整保留 [5.13ms]
+(pass) preview-scene public audio-image继续拒绝不兼容媒体类型 [0.84ms]
+(pass) preview-scene public video-audio继续拒绝不兼容媒体类型 [0.80ms]
+(pass) preview-scene public image-video继续拒绝不兼容媒体类型 [0.87ms]
+
+ 18 pass
+ 1 fail
+ 78 expect() calls
+Ran 19 tests across 1 file. [159.00ms]

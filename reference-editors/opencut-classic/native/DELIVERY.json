@@ -1,6 +1,6 @@
 {
   "task": "T-1274",
-  "deliveryStatus": "NATIVE_CANDIDATE_PREVIEW_SOURCE_PUBLIC_CONTROLLER_RENDERER_AND_DOM_FIXTURES_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
+  "deliveryStatus": "NATIVE_PREVIEW_SEPARATED_AUDIO_COMPATIBILITY_SOURCE_PUBLIC_CONTROLLER_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
@@ -10,14 +10,14 @@
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6628162,
+    "esmBytes": 6628195,
     "cssBytes": 128748,
     "licensedDependencies": 59,
     "renderedModules": 429,
     "nativeHashes": {
-      "native.js": "4c0da8c3e58aa808c13c1d34a4bbbc0636b33cb4cc8eaa01068d03d0b61b0e33",
+      "native.js": "77198cbf123da0065d041a2ff2f5f7b9e969539e3daf6723d38fc474bc2a2828",
       "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
-      "NATIVE_BUILD_GRAPH.json": "a18b6dfb4ab66854f6634acb36ff72db6c2859c2136108a3ba37d11663ae2950",
+      "NATIVE_BUILD_GRAPH.json": "d6bac2a68cefbe43e596ad8dbe158b53a6305a3dcc6ffcf2cd98ce03653d9016",
       "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
       "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
@@ -31,35 +31,36 @@
   "source": {
     "files": 713,
     "changedFiles": 80,
-    "archiveBytes": 760012,
-    "patchBytes": 391057,
+    "archiveBytes": 760854,
+    "patchBytes": 395805,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "cf683a02a18d19e119939da2256ec1bceb2d162167aaee357b27963c715cd8df",
-      "native-from-t1046.patch": "ed27c520d7ccc8ee0577962e58d13c82f6509c70431e61a7c230e5604c33f968",
+      "native-source.tar.gz": "3668923b871b7289c5eee4632faf2d959e50f54ade5eec6badfad08ce0673f7d",
+      "native-from-t1046.patch": "2aedcef1005b1a394a8a743a0d6b98f8082d4569a2d020d3af86e6f429e69b9b",
       "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "verification/t1274-preview/source-reconstruction.json",
-    "productionReconstructionEvidence": "verification/t1274-preview/production-reconstruction.json",
-    "archiveSha256": "cf683a02a18d19e119939da2256ec1bceb2d162167aaee357b27963c715cd8df",
-    "patchSha256": "ed27c520d7ccc8ee0577962e58d13c82f6509c70431e61a7c230e5604c33f968"
+    "reconstructionEvidence": "verification/t1274-preview-separated-audio/source-reconstruction.json",
+    "productionReconstructionEvidence": "verification/t1274-preview-separated-audio/production-reconstruction.json",
+    "archiveSha256": "3668923b871b7289c5eee4632faf2d959e50f54ade5eec6badfad08ce0673f7d",
+    "patchSha256": "2aedcef1005b1a394a8a743a0d6b98f8082d4569a2d020d3af86e6f429e69b9b"
   },
   "verification": {
-    "typecheckExitCode": 0,
-    "totalTests": 62,
-    "totalAssertions": 307,
+    "totalTests": 66,
+    "totalAssertions": 323,
     "testFailures": 0,
+    "typecheckExitCode": 0,
     "fixtureOnly": true,
-    "domFixtureChecks": 60,
     "browserAutomation": "not_run",
     "realGpu": "not_run",
     "realMp4": "not_run",
-    "allFailuresPreserved": "verification/t1274-preview与历史verification不删除",
+    "domFixture": "not_rerun_narrow_audio_media_validation_change",
+    "historicalDomFixtureChecks": 60,
+    "allFailuresPreserved": true,
     "unreplacedNodeEnv": 0,
     "unguardedGlobalProcessReferences": 0,
-    "evidenceDirectory": "verification/t1274-preview"
+    "evidenceDirectory": "verification/t1274-preview-separated-audio"
   },
   "limitations": [
     "原Canvas/Fabric夹具与JSDOM环境不等于真实浏览器像素或安装。",
@@ -1065,5 +1066,253 @@
         "diff-check-nonpatch.log"
       ]
     }
+  },
+  "historicalT1274PreviewBeforeSeparatedAudioCurrent": {
+    "deliveryStatus": "NATIVE_CANDIDATE_PREVIEW_SOURCE_PUBLIC_CONTROLLER_RENDERER_AND_DOM_FIXTURES_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6628195,
+      "cssBytes": 128748,
+      "licensedDependencies": 59,
+      "renderedModules": 429,
+      "nativeHashes": {
+        "native.js": "77198cbf123da0065d041a2ff2f5f7b9e969539e3daf6723d38fc474bc2a2828",
+        "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
+        "NATIVE_BUILD_GRAPH.json": "d6bac2a68cefbe43e596ad8dbe158b53a6305a3dcc6ffcf2cd98ce03653d9016",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "未重装；复用此前隔离源码真实bun frozen ignore-scripts安装的同一锁依赖树",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 713,
+      "changedFiles": 80,
+      "archiveBytes": 760854,
+      "patchBytes": 395805,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "3668923b871b7289c5eee4632faf2d959e50f54ade5eec6badfad08ce0673f7d",
+        "native-from-t1046.patch": "2aedcef1005b1a394a8a743a0d6b98f8082d4569a2d020d3af86e6f429e69b9b",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "verification/t1274-preview-separated-audio/source-reconstruction.json",
+      "productionReconstructionEvidence": "verification/t1274-preview-separated-audio/production-reconstruction.json",
+      "archiveSha256": "3668923b871b7289c5eee4632faf2d959e50f54ade5eec6badfad08ce0673f7d",
+      "patchSha256": "2aedcef1005b1a394a8a743a0d6b98f8082d4569a2d020d3af86e6f429e69b9b"
+    },
+    "verification": {
+      "typecheckExitCode": 0,
+      "totalTests": 62,
+      "totalAssertions": 307,
+      "testFailures": 0,
+      "fixtureOnly": true,
+      "domFixtureChecks": 60,
+      "browserAutomation": "not_run",
+      "realGpu": "not_run",
+      "realMp4": "not_run",
+      "allFailuresPreserved": "verification/t1274-preview与历史verification不删除",
+      "unreplacedNodeEnv": 0,
+      "unguardedGlobalProcessReferences": 0,
+      "evidenceDirectory": "verification/t1274-preview"
+    },
+    "t1274PreviewVerification": {
+      "scope": "真实controller/renderer机械边界；端口与DOM夹具不证明GPU/MP4/真实解码/宿主/E2E",
+      "sourceDirectory": "/tmp/creatoros-t1274-preview-isolated",
+      "sourceArchiveFiles": 713,
+      "standardPatchFuzz": 0,
+      "newPublicRedCases": 13,
+      "newPublicGreenCases": 15,
+      "extraGreenRegressionCases": "原公共load/context/snapshot/seek/apply/export及旧未知层保留，不补拍历史RED",
+      "red": {
+        "red-public-final.log": {
+          "pass": 0,
+          "fail": 13,
+          "sha256": "488116ee89eae86d42202d836c034551be267b5c4d67d74bfbec661034bf1ebd"
+        },
+        "red-resources-final.log": {
+          "pass": 0,
+          "fail": 3,
+          "sha256": "6fb26b3fa957cea083d9929ec3f83bcd08a4eeaf4effdd4b46d2007263708509"
+        },
+        "red-audio-final.log": {
+          "pass": 1,
+          "fail": 2,
+          "sha256": "c2b25c5d0e46a71a6fbbc40eb6b5e73201876fcc440251a8ee8bbf0a46215884"
+        },
+        "red-canvas.log": {
+          "pass": 0,
+          "fail": 1,
+          "sha256": "f3361cc2ef017814a042cd5f7ac7d37bd9edca9a48af89dfb33e47e0bdc665c3"
+        },
+        "red-image.log": {
+          "pass": 0,
+          "fail": 1,
+          "sha256": "e0fa4d2d009d19c68d99d127bf47942cbc7cde387d5a777a172efa52b2ba9218"
+        }
+      },
+      "green": {
+        "old-native-release.log": {
+          "pass": 19,
+          "fail": 0,
+          "assertions": 116,
+          "sha256": "12c3cdbf82637918d6c912b2eae6f84ee4f4195e2d28812d8f084e2e277daccc"
+        },
+        "old-workspace-release.log": {
+          "pass": 4,
+          "fail": 0,
+          "assertions": 24,
+          "sha256": "a26bf87b4ff11ef3faf0490ca1fdeedbef9939f7b92832d337fe69a114e02586"
+        },
+        "old-resources-release.log": {
+          "pass": 16,
+          "fail": 0,
+          "assertions": 68,
+          "sha256": "29a246bf5db7837f26b94a48c74f6e4ca165f3723d271d08c473b50241822dcb"
+        },
+        "green-public-last.log": {
+          "pass": 15,
+          "fail": 0,
+          "assertions": 69,
+          "sha256": "7c1924c2f179f2fa6567e4264e945bed61b492630a1a6912a55ed7ccc17e4771"
+        },
+        "green-resources-release.log": {
+          "pass": 3,
+          "fail": 0,
+          "assertions": 15,
+          "sha256": "9958af4d37bced974ffb16be23264f36a97d095e9a60291076937a09c504949c"
+        },
+        "green-audio-release.log": {
+          "pass": 3,
+          "fail": 0,
+          "assertions": 6,
+          "sha256": "65a5eb88677fdf37c263b2b46593cace60cb0a9186f03bcc61a4c0f243180971"
+        },
+        "green-canvas-release.log": {
+          "pass": 1,
+          "fail": 0,
+          "assertions": 5,
+          "sha256": "3f1240f3c0f4b7aeaca6634af1917f60da212cdd4abe087ca3791f0daf839d56"
+        },
+        "green-image-release.log": {
+          "pass": 1,
+          "fail": 0,
+          "assertions": 4,
+          "sha256": "7d7bda755a5e1aaf3e28dc91b91818ab5e2bb5bd50b5d9ee77fa339c96cc2a35"
+        }
+      },
+      "totalGreenTests": 62,
+      "totalGreenAssertions": 307,
+      "domFixtureChecks": {
+        "original": 38,
+        "workspace": 22
+      },
+      "typecheckLog": "type-last.log",
+      "productionBuildLog": "production-build.log",
+      "archiveBuildLog": "archive-production-build.log",
+      "astLog": "process-ast.log",
+      "allFailuresPreserved": true,
+      "fixturePublished": false,
+      "gpuOrRealMediaPass": false,
+      "diffCheck": {
+        "nonPatchExitCode": 0,
+        "fullPatchExitCode": 2,
+        "reason": "标准补丁上下文的空白前缀及真实上游CRLF/行尾空格；保留真实源字节与F0复原，不归一化历史源码。",
+        "logs": [
+          "diff-check-all.log",
+          "diff-check-nonpatch.log"
+        ]
+      }
+    }
+  },
+  "t1274PreviewSeparatedAudioVerification": {
+    "scope": "只校验既有分离原声合法媒体族：upload audio允许audio或video，其余video/image严格匹配；未改AAC/时长或产品语义",
+    "sourceDirectory": "/tmp/creatoros-t1274-preview-isolated",
+    "red": {
+      "publicTests": 19,
+      "passed": 18,
+      "failed": 1,
+      "log": "red-public.log",
+      "sha256": "82bbc8d74d6a0f3b469f5ae7340df2d8ef502d10b126e14064ab94a4a544bacc",
+      "failure": "合法已分离video原声的媒体类型校验拒绝"
+    },
+    "green": {
+      "green-public.log": {
+        "pass": 19,
+        "fail": 0,
+        "assertions": 85,
+        "sha256": "154f7163be0eb6f34522d20f40fc02c446680dbe6f5860ded0cc7f2f29e98380"
+      },
+      "old-native.log": {
+        "pass": 19,
+        "fail": 0,
+        "assertions": 116,
+        "sha256": "c3b50e1d2c942bb5fd01faf32b4e05eb5dc377643de9b49e0032c2a1982c035a"
+      },
+      "old-workspace.log": {
+        "pass": 4,
+        "fail": 0,
+        "assertions": 24,
+        "sha256": "27752538addd6c1911dfd8619199a67dd2829d123438ceab3706b14ae34386d0"
+      },
+      "old-resources.log": {
+        "pass": 16,
+        "fail": 0,
+        "assertions": 68,
+        "sha256": "ebf7e8b4f894da5c8c9d17c37a7500d73e6a1b9590f0399ec74f64583ecaefe9"
+      },
+      "green-resources.log": {
+        "pass": 3,
+        "fail": 0,
+        "assertions": 15,
+        "sha256": "1a2c554fc0a78cba01a70733760d30c455efb2f3ec3421fa790e60f599f12295"
+      },
+      "green-audio.log": {
+        "pass": 3,
+        "fail": 0,
+        "assertions": 6,
+        "sha256": "557601e70490ac03a50c597c04a5b4a375813157508473ff02fbf9ebc59e1127"
+      },
+      "green-canvas.log": {
+        "pass": 1,
+        "fail": 0,
+        "assertions": 5,
+        "sha256": "284eb2b1156da37979155eb34fd9fee6506745c8f3379fd91ed4da3a5f2b74c0"
+      },
+      "green-image.log": {
+        "pass": 1,
+        "fail": 0,
+        "assertions": 4,
+        "sha256": "2a7b3e16c73561a5b05d91d5dfeb8e523f1a978ae74dff40f05835f349abbb2e"
+      }
+    },
+    "totalGreenTests": 66,
+    "totalGreenAssertions": 323,
+    "sourceFiles": 713,
+    "standardPatchFuzz": 0,
+    "sourceAndPatchAllBytesMatch": true,
+    "allSevenArchiveRebuildAndPublishedBytesMatch": true,
+    "typecheckExitCode": 0,
+    "astExitCode": 0,
+    "domFixture": "未重复本轮DOM，先前verification/t1274-preview的38+22项证据原样保留",
+    "gpuOrRealMp4": "本子候选未执行；主会话旧E2E时长断言失败保留，不替其签PASS",
+    "diffCheck": {
+      "nonPatchExitCode": 0,
+      "fullPatchExitCode": 2,
+      "reason": "标准patch上下文前缀空格及原CRLF；F0复原字节保真，不归一化历史源"
+    },
+    "allFailuresPreserved": true,
+    "fixturePublished": false
   }
 }

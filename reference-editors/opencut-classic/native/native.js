@@ -81837,7 +81837,7 @@ function xJA(g, A, I) {
         "effect"
       ].includes(a.type) || (!D || bI(cQ(D)) !== bI(a)) && mI("未知图层只能保留原值。"), a.type === "video" || a.type === "image" || a.type === "audio" && a.sourceType === "upload") {
         const c = I.get(a.mediaId);
-        (!c || c.type !== (a.type === "audio" ? "audio" : a.type)) && mI("候选引用的真实素材文件缺失或类型不匹配。");
+        (!c || (a.type === "audio" ? c.type !== "audio" && c.type !== "video" : c.type !== a.type)) && mI("候选引用的真实素材文件缺失或类型不匹配。");
       }
       "retime" in a && a.retime && (!Number.isFinite(a.retime.rate) || a.retime.rate <= 0) && mI("候选播放速度无效。");
       for (const c of ["trimStart", "trimEnd", "sourceDuration"])

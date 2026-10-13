@@ -1,0 +1,11 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-audio.test.ts:
+(pass) 空音轨导出关闭自行创建的临时AudioContext，真实空保持null [0.79ms]
+(pass) 调用方的AudioContext不由导出关闭 [0.05ms]
+(pass) 原取消回调已取消时不分配context，不进入音频准备 [0.13ms]
+
+ 3 pass
+ 0 fail
+ 6 expect() calls
+Ran 3 tests across 1 file. [50.00ms]
