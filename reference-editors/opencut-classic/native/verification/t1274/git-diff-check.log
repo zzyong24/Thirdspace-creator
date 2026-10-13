@@ -1,0 +1,153 @@
+reference-editors/opencut-classic/native/native-from-t1046.patch:760: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:768: space before tab in indent.
++ 			await showMediaUploadToast({
+reference-editors/opencut-classic/native/native-from-t1046.patch:769: space before tab in indent.
++ 				filesCount: files.length,
+reference-editors/opencut-classic/native/native-from-t1046.patch:770: space before tab in indent.
++ 				promise: async () => {
+reference-editors/opencut-classic/native/native-from-t1046.patch:787: space before tab in indent.
++ 					return {
+reference-editors/opencut-classic/native/native-from-t1046.patch:788: space before tab in indent.
++ 						uploadedCount: processedAssets.length,
+reference-editors/opencut-classic/native/native-from-t1046.patch:789: space before tab in indent.
++ 						assetNames: processedAssets.map((asset) => asset.name),
+reference-editors/opencut-classic/native/native-from-t1046.patch:791: space before tab in indent.
++ 			);
+reference-editors/opencut-classic/native/native-from-t1046.patch:792: space before tab in indent.
++ 		}
+reference-editors/opencut-classic/native/native-from-t1046.patch:793: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:803: space before tab in indent.
++ 	}
+reference-editors/opencut-classic/native/native-from-t1046.patch:804: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:805: space before tab in indent.
++ 	if (item.type === "audio") {
+reference-editors/opencut-classic/native/native-from-t1046.patch:807: space before tab in indent.
++ 		</DropdownMenuItem>
+reference-editors/opencut-classic/native/native-from-t1046.patch:808: space before tab in indent.
++ 	);
+reference-editors/opencut-classic/native/native-from-t1046.patch:2672: space before tab in indent.
++ 	usePasteMedia();
+reference-editors/opencut-classic/native/native-from-t1046.patch:2673: space before tab in indent.
++ 	const { panels, setPanel } = usePanelStore();
+reference-editors/opencut-classic/native/native-from-t1046.patch:2674: space before tab in indent.
++ 	const activeScene = useEditor((editor) =>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2676: space before tab in indent.
++ 						maxSize={40}
+reference-editors/opencut-classic/native/native-from-t1046.patch:2677: space before tab in indent.
++ 						className="min-w-0"
+reference-editors/opencut-classic/native/native-from-t1046.patch:2678: space before tab in indent.
++ 					>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2681: space before tab in indent.
++ 					</ResizablePanel>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2682: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:2683: space before tab in indent.
++ 					<ResizableHandle withHandle />
+reference-editors/opencut-classic/native/native-from-t1046.patch:2685: space before tab in indent.
++ 					<ResizablePanel
+reference-editors/opencut-classic/native/native-from-t1046.patch:2686: space before tab in indent.
++ 						defaultSize={panels.preview}
+reference-editors/opencut-classic/native/native-from-t1046.patch:2687: space before tab in indent.
++ 						minSize={30}
+reference-editors/opencut-classic/native/native-from-t1046.patch:2689: space before tab in indent.
++ 						className="min-h-0 min-w-0 flex-1"
+reference-editors/opencut-classic/native/native-from-t1046.patch:2690: space before tab in indent.
++ 					>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2691: space before tab in indent.
++ 						<PreviewPanel
+reference-editors/opencut-classic/native/native-from-t1046.patch:2693: space before tab in indent.
++ 						maxSize={40}
+reference-editors/opencut-classic/native/native-from-t1046.patch:2694: space before tab in indent.
++ 						className="min-w-0"
+reference-editors/opencut-classic/native/native-from-t1046.patch:2695: space before tab in indent.
++ 					>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2698: space before tab in indent.
++ 					</ResizablePanel>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2699: space before tab in indent.
++ 				</ResizablePanelGroup>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2700: space before tab in indent.
++ 			</ResizablePanel>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2702: space before tab in indent.
++ 				defaultSize={panels.timeline}
+reference-editors/opencut-classic/native/native-from-t1046.patch:2703: space before tab in indent.
++ 				minSize={15}
+reference-editors/opencut-classic/native/native-from-t1046.patch:2704: space before tab in indent.
++ 				maxSize={70}
+reference-editors/opencut-classic/native/native-from-t1046.patch:2706: space before tab in indent.
++ 				className="min-h-0 px-3 pb-3"
+reference-editors/opencut-classic/native/native-from-t1046.patch:2707: space before tab in indent.
++ 			>
+reference-editors/opencut-classic/native/native-from-t1046.patch:2708: space before tab in indent.
++ 				<Timeline />
+reference-editors/opencut-classic/native/native-from-t1046.patch:3338: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:3341: space before tab in indent.
++ 	const requestRef = useRef<number>(0);
+reference-editors/opencut-classic/native/native-from-t1046.patch:3342: space before tab in indent.
++ 	const previousTimeRef = useRef<number | null>(null);
+reference-editors/opencut-classic/native/native-from-t1046.patch:3343: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:3344: space before tab in indent.
++ 	useEffect(() => {
+reference-editors/opencut-classic/native/native-from-t1046.patch:3347: space before tab in indent.
++ 		const loop = ({ time }: { time: number }) => {
+reference-editors/opencut-classic/native/native-from-t1046.patch:3348: space before tab in indent.
++ 			if (previousTimeRef.current !== null) {
+reference-editors/opencut-classic/native/native-from-t1046.patch:3349: space before tab in indent.
++ 				const deltaTime = time - previousTimeRef.current;
+reference-editors/opencut-classic/native/native-from-t1046.patch:3351: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:3352: space before tab in indent.
++ 		requestRef.current = requestAnimationFrame((time) => loop({ time }));
+reference-editors/opencut-classic/native/native-from-t1046.patch:3353: space before tab in indent.
++ 		return () => cancelAnimationFrame(requestRef.current);
+reference-editors/opencut-classic/native/native-from-t1046.patch:3498: space before tab in indent.
++ 	const total = fileArray.length;
+reference-editors/opencut-classic/native/native-from-t1046.patch:3517: space before tab in indent.
++ 		let fps: number | undefined;
+reference-editors/opencut-classic/native/native-from-t1046.patch:3518: space before tab in indent.
++ 		let hasAudio: boolean | undefined;
+reference-editors/opencut-classic/native/native-from-t1046.patch:3561: space before tab in indent.
++ 			};
+reference-editors/opencut-classic/native/native-from-t1046.patch:3705: space before tab in indent.
++ 		};
+reference-editors/opencut-classic/native/native-from-t1046.patch:3706: space before tab in indent.
++ 	}, [renderer]);
+reference-editors/opencut-classic/native/native-from-t1046.patch:3707: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:3709: space before tab in indent.
++ 	const render = useCallback(() => {
+reference-editors/opencut-classic/native/native-from-t1046.patch:3711: space before tab in indent.
++ 		if (!renderTree || renderingRef.current) return;
+reference-editors/opencut-classic/native/native-from-t1046.patch:3712: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:3713: space before tab in indent.
++ 		const renderTime = Math.min(
+reference-editors/opencut-classic/native/native-from-t1046.patch:3724: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:3725: space before tab in indent.
++ 	useEffect(() => {
+reference-editors/opencut-classic/native/native-from-t1046.patch:3726: space before tab in indent.
++ 		const container = viewportRef.current;
+reference-editors/opencut-classic/native/native-from-t1046.patch:3729: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:3730: space before tab in indent.
++ 		let pendingZoomDelta = 0;
+reference-editors/opencut-classic/native/native-from-t1046.patch:3731: space before tab in indent.
++ 		let pendingPanDeltaX = 0;
+reference-editors/opencut-classic/native/native-from-t1046.patch:3733: space before tab in indent.
++ 				cancelAnimationFrame(panRafId);
+reference-editors/opencut-classic/native/native-from-t1046.patch:3734: space before tab in indent.
++ 			}
+reference-editors/opencut-classic/native/native-from-t1046.patch:3735: space before tab in indent.
++ 		};
+reference-editors/opencut-classic/native/native-from-t1046.patch:3738: trailing whitespace.
++ 
+reference-editors/opencut-classic/native/native-from-t1046.patch:3739: space before tab in indent.
++ 	return (
+reference-editors/opencut-classic/native/native-from-t1046.patch:3740: space before tab in indent.
++ 		<PreviewViewportProvider value={viewport}>
+reference-editors/opencut-classic/native/native-from-t1046.patch:4352: new blank line at EOF.

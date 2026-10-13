@@ -1,0 +1,24 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-resources.test.ts:
+(pass) 慢图片解码取消释放临时Image与BlobURL，寿命排空后不能返回素材 [4.64ms]
+(pass) 换稿后迟到素材上传回执不注册到当前编辑器 [1.41ms]
+(pass) 上传提示等待绘制时换稿会取消RAF且不启动旧导入 [0.90ms]
+(pass) T1062 实际range实现逐样本裁剪连续块并echo完整本地身份，decode不等于已听/采纳 [16.37ms]
+(pass) T1062 合成负音频PTS不是视频zero；相邻解码重叠去重但不补零 [0.47ms]
+(pass) T1062 nonzero video仅该范围manual且Input释放，不伪造音频 [0.36ms]
+(pass) T1062 missing first coverage仅该范围manual且Input释放，不伪造音频 [0.08ms]
+(pass) T1062 hole仅该范围manual且Input释放，不伪造音频 [0.12ms]
+(pass) T1062 sample-rate change仅该范围manual且Input释放，不伪造音频 [0.07ms]
+(pass) T1062 request cancel取消真实range实现；迟到块不得返回decoded/假完成 [1.87ms]
+(pass) T1062 context seek取消真实range实现；迟到块不得返回decoded/假完成 [0.32ms]
+(pass) T1062 owner dispose取消真实range实现；迟到块不得返回decoded/假完成 [0.08ms]
+(pass) T1062 foreign本地owner或当前真实scene/clip proof失败在读取Input之前拒绝 [0.51ms]
+(pass) T1062 纯组NULLaccount原声读取保持同group owner，平台账号筛选不改实际本地root [0.40ms]
+(pass) T1069 第一份已完成素材立即交给编辑器，不等待第二份上传且取消不撤销已接管URL [4.86ms]
+(pass) T1069 原导入取消实际传递到宿主上传请求 [0.28ms]
+
+ 16 pass
+ 0 fail
+ 68 expect() calls
+Ran 16 tests across 1 file. [307.00ms]

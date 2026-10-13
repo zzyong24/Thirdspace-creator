@@ -1,0 +1,4 @@
+patching file NATIVE_REBUILD_CONSISTENCY.json
+patching file README.creatoros.md
+patching file UPSTREAM.json
+patch: **** malformed patch at line 143: --- /dev/null

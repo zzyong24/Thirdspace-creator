@@ -1,0 +1,3 @@
+error: Cannot find module '/tmp/creatoros-t1274-native-isolated-baseline/apps/web/native-dom-fixture-dist/native.js' from '/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native/verification/t1274/workspace-dom-probe.ts'
+
+Bun v1.4.0 (macOS arm64)

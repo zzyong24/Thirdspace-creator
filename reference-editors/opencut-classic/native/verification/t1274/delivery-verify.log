@@ -1,0 +1,76 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-lifecycle.test.ts:
+(pass) 取消后不发布慢操作的结果；销毁等待原操作到达不可写状态 [3.56ms]
+(pass) 同文档lease交接必须等旧实例关闭；排队取消不取得资源 [0.98ms]
+
+src/embedded/__tests__/native-command.test.ts:
+(pass) 采纳命令跨scene撤销只恢复目标scene，其他scene最新编辑、选区和播放头保留 [6.39ms]
+(pass) 已闭合的after不被原生ripple二次重排独立图层 [0.45ms]
+(pass) 完整beforeTracks包含独立轨；后来文字修改时零Command且原输入保留 [6.58ms]
+(pass) 相同ACK重播一次Command，撤销后重播不重新写入after [3.26ms]
+(pass) 错owner/scene回执均不写时间轴 [0.85ms]
+(pass) 原采纳摘要异步核对期间取消请求，零Command且完整轨道保留 [0.85ms]
+
+src/embedded/__tests__/host-boundary.test.ts:
+(pass) 原生变更直接报告host回调；不建立窗口消息监听 [0.72ms]
+(pass) storage holds one current output and snapshots without runtime binaries/URLs [4.90ms]
+(pass) export returns the exact frozen render document and rejects delayed imported edits [1.90ms]
+(pass) failed export releases editing and pending import replies cannot write during the freeze [3.57ms]
+(pass) load baseline suppresses autosave timestamps and identical snapshots but preserves editorial changes [0.94ms]
+(pass) T1062 同组平台owner key稳定，实际native-context变化同步abort旧范围且未产生试听确认 [0.62ms]
+(pass) T1062 原storage相同内容/时间戳save不假造新的context epoch [0.57ms]
+(pass) T1062 实际context relay连续播放帧不刷epoch；离散seek/state/selection/真实document各一次，重复storage通知无新增 [0.77ms]
+(pass) T1062 context显式pause先触发实际playing失效再返回暂停后epoch；原声playing保护零read且不暗暂停 [0.41ms]
+(pass) T1062 显式pause保留Abort；已暂停再次pause不伪造新epoch，取消不得继续read [0.24ms]
+(pass) T1069 隐藏工作台不接管快捷键事件，重新可见保持同一owner [0.24ms]
+
+ 19 pass
+ 0 fail
+ 116 expect() calls
+Ran 19 tests across 3 files. [742.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-workspace.test.tsx:
+(pass) T1274 open-addon严格校验panel且不改变context/owner，四面板切换保留宿主 [0.51ms]
+(pass) T1274 addon键盘与粘贴事件不归原生，原时间轴事件仍归原生 [0.13ms]
+(pass) T1274 disabled只禁用原生core与portal，tabs/slot可用；hidden全部inert [0.06ms]
+(pass) T1274旧挂载没有addons保持旧disabled语义，dispose后新owner默认状态不复用 [0.16ms]
+
+ 4 pass
+ 0 fail
+ 24 expect() calls
+Ran 4 tests across 1 file. [20.00ms]
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-resources.test.ts:
+(pass) 慢图片解码取消释放临时Image与BlobURL，寿命排空后不能返回素材 [3.04ms]
+(pass) 换稿后迟到素材上传回执不注册到当前编辑器 [0.16ms]
+(pass) 上传提示等待绘制时换稿会取消RAF且不启动旧导入 [0.57ms]
+(pass) T1062 实际range实现逐样本裁剪连续块并echo完整本地身份，decode不等于已听/采纳 [3.61ms]
+(pass) T1062 合成负音频PTS不是视频zero；相邻解码重叠去重但不补零 [0.13ms]
+(pass) T1062 nonzero video仅该范围manual且Input释放，不伪造音频 [0.13ms]
+(pass) T1062 missing first coverage仅该范围manual且Input释放，不伪造音频 [0.03ms]
+(pass) T1062 hole仅该范围manual且Input释放，不伪造音频 [0.25ms]
+(pass) T1062 sample-rate change仅该范围manual且Input释放，不伪造音频 [0.03ms]
+(pass) T1062 request cancel取消真实range实现；迟到块不得返回decoded/假完成 [0.53ms]
+(pass) T1062 context seek取消真实range实现；迟到块不得返回decoded/假完成 [0.08ms]
+(pass) T1062 owner dispose取消真实range实现；迟到块不得返回decoded/假完成 [0.04ms]
+(pass) T1062 foreign本地owner或当前真实scene/clip proof失败在读取Input之前拒绝 [0.10ms]
+(pass) T1062 纯组NULLaccount原声读取保持同group owner，平台账号筛选不改实际本地root [0.57ms]
+(pass) T1069 第一份已完成素材立即交给编辑器，不等待第二份上传且取消不撤销已接管URL [3.64ms]
+(pass) T1069 原导入取消实际传递到宿主上传请求 [0.31ms]
+
+ 16 pass
+ 0 fail
+ 68 expect() calls
+Ran 16 tests across 1 file. [80.00ms]
+{
+  "status": "PASS",
+  "sha256": "ccb79c5133316320ce128c1efebc67240154bf57050836180db0ed596e917ca9",
+  "unreplacedNodeEnv": 0,
+  "guardedGlobalProcessReferences": 6,
+  "unguardedGlobalProcessReferences": 0,
+  "propertyOrMethodNames": 8,
+  "scope": "TypeScript AST检查全产物；仅typeof和同条件短路保护的Node可选分支属于安全全局引用，成员/方法名不算全局。"
+}

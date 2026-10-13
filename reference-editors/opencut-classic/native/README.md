@@ -1,3 +1,17 @@
+# T-1274 原生统一剪辑工作区候选
+
+此候选沿已确认的CreatorOS品牌，保留OpenCut素材、属性、预览和时间轴实例。`workspaceAddons: true` 时，左侧素材/转录、右侧编导/属性使用页签与named slot；默认素材/编导。有真实原片时由宿主调用open-addon打开转录；重复标题仅在此模式隐藏。
+
+`request('open-addon', {panel: 'assets'|'transcript'|'director'|'properties'})` 返回 `{panel}`；页签不改正式JSON、dirty或contextEpoch。宿主light DOM元素必须有 `slot="creatoros-transcript"` 或 `slot="creatoros-director"`，并有 `data-creatoros-addon`。宿主保持唯一portal target，销毁原生前同步回迁聊天DOM。
+
+`disabled` 只锁原生core与原生弹层；宿主slot、页签、诊断保持可用。`visible: false` 暂停播放并使整面inert。addon键盘/粘贴不属于原生命令。未传workspaceAddons保留旧布局与禁用语义。
+
+七份正式构建文件直接放在本目录，与frontend/public/reference-editors/opencut-classic/native逐字节一致。完整源码707文件；native-from-t1046.patch是对真实上游source.tar.gz的完整标准补丁，实际patch -p1 -F0所得源与归档逐字节一致；旧T1069补丁另存native-from-t1069.historical.patch。
+
+已验证新增4例RED→GREEN、原19例命令/寿命和16例资源回归、类型及生产AST；真实React/slot DOM夹具22项与旧DOM38项；归档重建七份生产输出字节一致。原失败保留verification/t1274。**未验证真实浏览器视觉、GPU像素、AAC/MP4、宿主聊天集成或安装包。**
+
+下文为历史交付说明，当前数据以DELIVERY.json的T1274字段和verification/t1274为准。
+
 # T-1062 当前原生候选
 
 当前source与输出以本次candidate及校验清单为准，真实原命令记录见 VERIFY.md/VERIFICATION.md。宿主18、浏览器视觉、试听与安装尚未执行。

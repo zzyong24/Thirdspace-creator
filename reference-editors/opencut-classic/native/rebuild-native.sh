@@ -24,6 +24,7 @@ case "$2" in
     cd "$source_root/apps/web"
     bun ../../node_modules/typescript/bin/tsc --noEmit --project tsconfig.embedded.json
     bun test src/embedded/__tests__/native-lifecycle.test.ts src/embedded/__tests__/native-command.test.ts src/embedded/__tests__/host-boundary.test.ts
+    bun test src/embedded/__tests__/native-workspace.test.tsx
     # 资源测试使用独立Bun进程，显式fixture不污染原命令回归的模块图。
     bun test src/embedded/__tests__/native-resources.test.ts
     CREATOROS_TEST_TYPESCRIPT_MODULE="$source_root/node_modules/typescript/lib/typescript.js" bun "$script_root/verification/check-process-globals.ts" "$source_root/apps/web/native-dist/native.js"
@@ -33,6 +34,7 @@ case "$2" in
     cd "$source_root"
     bun apps/web/scripts/build-native.mjs --dom-fixture
     CREATOROS_NATIVE_FIXTURE_MODULE="$source_root/apps/web/native-dom-fixture-dist/native.js" bun "$script_root/verification/dom-probe.ts"
+    CREATOROS_NATIVE_FIXTURE_MODULE="$source_root/apps/web/native-dom-fixture-dist/native.js" bun "$script_root/verification/t1274/workspace-dom-probe.ts"
     ;;
   *)
     echo "未知模式: $2" >&2
