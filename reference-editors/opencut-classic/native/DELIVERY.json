@@ -1401,7 +1401,12 @@
         "red-canvas-pool-actual-resolve.log",
         "red-canvas-pool-resolve.log"
       ],
-      "centerOrRenamePrechangeRed": "未取得本轮前改动RED，不补拍历史PASS"
+      "centerOrRenamePrechangeRed": {
+        "origin": "接续旧agent本轮在同worktree执行的原始日志；本agent未重演，不改原字节",
+        "center": "red-dom.log（第三slot实际null）",
+        "rename": "red-rename-dom.log（原工程名input实际null）",
+        "coreLock": "red-core-lock-dom.log（active全部core锁实际false）"
+      }
     },
     "green": {
       "resourceCache": "20pass79assert",
@@ -1439,7 +1444,7 @@
       "green-rename-dom.log": "ed25062e40736d228a93631bb93d6f84311245b32005c748d0f634647d01dc17",
       "old-native.log": "05b2af2b902a3cd744dd682daa159825d5d15304d13eb10fbce864239c734ba6",
       "public-preview.log": "ad2022776a64bc9b463d3216526a0cadf482392fe4c8e545ce148919178cd718",
-      "package-source.py": "cb4f331c5ec3e67fb3932ef5f38665b610b778240c52cca9ca6aaa68ca4e988d",
+      "package-source.py": "8fa0010a25551e68fa1897c32da26f6b02fa64cb1762e99f6c4f466f6bf19c1a",
       "old-dom.log": "0471c486c86ed8acde2b6029785fec9ac3d499806511cdc69c4148988dce4daa",
       "production-reconstruction.json": "cf492e7932aa68efe3bafd12f351cb0ba06ac79e8292e4d2d0f346f62d0345cf",
       "fixture-build-batch.log": "6bfb8f9a3c40b553d84dd2688f1dc1175a40c8db81480b221a27aad9ec4b9786",
@@ -1458,6 +1463,7 @@
       "production-build.log": "c515d24cf7d61b73a9bb395b13e6ea5a0afbeacb6874dde9cd405c24e8b49307",
       "legacy-dom.log": "0471c486c86ed8acde2b6029785fec9ac3d499806511cdc69c4148988dce4daa",
       "format-core-lock.log": "1441000673d9c088d91dc4cd914119e11390855f0a9ee1d8cc1b6c5561daa304",
+      "hash-check-wrong-cwd.log": "a83bdc1337f5eb32d2ed30cdedf3baffcd1aed19c51962ad1f13f54c935bd3b3",
       "type-first.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "regression-final.log": "32a7dd90e37be929b2ec779f81eadb959734d454d68ab53068b0f56681abc1f3",
       "red-rename-dom.log": "de3c5cdaaa2862ff2543a6a020190796ac56dba7ea830d648776d6fbbf80447b",
@@ -1476,6 +1482,7 @@
       "old-workspace.log": "3b82426c7ae1fcdc934033253110543d3cea4d0bfdfb26783fc49ccf87190a1d",
       "rename-addon-dom-probe.ts": "ec97a502a2b96b4ee8615c73002870cd8776a491c66fd2b5bd0883ad86936050",
       "old-resources.log": "015f8ea0304f5e1f596c4d590c4580f6586427874515db5f9890da4e0bbff69d",
+      "hash-check-final.log": "2100e401fcf8afba39f212fbad981a2f37342f86312a3f44f010b9a6b5f31805",
       "preview-slot-dom-probe.ts": "20104d24fe8c4493b3e7b982b816e0057dbd744dc17bf2dcf5c2edcd645a6efc",
       "preview-resources.log": "1d9b5d90730ed62ed6bdcb7f36e33e6252cf86d0681bdfd78d875a744c2e54f0",
       "baseline-fixture-build-final.log": "ebb364de15293ccbe678cc9a917cb8eb3184fea061131c569331781dc5e6b7ec",
