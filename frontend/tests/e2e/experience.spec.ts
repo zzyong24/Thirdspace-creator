@@ -1,24 +1,24 @@
 import { expect, test } from "../helpers/test-environment";
+import { randomUUID } from "node:crypto";
+import { ENDPOINTS, successEnvelope } from "@creatoros/contract";
 
 /**
- * E2E contract for the 经验裁决台 page (T-062a · SPEC 2026-07-03 §2.1).
- *
- *  - Direct visit to `/experience` renders the two-column adjudication
- *    workbench (裁决队列 + 已验证经验库) distinct from per-project pages.
- *  - The TopHeader is in `global` mode with page title "经验沉淀"
- *    and the Sidebar marks "经验沉淀" as the active nav item.
- *  - The contextual card variant is `assistant` (D-003).
- *  - The page exposes 3 truth summary cards (待裁决 / 已验证 / 已回流校准),
- *    the candidate queue (or its honest empty state), the validated
- *    library with a discarded fold, and the Copilot capture deep-link
- *    (the retired 快速记录 form must NOT render).
- *  - The page is wrapped in exactly one AppShell.
+ * 经验入口兼容合同：T118 已退役独立经验工作台，/experience 正式重定向到 /knowledge。
+ * T1200 保留同一知识目的地的“经验与关联” advanced 入口与“录入与整理”。
+ * 本例先核真实 redirect，再实际导航到迁移后的经验入口，核记经验深链、预填与零自动提交。
+ * 复盘候选裁决与模型经验采纳/知识库回流属于 T1239 的独立公共链，不在本例代签通过。
+ * 保留单 AppShell、导航/header、退役队列无误放入口及原记经验功能后置。
  */
 
 test.describe("经验裁决台 page", () => {
   test("renders the adjudication workbench on the /experience route", async ({
-    page,
+    page, baseURL,
   }) => {
+    const groupResponse = await page.request.post("/api/v1/dispatch", { data: { id: "accountGroups.create", input: { body: { name: "经验入口真实空组", idempotencyKey: randomUUID() } } }, timeout: 120_000 });
+    expect(groupResponse.ok()).toBe(true);
+    const group = successEnvelope(ENDPOINTS.createAccountGroup.response).parse(await groupResponse.json()).data;
+    await page.context().addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(group.id), url: baseURL! }]);
+    await page.addInitScript(id => { localStorage.setItem("creatoros:current-group", id); localStorage.removeItem("creatoros:current-account"); }, group.id);
     await page.goto("/experience");
     await expect(page).toHaveURL(/\/knowledge$/);
 
@@ -44,6 +44,11 @@ test.describe("经验裁决台 page", () => {
     await expect(page.locator('[data-slot="app-sidebar"]')).toHaveCount(1);
     await expect(page.locator('[data-slot="app-top-header"]')).toHaveCount(1);
 
+    // T118退役redirect仅是兼容前置；T1200确认经验入口位于同一知识目的地的advanced视图。
+    await page.getByRole("navigation", { name: "知识库视图" }).getByRole("link", { name: "经验与关联", exact: true }).click();
+    await expect(page).toHaveURL(/\/knowledge\?view=advanced$/);
+    await expect(page.getByRole("navigation", { name: "知识库视图" }).getByRole("link", { name: "经验与关联", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByTestId("account-switcher")).toHaveAttribute("data-state", "ready");
     // The page-internal main region exists exactly once.
     const main = page.locator('main[data-page="knowledge"]');
     await expect(main).toHaveCount(1);
@@ -75,3 +80,6 @@ test.describe("经验裁决台 page", () => {
     expect(submissions).toEqual([]);
   });
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 20460000 });

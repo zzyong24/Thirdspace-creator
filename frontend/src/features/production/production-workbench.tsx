@@ -1,4 +1,5 @@
 "use client";
+import {taskRuntimeStatus} from "@/lib/ai-task-runtime";
 import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 
 /**
@@ -73,7 +74,7 @@ import {
   type ProductionStatus,
 } from "./production-flow";
 
-import {pollDelay, materialAdjustmentAttemptId, decisionFailureDisplay, includeExecutionRetryDescendants, readVideoDurationViaElement, readFileText, extractVoiceoverText, writeClipboardText, uploadProductionAsset, type WireAITask, type WireProduction, type WireExecTask, type RenderFlowStatus, type WireMaterialLink} from "./production-resource-operations";
+import {pollDelay, materialAdjustmentAttemptId, decisionFailureDisplay, decisionRuntimeFailureDisplay, includeExecutionRetryDescendants, readVideoDurationViaElement, readFileText, extractVoiceoverText, writeClipboardText, uploadProductionAsset, type WireAITask, type WireProduction, type WireExecTask, type RenderFlowStatus, type WireMaterialLink} from "./production-resource-operations";
 export {includeExecutionRetryDescendants,extractVoiceoverText} from "./production-resource-operations";
 
 export interface ProductionWorkbenchProps {
@@ -175,13 +176,25 @@ function ProductionWorkbenchSession({
     string | null
   >(null);
   const observeDecisionRuntime = React.useCallback((task: WireAITask) => {
+    if (task.id !== decisionsTaskId) return;
     setDecisionRuntime(task);
+    if (task.executionTaskId) {
+      if (taskRuntimeStatus(task) === "failed") {
+        const failure = decisionRuntimeFailureDisplay(task);
+        setDecisionsError(failure.summary);
+        setDecisionsErrorDetail(failure.detail);
+      } else {
+        setDecisionsError(null);
+        setDecisionsErrorDetail(null);
+      }
+      setCopyDecisionErrorStatus("idle");
+    }
     // 只有服务端确认取消后，才重新开放显式发起入口。
     if (task.executionTaskId && task.runtimeStatus === "cancelled") {
       setDecisionsTaskId((current) => current === task.id ? null : current);
       setDecisionsRetryOfTaskId(null);
     }
-  }, []);
+  }, [decisionsTaskId]);
   const observeLegacyDecisionFailure=React.useCallback((id:string,summary:string,detail:string|null)=>{
     setDecisionsError(summary);setDecisionsErrorDetail(detail);setDecisionsRetryOfTaskId(id);setDecisionsTaskId(null);
   },[]);

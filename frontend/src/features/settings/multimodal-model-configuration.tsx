@@ -258,6 +258,7 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
 export function MultimodalModelCard({
   kind,
   state,
+  onAudioPresetOpenChange,
 }: {
   kind:
   | "image"
@@ -268,7 +269,11 @@ export function MultimodalModelCard({
   | "search"
   | "fallback";
   state: MultimodalModelState;
+  onAudioPresetOpenChange?: (open: boolean) => void;
 }) {
+  const audioPresetOpenChangeRef = React.useRef(onAudioPresetOpenChange);
+  React.useLayoutEffect(() => { audioPresetOpenChangeRef.current = onAudioPresetOpenChange; }, [onAudioPresetOpenChange]);
+  React.useEffect(() => () => audioPresetOpenChangeRef.current?.(false), []);
   const meta = MULTIMODAL_META[kind];
   const [provider, setProvider] = React.useState<string>(state.provider);
   const [modelName, setModelName] = React.useState<string>(state.modelName);
@@ -423,6 +428,7 @@ export function MultimodalModelCard({
             <Select
               value={asrPresetId}
               onValueChange={handleSelectAsrPreset}
+              onOpenChange={onAudioPresetOpenChange}
             >
               <SelectTrigger
                 id="multimodal-audio-preset"
@@ -615,7 +621,7 @@ export function MultimodalModelCard({
             {showAudioAdvanced ? "收起高级设置" : "高级设置（自定义供应商）"}
           </button>
         ) : null}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-start sm:justify-between">
           {/* [T-377] 测试连接:按能力走最小真实调用/最便宜鉴权探测(生图/付费搜索会真实
               调用 → 额度提示;生视频只验鉴权不真生成)。 */}
           <TestConnectionButton

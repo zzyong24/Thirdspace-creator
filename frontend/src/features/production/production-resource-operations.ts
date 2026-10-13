@@ -37,6 +37,8 @@ export interface WireAsset {
 }
 
 export interface WireAITask {
+  errorCode?:string|null;
+  errorMessage?:string|null;
   executionTaskId?:string|null;
   runtimeStatus?:string|null;
   id: string;
@@ -48,6 +50,43 @@ export interface WireAITask {
 export interface DecisionFailureDisplay {
   summary: string;
   detail: string | null;
+}
+
+/** SEMANTIC_BOUNDARY_ALLOW: 只投影已回读任务的错误，复用正式诊断producer的纯脱敏规则；无创作判断。
+ * 规则来自 ai-worker/src/runtime/error-diagnostics.ts safeErrorMessage，局部复用避免引入Worker/SDK初始化。
+ * 空字段保持空，不把producer日志兜底unknown error当作用户错误详情。
+ */
+function redactedDecisionDiagnostic(raw: string): string {
+  // SEMANTIC_BOUNDARY_ALLOW: Cookie头和绝对文件路径只作安全移除，不推断内容或创作含义。
+  const singleLine = raw
+    .replace(/(["'])((?:set-)?cookie)\1\s*:\s*(["'])(?:\\.|(?!\3)[^\r\n\\])*\3/gi, "$1$2$1: $3[REDACTED]$3")
+    .replace(/\b((?:set-)?cookie)\s*[:=][^\r\n]*/gi, "$1: [REDACTED]")
+    .replace(/\s+/g, " ").trim();
+  const redacted = singleLine
+    .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [REDACTED]")
+    .replace(/\bsk-[A-Za-z0-9_-]{6,}\b/g, "[REDACTED]")
+    .replace(/https?:\/\/[^\s,;)"']+/gi, "[REDACTED_URL]")
+    .replace(/file:\/\/\/[^\s,;)"']+/gi, "[REDACTED_PATH]")
+    .replace(/(["'])(?:[a-z]:[\\/]|\\\\|\/(?!\/))[^"'\r\n]*\1/gi, "$1[REDACTED_PATH]$1")
+    .replace(/(^|[\s(=:"'])(?:[a-z]:[\\/]|\\\\|\/(?!\/))[^\s,;)"']+/gi, "$1[REDACTED_PATH]")
+    .replace(
+      /((?:api[-_ ]?key|token|secret|password)\s*[:=]\s*)[^\s,;]+/gi,
+      "$1[REDACTED]",
+    )
+    .replace(
+      /((?:model(?:name|id)?|provider|base[-_ ]?url)\s*[:=]\s*)[^\s,;]+/gi,
+      "$1[REDACTED]",
+    );
+  if (!redacted) return "";
+  return redacted.length <= 500
+    ? redacted
+    : `${redacted.slice(0, 500)}…`;
+}
+export function decisionRuntimeFailureDisplay(task: Pick<WireAITask, "errorCode" | "errorMessage">): DecisionFailureDisplay {
+  const code = typeof task.errorCode === "string" ? redactedDecisionDiagnostic(task.errorCode) : "";
+  const message = typeof task.errorMessage === "string" ? redactedDecisionDiagnostic(task.errorMessage) : "";
+  const detail = [code ? `错误代码：${code}` : "", message].filter(Boolean).join("\n") || null;
+  return {summary: detail ? "原分场任务失败，请查看原任务错误并重试。" : "原任务未提供错误详情。", detail};
 }
 
 export function decisionFailureDisplay(raw: string): DecisionFailureDisplay {

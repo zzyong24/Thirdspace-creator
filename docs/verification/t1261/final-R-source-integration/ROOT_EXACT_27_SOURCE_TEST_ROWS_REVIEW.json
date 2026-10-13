@@ -1,0 +1,25 @@
+{
+  "reviewer": "/root",
+  "status": "PASS_SOURCE_ROWS_PREPARED_ONLY",
+  "mapper": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/FINAL_NEXT_PACKAGE_EXACT_READONLY_MAPPER.json",
+  "mapperSha256": "685e781528fd9e268d702cb8875ebbcf28e96386d98dfabcbb59567432bfb957",
+  "rootActualReferenceAudit": "/private/tmp/t1246-root-next-package-mapper-audit-w1flievr/ACTUAL_REFERENCE_AUDIT.json",
+  "distinctRefsVerified": 99,
+  "sourceCandidateAndFrozenRRefsUnchanged": true,
+  "controlOnlyMismatches": [
+    "BACKLOG.md",
+    "orchestrator/events.ndjson"
+  ],
+  "controlsAction": "原控制面独立变化保留，非27源补丁写集，不能整copy或重哈希替换旧回执",
+  "rows": 27,
+  "sourceToolRows": 11,
+  "testRows": 16,
+  "actualRootReads": "11产品/driver全部精确窄增量此前已读；4个d195原测试本轮git show全文；9浏览器校准此前逐diff原消费者独读；19 public portable只机械import路径反向恢复其原获审断言",
+  "sourceCodeReview": "PASS_EXACT_MAPPER_SOURCE_ROWS",
+  "applyOrBuild": "NOT_RUN_WAIT_OLD_R_BORROWED_PI_PHASES_FULL_CLOSURE",
+  "nextRequired": "追加T1271两源及完整四同域测试窄增量、原14最新公共合同/真实期限观察；精确正式合入后normal类型/门及45/basic+11worker同HEAD重建、新包校验和真实完整E2E",
+  "inventory": "R108/425保持，不能单copy Main109/428/T1270/T1272夹具",
+  "oldPackageActualScope": "旧fd2唯一包保留，old50c与Downloads重复包已清理；旧记录不改，旧物理App已回收，新包尚未生成",
+  "nativeApp": "NOT_AUTHORIZED",
+  "noAllFeaturePass": true
+}

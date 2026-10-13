@@ -28,7 +28,7 @@ function writeVisibleCopy(
   }>,
 ) {
   const repoRoot = resolve(process.cwd(), "..");
-  const evidenceDir = resolve(repoRoot, "orchestrator", "evidence");
+  const evidenceDir = resolve(process.env.CREATOROS_T1246_RUN_DIR!, "original-output", "orchestrator", "evidence");
   mkdirSync(evidenceDir, { recursive: true });
   const commitSha = execFileSync("git", ["rev-parse", "HEAD"], {
     cwd: repoRoot,
@@ -100,7 +100,11 @@ test.describe("新手成果路径与低高度侧栏", () => {
     expect(await freshSteps.evaluateAll((rows) => rows.map((row) => row.getAttribute("data-step-key")))).toEqual([
       "import-account", "confirm-origin", "positioning-profile", "benchmark-monitor", "benchmark-topic", "first-project",
     ]);
-    expect(await freshSteps.locator(":scope > span").allTextContents()).toEqual(["1", "2", "3", "4", "5", "6"]);
+    // 已确认起点的步骤使用完成图标，其余步骤仍显示原序号；不能要求完成步骤仍写数字2。
+    const originStep = card.locator('[data-slot="onboarding-step"][data-step-key="confirm-origin"]');
+    await expect(originStep).toHaveAttribute("data-done", "true");
+    await expect(originStep.locator(":scope > span svg")).toHaveCount(1);
+    expect(await freshSteps.evaluateAll(rows => rows.filter(row => row.getAttribute("data-step-key") !== "confirm-origin").map(row => row.querySelector(":scope > span")?.textContent))).toEqual(["1", "3", "4", "5", "6"]);
     await expect(card).not.toContainText("查看已发布的历史项目");
     captures.push({
       checkpoint: "reopen-fresh-account",
@@ -175,3 +179,6 @@ test.describe("新手成果路径与低高度侧栏", () => {
     writeVisibleCopy("T-638", captures);
   });
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 37860000 });

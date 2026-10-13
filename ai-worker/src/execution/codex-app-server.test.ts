@@ -13,7 +13,7 @@ describe("T-1044 Codex 原生接口权限边界",()=>{
  });
  it("后续turn只由宿主构造，不接模型的环境、目录、权限升级",()=>{
   const thread=codexThreadParameters('/tmp/private-task',[{name:'read_project',description:'读取已授权项目',inputSchema:{type:'object'}}]);
-  expect(thread).toMatchObject({environments:[],approvalPolicy:'never',sandbox:'read-only',ephemeral:false});
+  expect(thread).toMatchObject({environments:[],approvalPolicy:'never',sandbox:'read-only',ephemeral:true});
   const turn=codexTurnParameters('thread-real','任务', {environments:['full'],additionalDirectories:['/'],permissionProfile:'danger'} as never);
   expect(turn).toEqual({threadId:'thread-real',input:[{type:'text',text:'任务'}]});
  });

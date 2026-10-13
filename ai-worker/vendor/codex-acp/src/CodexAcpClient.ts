@@ -725,6 +725,7 @@ export class CodexAcpClient {
             modelProvider: this.getModelProvider(),
             cwd: request.cwd,
             ...(this.creatorOsPolicy === null ? {} : {
+                ephemeral: true,
                 approvalPolicy: "on-request" as const,
                 approvalsReviewer: "user" as const,
                 sandbox: "read-only" as const,

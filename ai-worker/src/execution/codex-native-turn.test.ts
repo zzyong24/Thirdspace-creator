@@ -25,6 +25,7 @@ it('线程预备和回合入场都先持久，再接受实际ID与动态工具�
  expect(f.callbacks.onTool).toHaveBeenCalledTimes(1);
  await f.rpc.onNotification('turn/completed',{threadId:'thread-actual',turn:{id:'turn-actual',status:'completed',items:[{type:'agentMessage',phase:'final_answer',text:'完成'}]}});
  expect(await running).toMatchObject({sessionId:'thread-actual',providerTurnId:'turn-actual',text:'完成',usage:null});
+ expect(f.rpc.request.mock.calls.find((call:any)=>call[0]==='thread/start')?.[1]).toMatchObject({ephemeral:true,cwd:'/tmp/owned-task',sandbox:'read-only'});
 });
 it('预备回执未保存不能启动模型；不接受原生审批和伪造用户回复',async()=>{
  const f=fixture();f.callbacks.onThread.mockRejectedValueOnce(Error('no receipt'));
@@ -135,4 +136,11 @@ describe("partial必需数组协议族" ,()=>{
 const T='fixture-thread',V='fixture-turn',message=(text:string,phase='final_answer')=>({id:'same-message',type:'agentMessage',phase,text});
 function protocolItCase(name:string,view:string,items:any,known:any,readItem?:any){protocolIt(name,async()=>{let ready!:()=>void;const admitted=new Promise<void>(r=>ready=r),calls:any[]=[],rpc:any={request:async(method:string,params:unknown)=>{calls.push({method,params});if(method==='thread/start')return {thread:{id:T}};if(method==='mcpServerStatus/list')return {data:[]};if(method==='turn/start')return {turn:{id:V}};if(method==='thread/read')return {thread:{id:T,turns:[{id:V,status:'completed',itemsView:'full',items:[readItem]}]}};throw Error(method);}};const running=run({rpc,mcpNames:[],cwd:tmpdir(),prompt:'fixture原唯一提示',tools:[],signal:new AbortController().signal,onThread:async()=>{},onAdmission:async()=>{},onTurn:async()=>ready(),onTool:async()=>{throw Error('不允许重放');}});const result:Promise<any>=running.then(value=>({value}),error=>({error}));await admitted;await rpc.onNotification('item/completed',{threadId:T,turnId:V,completedAtMs:1,item:known});await rpc.onNotification('turn/completed',{threadId:T,turn:{id:V,status:'completed',itemsView:view,items}});const out=await result;assert.equal(out.error?.code,'CODEX_TURN_RESULT_UNKNOWN','非法full或冲突history必须UNKNOWN，不得完成');assert.equal(calls.filter((x:any)=>x.method==='turn/start').length,1);assert.equal(calls.filter((x:any)=>x.method==='thread/read').length,0);});}
 protocolItCase('partial notLoaded required items null必须UNKNOWN','notLoaded',null,message('完成事件原正文'));protocolItCase('partial summary required items null必须UNKNOWN','summary',null,message('完成事件原正文'));
+});
+
+it('T1271 临时原会话已丢失时只读原ID，不能新建线程或回合',async()=>{
+ const f=fixture();f.rpc.request.mockRejectedValueOnce(new Error('原临时会话已不存在'));
+ await expect(recoverCodexNativeTurn(f.rpc,'original-ephemeral-thread','original-turn')).rejects.toThrow('原临时会话已不存在');
+ expect(f.rpc.request.mock.calls).toEqual([['thread/read',{threadId:'original-ephemeral-thread',includeTurns:true}]]);
+ expect(f.callbacks.onTool).not.toHaveBeenCalled();
 });

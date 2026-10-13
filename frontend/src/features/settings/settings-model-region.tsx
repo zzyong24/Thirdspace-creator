@@ -22,7 +22,14 @@ import { useAssistantEngine } from "@/features/copilot/use-assistant-engine";
 export function SettingsModelRegion({ viewModel, modelAuthority, highlight }: { viewModel: SettingsViewModel; modelAuthority?: ModelAuthorityState; highlight: string | null }) {
   const {engine, preference}=useAssistantEngine();
   const usesCodex=preference.ready&&engine==="codex";
-  const showIndependentModels=preference.ready&&!usesCodex;
+  // SEMANTIC_BOUNDARY_ALLOW: 显式菜单打开时只保存展示布局，不决定模型或执行资格。
+  const [asrMenuPresentation, setAsrMenuPresentation] = React.useState<{ ready: boolean; engine: typeof engine } | null>(null);
+  const onAudioPresetOpenChange = React.useCallback((open: boolean) => {
+    setAsrMenuPresentation((current) => open ? current ?? { ready: preference.ready, engine } : null);
+  }, [preference.ready, engine]);
+  const presentation = asrMenuPresentation ?? { ready: preference.ready, engine };
+  const presentationUsesCodex = presentation.ready && presentation.engine === "codex";
+  const showIndependentModels = presentation.ready && !presentationUsesCodex;
   const retainedServiceIds=new Set(Object.entries(modelAuthority?.capabilities??{})
     .filter(([capability])=>['transcribe.audio','video.generate','knowledge.search.embed'].includes(capability))
     .flatMap(([,state])=>state?.serviceId?[state.serviceId]:[]));
@@ -70,7 +77,7 @@ export function SettingsModelRegion({ viewModel, modelAuthority, highlight }: { 
       className="flex flex-col gap-card-gap"
     >
       <AssistantEngineCard />
-      {usesCodex ? <div data-slot="codex-model-capabilities" className="rounded-xl border border-brand/25 bg-brand/5 px-4 py-3">
+      {presentationUsesCodex ? <div data-slot="codex-model-capabilities" className="rounded-xl border border-brand/25 bg-brand/5 px-4 py-3">
         <p className="text-sm font-semibold text-foreground">文本创作、图片理解和生图由本地 Codex 执行</p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。</p>
       </div> : showIndependentModels && (modelAuthority?.authority === "channel" ||
@@ -163,6 +170,7 @@ export function SettingsModelRegion({ viewModel, modelAuthority, highlight }: { 
             key={`audio:${JSON.stringify(viewModel.multimodalModels.audio)}`}
             kind="audio"
             state={viewModel.multimodalModels.audio}
+            onAudioPresetOpenChange={onAudioPresetOpenChange}
           />,
         )}
       </div>

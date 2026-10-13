@@ -1,0 +1,61 @@
+{
+  "reviewer": "/root",
+  "verdict": "PASS_PREPARED_EXACT_TWO_PRODUCTS_FOUR_TESTS",
+  "rows": [
+    {
+      "relative": "ai-worker/src/execution/codex-app-server.ts",
+      "beforeSha256": "2eb2848449e4bff3689b207258b5910521523b5828035c20aa752b5616e2d674",
+      "candidate": "/private/tmp/t1271-completed-session-exact-merge-readonly-uk1tbbu4/candidate/ai-worker/src/execution/codex-app-server.ts",
+      "candidateSha256": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a",
+      "category": "product"
+    },
+    {
+      "relative": "ai-worker/vendor/codex-acp/src/CodexAcpClient.ts",
+      "beforeSha256": "c7a7bc5d3ad2700309ea8fea69bc2a73c26b28f94ee02e66b66bfcb3950c91e6",
+      "candidate": "/private/tmp/t1271-completed-session-exact-merge-readonly-uk1tbbu4/candidate/ai-worker/vendor/codex-acp/src/CodexAcpClient.ts",
+      "candidateSha256": "ce295df842535835fa424f0cb8c3bb81d15624554246b9bf3c8150ba6f1b920a",
+      "category": "product"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-app-server.test.ts",
+      "beforeSha256": "281b21e5ae02f4b616c7f20182e1b0811946be8bd93960c049407f7b95a37641",
+      "candidate": "/private/tmp/t1271-R-preserving-three-tests-8_l62yjk/candidate/ai-worker/src/execution/codex-app-server.test.ts",
+      "candidateSha256": "fdd294ba3709b4a5bb157ea04d27610bd48f3be5e2e8164f1a93adf626e532c7",
+      "category": "test"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-acp-policy.test.ts",
+      "beforeSha256": "3c70e3f834542c2bec32fbf1e52772473de202e2fbc8c68290ef4e246cb8b455",
+      "candidate": "/private/tmp/t1271-R-preserving-three-tests-8_l62yjk/candidate/ai-worker/src/execution/codex-acp-policy.test.ts",
+      "candidateSha256": "f89945251afd9e67bde2f44a0c51970d177d7531deaf21fc77b54cd505eba9ca",
+      "category": "test"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-native-turn.test.ts",
+      "beforeSha256": "80f24cdea47c14ba450fa96885cb3f1280ab9e0ff71a36723924236326e2c9b4",
+      "candidate": "/private/tmp/t1271-R-preserving-three-tests-8_l62yjk/candidate/ai-worker/src/execution/codex-native-turn.test.ts",
+      "candidateSha256": "73a4c247e54c0154e3d6c92b65d00bff2dba772b1a63abc5aa1bb4babd149c04",
+      "category": "test"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-acp-worker-run.test.ts",
+      "beforeSha256": "58a515bd31d20c130da4587112bd0f15e2a32d98d4a3b373f0355cde918efefa",
+      "candidate": "/private/tmp/t1271-R-fourth-worker-test-increment-lokpi7pm/candidate/ai-worker/src/execution/codex-acp-worker-run.test.ts",
+      "candidateSha256": "3ac4d388d7958bce323db4822f9e464100ecae227f2a7ac6103054711bd510e9",
+      "category": "test"
+    }
+  ],
+  "sourceCommit": "2ab097673bdf7bc1b86f2322c093ca7576d2ec66",
+  "originalSpecRev": "b5247eee4711",
+  "actuallyRead": "SPEC、正式独立初评、独立code/test原报告，两产品唯一hunk、原三test完整新增差分及第四worker恢复/丢临时session增量全部全文",
+  "RSourceStillFrozenDb4669": true,
+  "RAllOriginalBytesInverseRestored": true,
+  "noPermissionScopeBudgetUsageOrDatabaseChange": true,
+  "genericACPDefaultPreserved": true,
+  "existingSettledReceiptAndUnknownZeroReplayOriginalAssertsPreserved": true,
+  "sourceAndTestsApplied": "NOT_RUN_WAIT_OLD_R_PI_BORROW_CLOSED",
+  "normalCurrentRTestsTypesBuild": "NOT_RUN",
+  "oldShared100AndOwned31": "保不同scope原结果及旧RED/75P1F，不能代新R通过",
+  "globalForeignT1271ReconcileOrTaskComplete": "未追认、原会话未complete不洗状态",
+  "nativeAppPersonalDesktopRealModel": "NOT_VERIFIED_HERE"
+}

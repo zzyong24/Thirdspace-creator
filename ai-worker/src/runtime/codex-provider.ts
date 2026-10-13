@@ -21,7 +21,10 @@ export function codexPrompt(request:LanguageModelV4CallOptions){
    images.push({url});return {type:'image',index:images.length-1};
   })};
  });
- return {prompt:JSON.stringify(prompt),images};
+ // SEMANTIC_BOUNDARY_ALLOW: 仅序列化原输出协议，保留完整schema和业务验证；不选择创作内容。
+ const compiledPrompt=JSON.stringify(prompt),format=request.responseFormat;
+ const jsonGuidance=format?.type==='json'?'\n\n【原结构化输出协议】\n只输出合法JSON，不要Markdown代码块或解释。'+(format.schema===undefined?'':'\n严格遵守以下原完整JSON Schema，字段可选性、默认值及开放键以它为准：\n'+JSON.stringify(format.schema)):'';
+ return {prompt:compiledPrompt+jsonGuidance,images};
 }
 export function createCodexProviderModel(spec:CodexModelSpec):LanguageModelV4{
  return {specificationVersion:'v4',provider:'codex-app-server',modelId:spec.requestedModel??'codex-default',supportedUrls:{},
@@ -41,7 +44,6 @@ export function createCodexProviderModel(spec:CodexModelSpec):LanguageModelV4{
     const result=authority.recover?
      await recoverCodexNativeTurn(rpc,binding?.threadId??'',binding?.turnId):
      await runCodexNativeTurn({rpc,mcpNames,cwd,signal,tools:[],...input,...(spec.requestedModel?{model:spec.requestedModel}:{}),
-      ...(request.responseFormat?.type==='json'&&request.responseFormat.schema?{outputSchema:request.responseFormat.schema as Record<string,unknown>} : {}),
       onThread:async threadId=>{await call('bindCodexCall',{callId:authority.callId,threadId},signal);},onAdmission:async()=>{},
       onTurn:async turnId=>{await call('bindCodexCall',{callId:authority.callId,turnId},signal);},onUsage:async usage=>{const bound=await call('bindCodexCall',{callId:authority.callId,observedUsage:{inputTokens:usage.inputTokens??undefined,outputTokens:usage.outputTokens??undefined,totalTokens:usage.totalTokens??undefined}}) as {budgetExceeded?:boolean};return bound.budgetExceeded===true||(request.maxOutputTokens!==undefined&&usage.outputTokens!==null&&usage.outputTokens>request.maxOutputTokens);},onTool:async()=>{throw new CodexHostError('CODEX_TOOL_UNAVAILABLE');}});
     if(result.images?.length)throw new CodexHostError('CODEX_TEXT_RESULT_INVALID');

@@ -6,7 +6,7 @@ import {
   sign,
   type KeyObject,
 } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, promises as fsPromises } from "node:fs";
 import {
   mkdtemp,
   readFile,
@@ -18,6 +18,24 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// T1259：保留真实文件写/加密/rename/回读，仅重现Windows目录fsync权限语义。
+const diskFault = { windowsDirectorySync: false, fileSync: false, directorySyncCalls: 0, fileSyncCalls: 0 };
+async function interceptDiskSync(directory: string) {
+  const probe = await fsPromises.open(join(directory, ".sync-probe"), "wx", 0o600);
+  const prototype = Object.getPrototypeOf(probe) as typeof probe;
+  const original = prototype.sync;
+  await probe.close();
+  const spy = vi.spyOn(prototype, "sync").mockImplementation(async function (this: typeof probe) {
+    const directory = (await this.stat()).isDirectory();
+    if (directory) diskFault.directorySyncCalls++;
+    else diskFault.fileSyncCalls++;
+    if ((directory && diskFault.windowsDirectorySync) || (!directory && diskFault.fileSync))
+      throw Object.assign(new Error("隔离模拟fsync拒绝"), { code: "EPERM", syscall: "fsync" });
+    return original.call(this);
+  });
+  return () => spy.mockRestore();
+}
 
 import { DEFAULT_LICENSE_BASE_URL } from "./activation-config";
 import {
@@ -297,6 +315,75 @@ describe("T-575 config.pull Creator consumer", () => {
       });
     });
   }
+
+  it("Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "t1259-config-win-"));
+    const restoreDisk = await interceptDiskSync(directory);
+    const descriptor = Object.getOwnPropertyDescriptor(process, "platform")!;
+    const encrypted = new EncryptedClientConfigStore(join(directory, ".channel-model-config"), Buffer.alloc(32, 19));
+    const bundle = signedBundle(growthKeys.privateKey);
+    const refresh = (fetchImpl: typeof fetch) => refreshClientConfig({
+      env: env(), now: () => NOW, nonce: () => "nonce-client-config-0001",
+      fetchImpl, readVerdict: async () => ({ state: "ready", verdict }), store: encrypted,
+    });
+    Object.defineProperty(process, "platform", { ...descriptor, value: "win32" });
+    diskFault.windowsDirectorySync = true;
+    diskFault.directorySyncCalls = 0;
+    diskFault.fileSyncCalls = 0;
+    try {
+      await expect(refresh(successfulFetch(bundle))).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+      expect(await encrypted.load()).toMatchObject({ state: "channel", bundle });
+      const unchangedBase = successfulFetch(bundle);
+      const unchanged: typeof fetch = async (input, init) => String(input).startsWith(GROWTH_ORIGIN)
+        ? new Response(null, { status: 304, headers: {
+          etag: `"${bundle.bundleDigest}"`, "cache-control": "private, no-store",
+          "x-config-bundle-version": String(bundle.bundleVersion), "x-config-key-id": bundle.keyId,
+          "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
+        } }) : unchangedBase(input, init);
+      await expect(refresh(unchanged)).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+      const invalidBase = successfulFetch(bundle);
+      const invalid: typeof fetch = async (input, init) => String(input).startsWith(GROWTH_ORIGIN)
+        ? new Response("not-json", { status: 200, headers: {
+          "cache-control": "private, no-store", "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
+        } }) : invalidBase(input, init);
+      await expect(refresh(invalid)).resolves.toMatchObject({ authority: "local", outcome: "security_error" });
+      expect(await encrypted.load()).toMatchObject({ state: "quarantined", outcome: "security_error" });
+      expect(diskFault.fileSyncCalls).toBe(3);
+      expect(diskFault.directorySyncCalls).toBe(0);
+      expect(await readFile(join(directory, ".channel-model-config"), "utf8")).toMatch(/^enc:v1:/);
+    } finally {
+      restoreDisk();
+      Object.defineProperty(process, "platform", descriptor);
+      diskFault.windowsDirectorySync = false;
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  it("POSIX目录fsync保留，Windows真实文件sync失败仍拒绝配置成功", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "t1259-config-disk-"));
+    const restoreDisk = await interceptDiskSync(directory);
+    const descriptor = Object.getOwnPropertyDescriptor(process, "platform")!;
+    const encrypted = new EncryptedClientConfigStore(join(directory, ".channel-model-config"), Buffer.alloc(32, 20));
+    const record: ClientConfigCacheRecord = { state: "local", outcome: "not_configured", checkedAt: NOW.toISOString(), bundle: null, channel: null };
+    diskFault.directorySyncCalls = 0;
+    try {
+      Object.defineProperty(process, "platform", { ...descriptor, value: "darwin" });
+      await encrypted.save(record);
+      expect(diskFault.directorySyncCalls).toBe(1);
+      diskFault.windowsDirectorySync = true;
+      await expect(encrypted.save(record)).rejects.toMatchObject({ code: "EPERM", syscall: "fsync" });
+      diskFault.windowsDirectorySync = false;
+      Object.defineProperty(process, "platform", { ...descriptor, value: "win32" });
+      diskFault.fileSync = true;
+      await expect(encrypted.save(record)).rejects.toMatchObject({ code: "EPERM", syscall: "fsync" });
+    } finally {
+      restoreDisk();
+      Object.defineProperty(process, "platform", descriptor);
+      diskFault.fileSync = false;
+      diskFault.windowsDirectorySync = false;
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 120_000);
 
   it("拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影", async () => {
     const fetchImpl = successfulFetch();

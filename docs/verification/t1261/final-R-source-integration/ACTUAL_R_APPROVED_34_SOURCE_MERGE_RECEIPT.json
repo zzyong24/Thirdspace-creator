@@ -1,0 +1,225 @@
+{
+  "actualUTC": "2026-10-13T11:00:38.414281+00:00",
+  "originalHEAD": "db4669d0975d15c3c979c68fec93e78909d39e90",
+  "approvedRowsApplied": [
+    {
+      "relative": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "before": "1cd4ced2481f5f4b69b757fa077d1a502924554dff77d41bd257cb9f017eac9f",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/ai-worker/src/runtime/browser/chromium-guard.ts",
+      "after": "c94e7782f73abcb16e1c7eb36e02f9138f206fc97fa3eb501d820867367edb9f"
+    },
+    {
+      "relative": "frontend/src/server/activation/client-config.server.ts",
+      "before": "d7236b0c4424af6f1205707b0ee75b7b59414c09b0a879369374541eded50dbd",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/server/activation/client-config.server.ts",
+      "after": "d48c6f8c1c9b216d192a69a88945cd66cbffc1ff1ec877f73abb846206604ae8"
+    },
+    {
+      "relative": "docs/verification/t1246/round-3/new-v3/source/fixtures/codex-protocol.cjs",
+      "before": "c2101c42afd8703c97fedd4867c32057db6fa9b77cc0682f697b0d668bf93453",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/docs/verification/t1246/round-3/new-v3/source/fixtures/codex-protocol.cjs",
+      "after": "c5126993ebe48710984d92a1f804febd21315a5761b14b4c6960b397081fb517"
+    },
+    {
+      "relative": "docs/verification/t1246/round-3/new-v3/driver/launch.cjs",
+      "before": "27c789896bd1424636e5c9078e9c0c9d45546771961cd9385d8763727892cb62",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/docs/verification/t1246/round-3/new-v3/driver/launch.cjs",
+      "after": "9b5fda27c2aba7f576dad5b6f1a6a9459657c4475b6adc50bbe2ee8f7e78daca"
+    },
+    {
+      "relative": "ai-worker/src/runtime/codex-provider.ts",
+      "before": "d77b3c1d4173eb3a8825a4e7fbc507cc3c9f3a7288e277c55ce8b156fa7cc117",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/ai-worker/src/runtime/codex-provider.ts",
+      "after": "50599c81d3914b5da122aad950cf52464f70d608134c4e59e09ba37eed0fe7ec"
+    },
+    {
+      "relative": "frontend/src/features/settings/settings-model-region.tsx",
+      "before": "8df4495477a0a336def085c2f0562cf7fe6243aff89b6ff71f80737fd2add9e8",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/features/settings/settings-model-region.tsx",
+      "after": "6118d901a5feb4b5174daab06e2b84e9d04a61f25f6218c72533f1e47c3e0e8d"
+    },
+    {
+      "relative": "frontend/src/features/settings/multimodal-model-configuration.tsx",
+      "before": "7171eec9d567ed316226612f6bc9c973ee6acf492ddd69240fb777802576130d",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/features/settings/multimodal-model-configuration.tsx",
+      "after": "8fad25f246df1071cddcdc4cb29c674e67cbf078bf3d50b11be050eb081615e4"
+    },
+    {
+      "relative": "docs/verification/t1246/round-3/new-v3/source/e2e/pi-support.ts",
+      "before": "967f8c4acef03cacc7121424643821bdea06cbadc7086cc59726cef54c87624c",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/docs/verification/t1246/round-3/new-v3/source/e2e/pi-support.ts",
+      "after": "91da29549d96c63159af636e6d3741d7a4f9b452ebbdae8ec98730dbd23b068b"
+    },
+    {
+      "relative": "frontend/src/features/production/production-workbench.tsx",
+      "before": "627454cfbd3f369f10eb0ab2e2568598f4bde01003d9adc1b873bd01c8a96d89",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/features/production/production-workbench.tsx",
+      "after": "711d6b4d1ee9db65fab11adb0a7a64d3d621bb15da36e0129d24521d10f93a3b"
+    },
+    {
+      "relative": "frontend/src/features/production/production-resource-operations.ts",
+      "before": "6f69f6a999f937db7d8a1b05a28549f62a10c0d8c0ceacbfaf33407284565071",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/features/production/production-resource-operations.ts",
+      "after": "0771481b7ef6971733b09257d85dfb76e2537c3ee73da1d84bcf29564a7c0fee"
+    },
+    {
+      "relative": "frontend/src/features/production/use-video-decision-task.ts",
+      "before": "9a9f5eb9a17c39e0f01ddae7dcc113bd46aeae3dc8a0854765a40097b7a29de0",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/features/production/use-video-decision-task.ts",
+      "after": "e143ae8dbfea8039c4ff6300cc862a9e3487c7b175baf485c042ed522fb0f510"
+    },
+    {
+      "relative": "ai-worker/src/runtime/browser/chromium-guard-close-order.test.ts",
+      "before": null,
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/ai-worker/src/runtime/browser/chromium-guard-close-order.test.ts",
+      "after": "5708b9a56fbfff15ab8d21824b4dadc281575a12c19084b288b45abc30633264"
+    },
+    {
+      "relative": "frontend/src/server/activation/client-config.server.test.ts",
+      "before": "3b14e5f1547bc81e59b275418a660337babe43cf8ae0c0eeb75602c7179eb7d9",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/server/activation/client-config.server.test.ts",
+      "after": "8ff527b94a91be2bab57ff7769e51e2d30305fdb67cd11686ceeb9d8749bbed7"
+    },
+    {
+      "relative": "frontend/src/server/ingestion/binding-profile-close.integration.test.ts",
+      "before": null,
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/server/ingestion/binding-profile-close.integration.test.ts",
+      "after": "13f309e90e25022305be6d6a2738567c95030d1d9e941ea11c4884c42f8dc3c8"
+    },
+    {
+      "relative": "frontend/src/server/ingestion/chromium-guard.test.ts",
+      "before": "13404c74612389cb91b684c09aedd7d480b1a5597336ec7b4c32cbe5743538b6",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/server/ingestion/chromium-guard.test.ts",
+      "after": "a66a16633843e86de7ab39c9f5fceacd2b421a3eb99fd7ff6a2f72f3054ed8c8"
+    },
+    {
+      "relative": "ai-worker/src/runtime/codex-provider-json-output.public.test.ts",
+      "before": null,
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/ai-worker/src/runtime/codex-provider-json-output.public.test.ts",
+      "after": "70fcc695395c24a3f06264558a6a0307952a22587460940975124a4e35c583f4"
+    },
+    {
+      "relative": "frontend/src/features/production/use-video-decision-task.public.test.tsx",
+      "before": null,
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/features/production/use-video-decision-task.public.test.tsx",
+      "after": "4b49ef08ac1f48854cced98aac5171e6e1a8769dcc7dc075a949706353e8db96"
+    },
+    {
+      "relative": "frontend/src/features/production/production-workbench.test.tsx",
+      "before": "7bc60346c7479fbcf385fce213dfbe0b83b74ed1eb1f0e184e9511e95c80818c",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/src/features/production/production-workbench.test.tsx",
+      "after": "78c3a05296e354afbef655dce9fb4a1a701f53bdda0bee313ea47d1dc0705eff"
+    },
+    {
+      "relative": "frontend/tests/e2e/ai-copilot.spec.ts",
+      "before": "ee1081b55fa67d5f5dc96322685b46851cc4f239b8c7bd6cb168baea3c1c8d2a",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/ai-copilot.spec.ts",
+      "after": "1bfcf36d67eedb41ff37732d4a3d396895e404fd2d7f8795677b5513190c8701"
+    },
+    {
+      "relative": "frontend/tests/e2e/all-routes.spec.ts",
+      "before": "48cdddad1504ab12b38af1c48e3e6ae19de61a2e20478724ef229a01ad6ed9dc",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/all-routes.spec.ts",
+      "after": "b50f22b3ccfe85d6e5e4ac7117d7ad377aba53094ebd5a28df940651d03432c2"
+    },
+    {
+      "relative": "frontend/tests/e2e/experience.spec.ts",
+      "before": "c6710f3e0f6a9df0c4f07cc4f0e69c8baa2514c532033d7c1d7bc6654e3dc682",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/experience.spec.ts",
+      "after": "b4cb70e99f25554646ccb94acae69ccc59d907ccc783c5a07bd6424ffcc6a113"
+    },
+    {
+      "relative": "frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts",
+      "before": "7d81d7ee70f6bc3767e2582f8ef6847d8692ad59d27107895d9230072af6d937",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts",
+      "after": "5de4baf3c4f20fcbbb3fa86da7a15caa8b05dbe2c8bdb3f03bcf25f2fcb93ce8"
+    },
+    {
+      "relative": "frontend/tests/e2e/production-broll-remove.spec.ts",
+      "before": "049b53cdc4a14ef91d369273bc7ecf187890b3894381acbc57203eb0785ba3ef",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/production-broll-remove.spec.ts",
+      "after": "934cdf53c797c486814706140e5659a1ceaac7aaa66dc36b1d46a351b491b144"
+    },
+    {
+      "relative": "frontend/tests/e2e/publishing-center.spec.ts",
+      "before": "c4acc22f735ae02fbe147c7167f9bc48dc162d1d2af3518003d95af964e3acf3",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/publishing-center.spec.ts",
+      "after": "1a77cc6ad921c990a6aef984952f0a8f4d4e78521ed6e0044484235bfacb8a9b"
+    },
+    {
+      "relative": "frontend/tests/e2e/search.spec.ts",
+      "before": "598955baac6d7b3527f83617a79a48c7350135a5242f2bd4cb903f3fb205cf7b",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/search.spec.ts",
+      "after": "2813241447f3f6c6eb1ae495b42560e37e0a0b2dacbdca167b4b84081fa6ad92"
+    },
+    {
+      "relative": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "before": "68300389f35d5a682daa8195fd4e100c5cc5aa46b99ee711cceb0b4acd5f27e5",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "after": "c0dbf1673c900dd4a185db522a45a3ec18a5e1485654463472e82950f9a68b5b"
+    },
+    {
+      "relative": "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+      "before": "9cab769242f140bd5c48f6b6487c364b615f9f56f67b027170df103c70b69c2d",
+      "candidate": "/private/tmp/t1246-final-eleven-source-next-package-readonly-7p1u0vr1/candidate/frontend/tests/e2e/wechat-article-workbench.spec.ts",
+      "after": "5c0fddccc29ef99e2bdb9972786eb7fb28903d131661adf056168f3264099fb6"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-app-server.ts",
+      "before": "2eb2848449e4bff3689b207258b5910521523b5828035c20aa752b5616e2d674",
+      "candidate": "/private/tmp/t1271-completed-session-exact-merge-readonly-uk1tbbu4/candidate/ai-worker/src/execution/codex-app-server.ts",
+      "after": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a"
+    },
+    {
+      "relative": "ai-worker/vendor/codex-acp/src/CodexAcpClient.ts",
+      "before": "c7a7bc5d3ad2700309ea8fea69bc2a73c26b28f94ee02e66b66bfcb3950c91e6",
+      "candidate": "/private/tmp/t1271-completed-session-exact-merge-readonly-uk1tbbu4/candidate/ai-worker/vendor/codex-acp/src/CodexAcpClient.ts",
+      "after": "ce295df842535835fa424f0cb8c3bb81d15624554246b9bf3c8150ba6f1b920a"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-app-server.test.ts",
+      "before": "281b21e5ae02f4b616c7f20182e1b0811946be8bd93960c049407f7b95a37641",
+      "candidate": "/private/tmp/t1271-R-preserving-three-tests-8_l62yjk/candidate/ai-worker/src/execution/codex-app-server.test.ts",
+      "after": "fdd294ba3709b4a5bb157ea04d27610bd48f3be5e2e8164f1a93adf626e532c7"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-acp-policy.test.ts",
+      "before": "3c70e3f834542c2bec32fbf1e52772473de202e2fbc8c68290ef4e246cb8b455",
+      "candidate": "/private/tmp/t1271-R-preserving-three-tests-8_l62yjk/candidate/ai-worker/src/execution/codex-acp-policy.test.ts",
+      "after": "f89945251afd9e67bde2f44a0c51970d177d7531deaf21fc77b54cd505eba9ca"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-native-turn.test.ts",
+      "before": "80f24cdea47c14ba450fa96885cb3f1280ab9e0ff71a36723924236326e2c9b4",
+      "candidate": "/private/tmp/t1271-R-preserving-three-tests-8_l62yjk/candidate/ai-worker/src/execution/codex-native-turn.test.ts",
+      "after": "73a4c247e54c0154e3d6c92b65d00bff2dba772b1a63abc5aa1bb4babd149c04"
+    },
+    {
+      "relative": "ai-worker/src/execution/codex-acp-worker-run.test.ts",
+      "before": "58a515bd31d20c130da4587112bd0f15e2a32d98d4a3b373f0355cde918efefa",
+      "candidate": "/private/tmp/t1271-R-fourth-worker-test-increment-lokpi7pm/candidate/ai-worker/src/execution/codex-acp-worker-run.test.ts",
+      "after": "3ac4d388d7958bce323db4822f9e464100ecae227f2a7ac6103054711bd510e9"
+    },
+    {
+      "relative": "docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts",
+      "before": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+      "candidate": "/private/tmp/t1267-exact-dialog-public-phases-OngsN6/source/e2e/protocol-support.ts",
+      "after": "593c4f23fbd934f9ec349c22022879b74b0d82f2a4b7b42ea6870dfcc5be1ec2"
+    }
+  ],
+  "actualRows": 34,
+  "piActualClosureFacts": "/private/tmp/t1267-exact-dialog-public-phases-OngsN6/ACTUAL_PUBLIC_CHAT_INPUT_UNAVAILABLE_AND_FULL_CLOSURE_FACTS.json",
+  "pi44RawSizeSHAVerified": true,
+  "piTargetREDProven": false,
+  "piGreenConsumed": false,
+  "oldProtocolHelperBefore": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+  "guardHelpersSame": {
+    "docs/verification/t1246/round-2/unit/owned-pg-runtime.cjs": "393f88771f732e57959ce948a61104fe616c6090faa3e21808186a6df7df3dea",
+    "docs/verification/t1246/round-3/tool/supervise.cjs": "02d51b8ff61bb69ceac0b31558c3c567c5c93a4c3f891bd751a11e05b69f00f4"
+  },
+  "gitDiffCheckCode": 0,
+  "actualStatus": " M ai-worker/src/execution/codex-acp-policy.test.ts\n M ai-worker/src/execution/codex-acp-worker-run.test.ts\n M ai-worker/src/execution/codex-app-server.test.ts\n M ai-worker/src/execution/codex-app-server.ts\n M ai-worker/src/execution/codex-native-turn.test.ts\n M ai-worker/src/runtime/browser/chromium-guard.ts\n M ai-worker/src/runtime/codex-provider.ts\n M ai-worker/vendor/codex-acp/src/CodexAcpClient.ts\n M docs/verification/t1246/round-3/new-v3/driver/launch.cjs\n M docs/verification/t1246/round-3/new-v3/source/e2e/pi-support.ts\n M docs/verification/t1246/round-3/new-v3/source/e2e/protocol-support.ts\n M docs/verification/t1246/round-3/new-v3/source/fixtures/codex-protocol.cjs\n M frontend/src/features/production/production-resource-operations.ts\n M frontend/src/features/production/production-workbench.test.tsx\n M frontend/src/features/production/production-workbench.tsx\n M frontend/src/features/production/use-video-decision-task.ts\n M frontend/src/features/settings/multimodal-model-configuration.tsx\n M frontend/src/features/settings/settings-model-region.tsx\n M frontend/src/server/activation/client-config.server.test.ts\n M frontend/src/server/activation/client-config.server.ts\n M frontend/src/server/ingestion/chromium-guard.test.ts\n M frontend/tests/e2e/ai-copilot.spec.ts\n M frontend/tests/e2e/all-routes.spec.ts\n M frontend/tests/e2e/experience.spec.ts\n M frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts\n M frontend/tests/e2e/production-broll-remove.spec.ts\n M frontend/tests/e2e/publishing-center.spec.ts\n M frontend/tests/e2e/search.spec.ts\n M frontend/tests/e2e/t1062-group-native-rough.spec.ts\n M frontend/tests/e2e/wechat-article-workbench.spec.ts\n?? ai-worker/src/runtime/browser/chromium-guard-close-order.test.ts\n?? ai-worker/src/runtime/codex-provider-json-output.public.test.ts\n?? frontend/src/features/production/use-video-decision-task.public.test.tsx\n?? frontend/src/server/ingestion/binding-profile-close.integration.test.ts\n",
+  "buildOrNormalCurrentRTests": "NOT_RUN",
+  "controlsWholeCopy": false,
+  "original109And428ForeignSourceCopied": false
+}

@@ -1,0 +1,17 @@
+{
+  "reviewer": "/root",
+  "verdict": "PASS_EXACT_PRIVATE_DIALOG_HELPER_AND_FRESH_PUBLIC_TOOL_VARIANT",
+  "scope": "T1261已审SPEC29 round3浏览器helper；不扩T1267唯一pi-support叶、产品/选择/路由/权限不变",
+  "factsSha256": "b41dcdc59e7ca46ff4886127f59bbcd90e2c8ae6caf1674284b5ee0d23178838",
+  "helperOriginalSha256": "0a7db72a6f64a938db41433bcfb1ac2fe970005446d1dabc3b79f523ccb5d937",
+  "helperCandidateSha256": "593c4f23fbd934f9ec349c22022879b74b0d82f2a4b7b42ea6870dfcc5be1ec2",
+  "inputSha256": "5295175b7c9901142bde7f6b4461f1d516d34afea7b146d532b97e3e86dceb09",
+  "rootActuallyRead": "原helper65行/唯一2行diff、真实双textarea错误、查看真实1366x900打开AI助手截图、Source/8tools/11workers/原b816/case2x4SHA及所有原budget/space逐值核验",
+  "onlyConsumerCorrection": "先唯一exact role/name dialog可见，原label与原submit testId在该dialog内；不first、不改四headers/same-ID/语义/账本/postcondition",
+  "old7a1bBody": "原真实提交前locatorFAIL/0tasks/本freshHTTP0保；非target capability RED",
+  "freshConditionalDispatch": "ONLY新RED43231现Rdbclean/pins/实时gate6979321856过才唯一执行；目标能力实际bodyRED且strictclosure/SOURCEsame后才GREEN6381，任意其它fail不当RED",
+  "old50bfMissingHttp": "UNKNOWN保持",
+  "RootRSourceOrOldTasksMutation": false,
+  "normalTypeAndActualPublicAfterNewHelper": "PENDING",
+  "nativeApp": "NOT_AUTHORIZED"
+}

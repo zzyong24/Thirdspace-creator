@@ -4,9 +4,23 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),readline=require('node:readline'),http=require('node:http');
 if(process.argv.includes('--version')){process.stdout.write('codex-cli 0.159.3\n');process.exit(0);}
 const markerPath=path.join(__dirname,'creatoros-t1246-fixture.json');
-const marker=JSON.parse(fs.readFileSync(markerPath,'utf8'));
-const root=fs.realpathSync(marker.runtimeRoot),stateRoot=fs.realpathSync(marker.stateRoot),binary=fs.realpathSync(__filename);
-if(marker.profile!=='protocol'||!binary.startsWith(root+path.sep)||!stateRoot.startsWith(root+path.sep)||!root.startsWith(fs.realpathSync(require('node:os').tmpdir())+path.sep+'creatoros-playwright-t1246-protocol-')||marker.scenarioVersion!==1)throw Error('NOT_OWNED_PROTOCOL_FIXTURE');
+// SEMANTIC_BOUNDARY_ALLOW: 只核对测试夹具目录、进程UID与原marker绑定，不做内容或创作选择。
+function ownedPlain(p,directory){
+ if(typeof p!=='string'||!path.isAbsolute(p)||path.normalize(p)!==p)throw Error('NOT_OWNED_PROTOCOL_FIXTURE');
+ const stat=fs.lstatSync(p);if(stat.isSymbolicLink()||stat.uid!==process.getuid()||(directory?!stat.isDirectory():!stat.isFile())||fs.realpathSync(p)!==p)throw Error('NOT_OWNED_PROTOCOL_FIXTURE');return p;
+}
+let root,stateRoot,binary,marker;
+try{
+ binary=ownedPlain(__filename,false);ownedPlain(markerPath,false);
+ marker=JSON.parse(fs.readFileSync(markerPath,'utf8'));
+ root=ownedPlain(marker.runtimeRoot,true);stateRoot=ownedPlain(marker.stateRoot,true);
+ if(marker.profile!=='protocol'||marker.scenarioVersion!==1||!/^creatoros-playwright-t1246-protocol-[a-f0-9]{24}$/.test(path.basename(root))||stateRoot!==path.join(root,'protocol-state')||!binary.startsWith(root+path.sep)||path.resolve(process.argv[1])!==binary)throw Error('NOT_OWNED_PROTOCOL_FIXTURE');
+ const withinRoot=(p,directory)=>{if(!p.startsWith(root+path.sep))throw Error('NOT_OWNED_PROTOCOL_FIXTURE');let current=root;const parts=path.relative(root,p).split(path.sep);for(const [index,part]of parts.entries()){current=path.join(current,part);ownedPlain(current,index<parts.length-1||directory);}};
+ withinRoot(binary,false);withinRoot(markerPath,false);withinRoot(stateRoot,true);
+ const temporary=fs.realpathSync(require('node:os').tmpdir()),isolated=path.join(root,'owned-data','tmp');
+ if(temporary===isolated){withinRoot(isolated,true);if(path.resolve(require('node:os').tmpdir())!==isolated)throw Error('NOT_OWNED_PROTOCOL_FIXTURE');}
+ else if(temporary!==path.dirname(root))throw Error('NOT_OWNED_PROTOCOL_FIXTURE');
+}catch(error){throw Error('NOT_OWNED_PROTOCOL_FIXTURE',{cause:error});}
 const audit=path.join(stateRoot,'protocol-events.ndjson');
 const emit=(method,detail={})=>fs.appendFileSync(audit,JSON.stringify({at:new Date().toISOString(),pid:process.pid,method,...detail})+'\n');
 const reply=(id,result)=>process.stdout.write(JSON.stringify({jsonrpc:'2.0',id,result})+'\n');

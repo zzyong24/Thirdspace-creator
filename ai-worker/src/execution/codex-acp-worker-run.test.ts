@@ -258,7 +258,7 @@ it('ACP只绑定实际session，工具MCP桥消费新Worker目录，原turn元�
 it('ACP已unknown原真实thread/turn只读恢复，不发prompt或建立新会话',async()=>{
  const f=fixture(),close=vi.fn();f.ports.reserveExternalChatTurn=()=>({callId,status:'unknown',sessionId,providerTurnId,protocolKind:'acp',protocolVersion:1});
  f.ports.readCheckpoint=()=>({replayableGenerationToolCallIds:[]});f.ports.readCodexCall=()=>({threadId:sessionId,turnId:providerTurnId});boundaries.nativeSession.mockResolvedValue({rpc:{close}});boundaries.recover.mockResolvedValue({sessionId,providerTurnId,text:'原回合真实已完成',usage:null});
- expect(await f.run()).toEqual({callId});expect(boundaries.recover).toHaveBeenCalledWith(expect.anything(),sessionId,providerTurnId);expect(f.client.prompt).not.toHaveBeenCalled();expect(boundaries.host).not.toHaveBeenCalled();expect(close).toHaveBeenCalledTimes(1);
+ expect(await f.run()).toEqual({callId});expect(boundaries.recover).toHaveBeenCalledWith(expect.anything(),sessionId,providerTurnId,f.controller.signal);expect(f.client.prompt).not.toHaveBeenCalled();expect(boundaries.host).not.toHaveBeenCalled();expect(close).toHaveBeenCalledTimes(1);
 });
 it('ACP已授权图片以原协议image content block传递，排空预算保持两分钟',async()=>{
  const f=fixture();boundaries.prompt.mockImplementation((_input,images:Array<{url:string}>)=>{images.push({url:'data:image/png;base64,AQID'});return '用户图片';});
@@ -275,4 +275,17 @@ it('ACP原native累计用量先落事实再cancel原session，不把used或外�
  });
  await expect(f.run()).rejects.toMatchObject({outcome:'unknown_result',errorCode:'CODEX_TOKEN_BUDGET_EXCEEDED'});
  expect(f.called('bindCodexCall').filter(([,data])=>record(data).observedUsage).map(([,data])=>data)).toEqual([{callId,observedUsage:{inputTokens:3,outputTokens:4,totalTokens:7}}]);expect(f.client.cancel).toHaveBeenCalledWith(sessionId);expect(f.settlements()).toEqual([{callId,status:'unknown'}]);
+});
+
+it('T1271 临时ACP会话跨进程已丢失保持unknown，零新会话/提示词/工具重放',async()=>{
+ const f=fixture(),close=vi.fn();
+ f.ports.reserveExternalChatTurn=()=>({callId,status:'unknown',sessionId,providerTurnId,protocolKind:'acp',protocolVersion:1});
+ f.ports.readCheckpoint=()=>({replayableGenerationToolCallIds:[]});
+ f.ports.readCodexCall=()=>({threadId:sessionId,turnId:providerTurnId});
+ boundaries.nativeSession.mockResolvedValue({rpc:{close}});
+ boundaries.recover.mockRejectedValueOnce(new Error('原临时会话不存在'));
+ await expect(f.run()).rejects.toMatchObject({outcome:'unknown_result'});
+ expect(boundaries.recover).toHaveBeenCalledWith(expect.anything(),sessionId,providerTurnId,f.controller.signal);
+ expect(boundaries.host).not.toHaveBeenCalled();expect(f.client.createSession).not.toHaveBeenCalled();expect(f.client.prompt).not.toHaveBeenCalled();
+ expect(f.called('executeExternalTaskTool')).toEqual([]);expect(f.settlements()).toEqual([]);expect(close).toHaveBeenCalledTimes(1);
 });

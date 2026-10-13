@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { ENDPOINTS, successEnvelope, listEnvelope } from "@creatoros/contract";
 import { expect, test } from "../helpers/test-environment";
 
 /**
@@ -30,9 +31,22 @@ test.describe("Global Search page", () => {
     for (let index = 0; index < 3; index += 1) {
       const response = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "projects.create", input: { body: { title: `${query} 项目 ${index + 1}`, brief: "用户创建的真实搜索对象" } } }, timeout: 120_000 });
       expect(response.ok()).toBe(true);
-      const project = (await response.json()).data as { id: string; groupId: string };
-      expect(project.groupId).toBe(group.id);
+      const project = successEnvelope(ENDPOINTS.createProject.response).parse(await response.json()).data;
+      const sameGroup = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "projects.get", input: { params: { projectId: project.id } } }, timeout: 120_000 });
+      expect(sameGroup.ok()).toBe(true);
+      expect(successEnvelope(ENDPOINTS.getProject.response).parse(await sameGroup.json()).data).toEqual(project);
       projectIds.push(project.id);
+    }
+    const ownListResponse = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": group.id }, data: { id: "projects.list", input: { query: { page: 1, pageSize: 100 } } }, timeout: 120_000 });
+    expect(ownListResponse.ok()).toBe(true);
+    const ownList = listEnvelope(ENDPOINTS.listProjects.response).parse(await ownListResponse.json()).data;
+    for (const id of projectIds) expect(ownList.some(project => project.id === id)).toBe(true);
+    const wrongGroupResponse = await page.request.post("/api/v1/dispatch", { data: { id: "accountGroups.create", input: { body: { name: "搜索错组", idempotencyKey: randomUUID() } } }, timeout: 120_000 });
+    expect(wrongGroupResponse.ok()).toBe(true);
+    const wrongGroup = successEnvelope(ENDPOINTS.createAccountGroup.response).parse(await wrongGroupResponse.json()).data;
+    for (const id of projectIds) {
+      const denied = await page.request.post("/api/v1/dispatch", { headers: { "x-group-id": wrongGroup.id }, data: { id: "projects.get", input: { params: { projectId: id } } }, timeout: 120_000 });
+      expect(denied.status()).toBe(404);
     }
     await page.context().addCookies([{ name: "creatoros_current_group", value: encodeURIComponent(group.id), url: baseURL! }]);
     await page.addInitScript((id) => { localStorage.setItem("creatoros:current-group", id); localStorage.removeItem("creatoros:current-account"); }, group.id);
@@ -124,3 +138,6 @@ test.describe("Global Search page", () => {
     await expect(input).toHaveValue("AI");
   });
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 30660000 });

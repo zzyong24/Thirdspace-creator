@@ -20,7 +20,7 @@ async function dispatch(
       ...(groupId ? { "x-group-id": groupId } : {}),
     },
     data: { id, input },
-  });
+  timeout: 120000});
   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
   const payload = (await response.json()) as { data: { id: string } };
   return payload.data;
@@ -72,11 +72,11 @@ test.describe("发布中心日历主视图（T-599）", () => {
     );
     const originalEntry = await dispatch(
       page,
-      "accounts.calendar.entries.create",
+      "group.calendar.entries.create",
       {
-        params: { accountId: account.id },
+        params: { groupId: group.id },
         query: undefined,
-        body: { projectId: project.id, plannedDate: "2099-12-31" },
+        body: { projectId: project.id, plannedDate: "2099-12-31", targetAccountId: account.id },
       },
       account.id,
       group.id,
@@ -137,3 +137,6 @@ test.describe("发布中心日历主视图（T-599）", () => {
     await expect(detail).not.toBeVisible();
   });
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 27060000 });

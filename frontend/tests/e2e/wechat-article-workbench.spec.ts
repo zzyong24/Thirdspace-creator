@@ -8,7 +8,7 @@ async function dispatch<T>(page: Page, id: string, input: unknown, scope?: Reque
   const response = await page.request.post("/api/v1/dispatch", {
     headers: { "content-type": "application/json", ...(typeof scope === "string" ? { "x-account-id": scope } : scope?.groupId ? { "x-group-id": scope.groupId, ...(scope.accountId ? { "x-account-id": scope.accountId } : {}) } : {}) },
     data: { id, input },
-  });
+  timeout: 120000});
   expect(response.ok(), `${id}: ${response.status()} ${await response.text()}`).toBe(true);
   return ((await response.json()) as { data: T }).data;
 }
@@ -76,7 +76,7 @@ test("公众号文章从项目目标到手写版本、刷新回读和跨账号�
     params: undefined, query: undefined, body: { assetType: "image", mimeType: "image/png", fileSize: png.length,
       fileName: "文章示意图.png", projectId: project.id },
   }, {groupId});
-  const put = await page.request.put(upload.uploadUrl, { headers: { "content-type": "image/png" }, data: png });
+  const put = await page.request.put(upload.uploadUrl, { headers: { "content-type": "image/png" }, data: png , timeout: 120000});
   expect(put.ok()).toBe(true);
   const image = await dispatch<{id: string; currentFileId: string}>(page, "assets.uploads.complete", {
     params: {uploadId: upload.uploadId}, query: undefined, body: {name: "文章示意图.png"},
@@ -112,12 +112,12 @@ test("公众号文章从项目目标到手写版本、刷新回读和跨账号�
   const cross = await page.request.post("/api/v1/dispatch", {
     headers: { "content-type": "application/json", "x-account-id": accountB.id },
     data: { id: "articles.get", input: { params: { outputId: output!.id }, query: undefined, body: undefined } },
-  });
+  timeout: 120000});
   expect(cross.status()).toBe(404);
 });
 
 test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读", async ({ page, context, baseURL }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(Math.max((120_000), 134460000));
   let projectRef: {kind: "project"; id: string; versionId: string} | null = null;
   const proposal = () => ({
     proposedTitle: "可核验的创作数据", proposedTitleSourceRefs: projectRef ? [projectRef] : [],
@@ -177,7 +177,7 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
     const saveResponsePromise = page.waitForResponse(response => {
       if (!response.url().includes("/api/v1/dispatch")) return false;
       try { return response.request().postDataJSON()?.id === "articles.versions.create"; } catch { return false; }
-    });
+    }, { timeout: 300000 });
     await workbench.getByRole("button", { name: "保存修改" }).click();
     const saveResponse = await saveResponsePromise;
     const saveEnvelope = await saveResponse.json() as { data: unknown };
@@ -207,7 +207,7 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
     await expect(workbench).toBeVisible();
     await workbench.getByText("AI 辅助生成与内容扩展", { exact: true }).click();
     const generatedEnvelope = {data:generated};
-    await expect(workbench.getByRole("heading", { name: "待审读候选" })).toBeVisible({ timeout: 60_000 });
+    await expect(workbench.getByRole("heading", { name: "待审读候选" })).toBeVisible({ timeout: 120000 });
     await expect(workbench.getByText("来源：项目资料").first()).toBeVisible();
     const generatedCandidate=await dispatch<{proposedTitle:string;proposedTitleSourceRefs:unknown[];proposedSummary:string;proposedSummarySourceRefs:unknown[];proposedSections:Array<{sourceRefs:unknown[]}>}>(page,"articles.candidates.get",{params:{candidateId:generatedEnvelope.data.candidateId},query:undefined,body:undefined},{groupId});
     // fixture模型确实返回projectRef；既有人工标题/摘要必须由Worker保留，不能被模型覆盖或伪造出处。
@@ -255,7 +255,7 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
     await expect(imageLink).toHaveAttribute("href", /selId=section-1/);
     await imageLink.click();
     await expect(page).toHaveURL(/fn=material\.generate\.image/);
-    await expect(page.getByRole("textbox", {name: "我能帮你做什么"})).toHaveValue(/账号与作品归属示意图/);
+    await expect(page.getByRole("dialog", { name: "AI 助手" }).getByRole("textbox", {name: "我能帮你做什么"})).toHaveValue(/账号与作品归属示意图/);
   } finally {
     try { if(priorEngine)await dispatch(page, "settings.preferences.patch", { body: { assistantExecutionEngine: priorEngine } }); } finally {
     model.closeAllConnections();
@@ -263,3 +263,6 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
     }
   }
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 134460000 });

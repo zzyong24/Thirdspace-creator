@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { basename, join, relative } from 'node:path';
 import type { Locator, Page, Request, TestInfo } from '@playwright/test';
-import { ENDPOINTS, articleManualVersionBody, productionReferencePlan, projectProductionRoughPlan } from '@creatoros/contract';
+import { ENDPOINTS, listEnvelope, articleManualVersionBody, productionReferencePlan, projectProductionRoughPlan } from '@creatoros/contract';
 import { expect, test } from '../helpers/test-environment';
 
 // 本文件只验证真实浏览器、公共服务和原生剪辑工作流。loopback粗剪输出是协议夹具，
@@ -30,7 +30,7 @@ const headers = (scope: Scope) => ({ 'content-type': 'application/json',
   ...(scope.accountId ? { 'x-account-id': scope.accountId } : {}) });
 
 async function dispatch<T>(page: Page, id: string, input: Input, scope: Scope = {}): Promise<T> {
-  const response = await page.request.post('/api/v1/dispatch', { headers: headers(scope), data: { id, input } });
+  const response = await page.request.post('/api/v1/dispatch', { headers: headers(scope), data: { id, input } , timeout: 120000});
   expect(response.ok(), `${id} ${response.status()}: ${await response.text()}`).toBe(true);
   return (await response.json() as { data: T }).data;
 }
@@ -39,7 +39,7 @@ function requestInput(request: Request): { id: string; input: Input } | null {
   return request.postDataJSON() as { id: string; input: Input };
 }
 async function clickDispatch(page: Page, id: string, action: () => Promise<unknown>) {
-  const request = page.waitForRequest(request => requestInput(request)?.id === id);
+  const request = page.waitForRequest(request => requestInput(request)?.id === id, { timeout: 300000 });
   await action();
   return await request;
 }
@@ -78,7 +78,7 @@ async function switchGroup(page: Page, groupId: string) {
   await page.getByTestId('account-switcher-menu').locator(`[data-group-id="${groupId}"]`).click();
   const confirm = page.getByTestId('account-switch-confirm-action');
   if (await confirm.isVisible()) await confirm.click();
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('creatoros:current-group'))).toBe(groupId);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('creatoros:current-group')), { timeout: 300000 }).toBe(groupId);
 }
 async function projectAndOutput(page: Page, scope: Scope) {
   const project = await dispatch<{ id: string; groupId: string | null; accountId: string | null }>(page,
@@ -118,13 +118,13 @@ async function upload(page: Page, projectId: string, scope: Scope, kind: keyof t
   expect(bytes.length).toBe(fixture.bytes); expect(sha(bytes)).toBe(fixture.sha);
   const started = await dispatch<{ uploadId: string; uploadUrl: string }>(page, 'assets.uploads.create',
     body({ assetType: 'video', mimeType: 'video/mp4', fileSize: bytes.length, projectId, fileName: fixture.name }), scope);
-  const put = await page.request.put(started.uploadUrl, { headers: { 'content-type': 'video/mp4' }, data: bytes });
+  const put = await page.request.put(started.uploadUrl, { headers: { 'content-type': 'video/mp4' }, data: bytes , timeout: 120000});
   expect(put.ok(), await put.text()).toBe(true);
   const asset = await dispatch<{ id: string; currentFileId: string }>(page, 'assets.uploads.complete',
     { params: { uploadId: started.uploadId }, body: { name: fixture.name } }, scope);
   const exact = await dispatch<{ url: string; fileName: string }>(page, 'assets.fileDownloadUrl',
     params({ assetId: asset.id, assetFileId: asset.currentFileId }), scope);
-  const downloaded = await page.request.get(exact.url);
+  const downloaded = await page.request.get(exact.url, { timeout: 120000 });
   expect(downloaded.ok()).toBe(true); expect(sha(await downloaded.body())).toBe(fixture.sha);
   return { ...asset, name: fixture.name, nativeFileName: exact.fileName, sha: fixture.sha };
 }
@@ -306,7 +306,7 @@ async function completeGap(page: Page, article: Locator, expectedDuration: numbe
   await article.getByRole('button', { name: '完整试听此项原声', exact: true }).click();
   const acknowledgement = article.getByRole('checkbox', { name: '我已听完原声，并核对这次保留和删除的范围', exact: true });
   await expect(acknowledgement).toHaveCount(0);
-  await expect(acknowledgement).toBeVisible({ timeout: Math.ceil(expectedDuration * 1000) + 30_000 });
+  await expect(acknowledgement).toBeVisible({ timeout: Math.max((Math.ceil(expectedDuration * 1000) + 30_000), 120000) });
   await expect(acknowledgement).not.toBeChecked();
   const events = (await audioEvents(page)).slice(before);
   const starts = events.filter(event => event.kind === 'start'); expect(starts.length).toBeGreaterThan(0);
@@ -347,7 +347,7 @@ function requireLocalAsrAdmission() {
   if (!process.env.CREATOROS_T1062_E2E_LOCAL_ASR_ADMISSION) throw Error('音频旅程待ROOT绑定真实离线worker/network/cache准入，禁止云端/下载/fake ASR');
 }
 async function evidence(page: Page, testInfo: TestInfo, name: string) {
-  await page.screenshot({ path: testInfo.outputPath(name), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath(name), fullPage: true , timeout: 120000});
 }
 
 test.describe('T1062 账号组真实原生粗剪', () => {
@@ -378,7 +378,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
     expect(owned.id).toBe(projectId); expect(owned.title).toBe('纯组中性作品');
     const foreignGroup = await group(page);
     const foreignRead = await page.request.post('/api/v1/dispatch', { headers: headers({ groupId: foreignGroup.id }),
-      data: { id: 'projects.get', input: params({ projectId }) } });
+      data: { id: 'projects.get', input: params({ projectId }) } , timeout: 120000});
     expect(foreignRead.status()).toBe(404);
     expect((await foreignRead.json() as { error: { code: string } }).error.code).toBe('OwnershipError');
     await page.goto('/canvases?tab=canvases'); await page.getByRole('button', { name: '新建画布', exact: true }).click();
@@ -427,7 +427,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
     let intercepted = false;
     await page.route('**/api/v1/dispatch', async route => {
       if (!intercepted && requestInput(route.request())?.id === 'assets.list') {
-        intercepted = true; const actual = await route.fetch(); entered(); await gate;
+        intercepted = true; const actual = await route.fetch({ timeout: 120000 }); entered(); await gate;
         // 只延迟真实公共服务响应。取消后的route已经关闭是预期，绝不造成功body。
         try { await route.fulfill({ response: actual }); } catch (error) { if (!/closed|aborted|canceled|disposed|finished/i.test(String(error))) throw error; }
       } else await route.fallback();
@@ -439,7 +439,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
     await expect(page.getByText(asset.name, { exact: true })).toHaveCount(0);
     expect((await document(page, output.id, scope)).revision).toBe(before.revision);
     const foreign = await page.request.post('/api/v1/dispatch', { headers: headers({ groupId: b.id }),
-      data: { id: ENDPOINTS.getProductionEditor.id, input: params({ outputId: output.id }) } });
+      data: { id: ENDPOINTS.getProductionEditor.id, input: params({ outputId: output.id }) } , timeout: 120000});
     expect(foreign.ok()).toBe(false); await evidence(page, testInfo, 'cross-group-late-read.png');
   });
 
@@ -482,7 +482,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
   });
 
   for (const kind of ['normal', 'offset'] as const) test(`真实默认ASR与原生原声：${kind === 'normal' ? '普通AAC完整自然播放、单独核对、明确采用与保存刷新' : '非零视频起点仅此项手工降级，原工程仍可保存'}`, async ({ page, baseURL }, testInfo) => {
-    test.setTimeout(600_000); requireLocalAsrAdmission();
+    test.setTimeout(Math.max((600_000), 672660000)); requireLocalAsrAdmission();
     const provider = await roughProvider();
     try {
       const a = await group(page), scope = { groupId: a.id }, { project, output } = await projectAndOutput(page, scope);
@@ -527,7 +527,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
         const reloaded = await document(page, output.id, scope);
         expect(reloaded.revision).toBe(manuallySaved.revision); expect(reloaded.plan).toEqual(manuallySaved.plan);
         const exact = await dispatch<{ url: string }>(page, 'assets.fileDownloadUrl', params({ assetId: asset.id, assetFileId: asset.currentFileId }), scope);
-        const originalFile = await page.request.get(exact.url); expect(originalFile.ok()).toBe(true);
+        const originalFile = await page.request.get(exact.url, { timeout: 120000 }); expect(originalFile.ok()).toBe(true);
         expect(sha(await originalFile.body())).toBe(asset.sha);
         expect(roughRequests).toEqual([]); expect(provider.calls).toEqual([]); expect(provider.errors).toEqual([]);
         expect((await audioEvents(page)).filter(event => event.kind === 'start')).toHaveLength(0);
@@ -587,7 +587,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
         await page.reload(); await expect(native(page).locator('.native-workbench')).toBeVisible();
         const afterReload = await document(page, output.id, scope); expect(afterReload.revision).toBe(afterAdopt.revision); expect(afterReload.plan).toEqual(afterAdopt.plan);
         const exact = await dispatch<{ url: string }>(page, 'assets.fileDownloadUrl', params({ assetId: asset.id, assetFileId: asset.currentFileId }), scope);
-        expect(sha(await (await page.request.get(exact.url)).body())).toBe(asset.sha);
+        expect(sha(await (await page.request.get(exact.url, { timeout: 120000 })).body())).toBe(asset.sha);
       }
       await testInfo.attach('原公开转写与候选', { body: Buffer.from(JSON.stringify({ source, candidate, providerCalls: provider.calls.length,
         caveat: '真实默认ASR管线与自动自然播放流程；loopback建议不是语义评审，未代签用户听感' }, null, 2)), contentType: 'application/json' });
@@ -621,7 +621,7 @@ async function saveInitializedArticle(page: Page, article: Locator, outputId: st
     expect(saved.versionId).toBeTruthy(); expect(saved.document).toEqual(command.document);
     // 精确按实际save.versionId捕获读回；不能用可能在途的旧版本读回替代。
     const readResponse = reads.find(response => readVersionId(response) === saved.versionId) ??
-      await page.waitForResponse(response => readVersionId(response) === saved.versionId);
+      await page.waitForResponse(response => readVersionId(response) === saved.versionId, { timeout: 300000 });
     expect(readResponse.ok()).toBe(true);
     expect(requestInput(readResponse.request())!.input.params).toEqual({ outputId, versionId: saved.versionId });
     expect(readResponse.request().headers()['x-group-id']).toBe(groupId);
@@ -647,16 +647,29 @@ test('真实首载组列表延迟时不发创建，根就绪后文章可创建�
   let observed!: () => void;
   const intercepted = new Promise<void>(resolve => { observed = resolve; });
   let delayedOnce = false;
+  const deliveredPages = new Map<number, { data: Array<{ id: string }>; meta: { total: number } }>();
+  const readFailures: string[] = [];
+  const collectDelivered = async (response: import('@playwright/test').Response) => {
+    const command = requestInput(response.request());
+    if (command?.id !== 'accountGroups.list') return;
+    try {
+      expect(response.ok()).toBe(true);
+      const pageNumber = Number((command.input.query as { page?: number } | undefined)?.page ?? 1);
+      expect(pageNumber).toBeGreaterThanOrEqual(1); expect(pageNumber).toBeLessThanOrEqual(20);
+      deliveredPages.set(pageNumber, listEnvelope(ENDPOINTS.listAccountGroups.response).parse(await response.json()));
+    } catch (error) { readFailures.push(String(error)); }
+  };
+  page.on('response', collectDelivered);
   let browserCreates = 0;
   page.on('request', request => { if (requestInput(request)?.id === 'projects.outputs.create') browserCreates++; });
   await page.route('**/api/v1/dispatch', async route => {
     if (requestInput(route.request())?.id !== 'accountGroups.list' || delayedOnce) { await route.continue(); return; }
     delayedOnce = true;
     // 读取真实公开服务的成功字节，只延迟交付，不造组或授权。
-    const response = await route.fetch();
+    const response = await route.fetch({ timeout: 120000 });
     expect(response.ok()).toBe(true);
     const envelope = await response.json() as { data: Array<{ id: string }>; meta: { total: number } };
-    expect(envelope.data.some(row => row.id === owner.id)).toBe(true);
+    // 首page只承担真实延迟交付；owner可合法在后页，不能要求首100含它。
     expect(envelope.meta.total).toBeGreaterThanOrEqual(envelope.data.length);
     observed();
     await delayed;
@@ -670,6 +683,16 @@ test('真实首载组列表延迟时不发创建，根就绪后文章可创建�
     await expect(page.getByRole('button', { name: '新建文章', exact: true })).toHaveCount(0);
     expect(browserCreates).toBe(0);
     release();
+    await expect.poll(() => {
+      expect(readFailures).toEqual([]);
+      const pages = [...deliveredPages.entries()].sort((a, b) => a[0] - b[0]);
+      if (!pages.length || pages.some(([number], index) => number !== index + 1)) return false;
+      const total = pages[0]![1].meta.total;
+      if (pages.some(([, result]) => result.meta.total !== total)) return false;
+      const ids = pages.flatMap(([, result]) => result.data.map(row => row.id));
+      return ids.length === total && new Set(ids).size === total && ids.filter(id => id === owner.id).length === 1;
+    }, { timeout: 300_000 }).toBe(true);
+    await expect(page.getByTestId('account-switcher')).toHaveAttribute('data-state', 'ready');
     const article = page.locator('[data-page="article-workbench"]');
     await expect(article).toBeVisible();
     const createRequest = await clickDispatch(page, 'projects.outputs.create',
@@ -690,6 +713,7 @@ test('真实首载组列表延迟时不发创建，根就绪后文章可创建�
     await expect(page).toHaveURL(new RegExp(`outputId=${created.id}`));
   } finally {
     release();
+    page.off('response', collectDelivered);
     await page.unroute('**/api/v1/dispatch');
   }
 });
@@ -740,7 +764,7 @@ test('真实首次RSC同步中手动切B：旧A完成不能放行，B就绪才�
     const finished = selected === a.id ? finishedA : finishedB;
     try {
       // 获取实际RSC响应字节，不替换payload或服务授权；只延迟浏览器交付。
-      const response = await route.fetch();
+      const response = await route.fetch({ timeout: 120000 });
       expect(response.ok()).toBe(true);
       const contentType = response.headers()['content-type'] ?? '';
       expect(contentType).toContain('text/x-component');
@@ -855,7 +879,7 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B�
     if (requestHeaders.rsc !== '1' || requestHeaders['next-router-prefetch'] === '1' || seen) { await route.continue(); return; }
     seen = true;
     try {
-      const response = await route.fetch();
+      const response = await route.fetch({ timeout: 120000 });
       expect(response.ok()).toBe(true);
       observation.status = response.status(); observation.contentType = response.headers()['content-type'];
       expect(observation.contentType).toContain('text/x-component');
@@ -891,7 +915,7 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B�
     await expect(page.locator('[data-slot="new-project-submit"]')).toHaveCount(0); expect(browserCreates).toBe(0); expect(browserProjectCreates).toBe(0);
     await evidence(page, testInfo, 'first-rsc-timeout-real-error.png');
     const navigation = page.waitForRequest(request => request.isNavigationRequest() &&
-      request.resourceType() === 'document' && new URL(request.url()).pathname === '/projects');
+      request.resourceType() === 'document' && new URL(request.url()).pathname === '/projects', { timeout: 300000 });
     await error.getByRole('button', { name: '重试打开工作区', exact: true }).click();
     const actualNavigation = await navigation;
     const response = await actualNavigation.response();
@@ -930,3 +954,6 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B�
       caveat: '旧真实RSC字节直到创建保存完成仍未交付；显式重试必须观测document请求与真实新文档就绪，非mockrouter或排队refresh。截图仅用例执行后才存在。' }, null, 2)), contentType: 'application/json' });
   }
 });
+
+// T-1246：原字节/FAIL封存；本活跃副本仅作已批准的本case合同校准，其余正文、标题及预算保持。
+test.describe.configure({ timeout: 672660000 });

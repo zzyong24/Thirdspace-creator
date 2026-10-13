@@ -911,3 +911,24 @@ T992：Windows 卸载会保留 AppData 中的业务数据和可再生成运行�
 - **GuardCheck**: `node docs/verification/t1073/verify-resource-lifecycle.mjs`；已登记reconcile.config.json，覆盖全部8处实际消费者。单测/hook各120秒；没有整套watchdog，不冒称整组有总上限。
 - **Outcome(T+N)**: 各根因当场正确行为RED后同测GREEN保留。整合聚合301/301通过（7+83+62+121+28）；无消费者SSE读0页、100份已消费音频liveBuffers=0、线程归属退出、慢读取peak=1、根dispose计时器为0。无审批等待、原任务停止和最终确认经真实隔离持久服务/SDK链23项及独立复跑通过。真实模型容量、安装版RSS和浏览器像素证据未验证，全局历史失败保留。内存探针新输出写本次门日志并还原旧证据；失败后的旧字节不得视为新观测。
 - **Ref**: DEC-T1073；docs/features/t1073-resource-memory-fixes.md；docs/verification/t1073/REPORT.md。
+
+
+## LED-062 — 主动关闭事件不能提前释放登录档案
+
+- **Date**: 2026-10-13 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 主动ctx.close仍等待时同步/异步close事件使onStopped提前执行，目录搬移可以抢先；原close最后失败也已被标记释放。
+- **RootCause**: 把close事件等同完整停止，且closing Promise右值启动时字段尚未赋值。
+- **GuardRule**: 调用原close之前同步置主动关闭标记；完整close成功后释放原宿主租约和队列，失败保留占用和原清理能力；外部独立关闭事件保持正常释放，不靠超时夺取活档案。
+- **GuardCheck**: reconcile.config.json LED-062；guard-close-order + guard-lifecycle实际回归。
+- **Outcome(T+N)**: 3例当场RED，修后守卫/共享会话31例、shutdown5例通过；真实临时Chromium停止→宿主真实租约释放→搬移→重开Cookie通过。Windows真锁/用户扫码尚未验。
+- **Ref**: docs/verification/t1259/REPORT.md。
+
+## LED-063 — 文件持久化必须核对目标系统的目录同步能力
+
+- **Date**: 2026-10-13 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: Windows只读目录handle.sync调用FlushFileBuffers，缺写权限，使已写配置仍失败；安全错误隔离保存还可遮住原校验结果。
+- **RootCause**: POSIX目录fsync语义直接复制到Windows，测试只有mac实际文件与内存store。
+- **GuardRule**: Windows只跳不适用目录sync，保文件fsync/原子rename/认证读回；POSIX目录sync和真实权限、磁盘、认证错误继续拒绝，不能宽泛catch吞错。
+- **GuardCheck**: reconcile.config.json LED-063；真实密文store经public refresh的200/304/invalid隔离及存储错误回归。
+- **Outcome(T+N)**: 公共refresh模拟Windows目录EPERM当场RED；修后前端64项通过，含POSIX目录错误与Windows文件sync错误继续拒绝。模拟不代签Windows实机。
+- **Ref**: docs/verification/t1259/REPORT.md；Microsoft FlushFileBuffers与libuv固定版本官方源码。

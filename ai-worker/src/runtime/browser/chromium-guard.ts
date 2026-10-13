@@ -290,13 +290,19 @@ async function runGuardedLaunch<T extends Closable>(profileDir:string|null,launc
     };
     const close=ctx.close.bind(ctx);
     let closing:Promise<void>|undefined;
+    let activeClose=false;
     ctx.close=()=>{
       if(released)return Promise.resolve();
-      if(!closing){closing=(async()=>{await close();await release();})();void closing.catch(()=>{closing=undefined;});}
+      if(!closing){
+        // close事件可能先于原close完成，甚至同步发出；原停止等待期间不能放行目录搬移。
+        activeClose=true;
+        closing=(async()=>{try{await close();await release();}finally{activeClose=false;}})();
+        void closing.catch(()=>{closing=undefined;});
+      }
       return closing;
     };
     forgetContext=shutdownScope.register(()=>ctx.close());
-    try{ctx.on?.('close',()=>{void release().catch(()=>{});});}catch{/* 无事件时以 close 成功作为关闭证据。 */}
+    try{ctx.on?.('close',()=>{if(!activeClose)void release().catch(()=>{});});}catch{/* 无事件时以 close 成功作为关闭证据。 */}
     return ctx;
   };
   const attempt=async(runPreflight=true):Promise<T>=>{

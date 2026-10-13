@@ -1387,11 +1387,15 @@ export class EncryptedClientConfigStore implements ClientConfigStore {
       await unlink(temp).catch(() => undefined);
       throw error;
     }
-    const directory = await open(dir, "r");
-    try {
-      await directory.sync();
-    } finally {
-      await directory.close();
+    // Windows的只读目录句柄不能FlushFileBuffers；文件sync与认证读回仍是必经步骤。
+    // POSIX保留目录fsync，真实文件/权限错误不能被兼容分支吞掉。
+    if (process.platform !== "win32") {
+      const directory = await open(dir, "r");
+      try {
+        await directory.sync();
+      } finally {
+        await directory.close();
+      }
     }
     const readback = await this.load();
     if (!isDeepStrictEqual(readback, expected)) {

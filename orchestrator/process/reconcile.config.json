@@ -336,6 +336,18 @@
       "what": "完整JSON被流式误判未知或转录共享schema缺validator阻断真实保存链",
       "check": "pnpm --dir ai-worker run build && pnpm --dir ai-worker exec vitest run src/runtime/pi-provider-json-compat.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/radar-model-result-unknown.repro.test.ts src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=1 --retry=0",
       "onFail": "核对同一次完整响应的结束事实、无损映射与真实usage，补共享validator并验证实际后端回放/工件；保留真实断流未知和原任务，不重复付费调用。"
+    },
+    {
+      "led": "LED-062",
+      "what": "主动关闭浏览器时close事件早于完整close等待而提前释放登录档案",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/browser/chromium-guard-close-order.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+      "onFail": "主动close之前置在途标记，完整close成功后才释放原宿主租约和队列；早到事件和close失败不能假称停止，保留外部关闭、取消和同租约清理重试。"
+    },
+    {
+      "led": "LED-063",
+      "what": "Windows配置持久化无条件同步只读目录导致已保存配置仍报失败并遮盖安全结果",
+      "check": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+      "onFail": "按平台能力处理目录fsync，文件sync、原子rename与加密认证读回不可跳过；POSIX目录同步及实际文件错误继续传播；公共refresh成功、304与安全隔离均须实际回归。"
     }
   ],
   "program_completion_required": false,
