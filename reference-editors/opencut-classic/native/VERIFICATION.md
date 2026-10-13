@@ -1,3 +1,11 @@
+# T-1274 已分离原声预览兼容窄修
+
+原OpenCut音频分离使用video的真实mediaId创建upload音轨，原backend合同允许audio元素引用video媒体。本轮仅修preview-scene的机械媒体类型校验，audio允许audio/video，video/image保持strict。未改变候选scope、renderer ABI、播放、保存、采纳或AAC时长。
+
+真实公共controller RED：18通过/1失败（原video加已分离原声音轨）；窄修后19通过，3项不兼容媒体族继续拒绝。完整原回归66测试323断言、类型、正式build、AST通过；713份source标准patch实际F0还原与归档字节一致，归档再productionbuild七份与双目录一致。证据在verification/t1274-preview-separated-audio，旧失败和主会话原E2E时长失败均不覆盖。
+
+本轮未重复DOM，先前38+22项证据原样保留；未签本子候选真实GPU/MP4/E2E PASS，未放宽主会话时长断言。标准patch上下文空白/原CRLF的diff-check告警保留，非patch检查PASS。以下为历史候选交付说明。
+
 # T-1274 候选隔离预览交付
 
 补齐生产`preview-scene`公共命令，使用原`renderer.exportProject` frozen ABI。校验完整owner、当前epoch、完整tracks前值与scene候选摘要、真实File与精确媒体版本；克隆当前工程，仅候选目标scene轨道替换。预览不暂停活动播放，不保存/切场景/写command，不改dirty、撤销、selection或contextEpoch。回执前再次核对，取消继承原signal/寿命，不重发或续期。

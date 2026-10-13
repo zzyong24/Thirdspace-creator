@@ -110,5 +110,11 @@
     "apps/web/src/services/renderer/nodes/sticker-node.ts",
     "README.creatoros.md",
     "NATIVE_REBUILD_CONSISTENCY.json"
+  ],
+  "t1274SeparatedAudioChangedFromCandidate": [
+    "apps/web/src/embedded/preview-scene.ts",
+    "apps/web/src/embedded/__tests__/native-preview.test.ts",
+    "README.creatoros.md",
+    "NATIVE_REBUILD_CONSISTENCY.json"
   ]
 }
