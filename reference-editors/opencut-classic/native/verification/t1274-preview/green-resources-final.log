@@ -1,0 +1,11 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-resources.test.ts:
+(pass) SceneExporter取消关闭未finalize输出、视频源并释放独立decode cache [2.75ms]
+(pass) SceneExporter编码错误仍关闭源/取消输出/排空decode cache [1.24ms]
+(pass) SceneExporter成功保留真实buffer但释放独立decode cache，不cancel已finalize输出 [0.43ms]
+
+ 3 pass
+ 0 fail
+ 15 expect() calls
+Ran 3 tests across 1 file. [37.00ms]

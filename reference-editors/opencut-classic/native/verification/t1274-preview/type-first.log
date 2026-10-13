@@ -1,0 +1,6 @@
+src/embedded/preview-scene.ts(43,42): error TS18048: 'original' is possibly 'undefined'.
+src/embedded/preview-scene.ts(44,24): error TS18048: 'original' is possibly 'undefined'.
+src/embedded/preview-scene.ts(54,78): error TS18048: 'original' is possibly 'undefined'.
+src/embedded/preview-scene.ts(61,102): error TS18048: 'original' is possibly 'undefined'.
+src/media/audio.ts(683,28): error TS2353: Object literal may only specify known properties, and 'signal' does not exist in type '{ audioContext: BaseAudioContext; sourceBuffer: AudioBuffer; trimStart: number; clipDuration: number; retime?: RetimeConfig | undefined; maintainPitch?: boolean | undefined; }'.
+src/services/renderer/resolve.ts(425,23): error TS2304: Cannot find name 'context'.

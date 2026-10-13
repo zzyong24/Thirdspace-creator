@@ -1,6 +1,6 @@
 {
   "task": "T-1274",
-  "deliveryStatus": "NATIVE_WORKSPACE_SOURCE_BUILD_DOM_FIXTURE_VERIFIED_NOT_HOST_OR_BROWSER_OR_INSTALLED",
+  "deliveryStatus": "NATIVE_CANDIDATE_PREVIEW_SOURCE_PUBLIC_CONTROLLER_RENDERER_AND_DOM_FIXTURES_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
@@ -10,317 +10,56 @@
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6618595,
-    "cssBytes": 128712,
+    "esmBytes": 6628162,
+    "cssBytes": 128748,
     "licensedDependencies": 59,
-    "renderedModules": 428,
+    "renderedModules": 429,
     "nativeHashes": {
-      "native.css": "a3d29c27a4cf8d665bb4b28d9f9893cc2334947c9b2075c5b64e65030d2e79bd",
-      "native.js": "ccb79c5133316320ce128c1efebc67240154bf57050836180db0ed596e917ca9",
-      "NATIVE_BUILD_GRAPH.json": "ceb3371580b32db9b53e41f977ca4a89384566be25a2c7914ba10b53e3595a71",
-      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "native.js": "4c0da8c3e58aa808c13c1d34a4bbbc0636b33cb4cc8eaa01068d03d0b61b0e33",
+      "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
+      "NATIVE_BUILD_GRAPH.json": "a18b6dfb4ab66854f6634acb36ff72db6c2859c2136108a3ba37d11663ae2950",
       "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
       "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
     },
-    "freshDependencyInstall": "bun install --frozen-lockfile --ignore-scripts：隔离源码实际执行一次，未安装CreatorOS全仓",
+    "freshDependencyInstall": "未重装；复用此前隔离源码真实bun frozen ignore-scripts安装的同一锁依赖树",
     "fixturePublished": false,
     "archiveRebuildBytesMatch": true,
     "crossOsBitReproducibility": "not-claimed"
   },
   "source": {
-    "files": 707,
-    "changedFiles": 70,
-    "archiveBytes": 765829,
-    "patchBytes": 251213,
+    "files": 713,
+    "changedFiles": 80,
+    "archiveBytes": 760012,
+    "patchBytes": 391057,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "9673b0d712109bfe23029d28b4c3a6f2ed1dfcc5e0f2aa56a72475416ea99ccb",
-      "native-from-t1046.patch": "20388a05d96c8bcf996f9ab3c3a31e141adce26e6500789bd54d3a7737e23a6a",
+      "native-source.tar.gz": "cf683a02a18d19e119939da2256ec1bceb2d162167aaee357b27963c715cd8df",
+      "native-from-t1046.patch": "ed27c520d7ccc8ee0577962e58d13c82f6509c70431e61a7c230e5604c33f968",
       "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "verification/t1274/source-reconstruction.json",
-    "productionReconstructionEvidence": "verification/t1274/production-reconstruction.json"
+    "reconstructionEvidence": "verification/t1274-preview/source-reconstruction.json",
+    "productionReconstructionEvidence": "verification/t1274-preview/production-reconstruction.json",
+    "archiveSha256": "cf683a02a18d19e119939da2256ec1bceb2d162167aaee357b27963c715cd8df",
+    "patchSha256": "ed27c520d7ccc8ee0577962e58d13c82f6509c70431e61a7c230e5604c33f968"
   },
   "verification": {
     "typecheckExitCode": 0,
-    "regressionTests": 18,
-    "regressionAssertions": 112,
-    "resourceFixtureTests": 14,
-    "resourceFixtureAssertions": 63,
-    "totalTests": 32,
-    "totalAssertions": 175,
-    "domFixtureChecks": 40,
+    "totalTests": 62,
+    "totalAssertions": 307,
     "testFailures": 0,
     "fixtureOnly": true,
+    "domFixtureChecks": 60,
     "browserAutomation": "not_run",
-    "historicalFailures": "immutable_R4_R7_reports_and_logs",
+    "realGpu": "not_run",
+    "realMp4": "not_run",
+    "allFailuresPreserved": "verification/t1274-preview与历史verification不删除",
     "unreplacedNodeEnv": 0,
     "unguardedGlobalProcessReferences": 0,
-    "guardedGlobalProcessReferences": 6,
-    "processGlobalDuringDomProbe": false,
-    "currentEvidence": [
-      {
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "apps/web/scripts/build-native.mjs"
-        ],
-        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source",
-        "started_utc": "2026-10-05T22:05:59.608844+00:00",
-        "finished_utc": "2026-10-05T22:06:08.221885+00:00",
-        "exit_code": 0,
-        "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/production-build.log",
-        "log_sha256": "6c66c09a99e527bdc6bb65401be7bf0f5f388a4b987255b989d0c50ef3fcae0f",
-        "bun_sha256": "4478c2c7fa1261fc67135311225e8f524dba389f82f699463e25eb397f572d9d",
-        "environment_keys": [
-          "HOME",
-          "LANG",
-          "LC_ALL",
-          "NO_COLOR",
-          "PATH",
-          "TMPDIR"
-        ],
-        "no_install": true,
-        "dependency_provenance": "APFS clone copy of existing R4/R8 actual dependency tree, no fresh install claim",
-        "db_model_browser_asr": false
-      },
-      {
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "apps/web/scripts/build-native.mjs",
-          "--dom-fixture"
-        ],
-        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source",
-        "started_utc": "2026-10-05T22:06:37.750995+00:00",
-        "finished_utc": "2026-10-05T22:06:42.915739+00:00",
-        "exit_code": 0,
-        "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/dom-build.log",
-        "log_sha256": "385adfbca56c525a5a80a780de67ab8e05e874bb7373bdb414c24aa67854a631",
-        "bun_sha256": "4478c2c7fa1261fc67135311225e8f524dba389f82f699463e25eb397f572d9d",
-        "environment_keys": [
-          "HOME",
-          "LANG",
-          "LC_ALL",
-          "NO_COLOR",
-          "PATH",
-          "TMPDIR"
-        ],
-        "no_install": true,
-        "dependency_provenance": "APFS clone copy of existing R4/R8 actual dependency tree, no fresh install claim",
-        "db_model_browser_asr": false
-      },
-      {
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "test",
-          "src/embedded/__tests__/native-lifecycle.test.ts",
-          "src/embedded/__tests__/native-command.test.ts",
-          "src/embedded/__tests__/host-boundary.test.ts"
-        ],
-        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source/apps/web",
-        "started_utc": "2026-10-05T22:08:16.613558+00:00",
-        "finished_utc": "2026-10-05T22:08:17.095613+00:00",
-        "exit_code": 0,
-        "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native-tests.log",
-        "log_sha256": "eeb34cded13c39fbd281f37c06f686eab5619e8d52c0f540074bb91f0ad39c90",
-        "environment_keys": [
-          "HOME",
-          "LANG",
-          "LC_ALL",
-          "NO_COLOR",
-          "PATH",
-          "TMPDIR"
-        ]
-      },
-      {
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "test",
-          "src/embedded/__tests__/native-resources.test.ts"
-        ],
-        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source/apps/web",
-        "started_utc": "2026-10-05T22:08:17.096509+00:00",
-        "finished_utc": "2026-10-05T22:08:17.185113+00:00",
-        "exit_code": 0,
-        "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/resource-tests.log",
-        "log_sha256": "46377f4eb5b817012573c00d7e4b19e84853ea2765f892fdd054f56dfc67b6fe",
-        "environment_keys": [
-          "HOME",
-          "LANG",
-          "LC_ALL",
-          "NO_COLOR",
-          "PATH",
-          "TMPDIR"
-        ]
-      },
-      {
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "../../node_modules/typescript/bin/tsc",
-          "--noEmit",
-          "--project",
-          "tsconfig.embedded.json"
-        ],
-        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source/apps/web",
-        "started_utc": "2026-10-05T22:08:17.185961+00:00",
-        "finished_utc": "2026-10-05T22:08:22.474088+00:00",
-        "exit_code": 0,
-        "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/typecheck.log",
-        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "environment_keys": [
-          "HOME",
-          "LANG",
-          "LC_ALL",
-          "NO_COLOR",
-          "PATH",
-          "TMPDIR"
-        ]
-      },
-      {
-        "phase": "red",
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native-dom-title-regression.ts"
-        ],
-        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source",
-        "started_utc": "2026-10-05T22:07:12.728410+00:00",
-        "finished_utc": "2026-10-05T22:07:14.068437+00:00",
-        "exit_code": 1,
-        "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/dom-title-red.log",
-        "log_sha256": "3388948029215bc05e0d2215aabc419edc6a9e5cf94f27a0923a968884e3ae7d",
-        "module_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/apps/web/native-dom-fixture-dist/native.js",
-        "module_sha256": "e0ceea4193f31b2af79bb10c6fb829069f2e4d5d76579db7a6181e4e29c94938",
-        "probe_sha256": "705c059796c419b28eb0fbbaba766f8549712668a7a81ad2cc2ca169e69a1738",
-        "boundary": "真实React native组件和公开request；JSDOM compositor/Canvas fixture，不是browser/GPU/视频/ASR/用户库。"
-      },
-      {
-        "phase": "green",
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native-dom-title-regression.ts"
-        ],
-        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source",
-        "started_utc": "2026-10-05T22:07:14.186997+00:00",
-        "finished_utc": "2026-10-05T22:07:15.985847+00:00",
-        "exit_code": 0,
-        "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/dom-title-green.log",
-        "log_sha256": "2c49f254e23dc4f20546f494b8d9cbcd2724a63ddfbc794c17365bbc8cbec85a",
-        "module_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source/apps/web/native-dom-fixture-dist/native.js",
-        "module_sha256": "f3c274aea4a37301a954b0a08dcb834e5fb8f51f799990655d08724fd526da47",
-        "probe_sha256": "705c059796c419b28eb0fbbaba766f8549712668a7a81ad2cc2ca169e69a1738",
-        "boundary": "真实React native组件和公开request；JSDOM compositor/Canvas fixture，不是browser/GPU/视频/ASR/用户库。"
-      }
-    ],
-    "supersededCandidateDefect": "前一候选14处React CJS NODE_ENV未替换，本次显式生产define修正，实际扫描原证据保留。",
-    "previousActualEvidenceHistorical": [
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-production-build-r6.json",
-          "sha256": "f51757014ebcfb9d20e0267fe6de26153f2b2287544b0a1c1a2115b8f3529788"
-        },
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "apps/web/scripts/build-native.mjs"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-production-build-r6.log",
-        "logSHA": "bbab7607cbc949b0031ac7ab60f543ff0e74159d5026ce38a1ad114e013cc6e8",
-        "startedUTC": "2026-10-05T17:43:41.907824+00:00",
-        "finishedUTC": "2026-10-05T17:43:47.377810+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-native-tests-r6.json",
-          "sha256": "272162c5a489ea8a31000e0fa4efd29a08b2577098f5053967dee587bffd3620"
-        },
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "test",
-          "src/embedded/__tests__/native-lifecycle.test.ts",
-          "src/embedded/__tests__/native-command.test.ts",
-          "src/embedded/__tests__/host-boundary.test.ts"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-native-tests-r6.log",
-        "logSHA": "735231a2af5737f058fd90af75af5c180721d91252405819355f2c6ed72b43d3",
-        "startedUTC": "2026-10-05T17:43:47.506168+00:00",
-        "finishedUTC": "2026-10-05T17:43:47.999060+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-resource-tests-r6.json",
-          "sha256": "2883706292967ffd9ea75ac3c075d9b525475fa263e4626c9efd17b75028bc8c"
-        },
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "test",
-          "src/embedded/__tests__/native-resources.test.ts"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-resource-tests-r6.log",
-        "logSHA": "088a42438f6fe60f6839b202b960b5b6825920079fba4fa3f4c99e5e7b92eb3e",
-        "startedUTC": "2026-10-05T17:43:48.106042+00:00",
-        "finishedUTC": "2026-10-05T17:43:48.173602+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-typecheck-r6.json",
-          "sha256": "3d2bd5fd73125b7746b4d99e065530da9b0896e8cce644e7e881edf3d881dcdf"
-        },
-        "argv": [
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "../../node_modules/typescript/bin/tsc",
-          "--noEmit",
-          "--project",
-          "tsconfig.embedded.json"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-typecheck-r6.log",
-        "logSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "startedUTC": "2026-10-05T17:43:48.283737+00:00",
-        "finishedUTC": "2026-10-05T17:43:50.047732+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-process-ast-r6.json",
-          "sha256": "27d700f330cd21ed3fb175ae6b7dd1507697c7e6290e26204cdf8d56be864646"
-        },
-        "argv": [
-          "/usr/bin/env",
-          "CREATOROS_TEST_TYPESCRIPT_MODULE=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/node_modules/typescript/lib/typescript.js",
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/physical-providers/check-process-globals.ts",
-          "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/apps/web/native-dist/native.js",
-          "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/opencut-physical-process-ast-r6-result.json"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-process-ast-r6.log",
-        "logSHA": "64ea2c865a72f96ec4de67af54fe718426ddab391c4c50e01819af441b51a70a",
-        "startedUTC": "2026-10-05T17:52:26.896107+00:00",
-        "finishedUTC": "2026-10-05T17:52:27.588793+00:00"
-      },
-      {
-        "report": {
-          "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-dom-r6-jsdom29.json",
-          "sha256": "409413b4e642ae14df403aeec34efa37b8977e0496b4e0fa7036e1ead00457fc"
-        },
-        "argv": [
-          "/usr/bin/env",
-          "CREATOROS_TEST_JSDOM_MODULE=/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/frontend/node_modules/jsdom/lib/api.js",
-          "CREATOROS_NATIVE_FIXTURE_MODULE=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/apps/web/native-dom-fixture-dist/native.js",
-          "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
-          "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/physical-providers/dom-probe-r6.ts"
-        ],
-        "exit": 0,
-        "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-dom-r6-jsdom29.log",
-        "logSHA": "0471c486c86ed8acde2b6029785fec9ac3d499806511cdc69c4148988dce4daa",
-        "startedUTC": "2026-10-05T17:57:09.800747+00:00",
-        "finishedUTC": "2026-10-05T17:57:11.659016+00:00"
-      }
-    ],
-    "titleDirtyRegression": "actual existing fixture RED1 then new fixture GREEN40checks; not browser"
+    "evidenceDirectory": "verification/t1274-preview"
   },
   "limitations": [
     "原Canvas/Fabric夹具与JSDOM环境不等于真实浏览器像素或安装。",
@@ -871,5 +610,460 @@
       "全局parallel-isolation因既有T1026非法glob失败，未建立自治lease；本候选仅声明指定worktree与路径隔离。",
       "git diff --check在完整标准patch文本中报告历史空白和上下文缩进，不为消除噪声改原源码；非patch范围检查另留。"
     ]
+  },
+  "historicalT1274WorkspaceCurrent": {
+    "deliveryStatus": "NATIVE_WORKSPACE_SOURCE_BUILD_DOM_FIXTURE_VERIFIED_NOT_HOST_OR_BROWSER_OR_INSTALLED",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6628162,
+      "cssBytes": 128748,
+      "licensedDependencies": 59,
+      "renderedModules": 429,
+      "nativeHashes": {
+        "native.js": "4c0da8c3e58aa808c13c1d34a4bbbc0636b33cb4cc8eaa01068d03d0b61b0e33",
+        "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
+        "NATIVE_BUILD_GRAPH.json": "a18b6dfb4ab66854f6634acb36ff72db6c2859c2136108a3ba37d11663ae2950",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "未重装；复用此前隔离源码真实bun frozen ignore-scripts安装的同一锁依赖树",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 713,
+      "changedFiles": 80,
+      "archiveBytes": 760012,
+      "patchBytes": 391057,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "cf683a02a18d19e119939da2256ec1bceb2d162167aaee357b27963c715cd8df",
+        "native-from-t1046.patch": "ed27c520d7ccc8ee0577962e58d13c82f6509c70431e61a7c230e5604c33f968",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "verification/t1274-preview/source-reconstruction.json",
+      "productionReconstructionEvidence": "verification/t1274-preview/production-reconstruction.json"
+    },
+    "verification": {
+      "typecheckExitCode": 0,
+      "regressionTests": 18,
+      "regressionAssertions": 112,
+      "resourceFixtureTests": 14,
+      "resourceFixtureAssertions": 63,
+      "totalTests": 32,
+      "totalAssertions": 175,
+      "domFixtureChecks": 40,
+      "testFailures": 0,
+      "fixtureOnly": true,
+      "browserAutomation": "not_run",
+      "historicalFailures": "immutable_R4_R7_reports_and_logs",
+      "unreplacedNodeEnv": 0,
+      "unguardedGlobalProcessReferences": 0,
+      "guardedGlobalProcessReferences": 6,
+      "processGlobalDuringDomProbe": false,
+      "currentEvidence": [
+        {
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "apps/web/scripts/build-native.mjs"
+          ],
+          "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source",
+          "started_utc": "2026-10-05T22:05:59.608844+00:00",
+          "finished_utc": "2026-10-05T22:06:08.221885+00:00",
+          "exit_code": 0,
+          "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/production-build.log",
+          "log_sha256": "6c66c09a99e527bdc6bb65401be7bf0f5f388a4b987255b989d0c50ef3fcae0f",
+          "bun_sha256": "4478c2c7fa1261fc67135311225e8f524dba389f82f699463e25eb397f572d9d",
+          "environment_keys": [
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "NO_COLOR",
+            "PATH",
+            "TMPDIR"
+          ],
+          "no_install": true,
+          "dependency_provenance": "APFS clone copy of existing R4/R8 actual dependency tree, no fresh install claim",
+          "db_model_browser_asr": false
+        },
+        {
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "apps/web/scripts/build-native.mjs",
+            "--dom-fixture"
+          ],
+          "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source",
+          "started_utc": "2026-10-05T22:06:37.750995+00:00",
+          "finished_utc": "2026-10-05T22:06:42.915739+00:00",
+          "exit_code": 0,
+          "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/dom-build.log",
+          "log_sha256": "385adfbca56c525a5a80a780de67ab8e05e874bb7373bdb414c24aa67854a631",
+          "bun_sha256": "4478c2c7fa1261fc67135311225e8f524dba389f82f699463e25eb397f572d9d",
+          "environment_keys": [
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "NO_COLOR",
+            "PATH",
+            "TMPDIR"
+          ],
+          "no_install": true,
+          "dependency_provenance": "APFS clone copy of existing R4/R8 actual dependency tree, no fresh install claim",
+          "db_model_browser_asr": false
+        },
+        {
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "test",
+            "src/embedded/__tests__/native-lifecycle.test.ts",
+            "src/embedded/__tests__/native-command.test.ts",
+            "src/embedded/__tests__/host-boundary.test.ts"
+          ],
+          "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source/apps/web",
+          "started_utc": "2026-10-05T22:08:16.613558+00:00",
+          "finished_utc": "2026-10-05T22:08:17.095613+00:00",
+          "exit_code": 0,
+          "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native-tests.log",
+          "log_sha256": "eeb34cded13c39fbd281f37c06f686eab5619e8d52c0f540074bb91f0ad39c90",
+          "environment_keys": [
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "NO_COLOR",
+            "PATH",
+            "TMPDIR"
+          ]
+        },
+        {
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "test",
+            "src/embedded/__tests__/native-resources.test.ts"
+          ],
+          "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source/apps/web",
+          "started_utc": "2026-10-05T22:08:17.096509+00:00",
+          "finished_utc": "2026-10-05T22:08:17.185113+00:00",
+          "exit_code": 0,
+          "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/resource-tests.log",
+          "log_sha256": "46377f4eb5b817012573c00d7e4b19e84853ea2765f892fdd054f56dfc67b6fe",
+          "environment_keys": [
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "NO_COLOR",
+            "PATH",
+            "TMPDIR"
+          ]
+        },
+        {
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "../../node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "--project",
+            "tsconfig.embedded.json"
+          ],
+          "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source/apps/web",
+          "started_utc": "2026-10-05T22:08:17.185961+00:00",
+          "finished_utc": "2026-10-05T22:08:22.474088+00:00",
+          "exit_code": 0,
+          "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/typecheck.log",
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "environment_keys": [
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "NO_COLOR",
+            "PATH",
+            "TMPDIR"
+          ]
+        },
+        {
+          "phase": "red",
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native-dom-title-regression.ts"
+          ],
+          "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source",
+          "started_utc": "2026-10-05T22:07:12.728410+00:00",
+          "finished_utc": "2026-10-05T22:07:14.068437+00:00",
+          "exit_code": 1,
+          "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/dom-title-red.log",
+          "log_sha256": "3388948029215bc05e0d2215aabc419edc6a9e5cf94f27a0923a968884e3ae7d",
+          "module_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/apps/web/native-dom-fixture-dist/native.js",
+          "module_sha256": "e0ceea4193f31b2af79bb10c6fb829069f2e4d5d76579db7a6181e4e29c94938",
+          "probe_sha256": "705c059796c419b28eb0fbbaba766f8549712668a7a81ad2cc2ca169e69a1738",
+          "boundary": "真实React native组件和公开request；JSDOM compositor/Canvas fixture，不是browser/GPU/视频/ASR/用户库。"
+        },
+        {
+          "phase": "green",
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native-dom-title-regression.ts"
+          ],
+          "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source",
+          "started_utc": "2026-10-05T22:07:14.186997+00:00",
+          "finished_utc": "2026-10-05T22:07:15.985847+00:00",
+          "exit_code": 0,
+          "log_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/dom-title-green.log",
+          "log_sha256": "2c49f254e23dc4f20546f494b8d9cbcd2724a63ddfbc794c17365bbc8cbec85a",
+          "module_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/build-source/apps/web/native-dom-fixture-dist/native.js",
+          "module_sha256": "f3c274aea4a37301a954b0a08dcb834e5fb8f51f799990655d08724fd526da47",
+          "probe_sha256": "705c059796c419b28eb0fbbaba766f8549712668a7a81ad2cc2ca169e69a1738",
+          "boundary": "真实React native组件和公开request；JSDOM compositor/Canvas fixture，不是browser/GPU/视频/ASR/用户库。"
+        }
+      ],
+      "supersededCandidateDefect": "前一候选14处React CJS NODE_ENV未替换，本次显式生产define修正，实际扫描原证据保留。",
+      "previousActualEvidenceHistorical": [
+        {
+          "report": {
+            "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-production-build-r6.json",
+            "sha256": "f51757014ebcfb9d20e0267fe6de26153f2b2287544b0a1c1a2115b8f3529788"
+          },
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "apps/web/scripts/build-native.mjs"
+          ],
+          "exit": 0,
+          "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-production-build-r6.log",
+          "logSHA": "bbab7607cbc949b0031ac7ab60f543ff0e74159d5026ce38a1ad114e013cc6e8",
+          "startedUTC": "2026-10-05T17:43:41.907824+00:00",
+          "finishedUTC": "2026-10-05T17:43:47.377810+00:00"
+        },
+        {
+          "report": {
+            "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-native-tests-r6.json",
+            "sha256": "272162c5a489ea8a31000e0fa4efd29a08b2577098f5053967dee587bffd3620"
+          },
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "test",
+            "src/embedded/__tests__/native-lifecycle.test.ts",
+            "src/embedded/__tests__/native-command.test.ts",
+            "src/embedded/__tests__/host-boundary.test.ts"
+          ],
+          "exit": 0,
+          "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-native-tests-r6.log",
+          "logSHA": "735231a2af5737f058fd90af75af5c180721d91252405819355f2c6ed72b43d3",
+          "startedUTC": "2026-10-05T17:43:47.506168+00:00",
+          "finishedUTC": "2026-10-05T17:43:47.999060+00:00"
+        },
+        {
+          "report": {
+            "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-resource-tests-r6.json",
+            "sha256": "2883706292967ffd9ea75ac3c075d9b525475fa263e4626c9efd17b75028bc8c"
+          },
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "test",
+            "src/embedded/__tests__/native-resources.test.ts"
+          ],
+          "exit": 0,
+          "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-resource-tests-r6.log",
+          "logSHA": "088a42438f6fe60f6839b202b960b5b6825920079fba4fa3f4c99e5e7b92eb3e",
+          "startedUTC": "2026-10-05T17:43:48.106042+00:00",
+          "finishedUTC": "2026-10-05T17:43:48.173602+00:00"
+        },
+        {
+          "report": {
+            "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-typecheck-r6.json",
+            "sha256": "3d2bd5fd73125b7746b4d99e065530da9b0896e8cce644e7e881edf3d881dcdf"
+          },
+          "argv": [
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "../../node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "--project",
+            "tsconfig.embedded.json"
+          ],
+          "exit": 0,
+          "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-typecheck-r6.log",
+          "logSHA": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "startedUTC": "2026-10-05T17:43:48.283737+00:00",
+          "finishedUTC": "2026-10-05T17:43:50.047732+00:00"
+        },
+        {
+          "report": {
+            "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-process-ast-r6.json",
+            "sha256": "27d700f330cd21ed3fb175ae6b7dd1507697c7e6290e26204cdf8d56be864646"
+          },
+          "argv": [
+            "/usr/bin/env",
+            "CREATOROS_TEST_TYPESCRIPT_MODULE=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/node_modules/typescript/lib/typescript.js",
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/physical-providers/check-process-globals.ts",
+            "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/apps/web/native-dist/native.js",
+            "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/opencut-physical-process-ast-r6-result.json"
+          ],
+          "exit": 0,
+          "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-process-ast-r6.log",
+          "logSHA": "64ea2c865a72f96ec4de67af54fe718426ddab391c4c50e01819af441b51a70a",
+          "startedUTC": "2026-10-05T17:52:26.896107+00:00",
+          "finishedUTC": "2026-10-05T17:52:27.588793+00:00"
+        },
+        {
+          "report": {
+            "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-dom-r6-jsdom29.json",
+            "sha256": "409413b4e642ae14df403aeec34efa37b8977e0496b4e0fa7036e1ead00457fc"
+          },
+          "argv": [
+            "/usr/bin/env",
+            "CREATOROS_TEST_JSDOM_MODULE=/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/frontend/node_modules/jsdom/lib/api.js",
+            "CREATOROS_NATIVE_FIXTURE_MODULE=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/apps/web/native-dom-fixture-dist/native.js",
+            "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun",
+            "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/physical-providers/dom-probe-r6.ts"
+          ],
+          "exit": 0,
+          "log": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-dom-r6-jsdom29.log",
+          "logSHA": "0471c486c86ed8acde2b6029785fec9ac3d499806511cdc69c4148988dce4daa",
+          "startedUTC": "2026-10-05T17:57:09.800747+00:00",
+          "finishedUTC": "2026-10-05T17:57:11.659016+00:00"
+        }
+      ],
+      "titleDirtyRegression": "actual existing fixture RED1 then new fixture GREEN40checks; not browser"
+    },
+    "t1274Verification": {
+      "nativeControlTests": 19,
+      "nativeControlAssertions": 116,
+      "nativeResourceTests": 16,
+      "nativeResourceAssertions": 68,
+      "workspaceTests": 4,
+      "workspaceAssertions": 24,
+      "workspaceDomChecks": 22,
+      "legacyDomChecks": 38,
+      "productionBuildExit": 0,
+      "typecheckExit": 0,
+      "processGlobalAstExit": 0,
+      "actualRedEvidence": [
+        "verification/t1274/tdd-red.log",
+        "verification/t1274/dom-tdd-red.log"
+      ],
+      "evidenceDirectory": "verification/t1274",
+      "limitations": [
+        "DOM探针替换compositor/Canvas，不证明真实GPU、像素、AAC或MP4。",
+        "未验证宿主唯一DraftChatRail停靠/回迁，宿主集成由主会话处理。",
+        "未执行真实浏览器视觉与独立任务走查、200%缩放或安装包。",
+        "全局parallel-isolation因既有T1026非法glob失败，未建立自治lease；本候选仅声明指定worktree与路径隔离。",
+        "git diff --check在完整标准patch文本中报告历史空白和上下文缩进，不为消除噪声改原源码；非patch范围检查另留。"
+      ]
+    }
+  },
+  "t1274PreviewVerification": {
+    "scope": "真实controller/renderer机械边界；端口与DOM夹具不证明GPU/MP4/真实解码/宿主/E2E",
+    "sourceDirectory": "/tmp/creatoros-t1274-preview-isolated",
+    "sourceArchiveFiles": 713,
+    "standardPatchFuzz": 0,
+    "newPublicRedCases": 13,
+    "newPublicGreenCases": 15,
+    "extraGreenRegressionCases": "原公共load/context/snapshot/seek/apply/export及旧未知层保留，不补拍历史RED",
+    "red": {
+      "red-public-final.log": {
+        "pass": 0,
+        "fail": 13,
+        "sha256": "488116ee89eae86d42202d836c034551be267b5c4d67d74bfbec661034bf1ebd"
+      },
+      "red-resources-final.log": {
+        "pass": 0,
+        "fail": 3,
+        "sha256": "6fb26b3fa957cea083d9929ec3f83bcd08a4eeaf4effdd4b46d2007263708509"
+      },
+      "red-audio-final.log": {
+        "pass": 1,
+        "fail": 2,
+        "sha256": "c2b25c5d0e46a71a6fbbc40eb6b5e73201876fcc440251a8ee8bbf0a46215884"
+      },
+      "red-canvas.log": {
+        "pass": 0,
+        "fail": 1,
+        "sha256": "f3361cc2ef017814a042cd5f7ac7d37bd9edca9a48af89dfb33e47e0bdc665c3"
+      },
+      "red-image.log": {
+        "pass": 0,
+        "fail": 1,
+        "sha256": "e0fa4d2d009d19c68d99d127bf47942cbc7cde387d5a777a172efa52b2ba9218"
+      }
+    },
+    "green": {
+      "old-native-release.log": {
+        "pass": 19,
+        "fail": 0,
+        "assertions": 116,
+        "sha256": "12c3cdbf82637918d6c912b2eae6f84ee4f4195e2d28812d8f084e2e277daccc"
+      },
+      "old-workspace-release.log": {
+        "pass": 4,
+        "fail": 0,
+        "assertions": 24,
+        "sha256": "a26bf87b4ff11ef3faf0490ca1fdeedbef9939f7b92832d337fe69a114e02586"
+      },
+      "old-resources-release.log": {
+        "pass": 16,
+        "fail": 0,
+        "assertions": 68,
+        "sha256": "29a246bf5db7837f26b94a48c74f6e4ca165f3723d271d08c473b50241822dcb"
+      },
+      "green-public-last.log": {
+        "pass": 15,
+        "fail": 0,
+        "assertions": 69,
+        "sha256": "7c1924c2f179f2fa6567e4264e945bed61b492630a1a6912a55ed7ccc17e4771"
+      },
+      "green-resources-release.log": {
+        "pass": 3,
+        "fail": 0,
+        "assertions": 15,
+        "sha256": "9958af4d37bced974ffb16be23264f36a97d095e9a60291076937a09c504949c"
+      },
+      "green-audio-release.log": {
+        "pass": 3,
+        "fail": 0,
+        "assertions": 6,
+        "sha256": "65a5eb88677fdf37c263b2b46593cace60cb0a9186f03bcc61a4c0f243180971"
+      },
+      "green-canvas-release.log": {
+        "pass": 1,
+        "fail": 0,
+        "assertions": 5,
+        "sha256": "3f1240f3c0f4b7aeaca6634af1917f60da212cdd4abe087ca3791f0daf839d56"
+      },
+      "green-image-release.log": {
+        "pass": 1,
+        "fail": 0,
+        "assertions": 4,
+        "sha256": "7d7bda755a5e1aaf3e28dc91b91818ab5e2bb5bd50b5d9ee77fa339c96cc2a35"
+      }
+    },
+    "totalGreenTests": 62,
+    "totalGreenAssertions": 307,
+    "domFixtureChecks": {
+      "original": 38,
+      "workspace": 22
+    },
+    "typecheckLog": "type-last.log",
+    "productionBuildLog": "production-build.log",
+    "archiveBuildLog": "archive-production-build.log",
+    "astLog": "process-ast.log",
+    "allFailuresPreserved": true,
+    "fixturePublished": false,
+    "gpuOrRealMediaPass": false,
+    "diffCheck": {
+      "nonPatchExitCode": 0,
+      "fullPatchExitCode": 2,
+      "reason": "标准补丁上下文的空白前缀及真实上游CRLF/行尾空格；保留真实源字节与F0复原，不归一化历史源码。",
+      "logs": [
+        "diff-check-all.log",
+        "diff-check-nonpatch.log"
+      ]
+    }
   }
 }

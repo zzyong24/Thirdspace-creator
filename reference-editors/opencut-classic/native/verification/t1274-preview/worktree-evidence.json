@@ -1,0 +1,27 @@
+{
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator",
+  "branch": "codex/t1274-native-workspace",
+  "baseHead": "5ef3de162bf5784559829d416898bfb311c36e83",
+  "scopePrefixes": [
+    "reference-editors/opencut-classic/native/",
+    "frontend/public/reference-editors/opencut-classic/native/"
+  ],
+  "changedTrackedFiles": [
+    "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+    "frontend/public/reference-editors/opencut-classic/native/native.css",
+    "frontend/public/reference-editors/opencut-classic/native/native.js",
+    "reference-editors/opencut-classic/native/DELIVERY.json",
+    "reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+    "reference-editors/opencut-classic/native/README.md",
+    "reference-editors/opencut-classic/native/SOURCE_CHANGES.json",
+    "reference-editors/opencut-classic/native/VERIFICATION.md",
+    "reference-editors/opencut-classic/native/native-from-t1046.patch",
+    "reference-editors/opencut-classic/native/native-source.tar.gz",
+    "reference-editors/opencut-classic/native/native.css",
+    "reference-editors/opencut-classic/native/native.js",
+    "reference-editors/opencut-classic/native/rebuild-native.sh"
+  ],
+  "sharedRootModified": false,
+  "noBusinessTaskOrExternalCommit": true,
+  "reviewSourceDirectory": "/tmp/creatoros-t1274-preview-isolated"
+}

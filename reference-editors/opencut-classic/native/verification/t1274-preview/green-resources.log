@@ -1,0 +1,14 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-resources.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find package 'eventemitter3' from '/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/services/renderer/scene-exporter.ts'
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [279.00ms]
