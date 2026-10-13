@@ -426,7 +426,7 @@ impl BrowserHost {
             "legacyIdentityImported": false,
             "primaryLoginState": "unverified",
             "bundledBrowserPathPresent": Self::packaged_chrome_available(&self.bundled_chrome)
-                && std::env::var_os("NOMIFUN_CHROME_BINARY").is_none(),
+                && std::env::var_os(crate::secure_strings::s(crate::secure_strings::ids::NOMIFUN_CHROME_BINARY_ENV)).is_none(),
         }))
     }
 
@@ -524,7 +524,7 @@ impl BrowserHost {
         // NomiFun otherwise falls back to system Chrome or downloads at runtime.
         // This host deliberately requires the packaged, pinned CfT binary.
         if !Self::packaged_chrome_available(&self.bundled_chrome)
-            || std::env::var_os("NOMIFUN_CHROME_BINARY").is_some()
+            || std::env::var_os(crate::secure_strings::s(crate::secure_strings::ids::NOMIFUN_CHROME_BINARY_ENV)).is_some()
         {
             return Err(BrowserHostError::unavailable());
         }
@@ -636,7 +636,7 @@ impl BrowserHost {
                     .map_or(true, |m| !m.is_dir() || m.file_type().is_symlink())
                     || std::fs::canonicalize(&physical).ok().as_deref() != Some(physical.as_path())
                     || !Self::packaged_chrome_available(&bundled_root)
-                    || std::env::var_os("NOMIFUN_CHROME_BINARY").is_some()
+                    || std::env::var_os(crate::secure_strings::s(crate::secure_strings::ids::NOMIFUN_CHROME_BINARY_ENV)).is_some()
                 {
                     return Err(BrowserPlatformError::new(
                         BrowserErrorCode::BrowserUnavailable,

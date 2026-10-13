@@ -11,7 +11,7 @@
   "app": {
     "windows": [],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:*; img-src 'self' data:; font-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'self'"
     }
   },
   "bundle": {
@@ -32,6 +32,7 @@
     ],
     "resources": [
       "sidecar.tar.gz",
+      "sidecar.tar.gz.sig",
       "THIRD_PARTY_NOTICES.md"
     ],
     "createUpdaterArtifacts": true,

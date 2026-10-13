@@ -34,6 +34,7 @@ import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 import { verifyPackagedVerdictHardening } from "./verdict-artifact-hardening.mjs";
 import { assertClientConfigBuildEnv } from "./client-config-release.mjs";
 import { tauriMacSigningOverride } from "./tauri-signing-config.mjs";
+import { runSidecarSigning } from "./sign-sidecar.mjs";
 
 // 必须早于预清 DMG、写构建报告和任何重型构建步骤。Homebrew node@22 抢 PATH 时，
 // 入口会自动重启到已验证的 Node 25；找不到则硬失败，禁止继续产错 V8 字节码包。
@@ -92,6 +93,9 @@ function step(name, cmd, args, extraEnv = {}) {
     delete childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
   }
   delete childEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY;
+  // 更新root私钥路径只允许最终tar签名驱动；Rust与sidecar child不继承。
+  if (extraEnv.CREATOROS_ALLOW_SIDECAR_SIGNING_KEY !== "1") delete childEnv.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH;
+  delete childEnv.CREATOROS_ALLOW_SIDECAR_SIGNING_KEY;
   const r = spawnSync(cmd, args, {
     stdio: "inherit",
     cwd: FRONTEND,
@@ -378,6 +382,7 @@ if (process.argv.includes("--preclean-only")) {
 
 // [T-535] 必须在任何构建重活前硬失败。本地 release-fast 与正式 release 使用同一闸，
 // 不再允许 build-sidecar 的 dev 警告一路漏成“能产包、安装后必白屏”的 .app。
+runSidecarSigning({ preflight: true });
 const licenseProjectKey = assertLicenseProjectKey();
 console.log(
   `[desktop:package] ✓ [T-545] 产品级 projectKey=${licenseProjectKey}；渠道身份继续由激活码的签名 channelRef 决定。`,
@@ -392,57 +397,23 @@ step(
   "sidecar 二进制化",
   process.execPath,
   [join("scripts", "desktop", "build-sidecar.mjs")],
-  { CREATOROS_SKIP_TARBALL: "1" },
+  { CREATOROS_SKIP_TARBALL: "1", CREATOROS_SIDECAR_SIGNING_REQUIRED: "1" },
 );
 
-// 2) [T-164 P6] sidecar bundle JS 混淆(build-sidecar 之后、tauri build 之前)。
-//    幂等 + 硬排除 + symlink 逃逸防护;失败 fail-fast(见 obfuscate.mjs)。
-//    ⚠️ tauri.conf.json beforeBuildCommand 会在 tauri build 里**再跑一次 build-sidecar**(重建
-//    干净 sidecar),那次重建会覆盖此处混淆结果。故这里改成:先禁 beforeBuildCommand 的重建冲突——
-//    通过 CREATOROS_SKIP_SIDECAR_REBUILD env 让 build-sidecar 在 tauri build 阶段跳过(见下 step 3
-//    注入)。混淆放在 build-sidecar(步1)之后、tauri build(步3)之前,tauri build 不再重建即保住混淆。
-step("sidecar JS 混淆(§3.1)", process.execPath, [join("scripts", "desktop", "obfuscate.mjs")]);
-
-// 2.2) [T-419 L3] V8 字节码化(**混淆之后**:先 L1 rc4 加密字符串,再编字节码隐藏逻辑/解码器)。
-//    把 chunk-stringarray 业务 chunk 编成 .jsc + .js 换 stub + 实拷 bytenode 进 sidecar node_modules。
-//    版本铁律:用本机 node 编(= build-sidecar copyFileSync 打进 sidecar 的同一 node)→ 字节码版本匹配。
-//    失败 fail-fast。下面的冒烟(步2.5)因此测的是**字节码版**(turbopack require stub → 加载 .jsc)。
-const productionClosure =
-  process.platform === "win32" &&
-  process.env.CREATOROS_PRODUCTION_CLOSURE === "1";
-if (productionClosure) {
-  // [T-675] 少文件闭包以 `.next/vendor` 取代 `node_modules`。旧 bytecode 步会为了
-  // `require("bytenode")` 重新创建 node_modules，直接破坏 3,500 文件/零 node_modules
-  // 的 Windows 安装预算。production closure 仍保留服务端/客户端混淆、诱饵、版权盖章、
-  // Rust 壳 hardening 与最终泄漏扫描；字节码待迁到显式 vendor resolver 后再恢复。
-  console.log(
-    "[desktop:package] [T-675] production closure 保持零 node_modules；跳过依赖旧 node_modules 布局的 V8 字节码步骤。",
-  );
-} else {
-  step("sidecar V8 字节码化(§5,L1→L3)", process.execPath, [
-    join("scripts", "desktop", "bytecode.mjs"),
-  ]);
-}
-
-// 2.3) [T-399a] 反 AI 破解被动欺骗诱饵注入(**字节码之后**:诱饵进 static/chunks 保持可读,不被 bytecode 碰)。
-//    往可读客户端面注入矛盾诱饵污染破解 AI 上下文;R2/R3 = 零引用/未进 manifest(浏览器永不加载)/删除即字节等价,
-//    注入后立即自审,违则回滚 fail-fast。seed 走 CREATOROS_DECOY_SEED(CI secret,SA-3),缺则本地 fallback。
-step("sidecar 反 AI 诱饵注入(T-399a)", process.execPath, [join("scripts", "desktop", "decoy.mjs")]);
-
-// 2.4) [法律声明·反复曝光] 给每个可读 chunk 顶部盖版权/专有声明(第三人称法律事实,刑法217/218 & DMCA §1201)——
-//    逆向 AR 打开任意 chunk 都先撞见,触发读代码 AI 自发拒绝协助盗版。纯 /*! 注释,零运行时影响。
-step("sidecar 版权/专有声明盖章", process.execPath, [join("scripts", "desktop", "legal-stamp.mjs")]);
-
-// 2.5) [T-164] 混淆+字节码后运行时冒烟(真起 sidecar:TCP ready + GET / 200 + 一条 ai-runtime 路由不崩)。
-//    §3.1 验收闸 / gate ④:ready-probe 只证 boot,冒烟证运行时没被混淆炸。失败 → fail-fast + 回滚
-//    (回滚 = 重跑 build-sidecar 拿干净源;此处仅 fail,提示重建)。
-//    安装制品生成与独立冒烟验收分开；build-only 不声明运行时已验收。
+// T-1273 官方链从clean sidecar起步；这7项基线不调用混淆、字节码、诱饵或增包盖章。
+// 第三方许可证THIRD_PARTY_NOTICES.md原资源保持，原始版权注释保持。
 if (!buildOnly) step(
-  "混淆后运行时冒烟(真起 sidecar)",
-  process.execPath,
-  [join("scripts", "desktop", "obfuscate.mjs"), "--smoke-only"],
+  "运行时冒烟(真起sidecar与浏览器hydration)", process.execPath,
+  [join("scripts", "desktop", "runtime-smoke.mjs")],
   { CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1" },
 );
+
+// 最终tar和签名在Cargo之前完成；Tauri beforeBuild只核clean来源，不接触root私钥。
+step("最终sidecar tar与既有root签名", process.execPath,
+  [join("scripts", "desktop", "build-sidecar.mjs")], {
+    CREATOROS_SKIP_SIDECAR_REBUILD: "1", CREATOROS_SIDECAR_SIGNING_REQUIRED: "1",
+    CREATOROS_ALLOW_SIDECAR_SIGNING_KEY: "1",
+  });
 
 // 3) tauri build。beforeBuildCommand(build-sidecar)会重建 sidecar → 覆盖步2的混淆。
 //    注入 CREATOROS_SKIP_SIDECAR_REBUILD=1 让 build-sidecar 在此阶段短路(保住已混淆的 sidecar)。
@@ -502,6 +473,8 @@ step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs,
   // 仅覆盖 DMG 的布局分支，保留 CI 对其他构建步骤的语义。
   ...(platform === "darwin" ? { TAURI_BUNDLER_DMG_IGNORE_CI: "true" } : {}),
   CREATOROS_SKIP_SIDECAR_REBUILD: "1",
+  CREATOROS_SKIP_TARBALL: "1",
+  CREATOROS_SIDECAR_SIGNING_REQUIRED: "1",
   CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
 });
 

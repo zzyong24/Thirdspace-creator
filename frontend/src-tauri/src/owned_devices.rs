@@ -17,7 +17,11 @@ use std::{
 };
 use zeroize::{Zeroize, Zeroizing};
 
+fn growth() -> &'static str { crate::secure_strings::s(crate::secure_strings::ids::GROWTH_BASE_URL) }
+#[cfg(test)]
 const GROWTH: &str = "https://growth.aitongban.cloud";
+fn activity() -> &'static str { crate::secure_strings::s(crate::secure_strings::ids::LICENSE_BASE_URL) }
+#[cfg(test)]
 const ACTIVITY: &str = "https://license.aitongban.cloud";
 const CREATE: &str = "/api/license-device-connect-sessions";
 const POLL: &str = "/api/license-device-connect-sessions/poll";
@@ -94,11 +98,11 @@ fn user_code(raw: &str) -> Option<String> {
 }
 fn verification_url(raw: &str, code: &str) -> Result<String, String> {
     let url = url::Url::parse(raw).map_err(|_| error("官方确认地址无效，请重新连接"))?;
-    let origin_allowed = url.origin().ascii_serialization() == GROWTH;
+    let origin_allowed = url.origin().ascii_serialization() == growth();
     #[cfg(debug_assertions)]
     let origin_allowed = origin_allowed ||
         (std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB").as_deref() == Ok("1")
-        && http_client_and_origin(GROWTH)?.1 == url.origin().ascii_serialization());
+        && http_client_and_origin(growth())?.1 == url.origin().ascii_serialization());
     if !origin_allowed
         || url.path() != "/products/connect"
         || !url.username().is_empty()
@@ -259,7 +263,7 @@ fn enabled() -> bool {
 fn config(state: &LicenseState) -> Result<LicenseConfig, String> {
     let mut cfg = LicenseConfig::from_env(state.0.machine_id.clone());
     cfg.strict_verify = true;
-    if cfg.base_url.trim_end_matches('/') != ACTIVITY || cfg.project_key.is_empty() {
+    if cfg.base_url.trim_end_matches('/') != activity() || cfg.project_key.is_empty() {
         return Err(error(
             "软件包的授权服务配置无法核对，请使用官方提供的安装包",
         ));
@@ -330,7 +334,7 @@ fn http_client_and_origin(origin: &str) -> Result<(reqwest::blocking::Client, St
         }
         let growth = loopback_origin(&lab.growth_origin)?;
         let activity = loopback_origin(&lab.activity_origin)?;
-        let target = match origin { GROWTH => growth, ACTIVITY => activity,
+        let target = match origin { value if value == self::growth() => growth, value if value == self::activity() => activity,
             _ => return Err(error("本地HTTP测试不能扩展生产origin白名单")) };
         let mut builder = builder.no_proxy();
         if target.scheme() == "https" {
@@ -371,14 +375,14 @@ impl Transport for Http {
         body: &str,
         bearer: Option<&str>,
     ) -> Result<Response, String> {
-        if ![GROWTH, ACTIVITY].contains(&origin)
+        if ![growth(), activity()].contains(&origin)
             || ![
                 CREATE,
                 POLL,
                 ACK,
                 TICKET,
-                "/api/license/activate",
-                "/api/license/status",
+                crate::secure_strings::s(crate::secure_strings::ids::LICENSE_ACTIVATE_PATH),
+                crate::secure_strings::s(crate::secure_strings::ids::LICENSE_STATUS_PATH),
             ]
             .contains(&path)
         {
@@ -450,13 +454,13 @@ impl Transport for Http {
 impl LicenseHttp for Http {
     fn post(&self, url: &str, body: &str) -> Result<LicenseHttpResponse, String> {
         let url = url::Url::parse(url).map_err(|_| error("授权地址无效"))?;
-        if url.origin().ascii_serialization() != ACTIVITY
+        if url.origin().ascii_serialization() != activity()
             || url.query().is_some()
             || url.fragment().is_some()
         {
             return Err(error("授权地址无效"));
         }
-        Ok(Transport::post(self, ACTIVITY, url.path(), body, None)?.signed)
+        Ok(Transport::post(self, activity(), url.path(), body, None)?.signed)
     }
 }
 struct Clock;
@@ -565,7 +569,7 @@ fn validate_ready(r: &Ready, j: &Journal, cfg: &LicenseConfig) -> Result<(), Str
     if r.status != "ready"
         || r.project_key != cfg.project_key
         || r.product_ref != crate::product_identity::product_ref()
-        || r.activation_endpoint != "/api/license/activate"
+        || r.activation_endpoint != crate::secure_strings::s(crate::secure_strings::ids::LICENSE_ACTIVATE_PATH)
         || r.expected_channel_ref.is_empty()
         || r.expected_channel_ref.len() > 160
         || !valid_hash(&r.expected_authorization_ref_hash)
@@ -627,13 +631,13 @@ fn signed_ticket(
 ) -> Result<(Zeroizing<String>, Claims), String> {
     let nonce = random();
     let body = Zeroizing::new(serde_json::json!({"contractVersion":"config-access-ticket-v3", "projectKey":cfg.project_key, "code":code, "machineId":cfg.machine_id, "nonce":nonce}).to_string());
-    let response = transport.post(ACTIVITY, TICKET, &body, None)?.signed;
+    let response = transport.post(activity(), TICKET, &body, None)?.signed;
     let key = license::resolve_public_key(&cfg.public_key_b64)
         .map_err(|_| error("软件包的授权校验暂不可用，请使用正式安装包"))?;
     license::verify_response_signature(
         &key,
         "post /api/license/client-config-tickets",
-        "license.aitongban.cloud",
+        crate::secure_strings::license_host(),
         &response,
     )
     .map_err(|_| error("授权票据未通过签名核对，请重试"))?;
@@ -855,7 +859,7 @@ fn ack(
         serde_json::json!({"deviceSecret":j.device_secret, "codeVerifier":j.code_verifier})
             .to_string(),
     );
-    let response = transport.post(GROWTH, ACK, &body, None)?;
+    let response = transport.post(growth(), ACK, &body, None)?;
     flight.current()?;
     match check_response(&response)? {
         Some("expired") => {
@@ -904,7 +908,7 @@ pub async fn owned_device_start(
             Some(signed_ticket(&Http, &cfg, &saved.code, now())?.0)
         } else { body["machineId"] = cfg.machine_id.clone().into(); body["deviceLabel"] = label.into(); if let Some(code) = &original { body["activationCode"] = code.clone().into(); } None };
         let request = Zeroizing::new(body.to_string()); drop(body);
-        let response = Transport::post(&Http, GROWTH, CREATE, &request, ticket.as_deref().map(|v| v.as_str()))?;
+        let response = Transport::post(&Http, growth(), CREATE, &request, ticket.as_deref().map(|v| v.as_str()))?;
         flight.current()?;
         if response.signed.status != 200 && response.signed.status != 201 { check_response(&response)?; return Err(error("连接未创建，请稍后重试")); }
         let mut created: Created = parse(&response.signed.body)?;
@@ -1029,7 +1033,7 @@ pub async fn owned_device_poll(state: tauri::State<'_, LicenseState>) -> Result<
         }
         let request = Zeroizing::new(body.to_string());
         drop(body);
-        let response = Transport::post(&Http, GROWTH, POLL, &request, None)?;
+        let response = Transport::post(&Http, growth(), POLL, &request, None)?;
         flight.current()?;
         match check_response(&response)? {
             Some("expired") => {

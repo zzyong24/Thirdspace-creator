@@ -378,7 +378,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
-  it("clean runtime 阶段不提前压大 tar，最终变换后只由 beforeBuild 压一次", () => {
+  it("clean runtime 阶段不提前压大tar，正式链在Cargo前完成最终签名且beforeBuild不重压", () => {
     expect(workflow).toMatch(
       /name:\s*构建 clean Runtime Image[\s\S]*CREATOROS_SKIP_TARBALL:\s*"1"/,
     );
@@ -390,7 +390,15 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       join(process.cwd(), "scripts", "desktop", "build-sidecar.mjs"),
       "utf8",
     );
-    expect(packageSource).toContain('{ CREATOROS_SKIP_TARBALL: "1" }');
+    const firstRuntimeStep = packageSource.slice(
+      packageSource.indexOf('"sidecar 二进制化"'),
+      packageSource.indexOf('// T-1273 官方链'),
+    );
+    expect(firstRuntimeStep).toContain('CREATOROS_SKIP_TARBALL: "1"');
+    expect(firstRuntimeStep).toContain('CREATOROS_SIDECAR_SIGNING_REQUIRED: "1"');
+    expect(packageSource).toContain('step("最终sidecar tar与既有root签名"');
+    const tauriStep = packageSource.slice(packageSource.indexOf('step("tauri build(含 updater 签名/占位)"'));
+    expect(tauriStep).toContain('CREATOROS_SKIP_TARBALL: "1"');
     expect(buildSource).toContain('process.env.CREATOROS_SKIP_TARBALL !== "1"');
   });
 

@@ -21,3 +21,8 @@ pub mod files;
 pub mod ipc;
 #[cfg(windows)]
 pub mod ipc_windows;
+
+// T-1273：独立workbench test crate同样消费候选字符串。
+#[cfg(test)]
+#[path = "../secure_strings.rs"]
+mod secure_strings;
