@@ -1,3 +1,5 @@
+本轮T-1274中心投影、原工程改名与private exact export源帧已归档。执行rebuild-native.sh verify包含新canvas多节点回归；DOM为显式fixture，最终真实GPU/MP4/UI采纳待ROOT。完整证据见VERIFICATION.md与verification/t1274-preview-center。
+
 # T-1274 已分离原声预览兼容窄修
 
 原OpenCut音频分离使用video的真实mediaId创建upload音轨，原backend合同允许audio元素引用video媒体。本轮仅修preview-scene的机械媒体类型校验，audio允许audio/video，video/image保持strict。未改变候选scope、renderer ABI、播放、保存、采纳或AAC时长。

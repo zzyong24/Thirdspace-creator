@@ -28,7 +28,7 @@ case "$2" in
     # 资源测试使用独立Bun进程，显式fixture不污染原命令回归的模块图。
     bun test src/embedded/__tests__/native-resources.test.ts
     # 各端口夹具单独进程，不混入原生命令/WASM模块图。
-    for preview_test in native-preview native-preview-resources native-preview-audio native-preview-canvas native-preview-image; do
+    for preview_test in native-preview native-preview-resources native-preview-audio native-preview-canvas native-preview-image native-preview-video-cache; do
       bun test "src/embedded/__tests__/$preview_test.test.ts"
     done
     CREATOROS_TEST_TYPESCRIPT_MODULE="$source_root/node_modules/typescript/lib/typescript.js" bun "$script_root/verification/check-process-globals.ts" "$source_root/apps/web/native-dist/native.js"

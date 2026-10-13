@@ -1,3 +1,13 @@
+# T-1274 中心候选与private源帧闭包
+
+本轮第三named slot把宿主候选投影在中心，原预览core保持DOM与尺寸；候选active时全部原core和快捷键锁定，空/解绑/卸载解除投影。compact header恢复原EditableProjectName→renameProject入口与工程名。DOM夹具真实检查中心42项、改名25项和旧组件38项；不把夹具签为实际GPU/宿主视觉或保存backend PASS。
+
+private SceneExporter cache仅按源PTS/declared duration半开区间取帧：等待pending prefetch、用实际next PTS晋升、保gap/取消/EOF。锁定MediaBunny文档确认poolSize0不复用画布；exact禁池保同素材多层不同源时刻，interactive保原3。真实旧源冷缓存3项RED→20PASS79断言；真resolveRenderTree并发1s/2s节点像素24变48的RED→1PASS7断言，后续迭代也保像素。WASM转换与解码端口为fixture，画布像素可读；不签实际MP4/GPU。
+
+完整71测试341断言、类型、production build及final AST均通过。715源码（原713+preview-workspace+canvas测试）标准patch实际F0还原、归档与展开源字节相同；从归档再次正式build七份与双发布路径逐字节相同。所有新环境失败及旧RED保verification/t1274-preview-center；旧patch空白/CRLF噪声不洗绿。本轮未取得中心/名称前改动RED，不补拍历史证据。
+
+最终新48帧候选的真实公共UI→预览→采纳→MP4仍待ROOT；先前重复前帧与AAC对齐FAIL保留，AAC/原900000ms预算未改，T1277另核。未新签独立视觉分或安装PASS。具体SHA/命令/限度见同目录verification-summary.json及DELIVERY.json。以下为历史记录。
+
 # T-1274 已分离原声预览兼容窄修
 
 原OpenCut音频分离使用video的真实mediaId创建upload音轨，原backend合同允许audio元素引用video媒体。本轮仅修preview-scene的机械媒体类型校验，audio允许audio/video，video/image保持strict。未改变候选scope、renderer ABI、播放、保存、采纳或AAC时长。

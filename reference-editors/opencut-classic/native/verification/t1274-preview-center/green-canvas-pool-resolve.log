@@ -1,0 +1,9 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview-video-cache.test.ts:
+(pass) T1274 private export同asset不同sourceTime多节点保留各自真实canvas像素，不被后续迭代池覆写 [2.16ms]
+
+ 1 pass
+ 0 fail
+ 7 expect() calls
+Ran 1 test across 1 file. [192.00ms]

@@ -1,7 +1,7 @@
 {
   "fixture": false,
   "entry": "src/embedded/native-entry.tsx",
-  "moduleCount": 429,
+  "moduleCount": 430,
   "modules": [
     {
       "module": "../../../../../__vite-plugin-wasm-helper",
@@ -321,7 +321,7 @@
     },
     {
       "module": "src/components/editor/editor-header.tsx",
-      "renderedLength": 2736
+      "renderedLength": 3007
     },
     {
       "module": "src/components/editor/panels/assets/assets-panel-store.tsx",
@@ -629,7 +629,7 @@
     },
     {
       "module": "src/embedded/editor-layout.tsx",
-      "renderedLength": 5240
+      "renderedLength": 5697
     },
     {
       "module": "src/embedded/frozen-export.ts",
@@ -645,11 +645,11 @@
     },
     {
       "module": "src/embedded/native-entry.tsx",
-      "renderedLength": 5521
+      "renderedLength": 5527
     },
     {
       "module": "src/embedded/native-host.ts",
-      "renderedLength": 6500
+      "renderedLength": 6667
     },
     {
       "module": "src/embedded/native-lifecycle.ts",
@@ -674,6 +674,10 @@
     {
       "module": "src/embedded/preview-scene.ts",
       "renderedLength": 7609
+    },
+    {
+      "module": "src/embedded/preview-workspace.tsx",
+      "renderedLength": 2692
     },
     {
       "module": "src/embedded/radix/aria-hidden.ts",
@@ -1229,7 +1233,7 @@
     },
     {
       "module": "src/services/renderer/scene-exporter.ts",
-      "renderedLength": 3978
+      "renderedLength": 3993
     },
     {
       "module": "src/services/storage/quota.ts",
@@ -1241,7 +1245,7 @@
     },
     {
       "module": "src/services/video-cache/service.ts",
-      "renderedLength": 8006
+      "renderedLength": 9519
     },
     {
       "module": "src/services/waveform-cache/service.ts",

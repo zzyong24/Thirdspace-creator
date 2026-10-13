@@ -1,6 +1,6 @@
 {
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
-  "nativeSourceFiles": 713,
+  "nativeSourceFiles": 715,
   "changedFiles": [
     "NATIVE_REBUILD_CONSISTENCY.json",
     "README.creatoros.md",
@@ -35,6 +35,7 @@
     "apps/web/src/embedded/__tests__/native-preview-canvas.test.ts",
     "apps/web/src/embedded/__tests__/native-preview-image.test.ts",
     "apps/web/src/embedded/__tests__/native-preview-resources.test.ts",
+    "apps/web/src/embedded/__tests__/native-preview-video-cache.test.ts",
     "apps/web/src/embedded/__tests__/native-preview.test.ts",
     "apps/web/src/embedded/__tests__/native-resources.test.ts",
     "apps/web/src/embedded/__tests__/native-workspace.test.tsx",
@@ -50,6 +51,7 @@
     "apps/web/src/embedded/native-visibility.tsx",
     "apps/web/src/embedded/native.css",
     "apps/web/src/embedded/preview-scene.ts",
+    "apps/web/src/embedded/preview-workspace.tsx",
     "apps/web/src/embedded/radix/aria-hidden.ts",
     "apps/web/src/embedded/radix/dismissable-layer.tsx",
     "apps/web/src/embedded/radix/focus-guards.tsx",
@@ -114,6 +116,32 @@
   "t1274SeparatedAudioChangedFromCandidate": [
     "apps/web/src/embedded/preview-scene.ts",
     "apps/web/src/embedded/__tests__/native-preview.test.ts",
+    "README.creatoros.md",
+    "NATIVE_REBUILD_CONSISTENCY.json"
+  ],
+  "t1274PreviewCenterChangedFiles": [
+    "apps/web/src/embedded/preview-workspace.tsx",
+    "apps/web/src/embedded/__tests__/native-preview.test.ts",
+    "apps/web/src/embedded/__tests__/native-preview-resources.test.ts",
+    "apps/web/src/embedded/__tests__/native-preview-canvas.test.ts",
+    "apps/web/src/embedded/__tests__/native-preview-image.test.ts",
+    "apps/web/src/embedded/__tests__/native-preview-audio.test.ts",
+    "apps/web/src/embedded/__tests__/native-preview-video-cache.test.ts",
+    "apps/web/src/services/video-cache/service.ts",
+    "apps/web/src/embedded/native-host.ts",
+    "apps/web/src/components/editor/editor-header.tsx",
+    "apps/web/src/embedded/native-visibility.tsx",
+    "apps/web/src/embedded/editor-layout.tsx",
+    "apps/web/scripts/build-native.mjs",
+    "apps/web/src/embedded/__tests__/native-resources.test.ts",
+    "apps/web/src/embedded/native-controller.ts",
+    "apps/web/src/core/managers/renderer-manager.ts",
+    "apps/web/src/media/audio.ts",
+    "apps/web/src/services/renderer/canvas-renderer.ts",
+    "apps/web/src/services/renderer/resolve.ts",
+    "apps/web/src/services/renderer/scene-exporter.ts",
+    "apps/web/src/services/renderer/nodes/image-node.ts",
+    "apps/web/src/services/renderer/nodes/sticker-node.ts",
     "README.creatoros.md",
     "NATIVE_REBUILD_CONSISTENCY.json"
   ]
