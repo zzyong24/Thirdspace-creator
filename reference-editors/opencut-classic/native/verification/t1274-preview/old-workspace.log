@@ -1,0 +1,12 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-workspace.test.tsx:
+(pass) T1274 open-addon严格校验panel且不改变context/owner，四面板切换保留宿主 [0.74ms]
+(pass) T1274 addon键盘与粘贴事件不归原生，原时间轴事件仍归原生 [0.27ms]
+(pass) T1274 disabled只禁用原生core与portal，tabs/slot可用；hidden全部inert [0.14ms]
+(pass) T1274旧挂载没有addons保持旧disabled语义，dispose后新owner默认状态不复用 [0.12ms]
+
+ 4 pass
+ 0 fail
+ 24 expect() calls
+Ran 4 tests across 1 file. [14.00ms]

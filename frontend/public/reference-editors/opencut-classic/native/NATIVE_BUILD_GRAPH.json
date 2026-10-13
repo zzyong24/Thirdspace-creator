@@ -1,7 +1,7 @@
 {
   "fixture": false,
   "entry": "src/embedded/native-entry.tsx",
-  "moduleCount": 428,
+  "moduleCount": 429,
   "modules": [
     {
       "module": "../../../../../__vite-plugin-wasm-helper",
@@ -545,7 +545,7 @@
     },
     {
       "module": "src/core/managers/renderer-manager.ts",
-      "renderedLength": 6435
+      "renderedLength": 6615
     },
     {
       "module": "src/core/managers/save-manager.ts",
@@ -641,7 +641,7 @@
     },
     {
       "module": "src/embedded/native-controller.ts",
-      "renderedLength": 9303
+      "renderedLength": 9460
     },
     {
       "module": "src/embedded/native-entry.tsx",
@@ -670,6 +670,10 @@
     {
       "module": "src/embedded/next-image.tsx",
       "renderedLength": 274
+    },
+    {
+      "module": "src/embedded/preview-scene.ts",
+      "renderedLength": 7568
     },
     {
       "module": "src/embedded/radix/aria-hidden.ts",
@@ -929,7 +933,7 @@
     },
     {
       "module": "src/media/audio.ts",
-      "renderedLength": 12485
+      "renderedLength": 13444
     },
     {
       "module": "src/media/media-utils.ts",
@@ -1149,7 +1153,7 @@
     },
     {
       "module": "src/services/renderer/canvas-renderer.ts",
-      "renderedLength": 1955
+      "renderedLength": 2634
     },
     {
       "module": "src/services/renderer/canvas-utils.ts",
@@ -1193,7 +1197,7 @@
     },
     {
       "module": "src/services/renderer/nodes/image-node.ts",
-      "renderedLength": 2529
+      "renderedLength": 3236
     },
     {
       "module": "src/services/renderer/nodes/root-node.ts",
@@ -1201,7 +1205,7 @@
     },
     {
       "module": "src/services/renderer/nodes/sticker-node.ts",
-      "renderedLength": 771
+      "renderedLength": 1417
     },
     {
       "module": "src/services/renderer/nodes/text-node.ts",
@@ -1217,7 +1221,7 @@
     },
     {
       "module": "src/services/renderer/resolve.ts",
-      "renderedLength": 8733
+      "renderedLength": 8948
     },
     {
       "module": "src/services/renderer/scene-builder.ts",
@@ -1225,7 +1229,7 @@
     },
     {
       "module": "src/services/renderer/scene-exporter.ts",
-      "renderedLength": 3042
+      "renderedLength": 3978
     },
     {
       "module": "src/services/storage/quota.ts",

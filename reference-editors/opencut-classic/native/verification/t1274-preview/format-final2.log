@@ -1,0 +1,2 @@
+apps/web/src/embedded/preview-scene.ts 169ms
+apps/web/src/services/renderer/canvas-renderer.ts 26ms

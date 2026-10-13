@@ -1,0 +1,33 @@
+{
+  "allSevenOutputsByteMatch": true,
+  "fixturePublished": false,
+  "hashes": {
+    "archiveRebuild": {
+      "native.js": "4c0da8c3e58aa808c13c1d34a4bbbc0636b33cb4cc8eaa01068d03d0b61b0e33",
+      "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
+      "NATIVE_BUILD_GRAPH.json": "a18b6dfb4ab66854f6634acb36ff72db6c2859c2136108a3ba37d11663ae2950",
+      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    },
+    "reference": {
+      "native.js": "4c0da8c3e58aa808c13c1d34a4bbbc0636b33cb4cc8eaa01068d03d0b61b0e33",
+      "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
+      "NATIVE_BUILD_GRAPH.json": "a18b6dfb4ab66854f6634acb36ff72db6c2859c2136108a3ba37d11663ae2950",
+      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    },
+    "public": {
+      "native.js": "4c0da8c3e58aa808c13c1d34a4bbbc0636b33cb4cc8eaa01068d03d0b61b0e33",
+      "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
+      "NATIVE_BUILD_GRAPH.json": "a18b6dfb4ab66854f6634acb36ff72db6c2859c2136108a3ba37d11663ae2950",
+      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    }
+  }
+}

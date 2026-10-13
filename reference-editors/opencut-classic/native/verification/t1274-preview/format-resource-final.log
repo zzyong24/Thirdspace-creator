@@ -1,0 +1,6 @@
+apps/web/src/services/renderer/canvas-renderer.ts 80ms
+apps/web/src/services/renderer/scene-exporter.ts 30ms
+apps/web/src/services/renderer/resolve.ts 44ms
+apps/web/src/services/renderer/nodes/image-node.ts 18ms
+apps/web/src/services/renderer/nodes/sticker-node.ts 5ms
+apps/web/src/embedded/__tests__/native-preview-image.test.ts 6ms

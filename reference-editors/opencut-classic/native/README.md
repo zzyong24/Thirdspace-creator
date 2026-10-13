@@ -1,3 +1,22 @@
+# T-1274 候选隔离预览交付
+
+补齐生产`preview-scene`公共命令，使用原`renderer.exportProject` frozen ABI。校验完整owner、当前epoch、完整tracks前值与scene候选摘要、真实File与精确媒体版本；克隆当前工程，仅候选目标scene轨道替换。预览不暂停活动播放，不保存/切场景/写command，不改dirty、撤销、selection或contextEpoch。回执前再次核对，取消继承原signal/寿命，不重发或续期。
+
+```mermaid
+flowchart LR
+ A[当前工程与真实媒体] --> B[owner / epoch / before摘要]
+ B --> C[独立候选scene / 完整candidate摘要]
+ C --> D[真实renderer / 独立画布与解码缓存]
+ D --> E[真实MediaBunny编码 / 取消释放]
+ E --> F[再次核对 / 可播放候选Blob]
+```
+
+真实CanvasRenderer在同一同步段执行WASM renderFrame与帧拷贝，各实例输出尺寸沿原项目；编码不读活动预览输出。SceneExporter取消/失败释放源、未finalize输出、独立解码缓存和画布；临时音频context、慢图和贴纸随原取消释放，活动缓存保持原作用域。旧export frozen ABI与原公共命令保留。
+
+实RED与全部失败保留`verification/t1274-preview`；当前62测试及机械端口夹具通过，旧DOM38项与workspace22项通过。713份source归档与相对真实上游source.tar.gz的标准patch实际F0还原字节一致；从归档再次正式构建所得七份与两处生产目录一致。完整源码审查目录`/tmp/creatoros-t1274-preview-isolated`仍保留。
+
+**以上不证明真实GPU像素、实际MP4/AAC、宿主候选交互或安装包通过。**真实公共媒体与E2E由主会话继续验证；DOM fixture产物没有发布。当前SHA和实证以DELIVERY.json、SHA256SUMS及verification/t1274-preview为准。全量git diff --check保留标准patch上下文空白/原CRLF告警（exit2）；非patch检查PASS。补丁真实F0复原和源字节一致，未为消告警重写历史源。以下为历史交付说明，原失败不覆盖。
+
 # T-1274 原生统一剪辑工作区候选
 
 此候选沿已确认的CreatorOS品牌，保留OpenCut素材、属性、预览和时间轴实例。`workspaceAddons: true` 时，左侧素材/转录、右侧编导/属性使用页签与named slot；默认素材/编导。有真实原片时由宿主调用open-addon打开转录；重复标题仅在此模式隐藏。

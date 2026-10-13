@@ -1,0 +1,33 @@
+GPU renderer unavailable: No WebGPU adapter is available
+{
+  "status": "PASS-仅真实React/slot的DOM夹具",
+  "checks": [
+    "两个真实named slot投影同一宿主DOM",
+    "workspace模式去除重复标题且原四区留存",
+    "空工程默认素材/编导",
+    "打开transcript只改变页签",
+    "打开properties只改变页签",
+    "打开assets只改变页签",
+    "打开director只改变页签",
+    "页签不改正式JSON/epoch/dirty事件",
+    "素材/属性/画面/时间轴实例未重挂",
+    "唯一输入DOM/草稿保留",
+    "原手工添加命令仍有效",
+    "编导Delete不删除时间轴",
+    "编导粘贴不接管原生剪辑板",
+    "disabled不禁用slot或tabs，原生core与portal禁用",
+    "禁用中切到属性仍保持原生禁用",
+    "禁用中可看宿主诊断与转录",
+    "页签键盘可达且保实例",
+    "hidden整个原生工作面inert且保留同一实例",
+    "恢复显示后同一原生与宿主稿保留",
+    "原生dispose不删已回迁宿主DOM",
+    "新owner页签重置且不共用旧正式工程",
+    "无React或宿主错误"
+  ],
+  "count": 22,
+  "pixels": false,
+  "mp4": false,
+  "realWebGPU": false,
+  "processGlobalDuringProbe": false
+}

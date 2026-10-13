@@ -1,0 +1,9 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-image.test.ts:
+(pass) 候选自己的取消signal立即停止慢图片，不取消活动host寿命且迟到图片不返回 [0.94ms]
+
+ 1 pass
+ 0 fail
+ 4 expect() calls
+Ran 1 test across 1 file. [12.00ms]
