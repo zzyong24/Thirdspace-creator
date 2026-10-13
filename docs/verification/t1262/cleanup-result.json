@@ -1,0 +1,91 @@
+{
+  "beforeAvailableBytes": 7304429568,
+  "afterAvailableBytes": 16499560448,
+  "availableDeltaBytes": 9195130880,
+  "logicalAllocatedKiB": 9080920,
+  "keptVerified": [
+    "/Applications/CreatorOS.app",
+    "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "/Users/zyongzhu/Library/Application Support/CreatorOS-validation/T1255-20261013-t_fmbdzi/verified-runtime",
+    "/private/tmp/creatoros-playwright-t1246-official-d581c2c378b492c940a9715d/frontend"
+  ],
+  "items": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/.next",
+      "allocatedKiB": 2456000,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug/deps",
+      "allocatedKiB": 3191960,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug/incremental",
+      "allocatedKiB": 851312,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug/build",
+      "allocatedKiB": 362372,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug/.fingerprint",
+      "allocatedKiB": 10300,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app",
+      "allocatedKiB": 826636,
+      "category": "历史安装产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg",
+      "allocatedKiB": 818356,
+      "category": "历史安装产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/private/tmp/t188-activity-release-20261009-r1/source/.next-build/cache",
+      "allocatedKiB": 157524,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/private/tmp/t188-activity-release-20261009-r1/source-t200-final/.next-build/cache",
+      "allocatedKiB": 146516,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/private/tmp/t203-activity-20261009-r1/cold-source/.next-build/cache",
+      "allocatedKiB": 144452,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    },
+    {
+      "path": "/private/tmp/t188-activity-release-20261009-r1/.npm-cache/_cacache",
+      "allocatedKiB": 115492,
+      "category": "可重建构建缓存/产物",
+      "openMatches": 0,
+      "deleted": true
+    }
+  ]
+}
