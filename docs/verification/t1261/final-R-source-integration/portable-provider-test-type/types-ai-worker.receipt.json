@@ -1,0 +1,43 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/bin/tsc",
+    "--noEmit",
+    "--incremental",
+    "false",
+    "--pretty",
+    "false",
+    "--project",
+    "tsconfig.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker",
+  "log": "/private/tmp/t1261-f966-normal-affected-gates-e79w5ebb/checks/types-ai-worker.log",
+  "logSha256": "583621139e0a94b4e443531de30b188c15ee8ddefc4a8f87b568167d80e78775",
+  "pid": 21806,
+  "identity": {
+    "pid": 21806,
+    "pgid": 21806,
+    "uid": 501,
+    "birth": "Tue Oct 13 19:12:50 2026",
+    "startedAt": 1791889970285
+  },
+  "startedAt": "2026-10-13T11:12:50.285Z",
+  "elapsedMs": 66920.770334,
+  "budgetMs": 900000,
+  "segmentsMaxMs": 60000,
+  "birthOnceMonotonic": true,
+  "positiveBirthMonotonic": 276377.477208,
+  "positiveDeadlineMonotonic": 1176377.4772080001,
+  "monotonicClosedAt": 342701.363417,
+  "positiveElapsedMs": 66323.88620899996,
+  "cleanupLifecycleElapsedMs": 66920.770334,
+  "budgetExhausted": false,
+  "processClosed": true,
+  "logClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "signals": [],
+  "code": 2,
+  "signal": null,
+  "stdioClosed": true,
+  "outerAbort": false
+}

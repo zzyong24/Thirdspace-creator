@@ -1,0 +1,18 @@
+{
+  "scope": "T1265已审同目录provider公共回归；不改SPEC/tsconfig/生产/原19断言",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "HEAD": "f966cfdc28e424a788076d81dfbb66df9ebee68b",
+  "relative": "ai-worker/src/runtime/codex-provider-json-output.public.test.ts",
+  "beforeSha256": "70fcc695395c24a3f06264558a6a0307952a22587460940975124a4e35c583f4",
+  "candidateSha256": "2705446728c2d788041b0df837d0ca101b0820d5fafc765375296039b230b641",
+  "candidate": "/private/tmp/t1265-portable-worker-test-type-fix-qdytyeyc/candidate.ts",
+  "actualNormalBody": {
+    "passed": 19,
+    "wholeWorkerPassed": 114
+  },
+  "actualTypeRed": "/private/tmp/t1261-f966-normal-affected-gates-e79w5ebb/checks/types-ai-worker.log",
+  "typeRedSha256": "583621139e0a94b4e443531de30b188c15ee8ddefc4a8f87b568167d80e78775",
+  "changes": "同域specifier去.ts；两个异构schema数组调用显式asSchema<unknown>，无any/cast/业务Schema调整",
+  "applied": "NOT_RUN_WAIT_NORMAL252_SOURCE_EPOCH_CLOSED",
+  "green": "NOT_RUN"
+}

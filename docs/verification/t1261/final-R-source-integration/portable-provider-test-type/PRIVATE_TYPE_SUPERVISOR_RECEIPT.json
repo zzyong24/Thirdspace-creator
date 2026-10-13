@@ -1,0 +1,36 @@
+{
+  "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "args": [
+    "/private/tmp/t1265-portable-worker-test-type-fix-qdytyeyc/private-whole-worker-type.cjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+  "log": "/private/tmp/t1265-portable-worker-test-type-fix-qdytyeyc/private-type.log",
+  "logSha256": "c02b53eeb2653602bf734b555f3f8db0ff7029f6d59a1b989cbc0a274db43d79",
+  "pid": 28911,
+  "identity": {
+    "pid": 28911,
+    "pgid": 28911,
+    "uid": 501,
+    "birth": "Tue Oct 13 19:28:04 2026",
+    "startedAt": 1791890884405
+  },
+  "startedAt": "2026-10-13T11:28:04.405Z",
+  "elapsedMs": 38624.220042,
+  "budgetMs": 900000,
+  "segmentsMaxMs": 60000,
+  "birthOnceMonotonic": true,
+  "positiveBirthMonotonic": 459.156042,
+  "positiveDeadlineMonotonic": 900459.156042,
+  "monotonicClosedAt": 38872.901084,
+  "positiveElapsedMs": 38413.745041999995,
+  "cleanupLifecycleElapsedMs": 38624.220042,
+  "budgetExhausted": false,
+  "processClosed": true,
+  "logClosed": true,
+  "remainingOwnedGroupMembers": [],
+  "signals": [],
+  "code": 0,
+  "signal": null,
+  "stdioClosed": true,
+  "outerAbort": false
+}

@@ -4,8 +4,8 @@ import {beforeEach,afterEach,expect,it,vi} from 'vitest';
 import {generateText,Output,asSchema} from 'ai';
 import {z} from 'zod';
 const boundary=vi.hoisted(()=>({scenario:null as any,session:null as any,ports:[] as any[],sessions:[] as any[],requests:[] as any[],counter:0}));
-vi.mock('../execution/codex-app-server.ts',async original=>({
- ...await original<typeof import('../execution/codex-app-server.ts')>(),
+vi.mock('../execution/codex-app-server',async original=>({
+ ...await original<typeof import('../execution/codex-app-server')>(),
  // 仅替身会话工厂；原Codex参数、MCP验证、错误类全部保留。
  createControlledCodexSession:vi.fn(async(cwd:string,signal:AbortSignal)=>{
   const scenario=boundary.scenario;const ordinal=++boundary.counter;
@@ -43,13 +43,13 @@ vi.mock('../execution/codex-app-server.ts',async original=>({
   return {rpc,authenticated:scenario.authenticated!==false,mcpNames:[],loginStatus:'authenticated' as const};
  }),
 }));
-import {createCodexProviderModel} from './codex-provider.ts';
-import {codexCallAuthority,codexWorkerPorts} from '../execution/codex-call-context.ts';
-import {createDurableGenerationModel} from '../execution/durable-generation-model.ts';
-import {planningThesisOutputSchema} from '../execution/planning-thesis-output.ts';
-import {topicCardSchema} from '../prompt/templates/topic-enrich.ts';
-import {topicPreferenceDistillSchema} from '../prompt/templates/topic-preference-distill.ts';
-import {resolveStructuredBusinessSchema} from '../execution/structured-business-schema.ts';
+import {createCodexProviderModel} from './codex-provider';
+import {codexCallAuthority,codexWorkerPorts} from '../execution/codex-call-context';
+import {createDurableGenerationModel} from '../execution/durable-generation-model';
+import {planningThesisOutputSchema} from '../execution/planning-thesis-output';
+import {topicCardSchema} from '../prompt/templates/topic-enrich';
+import {topicPreferenceDistillSchema} from '../prompt/templates/topic-preference-distill';
+import {resolveStructuredBusinessSchema} from '../execution/structured-business-schema';
 const callId='same-public-fixture-call';
 const spec={engine:'codex' as const,protocolKind:'codex-app-server' as const,schemaVersion:1 as const,runtimeVersion:'0.159.3' as const};
 const model=()=>createCodexProviderModel(spec as any);
@@ -86,8 +86,8 @@ const structureCases=[
  {name:'联合合法分支',schema:z.object({branch:z.union([z.object({tag:z.literal('a'),x:z.string()}),z.object({tag:z.literal('b'),y:z.number()})])}),value:{branch:{tag:'b',y:2}}},
 ];
 it.each(structureCases)('公共AI SDK原schema族：$name',async({schema,value})=>{
- const originalSchema=await asSchema(schema).jsonSchema,before=JSON.stringify(originalSchema);const result=await publicGenerate(schema,value);expect(result.output).toEqual(schema.parse(value));
- const turn=singleTurn();expect(turn.params).not.toHaveProperty('outputSchema');expect(turn.params.input[0].text).toContain(before);expect(JSON.stringify(await asSchema(schema).jsonSchema)).toBe(before);onlyOriginalBindings();
+ const originalSchema=await asSchema<unknown>(schema).jsonSchema,before=JSON.stringify(originalSchema);const result=await publicGenerate(schema,value);expect(result.output).toEqual(schema.parse(value));
+ const turn=singleTurn();expect(turn.params).not.toHaveProperty('outputSchema');expect(turn.params.input[0].text).toContain(before);expect(JSON.stringify(await asSchema<unknown>(schema).jsonSchema)).toBe(before);onlyOriginalBindings();
 },180000);
 it('recursive/ref家族原结构不展平，不截合法后代',async()=>{
  const recursive:z.ZodType<any>=z.object({label:z.string(),children:z.array(z.lazy(()=>recursive)).optional()});const value={label:'root',children:[{label:'child'}]};const original=JSON.stringify(await asSchema(recursive).jsonSchema);

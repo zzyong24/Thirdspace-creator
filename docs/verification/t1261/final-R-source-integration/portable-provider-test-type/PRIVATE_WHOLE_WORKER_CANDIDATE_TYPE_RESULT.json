@@ -1,0 +1,13 @@
+{
+  "scope": "PRIVATE唯一测试compiler-host overlay，原完整tsconfig根/源，不冒正式R类型通过",
+  "target": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/src/runtime/codex-provider-json-output.public.test.ts",
+  "beforeSha256": "70fcc695395c24a3f06264558a6a0307952a22587460940975124a4e35c583f4",
+  "candidateSha256": "2705446728c2d788041b0df837d0ca101b0820d5fafc765375296039b230b641",
+  "configSha256": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+  "rootFiles": 398,
+  "programSources": 1847,
+  "errorCount": 0,
+  "diagnostics": "",
+  "formalTargetSourceSame": true,
+  "productionAndTsconfigOverlay": false
+}
