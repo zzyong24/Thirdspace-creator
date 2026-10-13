@@ -1,0 +1,25 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-workspace.test.tsx:
+(pass) T1274 open-addon严格校验panel且不改变context/owner，四面板切换保留宿主 [1.01ms]
+(pass) T1274 addon键盘与粘贴事件不归原生，原时间轴事件仍归原生 [0.14ms]
+ 5 | class FixtureElement {inert=false;children:FixtureElement[]=[];addon=false;matches(){return this.addon;}closest(){return this.addon?this:null;}contains(node:unknown){return this.children.includes(node as FixtureElement);}querySelectorAll(){return this.children;}getRootNode(){return {activeElement:null};}}
+ 6 | beforeEach(()=>{Object.assign(globalThis,{Element:FixtureElement,HTMLElement:FixtureElement,Node:FixtureElement,ShadowRoot:class{},document:{activeElement:null}});const container=new FixtureElement(),core=new FixtureElement();container.children=[core];detach=host.installNativeHost({container:container as any,portalContainer:new FixtureElement() as any,owner:{groupId:'group-a',accountId:null,projectId:'project-a',outputId:'output-a',sourceVersionId:'revision-a'},theme:{mode:'light',tokens:{},fontFamily:'sans',fontSize:'14px',density:'comfortable'},lifetime:new NativeLifetime(new AbortController().signal),disabled:false,workspaceAddons:true,onChanged(){throw Error('UI不能触发documentChanged');},onError(){},importMedia:async()=>({mediaId:'real'})} as any);});
+ 7 | afterEach(()=>detach());
+ 8 | test('T1274 open-addon严格校验panel且不改变context/owner，四面板切换保留宿主',()=>{const before=host.currentNativeContextEpoch(),owner=host.nativeHost().owner,container=host.nativeHost().container;expect((host as any).nativeWorkspaceSnapshot()).toBe('assets:director');for(const panel of ['transcript','assets','properties','director'])expect((host as any).openNativeAddon({panel})).toEqual({panel});expect((host as any).nativeWorkspaceSnapshot()).toBe('assets:director');expect(host.currentNativeContextEpoch()).toBe(before);expect(host.nativeHost().owner).toBe(owner);expect(host.nativeHost().container).toBe(container);for(const payload of [{panel:'unknown'},{panel:'assets',owner:'forged'},null])expect(()=>(host as any).openNativeAddon(payload)).toThrow();});
+ 9 | test('T1274 addon键盘与粘贴事件不归原生，原时间轴事件仍归原生',()=>{const h=host.nativeHost(),addon=new FixtureElement();addon.addon=true;expect(host.ownsNativeEvent({composedPath:()=>[addon,h.container]} as any)).toBe(false);expect(host.ownsNativeEvent({composedPath:()=>[h.container]} as any)).toBe(true);(globalThis.document as any).activeElement=addon;expect(host.nativeFocused()).toBe(false);});
+10 | test('T1274 disabled只禁用原生core与portal，tabs/slot可用；hidden全部inert',()=>{const h=host.nativeHost();h.disabled=true;(host as any).syncNativeInteractivity(h,false);expect(h.container.inert).toBe(false);expect((h.container as any).children[0].inert).toBe(true);expect(h.portalContainer.inert).toBe(true);h.visible=false;(host as any).syncNativeInteractivity(h,false);expect(h.container.inert).toBe(true);h.visible=true;h.disabled=false;(host as any).syncNativeInteractivity(h,false);expect((h.container as any).children[0].inert).toBe(false);});
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ^
+error: expect(received).toBe(expected)
+
+Expected: false
+Received: undefined
+
+      at <anonymous> (/private/tmp/creatoros-t1274-native-isolated/apps/web/src/embedded/__tests__/native-workspace.test.tsx:10:524)
+(fail) T1274 disabled只禁用原生core与portal，tabs/slot可用；hidden全部inert [0.29ms]
+(pass) T1274旧挂载没有addons保持旧disabled语义，dispose后新owner默认状态不复用 [0.05ms]
+
+ 3 pass
+ 1 fail
+ 24 expect() calls
+Ran 4 tests across 1 file. [25.00ms]

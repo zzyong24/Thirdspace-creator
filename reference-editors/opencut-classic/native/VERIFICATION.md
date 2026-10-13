@@ -1,3 +1,22 @@
+# T-1274 当前验证
+
+| 检查 | 当场结果 | verification/t1274内证据 |
+|---|---|---|
+| 新行为缺失 | 4例FAIL；旧DOM缺slot断言FAIL | tdd-red.log、dom-tdd-red.log |
+| 新行为 | 4 PASS / 24断言 | tdd-green.log |
+| 原命令/寿命/边界 | 19 PASS / 116断言 | native-regression.log |
+| 原资源/取消/原声范围 | 16 PASS / 68断言 | resource-regression.log |
+| 类型 | exit 0 | typecheck-final.log |
+| 正式build/process全局 | exit 0；无unguarded process | build-production-final.log、process-globals.log |
+| 原DOM回归 | 38项PASS | legacy-dom-regression.log |
+| 工作区DOM | 22项PASS | dom-tdd-green.log |
+| 上游patch与归档 | fuzz 0；707源文件字节一致 | patch-apply-final.log、source-reconstruction.json |
+| 归档重建与两份正式路径 | 七份逐字节一致；fixture=false | rebuild-from-archive.log、production-reconstruction.json |
+
+DOM夹具替换compositor/Canvas，不证明真实GPU、像素或MP4。未运行宿主集成、真实浏览器独立视觉评审/任务走查及安装。初次类型布尔差异、patch缺EOF换行标记、基线依赖链接失败均保留，未追签历史PASS。完整patch文本的diff空白噪声保留，不改原源码洗绿。
+
+以下保留历史验证说明；不将历史PASS冒充本任务完整验收。
+
 # T-1062 原生 TMP 实际验证记录
 
 源码候选：`246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153`；成员31，归档 `3cd56aa533804be27842c007d8660dfb94d9b5a0c46011172faab41661a54fa6`。

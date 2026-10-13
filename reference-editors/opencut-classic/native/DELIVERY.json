@@ -1,69 +1,48 @@
 {
-  "task": "T-1069",
-  "deliveryStatus": "CURRENT_SOURCE_BUILD_AND_FIXTURE_VERIFIED_NOT_BROWSER_OR_INSTALLED",
+  "task": "T-1274",
+  "deliveryStatus": "NATIVE_WORKSPACE_SOURCE_BUILD_DOM_FIXTURE_VERIFIED_NOT_HOST_OR_BROWSER_OR_INSTALLED",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
     "command": "bun apps/web/scripts/build-native.mjs",
     "entry": "apps/web/src/embedded/native-entry.tsx",
-    "bun": "1.2.18",
+    "bun": "1.4.0",
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6656774,
-    "cssBytes": 127810,
+    "esmBytes": 6618595,
+    "cssBytes": 128712,
     "licensedDependencies": 59,
+    "renderedModules": 428,
     "nativeHashes": {
-      "native/LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
-      "native/NATIVE_BUILD_GRAPH.json": "6629699c0e7899fe016ab0fb38d74db902ece5f68bded1eeafba1ec6a8aabeba",
-      "native/THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
-      "native/THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
-      "native/effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
-      "native/native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
-      "native/native.js": "79c8fc5a9b7ce45f5abf66b91579a33365370edf1b044f740e83d4c5d7ebbc9f"
+      "native.css": "a3d29c27a4cf8d665bb4b28d9f9893cc2334947c9b2075c5b64e65030d2e79bd",
+      "native.js": "ccb79c5133316320ce128c1efebc67240154bf57050836180db0ed596e917ca9",
+      "NATIVE_BUILD_GRAPH.json": "ceb3371580b32db9b53e41f977ca4a89384566be25a2c7914ba10b53e3595a71",
+      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
     },
-    "sameInstalledDependencyTreeReconstruction": "not claimed",
-    "freshDependencyInstall": "本轮私有源码目录实际 frozen lock 安装；见 t1069-native-source 原始日志",
-    "crossOsBitReproducibility": "not-claimed",
-    "viteMode": "production",
-    "nodeEnvDefinition": "production",
-    "moduleCount": 427,
-    "transformedModules": 2543
+    "freshDependencyInstall": "bun install --frozen-lockfile --ignore-scripts：隔离源码实际执行一次，未安装CreatorOS全仓",
+    "fixturePublished": false,
+    "archiveRebuildBytesMatch": true,
+    "crossOsBitReproducibility": "not-claimed"
   },
   "source": {
-    "files": 705,
-    "changedFiles": 67,
-    "archiveBytes": 742460,
-    "patchBytes": 294859,
+    "files": 707,
+    "changedFiles": 70,
+    "archiveBytes": 765829,
+    "patchBytes": 251213,
+    "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "3a1442e9b0150710f7f284ea4c4773124d78f8e252d5b906d6e140cdec34bb44",
-      "native-from-t1046.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195",
-      "corresponding-source/mediabunny-source.tar.gz": "063a433553249d25a974c2b344c7d5ae12ab49162d1bf6262f53264b073a6aa5",
-      "corresponding-source/soundtouch-source.tar.gz": "b396e96f5e8e15d5125d022c2d8d53f36eb7ce7d9a654d1703bb89e1e0e6d762",
-      "corresponding-source/mediabunny-exclusions.json": "3df0e77e6bca8c19dd73e0ef9cd8f722a38d727d36e3325a13bcc71b9600a30e"
+      "native-source.tar.gz": "9673b0d712109bfe23029d28b4c3a6f2ed1dfcc5e0f2aa56a72475416ea99ccb",
+      "native-from-t1046.patch": "20388a05d96c8bcf996f9ab3c3a31e141adce26e6500789bd54d3a7737e23a6a",
+      "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
-    "patchMatchesArchive": "完整上游归档+完整补丁及旧原生归档+增量均实际 fuzz=0，705 文件字节一致",
-    "t1062NativeArchiveSHA": "bfed0110822c6f4a80348548be1e713b09b33be95ec1c8e420e1aa0f5934652d",
-    "t1062PatchSHA": "06e5e93212ed4fdb1d4b9076b9ad17fc9c6b2fdb73eb228e5ccd32426185da51",
-    "t1062ExactDeltaMatchesArchive": true,
-    "t1062DeltaReconstructionEvidence": {
-      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/revision-2-final/delta-reconstruction-result.json",
-      "sha256": "87671df380e33102232b1679d8d890f7bbb95ba81cfd236e0ac45d0fda48586a"
-    },
-    "t1062TitleRepairManifest": {
-      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native31-current-binding.json",
-      "sha256": "944f259e707c9579a321ede8b2655e51f3e3b36c9841fd0f16b640edc73d28b6"
-    },
-    "titleRepairCurrentExactDelta": {
-      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native-title-source.patch",
-      "sha256": "ce8d2434783b2aa12a855f5319fbefe3f568fb439b060fcd4360c1e60c4146a6",
-      "historicalPrefixByteExact": true,
-      "changedSourceFiles": 1
-    },
-    "previousR8DeltaReconstructionEvidenceHistorical": {
-      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-delta-reconstruction-result.json",
-      "sha256": "f180e258efc5e5fc5ba6680d3b6f952d04e0f949ccd8f523f370751cfcb06adb"
-    }
+    "patchMatchesArchive": true,
+    "patchFuzz": 0,
+    "reconstructionEvidence": "verification/t1274/source-reconstruction.json",
+    "productionReconstructionEvidence": "verification/t1274/production-reconstruction.json"
   },
   "verification": {
     "typecheckExitCode": 0,
@@ -767,5 +746,130 @@
       "allSourceBytesMatch": true,
       "status": "PRIVATE_SOURCE_CANDIDATE_NOT_PUBLIC_NOT_INSTALLED"
     }
+  },
+  "historicalT1069Current": {
+    "task": "T-1069",
+    "deliveryStatus": "CURRENT_SOURCE_BUILD_AND_FIXTURE_VERIFIED_NOT_BROWSER_OR_INSTALLED",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.2.18",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6656774,
+      "cssBytes": 127810,
+      "licensedDependencies": 59,
+      "nativeHashes": {
+        "native/LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "native/NATIVE_BUILD_GRAPH.json": "6629699c0e7899fe016ab0fb38d74db902ece5f68bded1eeafba1ec6a8aabeba",
+        "native/THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "native/THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "native/effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+        "native/native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
+        "native/native.js": "79c8fc5a9b7ce45f5abf66b91579a33365370edf1b044f740e83d4c5d7ebbc9f"
+      },
+      "sameInstalledDependencyTreeReconstruction": "not claimed",
+      "freshDependencyInstall": "本轮私有源码目录实际 frozen lock 安装；见 t1069-native-source 原始日志",
+      "crossOsBitReproducibility": "not-claimed",
+      "viteMode": "production",
+      "nodeEnvDefinition": "production",
+      "moduleCount": 427,
+      "transformedModules": 2543
+    },
+    "source": {
+      "files": 705,
+      "changedFiles": 67,
+      "archiveBytes": 742460,
+      "patchBytes": 294859,
+      "hashes": {
+        "native-source.tar.gz": "3a1442e9b0150710f7f284ea4c4773124d78f8e252d5b906d6e140cdec34bb44",
+        "native-from-t1046.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195",
+        "corresponding-source/mediabunny-source.tar.gz": "063a433553249d25a974c2b344c7d5ae12ab49162d1bf6262f53264b073a6aa5",
+        "corresponding-source/soundtouch-source.tar.gz": "b396e96f5e8e15d5125d022c2d8d53f36eb7ce7d9a654d1703bb89e1e0e6d762",
+        "corresponding-source/mediabunny-exclusions.json": "3df0e77e6bca8c19dd73e0ef9cd8f722a38d727d36e3325a13bcc71b9600a30e"
+      },
+      "patchMatchesArchive": "完整上游归档+完整补丁及旧原生归档+增量均实际 fuzz=0，705 文件字节一致",
+      "t1062NativeArchiveSHA": "bfed0110822c6f4a80348548be1e713b09b33be95ec1c8e420e1aa0f5934652d",
+      "t1062PatchSHA": "06e5e93212ed4fdb1d4b9076b9ad17fc9c6b2fdb73eb228e5ccd32426185da51",
+      "t1062ExactDeltaMatchesArchive": true,
+      "t1062DeltaReconstructionEvidence": {
+        "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/revision-2-final/delta-reconstruction-result.json",
+        "sha256": "87671df380e33102232b1679d8d890f7bbb95ba81cfd236e0ac45d0fda48586a"
+      },
+      "t1062TitleRepairManifest": {
+        "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native31-current-binding.json",
+        "sha256": "944f259e707c9579a321ede8b2655e51f3e3b36c9841fd0f16b640edc73d28b6"
+      },
+      "titleRepairCurrentExactDelta": {
+        "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native-title-source.patch",
+        "sha256": "ce8d2434783b2aa12a855f5319fbefe3f568fb439b060fcd4360c1e60c4146a6",
+        "historicalPrefixByteExact": true,
+        "changedSourceFiles": 1
+      },
+      "previousR8DeltaReconstructionEvidenceHistorical": {
+        "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-delta-reconstruction-result.json",
+        "sha256": "f180e258efc5e5fc5ba6680d3b6f952d04e0f949ccd8f523f370751cfcb06adb"
+      }
+    },
+    "t1069Verification": {
+      "nativeControlTests": 19,
+      "nativeResourceTests": 16,
+      "domChecks": 42,
+      "productionBuildExit": 0,
+      "nativeTypecheckExit": 0,
+      "browserPixels": false,
+      "mp4": false,
+      "installed": false,
+      "evidenceRoot": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-tests",
+      "reconstruction": {
+        "sourceFiles": 705,
+        "changedMembers": [
+          "apps/web/src/components/editor/panels/assets/views/assets.tsx",
+          "apps/web/src/embedded/__tests__/host-boundary.test.ts",
+          "apps/web/src/embedded/__tests__/native-resources.test.ts",
+          "apps/web/src/embedded/media-registration.ts",
+          "apps/web/src/embedded/native-controller.ts",
+          "apps/web/src/embedded/native-entry.tsx",
+          "apps/web/src/embedded/native-host.ts",
+          "apps/web/src/embedded/native-visibility.tsx",
+          "apps/web/src/hooks/use-raf-loop.ts",
+          "apps/web/src/media/mediabunny.ts",
+          "apps/web/src/media/processing.ts",
+          "apps/web/src/preview/components/index.tsx"
+        ],
+        "originalArchiveSha256": "bfed0110822c6f4a80348548be1e713b09b33be95ec1c8e420e1aa0f5934652d",
+        "candidateArchiveSha256": "3a1442e9b0150710f7f284ea4c4773124d78f8e252d5b906d6e140cdec34bb44",
+        "originalPatchPrefixPreserved": true,
+        "currentDeltaAppliedFuzzZero": true,
+        "allSourceBytesMatch": true,
+        "status": "PRIVATE_SOURCE_CANDIDATE_NOT_PUBLIC_NOT_INSTALLED"
+      }
+    }
+  },
+  "t1274Verification": {
+    "nativeControlTests": 19,
+    "nativeControlAssertions": 116,
+    "nativeResourceTests": 16,
+    "nativeResourceAssertions": 68,
+    "workspaceTests": 4,
+    "workspaceAssertions": 24,
+    "workspaceDomChecks": 22,
+    "legacyDomChecks": 38,
+    "productionBuildExit": 0,
+    "typecheckExit": 0,
+    "processGlobalAstExit": 0,
+    "actualRedEvidence": [
+      "verification/t1274/tdd-red.log",
+      "verification/t1274/dom-tdd-red.log"
+    ],
+    "evidenceDirectory": "verification/t1274",
+    "limitations": [
+      "DOM探针替换compositor/Canvas，不证明真实GPU、像素、AAC或MP4。",
+      "未验证宿主唯一DraftChatRail停靠/回迁，宿主集成由主会话处理。",
+      "未执行真实浏览器视觉与独立任务走查、200%缩放或安装包。",
+      "全局parallel-isolation因既有T1026非法glob失败，未建立自治lease；本候选仅声明指定worktree与路径隔离。",
+      "git diff --check在完整标准patch文本中报告历史空白和上下文缩进，不为消除噪声改原源码；非patch范围检查另留。"
+    ]
   }
 }
