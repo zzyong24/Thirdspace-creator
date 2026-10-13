@@ -26,8 +26,8 @@ try{
  await handle.request('load',{document:null,outputId:'output-a',title:'原生工作区',media:[]});await wait();
  const left=container.querySelector('slot[name="creatoros-transcript"]') as HTMLSlotElement,right=container.querySelector('slot[name="creatoros-director"]') as HTMLSlotElement;
  check('两个真实named slot投影同一宿主DOM',left&&right&&left.assignedElements()[0]===transcript&&right.assignedElements()[0]===director);
- check('workspace模式去除重复标题且原四区留存',!container.querySelector('.native-workbench > header')&&container.querySelectorAll('[role="tab"]').length===4&&container.querySelector('canvas'));
- const assets=container.querySelector('[data-native-core-panel]')!,properties=container.querySelector('#native-panel-properties')!,preview=container.querySelector('canvas')!,timeline=container.querySelector('[data-native-core-panel].pb-3')!;
+ check('workspace保留工程名称compact入口且原四区留存',container.querySelector('header[data-native-header-compact] input[aria-label="剪辑工程名称"]')&&container.querySelectorAll('[role="tab"]').length===4&&container.querySelector('canvas'));
+ const assets=container.querySelector('#native-panel-assets')!,properties=container.querySelector('#native-panel-properties')!,preview=container.querySelector('canvas')!,timeline=container.querySelector('[data-native-core-panel].pb-3')!;
  check('空工程默认素材/编导',container.querySelector('#native-tab-assets')?.getAttribute('aria-selected')==='true'&&container.querySelector('#native-tab-director')?.getAttribute('aria-selected')==='true');
  const before=await handle.request('context'),beforeChanges=changed;
  for(const panel of ['transcript','properties','assets','director']){assert.deepEqual(await handle.request('open-addon',{panel}),{panel});await wait();check('打开'+panel+'只改变页签',container.querySelector('#native-tab-'+panel)?.getAttribute('aria-selected')==='true');}

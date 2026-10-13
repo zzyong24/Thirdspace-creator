@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/NATIVE_REBUILD_CONSISTENCY.json
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,54 @@
 +{
 +  "historical": {
 +    "status": "PASS",
@@ -16,17 +16,17 @@
 +    }
 +  },
 +  "t1274Preview": {
-+    "status": "SOURCE_BUILD_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
++    "status": "SOURCE_BUILD_DOM_FIXTURE_VERIFIED_FINAL_REAL_MEDIA_PENDING_ROOT",
 +    "files": {
-+      "native.js": "77198cbf123da0065d041a2ff2f5f7b9e969539e3daf6723d38fc474bc2a2828",
-+      "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
-+      "NATIVE_BUILD_GRAPH.json": "d6bac2a68cefbe43e596ad8dbe158b53a6305a3dcc6ffcf2cd98ce03653d9016",
++      "native.js": "d255e015930770c3998cf4c018e6ed0113581eecb926333a9849aec183a66500",
++      "native.css": "d3ed547c9a216cca3726214a803f6028398a6c5496a5f5ff3518e5d5a56e1228",
++      "NATIVE_BUILD_GRAPH.json": "bf5c14de8c02c8a31d597c3f8cbf0a5004e36c0ef1fcb88e85e2e8f03549a688",
 +      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
 +      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
 +      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
 +      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
 +    },
-+    "source": "分离原声兼容窄修；复用同一锁依赖树，将从归档再次重建比较七份字节。"
++    "source": "中心slot、原工程名及private exact cache闭包；将从归档再次重建比较七份字节。"
 +  },
 +  "historicalT1274PreviewBeforeSeparatedAudio": {
 +    "status": "SOURCE_BUILD_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
@@ -40,22 +40,42 @@
 +      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
 +    },
 +    "source": "同一个锁依赖运行时，未重装依赖；将从归档源码再次重建并比较七份字节。"
++  },
++  "historicalT1274PreviewBeforeCenter": {
++    "status": "SOURCE_BUILD_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
++    "files": {
++      "native.js": "77198cbf123da0065d041a2ff2f5f7b9e969539e3daf6723d38fc474bc2a2828",
++      "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
++      "NATIVE_BUILD_GRAPH.json": "d6bac2a68cefbe43e596ad8dbe158b53a6305a3dcc6ffcf2cd98ce03653d9016",
++      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
++      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
++      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
++      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
++    },
++    "source": "分离原声兼容窄修；复用同一锁依赖树，将从归档再次重建比较七份字节。"
 +  }
 +}
 --- a/README.creatoros.md
 +++ b/README.creatoros.md
-@@ -1,64 +1,65 @@
+@@ -1,64 +1,67 @@
 -# 官方 OpenCut 完整编辑工作台的 CreatorOS 集成包
-+T-1274 分离原声兼容增量：上传音轨沿既有backend与audio-separation规则允许引用audio或video媒体，video/image引用仍严格匹配；新增公共controller真实RED→GREEN及三个不兼容类型回归。当前公共19例、完整66例；历史证据不覆盖。
++T-1274 中心候选预览闭包：第三named slot保持原预览实例，候选可见时锁原core/快捷键；compact header恢复原renameProject工程名。仅private export cache等待prefetch按实际PTS晋升，禁canvas池保同素材多层源帧；interactive沿原池。类型/71测试与DOM夹具已验；真实GPU、宿主E2E和最终48帧MP4由ROOT验，未签PASS。
  
 -原仓库：https://github.com/OpenCut-app/opencut-classic
 -固定提交：`cf5e79e919144200294fb9fed22a222592a0aeea`（已归档上游）。完整素材区、预览、属性区、时间轴及其命令/撤销/渲染仍来自原实现。
-+# T-1274 候选隔离预览增量
++T-1274 分离原声兼容增量：上传音轨沿既有backend与audio-separation规则允许引用audio或video媒体，video/image引用仍严格匹配；新增公共controller真实RED→GREEN及三个不兼容类型回归。当前公共19例、完整66例；历史证据不覆盖。
  
 -## 集成接口
-+`preview-scene` 接收既有宿主owner、targetSceneId、baseContextEpoch、beforeDigest、完整scene candidateDigest、tracks及携assetId/assetFileId的真实File集合。克隆当前工程，仅目标scene轨道替换，调用原renderer.exportProject frozen接口，返回真实编码buffer形成的MP4 Blob。不flush/save、不暂停活动播放、不修改活动工程/撤销/selection/dirty/contextEpoch。导出范围和120000ticks/s保持原接口。
++# T-1274 候选隔离预览增量
  
 -父页面与 iframe 必须同源；`iframe.src = '<静态目录>/index.html#/?session=<随机会话>'`。帧只接受 `event.source === parent`、精确同源、相同 session 的消息。
++`preview-scene` 接收既有宿主owner、targetSceneId、baseContextEpoch、beforeDigest、完整scene candidateDigest、tracks及携assetId/assetFileId的真实File集合。克隆当前工程，仅目标scene轨道替换，调用原renderer.exportProject frozen接口，返回真实编码buffer形成的MP4 Blob。不flush/save、不暂停活动播放、不修改活动工程/撤销/selection/dirty/contextEpoch。导出范围和120000ticks/s保持原接口。
+ 
+-消息外形：`{type:'creatoros.reference-editor',version:1,session,requestId,operation,payload}`。操作：
+-- `load`：`{document:nativeProject|null,title,outputId,media:[{mediaId,file:File,name,type:'video'|'image'|'audio',...原生元信息}]}`；原生文档为版本31，文档 metadata.id 必须等于 outputId。不转换旧 CreatorOS 工程。
+-- `snapshot`：回 `result`，payload 为 `{operation:'snapshot',document,mediaMetadata}`，不含 File/Blob/对象URL或临时缩略图。文档保持原生工程结构；父稿面负责显示、保存及原 Production CAS。
+-- `insert-media`：`{mediaId,file:File}`；真实已保存素材加入左侧素材区，由用户点击素材卡片的加号或拖入时间轴（双击仅选中），不自动做编排。
+-- `export`：可选 `{format:'mp4'|'webm'}`；原 MediaBunny/WebCodecs 导出后回 `{operation:'export',document,mediaMetadata,blob:Blob,fileName}`，document 与 mediaMetadata 来自本次渲染实际使用的同一冻结快照；导出时编辑输入被锁定，尚未完成的素材导入不可回写，结束或失败后恢复编辑。父稿面用同次回包的稿件做 CAS，再接既有作品成果服务并下载。
 +```mermaid
 +flowchart LR
 + A[当前工程与真实原片] --> B[owner/epoch/双摘要核对]
@@ -65,23 +85,18 @@
 + E --> F[再次核对 / 候选Blob]
 +```
  
--消息外形：`{type:'creatoros.reference-editor',version:1,session,requestId,operation,payload}`。操作：
--- `load`：`{document:nativeProject|null,title,outputId,media:[{mediaId,file:File,name,type:'video'|'image'|'audio',...原生元信息}]}`；原生文档为版本31，文档 metadata.id 必须等于 outputId。不转换旧 CreatorOS 工程。
--- `snapshot`：回 `result`，payload 为 `{operation:'snapshot',document,mediaMetadata}`，不含 File/Blob/对象URL或临时缩略图。文档保持原生工程结构；父稿面负责显示、保存及原 Production CAS。
--- `insert-media`：`{mediaId,file:File}`；真实已保存素材加入左侧素材区，由用户点击素材卡片的加号或拖入时间轴（双击仅选中），不自动做编排。
--- `export`：可选 `{format:'mp4'|'webm'}`；原 MediaBunny/WebCodecs 导出后回 `{operation:'export',document,mediaMetadata,blob:Blob,fileName}`，document 与 mediaMetadata 来自本次渲染实际使用的同一冻结快照；导出时编辑输入被锁定，尚未完成的素材导入不可回写，结束或失败后恢复编辑。父稿面用同次回包的稿件做 CAS，再接既有作品成果服务并下载。
+-帧发送 `ready`、`changed`；请求结果为 `result`，失败为 `error`，payload 内包含原 operation 和 message。原上传、粘贴文件先发送 `import-media` 的 `{file:File}`，父稿面必须完成真实上传和作品归属后同 requestId 回 `result` 的 `{operation:'import-media',mediaId}`，或者 error。原编辑素材只能使用回执中的真实ID；文件只保留于当前帧内存。
 +CanvasRenderer每实例持有原项目尺寸输出画布；共享WASM renderFrame与拷贝同步完成，不await后再读共享compositor。编码器释放临时源/缓存/画布/图片/音频context，取消继承原signal与context寿命，不续期。资源与公共控制器回归含真实RED；端口夹具只证明机械边界，真实GPU/MP4/宿主/E2E仍由主会话验收。
  
--帧发送 `ready`、`changed`；请求结果为 `result`，失败为 `error`，payload 内包含原 operation 和 message。原上传、粘贴文件先发送 `import-media` 的 `{file:File}`，父稿面必须完成真实上传和作品归属后同 requestId 回 `result` 的 `{operation:'import-media',mediaId}`，或者 error。原编辑素材只能使用回执中的真实ID；文件只保留于当前帧内存。
+-帧无 IndexedDB/OPFS 项目权或资产权，原自动保存只更新内存；载入建立原生结构基线，只有实际工程/素材元信息变化才通知 changed，忽略自动保存的 metadata.updatedAt/scene.updatedAt 和临时运行字段；离开、版本冲突或失败后恢复属于父稿面。不会从 iframe 直接访问 CreatorOS 数据库、任务或模型。
 +以下历史说明保留。
  
--帧无 IndexedDB/OPFS 项目权或资产权，原自动保存只更新内存；载入建立原生结构基线，只有实际工程/素材元信息变化才通知 changed，忽略自动保存的 metadata.updatedAt/scene.updatedAt 和临时运行字段；离开、版本冲突或失败后恢复属于父稿面。不会从 iframe 直接访问 CreatorOS 数据库、任务或模型。
+-## 可复建步骤
 +# OpenCut 原生 CreatorOS 工作面
  
--## 可复建步骤
-+来源为 OpenCut classic `cf5e79e919144200294fb9fed22a222592a0aeea`，基于 T1046 已集成的同轨命令、NativePatchReplay 和冻结导出源码继续修改。当前构建入口是 `apps/web/src/embedded/native-entry.tsx`，直接挂载原 React 素材区、预览、属性区与时间轴，不运行原独立网页入口。
- 
 -使用 Bun1.4.0（首次安装实测）/Node25.9.0，可用默认公开 npm registry。source archive 排除 node_modules、环境文件、服务器/认证页面、analytics及测试harness。原始完整 source 链接与提交保留。
++来源为 OpenCut classic `cf5e79e919144200294fb9fed22a222592a0aeea`，基于 T1046 已集成的同轨命令、NativePatchReplay 和冻结导出源码继续修改。当前构建入口是 `apps/web/src/embedded/native-entry.tsx`，直接挂载原 React 素材区、预览、属性区与时间轴，不运行原独立网页入口。
++
 +```mermaid
 +flowchart LR
 + A[CreatorOS 当前视频稿] --> B[原生 mount 与 owner lease]
@@ -191,7 +206,7 @@
 +}
 --- /dev/null
 +++ b/apps/web/scripts/build-native.mjs
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,71 @@
 +import {readFileSync,writeFileSync,mkdirSync,readdirSync,statSync} from 'node:fs';
 +import {resolve,dirname,relative} from 'node:path';
 +import {fileURLToPath} from 'node:url';
@@ -247,6 +262,13 @@
 +.native-workspace-content[hidden]{display:none;}
 +.native-workspace-addon slot{display:block;height:100%;min-height:0;}
 +.native-workspace-addon ::slotted(*){display:block;height:100%;min-height:0;min-width:0;}
++.native-workspace-preview{position:relative;height:100%;min-height:0;min-width:0;isolation:isolate;}
++.native-workspace-preview-core{height:100%;min-height:0;min-width:0;}
++.native-workspace-preview-projection{position:absolute;inset:0;z-index:1;min-height:0;min-width:0;overflow:hidden;background:var(--background);}
++.native-workspace-preview-projection[hidden]{display:none;}
++.native-workspace-preview-projection slot{display:block;height:100%;min-height:0;}
++.native-workspace-preview-projection ::slotted(*){display:block;height:100%;min-height:0;min-width:0;}
++
 +.reference-media-panel{container-type:inline-size;}
 +@container(max-width:260px){.reference-media-secondary{display:none;}}
 +`;
@@ -294,7 +316,21 @@
  				isTypableDOMElement({ element: activeElement });
 --- a/apps/web/src/components/editor/editor-header.tsx
 +++ b/apps/web/src/components/editor/editor-header.tsx
-@@ -37,7 +37,7 @@
+@@ -27,17 +27,17 @@
+ import Image from "next/image";
+ import { cn } from "@/utils/ui";
+ 
+-export function EditorHeader() {
++export function EditorHeader({compact=false}:{compact?:boolean}={}) {
+ 	return (
+-		<header className="bg-background flex h-[3.4rem] items-center justify-between px-3 pt-0.5">
+-			<div className="flex items-center gap-1">
+-				<span className="text-muted-foreground text-xs px-2">视频剪辑</span>
++		<header data-native-header-compact={compact||undefined} data-native-core-panel={compact||undefined} className={cn("bg-background flex shrink-0 items-center justify-between px-3 pt-0.5",compact?"h-[2.3rem]":"h-[3.4rem]")}>
++			<div className="flex min-w-0 items-center gap-1">
++				<span className={cn("text-muted-foreground shrink-0 px-2",compact?"text-sm":"text-xs")}>{compact?"工程":"视频剪辑"}</span>
+ 				<EditableProjectName />
+ 			</div>
  			<nav className="flex items-center gap-2">
  				
  				
@@ -303,6 +339,23 @@
  			</nav>
  		</header>
  	);
+@@ -233,6 +233,7 @@
+ 		<input
+ 			ref={inputRef}
+ 			type="text"
++            aria-label="剪辑工程名称"
+ 			defaultValue={projectName}
+ 			readOnly={!isEditing}
+ 			onClick={startEditing}
+@@ -240,7 +241,7 @@
+ 			onKeyDown={handleKeyDown}
+ 			style={{ fieldSizing: "content" }}
+ 			className={cn(
+-				"text-[0.9rem] h-8 px-2 py-1 rounded-sm bg-transparent outline-none cursor-pointer hover:bg-accent hover:text-accent-foreground",
++				"max-w-full min-w-0 text-[0.9rem] h-8 px-2 py-1 rounded-sm bg-transparent outline-none cursor-pointer hover:bg-accent hover:text-accent-foreground",
+ 				isEditing && "ring-1 ring-ring cursor-text hover:bg-transparent",
+ 			)}
+ 		/>
 --- a/apps/web/src/components/editor/panels/assets/assets-panel-store.tsx
 +++ b/apps/web/src/components/editor/panels/assets/assets-panel-store.tsx
 @@ -105,7 +105,7 @@
@@ -3377,6 +3430,52 @@
 +  expect(drained).toBe(1);
 +});
 --- /dev/null
++++ b/apps/web/src/embedded/__tests__/native-preview-video-cache.test.ts
+@@ -0,0 +1,43 @@
++import {test,expect,mock} from 'bun:test';
++import {createCanvas} from '@napi-rs/canvas';
++Object.assign(globalThis,{location:{href:'http://localhost/'}});
++mock.module('@/embedded/native-host',()=>({currentNativeHost:()=>undefined}));
++mock.module('@/wasm',()=>({TICKS_PER_SECOND:120000,ZERO_MEDIA_TIME:0,...Object.fromEntries(['addMediaTime','subMediaTime','maxMediaTime','minMediaTime','clampMediaTime','roundFrameTime','roundFrameTicks','snapSeekMediaTime','lastFrameMediaTime','parseMediaTimecode'].map(name=>[name,(v:any)=>v.time??v.ticks??0])),roundMediaTime:({time}:any)=>Math.round(time),mediaTimeToSeconds:({time}:any)=>time/120000,mediaTimeFromSeconds:({seconds}:any)=>Math.round(seconds*120000),mediaTime:({ticks}:any)=>ticks}));
++let cacheFrames:any[]=[];
++class PixelSink {
++ private pool:any[]=[];private poolIndex=0;
++ constructor(private track:{input:PixelInput},private options:{poolSize?:number}={}){}
++ async *canvases(time:number){
++  let index=0;for(let i=0;i<cacheFrames.length;i++)if(cacheFrames[i].timestamp<=time)index=i;
++  for(;index<cacheFrames.length;index++){
++   if(this.track.input.disposed)throw Error('Input disposed');
++   const frame=cacheFrames[index],size=this.options.poolSize??0;let canvas;
++   if(size){const slot=this.poolIndex++%size;canvas=this.pool[slot]??(this.pool[slot]=createCanvas(2,2));}else canvas=createCanvas(2,2);
++   const context=canvas.getContext('2d');context.fillStyle=`rgb(${index},0,0)`;context.fillRect(0,0,2,2);yield{...frame,canvas};
++  }
++ }
++}
++class PixelInput {disposed=false;async getPrimaryVideoTrack(){return{input:this,canDecode:async()=>true};}dispose(){this.disposed=true;}}
++mock.module('mediabunny',()=>({Input:PixelInput,CanvasSink:PixelSink,BlobSource:class{},ALL_FORMATS:[]}));
++const {VideoCache}=await import('@/services/video-cache/service');
++const cacheFrame=(index:number)=>({timestamp:index/24,duration:1/24});
++// 真resolveRenderTree并发同素材节点 + 可读像素canvas；仅解码端口为fixture。
++// CanvasSink池语义核于锁定mediabunny/src/media-sink.ts：0禁池、正整数环形复用；未签GPU/MP4。
++const {resolveRenderTree}=await import('@/services/renderer/resolve');
++const {VideoNode}=await import('@/services/renderer/nodes/video-node');
++const {BaseNode}=await import('@/services/renderer/nodes/base-node');
++test('T1274 private export同asset不同sourceTime多节点保留各自真实canvas像素，不被后续迭代池覆写',async()=>{
++ cacheFrames=Array.from({length:74},(_,index)=>cacheFrame(index));
++ const cache=new VideoCache({exact:true}),file=new File(['canvas-port-not-mp4'],'pixels.bin');
++ const params={url:'fixture',file,mediaId:'same-asset',duration:120000,timeOffset:0,trimEnd:0,transform:{position:{x:0,y:0},scaleX:1,scaleY:1,rotate:0},opacity:1};
++ const first=new VideoNode({...params,trimStart:120000}),second=new VideoNode({...params,trimStart:240000}),root=new BaseNode();root.add(first).add(second);
++ const red=(source:any)=>source.getContext('2d').getImageData(0,0,1,1).data[0];
++ try{
++  await resolveRenderTree({node:root,renderer:{videoCache:cache,width:2,height:2} as any,time:0});
++  expect(first.resolved).not.toBeNull();expect(second.resolved).not.toBeNull();
++  expect(red(first.resolved!.source)).toBe(24);expect(red(second.resolved!.source)).toBe(48);
++  expect(first.resolved!.source).not.toBe(second.resolved!.source);
++  await cache.getFrameAt({mediaId:'same-asset',file,time:3});
++  expect(red(first.resolved!.source)).toBe(24);expect(red(second.resolved!.source)).toBe(48);
++ }finally{cache.clearAll();await cache.drain();}
++});
+--- /dev/null
 +++ b/apps/web/src/embedded/__tests__/native-preview.test.ts
 @@ -0,0 +1,622 @@
 +import { test, expect, mock } from "bun:test";
@@ -4003,7 +4102,7 @@
 +  });
 --- /dev/null
 +++ b/apps/web/src/embedded/__tests__/native-resources.test.ts
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,108 @@
 +import {test,expect,beforeAll,mock} from 'bun:test';
 +import {installNativeHost,nativeHost,currentNativeContextEpoch,invalidateNativeContext} from '../native-host';
 +import {NativeLifetime} from '../native-lifecycle';
@@ -4016,11 +4115,23 @@
 +}
 +let rangeBlocks:Array<{buffer:AudioBuffer;timestamp:number}>=[],videoFirst:number|null=0,audioFirst=0,rangeDisposeCount=0,rangeStarts:Array<[number|undefined,number|undefined]>=[],waitRange=false;
 +let rejectRead:((error:Error)=>void)|undefined,finishRead:(()=>void)|undefined;
-+class RangeInput {
-+ disposed=false;constructor(_options:unknown){}async getPrimaryVideoTrack(){return videoFirst===null?null:{getFirstTimestamp:async()=>videoFirst};}async getPrimaryAudioTrack(){return{input:this,getFirstTimestamp:async()=>audioFirst};}
-+ dispose(){if(this.disposed)return;this.disposed=true;rangeDisposeCount++;rejectRead?.(new Error('Input has been disposed.'));}
++let cacheFrames:Array<{canvas:any;timestamp:number;duration:number}>=[],blockedCanvasIndex:number|null=null,finishCanvas:(()=>void)|undefined,rejectCanvas:((error:Error)=>void)|undefined;
++class CacheCanvasSink {
++ constructor(private track:{input:RangeInput}){}
++ async *canvases(time:number){
++  let index=0;for(let i=0;i<cacheFrames.length;i++)if(cacheFrames[i].timestamp<=time)index=i;
++  for(;index<cacheFrames.length;index++){
++   const frame=cacheFrames[index];if(frame.canvas.index===blockedCanvasIndex)await new Promise<void>((resolve,reject)=>{finishCanvas=resolve;rejectCanvas=reject;});
++   if(this.track.input.disposed)throw Error('Input disposed');
++   yield frame;
++  }
++ }
 +}
-+mock.module('mediabunny',()=>({ALL_FORMATS:[],BlobSource:class{constructor(_file:File){}},Input:RangeInput,AudioBufferSink:class{
++class RangeInput {
++ disposed=false;constructor(_options:unknown){}async getPrimaryVideoTrack(){return videoFirst===null?null:{input:this,canDecode:async()=>true,getFirstTimestamp:async()=>videoFirst};}async getPrimaryAudioTrack(){return{input:this,getFirstTimestamp:async()=>audioFirst};}
++ dispose(){if(this.disposed)return;this.disposed=true;rangeDisposeCount++;rejectRead?.(new Error('Input has been disposed.'));rejectCanvas?.(new Error('Input has been disposed.'));}
++}
++mock.module('mediabunny',()=>({ALL_FORMATS:[],BlobSource:class{constructor(_file:File){}},Input:RangeInput,CanvasSink:CacheCanvasSink,AudioBufferSink:class{
 + constructor(private track:{input:RangeInput}){}async *buffers(start?:number,end?:number){rangeStarts.push([start,end]);if(waitRange)await new Promise<void>((resolve,reject)=>{finishRead=resolve;rejectRead=reject;});for(const block of rangeBlocks){if(this.track.input.disposed)throw new Error('Input disposed');yield block;}}
 +}}));
 +
@@ -4068,6 +4179,38 @@
 + try{await Promise.resolve();host.lifetime.cancel();await observed;expect(uploadSignal).toBeDefined();expect(uploadSignal!.aborted).toBe(true);}
 + finally{host.lifetime.cancel();await observed;host.detach();resetMediaRegistration();}
 +});
++
++// 真VideoCache确定性协议回归；CanvasSink帧/异步端口为fixture，不签实际视频解码或GPU PASS。
++const {VideoCache}=await import('@/services/video-cache/service');
++const cacheFrame=(index:number)=>({canvas:{index},timestamp:index/24,duration:1/24});
++function resetCanvasFrames(){videoFirst=0;cacheFrames=Array.from({length:30},(_,i)=>cacheFrame(24+i));blockedCanvasIndex=null;finishCanvas=undefined;rejectCanvas=undefined;}
++async function waitCanvas(){for(let i=0;i<100&&!finishCanvas;i++)await new Promise(resolve=>setTimeout(resolve,1));expect(finishCanvas).toBeDefined();}
++test('T1274 private exact cache等待prefetch按actual next PTS处理24fps double边界，无重复前帧',async()=>{
++ resetCanvasFrames();const host=fixture(),cache=new VideoCache({exact:true} as any),file=new File(['timing-fixture-not-mp4'],'timing.bin');
++ try{
++  expect(cacheFrame(25).timestamp+cacheFrame(25).duration).toBeGreaterThan(cacheFrame(26).timestamp);
++  expect((await cache.getFrameAt({mediaId:'source',file,time:1}))?.canvas).toEqual({index:24});
++  blockedCanvasIndex=26;const at25=cache.getFrameAt({mediaId:'source',file,time:25/24});await waitCanvas();
++  let returned26=false;const at26=cache.getFrameAt({mediaId:'source',file,time:130000/120000}).then(frame=>{returned26=true;return frame;});
++  await new Promise(resolve=>setTimeout(resolve,1));expect(returned26).toBe(false);
++  finishCanvas!();expect((await at25)?.canvas).toEqual({index:25});expect((await at26)?.canvas).toEqual({index:26});
++ }finally{finishCanvas?.();rejectCanvas=undefined;cache.clearAll();await cache.drain();host.lifetime.cancel();host.detach();}
++});
++test('T1274 默认interactive暖cache保持旧快路径，prefetch ready帧仍按PTS晋升',async()=>{
++ resetCanvasFrames();const host=fixture(),cache=new VideoCache(),file=new File(['timing-fixture-not-mp4'],'timing.bin');
++ try{await cache.getFrameAt({mediaId:'source',file,time:1});await new Promise(resolve=>setTimeout(resolve,1));await cache.getFrameAt({mediaId:'source',file,time:25/24});await new Promise(resolve=>setTimeout(resolve,1));expect((await cache.getFrameAt({mediaId:'source',file,time:26/24}))?.canvas).toEqual({index:26});}
++ finally{cache.clearAll();await cache.drain();host.lifetime.cancel();host.detach();}
++});
++test('T1274 private exact cache保留declared duration gap，不把next PTS之前空隙延长成内容',async()=>{
++ resetCanvasFrames();cacheFrames=[{canvas:{index:0},timestamp:0,duration:1/48},{canvas:{index:1},timestamp:1/12,duration:1/24}];const host=fixture(),cache=new VideoCache({exact:true} as any),file=new File(['timing-fixture-not-mp4'],'gap.bin');
++ try{expect(await cache.getFrameAt({mediaId:'source',file,time:1/24})).toBeNull();}finally{cache.clearAll();await cache.drain();host.lifetime.cancel();host.detach();}
++});
++test('T1274 private exact cache清理取消pending prefetch，不返回迟到帧且Input释放',async()=>{
++ resetCanvasFrames();const host=fixture(),cache=new VideoCache({exact:true} as any),file=new File(['timing-fixture-not-mp4'],'cancel.bin');
++ try{await cache.getFrameAt({mediaId:'source',file,time:1});blockedCanvasIndex=26;const pending=cache.getFrameAt({mediaId:'source',file,time:25/24}).catch(error=>error);await waitCanvas();cache.clearAll();expect(await pending).toMatchObject({name:'AbortError'});await cache.drain();expect(cache.getStats().totalSinks).toBe(0);}
++ finally{finishCanvas?.();rejectCanvas=undefined;cache.clearAll();await cache.drain();host.lifetime.cancel();host.detach();}
++});
++
 --- /dev/null
 +++ b/apps/web/src/embedded/__tests__/native-workspace.test.tsx
 @@ -0,0 +1,11 @@
@@ -4117,17 +4260,18 @@
 +export function beginExportLock(){assertEditable();const h=nativeHost();exporting=true;advanceEditEpoch();const roots=[h.container,h.portalContainer],old=roots.map(root=>root.inert);roots.forEach(root=>root.inert=true);let released=false;return()=>{if(released)return;released=true;exporting=false;advanceEditEpoch();roots.forEach(root=>root.inert=h.disabled);};}
 --- a/apps/web/src/embedded/editor-layout.tsx
 +++ b/apps/web/src/embedded/editor-layout.tsx
-@@ -11,7 +11,8 @@
+@@ -11,7 +11,9 @@
  import {usePreviewStore} from '@/preview/preview-store';
  import {getGuidePreviewOverlaySource} from '@/guides';
  import {bookmarkNotesPreviewOverlay,getBookmarkPreviewOverlaySource} from '@/timeline/bookmarks/index';
 -export function EditorLayout() {
 +import {WorkspacePanel} from './workspace-panel';
++import {PreviewWorkspace} from './preview-workspace';
 +export function EditorLayout({workspaceAddons=false}:{workspaceAddons?:boolean}={}) {
  	usePasteMedia();
  	const { panels, setPanel } = usePanelStore();
  	const activeScene = useEditor((editor) =>
-@@ -97,7 +98,7 @@
+@@ -97,7 +99,7 @@
  						maxSize={40}
  						className="min-w-0"
  					>
@@ -4136,15 +4280,28 @@
  					</ResizablePanel>
  
  					<ResizableHandle withHandle />
-@@ -105,6 +106,7 @@
+@@ -105,13 +107,18 @@
  					<ResizablePanel
  						defaultSize={panels.preview}
  						minSize={30}
-+						data-native-core-panel
++						data-native-core-panel={workspaceAddons?undefined:true}
  						className="min-h-0 min-w-0 flex-1"
  					>
- 						<PreviewPanel
-@@ -122,7 +124,7 @@
+-						<PreviewPanel
++						{workspaceAddons?<PreviewWorkspace><PreviewPanel
+ 							overlayControls={overlayControls}
+ 							overlayInstances={overlaySource.instances}
+ 							onOverlayVisibilityChange={setOverlayVisibility}
+-						/>
++						/></PreviewWorkspace>:(<PreviewPanel
++							overlayControls={overlayControls}
++							overlayInstances={overlaySource.instances}
++							onOverlayVisibilityChange={setOverlayVisibility}
++						/>)}
+ 					</ResizablePanel>
+ 
+ 					<ResizableHandle withHandle />
+@@ -122,7 +129,7 @@
  						maxSize={40}
  						className="min-w-0"
  					>
@@ -4153,7 +4310,7 @@
  					</ResizablePanel>
  				</ResizablePanelGroup>
  			</ResizablePanel>
-@@ -133,6 +135,7 @@
+@@ -133,6 +140,7 @@
  				defaultSize={panels.timeline}
  				minSize={15}
  				maxSize={70}
@@ -4330,7 +4487,7 @@
 +import './native.css';
 +const lease=new DocumentLease();
 +export type NativeOptions={workspaceAddons?:boolean;owner:NativeOwner;theme:NativeTheme;portalContainer:HTMLElement;signal:AbortSignal;onChanged:NativeHost['onChanged'];onImportActivity?:NativeHost['onImportActivity'];onError:(message:string)=>void;importMedia:(file:File,options?:{signal?:AbortSignal})=>Promise<{mediaId:string}>};
-+function NativeApp({loaded,generation,exporting,theme,visible,workspaceAddons}:{loaded:boolean;generation:number;exporting:boolean;theme:NativeTheme;visible:boolean;workspaceAddons:boolean}){return <NativeVisibilityContext.Provider value={visible}><TooltipProvider><Toaster theme={theme.mode} position="bottom-right" toastOptions={{className:'native-toast'}}/>{loaded?<div key={generation} className="native-workbench"><EditorRuntimeBindings/>{!workspaceAddons&&<EditorHeader/>}<div className="min-h-0 min-w-0 flex-1"><EditorLayout workspaceAddons={workspaceAddons}/></div></div>:<div className="native-loading" role="status">正在载入视频稿…</div>}{exporting&&<div role="status" aria-live="polite" className="native-export-status">正在导出当前稿，完成后可以继续编辑…</div>}</TooltipProvider></NativeVisibilityContext.Provider>;}
++function NativeApp({loaded,generation,exporting,theme,visible,workspaceAddons}:{loaded:boolean;generation:number;exporting:boolean;theme:NativeTheme;visible:boolean;workspaceAddons:boolean}){return <NativeVisibilityContext.Provider value={visible}><TooltipProvider><Toaster theme={theme.mode} position="bottom-right" toastOptions={{className:'native-toast'}}/>{loaded?<div key={generation} className="native-workbench"><EditorRuntimeBindings/><EditorHeader compact={workspaceAddons}/><div className="min-h-0 min-w-0 flex-1"><EditorLayout workspaceAddons={workspaceAddons}/></div></div>:<div className="native-loading" role="status">正在载入视频稿…</div>}{exporting&&<div role="status" aria-live="polite" className="native-export-status">正在导出当前稿，完成后可以继续编辑…</div>}</TooltipProvider></NativeVisibilityContext.Provider>;}
 +export async function mount(container:HTMLElement,options:NativeOptions){
 + if(!(container instanceof HTMLElement)||!(options.portalContainer instanceof HTMLElement)||container.getRootNode()!==options.portalContainer.getRootNode())throw Error('剪辑容器与弹层容器必须属于同一工作面。');
 + if(!options.owner.projectId||!options.owner.outputId||!options.owner.sourceVersionId||(!options.owner.groupId&&!options.owner.accountId))throw Error('作品归属缺失。');
@@ -4349,17 +4506,17 @@
 +export type NativeOwner={groupId:string|null;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string};
 +export type NativeContextEvent={kind:'native-context';contextEpoch:number;outputId:string;sceneId:string|null;selectedElements:unknown[];documentChanged:boolean};
 +export function nativeOwnerKey(owner:NativeOwner){return JSON.stringify([owner.groupId?["group",owner.groupId]:["account",owner.accountId],owner.projectId,owner.outputId,owner.sourceVersionId]);}
-+export type NativeHost={container:HTMLElement;portalContainer:HTMLElement;owner:NativeOwner;theme:NativeTheme;lifetime:NativeLifetime;disabled:boolean;visible?:boolean;workspaceAddons?:boolean;onImportActivity?:(pending:number)=>void;onDocumentChanged?:()=>void;readPreviewPlaying?:()=>boolean;onChanged:(event?:NativeContextEvent)=>void;onError:(message:string)=>void;importMedia:(file:File,options?:{signal?:AbortSignal})=>Promise<{mediaId:string}>};
++export type NativeHost={container:HTMLElement;portalContainer:HTMLElement;owner:NativeOwner;theme:NativeTheme;lifetime:NativeLifetime;disabled:boolean;visible?:boolean;workspaceAddons?:boolean;previewActive?:boolean;onImportActivity?:(pending:number)=>void;onDocumentChanged?:()=>void;readPreviewPlaying?:()=>boolean;onChanged:(event?:NativeContextEvent)=>void;onError:(message:string)=>void;importMedia:(file:File,options?:{signal?:AbortSignal})=>Promise<{mediaId:string}>};
 +let host:NativeHost|null=null;
-+export function installNativeHost(value:NativeHost){if(host)throw Error('旧剪辑实例尚未销毁。');contextController.abort();contextController=new AbortController();contextEpoch=0;lastNativeContext={sceneId:null,selectedElements:[],documentChanged:false};workspacePanels='assets:director';host=value;return()=>{if(host===value){contextController.abort();workspaceListeners.clear();host=null;}};}
++export function installNativeHost(value:NativeHost){if(host)throw Error('旧剪辑实例尚未销毁。');contextController.abort();contextController=new AbortController();contextEpoch=0;lastNativeContext={sceneId:null,selectedElements:[],documentChanged:false};workspacePanels='assets:director';value.previewActive=false;host=value;return()=>{if(host===value){contextController.abort();workspaceListeners.clear();host=null;}};}
 +export function nativeHost(){if(!host)throw Error('剪辑组件尚未挂载。');return host;}
 +export function currentNativeHost(){return host;}
 +export function nativeChanged(){if(host&&!host.lifetime.signal.aborted){if(host.onDocumentChanged)host.onDocumentChanged();else invalidateNativeContext({...lastNativeContext,documentChanged:true});}}
 +export function nativePortal(){return nativeHost().portalContainer;}
 +export function nativeActiveElement():Element|null{const root=host?.container.getRootNode();return root instanceof ShadowRoot?root.activeElement:document.activeElement;}
 +function isHostAddon(node:unknown){return typeof Element!=='undefined'&&node instanceof Element&&!!node.closest('[data-creatoros-addon]');}
-+export function ownsNativeEvent(event:Event){if(!host||host.lifetime.signal.aborted||host.disabled||host.visible===false)return false;const path=event.composedPath();if(path.some(isHostAddon))return false;return path.includes(host.container)||path.includes(host.portalContainer)||path.some(node=>node instanceof Node&&(host!.container.contains(node)||host!.portalContainer.contains(node)));}
-+export function nativeFocused(){if(!host||host.lifetime.signal.aborted||host.disabled||host.visible===false)return false;const active=nativeActiveElement();return !!active&&!isHostAddon(active)&&(host.container.contains(active)||host.portalContainer.contains(active));}
++export function ownsNativeEvent(event:Event){if(!host||host.lifetime.signal.aborted||host.disabled||host.previewActive||host.visible===false)return false;const path=event.composedPath();if(path.some(isHostAddon))return false;return path.includes(host.container)||path.includes(host.portalContainer)||path.some(node=>node instanceof Node&&(host!.container.contains(node)||host!.portalContainer.contains(node)));}
++export function nativeFocused(){if(!host||host.lifetime.signal.aborted||host.disabled||host.previewActive||host.visible===false)return false;const active=nativeActiveElement();return !!active&&!isHostAddon(active)&&(host.container.contains(active)||host.portalContainer.contains(active));}
 +const appliedTokens=new WeakMap<HTMLElement,Set<string>>();
 +export function applyNativeTheme(target:HTMLElement,theme:NativeTheme){const next=new Set(Object.keys(theme.tokens).filter(key=>/^--creatoros-[a-z0-9-]+$/i.test(key)));for(const key of appliedTokens.get(target)??[])if(!next.has(key))target.style.removeProperty(key);for(const key of next)target.style.setProperty(key,theme.tokens[key]);appliedTokens.set(target,next);target.style.fontFamily=theme.fontFamily;target.style.fontSize=theme.fontSize;target.dataset.density=theme.density;target.classList.toggle('dark',theme.mode==='dark');target.dataset.theme=theme.mode;}
 +
@@ -4407,10 +4564,10 @@
 + return {panel};
 +}
 +export function syncNativeInteractivity(h:NativeHost,exportLocked:boolean){
-+ const coreDisabled=h.disabled||exportLocked,hidden=h.visible===false;
++ const coreDisabled=h.disabled||exportLocked||Boolean(h.previewActive),hidden=h.visible===false;
 + h.container.inert=hidden||(!h.workspaceAddons&&coreDisabled);
 + h.portalContainer.inert=hidden||coreDisabled;
-+ if(h.workspaceAddons)for(const panel of h.container.querySelectorAll<HTMLElement>('[data-native-core-panel]'))panel.inert=hidden||coreDisabled||Boolean(panel.hidden);
++ if(h.workspaceAddons)for(const panel of h.container.querySelectorAll<HTMLElement>('[data-native-core-panel]'))panel.inert=hidden||coreDisabled||Boolean(panel.hidden)||panel.getAttribute?.("data-native-addon-covered")==="true";
 +}
 --- /dev/null
 +++ b/apps/web/src/embedded/native-lifecycle.ts
@@ -4473,7 +4630,7 @@
 +export const useNativeVisibility=()=>useContext(NativeVisibilityContext);
 --- /dev/null
 +++ b/apps/web/src/embedded/native.css
-@@ -0,0 +1,227 @@
+@@ -0,0 +1,234 @@
 +@import "tailwindcss" source(none);
 +/* Only native source is scanned; generated bundles must not add utilities on rebuild. */
 +@source "../";
@@ -4699,6 +4856,13 @@
 +.native-workspace-content[hidden]{display:none;}
 +.native-workspace-addon slot{display:block;height:100%;min-height:0;}
 +.native-workspace-addon ::slotted(*){display:block;height:100%;min-height:0;min-width:0;}
++.native-workspace-preview{position:relative;height:100%;min-height:0;min-width:0;isolation:isolate;}
++.native-workspace-preview-core{height:100%;min-height:0;min-width:0;}
++.native-workspace-preview-projection{position:absolute;inset:0;z-index:1;min-height:0;min-width:0;overflow:hidden;background:var(--background);}
++.native-workspace-preview-projection[hidden]{display:none;}
++.native-workspace-preview-projection slot{display:block;height:100%;min-height:0;}
++.native-workspace-preview-projection ::slotted(*){display:block;height:100%;min-height:0;min-width:0;}
++
 +.reference-media-panel{container-type:inline-size;}
 +@container(max-width:260px){.reference-media-secondary{display:none;}}
 --- /dev/null
@@ -5024,6 +5188,90 @@
 +    clearImageSourcesForUrls(urls);
 +    for (const url of urls) URL.revokeObjectURL(url);
 +  }
++}
+--- /dev/null
++++ b/apps/web/src/embedded/preview-workspace.tsx
+@@ -0,0 +1,81 @@
++import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
++import { nativeHost, syncNativeInteractivity } from "./native-host";
++import { isExportLocked } from "./edit-lock";
++/** 只投影宿主明确启用的候选DOM；不选择候选、不改变工程或播放状态。 */
++export function PreviewWorkspace({ children }: { children: ReactNode }) {
++  const [active, setActive] = useState(false),
++    slot = useRef<HTMLSlotElement>(null);
++  const host = nativeHost();
++  useLayoutEffect(() => {
++    const outlet = slot.current;
++    if (!outlet || host.lifetime.signal.aborted) return;
++    let live = true;
++    const observer = new MutationObserver(() => sync());
++    const sync = () => {
++      if (!live || host.lifetime.signal.aborted) return;
++      const assigned = outlet.assignedElements();
++      observer.disconnect();
++      for (const element of assigned)
++        observer.observe(element, {
++          attributes: true,
++          childList: true,
++          subtree: true,
++          attributeFilter: [
++            "data-creatoros-addon",
++            "data-creatoros-preview-active",
++            "hidden",
++          ],
++        });
++      const next = assigned.some(
++        (element) =>
++          element.getAttribute("data-creatoros-addon") === "preview" &&
++          element.getAttribute("data-creatoros-preview-active") === "true" &&
++          !element.hasAttribute("hidden") &&
++          element.childElementCount > 0,
++      );
++      host.previewActive = next;
++      syncNativeInteractivity(host, isExportLocked());
++      setActive(next);
++    };
++    const cleanup = () => {
++      if (!live) return;
++      live = false;
++      observer.disconnect();
++      host.previewActive = false;
++      if (!host.lifetime.signal.aborted)
++        syncNativeInteractivity(host, isExportLocked());
++      outlet.removeEventListener("slotchange", sync);
++      host.lifetime.signal.removeEventListener("abort", cleanup);
++    };
++    outlet.addEventListener("slotchange", sync);
++    host.lifetime.signal.addEventListener("abort", cleanup, { once: true });
++    sync();
++    return cleanup;
++  }, [host]);
++  useLayoutEffect(() => {
++    if (!host.lifetime.signal.aborted)
++      syncNativeInteractivity(host, isExportLocked());
++  }, [active, host]);
++  return (
++    <div className="native-workspace-preview">
++      <div
++        data-native-core-panel
++        data-native-addon-covered={active ? "true" : undefined}
++        aria-hidden={active ? true : undefined}
++        inert={active}
++        className="native-workspace-preview-core"
++      >
++        {children}
++      </div>
++      <div
++        className="native-workspace-preview-projection"
++        role="region"
++        aria-label="候选画面比较"
++        hidden={!active}
++        inert={!active}
++      >
++        <slot ref={slot} name="creatoros-preview" />
++      </div>
++    </div>
++  );
 +}
 --- /dev/null
 +++ b/apps/web/src/embedded/radix/aria-hidden.ts
@@ -9095,7 +9343,7 @@
 +  private audioBuffer?: AudioBuffer;
 +
 +  private isCancelled = false;
-+  private readonly videoCache = new VideoCache();
++  private readonly videoCache = new VideoCache({exact:true});
 +  private readonly renderCancellation = new AbortController();
 +
 +  constructor({
@@ -9281,15 +9529,68 @@
  import {
  	Input,
  	ALL_FORMATS,
-@@ -18,6 +20,7 @@
+@@ -18,6 +20,9 @@
  }
  
  export class VideoCache {
++ private readonly exact:boolean;
++ constructor({exact=false}:{exact?:boolean}={}){this.exact=exact;}
 +	private generation=0;private pendingInputs=new Set<Input>();private pendingWork=new Set<Promise<unknown>>();
  	private sinks = new Map<string, VideoSinkData>();
  	private initPromises = new Map<string, Promise<void>>();
  	private frameChain = new Map<string, Promise<unknown>>();
-@@ -247,12 +250,12 @@
+@@ -41,16 +46,18 @@
+ 		this.seekGenerations.set(mediaId, generation);
+ 
+ 		const previous = this.frameChain.get(mediaId) ?? Promise.resolve();
+-		const current = previous.then(() => {
+-			if (this.seekGenerations.get(mediaId) !== generation) {
++		const cacheGeneration=this.generation;
++		const current = previous.then(async () => {
++			if (!this.exact && this.seekGenerations.get(mediaId) !== generation) {
+ 				return sinkData.currentFrame ?? null;
+ 			}
+-			return this.resolveFrame({ sinkData, time });
++			const frame=await this.resolveFrame({ sinkData, time });if(this.exact&&cacheGeneration!==this.generation)throw stopped();return frame;
+ 		});
+ 		this.frameChain.set(
+ 			mediaId,
+ 			current.catch(() => {}),
+ 		);
++		if(this.exact){this.pendingWork.add(current);void current.finally(()=>this.pendingWork.delete(current)).catch(()=>{});}
+ 		return current;
+ 	}
+ 
+@@ -61,6 +68,7 @@
+ 		sinkData: VideoSinkData;
+ 		time: number;
+ 	}): Promise<WrappedCanvas | null> {
++		if(this.exact)return this.resolveExactFrame({sinkData,time});
+ 		if (sinkData.nextFrame && sinkData.nextFrame.timestamp <= time) {
+ 			sinkData.currentFrame = sinkData.nextFrame;
+ 			sinkData.nextFrame = null;
+@@ -99,6 +107,20 @@
+ 		return frame;
+ 	}
+ 
++ // SEMANTIC_BOUNDARY_ALLOW: private export只按真实源PTS/declared duration的半开区间取帧，不做内容或创作选择。
++ private async resolveExactFrame({sinkData,time}:{sinkData:VideoSinkData;time:number}):Promise<WrappedCanvas|null>{
++  if(!sinkData.iterator||!sinkData.currentFrame||time<sinkData.lastTime||time>=sinkData.lastTime+2){
++   const frame=await this.seekToTime({sinkData,time});if(!frame)return null;
++  }
++  if(sinkData.prefetchPromise)await sinkData.prefetchPromise;
++  while(sinkData.nextFrame&&sinkData.nextFrame.timestamp<=time){
++   sinkData.currentFrame=sinkData.nextFrame;sinkData.nextFrame=null;sinkData.lastTime=sinkData.currentFrame.timestamp;
++   this.startPrefetch({sinkData});if(sinkData.prefetchPromise)await sinkData.prefetchPromise;
++  }
++  const frame=sinkData.currentFrame;if(!frame)return null;
++  const end=Math.min(frame.timestamp+frame.duration,sinkData.nextFrame?.timestamp??Infinity);
++  return time>=frame.timestamp&&time<end?frame:null;
++ }
+ 	private isFrameValid({
+ 		frame,
+ 		time,
+@@ -247,12 +269,12 @@
  		}
  
  		const initPromise = this.initializeSink({ mediaId, file });
@@ -9304,7 +9605,7 @@
  		}
  	}
  	private async initializeSink({
-@@ -262,18 +265,20 @@
+@@ -262,24 +284,27 @@
  		mediaId: string;
  		file: File;
  	}): Promise<void> {
@@ -9328,7 +9629,15 @@
  			if (!canDecode) {
  				throw new Error("Video codec not supported for decoding");
  			}
-@@ -297,14 +302,14 @@
+ 
+ 			const sink = new CanvasSink(videoTrack, {
+-				poolSize: 3,
++				// 导出树同素材多节点同时保留源canvas；禁池使后续PTS迭代不能覆写已解析节点。
++				poolSize: this.exact ? 0 : 3,
+ 				fit: "contain",
+ 			});
+ 
+@@ -297,14 +322,14 @@
  			input.dispose();
  			console.error(`Failed to initialize video sink for ${mediaId}:`, error);
  			throw error;
@@ -9345,7 +9654,7 @@
  			}
  
  			sinkData.input.dispose();
-@@ -317,11 +322,13 @@
+@@ -317,11 +342,13 @@
  	}
  
  	clearAll(): void {

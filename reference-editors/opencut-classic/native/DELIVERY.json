@@ -1,6 +1,6 @@
 {
   "task": "T-1274",
-  "deliveryStatus": "NATIVE_PREVIEW_SEPARATED_AUDIO_COMPATIBILITY_SOURCE_PUBLIC_CONTROLLER_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
+  "deliveryStatus": "NATIVE_CENTER_SLOT_RENAME_PRIVATE_EXACT_CACHE_SOURCE_DOM_VERIFIED_FINAL_GPU_MP4_PENDING_ROOT",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
@@ -10,14 +10,14 @@
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6628195,
-    "cssBytes": 128748,
+    "esmBytes": 6632365,
+    "cssBytes": 129354,
     "licensedDependencies": 59,
-    "renderedModules": 429,
+    "renderedModules": 430,
     "nativeHashes": {
-      "native.js": "77198cbf123da0065d041a2ff2f5f7b9e969539e3daf6723d38fc474bc2a2828",
-      "native.css": "cbd99c07a288a95307aeb08ac65d13f4be26342adf5d2302e075e1052e2c8cb6",
-      "NATIVE_BUILD_GRAPH.json": "d6bac2a68cefbe43e596ad8dbe158b53a6305a3dcc6ffcf2cd98ce03653d9016",
+      "native.js": "d255e015930770c3998cf4c018e6ed0113581eecb926333a9849aec183a66500",
+      "native.css": "d3ed547c9a216cca3726214a803f6028398a6c5496a5f5ff3518e5d5a56e1228",
+      "NATIVE_BUILD_GRAPH.json": "bf5c14de8c02c8a31d597c3f8cbf0a5004e36c0ef1fcb88e85e2e8f03549a688",
       "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
       "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
@@ -29,38 +29,42 @@
     "crossOsBitReproducibility": "not-claimed"
   },
   "source": {
-    "files": 713,
-    "changedFiles": 80,
-    "archiveBytes": 760854,
-    "patchBytes": 395805,
+    "files": 715,
+    "changedFiles": 82,
+    "archiveBytes": 765453,
+    "patchBytes": 414251,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "3668923b871b7289c5eee4632faf2d959e50f54ade5eec6badfad08ce0673f7d",
-      "native-from-t1046.patch": "2aedcef1005b1a394a8a743a0d6b98f8082d4569a2d020d3af86e6f429e69b9b",
+      "native-source.tar.gz": "1587efe4477bfca3197e936c5ef34d4056162e0a4d7bec5dafd2f471a2148d03",
+      "native-from-t1046.patch": "26136d105f783c8e471b013ad10d5cd6b05f3a741413371d43d1dc540d017f90",
       "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "verification/t1274-preview-separated-audio/source-reconstruction.json",
-    "productionReconstructionEvidence": "verification/t1274-preview-separated-audio/production-reconstruction.json",
-    "archiveSha256": "3668923b871b7289c5eee4632faf2d959e50f54ade5eec6badfad08ce0673f7d",
-    "patchSha256": "2aedcef1005b1a394a8a743a0d6b98f8082d4569a2d020d3af86e6f429e69b9b"
+    "reconstructionEvidence": "verification/t1274-preview-center/source-reconstruction.json",
+    "productionReconstructionEvidence": "verification/t1274-preview-center/production-reconstruction.json",
+    "archiveSha256": "1587efe4477bfca3197e936c5ef34d4056162e0a4d7bec5dafd2f471a2148d03",
+    "patchSha256": "26136d105f783c8e471b013ad10d5cd6b05f3a741413371d43d1dc540d017f90"
   },
   "verification": {
-    "totalTests": 66,
-    "totalAssertions": 323,
+    "totalTests": 71,
+    "totalAssertions": 341,
     "testFailures": 0,
     "typecheckExitCode": 0,
     "fixtureOnly": true,
     "browserAutomation": "not_run",
     "realGpu": "not_run",
     "realMp4": "not_run",
-    "domFixture": "not_rerun_narrow_audio_media_validation_change",
+    "domFixture": {
+      "legacy": 38,
+      "center": 42,
+      "rename": 25
+    },
     "historicalDomFixtureChecks": 60,
     "allFailuresPreserved": true,
     "unreplacedNodeEnv": 0,
     "unguardedGlobalProcessReferences": 0,
-    "evidenceDirectory": "verification/t1274-preview-separated-audio"
+    "evidenceDirectory": "verification/t1274-preview-center"
   },
   "limitations": [
     "原Canvas/Fabric夹具与JSDOM环境不等于真实浏览器像素或安装。",
@@ -70,7 +74,7 @@
     "NoteRelay原source.zip/WEB_ADAPTER/WEB_PATCHES与三个交付metadata按ROOT明确保留；实际新web源由单独成员provider绑定，不声称旧zip包含新适配。",
     "full canonical历史patch原bytes前缀保留，T1062增量相对已批准T1053 source；未新拍过去的上游全patch验收。"
   ],
-  "scope": "只写/tmp/t1053-native-video；共享checkout只读；未写根控制manifest或提交共享WIP",
+  "scope": "唯一native writer：/tmp/creatoros-t1274-preview-isolated源码及本t1274-native-workspace原生归档/patch/双发布产物/验证；未写根frontend业务。",
   "t1062": {
     "task": "T-1062",
     "candidateManifest": {
@@ -1314,5 +1318,176 @@
     },
     "allFailuresPreserved": true,
     "fixturePublished": false
+  },
+  "historicalT1274BeforeCenterTop": {
+    "deliveryStatus": "NATIVE_PREVIEW_SEPARATED_AUDIO_COMPATIBILITY_SOURCE_PUBLIC_CONTROLLER_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6632365,
+      "cssBytes": 129354,
+      "licensedDependencies": 59,
+      "renderedModules": 430,
+      "nativeHashes": {
+        "native.js": "d255e015930770c3998cf4c018e6ed0113581eecb926333a9849aec183a66500",
+        "native.css": "d3ed547c9a216cca3726214a803f6028398a6c5496a5f5ff3518e5d5a56e1228",
+        "NATIVE_BUILD_GRAPH.json": "bf5c14de8c02c8a31d597c3f8cbf0a5004e36c0ef1fcb88e85e2e8f03549a688",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "未重装；复用此前隔离源码真实bun frozen ignore-scripts安装的同一锁依赖树",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 715,
+      "changedFiles": 82,
+      "archiveBytes": 765453,
+      "patchBytes": 414251,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "1587efe4477bfca3197e936c5ef34d4056162e0a4d7bec5dafd2f471a2148d03",
+        "native-from-t1046.patch": "26136d105f783c8e471b013ad10d5cd6b05f3a741413371d43d1dc540d017f90",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "verification/t1274-preview-center/source-reconstruction.json",
+      "productionReconstructionEvidence": "verification/t1274-preview-center/production-reconstruction.json",
+      "archiveSha256": "1587efe4477bfca3197e936c5ef34d4056162e0a4d7bec5dafd2f471a2148d03",
+      "patchSha256": "26136d105f783c8e471b013ad10d5cd6b05f3a741413371d43d1dc540d017f90"
+    },
+    "verification": {
+      "totalTests": 71,
+      "totalAssertions": 341,
+      "testFailures": 0,
+      "typecheckExitCode": 0,
+      "fixtureOnly": true,
+      "browserAutomation": "not_run",
+      "realGpu": "not_run",
+      "realMp4": "not_run",
+      "domFixture": {
+        "legacy": 38,
+        "center": 42,
+        "rename": 25
+      },
+      "historicalDomFixtureChecks": 60,
+      "allFailuresPreserved": true,
+      "unreplacedNodeEnv": 0,
+      "unguardedGlobalProcessReferences": 0,
+      "evidenceDirectory": "verification/t1274-preview-center"
+    }
+  },
+  "t1274PreviewCenterVerification": {
+    "scope": "中心候选slot保持原core实例、原工程名称入口及private exact export按PTS无canvas池；interactive池3保持；未改AAC/预算",
+    "tests": {
+      "pass": 71,
+      "fail": 0,
+      "assertions": 341,
+      "log": "regression-final.log"
+    },
+    "red": {
+      "timingCancelGap": "red-resource-cache.log（旧源17pass3fail，真实当场）",
+      "canvasPool": "red-canvas-pool-resolve-final.log（真resolveRenderTree first像素24实际48）",
+      "environmentFailuresPreserved": [
+        "red-canvas-pool.log",
+        "red-canvas-pool-actual-resolve.log",
+        "red-canvas-pool-resolve.log"
+      ],
+      "centerOrRenamePrechangeRed": "未取得本轮前改动RED，不补拍历史PASS"
+    },
+    "green": {
+      "resourceCache": "20pass79assert",
+      "canvasPool": "1pass7assert",
+      "dom": {
+        "legacy": 38,
+        "center": 42,
+        "rename": 25
+      }
+    },
+    "typecheckExitCode": 0,
+    "productionBuildExitCode": 0,
+    "finalASTExitCode": 0,
+    "sourceFiles": 715,
+    "patchFuzz": 0,
+    "allSourceBytesMatch": true,
+    "archiveBuildSevenOutputsMatchBothPublished": true,
+    "fixturePublished": false,
+    "realGpu": "未运行",
+    "finalReal48FrameCandidateMp4": "待ROOT公共UI/媒体验收；旧重复前帧失败保留",
+    "oldAACAlignmentFailure": "保留，T1277另核；本轮未改音频",
+    "uiVisualReview": "本子执行未新签视觉分；ROOT走查待验",
+    "freshInstall": "复用原冻结锁依赖树，未重装",
+    "allFailuresPreserved": true,
+    "evidenceHashes": {
+      "process-ast.log": "9de7d0e73394e162ea19a1616aa0a0e87efbcf6d9e2392feeaf4775e6a02eee8",
+      "source-manifest.json": "42997c20e833695e511e09829b4d788b396cfde4a88305d75f3caddac51ef8b3",
+      "patch-fuzz0.log": "003329b9985dbe8455cca5c5653e36e70637b1fb5f53bccbfead45f7a9e2472d",
+      "diff-check-fullPatch.log": "2b68aeb57b9c8cc395fde64c053f5e49fa43b1d7a34a59cb1ae91eee10b77cf0",
+      "red-dom.log": "1cbb8d3b47b544df5ebdea40ea11b5f65cc35cd151fe354eb5d92928d2fa8530",
+      "rename-addon-dom.log": "ed25062e40736d228a93631bb93d6f84311245b32005c748d0f634647d01dc17",
+      "red-canvas-pool-actual-resolve.log": "fd9f2e3c05e36a2105ce725bb7994bd112a054bc3944b6eec01900b6b18def0c",
+      "diff-check-nonPatch.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "format.log": "98435ebfcab5258b6eb1cc0a06faa31847b25bd301a27c36260d2dbd8186dd01",
+      "green-rename-dom.log": "ed25062e40736d228a93631bb93d6f84311245b32005c748d0f634647d01dc17",
+      "old-native.log": "05b2af2b902a3cd744dd682daa159825d5d15304d13eb10fbce864239c734ba6",
+      "public-preview.log": "ad2022776a64bc9b463d3216526a0cadf482392fe4c8e545ce148919178cd718",
+      "package-source.py": "cb4f331c5ec3e67fb3932ef5f38665b610b778240c52cca9ca6aaa68ca4e988d",
+      "old-dom.log": "0471c486c86ed8acde2b6029785fec9ac3d499806511cdc69c4148988dce4daa",
+      "production-reconstruction.json": "cf492e7932aa68efe3bafd12f351cb0ba06ac79e8292e4d2d0f346f62d0345cf",
+      "fixture-build-batch.log": "6bfb8f9a3c40b553d84dd2688f1dc1175a40c8db81480b221a27aad9ec4b9786",
+      "workspace-dom.log": "6084e2214bca39abdaa6bdf3965ce23fda17f8cebf50b525193621ca616ee2d6",
+      "fixture-build-final.log": "3b80fbd318154b09d38db7a87306e5c14871b0b50c4c8add456ff95a46409006",
+      "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "green-core-lock-dom.log": "3ecfd7cfe28756e86fdc3e8e516d120ef86fe9c0cd379afb2c6342b731057c17",
+      "verify-reconstruction.py": "258756f1de3e4e6f392b081e7ec7aad9e0749cc84f97a5ff706abffae54d4547",
+      "green-resource-cache-first.log": "8e3f1e8e5b3cd7e13a2462d2eaf037309e07b251416d811777b5364cbfe74dc6",
+      "green-dom-first.log": "5981a9060e56d42ca765dad575392193d4b06123dac10ad4f3832f4405209938",
+      "center-dom-final.log": "8da0358479242463a3b2180c495809dc2d6624c68cc0ac36cb86811da8ba35e4",
+      "header-inventory.log": "e08d3f360e0603a6b721c620e27c5220aed47ddef4fad421dfce45e81357e959",
+      "fixture-build.log": "35738efdf4af8da22f80fc6d3434fc239e7f816177296a44fc6348d223083b3c",
+      "green-resource-cache-final.log": "22d5ec1684dcc15d1e17387cc45181591b3836eb8ec573976d54ff1ccd7eac48",
+      "preview-audio.log": "f92209f242fae3bd28ce23e623db074d56f6eb0e98ada5682a24b41e6f1b67ec",
+      "production-build.log": "c515d24cf7d61b73a9bb395b13e6ea5a0afbeacb6874dde9cd405c24e8b49307",
+      "legacy-dom.log": "0471c486c86ed8acde2b6029785fec9ac3d499806511cdc69c4148988dce4daa",
+      "format-core-lock.log": "1441000673d9c088d91dc4cd914119e11390855f0a9ee1d8cc1b6c5561daa304",
+      "type-first.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "regression-final.log": "32a7dd90e37be929b2ec779f81eadb959734d454d68ab53068b0f56681abc1f3",
+      "red-rename-dom.log": "de3c5cdaaa2862ff2543a6a020190796ac56dba7ea830d648776d6fbbf80447b",
+      "preview-slot-dom.log": "3ecfd7cfe28756e86fdc3e8e516d120ef86fe9c0cd379afb2c6342b731057c17",
+      "red-canvas-pool.log": "51ba9daa0cc98f9043d56293b3716c4c533658549b85cdacef03a731f06dd132",
+      "source-reconstruction.json": "1c48ed3384c3c64e1ab7ea91547a7e173a6f71dfa9813c9e5bddd318bb1d9075",
+      "red-resource-cache.log": "ef9f05c2f5955b95b729720a5ea9123c7c0d7d76613b84d96751cf9dff005fe1",
+      "header-inventory.ts": "66d7483788de6a6e03fa464b5c7f93586fe908bdef3499d004b731e6f4f19d77",
+      "preview-image.log": "c3f1227886ffd7acf358f5596a1e689f1ba10f647adee32992c1f56df72b03b6",
+      "package-source.log": "de17e8b6fbe44cf456bc142f5202c245f2ee9cfd64da206a6f7ab98a6f2e8c15",
+      "archive-production-build.log": "ddc659da3984da3946f3d4fbf1fe6589c6e7548c9759853c6c1704d5791e0d7f",
+      "reconstruction.log": "75f91618a5ad55d15fb45bdfa6f3c036beceaa37292909dc81afe123e00fbb53",
+      "red-core-lock-dom.log": "0a89af1a32e004681dec38a02d61f463da51f2927bb01f16fe359a1151b826eb",
+      "preview-canvas.log": "cb6eeac27a31b08480bd055800a3118548913bd4de8d8212a5b8ec333aacc403",
+      "green-dom-second.log": "8da0358479242463a3b2180c495809dc2d6624c68cc0ac36cb86811da8ba35e4",
+      "old-workspace.log": "3b82426c7ae1fcdc934033253110543d3cea4d0bfdfb26783fc49ccf87190a1d",
+      "rename-addon-dom-probe.ts": "ec97a502a2b96b4ee8615c73002870cd8776a491c66fd2b5bd0883ad86936050",
+      "old-resources.log": "015f8ea0304f5e1f596c4d590c4580f6586427874515db5f9890da4e0bbff69d",
+      "preview-slot-dom-probe.ts": "20104d24fe8c4493b3e7b982b816e0057dbd744dc17bf2dcf5c2edcd645a6efc",
+      "preview-resources.log": "1d9b5d90730ed62ed6bdcb7f36e33e6252cf86d0681bdfd78d875a744c2e54f0",
+      "baseline-fixture-build-final.log": "ebb364de15293ccbe678cc9a917cb8eb3184fea061131c569331781dc5e6b7ec",
+      "baseline-fixture-build.log": "c3f9849f988549b3c8242efdd44a273c1af43c576ede3f201741865fc67647bd",
+      "red-canvas-pool-resolve-final.log": "57d486de61c72014ce8d09f02f7e43a7ad408f140dcbbf92e1a13d47691e52f7",
+      "red-canvas-pool-resolve.log": "ed5a9515cfc764ddc7732eabe64163103cf84b3480e43c75a0d7695298a4924e",
+      "green-canvas-pool-resolve.log": "a388761238621c02204b8ff7cd94eb361b827431af30e01b27d0fe48a4ea795a"
+    },
+    "diffCheck": {
+      "nonPatch": 0,
+      "fullPatch": 2,
+      "reason": "标准patch上下文空白/上游CRLF保真；已F0逐字节复原，不归一化历史源"
+    }
   }
 }

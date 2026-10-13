@@ -1,0 +1,22 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview-video-cache.test.ts:
+32 |  const first=new VideoNode({...params,trimStart:120000}),second=new VideoNode({...params,trimStart:240000}),root=new BaseNode();root.add(first).add(second);
+33 |  const red=(source:any)=>source.getContext('2d').getImageData(0,0,1,1).data[0];
+34 |  try{
+35 |   await resolveRenderTree({node:root,renderer:{videoCache:cache,width:2,height:2} as any,time:0});
+36 |   expect(first.resolved).not.toBeNull();expect(second.resolved).not.toBeNull();
+37 |   expect(red(first.resolved!.source)).toBe(24);expect(red(second.resolved!.source)).toBe(48);
+                                           ^
+error: expect(received).toBe(expected)
+
+Expected: 24
+Received: 48
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/__tests__/native-preview-video-cache.test.ts:37:39)
+(fail) T1274 private export同asset不同sourceTime多节点保留各自真实canvas像素，不被后续迭代池覆写 [33.86ms]
+
+ 0 pass
+ 1 fail
+ 3 expect() calls
+Ran 1 test across 1 file. [186.00ms]

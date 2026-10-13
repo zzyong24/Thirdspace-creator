@@ -1,0 +1,90 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-resources.test.ts:
+(pass) 慢图片解码取消释放临时Image与BlobURL，寿命排空后不能返回素材 [10.03ms]
+(pass) 换稿后迟到素材上传回执不注册到当前编辑器 [0.83ms]
+(pass) 上传提示等待绘制时换稿会取消RAF且不启动旧导入 [0.75ms]
+(pass) T1062 实际range实现逐样本裁剪连续块并echo完整本地身份，decode不等于已听/采纳 [5.46ms]
+(pass) T1062 合成负音频PTS不是视频zero；相邻解码重叠去重但不补零 [0.15ms]
+(pass) T1062 nonzero video仅该范围manual且Input释放，不伪造音频 [0.13ms]
+(pass) T1062 missing first coverage仅该范围manual且Input释放，不伪造音频 [0.03ms]
+(pass) T1062 hole仅该范围manual且Input释放，不伪造音频 [0.21ms]
+(pass) T1062 sample-rate change仅该范围manual且Input释放，不伪造音频 [0.06ms]
+(pass) T1062 request cancel取消真实range实现；迟到块不得返回decoded/假完成 [0.52ms]
+(pass) T1062 context seek取消真实range实现；迟到块不得返回decoded/假完成 [0.09ms]
+(pass) T1062 owner dispose取消真实range实现；迟到块不得返回decoded/假完成 [0.16ms]
+(pass) T1062 foreign本地owner或当前真实scene/clip proof失败在读取Input之前拒绝 [0.17ms]
+(pass) T1062 纯组NULLaccount原声读取保持同group owner，平台账号筛选不改实际本地root [0.34ms]
+(pass) T1069 第一份已完成素材立即交给编辑器，不等待第二份上传且取消不撤销已接管URL [4.18ms]
+(pass) T1069 原导入取消实际传递到宿主上传请求 [0.65ms]
+Prefetch failed: warn: Input disposed
+      at canvases (/private/tmp/creatoros-t1274-preview-separated-archive/apps/web/src/embedded/__tests__/native-resources.test.ts:20:39)
+
+84 |  try{
+85 |   expect(cacheFrame(25).timestamp+cacheFrame(25).duration).toBeGreaterThan(cacheFrame(26).timestamp);
+86 |   expect((await cache.getFrameAt({mediaId:'source',file,time:1}))?.canvas).toEqual({index:24});
+87 |   blockedCanvasIndex=26;const at25=cache.getFrameAt({mediaId:'source',file,time:25/24});await waitCanvas();
+88 |   let returned26=false;const at26=cache.getFrameAt({mediaId:'source',file,time:130000/120000}).then(frame=>{returned26=true;return frame;});
+89 |   await new Promise(resolve=>setTimeout(resolve,1));expect(returned26).toBe(false);
+                                                                            ^
+error: expect(received).toBe(expected)
+
+Expected: false
+Received: true
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-separated-archive/apps/web/src/embedded/__tests__/native-resources.test.ts:89:72)
+(fail) T1274 private exact cache等待prefetch按actual next PTS处理24fps double边界，无重复前帧 [9.86ms]
+(pass) T1274 默认interactive暖cache保持旧快路径，prefetch ready帧仍按PTS晋升 [3.12ms]
+ 95 |  try{await cache.getFrameAt({mediaId:'source',file,time:1});await new Promise(resolve=>setTimeout(resolve,1));await cache.getFrameAt({mediaId:'source',file,time:25/24});await new Promise(resolve=>setTimeout(resolve,1));expect((await cache.getFrameAt({mediaId:'source',file,time:26/24}))?.canvas).toEqual({index:26});}
+ 96 |  finally{cache.clearAll();await cache.drain();host.lifetime.cancel();host.detach();}
+ 97 | });
+ 98 | test('T1274 private exact cache保留declared duration gap，不把next PTS之前空隙延长成内容',async()=>{
+ 99 |  resetCanvasFrames();cacheFrames=[{canvas:{index:0},timestamp:0,duration:1/48},{canvas:{index:1},timestamp:1/12,duration:1/24}];const host=fixture(),cache=new VideoCache({exact:true} as any),file=new File(['timing-fixture-not-mp4'],'gap.bin');
+100 |  try{expect(await cache.getFrameAt({mediaId:'source',file,time:1/24})).toBeNull();}finally{cache.clearAll();await cache.drain();host.lifetime.cancel();host.detach();}
+                                                                             ^
+error: expect(received).toBeNull()
+
+Received: {
+  canvas: {
+    index: 0,
+  },
+  timestamp: 0,
+  duration: 0.020833333333333332,
+}
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-separated-archive/apps/web/src/embedded/__tests__/native-resources.test.ts:100:72)
+(fail) T1274 private exact cache保留declared duration gap，不把next PTS之前空隙延长成内容 [3.20ms]
+Prefetch failed: warn: Input has been disposed.
+      at dispose (/private/tmp/creatoros-t1274-preview-separated-archive/apps/web/src/embedded/__tests__/native-resources.test.ts:26:146)
+      at clearVideo (/private/tmp/creatoros-t1274-preview-separated-archive/apps/web/src/services/video-cache/service.ts:315:19)
+      at clearAll (/private/tmp/creatoros-t1274-preview-separated-archive/apps/web/src/services/video-cache/service.ts:327:9)
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-separated-archive/apps/web/src/embedded/__tests__/native-resources.test.ts:104:195)
+
+ 99 |  resetCanvasFrames();cacheFrames=[{canvas:{index:0},timestamp:0,duration:1/48},{canvas:{index:1},timestamp:1/12,duration:1/24}];const host=fixture(),cache=new VideoCache({exact:true} as any),file=new File(['timing-fixture-not-mp4'],'gap.bin');
+100 |  try{expect(await cache.getFrameAt({mediaId:'source',file,time:1/24})).toBeNull();}finally{cache.clearAll();await cache.drain();host.lifetime.cancel();host.detach();}
+101 | });
+102 | test('T1274 private exact cache清理取消pending prefetch，不返回迟到帧且Input释放',async()=>{
+103 |  resetCanvasFrames();const host=fixture(),cache=new VideoCache({exact:true} as any),file=new File(['timing-fixture-not-mp4'],'cancel.bin');
+104 |  try{await cache.getFrameAt({mediaId:'source',file,time:1});blockedCanvasIndex=26;const pending=cache.getFrameAt({mediaId:'source',file,time:25/24}).catch(error=>error);await waitCanvas();cache.clearAll();expect(await pending).toMatchObject({name:'AbortError'});await cache.drain();expect(cache.getStats().totalSinks).toBe(0);}
+                                                                                                                                                                                                                                         ^
+error: expect(received).toMatchObject(expected)
+
+  {
+-   "name": "AbortError",
++   "canvas": {
++     "index": 25,
++   },
++   "duration": 0.041666666666666664,
++   "timestamp": 1.0416666666666667,
+  }
+
+- Expected  - 1
++ Received  + 5
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-separated-archive/apps/web/src/embedded/__tests__/native-resources.test.ts:104:228)
+(fail) T1274 private exact cache清理取消pending prefetch，不返回迟到帧且Input释放 [2.97ms]
+
+ 17 pass
+ 3 fail
+ 76 expect() calls
+Ran 20 tests across 1 file. [193.00ms]
