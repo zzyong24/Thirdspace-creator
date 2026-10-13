@@ -5,6 +5,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as build from './build-sidecar.mjs';
 import { DESKTOP_RELEASE_CSP } from './desktop-csp.mjs';
+import { buildSmokeSidecarEnv } from './runtime-smoke.mjs';
+
+test('独立冒烟也剥更新根路径，父构建环境不被修改', () => {
+  const base = { CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH: '/private/root.pem' };
+  const child = buildSmokeSidecarEnv(base, {
+    port: 12345, token: 'fixture-only', smokeDataRoot: '/fixture', libDir: '/fixture/lib',
+  });
+  assert.equal(child.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH, undefined);
+  assert.equal(base.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH, '/private/root.pem');
+});
 
 test('桌面CSP允许现有sandbox预览的精确GSAP脚本，仍禁止eval', () => {
   const directive = DESKTOP_RELEASE_CSP.split('; ').find(v => v.startsWith('script-src '));

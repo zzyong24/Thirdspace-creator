@@ -28,6 +28,7 @@ export function buildSmokeSidecarEnv(
     LD_LIBRARY_PATH: libDir,
   };
   delete childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
+  delete childEnv.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH;
   delete childEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY;
   delete childEnv.CREATOROS_SMOKE_BYPASS_VERDICT;
   return childEnv;

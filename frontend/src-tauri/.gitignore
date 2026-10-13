@@ -7,3 +7,4 @@
 /binaries/
 # [T-169] sidecar tarball(bundle resource,~322M,build 时由 build-sidecar.mjs 从 sidecar/ 再生)。
 /sidecar.tar.gz
+/sidecar.tar.gz.sig
