@@ -1,3 +1,4 @@
+# 本轮一次性归档动作实录；会写固定worktree并前缀追加交付说明。复核请用verify-reconstruction.py/rebuild-native.sh，不重复执行此打包实录。
 from pathlib import Path
 import json,tarfile,hashlib,gzip,difflib,shutil,io
 repo=Path('/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator')
