@@ -1,0 +1,15 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:53628
+- Network:       http://192.168.0.107:53628
+✓ Ready in 739ms
+[CreatorOS] SIDECAR_STARTUP_VERIFIED
+
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+[seed] win-video-tutor 已按 module 挂 22 条 tag
+ POST /api/v1/dispatch 200 in 9.4s (next.js: 2.3s, proxy.ts: 125ms, application-code: 7.0s)
+[execution-worker-port] task=exec_0648c934-d14c-491e-a0b8-2ea0420cab30 port=reserveGenerationCall category=ConflictError code=HOST_PORT_REJECTED
+[execution-worker-port] task=exec_c2b9c4f7-b6bf-4b86-943b-7576cdd81560 port=reserveGenerationCall category=ConflictError code=HOST_PORT_REJECTED
+ POST /api/v1/dispatch 200 in 68ms (next.js: 6ms, proxy.ts: 9ms, application-code: 53ms)
+ POST /api/v1/dispatch 200 in 21ms (next.js: 2ms, proxy.ts: 2ms, application-code: 17ms)
+ POST /api/v1/dispatch 200 in 3.4s (next.js: 3.1s, proxy.ts: 232ms, application-code: 120ms)

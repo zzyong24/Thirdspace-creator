@@ -1,0 +1,42 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:25974) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/assistant-engine-server.test.ts (3 tests | 3 failed) 17ms
+   × 后端默认取代旧浏览器选择，不覆盖已设值 15ms
+   × 首次迁移并发设置时尊重后端compare-write回读 1ms
+   × 保存失败保持原后端值，不能把本地写成功冒充持久 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/assistant-engine-server.test.ts > 后端默认取代旧浏览器选择，不覆盖已设值
+TypeError: prefs.loadAssistantEngine is not a function
+ ❯ src/features/copilot/assistant-engine-server.test.ts:5:226
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/features/copilot/assistant-engine-server.test.ts > 首次迁移并发设置时尊重后端compare-write回读
+TypeError: prefs.loadAssistantEngine is not a function
+ ❯ src/features/copilot/assistant-engine-server.test.ts:6:306
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/features/copilot/assistant-engine-server.test.ts > 保存失败保持原后端值，不能把本地写成功冒充持久
+TypeError: prefs.loadAssistantEngine is not a function
+ ❯ src/features/copilot/assistant-engine-server.test.ts:7:222
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  18:30:56
+   Duration  2.38s (transform 39ms, setup 223ms, import 10ms, tests 17ms, environment 985ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/features/copilot/assistant-engine-server.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000

@@ -1,0 +1,71 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:53625
+- Network:       http://192.168.0.107:53625
+✓ Ready in 417ms
+[CreatorOS] SIDECAR_STARTUP_VERIFIED
+
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+[seed] win-video-tutor 已按 module 挂 22 条 tag
+ POST /api/v1/dispatch 200 in 7.8s (next.js: 1698ms, proxy.ts: 110ms, application-code: 6.0s)
+ POST /api/v1/dispatch 200 in 36ms (next.js: 5ms, proxy.ts: 7ms, application-code: 24ms)
+ POST /api/v1/dispatch 200 in 14ms (next.js: 3ms, proxy.ts: 3ms, application-code: 9ms)
+ POST /api/v1/dispatch 200 in 13ms (next.js: 1184µs, proxy.ts: 1696µs, application-code: 11ms)
+ POST /api/v1/dispatch 200 in 10ms (next.js: 1470µs, proxy.ts: 1898µs, application-code: 7ms)
+ POST /api/v1/dispatch 404 in 6ms (next.js: 1445µs, proxy.ts: 2ms, application-code: 2ms)
+ POST /api/v1/dispatch 404 in 5ms (next.js: 1225µs, proxy.ts: 1678µs, application-code: 2ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"assets.get","errorName":"OwnershipError","errorCode":"OwnershipError"}
+ POST /api/v1/dispatch 404 in 1382ms (next.js: 1303ms, proxy.ts: 63ms, application-code: 16ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"assets.downloadUrl","errorName":"OwnershipError","errorCode":"OwnershipError"}
+ POST /api/v1/dispatch 404 in 11ms (next.js: 1811µs, proxy.ts: 2ms, application-code: 7ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.confirm","errorName":"ConflictError","errorCode":"ConflictError"}
+ POST /api/v1/dispatch 409 in 1421ms (next.js: 1311ms, proxy.ts: 60ms, application-code: 49ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"assets.get","errorName":"OwnershipError","errorCode":"OwnershipError"}
+ POST /api/v1/dispatch 404 in 11ms (next.js: 1680µs, proxy.ts: 2ms, application-code: 7ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"assets.downloadUrl","errorName":"OwnershipError","errorCode":"OwnershipError"}
+ POST /api/v1/dispatch 404 in 9ms (next.js: 1185µs, proxy.ts: 2ms, application-code: 6ms)
+ GET /settings 200 in 4.0s (next.js: 1069ms, proxy.ts: 2ms, application-code: 3.0s)
+⚠ Blocked cross-origin request to Next.js dev resource /_next/webpack-hmr from "127.0.0.1".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['127.0.0.1'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET /settings 200 in 261ms (next.js: 4ms, proxy.ts: 4ms, application-code: 254ms)
+✓ Compiled in 72ms
+ POST /api/v1/dispatch 200 in 255ms (next.js: 11ms, proxy.ts: 4ms, application-code: 241ms)
+ POST /api/v1/dispatch 200 in 19ms (next.js: 1581µs, proxy.ts: 3ms, application-code: 15ms)
+ POST /api/v1/dispatch 200 in 27ms (next.js: 1334µs, proxy.ts: 2ms, application-code: 23ms)
+ GET /api/v1/blob/groups/grp_legacy_acct-12b7a425-8/image/committed-50aabe8c75493ed9cf85d6b94b55ba955764af5038b4696f811d845007494bf6?exp=1791718069569&token=00cd8df0d604fa5b05960f33903be965ca20eda7fa52b02f52d00dec74f542ce&scope=eyJ1c2VySWQiOiJ1c2VyLWViNzgwNjkxLTEiLCJncm91cElkIjoiZ3JwX2xlZ2FjeV9hY2N0LTEyYjdhNDI1LTgiLCJhY2NvdW50SWQiOiJhY2N0LTEyYjdhNDI1LTgifQ 200 in 5.4s (next.js: 5.3s, application-code: 115ms)
+✓ Compiled in 115ms
+✓ Compiled in 2.4s
+ GET /settings 200 in 2.0s (next.js: 31ms, proxy.ts: 16ms, application-code: 1962ms)
+✓ Compiled in 720ms
+✓ Compiled in 1082ms
+✓ Compiled in 565ms
+✓ Compiled in 283ms
+ GET /settings 200 in 3.6s (next.js: 1115ms, proxy.ts: 80ms, application-code: 2.4s)
+ GET /settings 200 in 508ms (next.js: 4ms, proxy.ts: 5ms, application-code: 499ms)
+✓ Compiled in 127ms
+ GET /settings 200 in 324ms (next.js: 13ms, proxy.ts: 2ms, application-code: 308ms)
+✓ Compiled in 215ms
+ GET /settings 200 in 584ms (next.js: 18ms, proxy.ts: 8ms, application-code: 558ms)
+ POST /api/v1/dispatch 200 in 1565ms (next.js: 1533ms, proxy.ts: 10ms, application-code: 22ms)
+ GET /settings 200 in 3.1s (next.js: 8ms, proxy.ts: 5ms, application-code: 3.1s)
+✓ Compiled in 477ms
+[page-read] operation=accounts.list durationMs=216
+[page-read] operation=notifications.list durationMs=216
+ GET /settings 200 in 2.4s (next.js: 102ms, proxy.ts: 69ms, application-code: 2.3s)
+ GET /settings 200 in 332ms (next.js: 8ms, proxy.ts: 5ms, application-code: 319ms)
+ POST /api/v1/dispatch 200 in 132ms (next.js: 20ms, proxy.ts: 6ms, application-code: 106ms)
+ GET /settings 200 in 251ms (next.js: 9ms, proxy.ts: 8ms, application-code: 234ms)
+ GET /settings 200 in 502ms (next.js: 4ms, proxy.ts: 4ms, application-code: 493ms)
+ POST /api/v1/dispatch 200 in 23ms (next.js: 2ms, proxy.ts: 4ms, application-code: 16ms)
+ GET /settings 200 in 997ms (next.js: 7ms, proxy.ts: 6ms, application-code: 984ms)
+✓ Compiled in 127ms
+ GET /settings 200 in 270ms (next.js: 16ms, proxy.ts: 3ms, application-code: 252ms)

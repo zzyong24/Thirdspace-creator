@@ -1,0 +1,1221 @@
+▲ Next.js 16.2.9 (webpack)
+- Local:         http://localhost:53626
+- Network:       http://192.168.0.107:53626
+✓ Ready in 488ms
+⨯ node:crypto
+Module build failed: UnhandledSchemeError: Reading from "node:crypto" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs.
+Import trace for requested module:
+node:crypto
+./src/server/verdict-token-gate.ts
+[CreatorOS] SIDECAR_STARTUP_VERIFIED
+
+○ Compiling /settings ...
+⨯ ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx
+⨯ ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx
+⨯ ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx
+ GET /settings 500 in 33.2s (next.js: 33.0s, proxy.ts: 107ms, application-code: 91ms)
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] node:crypto
+Module build failed: UnhandledSchemeError: Reading from "node:crypto" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] node:fs
+Module build failed: UnhandledSchemeError: Reading from "node:fs" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] node:path
+Module build failed: UnhandledSchemeError: Reading from "node:path" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] Uncaught ModuleParseError: Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/ sync ^\.\/sharp\-.*\.node$
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/sharp.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/input.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/utils/image.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/ sync ^\.\/sharp\-.*\.node$
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/sharp.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/constructor.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/utils/image.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+⨯ ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx
+ GET /settings 500 in 30ms (next.js: 3ms, proxy.ts: 20ms, application-code: 7ms)
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] node:crypto
+Module build failed: UnhandledSchemeError: Reading from "node:crypto" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] node:fs
+Module build failed: UnhandledSchemeError: Reading from "node:fs" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] node:path
+Module build failed: UnhandledSchemeError: Reading from "node:path" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] Uncaught ModuleParseError: Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/ sync ^\.\/sharp\-.*\.node$
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/sharp.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/constructor.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/utils/image.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/ sync ^\.\/sharp\-.*\.node$
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/sharp.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/constructor.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/utils/image.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+⨯ ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx
+ GET /settings 500 in 32ms (next.js: 3ms, proxy.ts: 20ms, application-code: 8ms)
+[browser] Uncaught ModuleParseError: Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] node:crypto
+Module build failed: UnhandledSchemeError: Reading from "node:crypto" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] node:fs
+Module build failed: UnhandledSchemeError: Reading from "node:fs" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] node:path
+Module build failed: UnhandledSchemeError: Reading from "node:path" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+○ Compiling /settings ...
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/ sync ^\.\/sharp\-.*\.node$
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/sharp.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/constructor.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/utils/image.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+⨯ ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/ sync ^\.\/sharp\-.*\.node$
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/sharp.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/constructor.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/utils/image.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/ sync ^\.\/sharp\-.*\.node$
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/sharp.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/constructor.js
+../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/lib/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/utils/image.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx 
+⨯ ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx
+ GET /settings 500 in 42ms (next.js: 2ms, proxy.ts: 34ms, application-code: 6ms)
+[browser] Uncaught ModuleParseError: Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/linux/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/win32/x64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] ../node_modules/.pnpm/sharp@0.32.6/node_modules/sharp/build/Release/sharp-darwin-arm64v8.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file) 
+[browser] node:crypto
+Module build failed: UnhandledSchemeError: Reading from "node:crypto" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] node:fs
+Module build failed: UnhandledSchemeError: Reading from "node:fs" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+[browser] node:path
+Module build failed: UnhandledSchemeError: Reading from "node:path" is not handled by plugins (Unhandled scheme).
+Webpack supports "data:" and "file:" URIs by default.
+You may need an additional plugin to handle "node:" URIs. 
+⨯ ../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+Module parse failed: Unexpected character '�' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/darwin/arm64/onnxruntime_binding.node
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/bin/napi-v3/ sync ^\.\/.*\/.*\/onnxruntime_binding\.node$
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/binding.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/backend.js
+../node_modules/.pnpm/onnxruntime-node@1.14.0/node_modules/onnxruntime-node/dist/index.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/backends/onnx.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/env.js
+../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js
+../ai-worker/src/runtime/multimodal-whisper-local.ts
+../ai-worker/src/index.ts
+./src/server/persistence-client.ts
+./src/app/(creator)/settings/page.tsx

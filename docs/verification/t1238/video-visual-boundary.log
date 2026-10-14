@@ -1,0 +1,12 @@
+
+门卫 boundary-scan — 剩余违规 6 条(基线 5):
+  0	R1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。
+  4	R2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。
+  2	R3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。
+  0	R5-no-workbench-worker-direct-db  通用能力适配器只能经 backend service port 写入，不得直连数据库。
+  0	R4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。
+
+✗ 发现 1 条【新】违规(结构回归,被拦住):
+   + R3-no-cross-module-repository-import::backend/src/modules/execution/execution-codex-chat-tool.test.ts::../ai/ai.repository
+
+物理架构规则见 orchestrator/SYSTEM_ARCHITECTURE.md。

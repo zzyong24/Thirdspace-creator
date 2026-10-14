@@ -1,0 +1,4 @@
+JSON report written to /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/video-visual-scope-red.json
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/video-render/executor.test.ts --maxWorkers=1 --retry=0 --testTimeout=180000 --hookTimeout=180000 --reporter=json --outputFile=../docs/verification/t1238/video-visual-scope-red.json
