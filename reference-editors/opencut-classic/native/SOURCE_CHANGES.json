@@ -184,5 +184,10 @@
     "apps/web/src/embedded/editor-layout.tsx",
     "README.creatoros.md",
     "NATIVE_REBUILD_CONSISTENCY.json"
+  ],
+  "t1282SceneEffectProtocolChangedFiles": [
+    "apps/web/src/services/renderer/compositor/wasm-compositor.ts",
+    "README.creatoros.md",
+    "NATIVE_REBUILD_CONSISTENCY.json"
   ]
 }

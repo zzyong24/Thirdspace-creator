@@ -1,0 +1,100 @@
+[
+  {
+    "name": "no-effects",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "3b416c76a8623ac4f3bf0b00eca15e1c8f79cc2668b1eb5237b9d0316872010f",
+    "redPixel": [
+      233,
+      35,
+      55,
+      255
+    ],
+    "edgePixel": [
+      233,
+      35,
+      55,
+      255
+    ]
+  },
+  {
+    "name": "layer-effects",
+    "status": "pass",
+    "inputUnchanged": true,
+    "wireIdentityPreserved": true,
+    "pixelHash": "13dfa03f97f0138c918f5896feacfab4b3de550cd13a8df5715190cb708ebea9",
+    "redPixel": [
+      233,
+      35,
+      55,
+      255
+    ],
+    "edgePixel": [
+      231,
+      35,
+      57,
+      255
+    ]
+  },
+  {
+    "name": "scene-empty",
+    "status": "fail",
+    "inputUnchanged": true,
+    "error": "Invalid frame descriptor: Error: missing field `effect_pass_groups`"
+  },
+  {
+    "name": "scene-single-group",
+    "status": "fail",
+    "inputUnchanged": true,
+    "error": "Invalid frame descriptor: Error: missing field `effect_pass_groups`"
+  },
+  {
+    "name": "scene-multiple-groups",
+    "status": "fail",
+    "inputUnchanged": true,
+    "error": "Invalid frame descriptor: Error: missing field `effect_pass_groups`"
+  },
+  {
+    "name": "mixed-layers-scenes-mask-transform-opacity-blend",
+    "status": "fail",
+    "inputUnchanged": true,
+    "error": "Invalid frame descriptor: Error: missing field `effect_pass_groups`"
+  },
+  {
+    "name": "mixed-reordered-control",
+    "status": "fail",
+    "inputUnchanged": true,
+    "error": "Invalid frame descriptor: Error: missing field `effect_pass_groups`"
+  },
+  {
+    "name": "empty-scene-preserves-pixels",
+    "status": "fail",
+    "expectedEqual": true,
+    "actualEqual": null
+  },
+  {
+    "name": "single-scene-matches-layer",
+    "status": "fail",
+    "expectedEqual": true,
+    "actualEqual": null
+  },
+  {
+    "name": "blur-changes-pixels",
+    "status": "fail",
+    "expectedEqual": false,
+    "actualEqual": null
+  },
+  {
+    "name": "multiple-groups-change-pixels",
+    "status": "fail",
+    "expectedEqual": false,
+    "actualEqual": null
+  },
+  {
+    "name": "mixed-item-order-is-observable",
+    "status": "fail",
+    "expectedEqual": false,
+    "actualEqual": null
+  }
+]

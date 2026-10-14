@@ -1,6 +1,6 @@
 {
-  "task": "T-1274",
-  "deliveryStatus": "PASS_NATIVE_RESIZE_INTERACTIVITY_FULL_HOST_PENDING_ROOT",
+  "task": "T-1282",
+  "deliveryStatus": "PASS_SCENE_EFFECT_ABI_REAL_GPU_FULL_PUBLIC_MP4_PENDING_ROOT",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
@@ -10,14 +10,14 @@
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6640450,
+    "esmBytes": 6640702,
     "cssBytes": 131527,
     "licensedDependencies": 59,
     "renderedModules": 430,
     "nativeHashes": {
-      "native.js": "d987b5752f5a69cb23533857d9095372880034b59c7927987ad48b011f447dbb",
+      "native.js": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
       "native.css": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
-      "NATIVE_BUILD_GRAPH.json": "e4961a8a150496fc3dda23120beaa51be535c732932e4071cebc10a09f093f0b",
+      "NATIVE_BUILD_GRAPH.json": "a5a6d38f6fcf1d07100853313ea9b7adb302692ef93e404ea940eb0ea9e81667",
       "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
       "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
@@ -31,38 +31,35 @@
   "source": {
     "files": 715,
     "changedFiles": 83,
-    "archiveBytes": 773413,
-    "patchBytes": 454752,
+    "archiveBytes": 774056,
+    "patchBytes": 456802,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "d734b2eab8c752f81e6fe03ffcba0f04e6733ed013471af9be5ab1ac1ed7c548",
-      "native-from-t1046.patch": "2bcd1703a00ee44718a7f6c0436f29c3098cc746fb9da5ab8ec81ab93d2527b4",
+      "native-source.tar.gz": "f9d035cad877a90f1fefcaf3e34653454695ebf38ad7753bd380342ee2c45d9b",
+      "native-from-t1046.patch": "5a59aa96cf3bddd2fcc7b55403d4513661fd9355280ca22abcd6cf46a4f5fad9",
       "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "verification/t1274-resize-hit/source-reconstruction.json",
-    "productionReconstructionEvidence": "verification/t1274-resize-hit/production-reconstruction.json",
-    "archiveSha256": "d734b2eab8c752f81e6fe03ffcba0f04e6733ed013471af9be5ab1ac1ed7c548",
-    "patchSha256": "2bcd1703a00ee44718a7f6c0436f29c3098cc746fb9da5ab8ec81ab93d2527b4"
+    "reconstructionEvidence": "verification/t1282-scene-effect-protocol/source-reconstruction.json",
+    "productionReconstructionEvidence": "verification/t1282-scene-effect-protocol/production-reconstruction.json",
+    "archiveSha256": "f9d035cad877a90f1fefcaf3e34653454695ebf38ad7753bd380342ee2c45d9b",
+    "patchSha256": "5a59aa96cf3bddd2fcc7b55403d4513661fd9355280ca22abcd6cf46a4f5fad9"
   },
   "verification": {
     "totalTests": 86,
     "totalAssertions": 380,
     "testFailures": 0,
     "typecheckExitCode": 0,
+    "realGpu": "7真实WasmCompositor渲染案例、5像素关系断言通过",
+    "realMp4": "本轮未运行；由ROOT继续三候选公共链",
+    "red": "真实生产桥5种scene入口原协议异常保留；无scene/layer旧入口通过",
+    "domNotRerun": true,
     "fixtureOnly": false,
-    "browserAutomation": "真实Chromium生产native小型宿主几何，不是完整CreatorOS E2E",
-    "realGpu": "not_run",
-    "realMp4": "六旧export/四新preview真实MP4，4组全部12帧RGB和stream相同；2组无画面明确拒绝",
-    "domFixture": {},
-    "historicalDomFixtureChecks": 60,
-    "allFailuresPreserved": true,
+    "evidenceDirectory": "verification/t1282-scene-effect-protocol",
+    "probeEvidence": "docs/verification/t1282/native-protocol",
     "unreplacedNodeEnv": 0,
-    "unguardedGlobalProcessReferences": 0,
-    "evidenceDirectory": "verification/t1274-preserved-missing-media",
-    "realGeometryCases": 0,
-    "domNotRerun": true
+    "unguardedGlobalProcessReferences": 0
   },
   "limitations": [
     "原Canvas/Fabric夹具与JSDOM环境不等于真实浏览器像素或安装。",
@@ -2190,5 +2187,104 @@
     "modifiedImplementation": [
       "apps/web/src/embedded/editor-layout.tsx"
     ]
+  },
+  "historicalDeliveryBeforeT1282": {
+    "task": "T-1274",
+    "deliveryStatus": "PASS_NATIVE_RESIZE_INTERACTIVITY_FULL_HOST_PENDING_ROOT",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6640450,
+      "cssBytes": 131527,
+      "licensedDependencies": 59,
+      "renderedModules": 430,
+      "nativeHashes": {
+        "native.js": "d987b5752f5a69cb23533857d9095372880034b59c7927987ad48b011f447dbb",
+        "native.css": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
+        "NATIVE_BUILD_GRAPH.json": "e4961a8a150496fc3dda23120beaa51be535c732932e4071cebc10a09f093f0b",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "本次复用上一轮真实冻结安装，锁文件未变",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 715,
+      "changedFiles": 83,
+      "archiveBytes": 773413,
+      "patchBytes": 454752,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "d734b2eab8c752f81e6fe03ffcba0f04e6733ed013471af9be5ab1ac1ed7c548",
+        "native-from-t1046.patch": "2bcd1703a00ee44718a7f6c0436f29c3098cc746fb9da5ab8ec81ab93d2527b4",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "verification/t1274-resize-hit/source-reconstruction.json",
+      "productionReconstructionEvidence": "verification/t1274-resize-hit/production-reconstruction.json",
+      "archiveSha256": "d734b2eab8c752f81e6fe03ffcba0f04e6733ed013471af9be5ab1ac1ed7c548",
+      "patchSha256": "2bcd1703a00ee44718a7f6c0436f29c3098cc746fb9da5ab8ec81ab93d2527b4"
+    },
+    "verification": {
+      "totalTests": 86,
+      "totalAssertions": 380,
+      "testFailures": 0,
+      "typecheckExitCode": 0,
+      "fixtureOnly": false,
+      "browserAutomation": "真实Chromium生产native小型宿主几何，不是完整CreatorOS E2E",
+      "realGpu": "not_run",
+      "realMp4": "六旧export/四新preview真实MP4，4组全部12帧RGB和stream相同；2组无画面明确拒绝",
+      "domFixture": {},
+      "historicalDomFixtureChecks": 60,
+      "allFailuresPreserved": true,
+      "unreplacedNodeEnv": 0,
+      "unguardedGlobalProcessReferences": 0,
+      "evidenceDirectory": "verification/t1274-preserved-missing-media",
+      "realGeometryCases": 0,
+      "domNotRerun": true
+    }
+  },
+  "t1282SceneEffectProtocolVerification": {
+    "status": "PASS",
+    "wasmVersion": "0.2.10",
+    "wasmSha256": "e7720e0d3fc46e06fd8aa10aa2c1a29121722e3c1b1d909945ed72a35581ec67",
+    "unchangedFrozenWasmSha256": "e7720e0d3fc46e06fd8aa10aa2c1a29121722e3c1b1d909945ed72a35581ec67",
+    "embeddedWasmSha256": [
+      "e7720e0d3fc46e06fd8aa10aa2c1a29121722e3c1b1d909945ed72a35581ec67"
+    ],
+    "nativeJsSha256": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
+    "changedSourceFilesSinceParent": [
+      "NATIVE_REBUILD_CONSISTENCY.json",
+      "README.creatoros.md",
+      "apps/web/src/services/renderer/compositor/wasm-compositor.ts"
+    ],
+    "implementationFiles": [
+      "apps/web/src/services/renderer/compositor/wasm-compositor.ts"
+    ],
+    "beforeImplementationSha256": "494820b0b7fea81b3668268f45e8852e56104b82f1f21349b7288ab5595809a7",
+    "afterImplementationSha256": "d40c841cadd02e2250f424c91453975512b0ab81082be43c36e187c31130c5f0",
+    "sourceFiles": 715,
+    "tests": 86,
+    "assertions": 380,
+    "publicMp4": "pending_root",
+    "freshDependencyInstall": false,
+    "realRenderCases": 7,
+    "pixelRelationships": 5,
+    "inputDeepFrozenAndUnchanged": true,
+    "layerAndNoSceneFrameIdentityPreserved": true,
+    "sceneGroupIdentityAndOrderPreserved": true,
+    "sevenOutputsMatch": true,
+    "patchFuzz": 0,
+    "publicPreviewMp4": "pending_root",
+    "createdAt": "2026-10-14T08:07:58.274355+00:00"
   }
 }

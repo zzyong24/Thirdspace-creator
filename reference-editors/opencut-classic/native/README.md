@@ -1,3 +1,9 @@
+# T-1282 场景效果 WASM 字段协议兼容
+
+仅在 WasmCompositor.render 为 sceneEffect 创建临时 effect_pass_groups 字段，内部继续使用 effectPassGroups；layer 与无 scene 帧保持原对象。效果组/参数/顺序不变，不改工程或 WASM 0.2.10 二进制。
+
+真实桥 RED 五种 scene 报原错→GREEN 七渲染与五像素关系；同参数输出逐像素一致，混排顺序控制能改变像素，输入深冻结保持不变。原 86 测试 / 380 断言、类型/AST、715 源标准 patch F0、归档独立重建七产物与双目录逐字节一致。实际公共三候选 preview→MP4 及 thumbnail 由 ROOT 继续，不在此代签。证据 verification/t1282-scene-effect-protocol 与 docs/verification/t1282/native-protocol；以下历史原样保留。
+
 # T-1274 响应式时间轴交互状态恢复
 
 ROOT完整宿主出现390→1366后剪刀可见但父panel命中。独立只读验证两种路径按钮矩形完全相同，问题是隐藏时间轴曾写入inert=true，重新显示未同步；原失败图/日志保留。仅EditorLayout在layout/view提交后复用syncNativeInteractivity(currentHost,isExportLocked())，不直接清inert，不加z-index/强制点击，不改变Core。
