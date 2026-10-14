@@ -1,0 +1,24 @@
+{
+  "sourceStart": 0,
+  "durationSec": 2,
+  "audio": {
+    "samplesCompared": 32000,
+    "sampleRate": 16000,
+    "sourceRMS": 0.0881830054717594,
+    "outputRMS": 0.08809994931956165,
+    "correlation": 0.999997876451436,
+    "actualNonSilentAudio": true
+  },
+  "video": {
+    "original": {
+      "frames": 48,
+      "decodedRGBSHA256": "dac23d164500389eaff4783f2bc481f350bfdd4b5222fcd1201263bdae5990a2"
+    },
+    "repaired": {
+      "frames": 48,
+      "decodedRGBSHA256": "dac23d164500389eaff4783f2bc481f350bfdd4b5222fcd1201263bdae5990a2"
+    },
+    "all48FramesRGBEqual": true,
+    "all48FramesRGBMeanAbsoluteDifference": 0.0
+  }
+}

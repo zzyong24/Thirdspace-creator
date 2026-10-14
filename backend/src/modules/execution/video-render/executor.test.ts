@@ -183,6 +183,26 @@ afterEach(async () => {
 });
 
 describe("createVideoRenderExecutor", () => {
+  it.each([true,false])("T1284 无clips旧V1尊重hasAudio=%s，不依赖raw渲染器保声",async(hasAudio)=>{
+    const calls:EngineCalls={ffmpegArgs:[],probed:[],rendered:[]};
+    const input=props();input.talkingHead.hasAudio=hasAudio;
+    const before=structuredClone(input);
+    await createVideoRenderExecutor(fakeEngine(calls)).run(sandbox,{props:input},runOpts([]));
+    const command=calls.ffmpegArgs.at(-1)!;
+    if(hasAudio){
+      expect(command).toContain('-filter_complex');
+      expect(command[command.indexOf('-filter_complex')+1]).toContain('atrim=start=0:duration=12');
+      expect(command).toContain('[main_audio]');
+      expect(command.join(' ')).toContain('-c:v copy -c:a aac');
+      expect(command.filter(arg=>arg==='-i')).toHaveLength(2);
+    }else{
+      expect(command).not.toContain('-filter_complex');
+      expect(command.filter(arg=>arg==='-i')).toHaveLength(1);
+    }
+    expect(input).toEqual(before);
+    const html=await fs.readFile(path.join(calls.rendered[0]!.projectDir,'index.html'),'utf8');
+    expect(html).not.toContain('data-media-start=');
+  });
   it("[T-853] FFmpeg 诊断同时保留启动首部与真正失败尾部", () => {
     const stderr = [
       "ffmpeg version 6.0 Copyright (c) FFmpeg developers",
@@ -324,9 +344,9 @@ describe("createVideoRenderExecutor", () => {
     expect(calls.rendered[0]!.videoFrameFormat).toBe("png");
     expect(calls.rendered[0]!.ffmpegPath).toBe("/fake/ffmpeg");
     expect(calls.rendered[0]!.ffprobePath).toBe("/fake/ffprobe");
-    // final 只整理容器，不再发生第二次视频编码。
+    // final 保持视频stream copy，主声音按原范围从输入编译，不依赖外部引擎保声。
     const delivery = calls.ffmpegArgs.at(-1)!;
-    expect(delivery.join(" ")).toContain("-c copy");
+    expect(delivery.join(" ")).toContain("-c:v copy");
     expect(delivery.join(" ")).not.toContain("libx264");
     expect(delivery.join(" ")).not.toContain("libx265");
     expect(delivery.join(" ")).toContain("-movflags +faststart");

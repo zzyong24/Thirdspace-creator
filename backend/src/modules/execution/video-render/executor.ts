@@ -1206,7 +1206,11 @@ export function createVideoRenderExecutor(
       const finalFile = path.join(sandbox.outDir, "final.mp4");
       // SEMANTIC_BOUNDARY_ALLOW: 仅落实已保存的主轨实例、入点和时长，不判断语音内容。
       // 主轨音频直接按冻结区间编译，避免外部引擎静默丢失音轨或重复实例去重。
-      const mainClips=renamedProps.talkingHead.clips;
+      // 旧V1单主文件也有明确音轨边界；只编译音频，不改变其字幕/视觉模板。
+      const mainClips=renamedProps.talkingHead.clips??[{
+        file:renamedProps.talkingHead.file,startSec:0,endSec:renamedProps.talkingHead.durationSec,
+        sourceInSec:0,hasAudio:renamedProps.talkingHead.hasAudio,
+      }];
       const audioArgs=mainClips?.some(clip=>clip.hasAudio)?(()=>{
         const inputs=mainClips.flatMap(clip=>["-i",path.join(mediaDir,clip.file)]);
         const filters=mainClips.map((clip,index)=>{

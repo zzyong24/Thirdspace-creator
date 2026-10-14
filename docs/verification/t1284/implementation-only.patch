@@ -1,0 +1,60 @@
+diff --git a/backend/src/modules/execution/video-render/executor.ts b/backend/src/modules/execution/video-render/executor.ts
+index c9e29e799..544cb6365 100644
+--- a/backend/src/modules/execution/video-render/executor.ts
++++ b/backend/src/modules/execution/video-render/executor.ts
+@@ -1206,7 +1207,11 @@ export function createVideoRenderExecutor(
+       const finalFile = path.join(sandbox.outDir, "final.mp4");
+       // SEMANTIC_BOUNDARY_ALLOW: 仅落实已保存的主轨实例、入点和时长，不判断语音内容。
+       // 主轨音频直接按冻结区间编译，避免外部引擎静默丢失音轨或重复实例去重。
+-      const mainClips=renamedProps.talkingHead.clips;
++      // 旧V1单主文件也有明确音轨边界；只编译音频，不改变其字幕/视觉模板。
++      const mainClips=renamedProps.talkingHead.clips??[{
++        file:renamedProps.talkingHead.file,startSec:0,endSec:renamedProps.talkingHead.durationSec,
++        sourceInSec:0,hasAudio:renamedProps.talkingHead.hasAudio,
++      }];
+       const audioArgs=mainClips?.some(clip=>clip.hasAudio)?(()=>{
+         const inputs=mainClips.flatMap(clip=>["-i",path.join(mediaDir,clip.file)]);
+         const filters=mainClips.map((clip,index)=>{
+diff --git a/backend/src/modules/execution/video-render/executor.test.ts b/backend/src/modules/execution/video-render/executor.test.ts
+index bb95f5855..8b0842cb9 100644
+--- a/backend/src/modules/execution/video-render/executor.test.ts
++++ b/backend/src/modules/execution/video-render/executor.test.ts
+@@ -183,6 +183,26 @@ afterEach(async () => {
+ });
+ 
+ describe("createVideoRenderExecutor", () => {
++  it.each([true,false])("T1284 无clips旧V1尊重hasAudio=%s，不依赖raw渲染器保声",async(hasAudio)=>{
++    const calls:EngineCalls={ffmpegArgs:[],probed:[],rendered:[]};
++    const input=props();input.talkingHead.hasAudio=hasAudio;
++    const before=structuredClone(input);
++    await createVideoRenderExecutor(fakeEngine(calls)).run(sandbox,{props:input},runOpts([]));
++    const command=calls.ffmpegArgs.at(-1)!;
++    if(hasAudio){
++      expect(command).toContain('-filter_complex');
++      expect(command[command.indexOf('-filter_complex')+1]).toContain('atrim=start=0:duration=12');
++      expect(command).toContain('[main_audio]');
++      expect(command.join(' ')).toContain('-c:v copy -c:a aac');
++      expect(command.filter(arg=>arg==='-i')).toHaveLength(2);
++    }else{
++      expect(command).not.toContain('-filter_complex');
++      expect(command.filter(arg=>arg==='-i')).toHaveLength(1);
++    }
++    expect(input).toEqual(before);
++    const html=await fs.readFile(path.join(calls.rendered[0]!.projectDir,'index.html'),'utf8');
++    expect(html).not.toContain('data-media-start=');
++  });
+   it("[T-853] FFmpeg 诊断同时保留启动首部与真正失败尾部", () => {
+     const stderr = [
+       "ffmpeg version 6.0 Copyright (c) FFmpeg developers",
+@@ -324,9 +344,9 @@ describe("createVideoRenderExecutor", () => {
+     expect(calls.rendered[0]!.videoFrameFormat).toBe("png");
+     expect(calls.rendered[0]!.ffmpegPath).toBe("/fake/ffmpeg");
+     expect(calls.rendered[0]!.ffprobePath).toBe("/fake/ffprobe");
+-    // final 只整理容器，不再发生第二次视频编码。
++    // final 保持视频stream copy，主声音按原范围从输入编译，不依赖外部引擎保声。
+     const delivery = calls.ffmpegArgs.at(-1)!;
+-    expect(delivery.join(" ")).toContain("-c copy");
++    expect(delivery.join(" ")).toContain("-c:v copy");
+     expect(delivery.join(" ")).not.toContain("libx264");
+     expect(delivery.join(" ")).not.toContain("libx265");
+     expect(delivery.join(" ")).toContain("-movflags +faststart");
