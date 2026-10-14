@@ -1,0 +1,58 @@
+{
+  "observedAt": "2026-10-14T10:15:58.459939+00:00",
+  "headAtReadOnlyAudit": "5c8ea3cf88ac2740047c637061f4c7cdd04cf3ca",
+  "notExecutionBinding": true,
+  "scopes": {
+    "T-1274": {
+      "watchedPathCount": 66,
+      "clean": false,
+      "status": [
+        " M backend/src/application/generation/transactional-task-runtime.ts",
+        " M backend/src/modules/ai-runtime/chat-host-tool-adapter.ts",
+        " M backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+        " M backend/src/modules/ai-runtime/chat-tools.ts",
+        " M backend/src/modules/ai-runtime/chat-work-editor-tool-host.test.ts",
+        " M backend/src/modules/ai-runtime/chat-work-editor-tool-host.ts",
+        " M backend/src/modules/execution/video-render/executor.test.ts",
+        " M backend/src/modules/execution/video-render/executor.ts",
+        " M contract/src/cli-policy.ts",
+        " M contract/src/index.ts",
+        " M contract/src/resources/work-editor.ts",
+        " M contract/src/workspace-operation-scope.ts",
+        " M frontend/src/features/copilot/ai-copilot-content.tsx",
+        " M frontend/src/features/draft-workbench/draft-chat-request.tsx",
+        " M frontend/src/features/production/production-workbench.tsx",
+        " M frontend/src/server/persistence-client.ts",
+        " M mcp-server/src/cli.ts",
+        " M mcp-server/src/dispatch.ts",
+        " M mcp-server/src/server.ts",
+        "?? docs/verification/t1274/closure/fresh-readonly.cjs",
+        "?? docs/verification/t1274/closure/witnesses.json"
+      ]
+    },
+    "T-1275": {
+      "watchedPathCount": 18,
+      "clean": false,
+      "status": [
+        " M backend/src/application/generation/transactional-task-runtime.ts",
+        " M frontend/next.config.ts",
+        " M frontend/playwright.config.ts",
+        " M frontend/src/features/production/production-workbench.tsx",
+        " M frontend/src/server/persistence-client.ts",
+        "?? docs/verification/t1274/closure/fresh-readonly.cjs",
+        "?? docs/verification/t1274/closure/witnesses.json"
+      ]
+    },
+    "T-1276": {
+      "watchedPathCount": 15,
+      "clean": false,
+      "status": [
+        " M backend/src/application/generation/transactional-task-runtime.ts",
+        " M frontend/src/features/production/production-workbench.tsx",
+        " M frontend/src/server/persistence-client.ts",
+        "?? docs/verification/t1274/closure/fresh-readonly.cjs",
+        "?? docs/verification/t1274/closure/witnesses.json"
+      ]
+    }
+  }
+}

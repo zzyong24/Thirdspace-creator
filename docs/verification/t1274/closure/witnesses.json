@@ -1,0 +1,36 @@
+{
+  "schema": "t1274-closure-witnesses/v1",
+  "baseURL": "http://127.0.0.1:3919",
+  "groupId": "grp-8a2fadb0-6",
+  "projectId": "project-8a2fadb0-8",
+  "mainOutputId": "output-5e3e4e95-261",
+  "mainExpectedRevision": 3,
+  "mainExpectedDocumentPath": "docs/verification/t1274/model-reorder-clone/18-refresh-readback.json",
+  "mainDocumentJSONPath": [
+    "result",
+    "data"
+  ],
+  "sourceOutputId": "output-8a2fadb0-19",
+  "sourceExpectedRevision": 6,
+  "sourceExpectedDocumentPath": "docs/verification/t1274/model-reorder-clone/20-original-unchanged.json",
+  "sourceDocumentJSONPath": [
+    "result",
+    "data"
+  ],
+  "sourceRequestId": "bcc7b48c-3145-4d23-a5ae-8e166c326e8e",
+  "sourceAssetId": "asset-8a2fadb0-27",
+  "sourceAssetFileId": "afile-8a2fadb0-31",
+  "sourceSHA256": "ab4ebe8c8bf6cd9d0a5ee9b00bf03d4af613b36f53cd6ecb090df18a607c47aa",
+  "registeredDeliveryAssetId": "asset-8a2fadb0-122",
+  "candidate": {
+    "conversationId": "ai-conv-94c2affe-128",
+    "executionTaskId": "execution-task-4a9bc831-0a9e-4b71-b2cd-a619640e1dad",
+    "sourceMessageId": "ai-msg-5e3e4e95-508",
+    "toolCallId": "5",
+    "candidateDigest": "sha256:88317640e1b5bd2c2532ccaa3e01b45b00d23e7e18f3dbc7a0324a688dd37ecc",
+    "summary": "将当前主场景主轨排列为原第二段、原第一段、原第二段的独立副本，总长5秒；保持源区间、速度、声音和其他属性，保留其他图层及非目标场景。"
+  },
+  "historicalOriginalSourceRequest": "docs/verification/t1276/original-source-request.json",
+  "originalTemporaryRootAvailable": false,
+  "runtimeScope": "只读当前隔离数据库的既有作品、原模型消息/候选、来源回执和既有注册成片；不重演旧已消失临时根的原request。"
+}
