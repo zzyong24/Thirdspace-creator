@@ -1169,7 +1169,7 @@
     },
     {
       "module": "src/services/renderer/compositor/wasm-compositor.ts",
-      "renderedLength": 4622
+      "renderedLength": 4923
     },
     {
       "module": "src/services/renderer/effect-preview.ts",

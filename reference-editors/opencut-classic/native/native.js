@@ -49452,7 +49452,16 @@ class $lA {
       C.kind === "external" ? this.syncExternalTexture(C) : this.syncRenderedTexture(C);
   }
   render(A) {
-    HW(A), co() && ZlA(
+    const I = A.items.some((C) => C.type === "sceneEffect") ? {
+      ...A,
+      items: A.items.map(
+        (C) => C.type === "sceneEffect" ? {
+          type: C.type,
+          effect_pass_groups: C.effectPassGroups
+        } : C
+      )
+    } : A;
+    HW(I), co() && ZlA(
       YW()
     );
   }
