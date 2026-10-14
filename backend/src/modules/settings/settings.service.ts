@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import {isDeepStrictEqual} from 'node:util';
 import {ConflictError} from '../execution/execution.errors';
-import {ENDPOINTS} from '@creatoros/contract';
+import {ENDPOINTS,ErrorCode,modelRoutingPutSchema,modelRoutingResourceSchema,type ModelRoutingPut,type ModelRoutingResource} from '@creatoros/contract';
 import type { RequestContext } from "@creatoros/backend";
 import type {
   SettingsRepository,
@@ -243,6 +243,8 @@ export type AccountWriter = (
 ) => Promise<UserResource>;
 
 export interface SettingsService {
+  getModelRouting(ctx:RequestContext):Promise<ModelRoutingResource>;
+  putModelRouting(ctx:RequestContext,input:ModelRoutingPut):Promise<ModelRoutingResource>;
   patchPreferencesIfUnchanged(ctx:RequestContext,patch:PreferencePatch,expected:Partial<Omit<PreferencePatch,"assistantExecutionEngine"> & {assistantExecutionEngine:"pi"|"codex"|null}>):Promise<UserPreferenceResource>;
   getAccount(ctx: RequestContext): Promise<UserResource>;
   updateAccount(
@@ -362,7 +364,17 @@ function toPreferenceResource(
   };
 }
 function defaultPreferenceResource(ctx:RequestContext):UserPreferenceResource{return {id:`pref-${ctx.userId}`,userId:ctx.userId,defaultHome:'dashboard',defaultCreationMode:'guided',defaultVisibility:'private',autosaveEnabled:true,fileNamingRule:'{date}-{title}',analyticsEnabled:false,assistantExecutionEngine:null};}
-export type PreferencesWritePort=<T>(ctx:RequestContext,write:(repo:Pick<SettingsRepository,'getPreferences'|'patchPreferences'>)=>Promise<T>)=>Promise<T>;
+export type PreferencesWritePort=<T>(ctx:RequestContext,write:(repo:Pick<SettingsRepository,'getPreferences'|'patchPreferences'|'setModelRouting'>)=>Promise<T>)=>Promise<T>;
+export type ModelRoutingProjectionReader=(ctx:RequestContext,value:Pick<ModelRoutingResource,'choices'|'legacyExecutionEngine'>)=>Promise<Pick<ModelRoutingResource,'effectiveChoices'|'capabilities'>>;
+export class ModelRoutingConflictError extends ConflictError {
+  readonly details:{domainCode:'MODEL_ROUTING_CONFLICT';latestRevision:number};
+  constructor(latestRevision:number){super('模型来源已在其它窗口修改，请刷新后再保存');this.details={domainCode:'MODEL_ROUTING_CONFLICT',latestRevision};}
+}
+export class ModelRoutingValidationError extends Error {
+  readonly code=ErrorCode.ValidationError;
+  readonly details={domainCode:'MODEL_ROUTE_UNSUPPORTED'} as const;
+  constructor(){super('模型来源或版本不受支持，请按用途选择有效来源');}
+}
 
 function toModelResource(
   row: ModelConfigurationRow,
@@ -559,7 +571,14 @@ export function createSettingsService(
   //   曾把用户真实封面从 media 搬去 custom+删 media,并是那条 flaky 测试的根源)。
   migrate: typeof migrateStorageRoot = migrateStorageRoot,
   withPreferencesWrite?:PreferencesWritePort,
+  readModelRoutingProjection?:ModelRoutingProjectionReader,
 ): SettingsService {
+  const routingResource=async(ctx:RequestContext,row:UserPreferenceRow|null):Promise<ModelRoutingResource>=>{
+    const choices=row?.modelRouting??null;
+    const legacyExecutionEngine=row?.assistantExecutionEngine==='pi'||row?.assistantExecutionEngine==='codex'?row.assistantExecutionEngine:null;
+    const projection=readModelRoutingProjection?await readModelRoutingProjection(ctx,{choices,legacyExecutionEngine}):{effectiveChoices:choices??{},capabilities:[]};
+    return modelRoutingResourceSchema.parse({schemaVersion:1,revision:row?.modelRoutingRevision??0,choices,legacyExecutionEngine,...projection});
+  };
   const fallbackBase = (id: string): OfficialSkillBase => ({
     skillId: id,
     baseVersion: "builtin",
@@ -595,6 +614,21 @@ export function createSettingsService(
   // [T-363] 具名对象(而非直接 return 字面量):importModelConfigs 复用 service 自身的
   // setModelConfiguration 既有写路径(upsert on (user_id, capability))。
   const service: SettingsService = {
+    async getModelRouting(ctx){return routingResource(ctx,await repoForCtx(ctx).getPreferences(ctx));},
+    async putModelRouting(ctx,raw){
+      const parsed=modelRoutingPutSchema.safeParse(raw);
+      if(!parsed.success)throw new ModelRoutingValidationError();
+      if(!withPreferencesWrite)throw new ConflictError('偏好写锁尚未装配，请从原设置入口保存');
+      const input=parsed.data;
+      const row=await withPreferencesWrite(ctx,async repo=>{
+        const current=await repo.getPreferences(ctx);
+        if((current?.modelRoutingRevision??0)!==input.expectedRevision)throw new ModelRoutingConflictError(current?.modelRoutingRevision??0);
+        const written=await repo.setModelRouting(ctx,input.choices,input.expectedRevision);
+        if(!written)throw new ModelRoutingConflictError((await repo.getPreferences(ctx))?.modelRoutingRevision??0);
+        return written;
+      });
+      return routingResource(ctx,row);
+    },
     async getAccount(ctx) {
       // Delegated to Identity (injected). Settings does not own `users`.
       return accountReader(ctx);

@@ -34,7 +34,7 @@ export function createTransactionalTaskRuntimeResolver(tx:Db,deps:TransactionalT
   }
   if(taskType==='benchmark.transcribe')return {executionRoute}; // ASR不申请文本Skill，但原任务保留文本后处理路由。
   const required=requiredSkillIdsForTask(taskType,inputData),skillSnapshot=await resolve(ctx,required);
-  if(executionRoute.engine==='codex')return {skillSnapshot,executionRoute};
+  if(frozenExecutionEngine({executionRoute})==='codex')return {skillSnapshot,executionRoute};
   const authority=await deps.readPinnedAuthority(ctx,tx);
   return{skillSnapshot,executionRoute,modelAuthority:authority.authority,modelAuthorityDigest:authority.digest};
  };

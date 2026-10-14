@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoint-definition";
+import {modelRoutingPutSchema,modelRoutingResourceSchema} from '../internal/model-routing';
 import {
   onboardingPatchResource,
   onboardingStateResource,
@@ -43,6 +44,8 @@ export const reportingStatusResource = z.object({
   uploadAvailable: z.boolean(),
 }).strict();
 export const settingsOperations = {
+ getModelRouting:defineEndpoint({id:'settings.modelRouting.get',method:'GET',path:'/settings/model-routing',response:modelRoutingResourceSchema,fr:['FR-1278-2','FR-1278-6']}),
+ putModelRouting:defineEndpoint({id:'settings.modelRouting.put',method:'PUT',path:'/settings/model-routing',body:modelRoutingPutSchema,response:modelRoutingResourceSchema,fr:['FR-1278-2','FR-1278-6']}),
  getGroupOnboarding:defineEndpoint({id:"settings.onboarding.group.get",method:"GET",path:"/settings/group-onboarding/:groupId",params:z.object({groupId:z.string().min(1)}).strict(),response:groupOnboardingStateResource,fr:["FR-ONBOARDING"]}),
  patchGroupOnboarding:defineEndpoint({id:"settings.onboarding.group.patch",method:"PATCH",path:"/settings/group-onboarding/:groupId",params:z.object({groupId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:groupOnboardingStateResource,fr:["FR-ONBOARDING"]}),
  getReportingStatus:defineEndpoint({id:"settings.reporting.get",method:"GET",path:"/settings/reporting",response:reportingStatusResource,fr:["FR-REPORTING-CONSENT"]}),

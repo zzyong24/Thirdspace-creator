@@ -1,4 +1,5 @@
 export * from "./resources/work-source-select";
+export * from './internal/model-routing';
 export * from "./resources/production-time-mapping";
 export const CONTRACT_API_BASE = "/api/v1";
 export * from "./resources/production-editor";

@@ -313,6 +313,8 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "settings.get": "user",
   "settings.preferences.get": "user",
   "settings.preferences.patch": "user",
+  "settings.modelRouting.get": "user",
+  "settings.modelRouting.put": "user",
   "settings.models.put": "user",
   "settings.models.list": "user",
   "settings.channelModelCredentials.list": "user",

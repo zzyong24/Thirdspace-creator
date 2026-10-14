@@ -131,6 +131,11 @@ function makeFakeRepo(
     async getPreferences() {
       return state._pref ?? null;
     },
+    async setModelRouting(_c,choices,expectedRevision){
+      if(!state._pref||(state._pref.modelRoutingRevision??0)!==expectedRevision)return null;
+      state._pref={...state._pref,modelRouting:choices,modelRoutingRevision:expectedRevision+1};
+      return state._pref;
+    },
     async patchPreferences(_c: RequestContext, patch: PreferencePatch) {
       const base: UserPreferenceRow = state._pref ?? {
         userId: ctx.userId,
@@ -141,6 +146,8 @@ function makeFakeRepo(
         fileNamingRule: "",
         analyticsEnabled: false,
         assistantExecutionEngine: null, // 镜像 schema 默认关(PROTECTION.md §4)
+        modelRouting:null,
+        modelRoutingRevision:0,
       };
       const provided = Object.fromEntries(
         Object.entries(patch).filter(([, v]) => v !== undefined),

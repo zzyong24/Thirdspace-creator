@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { id, iso8601, creationMode } from "../primitives";
+export {modelRoutingResourceSchema,modelRoutingChoicesSchema,modelRoutingPutSchema,type ModelRoutingResource,type ModelRoutingChoices,type ModelRoutingPut} from '../internal/model-routing';
 
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }.
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };

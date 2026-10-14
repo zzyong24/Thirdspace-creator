@@ -34,6 +34,8 @@ export const userPreferences = pgTable("user_preferences", {
   // 默认关 —— PROTECTION.md §4「数据上报 · 默认零收集」。隐私优先本地软件,遥测新用户默认 off。
   analyticsEnabled: boolean("analytics_enabled").notNull().default(false),
   assistantExecutionEngine: text("assistant_execution_engine"),
+  modelRouting: jsonb('model_routing').$type<import('@creatoros/contract').ModelRoutingChoices>(),
+  modelRoutingRevision: integer('model_routing_revision').notNull().default(0),
 });
 
 // MODEL_CONFIGURATION — upsert keyed on (user_id, capability) (the unique index
@@ -278,7 +280,9 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   autosave_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   file_naming_rule TEXT NOT NULL DEFAULT '',
   analytics_enabled BOOLEAN NOT NULL DEFAULT FALSE,
-  assistant_execution_engine TEXT CHECK (assistant_execution_engine IN ('pi', 'codex'))
+  assistant_execution_engine TEXT CHECK (assistant_execution_engine IN ('pi', 'codex')),
+  model_routing JSONB,
+  model_routing_revision INTEGER NOT NULL DEFAULT 0 CHECK (model_routing_revision >= 0)
 );
 CREATE TABLE IF NOT EXISTS model_configurations (
   id TEXT PRIMARY KEY,

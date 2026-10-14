@@ -2844,7 +2844,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       const requiredSkillIds = requiredSkillIdsForTask(taskType, inputData);
       const skillSnapshot=await resolveEffectiveSkillSnapshotForRuntime(ctx,requiredSkillIds);
-      if(executionRoute.engine==='codex')return {skillSnapshot,executionRoute};
+      if(frozenExecutionEngine({executionRoute})==='codex')return {skillSnapshot,executionRoute};
       const modelAuthority = pinModelAuthority(
         await readChannelModelAuthority(),
       );

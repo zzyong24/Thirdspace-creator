@@ -11,6 +11,9 @@
 
 export {
   createSettingsService,
+  type ModelRoutingProjectionReader,
+  ModelRoutingConflictError,
+  ModelRoutingValidationError,
   type SettingsService,
   type AccountReader,
   type AccountWriter,

@@ -1,5 +1,5 @@
 import { workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace, and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
-import { ErrorCode } from "@creatoros/contract";
+import { ErrorCode, type ModelRoutingChoices } from "@creatoros/contract";
 import { assets, assetFiles } from "@creatoros/backend";
 import { encryptSecret, decryptSecret, isEncrypted } from "@creatoros/backend";
 import {
@@ -156,6 +156,7 @@ export interface SkillConfigOverridePutBody {
 }
 
 export interface SettingsRepository {
+  setModelRouting(ctx:RequestContext,choices:ModelRoutingChoices,expectedRevision:number):Promise<UserPreferenceRow|null>;
   getPreferences(ctx: RequestContext): Promise<UserPreferenceRow | null>;
   patchPreferences(
     ctx: RequestContext,
@@ -339,6 +340,15 @@ export function createSettingsRepository(
     }
   };
   return {
+    async setModelRouting(ctx,choices,expectedRevision){
+      const changed=await db.update(userPreferences).set({modelRouting:choices,modelRoutingRevision:expectedRevision+1})
+        .where(and(eq(userPreferences.userId,ctx.userId),eq(userPreferences.modelRoutingRevision,expectedRevision))).returning();
+      if(changed[0])return changed[0];
+      if(expectedRevision!==0)return null;
+      const inserted=await db.insert(userPreferences).values({userId:ctx.userId,...PREFERENCE_DEFAULTS,modelRouting:choices,modelRoutingRevision:1})
+        .onConflictDoNothing({target:userPreferences.userId}).returning();
+      return inserted[0]??null;
+    },
     async getPreferences(ctx) {
       const rows = await db
         .select()

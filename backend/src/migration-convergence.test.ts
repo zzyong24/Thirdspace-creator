@@ -189,6 +189,23 @@ it('补充冻结SQL或journal损坏时拒绝，不接受仅身份白名单',asyn
 });
 
 import {assertMigrationConverged} from './migration-convergence';
+it('T1279 新0135必须有真实回执且偏好列完整，旧设置与任务不迁写',async()=>{
+ const store=await createDb();try{
+  const cols=(await readCatalog(store.db)).columns.filter(c=>c.table_name==='user_preferences');
+  expect(cols.find(c=>c.column_name==='model_routing')?.is_nullable).toBe('YES');
+  expect(cols.find(c=>c.column_name==='model_routing_revision')?.is_nullable).toBe('NO');
+  const hash=createHash('sha256').update(await readFile(join(folder,'0135_model_routing.sql'),'utf8')).digest('hex');
+  expect(hash).toBe('6fae4e865bf2fbabaf16127644e0abb6b1179bc3fc246b563a3a3c5c663233e8');
+  await store.client.query('DELETE FROM drizzle.__drizzle_migrations WHERE hash=$1',[hash]);
+  await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('0135');
+ }finally{await store.client.close();}
+},180000);
+it('T1279 已记账0135但偏好列损坏不得宣称已准备',async()=>{
+ const store=await createDb();try{
+  await store.client.exec('ALTER TABLE user_preferences DROP COLUMN model_routing');
+  await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('SCHEMA_INCOMPATIBLE');
+ }finally{await store.client.close();}
+},180000);
 it('T1110迁移后必须有真实0131回执，旧完整前缀不得冒充新runtime已准备',async()=>{
  const store=await createDb();try{
   const hash=createHash('sha256').update(await readFile(join(folder,'0131_platform_native_reports.sql'),'utf8')).digest('hex');

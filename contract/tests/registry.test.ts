@@ -3,6 +3,8 @@ import { ENDPOINTS } from "../src/endpoints";
 
 // The authoritative SPEC §13 surface — every "METHOD /path" line, verbatim.
 const SPEC_13: ReadonlyArray<[string, string]> = [
+  ["GET", "/settings/model-routing"],
+  ["PUT", "/settings/model-routing"],
   // T-1074正式服务契约：候选由用户采纳，来源/账号归属仍由backend验证。
   ["POST", "/ai/assistant-actions/adopt"],
   ["GET", "/ai/assistant-actions/receipt"],

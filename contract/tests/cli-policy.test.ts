@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import { CLI_OPERATION_POLICIES, ENDPOINTS } from "../src";
 
 describe("T-843 CLI operation policy", () => {
+  it('T1278模型来源读取无副作用，保存仍经明确写确认',()=>{
+    expect(CLI_OPERATION_POLICIES['settings.modelRouting.get']).toMatchObject({effect:'read',confirmation:'none',asyncTask:false});
+    expect(CLI_OPERATION_POLICIES['settings.modelRouting.put']).toMatchObject({effect:'write',confirmation:'apply',asyncTask:false});
+  });
   it("穷尽覆盖且只覆盖全部正式 operation", () => {
     expect(Object.keys(CLI_OPERATION_POLICIES).sort()).toEqual(
       Object.values(ENDPOINTS).map((endpoint) => endpoint.id).sort(),

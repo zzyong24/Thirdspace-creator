@@ -1,6 +1,10 @@
 import {describe,it,expect} from "vitest";
 import {ENDPOINTS,WORKSPACE_OPERATION_SCOPES as scopes} from "../src";
 describe("账号组操作归属契约",()=>{
+ it('T1278来源偏好属于用户，切账号组不变成组偏好',()=>{
+  expect(scopes['settings.modelRouting.get']).toBe('user');
+  expect(scopes['settings.modelRouting.put']).toBe('user');
+ });
  it("原模型摘要是独立纯组读取，不扩大旧实体和文件门",()=>{
   expect(scopes["workbench.modelCalls.summary" as keyof typeof scopes]).toBe("group");
   for(const id of ["workbench.tasks.inspect","workbench.tasks.events","workbench.artifacts.read","workbench.files.reconcile"] as const)

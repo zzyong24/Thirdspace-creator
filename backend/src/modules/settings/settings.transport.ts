@@ -39,6 +39,8 @@ export const SETTINGS_OP_IDS = [
   "identity.profile.patch",
   "settings.preferences.get",
   "settings.preferences.patch",
+  "settings.modelRouting.get",
+  "settings.modelRouting.put",
   "settings.models.put",
   "settings.models.list",
   // T-645 composition-only：scope/service 合法性依赖当前已验签渠道 authority，
@@ -80,6 +82,10 @@ export function createSettingsTransport(
       const { params, body } = (input ?? {}) as Input;
 
       switch (endpoint.id) {
+        case 'settings.modelRouting.get':case 'settings.modelRouting.put':{
+          const data=endpoint.id==='settings.modelRouting.get'?await service.getModelRouting(ctx):await service.putModelRouting(ctx,body as import('@creatoros/contract').ModelRoutingPut);
+          return {data,meta:{requestId:ctx.requestId}};
+        }
         case "settings.onboarding.group.get": case "settings.onboarding.group.patch": {
           if(!onboarding)throw Error("ONBOARDING_SETTINGS_UNAVAILABLE");
           const groupId=(params as {groupId?:string}|undefined)?.groupId??"";
