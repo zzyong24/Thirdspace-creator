@@ -9,3 +9,5 @@
 2026-10-14补证：T1281修复旧纯原片质量门后V1新task ai-task-65bafd60-41已确认下载；48帧/2秒RGB与V2逐字节相同，PCM亦相同。原取消/failed终态未改。最新完整生产build与前后端类型通过，边界0新增/timeout通过。最终全局对账仍单独记录。自身修改继续因共享冻结contract未入HEAD而未单独提交，不能冒称纯提交可重现。
 
 2026-10-14 精确集成闭合：提交b8d9a26b9只纳入原两个包装/authority helper与测试，并从既有共享解析器切出同字节executionRouteSchema+frozenExecutionEngine及显式导出必要依赖。其它Codex route/model helper及其它任务生产改动仍保留工作区。独立只读核对确认依赖完整；旧临时patch漏掉第一个wrapper末尾取消hunk已在实际index核对并补全，最终commit包含两个Pi不匹配取消分支。工作区运行时字节未改变，先前实际6PASS/类型/公共V1/V2/build证据适用当前实现；不冒称完整纯HEAD整仓验收。
+
+2026-10-14 最终公共链与专项证据收齐后，T1285最新完整生产build exit0（含完整TypeScript），timeout/边界0新增通过；最新全局reconcile为29ERROR/0WARN，与上轮逐条相同且无新增，继续归属已登记T1204，见../t1285/reconcile-comparison.json。保留历史失败和样例范围限制，不称全仓或安装App通过。
