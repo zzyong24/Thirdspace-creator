@@ -10,6 +10,7 @@ export function createKnowledgeSearchRuntime<Spec>(deps: {
   knowledge: Pick<KnowledgeService, "getKnowledge" | "listRevisions">;
   search: Pick<SearchService, "upsertDocument" | "listMissingEmbeddings" | "fillMissingEmbedding" | "hybridSearch" | "recordSearch">;
   resolveEmbedSpec: (ctx: RequestContext) => Promise<Spec | null>;
+  embeddingConfigDigest?: (spec:Spec)=>string|undefined;
   embedTexts: (ctx: RequestContext, spec: Spec, texts: string[], signal?: AbortSignal) => Promise<number[][]>;
 }) {
   const controller = new AbortController();
@@ -41,18 +42,20 @@ export function createKnowledgeSearchRuntime<Spec>(deps: {
     const signal = controller.signal;
     const flight = tracked(async () => {
       signal.throwIfAborted();
-      const docs = await deps.search.listMissingEmbeddings(ctx, "knowledge", BACKFILL_BATCH);
-      signal.throwIfAborted();
-      if (!docs.length) return;
+      // 每一批先冻结Spec，再等待原文档列表；切设置不能替换已捕获的模型。
       const spec = await deps.resolveEmbedSpec(ctx);
       signal.throwIfAborted();
       if (!spec) return;
+      const digest=deps.embeddingConfigDigest?.(spec);
+      const docs = await deps.search.listMissingEmbeddings(ctx, "knowledge", BACKFILL_BATCH,...(digest===undefined?[]:[digest]));
+      signal.throwIfAborted();
+      if (!docs.length) return;
       const vectors = await deps.embedTexts(ctx, spec, docs.map(doc => doc.searchText), signal);
       signal.throwIfAborted();
       if (vectors.length !== docs.length) throw new Error("向量结果数量不匹配");
       for (let index = 0; index < docs.length; index++) {
         signal.throwIfAborted();
-        await deps.search.fillMissingEmbedding(ctx, docs[index]!, vectors[index]!, signal);
+        await deps.search.fillMissingEmbedding(ctx, docs[index]!, vectors[index]!, signal,...(digest===undefined?[]:[digest]));
       }
     }).catch(() => {
       // 派生增益失败不影响查询，也不在本次批次内自动重付费重试。
@@ -92,11 +95,13 @@ export function createKnowledgeSearchRuntime<Spec>(deps: {
       return tracked(async () => {
         let queryEmbedding: number[] | null = null;
         let semanticError: string | null = null;
+        let embeddingConfigDigest:string|undefined;
         const querySignal = controller.signal;
         try {
           const spec = await deps.resolveEmbedSpec(ctx);
           querySignal.throwIfAborted();
           if (spec) {
+            embeddingConfigDigest=deps.embeddingConfigDigest?.(spec);
             const [vector] = await deps.embedTexts(ctx, spec, [query], querySignal);
             querySignal.throwIfAborted();
             queryEmbedding = vector?.length ? vector : null;
@@ -109,7 +114,7 @@ export function createKnowledgeSearchRuntime<Spec>(deps: {
         }
         controller.signal.throwIfAborted();
         const hits = await deps.search.hybridSearch(ctx, query, {
-          entityType: "knowledge", limit: 20, queryEmbedding,
+          entityType: "knowledge", limit: 20, queryEmbedding,...(embeddingConfigDigest===undefined?{}:{embeddingConfigDigest}),
         });
         controller.signal.throwIfAborted();
         const semanticEnabled = queryEmbedding !== null;

@@ -31,6 +31,20 @@ function cleanIdentity(source:string,raw:unknown):unknown{
   return {...fields,configIdentityDigest:`sha256:${createHash('sha256').update(canonicalJson({source,...selected})).digest('hex')}`};
 }
 
+
+/** 无秘密配置摘要；调用者只能传入白名单配置身份，不传凭据。 */
+export function selectedModelIdentityDigest(identity:unknown):string{
+ return `sha256:${createHash('sha256').update(canonicalJson(identity)).digest('hex')}`;
+}
+/** 私有无任务生命周期（例如向量查询）与持久根复用同一严格身份投影。 */
+export function prepareSelectedModelRoute(entry:ModelRouteCatalogEntry,source:ModelRoutingChoices[ModelRouteCatalogEntry['family']],metadata:SelectedModelMetadata){
+ const fallback=metadata.fallbackPolicy===undefined?{}:{fallbackPolicy:metadata.fallbackPolicy,localFallbackIdentity:metadata.localFallbackIdentity};
+ return frozenModelRouteSchema.parse({routeKey:entry.routeKey,capability:entry.capability,mode:entry.mode,source,...fallback,
+  ...((metadata.status==='ready'||metadata.status==='unverified')&&metadata.identity!==undefined
+   ?{readiness:'configured',identity:cleanIdentity(source,metadata.identity)}
+   :{readiness:'unavailable',reasonCode:metadata.reasonCode??(metadata.status==='unverified'?'MODEL_CAPABILITY_UNVERIFIED':'MODEL_NOT_CONFIGURED')})});
+}
+
 /** SEMANTIC_BOUNDARY_ALLOW: 只实现用户显式来源、真实mode/能力键与不可变配置身份，不推断创作意图。 */
 export async function freezeSelectedModelRoutes(input:{
   choices:ModelRoutingChoices;revision:number;
@@ -47,13 +61,7 @@ export async function freezeSelectedModelRoutes(input:{
   for(const entry of modelRouteCatalog){
     const source=entry.routeKey===key&&input.explicitEngine==='codex'?'codex':choices[entry.family];
     const metadata=await input.read(entry,source);
-    const fallback=metadata.fallbackPolicy===undefined?{}:{fallbackPolicy:metadata.fallbackPolicy,localFallbackIdentity:metadata.localFallbackIdentity};
-    // configured表示存在真实配置身份；编辑能力未核实但身份已知时，仍交原宿主实际协议验证。
-    // 登录缺失等不可用状态不得借identity伪装可执行。
-    routes[entry.routeKey]=frozenModelRouteSchema.parse({routeKey:entry.routeKey,capability:entry.capability,mode:entry.mode,source,...fallback,
-      ...((metadata.status==='ready'||metadata.status==='unverified')&&metadata.identity!==undefined
-        ?{readiness:'configured',identity:cleanIdentity(source,metadata.identity)}
-        :{readiness:'unavailable',reasonCode:metadata.reasonCode??(metadata.status==='unverified'?'MODEL_CAPABILITY_UNVERIFIED':'MODEL_NOT_CONFIGURED')})});
+    routes[entry.routeKey]=prepareSelectedModelRoute(entry,source,metadata);
   }
   const selected=routes[key]!;
   if(selected.readiness==='unavailable')throw new CapabilityModelRoutingError(selected.reasonCode,key);

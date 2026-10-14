@@ -31,3 +31,14 @@ export function readFrozenModelRoute(runtime:unknown,mode:ModelRouteMode,capabil
  const route=executionRouteSchema.parse(raw);
  return route.schemaVersion===1?null:route.routes[key]??(()=>{throw new Error('MODEL_ROUTE_NOT_FROZEN');})();
 }
+
+/** SEMANTIC_BOUNDARY_ALLOW: 复制原可信冻结值，不按当前偏好重建或推断来源。 */
+export function frozenExecutionRoute(runtime:unknown,fallbackEngine:'pi'|'codex'='pi'):ExecutionRoute{
+ const raw=runtime&&typeof runtime==='object'&&!Array.isArray(runtime)?(runtime as Record<string,unknown>).executionRoute:undefined;
+ return raw===undefined?createExecutionRoute(fallbackEngine,'legacy'):structuredClone(executionRouteSchema.parse(raw));
+}
+/** v1保原parent标记；v2完整复制原map与摘要，子任务不得降成全局引擎。 */
+export function inheritExecutionRoute(runtime:unknown,fallbackEngine:'pi'|'codex'='pi'):ExecutionRoute{
+ const original=frozenExecutionRoute(runtime,fallbackEngine);
+ return original.schemaVersion===2?original:createExecutionRoute(original.engine,'parent');
+}

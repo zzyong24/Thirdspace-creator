@@ -222,3 +222,20 @@ it('T1238迁移后必须有真实0133回执与列，旧完整前缀不得宣称�
   await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('0133');
  }finally{await store.client.close();}
 },180000);
+
+it('T1278 0136向量身份nullable，必须有真实回执且旧向量不改写',async()=>{
+ const store=await createDb();try{
+  const column=(await readCatalog(store.db)).columns.find(c=>c.table_name==='search_documents'&&c.column_name==='embedding_identity');
+  expect(column).toMatchObject({udt_name:'jsonb',is_nullable:'YES'});
+  const hash=createHash('sha256').update(await readFile(join(folder,'0136_embedding_identity.sql'),'utf8')).digest('hex');
+  expect(hash).toBe('2f279e1cb378dd60d4878d8883a8335955834cf1bacfc70a15b05e423fe13477');
+  await store.client.query('DELETE FROM drizzle.__drizzle_migrations WHERE hash=$1',[hash]);
+  await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('0136');
+ }finally{await store.client.close();}
+},180000);
+it('T1278 已记账0136却缺embedding_identity列拒绝，不伪造重建',async()=>{
+ const store=await createDb();try{
+  await store.client.exec('ALTER TABLE search_documents DROP COLUMN embedding_identity');
+  await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('embedding_identity');
+ }finally{await store.client.close();}
+},180000);

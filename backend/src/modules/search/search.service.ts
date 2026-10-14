@@ -86,6 +86,8 @@ export interface HybridSearchOpts {
    * 纯关键词路径——诚实降级,不静默装 AI)。
    */
   queryEmbedding?: number[] | null;
+  /** undefined沿原v1；v2仅比较本次冻结模型与实际维度。 */
+  embeddingConfigDigest?:string;
 }
 
 // [T-093] 语义命中阈值:余弦低于它的候选直接截断(不足额不硬凑,SPEC §3.1)。
@@ -110,8 +112,8 @@ export function cosineSimilarity(
 }
 
 export interface SearchService {
-  listMissingEmbeddings(ctx: RequestContext, entityType: string, limit: number): Promise<SearchDocumentResource[]>;
-  fillMissingEmbedding(ctx: RequestContext, snapshot: EmbeddingSnapshot, embedding: number[], signal?: AbortSignal): Promise<boolean>;
+  listMissingEmbeddings(ctx: RequestContext, entityType: string, limit: number, embeddingConfigDigest?:string): Promise<EmbeddingSnapshot[]>;
+  fillMissingEmbedding(ctx: RequestContext, snapshot: EmbeddingSnapshot, embedding: number[], signal?: AbortSignal, embeddingConfigDigest?:string): Promise<boolean>;
   upsertDocument(ctx: RequestContext, input: UpsertInput): Promise<SearchDocumentResource>;
   removeDocument(ctx: RequestContext, entityType: string, entityId: string): Promise<void>;
   search(ctx: RequestContext, query: string, opts?: SearchOpts): Promise<SearchDocumentResource[]>;
@@ -248,6 +250,7 @@ export function createSearchService(
       // 语义层(方案 B 核心):调用方注入 queryEmbedding(可配 capability 算出);
       // 未注入 = 未配置模型 → 纯关键词返回(诚实降级,调用方渲提示条)。
       const queryEmbedding = opts?.queryEmbedding ?? null;
+      if(opts?.embeddingConfigDigest!==undefined&&!/^sha256:[a-f0-9]{64}$/.test(opts.embeddingConfigDigest))throw new Error("向量模型身份摘要无效");
       if (queryEmbedding && queryEmbedding.length > 0 && entityType) {
         const seen = new Set(exactRows.map((r) => r.id));
         const all = await repo.listByEntityType(entityType);
@@ -256,6 +259,8 @@ export function createSearchService(
           if (seen.has(row.id)) continue;
           const emb = row.embedding as number[] | null;
           if (!Array.isArray(emb) || emb.length === 0) continue;
+          const identity=row.embeddingIdentity;
+          if(opts?.embeddingConfigDigest!==undefined&&(!identity||identity.schemaVersion!==1||identity.configDigest!==opts.embeddingConfigDigest||identity.dimensions!==queryEmbedding.length||identity.dimensions!==emb.length))continue;
           const score = cosineSimilarity(queryEmbedding, emb);
           // 阈值截断:低分不进结果(不足额不硬凑)。
           if (score === null || score < SEMANTIC_MIN_SCORE) continue;
@@ -274,16 +279,16 @@ export function createSearchService(
       return hits.slice(0, limit);
     },
 
-    async listMissingEmbeddings(ctx, entityType, limit) {
+    async listMissingEmbeddings(ctx, entityType, limit, embeddingConfigDigest) {
       requireWorkspace(ctx);
       if (!Number.isInteger(limit) || limit < 1 || limit > 16) throw new Error("索引补算批次必须为 1–16 条");
-      return (await repoForCtx(ctx).listMissingEmbeddings(entityType, limit)).map(toResource);
+      return repoForCtx(ctx).listMissingEmbeddings(entityType, limit, embeddingConfigDigest);
     },
-    async fillMissingEmbedding(ctx, snapshot, embedding, signal) {
+    async fillMissingEmbedding(ctx, snapshot, embedding, signal, embeddingConfigDigest) {
       requireWorkspace(ctx);
       signal?.throwIfAborted();
       if (!embedding.length || !embedding.every(Number.isFinite)) throw new Error("向量结果无效");
-      return repoForCtx(ctx).fillMissingEmbedding({...snapshot}, [...embedding], signal);
+      return repoForCtx(ctx).fillMissingEmbedding(structuredClone(snapshot), [...embedding], signal, embeddingConfigDigest);
     },
     async listDocumentsByEntityType(ctx, entityType) {
       requireWorkspace(ctx);

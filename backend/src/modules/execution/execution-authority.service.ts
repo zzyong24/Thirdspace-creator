@@ -1,4 +1,4 @@
-import {createExecutionRoute,frozenExecutionEngine} from '@creatoros/contract/execution-worker';
+import {frozenExecutionRoute} from '@creatoros/contract/execution-worker';
 import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob} from '../scheduling';
 import {requireWorkspace} from "../../workspace-scope";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
@@ -88,6 +88,8 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
             eq(executionTasks.ownerType, "ai_task"), eq(executionTasks.kind, "ai_task"),
           ));
           if (!execution) throw new ConflictError("任务执行映射不一致，请先核对");
+          const originalRoute=frozenExecutionRoute(task.runtimeData);
+          if(originalRoute.schemaVersion===2&&!isDeepStrictEqual((execution.payload as Record<string,unknown>).executionRoute,originalRoute))throw new ConflictError("已有执行的完整模型路由与原任务不符");
           if (prepared && (!isDeepStrictEqual((execution.payload as Record<string,unknown>).modelInput,prepared.modelInput) || !isDeepStrictEqual(execution.executionBudget,prepared.budget))) {
             throw new ConflictError("已有执行输入或预算不能改写");
           }
@@ -104,7 +106,7 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
         await tx.insert(executionTasks).values({
           id: executionTaskId, userId: task.userId, accountId: task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,
           kind: "ai_task", ownerType: "ai_task", ownerId: task.id,
-          idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id,executionRoute:createExecutionRoute(frozenExecutionEngine(task.runtimeData)), ...(prepared ? {modelInput:prepared.modelInput} : {})},
+          idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id,executionRoute:frozenExecutionRoute(task.runtimeData), ...(prepared ? {modelInput:prepared.modelInput} : {})},
           ...(prepared ? {priority:prepared.priority??0,executionBudget:prepared.budget,deadlineAt} : {}),
           createdAt: stamp, updatedAt: stamp,
         });

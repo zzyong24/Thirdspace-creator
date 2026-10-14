@@ -1,12 +1,18 @@
+import {localCodexStatusSchema} from '../src/internal/local-codex-status';
 import {describe, expect, it} from 'vitest';
 import {modelRoutingChoicesSchema, modelRoutingPutSchema, modelRoutingResourceSchema} from '../src/internal/model-routing';
 import {modelRouteCatalog,executionRouteV2Schema} from '../src/internal/model-routing';
 import {frozenSelfModelIdentitySchema,projectFrozenModelSettings} from '../src/internal/model-routing';
-import {executionRouteSchema,createExecutionRoute,frozenExecutionEngine,readFrozenModelRoute} from '../src/internal/execution-engine';
+import {executionRouteSchema,createExecutionRoute,frozenExecutionEngine,readFrozenModelRoute,frozenExecutionRoute,inheritExecutionRoute} from '../src/internal/execution-engine';
 
 const choices = {text:'codex', vision:'official', image:'self', video:'official', audio:'local', embed:'self'} as const;
 
 describe('T1278 按能力模型来源的公开合同', () => {
+  it('Codex默认模型只接受实际ID，图像理解、生图与编辑核实状态分开',()=>{
+    const actual={engine:'codex',installed:true,available:true,version:'0.159.3',loginStatus:'authenticated',defaultModelId:'fixture-model-from-list',capabilities:{text:true,imageUnderstanding:true,imageGeneration:true,imageEditing:'unverified'}};
+    expect(localCodexStatusSchema.parse(actual)).toEqual(actual);
+    expect(localCodexStatusSchema.safeParse({...actual,defaultModelId:''}).success).toBe(false);
+  });
   it('无秘密身份拒绝嵌套headers及任意密钥参数',()=>{
     const identity={provider:'api',model:'model',apiFormat:'openai_chat',authStyle:'bearer',endpoint:null,configIdentityDigest:`sha256:${'a'.repeat(64)}`,configuration:{kind:'row',id:'config',capability:'default'}};
     expect(frozenSelfModelIdentitySchema.safeParse({...identity,settings:{headers:{Authorization:'fixture-private-token'},apiKey:'fixture-private-key'}}).success).toBe(false);
@@ -44,6 +50,19 @@ describe('T1278 完整任务冻结与原v1兼容',()=>{
     expect(frozenExecutionEngine({executionRoute:route})).toBe('codex');
     expect(readFrozenModelRoute({executionRoute:route},'image','image.generate')).toMatchObject({source:'self'});
     expect(readFrozenModelRoute({executionRoute:old},'image','image.generate')).toBeNull();
+  });
+  it('执行绑定与父子继承保完整v2冻结，副本不共享可变引用',()=>{
+    const original=executionRouteV2Schema.parse(frozen());
+    const copy=frozenExecutionRoute({executionRoute:original});
+    const child=inheritExecutionRoute({executionRoute:original});
+    expect(copy).toEqual(original);expect(child).toEqual(original);
+    expect(copy).not.toBe(original);expect(child).not.toBe(original);
+    if(child.schemaVersion!==2)throw new Error('v2被降为v1');
+    child.routes['image:image.generate']={...child.routes['image:image.generate']!,readiness:'unavailable',reasonCode:'CHILD_ONLY'};
+    expect(original.routes['image:image.generate']).not.toHaveProperty('reasonCode','CHILD_ONLY');
+    expect(inheritExecutionRoute({executionRoute:createExecutionRoute('codex')})).toEqual(createExecutionRoute('codex','parent'));
+    expect(frozenExecutionRoute({})).toEqual(createExecutionRoute('pi','legacy'));
+    expect(()=>inheritExecutionRoute({executionRoute:{...original,routes:{}}})).toThrow();
   });
   it('登记目录缺项和未知项均拒绝，不读当前设置补齐',()=>{
     const route=frozen();delete route.routes['image:image.generate'];

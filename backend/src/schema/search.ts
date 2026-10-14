@@ -40,6 +40,7 @@ export const searchDocuments = pgTable("search_documents", {
   // ILIKE; the semantic layer complements it by queryEmbedding cosine. jsonb
   // array-of-number per searchDocumentResource.embedding; avoids a pgvector dep.
   embedding: jsonb("embedding").notNull().default([]),
+  embeddingIdentity: jsonb("embedding_identity").$type<{schemaVersion:1;configDigest:string;dimensions:number}>(),
   indexedAt: text("indexed_at").notNull(),
 });
 
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS search_documents (
   body TEXT NOT NULL DEFAULT '',
   search_text TEXT NOT NULL,
   embedding JSONB NOT NULL DEFAULT '[]',
+  embedding_identity JSONB,
   indexed_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS search_documents_user_entity_uniq ON search_documents (user_id, entity_type, entity_id);
@@ -76,6 +78,7 @@ CREATE INDEX IF NOT EXISTS search_documents_user_indexed_ix ON search_documents(
 -- [T-136 多账号 · MAJOR-4] search_documents 按号隔离列(additive、幂等)。存量行 NULL;派生索引
 -- 可重建,迁移 0025 也 backfill 默认号(重建时会重新 stamp)。搜索按 ctx.accountId 过滤。
 ALTER TABLE search_documents ADD COLUMN IF NOT EXISTS account_id TEXT;
+ALTER TABLE search_documents ADD COLUMN IF NOT EXISTS embedding_identity JSONB;
 CREATE INDEX IF NOT EXISTS idx_search_documents_user_account ON search_documents (user_id, account_id, indexed_at);
 CREATE TABLE IF NOT EXISTS search_history (
   id TEXT PRIMARY KEY,

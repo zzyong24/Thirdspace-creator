@@ -162,6 +162,7 @@ export type ChannelModelAuthority =
       readonly outcome: "configured";
       readonly payload: ChannelModelJson;
       readonly scopeId: string;
+      readonly bundleDigest?: string;
     }
   | {
       readonly authority: "local";
@@ -1894,6 +1895,7 @@ export async function readChannelModelAuthority(
         authority: "channel",
         outcome: "configured",
         payload: channel.payload,
+        bundleDigest: record.bundle.bundleDigest,
         scopeId: deriveChannelModelScopeId({
           projectKey: verdict.projectKey,
           channelRef: verdict.channelRef,

@@ -31,7 +31,7 @@ export interface RepoDeps {
   groupId?: string|null;
 }
 
-export type SearchDocumentRow = Omit<typeof searchDocuments.$inferSelect,"groupId"> & {groupId?:string|null};
+export type SearchDocumentRow = Omit<typeof searchDocuments.$inferSelect,"groupId"|"embeddingIdentity"> & {groupId?:string|null;embeddingIdentity?:EmbeddingIdentity|null};
 export type SearchHistoryRow = typeof searchHistory.$inferSelect;
 
 export interface UpsertDocumentInput {
@@ -54,11 +54,12 @@ export interface SearchOpts {
   limit?: number;
 }
 
-export type EmbeddingSnapshot = Pick<SearchDocumentRow, "id" | "entityType" | "entityId" | "indexedAt" | "title" | "body" | "searchText">;
+export type EmbeddingIdentity={schemaVersion:1;configDigest:string;dimensions:number};
+export type EmbeddingSnapshot = Pick<SearchDocumentRow, "id" | "entityType" | "entityId" | "indexedAt" | "title" | "body" | "searchText"> & {embedding?:unknown;embeddingIdentity?:EmbeddingIdentity|null};
 
 export interface SearchRepository {
-  listMissingEmbeddings(entityType: string, limit: number): Promise<SearchDocumentRow[]>;
-  fillMissingEmbedding(snapshot: EmbeddingSnapshot, embedding: number[], signal?: AbortSignal): Promise<boolean>;
+  listMissingEmbeddings(entityType: string, limit: number, embeddingConfigDigest?:string): Promise<SearchDocumentRow[]>;
+  fillMissingEmbedding(snapshot: EmbeddingSnapshot, embedding: number[], signal?: AbortSignal, embeddingConfigDigest?:string): Promise<boolean>;
   upsertDocument(input: UpsertDocumentInput): Promise<SearchDocumentRow>;
   removeDocument(entityType: string, entityId: string): Promise<void>;
   search(query: string, opts?: SearchOpts): Promise<SearchDocumentRow[]>;
@@ -103,21 +104,25 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
   const scopedHist = eq(searchHistory.userId, deps.userId);
 
   return {
-    async listMissingEmbeddings(entityType, limit) {
+    async listMissingEmbeddings(entityType, limit, embeddingConfigDigest) {
+      if(embeddingConfigDigest!==undefined&&!/^sha256:[a-f0-9]{64}$/.test(embeddingConfigDigest))throw new Error("向量模型身份摘要无效");
       return db.select().from(searchDocuments).where(and(scopedDoc,
-        eq(searchDocuments.entityType, entityType), sql`${searchDocuments.embedding} = '[]'::jsonb`,
+        eq(searchDocuments.entityType, entityType), embeddingConfigDigest===undefined?sql`${searchDocuments.embedding} = '[]'::jsonb`:sql`(${searchDocuments.embedding} = '[]'::jsonb OR ${searchDocuments.embeddingIdentity}->>'configDigest' IS DISTINCT FROM ${embeddingConfigDigest} OR ${searchDocuments.embeddingIdentity}->>'schemaVersion' IS DISTINCT FROM '1' OR ${searchDocuments.embeddingIdentity}->>'dimensions' IS DISTINCT FROM jsonb_array_length(${searchDocuments.embedding})::text)`,
       )).orderBy(desc(searchDocuments.indexedAt)).limit(limit);
     },
-    async fillMissingEmbedding(snapshot, embedding, signal) {
-      // 只补原内容的空向量，不 upsert；删除/重建/修订都不能被迟到计算覆盖。
+    async fillMissingEmbedding(snapshot, embedding, signal, embeddingConfigDigest) {
+      if(embeddingConfigDigest!==undefined&&(!/^sha256:[a-f0-9]{64}$/.test(embeddingConfigDigest)||!Array.isArray(snapshot.embedding)))throw new Error("向量模型身份或原向量快照无效");
+      if(!embedding.length||!embedding.every(Number.isFinite))throw new Error("向量结果无效");
+      const embeddingIdentity=embeddingConfigDigest===undefined?null:{schemaVersion:1 as const,configDigest:embeddingConfigDigest,dimensions:embedding.length};
+      // SEMANTIC_BOUNDARY_ALLOW: 精确内容/旧向量/旧身份CAS只防迟到覆盖，不判断正文语义或选择模型。
       return db.transaction(async tx => {
         signal?.throwIfAborted();
-        const rows = await tx.update(searchDocuments).set({embedding}).where(and(
+        const rows = await tx.update(searchDocuments).set({embedding,embeddingIdentity}).where(and(
           scopedDoc, eq(searchDocuments.id, snapshot.id),
           eq(searchDocuments.entityType, snapshot.entityType), eq(searchDocuments.entityId, snapshot.entityId),
           eq(searchDocuments.indexedAt, snapshot.indexedAt), eq(searchDocuments.title, snapshot.title),
           eq(searchDocuments.body, snapshot.body), eq(searchDocuments.searchText, snapshot.searchText),
-          sql`${searchDocuments.embedding} = '[]'::jsonb`,
+          embeddingConfigDigest===undefined?sql`${searchDocuments.embedding} = '[]'::jsonb`:and(sql`${searchDocuments.embedding} = ${JSON.stringify(snapshot.embedding)}::jsonb`,snapshot.embeddingIdentity==null?sql`${searchDocuments.embeddingIdentity} IS NULL`:sql`${searchDocuments.embeddingIdentity} = ${JSON.stringify(snapshot.embeddingIdentity)}::jsonb`),
         )).returning({id: searchDocuments.id});
         signal?.throwIfAborted();
         return rows.length === 1;
@@ -141,6 +146,7 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
           body: input.body,
           searchText: input.searchText,
           embedding: input.embedding ?? [],
+          embeddingIdentity:null,
           indexedAt,
         })
         .onConflictDoUpdate({
@@ -156,6 +162,7 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
             body: input.body,
             searchText: input.searchText,
             embedding: input.embedding ?? [],
+          embeddingIdentity:null,
             indexedAt,
           },
         })

@@ -9,6 +9,7 @@ import {createSearchRepository,createSearchService,createSearchTransport,createK
 export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof createKnowledgeRepository>[1]&Parameters<typeof createSearchService>[1],ports:{
  assertAssetReadable?: (ctx:RequestContext,assetId:string)=>Promise<unknown>;
  resolveEmbedSpec:(ctx:RequestContext)=>Promise<Spec|null>;
+ embeddingConfigDigest?:(spec:Spec)=>string|undefined;
  embedTexts:(ctx:RequestContext,spec:Spec,texts:string[],signal?:AbortSignal)=>Promise<number[][]>;
 }){
   // Search (module 02): the composed `pages.search.get` read served over the
@@ -40,7 +41,7 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
   const knowledgeBaseTransport = createKnowledgeTransport(() => knowledgeService);
   const knowledgeSearchRuntime=createKnowledgeSearchRuntime({
     knowledge:knowledgeService,search:searchService,
-    resolveEmbedSpec:ports.resolveEmbedSpec,embedTexts:ports.embedTexts,
+    resolveEmbedSpec:ports.resolveEmbedSpec,embeddingConfigDigest:ports.embeddingConfigDigest,embedTexts:ports.embedTexts,
   });
   const {indexKnowledgeDocumentBestEffort}=knowledgeSearchRuntime;
   // [T-093] 知识写路径的搜索索引 fan-out(composition root 组合,knowledge 模块不反向

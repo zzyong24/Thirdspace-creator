@@ -1,4 +1,4 @@
-import {createExecutionRoute,frozenExecutionEngine} from '@creatoros/contract/execution-worker';
+import {createExecutionRoute,frozenExecutionEngine,inheritExecutionRoute} from '@creatoros/contract/execution-worker';
 import {and,eq,sql,executionTasks,scheduledJobs,type Db} from '@creatoros/backend';
 import {workspaceFilter} from '../../workspace-scope';
 import type {RequestContext} from '@creatoros/contract';
@@ -28,7 +28,7 @@ export function createTransactionalTaskRuntimeResolver(tx:Db,deps:TransactionalT
     if(parent){
      const payload=parent.payload as Record<string,unknown>;
      if((payload.job as {id?:unknown}|undefined)?.id!==job.id)throw new Error('调度父执行与真实作业不符');
-     executionRoute=createExecutionRoute(frozenExecutionEngine(payload),'parent');
+     executionRoute=inheritExecutionRoute(payload);
     }
    }
   }

@@ -138,7 +138,7 @@ it('T1209旧105库补尾，新作业和legacy共享作业沿原公共运行合�
   await Promise.all(c.dispatched);
   expect((await opened.client.query("SELECT membership_version,group_version FROM ai_tasks WHERE id='old-ai'")).rows).toEqual([{membership_version:null,group_version:null}]);
   expect((await opened.client.query("SELECT membership_version,group_version FROM execution_tasks WHERE id='old-execution'")).rows).toEqual([{membership_version:null,group_version:null}]);
-  expect((await opened.client.query<{created_at:number}>('SELECT created_at FROM drizzle.__drizzle_migrations WHERE created_at>=1791043200004 ORDER BY created_at')).rows.map(r=>Number(r.created_at))).toEqual([1791043200004,1791043200005,1791043200006,1791043200008]);
+  expect((await opened.client.query<{created_at:number}>('SELECT created_at FROM drizzle.__drizzle_migrations WHERE created_at>=1791043200004 ORDER BY created_at')).rows.map(r=>Number(r.created_at))).toEqual([1791043200004,1791043200005,1791043200006,1791043200008,1791043200009]);
  }finally{await opened.client.close();}
 });
 
