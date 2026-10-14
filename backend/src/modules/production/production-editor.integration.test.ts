@@ -26,6 +26,36 @@ beforeEach(async()=>{
 afterEach(async()=>{await close?.();close=undefined;});
 const save=(requestId:string,expectedRevision=0)=>({expectedRevision,requestId,plan:plan(),source:"manual" as const});
 
+it("T1281 公共V1预览和渲染同源同时间，零改正式工程及原幂等/归属",async()=>{
+  const tasks:unknown[]=[],mediaReads:unknown[]=[];let unavailable=false;
+  const owner=createProductionService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,
+    assertEditorAsset:async(_ctx,input)=>{if(unavailable||input.assetId!=="master")throw new Error("原片不可用");},
+    resolveEditorMedia:async(_ctx,input)=>{mediaReads.push(input);return {url:"/owned-master.mp4",mimeType:"video/mp4"};},
+    createEditorRender:async(_ctx,input)=>{tasks.push(input);return{id:"only-render-task"};},
+  });
+  const transport=createProductionTransport(()=>owner),params={outputId:"video-a"};
+  const draft={...plan(),editorVersion:1,legacyExtension:{keep:[1,2,3]},renderProps:{...plan().renderProps,
+    talkingHead:{file:"master",durationSec:2.125,hasAudio:false},
+    scenes:[{id:"scene",title:"原片",label:"原片",startSec:0,endSec:2.125,cards:[]}],captions:[],delivery:{width:320,height:180,fps:24}}};
+  await owner.saveEditor(ctx,"video-a",{expectedRevision:0,requestId:"t1281-save-original",source:"manual",plan:draft});
+  const before=await owner.getEditor(ctx,"video-a");
+  const preview=await transport.request(ENDPOINTS.previewProductionEditor,{params,query:undefined,body:{expectedRevision:1,requestId:"t1281-preview-original",plan:before.plan!}},ctx) as {data:{html:string;durationSec:number}};
+  expect(preview.data.durationSec).toBe(2.125);
+  expect(preview.data.html).toContain('data-media-start="0"');
+  expect(preview.data.html).toContain('data-duration="2.125"');
+  expect(preview.data.html).toContain('left:0px;top:0px;width:320px;height:180px');
+  expect(mediaReads).toEqual([{projectId:"project-a",assetId:"master"}]);
+  const body={revision:1,requestId:"t1281-render-original"};
+  const rendered=await owner.renderEditor(ctx,"video-a",body);
+  expect(rendered.spec.params.props).toMatchObject({talkingHead:{file:"master",durationSec:2.125,hasAudio:false,clips:[{file:"master",startSec:0,endSec:2.125,sourceInSec:0,hasAudio:false}]}});
+  expect(await owner.renderEditor(ctx,"video-a",body)).toEqual(rendered);expect(tasks).toHaveLength(1);
+  expect(await owner.getEditor(ctx,"video-a")).toEqual(before);
+  unavailable=true;
+  await expect(owner.renderEditor(ctx,"video-a",{revision:1,requestId:"t1281-missing-source"})).rejects.toThrow("原片不可用");
+  await expect(owner.renderEditor({...ctx,accountId:"account-b"},"video-a",body)).rejects.toThrow();
+  expect(tasks).toHaveLength(1);expect(await owner.getEditor(ctx,"video-a")).toEqual(before);
+},180000);
+
 describe("T-1037 公共制作工程与持久版本",()=>{
   it("纯读不创建工程，保存→公共读回→重新装配，未知字段与另一作品保持独立",async()=>{
     const s=service();expect((await s.getEditor(ctx,"video-a")).state).toBe("empty");

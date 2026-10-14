@@ -21,6 +21,7 @@ import {
 import {mapMainTrack} from "./production-main-track";
 import {applyV2EditorEdits} from "./production-v2-edits";
 import {compileV2RenderablePlan} from "./production-v2-compile";
+import {compileV1RenderProps} from "./production-v1-compile";
 import {buildProductionPreview,type ResolveEditorMedia} from "./production-preview";
 import { createProductionEditorRepository, editingPlan, editorRevision, type ProductionVersionSavedEvent } from "./production-editor.repository";
 import { prepareEditorPlan, applyEditorEdits, itemDigest, unsupportedEditorFields, validateEditorChanges, type EditorPlan } from "./production-editor-plan";
@@ -427,7 +428,7 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
         if(!deps.assertEditorAsset)throw new UnsupportedOperationError("production.editor.asset-validation");
         for(const assetId of mediaRefs(prepared))await deps.assertEditorAsset(ctx,{projectId,assetId},transaction);
         return executionTaskSpec.parse({taskType:"video.render",goal:`生成视频：${prepared.renderProps.meta.title}`,
-          inputs:[...mediaRefs(prepared)].map(assetId=>({assetId,mountAs:assetId})),params:{props:prepared.renderProps},
+          inputs:[...mediaRefs(prepared)].map(assetId=>({assetId,mountAs:assetId})),params:{props:compileV1RenderProps(prepared.renderProps)},
           constraints:{timeoutSec:null,network:"deny",maxOutputMB:512}});
       });
       if(frozen.request.taskId)return frozen.request;

@@ -2,6 +2,7 @@ import {ErrorCode,videoRenderProps,type RequestContext,type ProductionEditorPrev
 import {generateVideoRenderHtml} from "../execution";
 import {unsupportedEditorFields,type EditorPlan} from "./production-editor-plan";
 import {compileV2RenderablePlan} from "./production-v2-compile";
+import {compileV1RenderProps} from "./production-v1-compile";
 import type {ProductionOverlayBinding} from './production-overlay-capture';
 import {ConflictError} from "./production.errors";
 
@@ -10,7 +11,7 @@ export type ResolveEditorMedia=(ctx:RequestContext,input:{projectId:string;asset
 // SEMANTIC_BOUNDARY_ALLOW: 只校验来源协议、权威类型和真实素材引用，不选择创作内容。
 export async function buildProductionPreview(ctx:RequestContext,projectId:string,plan:EditorPlan|ProductionPlanV2,resolve:ResolveEditorMedia,exactOverlays:ProductionOverlayBinding[]=[]):Promise<ProductionEditorPreview> {
   const compiled=plan.editorVersion===2?compileV2RenderablePlan(plan,exactOverlays):null;
-  const props=compiled?.props??videoRenderProps.parse((plan as EditorPlan).renderProps);
+  const props=compiled?.props??compileV1RenderProps(videoRenderProps.parse((plan as EditorPlan).renderProps));
   const bindings=new Map(compiled?.mediaBindings.map(b=>[b.mountAs,b])??[]);
   const imageCards=props.scenes.flatMap(s=>s.cards.filter(c=>c.kind==="image").map(c=>c.kind==="image"?c.file:""));
   const refs=new Set([...(props.talkingHead.clips?.map(c=>c.file)??[props.talkingHead.file]),...props.broll.map(b=>b.file),...imageCards]);
