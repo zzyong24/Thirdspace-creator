@@ -629,7 +629,7 @@
     },
     {
       "module": "src/embedded/editor-layout.tsx",
-      "renderedLength": 5697
+      "renderedLength": 11243
     },
     {
       "module": "src/embedded/frozen-export.ts",
@@ -649,7 +649,7 @@
     },
     {
       "module": "src/embedded/native-host.ts",
-      "renderedLength": 6667
+      "renderedLength": 7525
     },
     {
       "module": "src/embedded/native-lifecycle.ts",
@@ -677,7 +677,7 @@
     },
     {
       "module": "src/embedded/preview-workspace.tsx",
-      "renderedLength": 2692
+      "renderedLength": 2765
     },
     {
       "module": "src/embedded/radix/aria-hidden.ts",
@@ -701,7 +701,7 @@
     },
     {
       "module": "src/embedded/workspace-panel.tsx",
-      "renderedLength": 2228
+      "renderedLength": 3094
     },
     {
       "module": "src/fonts/google-fonts.ts",

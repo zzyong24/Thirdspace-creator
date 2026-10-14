@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/NATIVE_REBUILD_CONSISTENCY.json
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,67 @@
 +{
 +  "historical": {
 +    "status": "PASS",
@@ -16,17 +16,17 @@
 +    }
 +  },
 +  "t1274Preview": {
-+    "status": "SOURCE_BUILD_DOM_FIXTURE_VERIFIED_FINAL_REAL_MEDIA_PENDING_ROOT",
++    "status": "RESPONSIVE_SOURCE_DOM_VERIFIED_REAL_HOST_UI_PENDING_ROOT",
 +    "files": {
-+      "native.js": "d255e015930770c3998cf4c018e6ed0113581eecb926333a9849aec183a66500",
-+      "native.css": "d3ed547c9a216cca3726214a803f6028398a6c5496a5f5ff3518e5d5a56e1228",
-+      "NATIVE_BUILD_GRAPH.json": "bf5c14de8c02c8a31d597c3f8cbf0a5004e36c0ef1fcb88e85e2e8f03549a688",
++      "native.js": "b30e2b7d7a22aca45aa70a4eae84e01a465a8d6b6e6a5982ef4666efacd6fff7",
++      "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
++      "NATIVE_BUILD_GRAPH.json": "3b654452b81fd4b8bddead7722990cd2df9971ecfb1c04e3f69c216ceb0f7281",
 +      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
 +      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
 +      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
 +      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
 +    },
-+    "source": "中心slot、原工程名及private exact cache闭包；将从归档再次重建比较七份字节。"
++    "source": "响应式DOM保持与materials slot；从归档再重建核七份字节。"
 +  },
 +  "historicalT1274PreviewBeforeSeparatedAudio": {
 +    "status": "SOURCE_BUILD_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
@@ -53,29 +53,45 @@
 +      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
 +    },
 +    "source": "分离原声兼容窄修；复用同一锁依赖树，将从归档再次重建比较七份字节。"
++  },
++  "historicalT1274PreviewBeforeResponsive": {
++    "status": "SOURCE_BUILD_DOM_FIXTURE_VERIFIED_FINAL_REAL_MEDIA_PENDING_ROOT",
++    "files": {
++      "native.js": "d255e015930770c3998cf4c018e6ed0113581eecb926333a9849aec183a66500",
++      "native.css": "d3ed547c9a216cca3726214a803f6028398a6c5496a5f5ff3518e5d5a56e1228",
++      "NATIVE_BUILD_GRAPH.json": "bf5c14de8c02c8a31d597c3f8cbf0a5004e36c0ef1fcb88e85e2e8f03549a688",
++      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
++      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
++      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
++      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
++    },
++    "source": "中心slot、原工程名及private exact cache闭包；将从归档再次重建比较七份字节。"
 +  }
 +}
 --- a/README.creatoros.md
 +++ b/README.creatoros.md
-@@ -1,64 +1,67 @@
+@@ -1,64 +1,69 @@
 -# 官方 OpenCut 完整编辑工作台的 CreatorOS 集成包
-+T-1274 中心候选预览闭包：第三named slot保持原预览实例，候选可见时锁原core/快捷键；compact header恢复原renameProject工程名。仅private export cache等待prefetch按实际PTS晋升，禁canvas池保同素材多层源帧；interactive沿原池。类型/71测试与DOM夹具已验；真实GPU、宿主E2E和最终48帧MP4由ROOT验，未签PASS。
++T-1274 响应式工作区：容器小于700px单面板，700至1099px预览与按需侧栏，宽屏原三栏；保持Core/portal/草稿实例。新增materials slot，候选开始自动画面、结束恢复原面板。类型/71测试与58项DOM夹具已验；真实宿主UI由ROOT验证，本子候选未签视觉/GPU/MP4。
  
 -原仓库：https://github.com/OpenCut-app/opencut-classic
 -固定提交：`cf5e79e919144200294fb9fed22a222592a0aeea`（已归档上游）。完整素材区、预览、属性区、时间轴及其命令/撤销/渲染仍来自原实现。
-+T-1274 分离原声兼容增量：上传音轨沿既有backend与audio-separation规则允许引用audio或video媒体，video/image引用仍严格匹配；新增公共controller真实RED→GREEN及三个不兼容类型回归。当前公共19例、完整66例；历史证据不覆盖。
++T-1274 中心候选预览闭包：第三named slot保持原预览实例，候选可见时锁原core/快捷键；compact header恢复原renameProject工程名。仅private export cache等待prefetch按实际PTS晋升，禁canvas池保同素材多层源帧；interactive沿原池。类型/71测试与DOM夹具已验；真实GPU、宿主E2E和最终48帧MP4由ROOT验，未签PASS。
  
 -## 集成接口
-+# T-1274 候选隔离预览增量
++T-1274 分离原声兼容增量：上传音轨沿既有backend与audio-separation规则允许引用audio或video媒体，video/image引用仍严格匹配；新增公共controller真实RED→GREEN及三个不兼容类型回归。当前公共19例、完整66例；历史证据不覆盖。
  
 -父页面与 iframe 必须同源；`iframe.src = '<静态目录>/index.html#/?session=<随机会话>'`。帧只接受 `event.source === parent`、精确同源、相同 session 的消息。
-+`preview-scene` 接收既有宿主owner、targetSceneId、baseContextEpoch、beforeDigest、完整scene candidateDigest、tracks及携assetId/assetFileId的真实File集合。克隆当前工程，仅目标scene轨道替换，调用原renderer.exportProject frozen接口，返回真实编码buffer形成的MP4 Blob。不flush/save、不暂停活动播放、不修改活动工程/撤销/selection/dirty/contextEpoch。导出范围和120000ticks/s保持原接口。
++# T-1274 候选隔离预览增量
  
 -消息外形：`{type:'creatoros.reference-editor',version:1,session,requestId,operation,payload}`。操作：
 -- `load`：`{document:nativeProject|null,title,outputId,media:[{mediaId,file:File,name,type:'video'|'image'|'audio',...原生元信息}]}`；原生文档为版本31，文档 metadata.id 必须等于 outputId。不转换旧 CreatorOS 工程。
 -- `snapshot`：回 `result`，payload 为 `{operation:'snapshot',document,mediaMetadata}`，不含 File/Blob/对象URL或临时缩略图。文档保持原生工程结构；父稿面负责显示、保存及原 Production CAS。
 -- `insert-media`：`{mediaId,file:File}`；真实已保存素材加入左侧素材区，由用户点击素材卡片的加号或拖入时间轴（双击仅选中），不自动做编排。
 -- `export`：可选 `{format:'mp4'|'webm'}`；原 MediaBunny/WebCodecs 导出后回 `{operation:'export',document,mediaMetadata,blob:Blob,fileName}`，document 与 mediaMetadata 来自本次渲染实际使用的同一冻结快照；导出时编辑输入被锁定，尚未完成的素材导入不可回写，结束或失败后恢复编辑。父稿面用同次回包的稿件做 CAS，再接既有作品成果服务并下载。
++`preview-scene` 接收既有宿主owner、targetSceneId、baseContextEpoch、beforeDigest、完整scene candidateDigest、tracks及携assetId/assetFileId的真实File集合。克隆当前工程，仅目标scene轨道替换，调用原renderer.exportProject frozen接口，返回真实编码buffer形成的MP4 Blob。不flush/save、不暂停活动播放、不修改活动工程/撤销/selection/dirty/contextEpoch。导出范围和120000ticks/s保持原接口。
+ 
+-帧发送 `ready`、`changed`；请求结果为 `result`，失败为 `error`，payload 内包含原 operation 和 message。原上传、粘贴文件先发送 `import-media` 的 `{file:File}`，父稿面必须完成真实上传和作品归属后同 requestId 回 `result` 的 `{operation:'import-media',mediaId}`，或者 error。原编辑素材只能使用回执中的真实ID；文件只保留于当前帧内存。
 +```mermaid
 +flowchart LR
 + A[当前工程与真实原片] --> B[owner/epoch/双摘要核对]
@@ -85,16 +101,15 @@
 + E --> F[再次核对 / 候选Blob]
 +```
  
--帧发送 `ready`、`changed`；请求结果为 `result`，失败为 `error`，payload 内包含原 operation 和 message。原上传、粘贴文件先发送 `import-media` 的 `{file:File}`，父稿面必须完成真实上传和作品归属后同 requestId 回 `result` 的 `{operation:'import-media',mediaId}`，或者 error。原编辑素材只能使用回执中的真实ID；文件只保留于当前帧内存。
+-帧无 IndexedDB/OPFS 项目权或资产权，原自动保存只更新内存；载入建立原生结构基线，只有实际工程/素材元信息变化才通知 changed，忽略自动保存的 metadata.updatedAt/scene.updatedAt 和临时运行字段；离开、版本冲突或失败后恢复属于父稿面。不会从 iframe 直接访问 CreatorOS 数据库、任务或模型。
 +CanvasRenderer每实例持有原项目尺寸输出画布；共享WASM renderFrame与拷贝同步完成，不await后再读共享compositor。编码器释放临时源/缓存/画布/图片/音频context，取消继承原signal与context寿命，不续期。资源与公共控制器回归含真实RED；端口夹具只证明机械边界，真实GPU/MP4/宿主/E2E仍由主会话验收。
  
--帧无 IndexedDB/OPFS 项目权或资产权，原自动保存只更新内存；载入建立原生结构基线，只有实际工程/素材元信息变化才通知 changed，忽略自动保存的 metadata.updatedAt/scene.updatedAt 和临时运行字段；离开、版本冲突或失败后恢复属于父稿面。不会从 iframe 直接访问 CreatorOS 数据库、任务或模型。
+-## 可复建步骤
 +以下历史说明保留。
  
--## 可复建步骤
-+# OpenCut 原生 CreatorOS 工作面
- 
 -使用 Bun1.4.0（首次安装实测）/Node25.9.0，可用默认公开 npm registry。source archive 排除 node_modules、环境文件、服务器/认证页面、analytics及测试harness。原始完整 source 链接与提交保留。
++# OpenCut 原生 CreatorOS 工作面
++
 +来源为 OpenCut classic `cf5e79e919144200294fb9fed22a222592a0aeea`，基于 T1046 已集成的同轨命令、NativePatchReplay 和冻结导出源码继续修改。当前构建入口是 `apps/web/src/embedded/native-entry.tsx`，直接挂载原 React 素材区、预览、属性区与时间轴，不运行原独立网页入口。
 +
 +```mermaid
@@ -206,7 +221,7 @@
 +}
 --- /dev/null
 +++ b/apps/web/scripts/build-native.mjs
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,92 @@
 +import {readFileSync,writeFileSync,mkdirSync,readdirSync,statSync} from 'node:fs';
 +import {resolve,dirname,relative} from 'node:path';
 +import {fileURLToPath} from 'node:url';
@@ -268,6 +283,27 @@
 +.native-workspace-preview-projection[hidden]{display:none;}
 +.native-workspace-preview-projection slot{display:block;height:100%;min-height:0;}
 +.native-workspace-preview-projection ::slotted(*){display:block;height:100%;min-height:0;min-width:0;}
++
++.native-responsive-workspace{height:100%;min-height:0;min-width:0;display:flex;flex-direction:column;}
++.native-workspace-navigation{display:flex;flex-shrink:0;gap:.25rem;padding:.25rem .75rem .5rem;}
++.native-workspace-navigation button{white-space:nowrap;padding:.5rem .65rem;border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--muted-foreground);}
++.native-workspace-navigation button[aria-pressed="true"]{color:var(--primary);background:var(--secondary);font-weight:600;}
++.native-workspace-navigation button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}
++[data-workspace-layout="wide"] .native-workspace-navigation{display:none;}
++.native-responsive-workspace [hidden]{display:none;}
++.native-responsive-workspace>.native-workspace-vertical{flex:1;min-height:0;}
++.native-workspace-tabs button{white-space:nowrap;}
++.native-workspace-core-content{display:flex;flex-direction:column;}
++.native-workspace-core-body{flex:1;min-height:0;min-width:0;overflow:hidden;}
++.native-workspace-materials{flex-shrink:0;min-width:0;}
++.native-workspace-materials slot{display:block;}
++.native-workspace-materials ::slotted(*){display:block;min-width:0;}
++[data-workspace-layout="single"] .native-workspace-navigation{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding-inline:.5rem;gap:.25rem;}
++[data-workspace-layout="single"] .native-workspace-navigation button{padding:.45rem .25rem;}
++[data-workspace-layout="single"] .native-workspace-horizontal{padding-inline:.5rem;}
++[data-workspace-layout="single"] .native-workspace-main,[data-workspace-layout="single"] .native-workspace-timeline,[data-workspace-layout="single"] .native-workspace-horizontal>[data-panel]{min-width:0;min-height:0;}
++[data-workspace-layout="single"] .native-workspace-timeline{padding-inline:.5rem;}
++[data-workspace-layout="single"] .native-workspace-timeline>div{min-width:560px;}
 +
 +.reference-media-panel{container-type:inline-size;}
 +@container(max-width:260px){.reference-media-secondary{display:none;}}
@@ -4260,64 +4296,450 @@
 +export function beginExportLock(){assertEditable();const h=nativeHost();exporting=true;advanceEditEpoch();const roots=[h.container,h.portalContainer],old=roots.map(root=>root.inert);roots.forEach(root=>root.inert=true);let released=false;return()=>{if(released)return;released=true;exporting=false;advanceEditEpoch();roots.forEach(root=>root.inert=h.disabled);};}
 --- a/apps/web/src/embedded/editor-layout.tsx
 +++ b/apps/web/src/embedded/editor-layout.tsx
-@@ -11,7 +11,9 @@
- import {usePreviewStore} from '@/preview/preview-store';
- import {getGuidePreviewOverlaySource} from '@/guides';
- import {bookmarkNotesPreviewOverlay,getBookmarkPreviewOverlaySource} from '@/timeline/bookmarks/index';
+@@ -1,142 +1,302 @@
+-import {ResizablePanelGroup,ResizablePanel,ResizableHandle} from '@/components/ui/resizable';
+-import {AssetsPanel} from '@/components/editor/panels/assets';
+-import {PropertiesPanel} from '@/components/editor/panels/properties';
+-import {Timeline} from '@/timeline/components';
+-import {PreviewPanel} from '@/preview/components';
+-import {usePanelStore} from '@/editor/panel-store';
+-import {usePasteMedia} from '@/media/use-paste-media';
+-import {useMemo} from 'react';
+-import {useEditor} from '@/editor/use-editor';
+-import {createPreviewOverlayControl,isPreviewOverlayVisible,mergePreviewOverlaySources} from '@/preview/overlays';
+-import {usePreviewStore} from '@/preview/preview-store';
+-import {getGuidePreviewOverlaySource} from '@/guides';
+-import {bookmarkNotesPreviewOverlay,getBookmarkPreviewOverlaySource} from '@/timeline/bookmarks/index';
 -export function EditorLayout() {
-+import {WorkspacePanel} from './workspace-panel';
-+import {PreviewWorkspace} from './preview-workspace';
-+export function EditorLayout({workspaceAddons=false}:{workspaceAddons?:boolean}={}) {
- 	usePasteMedia();
- 	const { panels, setPanel } = usePanelStore();
- 	const activeScene = useEditor((editor) =>
-@@ -97,7 +99,7 @@
- 						maxSize={40}
- 						className="min-w-0"
- 					>
+-	usePasteMedia();
+-	const { panels, setPanel } = usePanelStore();
+-	const activeScene = useEditor((editor) =>
+-		editor.scenes.getActiveSceneOrNull(),
+-	);
+-	const currentTime = useEditor((editor) => editor.playback.getCurrentTime());
+-	const activeGuide = usePreviewStore((state) => state.activeGuide);
+-	const overlays = usePreviewStore((state) => state.overlays);
+-	const setOverlayVisibility = usePreviewStore(
+-		(state) => state.setOverlayVisibility,
+-	);
+-	const showBookmarkNotes = isPreviewOverlayVisible({
+-		overlay: bookmarkNotesPreviewOverlay,
+-		overlays,
+-	});
+-
+-	const overlaySource = useMemo(
+-		() =>
+-			mergePreviewOverlaySources({
+-				sources: [
+-					getGuidePreviewOverlaySource({
+-						guideId: activeGuide,
+-					}),
+-					activeScene
+-						? getBookmarkPreviewOverlaySource({
+-								bookmarks: activeScene.bookmarks,
+-								time: currentTime,
+-								isVisible: showBookmarkNotes,
+-							})
+-						: {
+-								definitions: [bookmarkNotesPreviewOverlay],
+-								instances: [],
+-							},
+-				],
+-			}),
+-		[activeGuide, activeScene, currentTime, showBookmarkNotes],
+-	);
+-
+-	const overlayControls = useMemo(
+-		() =>
+-			overlaySource.definitions.map((overlay) =>
+-				createPreviewOverlayControl({ overlay, overlays }),
+-			),
+-		[overlaySource.definitions, overlays],
+-	);
+-
+-	return (
+-		<ResizablePanelGroup
+-			direction="vertical"
+-			className="size-full gap-[0.18rem]"
+-			onLayout={(sizes) => {
+-				setPanel({
+-					panel: "mainContent",
+-					size: sizes[0] ?? panels.mainContent,
+-				});
+-				setPanel({
+-					panel: "timeline",
+-					size: sizes[1] ?? panels.timeline,
+-				});
+-			}}
+-		>
+-			<ResizablePanel
+-				defaultSize={panels.mainContent}
+-				minSize={30}
+-				maxSize={85}
+-				className="min-h-0"
+-			>
+-				<ResizablePanelGroup
+-					direction="horizontal"
+-					className="size-full gap-[0.19rem] px-3"
+-					onLayout={(sizes) => {
+-						setPanel({ panel: "tools", size: sizes[0] ?? panels.tools });
+-						setPanel({ panel: "preview", size: sizes[1] ?? panels.preview });
+-						setPanel({
+-							panel: "properties",
+-							size: sizes[2] ?? panels.properties,
+-						});
+-					}}
+-				>
+-					<ResizablePanel
+-						defaultSize={panels.tools}
+-						minSize={15}
+-						maxSize={40}
+-						className="min-w-0"
+-					>
 -						<AssetsPanel />
-+						{workspaceAddons?<WorkspacePanel side="left"><AssetsPanel /></WorkspacePanel>:<AssetsPanel />}
- 					</ResizablePanel>
- 
- 					<ResizableHandle withHandle />
-@@ -105,13 +107,18 @@
- 					<ResizablePanel
- 						defaultSize={panels.preview}
- 						minSize={30}
-+						data-native-core-panel={workspaceAddons?undefined:true}
- 						className="min-h-0 min-w-0 flex-1"
- 					>
+-					</ResizablePanel>
+-
+-					<ResizableHandle withHandle />
+-
+-					<ResizablePanel
+-						defaultSize={panels.preview}
+-						minSize={30}
+-						className="min-h-0 min-w-0 flex-1"
+-					>
 -						<PreviewPanel
-+						{workspaceAddons?<PreviewWorkspace><PreviewPanel
- 							overlayControls={overlayControls}
- 							overlayInstances={overlaySource.instances}
- 							onOverlayVisibilityChange={setOverlayVisibility}
+-							overlayControls={overlayControls}
+-							overlayInstances={overlaySource.instances}
+-							onOverlayVisibilityChange={setOverlayVisibility}
 -						/>
-+						/></PreviewWorkspace>:(<PreviewPanel
-+							overlayControls={overlayControls}
-+							overlayInstances={overlaySource.instances}
-+							onOverlayVisibilityChange={setOverlayVisibility}
-+						/>)}
- 					</ResizablePanel>
- 
- 					<ResizableHandle withHandle />
-@@ -122,7 +129,7 @@
- 						maxSize={40}
- 						className="min-w-0"
- 					>
+-					</ResizablePanel>
+-
+-					<ResizableHandle withHandle />
+-
+-					<ResizablePanel
+-						defaultSize={panels.properties}
+-						minSize={15}
+-						maxSize={40}
+-						className="min-w-0"
+-					>
 -						<PropertiesPanel />
-+						{workspaceAddons?<WorkspacePanel side="right"><PropertiesPanel /></WorkspacePanel>:<PropertiesPanel />}
- 					</ResizablePanel>
- 				</ResizablePanelGroup>
- 			</ResizablePanel>
-@@ -133,6 +140,7 @@
- 				defaultSize={panels.timeline}
- 				minSize={15}
- 				maxSize={70}
-+				data-native-core-panel
- 				className="min-h-0 px-3 pb-3"
- 			>
- 				<Timeline />
+-					</ResizablePanel>
+-				</ResizablePanelGroup>
+-			</ResizablePanel>
+-
+-			<ResizableHandle withHandle />
+-
+-			<ResizablePanel
+-				defaultSize={panels.timeline}
+-				minSize={15}
+-				maxSize={70}
+-				className="min-h-0 px-3 pb-3"
+-			>
+-				<Timeline />
+-			</ResizablePanel>
+-		</ResizablePanelGroup>
+-	);
++import {
++  ResizablePanelGroup,
++  ResizablePanel,
++  ResizableHandle,
++} from "@/components/ui/resizable";
++import { AssetsPanel } from "@/components/editor/panels/assets";
++import { PropertiesPanel } from "@/components/editor/panels/properties";
++import { Timeline } from "@/timeline/components";
++import { PreviewPanel } from "@/preview/components";
++import { usePanelStore } from "@/editor/panel-store";
++import { usePasteMedia } from "@/media/use-paste-media";
++import {
++  useMemo,
++  useLayoutEffect,
++  useRef,
++  useState,
++  useSyncExternalStore,
++} from "react";
++import {
++  nativeWorkspaceViewSnapshot,
++  subscribeNativeWorkspace,
++  openNativeWorkspaceView,
++  type NativeWorkspaceView,
++} from "./native-host";
++import { useEditor } from "@/editor/use-editor";
++import {
++  createPreviewOverlayControl,
++  isPreviewOverlayVisible,
++  mergePreviewOverlaySources,
++} from "@/preview/overlays";
++import { usePreviewStore } from "@/preview/preview-store";
++import { getGuidePreviewOverlaySource } from "@/guides";
++import {
++  bookmarkNotesPreviewOverlay,
++  getBookmarkPreviewOverlaySource,
++} from "@/timeline/bookmarks/index";
++import { WorkspacePanel } from "./workspace-panel";
++import { PreviewWorkspace } from "./preview-workspace";
++export function EditorLayout({
++  workspaceAddons = false,
++}: { workspaceAddons?: boolean } = {}) {
++  usePasteMedia();
++  const workspaceRef = useRef<HTMLDivElement>(null);
++  const [layout, setLayout] = useState<"wide" | "compact" | "single">("wide");
++  const view = useSyncExternalStore(
++    subscribeNativeWorkspace,
++    nativeWorkspaceViewSnapshot,
++    nativeWorkspaceViewSnapshot,
++  );
++  useLayoutEffect(() => {
++    if (!workspaceAddons || !workspaceRef.current) return;
++    const element = workspaceRef.current;
++    const update = () => {
++      const width = element.getBoundingClientRect().width;
++      if (width > 0)
++        setLayout(width < 700 ? "single" : width < 1100 ? "compact" : "wide");
++    };
++    update();
++    const observer = new ResizeObserver(update);
++    observer.observe(element);
++    return () => observer.disconnect();
++  }, [workspaceAddons]);
++  const single = workspaceAddons && layout === "single",
++    compact = workspaceAddons && layout === "compact";
++  const leftVisible = !workspaceAddons || layout === "wide" || view === "left";
++  const rightVisible =
++    !workspaceAddons || layout === "wide" || view === "right";
++  const previewVisible = !single || view === "preview";
++  const mainVisible = !single || view !== "timeline";
++  const timelineVisible = !single || view === "timeline";
++  const views: [NativeWorkspaceView, string][] = [
++    ["left", "素材/转录"],
++    ["preview", "画面"],
++    ["timeline", "时间轴"],
++    ["right", "编导/属性"],
++  ];
++  const { panels, setPanel } = usePanelStore();
++  const activeScene = useEditor((editor) =>
++    editor.scenes.getActiveSceneOrNull(),
++  );
++  const currentTime = useEditor((editor) => editor.playback.getCurrentTime());
++  const activeGuide = usePreviewStore((state) => state.activeGuide);
++  const overlays = usePreviewStore((state) => state.overlays);
++  const setOverlayVisibility = usePreviewStore(
++    (state) => state.setOverlayVisibility,
++  );
++  const showBookmarkNotes = isPreviewOverlayVisible({
++    overlay: bookmarkNotesPreviewOverlay,
++    overlays,
++  });
++
++  const overlaySource = useMemo(
++    () =>
++      mergePreviewOverlaySources({
++        sources: [
++          getGuidePreviewOverlaySource({
++            guideId: activeGuide,
++          }),
++          activeScene
++            ? getBookmarkPreviewOverlaySource({
++                bookmarks: activeScene.bookmarks,
++                time: currentTime,
++                isVisible: showBookmarkNotes,
++              })
++            : {
++                definitions: [bookmarkNotesPreviewOverlay],
++                instances: [],
++              },
++        ],
++      }),
++    [activeGuide, activeScene, currentTime, showBookmarkNotes],
++  );
++
++  const overlayControls = useMemo(
++    () =>
++      overlaySource.definitions.map((overlay) =>
++        createPreviewOverlayControl({ overlay, overlays }),
++      ),
++    [overlaySource.definitions, overlays],
++  );
++
++  return (
++    <div
++      ref={workspaceRef}
++      className={workspaceAddons ? "native-responsive-workspace" : "size-full"}
++      data-workspace-layout={workspaceAddons ? layout : undefined}
++      data-workspace-view={view}
++    >
++      {workspaceAddons && (
++        <nav
++          className="native-workspace-navigation"
++          aria-label="剪辑工作区面板"
++        >
++          {views.map(([target, label]) => (
++            <button
++              type="button"
++              key={target}
++              aria-pressed={view === target}
++              onClick={() => openNativeWorkspaceView(target)}
++            >
++              {label}
++            </button>
++          ))}
++        </nav>
++      )}
++      <ResizablePanelGroup
++        direction="vertical"
++        className="size-full gap-[0.18rem] native-workspace-vertical"
++        onLayout={(sizes) => {
++          setPanel({
++            panel: "mainContent",
++            size: sizes[0] ?? panels.mainContent,
++          });
++          setPanel({
++            panel: "timeline",
++            size: sizes[1] ?? panels.timeline,
++          });
++        }}
++      >
++        <ResizablePanel
++          defaultSize={panels.mainContent}
++          minSize={30}
++          maxSize={85}
++          className="min-h-0 native-workspace-main"
++          hidden={!mainVisible}
++          inert={!mainVisible}
++          style={{
++            display: mainVisible ? undefined : "none",
++            flex: single ? "1 1 0" : undefined,
++          }}
++        >
++          <ResizablePanelGroup
++            direction="horizontal"
++            className="size-full gap-[0.19rem] px-3 native-workspace-horizontal"
++            onLayout={(sizes) => {
++              setPanel({ panel: "tools", size: sizes[0] ?? panels.tools });
++              setPanel({ panel: "preview", size: sizes[1] ?? panels.preview });
++              setPanel({
++                panel: "properties",
++                size: sizes[2] ?? panels.properties,
++              });
++            }}
++          >
++            <ResizablePanel
++              defaultSize={panels.tools}
++              minSize={15}
++              maxSize={40}
++              className="min-w-0 native-workspace-left"
++              hidden={!leftVisible}
++              inert={!leftVisible}
++              style={{
++                display: leftVisible ? undefined : "none",
++                flex: single ? "1 1 0" : compact ? "0 0 340px" : undefined,
++              }}
++            >
++              {workspaceAddons ? (
++                <WorkspacePanel side="left">
++                  <AssetsPanel />
++                </WorkspacePanel>
++              ) : (
++                <AssetsPanel />
++              )}
++            </ResizablePanel>
++
++            <ResizableHandle
++              withHandle
++              hidden={workspaceAddons && layout !== "wide"}
++              disabled={workspaceAddons && layout !== "wide"}
++              style={{
++                display:
++                  workspaceAddons && layout !== "wide" ? "none" : undefined,
++              }}
++            />
++
++            <ResizablePanel
++              defaultSize={panels.preview}
++              minSize={30}
++              data-native-core-panel={workspaceAddons ? undefined : true}
++              className="min-h-0 min-w-0 flex-1 native-workspace-center"
++              hidden={!previewVisible}
++              inert={!previewVisible}
++              style={{
++                display: previewVisible ? undefined : "none",
++                flex: single || compact ? "1 1 0" : undefined,
++              }}
++            >
++              {workspaceAddons ? (
++                <PreviewWorkspace>
++                  <PreviewPanel
++                    overlayControls={overlayControls}
++                    overlayInstances={overlaySource.instances}
++                    onOverlayVisibilityChange={setOverlayVisibility}
++                  />
++                </PreviewWorkspace>
++              ) : (
++                <PreviewPanel
++                  overlayControls={overlayControls}
++                  overlayInstances={overlaySource.instances}
++                  onOverlayVisibilityChange={setOverlayVisibility}
++                />
++              )}
++            </ResizablePanel>
++
++            <ResizableHandle
++              withHandle
++              hidden={workspaceAddons && layout !== "wide"}
++              disabled={workspaceAddons && layout !== "wide"}
++              style={{
++                display:
++                  workspaceAddons && layout !== "wide" ? "none" : undefined,
++              }}
++            />
++
++            <ResizablePanel
++              defaultSize={panels.properties}
++              minSize={15}
++              maxSize={40}
++              className="min-w-0 native-workspace-right"
++              hidden={!rightVisible}
++              inert={!rightVisible}
++              style={{
++                display: rightVisible ? undefined : "none",
++                flex: single ? "1 1 0" : compact ? "0 0 340px" : undefined,
++              }}
++            >
++              {workspaceAddons ? (
++                <WorkspacePanel side="right">
++                  <PropertiesPanel />
++                </WorkspacePanel>
++              ) : (
++                <PropertiesPanel />
++              )}
++            </ResizablePanel>
++          </ResizablePanelGroup>
++        </ResizablePanel>
++
++        <ResizableHandle
++          withHandle
++          hidden={single}
++          disabled={single}
++          style={{ display: single ? "none" : undefined }}
++        />
++
++        <ResizablePanel
++          defaultSize={panels.timeline}
++          minSize={15}
++          maxSize={70}
++          data-native-core-panel
++          className="min-h-0 px-3 pb-3 native-workspace-timeline"
++          hidden={!timelineVisible}
++          style={{
++            display: timelineVisible ? undefined : "none",
++            flex: single ? "1 1 0" : undefined,
++            overflow: single ? "auto" : undefined,
++          }}
++        >
++          <Timeline />
++        </ResizablePanel>
++      </ResizablePanelGroup>
++    </div>
++  );
+ }
 --- a/apps/web/src/embedded/frozen-export.ts
 +++ b/apps/web/src/embedded/frozen-export.ts
 @@ -3,13 +3,14 @@
@@ -4500,7 +4922,7 @@
 +}
 --- /dev/null
 +++ b/apps/web/src/embedded/native-host.ts
-@@ -0,0 +1,68 @@
+@@ -0,0 +1,75 @@
 +import type {NativeLifetime} from './native-lifecycle';
 +export type NativeTheme={mode:'light'|'dark';tokens:Record<string,string>;fontFamily:string;fontSize:string;density:string};
 +export type NativeOwner={groupId:string|null;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string};
@@ -4508,7 +4930,7 @@
 +export function nativeOwnerKey(owner:NativeOwner){return JSON.stringify([owner.groupId?["group",owner.groupId]:["account",owner.accountId],owner.projectId,owner.outputId,owner.sourceVersionId]);}
 +export type NativeHost={container:HTMLElement;portalContainer:HTMLElement;owner:NativeOwner;theme:NativeTheme;lifetime:NativeLifetime;disabled:boolean;visible?:boolean;workspaceAddons?:boolean;previewActive?:boolean;onImportActivity?:(pending:number)=>void;onDocumentChanged?:()=>void;readPreviewPlaying?:()=>boolean;onChanged:(event?:NativeContextEvent)=>void;onError:(message:string)=>void;importMedia:(file:File,options?:{signal?:AbortSignal})=>Promise<{mediaId:string}>};
 +let host:NativeHost|null=null;
-+export function installNativeHost(value:NativeHost){if(host)throw Error('旧剪辑实例尚未销毁。');contextController.abort();contextController=new AbortController();contextEpoch=0;lastNativeContext={sceneId:null,selectedElements:[],documentChanged:false};workspacePanels='assets:director';value.previewActive=false;host=value;return()=>{if(host===value){contextController.abort();workspaceListeners.clear();host=null;}};}
++export function installNativeHost(value:NativeHost){if(host)throw Error('旧剪辑实例尚未销毁。');contextController.abort();contextController=new AbortController();contextEpoch=0;lastNativeContext={sceneId:null,selectedElements:[],documentChanged:false};workspacePanels='assets:director';workspaceView='preview';previewReturnView=null;value.previewActive=false;host=value;return()=>{if(host===value){contextController.abort();workspaceListeners.clear();host=null;}};}
 +export function nativeHost(){if(!host)throw Error('剪辑组件尚未挂载。');return host;}
 +export function currentNativeHost(){return host;}
 +export function nativeChanged(){if(host&&!host.lifetime.signal.aborted){if(host.onDocumentChanged)host.onDocumentChanged();else invalidateNativeContext({...lastNativeContext,documentChanged:true});}}
@@ -4549,6 +4971,12 @@
 +// T1274: 页签只属于宿主布局；不生成工程修改、选区epoch或持久化状态。
 +export type NativeAddonPanel='assets'|'transcript'|'director'|'properties';
 +let workspacePanels='assets:director';
++export type NativeWorkspaceView='left'|'preview'|'timeline'|'right';
++let workspaceView:NativeWorkspaceView='preview';
++let previewReturnView:NativeWorkspaceView|null=null;
++export function nativeWorkspaceViewSnapshot(){return workspaceView;}
++export function openNativeWorkspaceView(view:NativeWorkspaceView){nativeHost().lifetime.assertCurrent();if(workspaceView===view)return;workspaceView=view;for(const listener of workspaceListeners)listener();}
++export function syncNativePreviewWorkspace(active:boolean){if(active&&previewReturnView===null){previewReturnView=workspaceView;openNativeWorkspaceView('preview');}else if(!active&&previewReturnView!==null){const restore=previewReturnView;previewReturnView=null;openNativeWorkspaceView(restore);}}
 +const workspaceListeners=new Set<()=>void>();
 +export function nativeWorkspaceSnapshot(){return workspacePanels;}
 +export function subscribeNativeWorkspace(listener:()=>void){nativeHost().lifetime.assertCurrent();workspaceListeners.add(listener);return()=>{workspaceListeners.delete(listener);};}
@@ -4560,7 +4988,8 @@
 + if(panel!=='assets'&&panel!=='transcript'&&panel!=='director'&&panel!=='properties')throw Error('此工作区面板不存在。');
 + const [left,right]=workspacePanels.split(':');
 + const next=panel==='assets'||panel==='transcript'?`${panel}:${right}`:`${left}:${panel}`;
-+ if(next!==workspacePanels){workspacePanels=next;for(const listener of workspaceListeners)listener();}
++ const view=panel==='assets'||panel==='transcript'?'left':'right';
++ if(next!==workspacePanels||workspaceView!==view){workspacePanels=next;workspaceView=view;for(const listener of workspaceListeners)listener();}
 + return {panel};
 +}
 +export function syncNativeInteractivity(h:NativeHost,exportLocked:boolean){
@@ -4630,7 +5059,7 @@
 +export const useNativeVisibility=()=>useContext(NativeVisibilityContext);
 --- /dev/null
 +++ b/apps/web/src/embedded/native.css
-@@ -0,0 +1,234 @@
+@@ -0,0 +1,255 @@
 +@import "tailwindcss" source(none);
 +/* Only native source is scanned; generated bundles must not add utilities on rebuild. */
 +@source "../";
@@ -4862,6 +5291,27 @@
 +.native-workspace-preview-projection[hidden]{display:none;}
 +.native-workspace-preview-projection slot{display:block;height:100%;min-height:0;}
 +.native-workspace-preview-projection ::slotted(*){display:block;height:100%;min-height:0;min-width:0;}
++
++.native-responsive-workspace{height:100%;min-height:0;min-width:0;display:flex;flex-direction:column;}
++.native-workspace-navigation{display:flex;flex-shrink:0;gap:.25rem;padding:.25rem .75rem .5rem;}
++.native-workspace-navigation button{white-space:nowrap;padding:.5rem .65rem;border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--muted-foreground);}
++.native-workspace-navigation button[aria-pressed="true"]{color:var(--primary);background:var(--secondary);font-weight:600;}
++.native-workspace-navigation button:focus-visible{outline:2px solid var(--ring);outline-offset:2px;}
++[data-workspace-layout="wide"] .native-workspace-navigation{display:none;}
++.native-responsive-workspace [hidden]{display:none;}
++.native-responsive-workspace>.native-workspace-vertical{flex:1;min-height:0;}
++.native-workspace-tabs button{white-space:nowrap;}
++.native-workspace-core-content{display:flex;flex-direction:column;}
++.native-workspace-core-body{flex:1;min-height:0;min-width:0;overflow:hidden;}
++.native-workspace-materials{flex-shrink:0;min-width:0;}
++.native-workspace-materials slot{display:block;}
++.native-workspace-materials ::slotted(*){display:block;min-width:0;}
++[data-workspace-layout="single"] .native-workspace-navigation{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding-inline:.5rem;gap:.25rem;}
++[data-workspace-layout="single"] .native-workspace-navigation button{padding:.45rem .25rem;}
++[data-workspace-layout="single"] .native-workspace-horizontal{padding-inline:.5rem;}
++[data-workspace-layout="single"] .native-workspace-main,[data-workspace-layout="single"] .native-workspace-timeline,[data-workspace-layout="single"] .native-workspace-horizontal>[data-panel]{min-width:0;min-height:0;}
++[data-workspace-layout="single"] .native-workspace-timeline{padding-inline:.5rem;}
++[data-workspace-layout="single"] .native-workspace-timeline>div{min-width:560px;}
 +
 +.reference-media-panel{container-type:inline-size;}
 +@container(max-width:260px){.reference-media-secondary{display:none;}}
@@ -5191,9 +5641,13 @@
 +}
 --- /dev/null
 +++ b/apps/web/src/embedded/preview-workspace.tsx
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,86 @@
 +import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-+import { nativeHost, syncNativeInteractivity } from "./native-host";
++import {
++  nativeHost,
++  syncNativeInteractivity,
++  syncNativePreviewWorkspace,
++} from "./native-host";
 +import { isExportLocked } from "./edit-lock";
 +/** 只投影宿主明确启用的候选DOM；不选择候选、不改变工程或播放状态。 */
 +export function PreviewWorkspace({ children }: { children: ReactNode }) {
@@ -5227,6 +5681,7 @@
 +          !element.hasAttribute("hidden") &&
 +          element.childElementCount > 0,
 +      );
++      if (host.previewActive !== next) syncNativePreviewWorkspace(next);
 +      host.previewActive = next;
 +      syncNativeInteractivity(host, isExportLocked());
 +      setActive(next);
@@ -5328,17 +5783,116 @@
 +export const RemoveScroll=Object.assign(Scroll,{classNames:{fullWidth:'native-scroll-full-width',zeroRight:'native-scroll-zero-right'}});
 --- /dev/null
 +++ b/apps/web/src/embedded/workspace-panel.tsx
-@@ -0,0 +1,11 @@
-+import {useLayoutEffect,useSyncExternalStore,type ReactNode} from 'react';
-+import {nativeWorkspaceSnapshot,subscribeNativeWorkspace,openNativeAddon,nativeHost,syncNativeInteractivity,type NativeAddonPanel} from './native-host';
-+import {isExportLocked} from './edit-lock';
-+export function WorkspacePanel({side,children}:{side:'left'|'right';children:ReactNode}){
-+ const state=useSyncExternalStore(subscribeNativeWorkspace,nativeWorkspaceSnapshot,nativeWorkspaceSnapshot);
-+ useLayoutEffect(()=>syncNativeInteractivity(nativeHost(),isExportLocked()),[state]);
-+ const selected=state.split(':')[side==='left'?0:1];
-+ const core:NativeAddonPanel=side==='left'?'assets':'properties',addon:NativeAddonPanel=side==='left'?'transcript':'director';
-+ const panels=side==='left'?[[core,'素材'],[addon,'转录']]:[[addon,'编导'],[core,'属性']];
-+ return <div className="native-workspace-panel"><div role="tablist" aria-label={side==='left'?'素材与转录':'编导与属性'} className="native-workspace-tabs">{panels.map(([panel,label])=><button key={panel} id={`native-tab-${panel}`} type="button" role="tab" aria-selected={selected===panel} aria-controls={`native-panel-${panel}`} tabIndex={selected===panel?0:-1} onClick={()=>openNativeAddon({panel})} onKeyDown={event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight'&&event.key!=='Home'&&event.key!=='End')return;event.preventDefault();const next=event.key==='Home'?panels[0][0]:event.key==='End'?panels[1][0]:panels.find(([id])=>id!==selected)![0];openNativeAddon({panel:next});event.currentTarget.parentElement?.querySelector<HTMLButtonElement>(`#native-tab-${next}`)?.focus();}}>{label}</button>)}</div><div id={`native-panel-${core}`} role="tabpanel" aria-labelledby={`native-tab-${core}`} data-native-core-panel hidden={selected!==core} inert={selected!==core} className="native-workspace-content">{children}</div><div id={`native-panel-${addon}`} role="tabpanel" aria-labelledby={`native-tab-${addon}`} hidden={selected!==addon} inert={selected!==addon} className="native-workspace-content native-workspace-addon"><slot name={`creatoros-${addon}`}/></div></div>;
+@@ -0,0 +1,110 @@
++import { useLayoutEffect, useSyncExternalStore, type ReactNode } from "react";
++import {
++  nativeWorkspaceSnapshot,
++  subscribeNativeWorkspace,
++  openNativeAddon,
++  nativeHost,
++  syncNativeInteractivity,
++  type NativeAddonPanel,
++} from "./native-host";
++import { isExportLocked } from "./edit-lock";
++export function WorkspacePanel({
++  side,
++  children,
++}: {
++  side: "left" | "right";
++  children: ReactNode;
++}) {
++  const state = useSyncExternalStore(
++    subscribeNativeWorkspace,
++    nativeWorkspaceSnapshot,
++    nativeWorkspaceSnapshot,
++  );
++  useLayoutEffect(
++    () => syncNativeInteractivity(nativeHost(), isExportLocked()),
++    [state],
++  );
++  const selected = state.split(":")[side === "left" ? 0 : 1];
++  const core: NativeAddonPanel = side === "left" ? "assets" : "properties",
++    addon: NativeAddonPanel = side === "left" ? "transcript" : "director";
++  const panels =
++    side === "left"
++      ? [
++          [core, "素材"],
++          [addon, "转录"],
++        ]
++      : [
++          [addon, "编导"],
++          [core, "属性"],
++        ];
++  return (
++    <div className="native-workspace-panel">
++      <div
++        role="tablist"
++        aria-label={side === "left" ? "素材与转录" : "编导与属性"}
++        className="native-workspace-tabs"
++      >
++        {panels.map(([panel, label]) => (
++          <button
++            key={panel}
++            id={`native-tab-${panel}`}
++            type="button"
++            role="tab"
++            aria-selected={selected === panel}
++            aria-controls={`native-panel-${panel}`}
++            tabIndex={selected === panel ? 0 : -1}
++            onClick={() => openNativeAddon({ panel })}
++            onKeyDown={(event) => {
++              if (
++                event.key !== "ArrowLeft" &&
++                event.key !== "ArrowRight" &&
++                event.key !== "Home" &&
++                event.key !== "End"
++              )
++                return;
++              event.preventDefault();
++              const next =
++                event.key === "Home"
++                  ? panels[0][0]
++                  : event.key === "End"
++                    ? panels[1][0]
++                    : panels.find(([id]) => id !== selected)![0];
++              openNativeAddon({ panel: next });
++              event.currentTarget.parentElement
++                ?.querySelector<HTMLButtonElement>(`#native-tab-${next}`)
++                ?.focus();
++            }}
++          >
++            {label}
++          </button>
++        ))}
++      </div>
++      <div
++        id={`native-panel-${core}`}
++        role="tabpanel"
++        aria-labelledby={`native-tab-${core}`}
++        data-native-core-panel
++        hidden={selected !== core}
++        inert={selected !== core}
++        className="native-workspace-content native-workspace-core-content"
++      >
++        {side === "left" && (
++          <div className="native-workspace-materials">
++            <slot name="creatoros-materials" />
++          </div>
++        )}
++        <div className="native-workspace-core-body">{children}</div>
++      </div>
++      <div
++        id={`native-panel-${addon}`}
++        role="tabpanel"
++        aria-labelledby={`native-tab-${addon}`}
++        hidden={selected !== addon}
++        inert={selected !== addon}
++        className="native-workspace-content native-workspace-addon"
++      >
++        <slot name={`creatoros-${addon}`} />
++      </div>
++    </div>
++  );
 +}
 --- a/apps/web/src/export/index.ts
 +++ b/apps/web/src/export/index.ts

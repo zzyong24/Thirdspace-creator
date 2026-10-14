@@ -1,3 +1,13 @@
+# T-1274 响应式工作区与素材槽位
+
+2026-10-14：按编辑器实际容器宽度布局：小于700px单面板，四个按钮依次为素材/转录、画面、时间轴、编导/属性；700–1099px画面和时间轴保持，按需展示一侧340px面板；1100px及以上沿原可调三栏。单面板时间轴保原控件和水平滚动，不缩成不可读竖列。所有Core、Resizable、portal和宿主草稿保持同一实例。
+
+素材面板顶部新增creatoros-materials槽位，data-creatoros-addon沿原键盘归属。候选active出现记录原面板并转画面，移除后恢复原面板；宿主下一动画帧恢复原触发按钮焦点。未改正式工程owner、数据合同、控制器或private exact cache源码。
+
+类型、原71测试341断言、完整AST、正式构建和58项DOM夹具通过；715源码标准patch以F0复原、归档再构建七份产物与双目录逐字节一致。冻结安装989包且锁文件未改。夹具ResizeObserver环境失败原日志保留。未执行本子候选真实宿主视觉/GPU/MP4/安装；由ROOT继续真实UI和独立任务走查，不把DOM夹具签为像素或完整验收。
+
+证据见verification/t1274-responsive/verification-summary.json。下面的旧证据原样保留。
+
 本轮T-1274中心投影、原工程改名与private exact export源帧已归档。执行rebuild-native.sh verify包含新canvas多节点回归；DOM为显式fixture，最终真实GPU/MP4/UI采纳待ROOT。完整证据见VERIFICATION.md与verification/t1274-preview-center。
 
 # T-1274 已分离原声预览兼容窄修

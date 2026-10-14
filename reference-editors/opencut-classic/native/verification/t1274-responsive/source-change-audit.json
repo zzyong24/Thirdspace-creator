@@ -1,0 +1,15 @@
+{
+  "changedSourceMembers": [
+    "./NATIVE_REBUILD_CONSISTENCY.json",
+    "./README.creatoros.md",
+    "./apps/web/scripts/build-native.mjs",
+    "./apps/web/src/embedded/editor-layout.tsx",
+    "./apps/web/src/embedded/native-host.ts",
+    "./apps/web/src/embedded/native.css",
+    "./apps/web/src/embedded/preview-workspace.tsx",
+    "./apps/web/src/embedded/workspace-panel.tsx"
+  ],
+  "unchangedMembers": 707,
+  "privateExactCacheBytesUnchanged": true,
+  "nativeControllerBytesUnchanged": true
+}

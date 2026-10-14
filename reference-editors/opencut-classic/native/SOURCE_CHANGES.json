@@ -144,5 +144,15 @@
     "apps/web/src/services/renderer/nodes/sticker-node.ts",
     "README.creatoros.md",
     "NATIVE_REBUILD_CONSISTENCY.json"
+  ],
+  "t1274ResponsiveChangedFiles": [
+    "apps/web/src/embedded/editor-layout.tsx",
+    "apps/web/src/embedded/workspace-panel.tsx",
+    "apps/web/src/embedded/preview-workspace.tsx",
+    "apps/web/src/embedded/native-host.ts",
+    "apps/web/scripts/build-native.mjs",
+    "apps/web/src/embedded/native.css",
+    "README.creatoros.md",
+    "NATIVE_REBUILD_CONSISTENCY.json"
   ]
 }
