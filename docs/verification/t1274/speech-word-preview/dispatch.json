@@ -1,0 +1,321 @@
+{
+  "events": [
+    {
+      "id": "accountGroups.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 100
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-721"
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-721"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.get",
+      "input": {}
+    },
+    {
+      "id": "ai.conversations.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 1,
+          "scope": "project:project-94c2affe-710"
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "materialLinks.list",
+      "input": {
+        "query": {
+          "projectId": "project-94c2affe-710",
+          "page": 1,
+          "pageSize": 100
+        }
+      }
+    },
+    {
+      "id": "outputs.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-721"
+        }
+      }
+    },
+    {
+      "id": "materialLinks.list",
+      "input": {
+        "query": {
+          "projectId": "project-94c2affe-710",
+          "page": 1,
+          "pageSize": 100
+        }
+      }
+    },
+    {
+      "id": "outputs.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-721"
+        }
+      }
+    },
+    {
+      "id": "assets.get",
+      "input": {
+        "params": {
+          "assetId": "asset-94c2affe-729"
+        }
+      }
+    },
+    {
+      "id": "assets.fileDownloadUrl",
+      "input": {
+        "params": {
+          "assetId": "asset-94c2affe-729",
+          "assetFileId": "afile-94c2affe-733"
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-721"
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.script.read",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-721"
+        },
+        "body": {
+          "target": {
+            "schemaVersion": 1,
+            "projectId": "project-94c2affe-710",
+            "outputId": "output-94c2affe-721",
+            "owner": "production",
+            "contentType": "video",
+            "savedBase": {
+              "kind": "production",
+              "productionId": "production-94c2affe-736",
+              "revision": 3
+            },
+            "documentDigest": "sha256:64a4b08639734f68861b34705bd3188eb48089a6d84b8be9a954d328aeec4319",
+            "selection": {
+              "kind": "native_scene",
+              "sceneId": "07688549-16c6-45f7-8689-3e71ba3e5d56",
+              "elementRefs": [],
+              "playheadTick": 0,
+              "contextEpoch": 3,
+              "editorGeneration": "1:066048f1-5a16-4039-813a-3a69072814d6"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.script.propose",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-721"
+        },
+        "body": {
+          "target": {
+            "schemaVersion": 1,
+            "projectId": "project-94c2affe-710",
+            "outputId": "output-94c2affe-721",
+            "documentDigest": "sha256:64a4b08639734f68861b34705bd3188eb48089a6d84b8be9a954d328aeec4319",
+            "owner": "production",
+            "contentType": "video",
+            "savedBase": {
+              "kind": "production",
+              "productionId": "production-94c2affe-736",
+              "revision": 3
+            },
+            "selection": {
+              "kind": "native_scene",
+              "sceneId": "07688549-16c6-45f7-8689-3e71ba3e5d56",
+              "elementRefs": [],
+              "playheadTick": 0,
+              "contextEpoch": 3,
+              "editorGeneration": "1:066048f1-5a16-4039-813a-3a69072814d6"
+            }
+          },
+          "input": {
+            "base": {
+              "kind": "production",
+              "productionId": "production-94c2affe-736",
+              "revision": 3
+            },
+            "baseDigest": "sha256:64a4b08639734f68861b34705bd3188eb48089a6d84b8be9a954d328aeec4319",
+            "summary": "按当前文字修改剪辑",
+            "candidate": {
+              "kind": "markdown_timeline",
+              "owner": "production",
+              "sceneId": "07688549-16c6-45f7-8689-3e71ba3e5d56",
+              "markdown": "<!-- markdown-state:format:1 -->\n<!-- markdown-state:stamp:sha256:a70a93f0191d18a645976c8ef9512a7baef25b16b482d8e06dd6f56a42a41aa4 -->\n<!-- markdown-state:lib-stamp:sha256:bbd67b4dfdad10f9004102beb40c0f8aba8f9bcd4f88c890980869137b95beb2 -->\n<!-- markdown-state:timeline:07688549-16c6-45f7-8689-3e71ba3e5d56 -->\n<!-- markdown-state:body -->\n\n<!-- t=120000 ticks/s；silence仅表示未转录源区间，不是声学静音，缩短须沿既有听审。 -->\n## V1 <!-- markdown-state:track:5abf3852-7477-4278-ae2c-8bc2e950b0a3 -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22V1%22%2C%22trackId%22%3A%225abf3852-7477-4278-ae2c-8bc2e950b0a3%22%2C%22type%22%3A%22video%22%2C%22editableElementIds%22%3A%5B%2230f46d84-e5ef-4755-ba65-68e187056e9f%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n### asset-94c2affe-729 <!-- markdown-state:source:90c9f206-a15b-4bd9-8427-f391569cf5a9:asset-94c2affe-729 -->\n[c1] 984000t source=0..984000t rate=1 <!-- markdown-state:item:30f46d84-e5ef-4755-ba65-68e187056e9f -->\n~~[s1] 今天~~\n[s2] 我们\n[s3] 和\n[s4] 对\n[s5] 视\n[s6] 频\n[s7] 剪\n[s8] 辑\n[silence=151200t] <!-- markdown-state:range:290400..441600 -->\n[s9] 保\n[s10] 留\n[s11] 清楚\n[s12] 完\n[s13] 整\n[s14] 的\n[s15] 内\n[s16] 容,\n[s17] 再\n[s18] 保\n[s19] 存\n[s20] 这\n[s21] 次\n[s22] 修\n[s23] 改\n[silence=19200t] <!-- markdown-state:range:964800..984000 -->\n",
+              "declaredTrackIds": [
+                "5abf3852-7477-4278-ae2c-8bc2e950b0a3"
+              ],
+              "stateStamp": "sha256:a70a93f0191d18a645976c8ef9512a7baef25b16b482d8e06dd6f56a42a41aa4",
+              "libraryStamp": "sha256:bbd67b4dfdad10f9004102beb40c0f8aba8f9bcd4f88c890980869137b95beb2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-721"
+        }
+      }
+    }
+  ],
+  "blockedWrites": []
+}

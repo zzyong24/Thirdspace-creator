@@ -1,0 +1,14 @@
+{
+  "source": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1274-speech-uoexlbx6/media/speech-precise.mov",
+  "sourceSHA256": "d412b4a9cbe738fb50738affc8a1ec7088174f429c3760866ab515fe00898535",
+  "granularity": "word",
+  "firstTokenText": "今天",
+  "firstTokenEndSourceTicks": 5760,
+  "sourceTimebase": {
+    "num": 1,
+    "den": 16000
+  },
+  "expectedTrimSec": 0.36,
+  "expectedDurationSec": 7.84,
+  "fullDecodeExit": 0
+}

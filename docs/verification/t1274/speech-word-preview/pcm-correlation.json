@@ -1,0 +1,10 @@
+{
+  "method": "同原文件与实际候选均由ffmpeg解码到16kHz mono float PCM，候选0.2至2.2秒窗口做归一化互相关；不是人工听审",
+  "sourceSamples": 131200,
+  "candidateSamples": 126688,
+  "matchedSourceMinusOutputSec": 0.312125,
+  "correlation": 0.9958592210808304,
+  "expectedTrimSec": 0.36,
+  "observedLeadingDelaySec": 0.047875,
+  "limitation": "编码输出含AAC首尾样本扩展；本轮不宣称首尾样本精确对齐，归T1277既有核对。"
+}
