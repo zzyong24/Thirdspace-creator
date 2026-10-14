@@ -1,4 +1,5 @@
 import "server-only";
+import {AsyncLocalStorage} from "node:async_hooks";
 import {randomUUID} from "node:crypto";
 import {PNG} from "pngjs";
 import type {Db} from "@creatoros/backend";
@@ -6,6 +7,7 @@ import {BrowserProfileBusyError,createExecutionBrowserProfileLeaseService,create
  createWorkbenchBrowserAdmissionService} from "@creatoros/backend/modules/execution";
 import type {ChatProductionCompositionDeps} from "@creatoros/backend/modules/ai-runtime";
 import {WORKBENCH_SCREENSHOT_MAX_BYTES,isCanonicalBase64,workbenchCapabilitySchema,workbenchHostCallSchema,workbenchResultSchema,type WorkbenchResult} from "@creatoros/contract/agent-workbench";
+import {completionWaitMs,MIN_EXECUTION_TIMEOUT_MS} from "@creatoros/contract/timeout-policy";
 import type {ExecutionRef} from "@creatoros/contract/execution-worker";
 import {BrowserSocketError,exchangeBrowserSocket,resolveManagedBrowserProfile,type ManagedBrowserMode} from "./workbench-browser-client";
 
@@ -128,6 +130,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
  const trustedSocketPath=socketPath;
  const leases=createExecutionLeaseService(db,{now:options.now});
  const profiles=createExecutionBrowserProfileLeaseService(db,{now:options.now});
+ const callSignals=new AsyncLocalStorage<AbortSignal>();
  const sessions=new Map<string,Session>(),held=new Map<string,Session>();
  let timer:NodeJS.Timeout|undefined,reconciling:Promise<void>|undefined,disposed=false;
  function scheduleReconciliation(){
@@ -154,22 +157,32 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    const session=held.get(scope.leaseId);
    if(!session||!sameRef(session.ref,scope.ref)||session.receipt.profileKey!==scope.profileKey)return false;
    try {const operationId=randomUUID();const proof=await exchangeBrowserSocket(socketPath,{operationId,
-    admission:session.admission,identityMode:session.mode,action:{kind:"stop_proof"}},operationId) as Record<string,unknown>;
+    admission:session.admission,identityMode:session.mode,action:{kind:"stop_proof"}},operationId,callSignals.getStore()) as Record<string,unknown>;
     return proof.profileStopped===true&&proof.profileKey===scope.profileKey&&proof.profileLeaseId===scope.leaseId;
    }catch{return false;}
   },
  });
  async function recoverStoppedProfile(profileKey:string):Promise<boolean>{
-  const old=await profiles.getRecoverableWorkerProfile(profileKey);
-  if(!old)return false;
+  const controller=new AbortController(),signal=controller.signal;
+  // 三次完整RPC(两种profile lookup与cleanup)及原DB前/后核对/释放；不续原30秒admission。
+  const rpcMs=completionWaitMs([MIN_EXECUTION_TIMEOUT_MS,125_000,MIN_EXECUTION_TIMEOUT_MS],60_000);
+  const budgetMs=completionWaitMs([MIN_EXECUTION_TIMEOUT_MS,rpcMs,rpcMs,rpcMs,MIN_EXECUTION_TIMEOUT_MS,MIN_EXECUTION_TIMEOUT_MS],60_000);
+  const timer=setTimeout(()=>controller.abort(Error("原profile回收观察期限耗尽")),budgetMs);
+  const observing=<T>(operation:()=>Promise<T>,ms=MIN_EXECUTION_TIMEOUT_MS):Promise<T>=>{
+   signal.throwIfAborted();return new Promise<T>((resolve,reject)=>{let settled=false;const finish=(run:()=>void)=>{if(settled)return;settled=true;clearTimeout(waitTimer);signal.removeEventListener("abort",abort);run();};const abort=()=>finish(()=>reject(signal.reason));const waitTimer=setTimeout(()=>finish(()=>reject(Error("profile回收单次观察期限耗尽"))),ms);signal.addEventListener("abort",abort,{once:true});Promise.resolve().then(()=>{signal.throwIfAborted();return operation();}).then(value=>finish(()=>resolve(value)),error=>finish(()=>reject(error)));});
+  };
+  try{
+  const old=await observing(()=>profiles.getRecoverableWorkerProfile(profileKey));
+  if(!old||signal.aborted)return false;
   let mode:ManagedBrowserMode|undefined;
   for(const choice of ["primary","anonymous"] as const){
+   if(signal.aborted)return false;
    try {const location=await resolveManagedBrowserProfile(trustedSocketPath,{userId:old.userId,
-    accountId:old.accountId,taskId:old.ref.executionTaskId},choice,AbortSignal.timeout(10_000));
+    accountId:old.accountId,taskId:old.ref.executionTaskId},choice,signal);
     if(location.profileKey===old.profileKey){mode=choice;break;}
    }catch {/* 不能解析旧物理目录时保留占用。 */}
   }
-  if(!mode)return false;
+  if(!mode||signal.aborted)return false;
   const operationId=randomUUID();
   const nativeAdmission:NativeAdmission={userId:old.userId,accountId:old.accountId,
    taskId:old.ref.executionTaskId,attempt:old.ref.attempt,fenceToken:old.ref.fenceToken,
@@ -177,15 +190,16 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    laneName:"recovery",expiresAtMs:Date.now()+30_000};
   let proof:Record<string,unknown>;
   try {proof=await exchangeBrowserSocket(trustedSocketPath,{operationId,admission:nativeAdmission,
-   identityMode:mode,action:{kind:"cleanup"}},operationId,AbortSignal.timeout(15_000)) as Record<string,unknown>;
+   identityMode:mode,action:{kind:"cleanup"}},operationId,signal) as Record<string,unknown>;
   }catch{return false;}
-  if(proof?.profileStopped!==true||proof.profileKey!==old.profileKey||proof.profileLeaseId!==old.leaseId)return false;
-  const fresh=await profiles.getRecoverableWorkerProfile(profileKey);
-  if(!fresh||fresh.leaseId!==old.leaseId||!sameRef(fresh.ref,old.ref))return false;
-  try {const released=await profiles.releaseAfterWorkerStopped(old.ref,old.leaseId);
+  if(signal.aborted||proof?.profileStopped!==true||proof.profileKey!==old.profileKey||proof.profileLeaseId!==old.leaseId)return false;
+  const fresh=await observing(()=>profiles.getRecoverableWorkerProfile(profileKey));
+  if(signal.aborted||!fresh||fresh.leaseId!==old.leaseId||!sameRef(fresh.ref,old.ref))return false;
+  try {const released=await observing(()=>profiles.releaseAfterWorkerStopped(old.ref,old.leaseId));
    if(released)forgetLease(old.leaseId);
    return released;}
   catch {return false;}
+  }finally{clearTimeout(timer);}
  }
  async function reconcileStoppedProfiles():Promise<void>{
   if(reconciling)return reconciling;
@@ -208,6 +222,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    await reconciling?.catch(()=>{});
   },
   async dispatch(rawCall,{signal,onProgress}){
+   return callSignals.run(signal,async()=>{
    signal.throwIfAborted();const call=workbenchHostCallSchema.parse(rawCall);
    const name=call.invocation.name as BrowserTool;
    if(!browserTools.includes(name))return failed(call.context.operationId,"BROWSER_CAPABILITY_UNAVAILABLE");
@@ -366,6 +381,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
     const code=error&&typeof error==="object"&&"code" in error?String((error as {code:unknown}).code):"BROWSER_ADMISSION_FAILED";
     return failed(call.context.operationId,code);
    }
+   });
   },
  };
 }

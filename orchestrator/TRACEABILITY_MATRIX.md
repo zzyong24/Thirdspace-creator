@@ -205,3 +205,16 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | FR-AW-07 | T-1009/1011/1013 | 产物、交互、双端；AC-AW-02/06/07/09 | PLANNED |
 
 规格及AC完整编号见 [SPEC](../docs/features/t1003-agent-workbench.md)。上述 API/测试为待实现职责，不是已通过证据。
+
+## T1274 / T1276 当前剪辑实现（PLANNED）
+
+| 需求 | 页面/API | 测试 | 状态 |
+|---|---|---|---|
+| FR-1274-01 | PAGE-1274-WORKSPACE, API-1274-SCRIPT | TEST-1274-PUBLIC, TEST-1274-JOURNEY | PLANNED |
+| FR-1274-02 | PAGE-1274-WORKSPACE | TEST-1274-JOURNEY | PLANNED |
+| FR-1274-03 | PAGE-1274-WORKSPACE | TEST-1274-JOURNEY | PLANNED |
+| FR-1274-04 | API-1274-SCRIPT | TEST-1274-PROTECTION, TEST-1274-JOURNEY | PLANNED |
+| FR-1276-01 | API-1276-ORIGINAL-SOURCE | TEST-1276-GROUP-SOURCE | PLANNED |
+| FR-1276-02 | API-1276-ORIGINAL-SOURCE | TEST-1276-GROUP-SOURCE | PLANNED |
+
+完整旅程未验时保留PLANNED；来源事务恢复及候选完整媒体仅属各自实际证据，不扩成全范围PASS。

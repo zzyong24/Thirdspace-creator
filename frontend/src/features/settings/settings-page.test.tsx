@@ -30,7 +30,7 @@
 
 import * as React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
 // Stub `next/link` so we can assert href values without the Next.js
@@ -55,6 +55,7 @@ vi.mock("next/link", () => ({
 // (Settings module Step 5). Stub both so the structural render runs
 // without a Next router context or a real HTTP transport.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
   useRouter: () => ({
     refresh: vi.fn(),
     push: vi.fn(),
@@ -67,6 +68,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/contract-client", () => ({
   client: {
     getReportingStatus: vi.fn().mockResolvedValue({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
+    getPreferences: vi.fn().mockResolvedValue({assistantExecutionEngine:'pi'}),
     patchPreferences: vi.fn().mockResolvedValue({}),
     putModel: vi.fn().mockResolvedValue({}),
     putChannelModelCredential: vi.fn().mockResolvedValue({}),
@@ -103,6 +105,7 @@ async function renderSettings(overrides: Partial<SettingsPageProps> = {}) {
 }
 
 describe("SettingsPage", () => {
+  beforeEach(async()=>{const {loadAssistantEngine}=await import('@/features/copilot/assistant-engine');await loadAssistantEngine(true);});
   afterEach(() => {
     cleanup();
   });
@@ -151,6 +154,14 @@ describe("SettingsPage", () => {
     expect(serialized).not.toContain("api.omnihi.ai");
     expect(serialized).toContain("MiniMax M3");
     expect(serialized).toContain("managed-ai-credits");
+  });
+
+  it('T-1238只保留本次公开用户服务的opaque映射，媒体可合法配Key且未知/受管ID仍不下发',async()=>{
+    const {sanitizeModelAuthorityForClient}=await import('./settings-page');
+    const capability=(kind:'transcribe.audio'|'video.generate'|'image.generate',serviceId:string)=>({capability:kind,authority:'channel' as const,serviceId,serviceName:'内部实现名',provider:'internal-provider',modelName:'已保存媒体模型',baseUrl:'https://internal.invalid/v1',hasSecret:false});
+    const projected=sanitizeModelAuthorityForClient({authority:'channel',outcome:'configured',action:'原能力',capabilities:{'transcribe.audio':capability('transcribe.audio','public-media-service'),'video.generate':capability('video.generate','not-public'),'image.generate':capability('image.generate','managed-internal')},services:[{serviceId:'public-media-service',serviceName:'内部实现名',hasSecret:false,credentialSource:'user_input',portalUrl:null,purchaseUrl:null,rechargeUrl:null,helpUrl:null},{serviceId:'managed-internal',serviceName:'受管实现名',hasSecret:true,credentialSource:'activation_managed',portalUrl:null,purchaseUrl:null,rechargeUrl:null,helpUrl:null}]});
+    expect(projected?.capabilities?.['transcribe.audio']?.serviceId).toBe('public-media-service');expect(projected?.capabilities?.['video.generate']?.serviceId).toBeNull();expect(projected?.capabilities?.['image.generate']?.serviceId).toBeNull();
+    expect(projected?.capabilities?.['transcribe.audio']).toMatchObject({serviceName:null,provider:null,baseUrl:null});const serialized=JSON.stringify(projected);expect(serialized).not.toContain('内部实现名');expect(serialized).not.toContain('internal-provider');expect(serialized).not.toContain('internal.invalid');expect(serialized).not.toContain('managed-internal');
   });
 
   it("[T-679] 受管语音转文字只向页面投影业务名称，不暴露实现模型", async () => {

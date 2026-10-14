@@ -1,3 +1,4 @@
+import {graphicManualVersionBody,graphicAssistedVersionBody} from '../resources/work-candidate-adoption';
 import { z } from "zod";
 import { defineEndpoint } from "../endpoint-definition";
 import { id, platformId } from "../primitives";
@@ -42,11 +43,7 @@ export const graphicPostsOperations = {
     method: "POST",
     path: "/outputs/:outputId/graphic-post/versions",
     params: outputParams,
-    body: z.object({
-      expectedCurrentVersionId: id,
-      document: graphicPostDocument,
-      clientRequestId: requestId,
-    }).strict(),
+    body: z.union([graphicManualVersionBody,graphicAssistedVersionBody]),
     response: graphicPostWriteResult,
     fr: ["FR-GRAPHIC-POST-EDIT"],
   }),

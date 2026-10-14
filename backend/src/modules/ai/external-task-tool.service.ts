@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import { and, asc, eq, aiConversations, aiTasks, executionCalls, executionTasks, type Db } from "@creatoros/backend";
-import { agenticToolOutcomeSchema, chatWorkerInputSchema, externalChatStartSchema, externalTaskToolCallSchema, externalTaskToolListSchema, externalTaskToolResultSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { externalToolInputProofSchema, agenticToolOutcomeSchema, chatWorkerInputSchema, externalChatStartSchema, externalTaskToolCallSchema, externalTaskToolListSchema, externalTaskToolResultSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import type { ChatBackendTool } from "../execution/execution-chat-tool-ports.service";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { ConflictError, ExecutionBudgetError } from "../execution/execution.errors";
@@ -10,6 +10,8 @@ import { chatInputDigest } from "./chat-turn-submission.service";
 import {workspaceFilter} from "../../workspace-scope";
 import {isAssistantEngineToolAllowed} from "@creatoros/contract";
 
+import {requireExternalChatCallTree} from './external-chat-call-tree';
+import {createAgenticToolBinding} from '../execution/agentic-tool-binding';
 type Tools=Record<string,ChatBackendTool>;
 const object=(value:unknown):Record<string,unknown>=>value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:{};
 /** 逐个审计的宿主短读取与纯候选；本机命令、发布、采纳、删除和 Worker 专用工具不开放给 ACP。 */
@@ -31,9 +33,12 @@ export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
  function available(frozen:Awaited<ReturnType<typeof scope>>["frozen"],tools:Tools){
   return frozen.tools.filter(def=>{
    const tool=tools[def.name];
-   return isAssistantEngineToolAllowed(frozen.executionEngine as "codex"|"codebuddy",def)&&(def.execution??"host")==="host"&&
-     (def.effect==="none"||def.effect==="proposal")&&!!tool&&tool.version===def.version&&tool.effect===def.effect&&
-     (tool.execution??"host")==="host"&&typeof tool.execute==="function"&&typeof tool.approve==="function";
+   if(!isAssistantEngineToolAllowed(frozen.executionEngine as 'codex'|'codebuddy',def,frozen.workbenchCapabilities?.find(item=>item.name===def.name))||!tool||tool.version!==def.version||tool.effect!==def.effect||(tool.execution??'host')!==(def.execution??'host')||typeof tool.approve!=='function')return false;
+   if((def.execution??'host')==='host')return typeof tool.execute==='function';
+   if(frozen.executionEngine!=='codex'||typeof tool.execute==='function')return false;
+   if(def.execution==='worker.structured-node')return typeof tool.prepareGeneration==='function';
+   if(def.execution==='host.task-submit'||def.execution==='worker.script-draft')return typeof tool.prepareTask==='function';
+   return def.execution==='worker.script-hooks'||def.execution==='worker.research'||def.execution==='worker.web-read'||def.execution==='worker.redfox';
   });
  }
  async function reserve(ref:ExecutionRef,request:z.infer<typeof workerPortInputSchemas.executeExternalTaskTool>,tools:Tools){
@@ -44,14 +49,14 @@ export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
    const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,frozen.conversationId),eq(aiConversations.userId,context.userId),workspaceFilter(aiConversations,context))).for("update");
    if(!business||business.taskType!=="copilot.assist"||object(task.payload).aiTaskId!==business.id||object(business.inputData).modelInputDigest!==chatInputDigest(frozen)||!["queued","running"].includes(business.status)||!conversation||conversation.projectId!==business.projectId)throw new ConflictError("外部工具账号或项目归属无效");
    const def=available(frozen,tools).find(item=>item.name===request.toolName),tool=tools[request.toolName];
-   if(!def||!tool)throw new ConflictError("外部工具未获当前任务授权");
+   if(!def||!tool||(def.execution??"host")!=="host"||!["none","proposal"].includes(def.effect)||def.name==='plan.update'||frozen.workbenchCapabilities?.some(item=>item.name===def.name))throw new ConflictError("外部工具未获当前任务授权");
    const parsed=tool.parameters.safeParse(request.input);
    if(!parsed.success)throw new ConflictError("外部工具参数不符合冻结定义");
    const input=z.json().parse(parsed.data),digest=`sha256:${chatInputDigest({turnCallId:request.turnCallId,toolCallId:request.toolCallId,toolName:def.name,version:def.version,input})}`;
    const rows=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
    const turn=rows.find(row=>row.id===request.turnCallId);
    if(!turn||turn.kind!=="external_agent"||turn.status!=="started"||turn.parentCallId||turn.inputDigest!==chatInputDigest(frozen)||!externalChatStartSchema.safeParse(turn.providerResult).success)throw new ConflictError("外部工具缺少已启动的 Agent 回合");
-   if(rows.some(row=>!["external_agent","external_tool"].includes(row.kind)))throw new ConflictError("外部工具任务混入其他执行账本");
+   requireExternalChatCallTree(task,rows,turn.id);for(const row of rows.filter(row=>row.kind==='tool'))createAgenticToolBinding(tools).forCall(task,rows,row);
    const operationKey=`external-tool:${createHash("sha256").update(JSON.stringify([request.turnCallId,request.toolCallId])).digest("hex")}`;
    const identity=externalTaskToolCallSchema.parse({schemaVersion:1,kind:"external_tool",turnCallId:turn.id,toolCallId:request.toolCallId,toolName:def.name,toolVersion:def.version});
    const existing=rows.find(row=>row.operationKey===operationKey);
@@ -62,6 +67,8 @@ export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
    if((typeof maxCalls==="number"&&rows.length>=maxCalls)||rows.length>=1000)throw new ExecutionBudgetError("外部工具调用次数已达上限");
    const stamp=now(),[call]=await tx.insert(executionCalls).values({id:`call_${randomUUID()}`,executionTaskId:task.id,sequence:rows.length+1,operationKey,parentCallId:turn.id,kind:"external_tool",inputDigest:digest,status:"started",startedAttempt:ref.attempt,reservedTokens:0,accountingBasis:"requests",providerResult:identity,createdAt:stamp,updatedAt:stamp}).returning();
    if(!call)throw new ConflictError("外部工具预留失败");
+   const proof=externalToolInputProofSchema.parse({schemaVersion:1,callId:call.id,turnCallId:turn.id,toolCallId:request.toolCallId,toolName:def.name,toolVersion:def.version,inputDigest:digest,input});
+   await tx.update(executionTasks).set({payload:{...object(task.payload),externalToolInputs:{...object(object(task.payload).externalToolInputs),[call.id]:proof}},updatedAt:stamp}).where(eq(executionTasks.id,task.id));
    return {call,input,replayed:false};
   });
  }

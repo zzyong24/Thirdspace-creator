@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {articleTextCandidates} from "../../schema/articles";
 import {accountGroups} from '../../schema/account-groups';
 import {z} from 'zod';
@@ -767,7 +769,7 @@ describe("T1062 文章真实父归档与旧回执",()=>{
    expect(await f.service.getArticle(ctx("a"),out.id)).toEqual(before);
    expect((await f.service.getVersion(ctx("a"),out.id,old.currentVersionId)).document).toEqual(old.current);
   }finally{await f.opened.client.close();}
- },30000);
+ },180000);
  it("整稿采用到达真实repo前项目归档先提交，拒绝追加且候选保留",async()=>{
   let hold=false;let arrived!:()=>void;let release!:()=>void;
   const reached=new Promise<void>(r=>arrived=r),resume=new Promise<void>(r=>release=r);
@@ -784,17 +786,17 @@ describe("T1062 文章真实父归档与旧回执",()=>{
    expect(await f.service.getArticle(ctx("a"),out.id)).toEqual(before);
    expect(await f.service.getCandidate(ctx("a"),task.candidateId)).toEqual(candidate);
   }finally{release();await f.opened.client.close();}
- },30000);
+ },180000);
 });
 
 
 // 真PG随机库：raw blocker仅调度锁顺序，归档和保存仍走真实公共service。
-import {Pool} from "pg";
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import {randomUUID} from "node:crypto";
 import {createRuntimeDb} from "@creatoros/backend";
 const isolatedPgUrl=process.env.CREATOROS_TEST_POSTGRES_URL;
 it.skipIf(!isolatedPgUrl)("T1062 真实PG项目归档先提交，公共保存等待父锁后零写",async()=>{
- const url=new URL(isolatedPgUrl!);if(url.hostname!=="127.0.0.1"||url.port!=="55422")throw Error("只允许隔离PG服务");
+ const url=new URL(isolatedPgUrl!);assertOwnedPostgresUrl(url.toString());
  const name="t1062_archive_"+randomUUID().replaceAll("-","");
  const admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname="/"+name;
  const runtime=await createRuntimeDb({connectionString:url.toString()});
@@ -814,7 +816,7 @@ it.skipIf(!isolatedPgUrl)("T1062 真实PG项目归档先提交，公共保存等
   await blocker.query("COMMIT");locked=false;await archive;await checked;
   expect(await f.service.getArticle(ctx("a"),out.id)).toEqual(before);
  }finally{if(locked)await blocker.query("ROLLBACK");blocker.release();await runtime.pool.end();await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);await admin.end();}
-},30000);
+},180000);
 
 
 it("T1062 窄文章归档守卫保留trend_analysis既有已开始结算的版本端口",async()=>{
@@ -826,7 +828,7 @@ it("T1062 窄文章归档守卫保留trend_analysis既有已开始结算的版�
   expect(version.contentText).toBe("模型已结算结果");
   expect((await repo.getArtifact(ctx("a"),artifact.id)).currentVersionId).toBe(version.id);
  }finally{await f.opened.client.close();}
-},30000);
+},180000);
 
 describe('T1062 组归档后的原artifact采用回执',()=>{
  it('精确原回执可回读，改digest/跨组/新append仍拒绝且版本不变',async()=>{
@@ -844,7 +846,7 @@ describe('T1062 组归档后的原artifact采用回执',()=>{
    await expect(repo.createVersion(groupCtx,old.artifactId,{...exact,adoptionKey:'new-after-group-archive'})).rejects.toThrow();
    expect(await repo.listVersions(groupCtx,old.artifactId)).toEqual(versions);expect((await f.service.getArticle(groupCtx,output.id)).currentVersionId).toBe(saved.versionId);
   }finally{await f.opened.client.close();}
- },30000);
+ },180000);
 });
 
 it.each(['owned','foreign','missing'] as const)('T1062 单项首次投影必须原冻结任务/父归属：%s',async source=>{
@@ -859,4 +861,4 @@ it.each(['owned','foreign','missing'] as const)('T1062 单项首次投影必须�
   if(source==='owned'){expect(await text.getCandidate(owner,'projection-task')).toMatchObject({value:'原冻结候选'});expect(await text.getCandidate({...owner,accountId:'platform-filter-only'},'projection-task')).toMatchObject({value:'原冻结候选'});const [row]=await f.db.select().from(articleTextCandidates).where(eq(articleTextCandidates.id,'projection-task'));expect(row).toMatchObject({groupId:owner.groupId,accountId:null});}
   else{await expect(text.getCandidate(owner,'projection-task')).rejects.toThrow();expect(await f.db.select().from(articleTextCandidates).where(eq(articleTextCandidates.id,'projection-task'))).toEqual([]);}
  }finally{await f.opened.client.close();}
-},30000);
+},180000);

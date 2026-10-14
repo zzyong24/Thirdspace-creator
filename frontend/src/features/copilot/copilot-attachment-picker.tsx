@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { FileText, Image as ImageIcon, Loader2, Paperclip, X } from "lucide-react";
+import { useCreationScope, creationScopeKey, readCreationScope } from "@/lib/creation-workspace-scope";
 import { uploadFileForCopilot } from "@/features/draft-workbench/upload-to-project";
 
 const MAX_ATTACHMENTS = 5;
@@ -13,12 +14,15 @@ type AttachmentStatus = "uploading" | "ready" | "error";
 
 interface AttachmentItem {
   localId: string;
+  workspaceOwner: string;
   assetId?: string;
   name: string;
   kind: "image" | "document";
   status: AttachmentStatus;
   error?: string;
 }
+
+export type CopilotAttachmentDraft = readonly AttachmentItem[];
 
 export interface CopilotAttachmentState {
   ids: string[];
@@ -29,12 +33,14 @@ export interface CopilotAttachmentState {
 export interface CopilotAttachmentPickerHandle {
   clear(): void;
   addFiles(files: File[]): void;
+  readDraft(): CopilotAttachmentDraft;
 }
 
 export interface CopilotAttachmentPickerProps {
   projectId?: string | null;
   disabled?: boolean;
   onStateChange(state: CopilotAttachmentState): void;
+  initialDraft?: CopilotAttachmentDraft;
 }
 
 function classify(file: File):
@@ -65,24 +71,26 @@ export const CopilotAttachmentPicker = React.forwardRef<
   CopilotAttachmentPickerHandle,
   CopilotAttachmentPickerProps
 >(function CopilotAttachmentPicker(
-  { projectId, disabled = false, onStateChange },
+  { projectId, disabled = false, onStateChange, initialDraft },
   ref,
 ) {
+  const workspaceOwner=creationScopeKey(useCreationScope());
   const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const localIdSequence = React.useRef(0);
-  const [items, setItems] = React.useState<AttachmentItem[]>([]);
+  // SEMANTIC_BOUNDARY_ALLOW: 仅延续当前窗口附件的机械local ID序号，防恢复后ID碰撞；不判断内容、选材或创作。
+  const localIdSequence = React.useRef(initialDraft?.reduce((max,item)=>{const value=Number(item.localId.split(":").at(-1));return Number.isSafeInteger(value)&&value>=0?Math.max(max,value):max;},0)??0);
+  const [items, setItems] = React.useState<AttachmentItem[]>(()=>initialDraft?.map(item=>item.status==="uploading"?{...item,status:"error",error:"原上传状态尚未确认，请核对后重新选择附件。"}:{...item})??[]);
   const [dragging, setDragging] = React.useState(false);
   const [notice, setNotice] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     onStateChange({
       ids: items
-        .filter((item) => item.status === "ready" && item.assetId)
+        .filter((item) => item.status === "ready" && item.assetId && item.workspaceOwner === workspaceOwner)
         .map((item) => item.assetId as string),
-      uploading: items.some((item) => item.status === "uploading"),
+      uploading: items.some((item) => item.status === "uploading" && item.workspaceOwner === workspaceOwner),
       count: items.length,
     });
-  }, [items, onStateChange]);
+  }, [items, onStateChange, workspaceOwner]);
 
   const addFiles = React.useCallback(
     (files: File[]) => {
@@ -94,6 +102,7 @@ export const CopilotAttachmentPicker = React.forwardRef<
       } else {
         setNotice(null);
       }
+      const capturedWorkspaceOwner=creationScopeKey(readCreationScope());
       for (const file of accepted) {
         const verdict = classify(file);
         const localId = `${file.name}:${file.size}:${file.lastModified}:${++localIdSequence.current}`;
@@ -102,6 +111,7 @@ export const CopilotAttachmentPicker = React.forwardRef<
             ...current,
             {
               localId,
+              workspaceOwner:capturedWorkspaceOwner,
               name: file.name,
               kind: "document",
               status: "error",
@@ -112,7 +122,7 @@ export const CopilotAttachmentPicker = React.forwardRef<
         }
         setItems((current) => [
           ...current,
-          { localId, name: file.name, kind: verdict.kind, status: "uploading" },
+          { localId, workspaceOwner:capturedWorkspaceOwner, name: file.name, kind: verdict.kind, status: "uploading" },
         ]);
         void uploadFileForCopilot(file, projectId)
           .then((uploaded) => {
@@ -122,6 +132,7 @@ export const CopilotAttachmentPicker = React.forwardRef<
                 (item) =>
                   item.localId !== localId &&
                   item.status === "ready" &&
+                  item.workspaceOwner === capturedWorkspaceOwner &&
                   item.assetId === uploaded.assetId,
               );
               if (alreadyShown) return current.filter((item) => item.localId !== localId);
@@ -158,8 +169,9 @@ export const CopilotAttachmentPicker = React.forwardRef<
     () => ({
       clear: () => setItems([]),
       addFiles,
+      readDraft:()=>items.map(item=>({...item})),
     }),
-    [addFiles],
+    [addFiles,items],
   );
 
   const remove = React.useCallback((localId: string) => {
@@ -233,8 +245,10 @@ export const CopilotAttachmentPicker = React.forwardRef<
               )}
               <span className="max-w-48 truncate">{item.name}</span>
               <span className="text-muted-foreground">
-                {item.status === "uploading"
-                  ? "上传中"
+                {item.workspaceOwner !== workspaceOwner
+                  ? "请核对原工作区附件"
+                  : item.status === "uploading"
+                    ? "上传中"
                   : item.status === "ready"
                     ? "已就绪"
                     : item.error}

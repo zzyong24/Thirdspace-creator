@@ -1169,6 +1169,12 @@ describe("[T-239f] POST /api/chat — user 消息去重", () => {
 });
 
 describe("[T-716] POST /api/chat — 附件上下文", () => {
+  it.each(['图片不存在','图片跨账号组'])('Codex原附件归属拒绝：%s，不创建执行任务',async reason=>{
+    readChatAttachment.mockRejectedValueOnce(Object.assign(new Error(reason),{name:'OwnershipError'}));
+    const res=await POST(chatReq({messages:[userMessage('看图')],attachmentIds:['foreign-image'],executionEngine:'codex'},'creatoros_session=tok'));
+    expect(res.status).toBe(404);expect(durableSubmit).not.toHaveBeenCalled();expect(createMessage).not.toHaveBeenCalled();
+  });
+
   it("图片经素材归属门读取，只把 assetId 落消息，模型临时收到 file part", async () => {
     const res = await POST(
       chatReq(

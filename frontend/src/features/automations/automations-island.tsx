@@ -1334,9 +1334,9 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
         data-slot="automation-run-detail-dialog"
         className="flex max-h-[80vh] flex-col gap-0 p-0 sm:max-w-2xl"
       >
-        <DialogHeader className="border-b px-5 py-4">
-          <DialogTitle className="flex items-center gap-2">
-            <Clock className="size-4 text-brand" />
+        <DialogHeader className="min-w-0 border-b px-5 py-4 pr-12">
+          <DialogTitle className="flex min-w-0 items-start gap-2 break-words [overflow-wrap:anywhere] leading-normal">
+            <Clock className="size-4 shrink-0 text-brand" />
             运行详情{job ? ` · ${job.name}` : ""}
           </DialogTitle>
           <DialogDescription>
@@ -1904,16 +1904,16 @@ export function AutomationsIsland({
   return (
     <section data-testid="automations-region" className="flex flex-col gap-4">
       {scope?.groupId ? <section aria-label="账号组任务范围" className="rounded-panel border border-border bg-surface p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="mr-auto text-sm font-semibold">{groupName??"当前账号组"}</h2>
-          <label className="flex items-center gap-2 text-sm">平台
-            <select aria-label="筛选媒体平台" className="h-9 rounded-control border border-border bg-surface px-3" value={platformFilter} onChange={e=>{setPlatformFilter(e.target.value);setAccountFilter("all");}}>
+        <div className="flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <h2 className="min-w-0 break-words text-sm font-semibold sm:mr-auto">{groupName??"当前账号组"}</h2>
+          <label className="flex min-w-0 flex-col gap-2 text-sm sm:flex-row sm:items-center">平台
+            <select aria-label="筛选媒体平台" className="h-9 w-full min-w-0 max-w-full rounded-control border border-border bg-surface px-3 sm:w-auto" value={platformFilter} onChange={e=>{setPlatformFilter(e.target.value);setAccountFilter("all");}}>
               <option value="all">全部媒体</option>
               {[...new Set(accounts.map(a=>a.platform))].map(platform=><option key={platform} value={platform}>{PLATFORM_LABELS[platform]??platform}</option>)}
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm">账号
-            <select aria-label="筛选平台账号" className="h-9 max-w-full rounded-control border border-border bg-surface px-3" value={accountFilter} onChange={e=>setAccountFilter(e.target.value)}>
+          <label className="flex min-w-0 flex-col gap-2 text-sm sm:flex-row sm:items-center">账号
+            <select aria-label="筛选平台账号" className="h-9 w-full min-w-0 max-w-full rounded-control border border-border bg-surface px-3 sm:w-auto" value={accountFilter} onChange={e=>setAccountFilter(e.target.value)}>
               <option value="all">全部账号</option>
               {accounts.filter(a=>platformFilter==="all"||a.platform===platformFilter).map(a=><option key={a.id} value={a.id}>{PLATFORM_LABELS[a.platform]??a.platform} · {a.handle}{a.status==="archived"?"（已归档）":""}</option>)}
             </select>
@@ -1924,7 +1924,7 @@ export function AutomationsIsland({
           {accounts.filter(a=>(platformFilter==="all"||a.platform===platformFilter)&&(accountFilter==="all"||a.id===accountFilter)).map(a=>{
             const count=jobs.filter(j=>j.accountId===a.id&&!isSharedKind(j.sourceKind)).length;
             const reason=a.readinessError ?? (a.status==="archived"?"已归档，保留历史任务":count?`${count} 条采集计划`:a.readiness?.planEvidence==="missing"?"尚未建立采集计划；缺少默认计划的验证证明":a.readiness?.collectAvailable===false?"尚未建立采集计划；采集能力未装配":a.readiness?.planEvidence!=="verified"||a.readiness.collectAvailable!==true?"尚未建立采集计划；资格尚未确认":"尚未建立采集计划；选择此账号可创建");
-            return <li key={a.id} className="min-w-0 rounded-control border border-border px-3 py-2 text-sm"><span className="font-medium">{PLATFORM_LABELS[a.platform]??a.platform} · {a.handle}</span><p className={a.readinessError?"text-destructive":"text-muted-foreground"}>{reason}</p>{!count&&a.readiness?.planEvidence==="missing"?<a href="/accounts" className="text-brand hover:underline">去账号绑定</a>:null}</li>;
+            return <li key={a.id} className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] rounded-control border border-border px-3 py-2 text-sm"><span className="font-medium">{PLATFORM_LABELS[a.platform]??a.platform} · {a.handle}</span><p className={a.readinessError?"text-destructive":"text-muted-foreground"}>{reason}</p>{!count&&a.readiness?.planEvidence==="missing"?<a href="/accounts" className="text-brand hover:underline">去账号绑定</a>:null}</li>;
           })}
           {!accounts.length?<li className="text-sm text-muted-foreground">当前账号组没有平台账号。<a href="/accounts" className="text-brand hover:underline">添加平台账号</a></li>:null}
         </ul>

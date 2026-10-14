@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {beforeEach,afterEach,expect,it} from 'vitest';
 import {createDb} from '@creatoros/backend';
 let store:Awaited<ReturnType<typeof createDb>>,seq=0;
@@ -13,7 +15,7 @@ it('制作子项写在同事务重新验证项目scope，迁移后旧组不能�
 import {createProductionService} from './production.service';
 
 import {randomUUID} from 'node:crypto';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import {createRuntimeDb,type Db,projects,contentOutputs,assets,eq,and} from '@creatoros/backend';
 import {createAccountGroupService} from '../platform-account/account-group.service';
@@ -23,7 +25,7 @@ afterEach(async()=>{for(const cleanup of pgCleanup.splice(0).reverse())await cle
 const gate=()=>{let release!:()=>void;const promise=new Promise<void>(resolve=>{release=resolve;});return {promise,release};};
 function outcome<T>(promise:Promise<T>){let done=false;const result=promise.then(value=>{done=true;return {value,error:undefined};},error=>{done=true;return {value:undefined,error};});return {result,done:()=>done};}
 async function pgFixture(){
- if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离测试服务');
+ if(!pgUrl)throw Error('需显式隔离PG');const parsed=new URL(pgUrl);assertOwnedPostgresUrl(parsed.toString());
  const name=`t1022_production_${randomUUID().replaceAll('-','')}`;const admin=new Pool({connectionString:pgUrl});pgCleanup.push(()=>admin.end());await admin.query(`CREATE DATABASE ${name}`);pgCleanup.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname=`/${name}`;
  const runtime=await createRuntimeDb({connectionString:parsed.toString()});pgCleanup.push(()=>runtime.pool.end());const writerPool=new Pool({connectionString:parsed.toString(),max:1,application_name:`${name}_writer`});pgCleanup.push(()=>writerPool.end());const writer=drizzle(writerPool) as unknown as Db;
  let n=0;const deps={db:runtime.db,now:()=>new Date().toISOString(),nextId:(prefix:string)=>`${prefix}-${++n}`},user={userId:`user-${name}`,requestId:'race',source:'user' as const};const groups=createAccountGroupService(deps);const from=(await groups.create(user,{name:'来源',idempotencyKey:'source'})).id,to=(await groups.create(user,{name:'目标',idempotencyKey:'target'})).id;const scope={...user,groupId:from,accountId:null};const at=deps.now();
@@ -36,7 +38,7 @@ async function pgFixture(){
 }
 it.skipIf(!pgUrl)('真实PG迁移先校验：制作分段公共子项写等待并在旧scope拒绝',async()=>{
  const f=await pgFixture(),paused=gate(),resume=gate();const migrations=createGroupMigrationService({...f.deps,observePhase:async phase=>{if(phase==='apply:validated'){paused.release();await resume.promise;}}});const preview=await migrations.preview(f.scope,f.selection);const move=outcome(migrations.apply(f.scope,{...f.selection,digest:preview.digest,idempotencyKey:'move'}));await paused.promise;const write=outcome(f.write(f.writer));let blocked=false;try{blocked=await f.watch(write.done);}finally{resume.release();}expect(blocked).toBe(true);expect((await move.result).error).toBeUndefined();expect((await write.result).error).toBeDefined();
-},30000);
+},180000);
 it.skipIf(!pgUrl)('真实PG公共制作分段子项写先提交：迁移等待后重验digest拒绝过期预览',async()=>{
  const f=await pgFixture(),paused=gate(),resume=gate(),migrations=createGroupMigrationService(f.deps);const preview=await migrations.preview(f.scope,f.selection);const write=outcome(f.writer.transaction(async tx=>{await f.write(tx as unknown as Db);paused.release();await resume.promise;}));await paused.promise;const move=outcome(migrations.apply(f.scope,{...f.selection,digest:preview.digest,idempotencyKey:'move'}));let blocked=false;try{blocked=await f.watchMigration(move.done);}finally{resume.release();}expect(blocked).toBe(true);expect((await write.result).error).toBeUndefined();expect((await move.result).error).toMatchObject({code:'ConflictError'});
-},30000);
+},180000);

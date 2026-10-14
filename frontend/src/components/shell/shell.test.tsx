@@ -55,6 +55,8 @@ function readRootVar(name: string): string {
 // the bell's "全部标记为已读" handler asks the router to revalidate). The shell
 // tests don't exercise the mutation; this just satisfies the hook.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({
     refresh: vi.fn(),
     replace: vi.fn(),

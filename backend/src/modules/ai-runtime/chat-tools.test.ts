@@ -4660,3 +4660,12 @@ it('编导冻结工具说明提供真正的typed操作名，原错误op不能通
  expect(parameters.safeParse({...request,candidate:{...request.candidate,edits:[{...edit,type:undefined,op:'update_element'}]}}).success).toBe(false);
  for(const name of ['patchNativeElement','expectedElementDigest','patchArticleSection','expectedSectionDigest','patchGraphicCard','expectedCardDigest'])expect(definitions[0]!.description).toContain(name);
 });
+
+it('T1248 当前与旧action独立固定原型，默认新合同不随恢复改动',async()=>{
+ const {readFileSync}=await import('node:fs');const {prepareChatToolDefinitions}=await import('./chat-tool-definitions');
+ const golden=JSON.parse(readFileSync(new URL('../../../../docs/verification/t1248/system-action-v1.definition.json',import.meta.url),'utf8'));
+ const old=(await prepareChatToolDefinitions(buildChatTools(['system.action.propose'],{assistantActionCatalogVersion:1} as never))).definitions[0];
+ const current=(await prepareChatToolDefinitions(buildChatTools(['system.action.propose'],{} as never))).definitions[0];
+ expect(old).toEqual(golden);expect(current!.version).toBe('chat-tools-system-director-v1:ea89720c41e36fe55f9fc756a3cca8f8d2616dcdd27744c044134188dcb9ae8c');
+ expect((await prepareChatToolDefinitions(buildChatTools(['system.action.propose'],{assistantActionCatalogVersion:2} as never))).definitions[0]).toEqual(current);
+},120000);

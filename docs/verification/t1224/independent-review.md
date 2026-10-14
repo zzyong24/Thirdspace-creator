@@ -28,3 +28,13 @@
 writeVisibleCopy仅新增 `CREATOROS_T1224_EVIDENCE_DIR`：显式相对路径按repoRoot解析，绝对路径亦可；未设置仍原orchestrator/evidence默认。输出文件名和schema/task_id/commit/captures/文字保持。因此**本轮运行必须实际设置新独立目录并记录环境/输出锚**，静态代码本身不能证明将来绝不会落默认旧receipt。报告对此准确标待执行，未制造新回执。仍不得以T870/T893/T900同名文件冒充旧验收再签。
 
 implementation-report记录作者当场frontend tsc、精确eslint和diff-check实际exit0；本独评读取报告及root提供的真实静态退出结论，未将空诊断当作独立再次运行的证据。报告清楚未启动浏览器、无新截图/trace/网络attempt、不证明端到端完成；现证据边界充分。后续须等T1217产品稳定最终hash及隔离回归完成，唯一Next串行按原完整旅程操作并公共回读/截图。当前无本测试实现阻断，但真实公共链通过仍待发生。
+
+## 2026-10-11 T1223/T1224 界面合同 Gate 适用性独评
+
+**适用性结论 PASS：这两个任务当前不激活新增产品 frontend-journey-contract 的验收义务，可将误登记的验收列“待验”校准为“—”，由 root 记录理由并仍通过原 taskctl 留审计；不改 Gate 或校验器。** 本评审只读取，不编辑 BACKLOG/SPEC/控制面，也不执行任务状态转换。T1223 SPEC SHA256 `ae169f103e5d7c8f2bc1d16b53a1276f4da59d46100266cd350cd0a178c506c9`；T1224 SPEC `7bee72dc29e67997174365ce1fd5fb9396b0489a35b67c94daad0a4acd57dc17`。
+
+依据已加载技能 gates/_GATE_EVIDENCE.md 的明确规则：“未激活的条件不产生缺失工件义务”“未触发条件不是例外”；ui-implementation-rules 要求按当前页面规格及实际界面实现，而非给每个测试/报告工具强造页面。taskctl.mjs:102 的 hasJourneyContract 对看板文档列实际本地链接逐个读取并仅识别 frontend-journey-contract fenced block；两个实际正式 SPEC 均无该合同或 PAGE_SPEC 引用。taskctl:259 起，acceptance=待验会不分任务类型把 evidence 当 UI report 校验并执行；acceptance=—仅在实际链接含 journey contract 时拒绝。这不是绕过存在的合同，当前不存在该触发条件。程序 SHA256 `f5d9660c87023b1320ba3703bd3b7ef6df9044356b271f6751d0343ea366e65d`；技能公共约定 `5dff08e3af35d3bccac5d82f3532864aaee6596467c05ac668e618e6f9eda4d6`。
+
+适用判断不只依赖“没有代码块”：T1223 精确范围是验证报告生成器和两份派生文档，未改 CreatorOS 页面/组件/交互合同；已实际有原生成器 RED、新 fixture/full 字节确定性 GREEN、345 历史记录/224 TestID、保旧失败及唯一锚点、file 页面两视口截图/跳转与独评，证据证明报告修复而非全产品。T1224 仅改既有 E2E 请求/观察预算及独立证据目录，原产品 UI、输入/断言、服务/权限均未改，不应为测试设施新增产品设计合同。它的类型/lint/静态消费者检查已实际通过，当前公共回归尚待 T1217 稳定后发生。
+
+因此验收列校准不解除任何正式 SPEC 要求：T1224 必须原完整来源→逐字稿保存→选题→用户点击升级→公共同 ID 项目回读/重复立项旅程、真实截图/日志/visible copy 独立保存，外网 RSS 与本地模型替身边界准确；T1223 也保原状态/图路径/统计和报告确定性。任何范围内失败仍保留并阻断其验收，不能拿“—”当完成或删断言/洗红。现有 3914/60/76 未终态及全局历史债不得签绿；未来若实际扩张产品 UI 或新增 journey contract，应按原条件重新激活 Gate。

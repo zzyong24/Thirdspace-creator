@@ -10,6 +10,7 @@
  */
 
 import { useEffect } from "react";
+import {captureBrowserException} from "@/lib/observability-client";
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -23,8 +24,7 @@ interface CreatorErrorProps {
 
 export default function CreatorError({ error, reset }: CreatorErrorProps) {
   useEffect(() => {
-    // Log to the console only; the project does not have a remote error
-    // sink in the first implementation phase.
+    captureBrowserException(error,error.digest??null);
     console.error("CreatorOS page error:", error);
   }, [error]);
 

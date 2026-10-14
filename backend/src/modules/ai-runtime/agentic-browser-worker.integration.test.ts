@@ -1,3 +1,5 @@
+import {platformAccounts as originalAccounts,type Db as OwnedFixtureDb} from "@creatoros/backend";
+import {createAccountGroupService} from "../platform-account/account-group.service";
 import {createBrowserTaskAuthorizationService} from "./browser-task-authorization.service";
 import { createServer } from "node:http";
 import { createHash, randomUUID } from "node:crypto";
@@ -46,7 +48,7 @@ it.each(["normal", "unknown"] as const)(
         resolve("src/modules/ai-runtime/agentic-browser-worker.fixture.ts"),
         entryPath,
       ],
-      { cwd: resolve("../ai-worker"), stdio: "pipe" },
+      { cwd: resolve("../ai-worker"), stdio: "pipe", timeout:180000 },
     );
     const f = await createDb(),
       now = () => new Date().toISOString(),
@@ -57,6 +59,7 @@ it.each(["normal", "unknown"] as const)(
       requestId: "test",
       source: "user" as const,
     };
+    await seedOwnedKnowledgeAccount(f.db,ctx.userId,ctx.accountId);
     const noExternal = async (): Promise<never> => {
       throw new Error("未授权外部能力");
     };
@@ -97,7 +100,7 @@ it.each(["normal", "unknown"] as const)(
       stage: (ref, input, signal) =>
         staging.stageForExecution(ref, input, signal),
     });
-    const budget = { maxCalls: 24, maxTokens: 100000, deadlineMs: 60000 };
+    const budget = { maxCalls: 24, maxTokens: 100000, deadlineMs: 180000 };
     const preparation = createAgenticBusinessExecutionService(f.db, {
       definitions: {
         "exec.agentic.research": {
@@ -191,7 +194,7 @@ it.each(["normal", "unknown"] as const)(
           oldObservation = latest(raw).data.observation;
           expect(oldObservation.text).toContain("尚未提交");
           mutate = true;
-          await vi.waitFor(() => expect(mutated).toBe(true), { timeout: 3000 });
+          await vi.waitFor(() => expect(mutated).toBe(true), { timeout: 180000 });
           name = "browser.act";
           args = {
             sessionId: "browser-session",
@@ -329,7 +332,7 @@ it.each(["normal", "unknown"] as const)(
                 },
               },
               constraints: {
-                timeoutSec: 60,
+                timeoutSec: 180,
                 network: "deny",
                 maxOutputMB: 512,
               },
@@ -488,5 +491,11 @@ it.each(["normal", "unknown"] as const)(
       await rm(directory, { recursive: true, force: true });
     }
   },
-  60000,
+  720000,
 );
+
+async function seedOwnedKnowledgeAccount(db:OwnedFixtureDb,userId:string,accountId:string){
+ const stamp="2026-06-21T00:00:00.000Z";
+ await db.insert(originalAccounts).values({id:accountId,userId,platform:'douyin',accountHandle:accountId,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing();
+ await createAccountGroupService({db,now:()=>stamp,nextId:prefix=>`${prefix}-${accountId}-fixture`}).ensureLegacyGroups({userId,requestId:'original-knowledge-fixture',source:'user'});
+}

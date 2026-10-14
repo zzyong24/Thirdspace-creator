@@ -17,3 +17,10 @@ reviewctl全局audit当场exit1，仅报既有T1255宪法漂移/T1021等旧recei
 原任务恢复取证：公开get确认同requestId reserved/taskId=null后，原body/原ID接续prepare在原120秒预算内ACK；实际probe succeeded、taskId ai-task-351b7345-6，SHA一致、raw durationTicks36864/timebase1/12288=3秒，native120000精确换算。原source采用请求body和requestId在首次发送前保存至original-source-request.json，再运行只重放原采纳回执；真实旅程已进入MD候选和实际浏览器编码。完整读回见original-source-probe-readback.json、t1274/browser/original-source-readback.json。来源任务恢复不等于完整剪辑验收。
 
 末轮实际公共偏好冻结回归：public-source-preference-freeze.txt exit0，1PASS/21.81s。真实patchPreferences Codex→source prepare，公开getTask确认modelKey=codex及groupId；再改偏好Pi，同原IDprepare仍返回原任务/原Codex快照。真实ffmpeg/probe/SHA/采纳、异冻结文件和跨组拒绝保持。media.probe为无文本Skill任务，不虚构非空Skill overlay证据。共享组合根仅stage source tx一处既有factory复用，其它前置dirty未提交；本轮类型/build/timeout和最终对账还未完成，不签任务complete。
+
+
+## 2026-10-14 适用链路收尾
+
+最终T1274完整浏览器旅程e2e-closure.txt实际1PASS/39.6秒：私有Next启动、真实原片probe/采纳、Markdown候选真实预览与持久采纳、MP4解码/逐帧/PTS/完整PCM旧内核对比、采用成片及历史恢复；桌面/390与CSS200实际图片。frontend/backend类型、production build、timeout完整检查exit0，boundary新增0/既有5，orphan0error/100warning，分别见../t1274/RESULT.md。原失败保留；这些结果不等于真实模型/ASR或安装App通过。
+
+pmem sync已执行；完整reconcile-final.txt实际exit1/29ERROR/0WARN，已回登记T1204原诊断任务。错误为看板过大、其他历史审核收据和桌面/Windows/PG guard；本任务窄修与隔离恢复适用回归已通过，完整错误及已实查的两个底层失败见T1204新增记录，未改guard洗绿。

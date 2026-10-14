@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "4-build"               # 3.9.0 v3 五阶段映射；具体切片仍由 BACKLOG 唯一排序
   frontier: "4-build"                    # 既有产品持续 BUILD，SHIP 仍受真实安装版/生产 E2E 门约束
-  updated_at: "2026-09-21"
+  updated_at: "2026-10-11"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -63,11 +63,13 @@ stages:
     gate_status: "pass"
     confirmation_required: false
     artifacts:
+      - existing: "docs/features/t1274-chatcut-editing-redesign.md"
+      - existing: "docs/features/t1274-chatcut-editing-redesign/layout.html"
       - existing: "frontend/src"
       - existing: "docs/features/t1075-knowledge-redesign/RESEARCH.md"
       - existing: "docs/features/t1075-knowledge-redesign/style-explorer.html"
       - existing: "docs/verification/t1075/DESIGN_REVIEW.md"
-    notes: "迁移只映射既有成熟产品，不替代后续页面任务的设计与真机验收。T-1075仅完成研究和A/B方向小样，候选待用户选择；未进入生产实现，未独立视觉评分，不继承本行历史passed为新设计PASS。"
+    notes: "迁移只映射既有成熟产品，不替代后续页面任务的设计与真机验收。T-1075仅完成研究和A/B方向小样，候选待用户选择；未进入生产实现，未独立视觉评分，不继承本行历史passed为新设计PASS。T-1274统一剪辑IA及Markdown候选范围已获用户确认，SPEC独评55a3f14a70a5；BUILD进行中。真实媒体、窄屏操作与CLI/MCP专项已有证据，整体AC/Gate未完成；独立视觉末轮8.2，具体限度见t1274/RESULT。"
 
   "4-build":
     status: "draft"
@@ -662,6 +664,28 @@ stages:
       仍被 T-635/T-639/T-638/T-637/T-634 的既有过期回执阻断，已在 Gate 诚实记录。
 
 
+  "T-1238-4-build":
+    status: "passed"
+    gate: "T1238 scoped tests + public Codex + settings journey + types + boundary + orphan"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/features/t1238-codex-unified-text-image-engine.md"
+      - existing: "docs/verification/t1238/COVERAGE.md"
+      - existing: "docs/verification/t1238/FINAL_REVIEW.md"
+      - existing: "docs/verification/t1238/PENDING_GUARD_REVIEW.md"
+      - existing: "docs/verification/t1238/ui-final.json"
+      - existing: "docs/verification/t1238/FRONTEND_REPORT.md"
+      - existing: "docs/verification/t1238/GATES.md"
+      - existing: "docs/verification/t1238/public-native-ledger.json"
+    notes: >
+      DEC-T1238-001确认文本、图片理解与内置生图统一范围；独评合同REV6b70a2a85595。
+      已真实执行Codex结构化文本、无独立key生图与参考编辑、原组采纳下载及设置双窗操作。
+      未签所有功能官方账户逐族真机或安装版发布；图片理解真实公共链路已成功；恢复原回合独立26项、整合31项、设置10项通过。
+      原全量32ERROR中的本任务评审链与相关夹具回归已实际修复，LED054/058/059/061完整组通过。
+      超时范围外22条静态失败、缺隔离PG/真实打包资源及控制面欠债由T1204保留，不能伪称全局全绿。
+      最终完整25ERROR包含已单项修验的记录日期；其余24项原清单保留，不代签完整24ERROR回执。
+
 stage_defaults:
   valid_statuses:
     - "not-started"
@@ -844,3 +868,14 @@ agent_workbench_change:
   acceptance_status: not-started
   global_reconcile: "fail: 233 existing errors; docs/verification/t1003-reconcile.log; T-916 tracks governance drift"
   notes: "用户已确认多步执行与NomiFun迁移方向；本轮仅SPEC和任务拆分，独立规格评审PASS（hash回执见review文件），不是实现验收通过。"
+
+chatcut_editing_change:
+  task_id: T-1274
+  spec: docs/features/t1274-chatcut-editing-redesign.md
+  review: docs/features/t1274-chatcut-editing-redesign.review.md
+  user_confirmation: "用户：整体上是认可的；DEC-T1274"
+  implementation_status: in-progress
+  acceptance_status: in-progress
+  gate_status: fail
+  evidence: docs/verification/t1274/RESULT.md
+  notes: "T1274集成b6f133456/a76563099/f131f3344；真实完整媒体旅程、390独立操作及三项复验、Fit控件、CLI/MCP各自read/propose/apply/同ID重放与错组拒绝通过。视觉6.5/7.7/8.2，生产build通过；真实模型/ASR准备完成待执行，全输入族与完整对账待闭合，保持in-progress/fail，不替换安装。"

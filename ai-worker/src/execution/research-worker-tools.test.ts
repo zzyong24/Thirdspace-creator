@@ -155,7 +155,7 @@ it("原始搜索只访问指定引擎，保留结果且不触发宿主结算或�
   const f=fixture();const goto=vi.fn(async(_url:string)=>null);
   f.ctx.newPage.mockResolvedValue({goto,url:()=>"https://www.bing.com/search?q=test",content:async()=>'<li class="b_algo"><h2><a href="https://example.com/article">真实解析标题</a></h2><p>摘要</p></li>',screenshot:async()=>new Uint8Array()} as never);
   try {
-    const results=await f.tools.searchBrowser({baseUrl:null,query:"test",count:1},{callId:"search",signal:f.controller.signal});
+    const results=await f.tools.searchBrowser({baseUrl:"https://www.bing.com/search?q={q}",query:"test",count:1},{callId:"search",signal:f.controller.signal});
     expect(results).toMatchObject([{url:"https://example.com/article",title:"真实解析标题",snippet:"摘要"}]);
     expect(goto).toHaveBeenCalledTimes(1);expect(goto.mock.calls[0]?.[0]).toBe("https://www.bing.com/search?q=test");
     expect(f.call).not.toHaveBeenCalled();expect(f.ctx.close).toHaveBeenCalledTimes(1);
@@ -166,9 +166,9 @@ it("原始搜索空结果不私自切引擎，导航错误保留供上层选择�
   const f=fixture(),goto=vi.fn(async(_url:string)=>null);
   f.ctx.newPage.mockResolvedValue({goto,url:()=>"https://www.bing.com/search?q=test",content:async()=>"无结果",screenshot:async()=>new Uint8Array()} as never);
   try {
-    expect(await f.tools.searchBrowser({baseUrl:null,query:"test"},{callId:"empty",signal:f.controller.signal})).toEqual([]);
+    expect(await f.tools.searchBrowser({baseUrl:"https://www.bing.com/search?q={q}",query:"test"},{callId:"empty",signal:f.controller.signal})).toEqual([]);
     goto.mockRejectedValueOnce(new Error("导航断线"));
-    await expect(f.tools.searchBrowser({baseUrl:null,query:"test"},{callId:"fail",signal:f.controller.signal})).rejects.toThrow("导航断线");
+    await expect(f.tools.searchBrowser({baseUrl:"https://www.bing.com/search?q={q}",query:"test"},{callId:"fail",signal:f.controller.signal})).rejects.toThrow("导航断线");
     expect(goto).toHaveBeenCalledTimes(2);expect(f.call).not.toHaveBeenCalled();
   }finally{await f.tools.close();}
 });

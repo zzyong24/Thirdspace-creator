@@ -4,6 +4,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import ts from 'typescript';
+import {verifyDoocsStatic} from './verify-doocs-static.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const publicRoot=path.join(root,'frontend/public/reference-editors');
 const manifest=JSON.parse(await readFile(path.join(root,'reference-editors/manifest.json'),'utf8'));
@@ -43,4 +44,5 @@ for(const [name,expected] of [[opencut.native.patch,opencut.native.patchSha256],
 const graph=JSON.parse(await readFile(path.join(publicRoot,'opencut-classic/native/NATIVE_BUILD_GRAPH.json'),'utf8'));
 if(graph.fixture!==false)throw Error('OpenCut 发布包不能是compositor fixture');
 for(const module of ['src/embedded/native-controller.ts','src/embedded/native-preview.ts','src/embedded/native-document-contract.ts','src/embedded/native-operations.ts','src/services/video-cache/service.ts','src/services/renderer/resolve.ts','src/services/renderer/nodes/visual-node.ts','src/services/renderer/nodes/blur-background-node.ts','src/services/renderer/compositor/frame-descriptor.ts','src/services/renderer/compositor/wasm-compositor.ts'])if(!graph.modules.some(item=>item.module===module))throw Error(`OpenCut 新原生消费者未进入实际生产模块图：${module}`);
-console.log(JSON.stringify({passed:true,verification:'四类原生交付文件集、摘要、对应源码、生产宏语法检查、累计重建patch摘要、新原生preview实际模块图及共享合同归档复制件；不代表浏览器执行/像素验收',editors:result},null,2));
+const doocsStatic=await verifyDoocsStatic({repoRoot:root});
+console.log(JSON.stringify({passed:true,doocsStatic,verification:'四类原生交付文件集、摘要、对应源码、生产宏语法检查、累计重建patch摘要、新原生preview实际模块图及共享合同归档复制件；不代表浏览器执行/像素验收',editors:result},null,2));

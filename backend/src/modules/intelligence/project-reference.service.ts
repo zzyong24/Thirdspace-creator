@@ -1,3 +1,4 @@
+import {intelligenceWorkspaceFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 
@@ -122,22 +123,23 @@ export function createProjectIntelligenceReferenceService(
   async function findConfirmedTransform(
     ctx: RequestContext,
     topicId: string,
+    connection:Pick<Db,"select">=db,
   ) {
     requireWorkspace(ctx);const accountId=ctx.accountId??null;
-    const [transform] = await db
+    const transforms = await connection
       .select()
       .from(intelligenceTransforms)
       .where(
         and(
           eq(intelligenceTransforms.userId, ctx.userId),
-          workspaceFilter(intelligenceTransforms,ctx),
+          intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
           eq(intelligenceTransforms.targetTopicId, topicId),
           eq(intelligenceTransforms.status, "confirmed"),
         ),
       )
       .orderBy(desc(intelligenceTransforms.updatedAt))
-      .limit(1);
-    return transform ?? null;
+      .limit(2);
+    return uniqueIntelligenceRow(transforms) ?? null;
   }
 
   async function attachResolved(
@@ -160,7 +162,8 @@ export function createProjectIntelligenceReferenceService(
       await deps.projects.assertExists(ctx, input.projectId);
     }
 
-    const transform = await findConfirmedTransform(ctx, input.topicId);
+    return withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+    const transform = await findConfirmedTransform(ctx, input.topicId,tx);
     if (!transform) {
       if (missingIsNull) return null;
       throw new OwnershipError("Intelligence topic provenance not found");
@@ -179,14 +182,17 @@ export function createProjectIntelligenceReferenceService(
       );
     }
 
-    const [transcript] = await db
+    const [item]=await tx.select().from(intelligenceItems).where(and(eq(intelligenceItems.id,transform.itemId),intelligenceWorkspaceFilter(intelligenceItems,ctx)));
+    const [snapshot]=await tx.select().from(sourceSnapshots).where(and(eq(sourceSnapshots.id,transform.sourceSnapshotId),intelligenceWorkspaceFilter(sourceSnapshots,ctx)));
+    if(!item||!snapshot||snapshot.itemId!==item.id)throw new OwnershipError("选题的原作品与快照关联不完整");
+    const [transcript] = await tx
       .select()
       .from(itemTranscripts)
       .where(
         and(
           eq(itemTranscripts.itemId, transform.itemId),
           eq(itemTranscripts.userId, ctx.userId),
-          workspaceFilter(itemTranscripts,ctx),
+          intelligenceWorkspaceFilter(itemTranscripts,ctx),
         ),
       )
       .limit(1);
@@ -203,13 +209,13 @@ export function createProjectIntelligenceReferenceService(
     }
     const hash = transcriptHash(text);
 
-    const [existing] = await db
+    const [existing] = await tx
       .select()
       .from(projectIntelligenceReferences)
       .where(
         and(
           eq(projectIntelligenceReferences.userId, ctx.userId),
-          workspaceFilter(projectIntelligenceReferences,ctx),
+          intelligenceWorkspaceFilter(projectIntelligenceReferences,ctx),
           eq(projectIntelligenceReferences.projectId, input.projectId),
           eq(projectIntelligenceReferences.transformId, transform.id),
         ),
@@ -217,12 +223,12 @@ export function createProjectIntelligenceReferenceService(
       .limit(1);
     if (existing) return toReference(existing);
 
-    const [created] = await db
+    const [created] = await tx
       .insert(projectIntelligenceReferences)
       .values({
         id: deps.nextId("project-intelligence-reference"),
         userId: ctx.userId,
-        accountId,groupId:ctx.groupId??null,
+        accountId,groupId:frozen.groupId,
         projectId: input.projectId,
         topicId: input.topicId,
         itemId: transform.itemId,
@@ -235,13 +241,13 @@ export function createProjectIntelligenceReferenceService(
       .returning();
     if (created) return toReference(created);
 
-    const [raced] = await db
+    const [raced] = await tx
       .select()
       .from(projectIntelligenceReferences)
       .where(
         and(
           eq(projectIntelligenceReferences.userId, ctx.userId),
-          workspaceFilter(projectIntelligenceReferences,ctx),
+          intelligenceWorkspaceFilter(projectIntelligenceReferences,ctx),
           eq(projectIntelligenceReferences.projectId, input.projectId),
           eq(projectIntelligenceReferences.transformId, transform.id),
         ),
@@ -251,6 +257,7 @@ export function createProjectIntelligenceReferenceService(
       throw new Error("failed to attach project intelligence reference");
     }
     return toReference(raced);
+    });
   }
 
   return {
@@ -281,7 +288,7 @@ export function createProjectIntelligenceReferenceService(
       const requestedIds = [...new Set(input.referenceIds ?? [])];
       const conditions = [
         eq(projectIntelligenceReferences.userId, ctx.userId),
-        workspaceFilter(projectIntelligenceReferences,ctx),
+        intelligenceReferenceRootFilter(projectIntelligenceReferences,ctx),
         eq(projectIntelligenceReferences.projectId, input.projectId),
       ];
       if (requestedIds.length > 0) {
@@ -312,7 +319,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(intelligenceItems.id, reference.itemId),
                   eq(intelligenceItems.userId, ctx.userId),
-                  workspaceFilter(intelligenceItems,ctx),
+                  intelligenceWorkspaceFilter(intelligenceItems,ctx),
                 ),
               )
               .limit(1),
@@ -323,7 +330,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(sourceSnapshots.id, reference.sourceSnapshotId),
                   eq(sourceSnapshots.userId, ctx.userId),
-                  workspaceFilter(sourceSnapshots,ctx),
+                  intelligenceWorkspaceFilter(sourceSnapshots,ctx),
                 ),
               )
               .limit(1),
@@ -334,7 +341,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(intelligenceTransforms.id, reference.transformId),
                   eq(intelligenceTransforms.userId, ctx.userId),
-                  workspaceFilter(intelligenceTransforms,ctx),
+                  intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
                 ),
               )
               .limit(1),
@@ -345,7 +352,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(itemTranscripts.itemId, reference.itemId),
                   eq(itemTranscripts.userId, ctx.userId),
-                  workspaceFilter(itemTranscripts,ctx),
+                  intelligenceWorkspaceFilter(itemTranscripts,ctx),
                 ),
               )
               .limit(1),

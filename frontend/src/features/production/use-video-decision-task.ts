@@ -38,7 +38,7 @@ export function useVideoDecisionTask({taskId,hasCandidate,pollEpoch,onCandidate,
    for(let attempt=0;;attempt++){
     try{
      const task=await client.getTask({params:{taskId},query:undefined,body:undefined}) as unknown as WireAITask;
-     if(abandoned)return;onRuntime(task);
+     if(abandoned||task.id!==taskId)return;onRuntime(task);
      const runtime=taskRuntimeStatus(task);
      if(task.executionTaskId&&['paused','waiting_user','unknown_result','failed','cancelled','blocked'].includes(runtime))return;
      if(task.status==='awaiting_confirmation'||task.status==='succeeded'){if(await onCandidate(taskId))return;}

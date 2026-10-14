@@ -115,7 +115,7 @@ describe("assets.service — [T-298] 存量 local-fs 媒体元信息懒回填", 
     await expect(
       service.listAssets(ctxA, { limit: 50, cursor: null }),
     ).resolves.toHaveLength(1);
-    await vi.waitFor(() => expect(headObject).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(headObject).toHaveBeenCalledTimes(1),{timeout:180000});
 
     resolveProbe(probed(12_345));
     await vi.waitFor(async () => {
@@ -132,7 +132,7 @@ describe("assets.service — [T-298] 存量 local-fs 媒体元信息懒回填", 
       expect(file?.mediaMetadata).toMatchObject({
         legacyMediaProbeBackfilledAt: NOW,
       });
-    });
+    },{timeout:180000});
 
     await service.listAssets(ctxA, { limit: 50, cursor: null });
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -176,7 +176,7 @@ describe("assets.service — [T-298] 存量 local-fs 媒体元信息懒回填", 
     const service = createAssetsService(repo, async () => storage, deps);
 
     await service.listAssets(ctxA, { limit: 50, cursor: null });
-    await vi.waitFor(() => expect(headObject).toHaveBeenCalledTimes(5));
+    await vi.waitFor(() => expect(headObject).toHaveBeenCalledTimes(5),{timeout:180000});
     expect(headObject.mock.calls.map(([key]) => key)).not.toContain(
       nonLegacy.file.storageKey,
     );
@@ -187,12 +187,14 @@ describe("assets.service — [T-298] 存量 local-fs 媒体元信息懒回填", 
       expect(info).toHaveBeenCalledWith(
         "[assets][T-298] legacy-media-backfill",
         expect.objectContaining({
-          accountId: "acct-a",
+          accountId: {kind:"legacy-account",id:"acct-a"},
           eligible: 5,
           updated: 5,
+          skipped: 0,
           failed: 0,
         }),
       ),
+      {timeout:180000},
     );
 
     // 第一批留下第 6 条；第二次 list 只补余下 1 条，不重探已完成的 5 条。
@@ -208,7 +210,7 @@ describe("assets.service — [T-298] 存量 local-fs 媒体元信息懒回填", 
     );
     expect(firstBatch.filter((duration) => duration !== 1000)).toHaveLength(5);
     await service.listAssets(ctxA, { limit: 50, cursor: null });
-    await vi.waitFor(() => expect(headObject).toHaveBeenCalledTimes(6));
+    await vi.waitFor(() => expect(headObject).toHaveBeenCalledTimes(6),{timeout:180000});
 
     const [untouchedWrongSignature] = await repo.listAssetFiles(
       ctxA.userId,

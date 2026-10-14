@@ -1,3 +1,13 @@
+import {activeEncryptedLogSession} from "./feedback/encrypted-log-upload.server";
+import {createObservabilityCollector,createObservabilityTaskLedger} from "@creatoros/backend/modules/observability";
+import {createObservabilityHost,resolveObservabilityAppVersion} from "./observability-host.server";
+import {createWorkCandidateAdoption,createWorkCandidateSourceService} from '@creatoros/backend/application/generation/work-candidate-adoption';
+import {createWorkWritingContext} from '@creatoros/backend/application/generation/work-writing-context';
+import {createKnowledgeGenerationService,createKnowledgeGenerationBusinessAdapters} from '@creatoros/backend/modules/ai-runtime';
+import {codexCapabilityReasonSchema,createExecutionRoute,codexExecutionSpec,frozenExecutionEngine,type CodexModelSpec,type executionModelSpecSchema} from '@creatoros/contract/execution-worker';
+import {readFrozenChatExecutionEngine} from '@creatoros/backend/modules/execution';
+import {createExecutionVideoVisualReviewService} from '@creatoros/backend/modules/execution';
+import {resolveVideoVisualReviewWorkerPath} from './execution-worker-path';
 import {createAccountCollectionQueue} from '@creatoros/backend/application/scheduling/account-collection-queue';
 import {createPlatformMetricsCollector,PlatformCollectionNeedsAuthError} from '@creatoros/backend/application/scheduling/platform-collector';
 import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
@@ -202,7 +212,7 @@ import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creato
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, registerPersistentTaskObserver, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
@@ -656,6 +666,8 @@ const FAVORITES_PROMOTE_PER_RUN = 50;
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
+  observability: ReturnType<typeof createObservabilityCollector>;
+  observabilityHost: ReturnType<typeof createObservabilityHost>;
   reportingLocal: ReturnType<typeof createReportingLocal>;
   projectListCoverIds: (ctx: RequestContext, projectIds: readonly string[]) => Promise<Record<string, string | null>>;
   readPageRevision: () => Promise<string>;
@@ -810,6 +822,7 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  resolveWritingContext?: (ctx:RequestContext,projectId:string,selection:import("@creatoros/contract").WritingContext)=>Promise<import("@creatoros/contract").ResolvedWritingContext>;
   readCreationTarget?: (ctx:RequestContext,target:WorkCreationTarget)=>Promise<WorkCreationTarget>;
   readEditorTarget?: (ctx:RequestContext,target:WorkEditorTarget)=>Promise<WorkEditorTarget>;
   workbenchHost?: ChatProductionCompositionDeps["workbenchHost"];
@@ -830,15 +843,11 @@ export interface ChatRuntime {
     requiredSkillIds: readonly string[],
     execute: () => Promise<T>,
   ) => Promise<T>;
+  runKnowledgeGeneration:ReturnType<typeof createKnowledgeGenerationService>["runKnowledgeGeneration"];
   resolveModelSpec: (
     ctx: RequestContext,
     capability: string,
-  ) => Promise<{
-    apiFormat: "anthropic" | "openai_chat" | "openai_responses";
-    baseUrl: string | null;
-    model: string;
-    token: string;
-  }>;
+  ) => Promise<import("@creatoros/ai-worker").ModelSpec>;
   /** [T-652] Copilot 生成定位卡前读取最新前采真值，避免旧 revision 候选。 */
   getPositioningDiscovery: (
     ctx: RequestContext,
@@ -1323,6 +1332,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const identityRepo = createIdentityRepository(db, deps);
   const identity = createIdentityService(identityRepo, deps);
   const localUser = await ensureLocalUser(identityRepo, deps);
+  const observabilityCtx:RequestContext={userId:localUser.id,requestId:"observability-host",source:"ingestion"};
+  let observabilityHost:ReturnType<typeof createObservabilityHost>|undefined;
+  const observability=createObservabilityCollector(db,{
+    now:deps.now,uploadAvailable:()=>Boolean(process.env.CREATOROS_LOG_DIR),
+    onRevoke:()=>observabilityHost?.pause(),
+    logSessionId:()=>process.env.CREATOROS_LOG_DIR?activeEncryptedLogSession(process.env.CREATOROS_LOG_DIR):Promise.resolve(null),
+    // Rust原stderr tee先脱敏再以原公钥封帧；服务器不存明文异常副本。
+    writeEncryptedContext:event=>console.error(`[observability-exception] ${JSON.stringify(event)}`),
+  });
+  const observabilityLedger=createObservabilityTaskLedger(db,observability);
+  const observabilityObserver=registerPersistentTaskObserver(db,{observeAttempt:async event=>{observabilityHost?.pause();await observabilityLedger.observeAttempt(event);},observeSettlement:observabilityLedger.observeSettlement});
+  (globalThis as {__creatorosCaptureException?:(event:unknown)=>void}).__creatorosCaptureException=event=>{
+    void observability.recordException(observabilityCtx,event).catch(()=>{});
+  };
+
 
   // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
   // 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):
@@ -2828,23 +2852,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     db,
     now: deps.now,
     nextId: deps.nextId,
-    resolveTaskRuntimeData: async (ctx, taskType, inputData) => {
+    resolveTaskRuntimeData: async (ctx, taskType, inputData,trustedRoute) => {
+      const preference=await settingsService.getPreferences(ctx);
+      const executionRoute=trustedRoute??createExecutionRoute(preference.assistantExecutionEngine==='codex'?'codex':'pi');
       // 纯 ASR 使用业务提交冻结的音源/配置及按次凭据，不申请文本 Skill。
-      if(taskType==="benchmark.transcribe")return {};
+      if(taskType==="benchmark.transcribe")return {executionRoute};
       if (!resolveEffectiveSkillSnapshotForRuntime) {
         throw new Error(
           "[T-513] Effective Skill snapshot resolver 尚未完成装配",
         );
       }
       const requiredSkillIds = requiredSkillIdsForTask(taskType, inputData);
+      const skillSnapshot=await resolveEffectiveSkillSnapshotForRuntime(ctx,requiredSkillIds);
+      if(executionRoute.engine==='codex')return {skillSnapshot,executionRoute};
       const modelAuthority = pinModelAuthority(
         await readChannelModelAuthority(),
       );
       return {
-        skillSnapshot: await resolveEffectiveSkillSnapshotForRuntime(
-          ctx,
-          requiredSkillIds,
-        ),
+        skillSnapshot,executionRoute,
         modelAuthority: modelAuthority.authority,
         modelAuthorityDigest: modelAuthority.digest,
       };
@@ -2939,7 +2964,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ),
     },
   };
-  const aiService = createAiService(aiOwnerDeps);
+  const aiService = createAiService({...aiOwnerDeps,readWorkCandidateSource:async(c,input)=>{const result=await workCandidateSource.read(c,input);return import("@creatoros/contract").then(m=>m.workCandidateSourceResult.parse(result));}});
   const runWithResolvedEffectiveSkills = async <T>(
     ctx: RequestContext,
     requiredSkillIds: readonly string[],
@@ -3109,7 +3134,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
   const articlesService = createArticlesService(db, articleOwnerPorts);
-  const articles = createArticlesTransport(() => articlesService);
+  const articles = createArticlesTransport(() => articlesService,(c,id,body)=>workCandidateAdoption.adopt(c,'article',id,body));
   const graphicOwnerPorts: import("@creatoros/backend/modules/graphic-posts").GraphicPostPeerPorts & {now:()=>string} = {
     resumeGeneration:(context,input)=>resumeModelExecution(context,{...input,taskType:"graphic.post-text"}),
     resolveConversionSource: (context,input):Promise<import("@creatoros/backend/modules/creative-results").FrozenConversionSource>=>
@@ -3179,7 +3204,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
   const graphicPostsService = createGraphicPostsService(db, graphicOwnerPorts);
-  const graphicPosts = createGraphicPostsTransport(() => graphicPostsService);
+  const graphicPosts = createGraphicPostsTransport(() => graphicPostsService,(c,id,body)=>workCandidateAdoption.adopt(c,'graphic',id,body));
   const articleTextResultsService = createArticleTextResultsService(db, {
     resumeGeneration:(context,input)=>resumeModelExecution(context,{...input,taskType:"wechat.article-text"}),
     articles: articlesService,
@@ -3215,8 +3240,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       try {
         await resolveModelSpec(context, "copy.generate");
         return {ready: true, lastVerifiedAt: deps.now()};
-      } catch {
-        return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
       }
     },
   });
@@ -3257,18 +3282,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     confirmTask: (context, taskId) => aiService.confirmTask(context, taskId),
     async probeCover(context) {
       try {
-        await Promise.all([resolveModelSpec(context, "copy.generate"), resolveMultimodalSpec(context, "image.generate")]);
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
         return {ready: true, lastVerifiedAt: deps.now()};
-      } catch {
-        return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
       }
     },
     async probeCard(context) {
       try {
-        await Promise.all([resolveModelSpec(context, "copy.generate"), resolveMultimodalSpec(context, "image.generate")]);
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
         return {ready: true, lastVerifiedAt: deps.now()};
-      } catch {
-        return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
       }
     },
   });
@@ -3308,18 +3333,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     confirmTask: (context, taskId) => aiService.confirmTask(context, taskId),
     async probeCover(context) {
       try {
-        await Promise.all([resolveModelSpec(context, "copy.generate"), resolveMultimodalSpec(context, "image.generate")]);
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
         return {ready: true, lastVerifiedAt: deps.now()};
-      } catch {
-        return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
       }
     },
     async probeCard(context) {
       try {
-        await Promise.all([resolveModelSpec(context, "copy.generate"), resolveMultimodalSpec(context, "image.generate")]);
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
         return {ready: true, lastVerifiedAt: deps.now()};
-      } catch {
-        return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
       }
     },
   });
@@ -3419,6 +3444,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   }));
   articleOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
   graphicOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
+  const workCandidateSource=createWorkCandidateSourceService(db);
+  const workCandidateAdoption=createWorkCandidateAdoption(db,{source:workCandidateSource,articles:workArticlesFor,graphic:workGraphicFor,lockArtifact:(c,id,tx)=>workArtifactsFor(tx).getArtifact(c,id,true)});
+  const workWritingContext=createWorkWritingContext({assertProject:(c,id)=>projectsService.getProject(c,id),readDocument:articleOwnerPorts.resolveDocumentSource!,readCenter:c=>positioningService.readPositioningCenter(c),readStatement:(c,id)=>positioningService.getStatement(c,id)});
   const workCreationRoot=createWorkCreationRoot({compositions:workCompositionsFor(db),articles:articlesService,graphicPosts:graphicPostsService,script:projectScriptSource});
   const workEditorPorts:WorkEditorPorts={
     readArticle:(c,id)=>articlesService.getArticle(c,id),
@@ -3530,10 +3558,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     confirmTask: (context, taskId) => aiService.confirmTask(context, taskId),
     async probeCover(context) {
       try {
-        await Promise.all([resolveModelSpec(context, "copy.generate"), resolveMultimodalSpec(context, "image.generate")]);
+        await Promise.all([resolveModelSpec(context, "copy.generate"), assertImageCapability(context, "image.generate")]);
         return {ready: true, lastVerifiedAt: deps.now()};
-      } catch {
-        return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+      } catch (error) {
+        return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
       }
     },
   });
@@ -3549,8 +3577,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           try {
             await resolveModelSpec(context, "copy.generate");
             return {ready: true, lastVerifiedAt: deps.now()};
-          } catch {
-            return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+          } catch (error) {
+            return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
           }
         },
       }), articleCoverMediaAdapter),
@@ -3560,8 +3588,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           try {
             await resolveModelSpec(context, "script.draft");
             return {ready: true, lastVerifiedAt: deps.now()};
-          } catch {
-            return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+          } catch (error) {
+            return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
           }
         },
       }),
@@ -3571,8 +3599,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           try {
             await resolveModelSpec(context, "copy.generate");
             return {ready: true, lastVerifiedAt: deps.now()};
-          } catch {
-            return {ready: false, reasonCode: "MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
+          } catch (error) {
+            return {ready: false, reasonCode:codexCapabilityReasonSchema.safeParse((error as {code?:unknown})?.code).data??"MODEL_NOT_CONFIGURED", lastVerifiedAt: deps.now()};
           }
         },
       }), publicationCoverAdapter),
@@ -3799,6 +3827,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // caller)。executor 注册表:demo `echo.manifest` 先行(框架自检),T-254a 在
   // registerBuiltinExecutors 追加 video.render。
   const executorRegistry = createExecutorRegistry();
+  const videoVisualReviewService=createExecutionVideoVisualReviewService(db,{now:deps.now,entryPath:resolveVideoVisualReviewWorkerPath,
+    resolvePiModelSpec:async(c,owner)=>{
+      const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId),authority=pinModelAuthority(await readChannelModelAuthority());
+      if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error('MODEL_AUTHORITY_CHANGED'),{code:'MODEL_AUTHORITY_CHANGED'});
+      try{return await taskModelAuthorityScope.run(authority,async()=>{
+        const spec=await resolveMultimodalSpec(c,'asset.classify');
+        return {apiFormat:'openai_chat' as const,baseUrl:spec.baseUrl??'https://api.siliconflow.cn/v1',token:spec.token,model:spec.model};
+      });}catch(err){if(err instanceof Error&&err.name==='MultimodalConfigError')return null;throw err;}
+    },
+  });
   // [T-281] 注入 Chromium 下载器:未装时 video.render 自动 `playwright install chromium`
   //   (复用 douyin 的 frontend-context 实现,解析基准对;executor 在 backend chunk 里 resolve
   //   playwright 会「too dynamic」运行时崩)。下载 ~340MB 前后回步骤流报诚实进度,装过秒过。
@@ -3810,28 +3848,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     // [T-712] 成片抽帧视觉审核复用既有 asset.classify/vision.default。只在已配置时
     // 调一次受控 VLM 端口；未配置返回 null，executor 记录 skipped 且不阻断成片。
-    videoVisualReview: async (c, input) => {
-      let spec;
-      try {
-        spec = await resolveMultimodalSpecFn(c, "asset.classify", {
-          getModelConfig: (cc: RequestContext, cap: string) =>
-            settingsService.getModelConfig(cc, cap),
-          env: process.env,
-          getChannelModelConfig,
-          getChannelModelCredential: (serviceId) =>
-            getChannelModelCredential(c, serviceId),
-          getChannelModelSelection: (capability) =>
-            getChannelModelSelection(c, capability),
-        });
-      } catch (err) {
-        if (err instanceof Error && err.name === "MultimodalConfigError") return null;
-        throw err;
-      }
-      const { describeImageOpenAICompatible } = await import(
-        "@creatoros/ai-worker"
-      );
-      return describeImageOpenAICompatible(spec, input);
-    },
+    videoVisualReview:videoVisualReviewService.review,
   });
   const executionWorkspacesRoot = resolveWorkspacesRoot();
   const executionService = createExecutionService({
@@ -3998,7 +4015,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }),
   });
   const intelligenceGeneration=createIntelligenceGenerationBridge(db,{
-    entryPath:resolveIntelligenceGenerationWorkerPath,tasks:persistentTaskService,resolveModelSpec:(c,capability)=>resolveModelSpec(c,capability),
+    entryPath:resolveIntelligenceGenerationWorkerPath,tasks:persistentTaskService,resolveModelSpec:(c,capability)=>resolvePiModelSpec(c,capability),
     resolveSkillSnapshot:(c,ids)=>{
       if(!resolveEffectiveSkillSnapshotForRuntime)throw new Error("Skill 服务未就绪");
       return resolveEffectiveSkillSnapshotForRuntime(c,ids);
@@ -4291,6 +4308,7 @@ dispatchIntelligenceRun});
                     assetsService.materializeAsset(c, assetId, destinationPath, exact),
                 },
                 registry: executorRegistry,
+                bindModelExecutionScope:videoVisualReviewService.freezeParentDeadline,
                 workspacesRoot: executionWorkspacesRoot,
               },
             ),
@@ -5082,7 +5100,7 @@ dispatchIntelligenceRun});
   const scheduledSignals=new AsyncLocalStorage<AbortSignal>();
   const checkScheduledSignal=()=>scheduledSignals.getStore()?.throwIfAborted();
   const scheduledFlywheel=createScheduledFlywheelExecutionService(db,{
-    entryPath:resolveFlywheelWorkerPath,resolveModelSpec:(c,capability)=>resolveModelSpec(c,capability),
+    entryPath:resolveFlywheelWorkerPath,resolveModelSpec:(c,capability)=>resolvePiModelSpec(c,capability),
     // 收藏每轮 3 条 × 至多 29 个知识分块；预算同时覆盖 ASR、判库与结构修复。
     // 每轮最多 3 条收藏；覆盖音频分片、知识分块和有界修复，仍服从 token/截止时间。
     budget:{maxCalls:6144,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
@@ -5153,7 +5171,7 @@ positioningService,
 now:deps.now,
 models:scheduledFlywheel.models,
 checkScheduledSignal,
-assertAttributionConfigured:c=>resolveModelSpec(c,"topic.attribution"),
+assertAttributionConfigured:c=>scheduledFlywheel.assertModelConfigured(c,'topic.attribution'),
 makeReviewSubjectReader,
 ai,
 createAiTaskAttemptId,
@@ -5758,7 +5776,7 @@ FAVORITES_PROMOTE_PER_RUN
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
   const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id), (ctx, id) => accountGroupService.get(ctx, id));
-  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState,reportingLocal);
+  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState,reportingLocal,observability);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
       officialSkills: {
@@ -5790,7 +5808,7 @@ FAVORITES_PROMOTE_PER_RUN
   const creativeCanvasRoot=createCreativeCanvasRoot(db,deps,{
     ai:workReviewAiFor,assets:workAssetsFor,projects:workProjectsFor,
     resolveTemplateRequirement:(c,id,version,tx)=>tx?createVisualTemplateService(tx,{assertImageReference:async(context,ref)=>{const owner=workAssetsFor(tx),asset=await owner.getAsset(context,ref.assetId);if(asset.assetType!=="image"||asset.status!=="active")throw new AssetConflictError("参考图片不是可用素材");const exact=await owner.readImageReference(context,ref.assetId,ref.fileId);if(exact.checksum!==ref.checksum)throw new AssetConflictError("图片文件已变化，请重新选择");return {fileId:exact.fileId,checksum:exact.checksum};}}).resolveRequirement(c,id,version):visualTemplateService.resolveRequirement(c,id,version),
-    resolveCapability:async(c,capability,store)=>{const spec=await resolveMultimodalSpec(c,capability,store);return{provider:spec.provider,model:spec.model};},
+    resolveCapability:async(c,capability,store)=>{const spec=capability==="video.generate"?await resolveMultimodalSpec(c,capability,store):await assertImageCapability(c,capability,store);return "engine" in spec?spec:{provider:spec.provider,model:spec.model};},
     assetLimit:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},
     assertProposalAdmission:(c,input,store)=>assistantSystemRoot.service.assertGenerationAdmission(c,input,store),
     wake:(c,id)=>wakeBusinessTask(c,id,"asset.generate"),
@@ -5843,8 +5861,29 @@ FAVORITES_PROMOTE_PER_RUN
     env: process.env,
   });
 
+  const assertCodexCapability=async(ctx:RequestContext,capability:'text'|'imageUnderstanding'|'imageGeneration')=>{
+    const status=await localCodexStatus.read(ctx);
+    if(!status.available||status.capabilities?.[capability]!==true)throw Object.assign(new Error(capability==='imageGeneration'?status.capabilities?.imageErrorCode??status.errorCode??'CODEX_IMAGE_CAPABILITY_UNAVAILABLE':status.errorCode??'CODEX_CAPABILITY_UNAVAILABLE'),{code:capability==='imageGeneration'?status.capabilities?.imageErrorCode??status.errorCode??'CODEX_IMAGE_CAPABILITY_UNAVAILABLE':status.errorCode??'CODEX_CAPABILITY_UNAVAILABLE'});
+  };
+  const assertImageCapability=async(ctx:RequestContext,capability:'image.generate'|'image.edit'|'asset.classify',store?:typeof db)=>{
+    const preferences=await (store?settingsServiceFor(store):settingsService).getPreferences(ctx);
+    if(preferences.assistantExecutionEngine==='codex'){
+      await assertCodexCapability(ctx,capability==='asset.classify'?'imageUnderstanding':'imageGeneration');
+      return codexExecutionSpec();
+    }
+    return resolveMultimodalSpec(ctx,capability,store);
+  };
   // 只解析冻结模型配置；实际模型调用归独立 Worker。
-  const resolveModelSpec = async (ctx: RequestContext, capability: string) => {
+  const resolveModelSpec = async (ctx: RequestContext, capability: string,owner?:{aiTaskId:string}) => {
+    const engine=owner?frozenExecutionEngine(await aiService.getTaskRuntimeData(ctx,owner.aiTaskId)):(await settingsService.getPreferences(ctx)).assistantExecutionEngine;
+    if(engine==="codex"){
+      if(!owner)await assertCodexCapability(ctx,capability==='asset.classify'?'imageUnderstanding':'text');
+      return codexExecutionSpec();
+    }
+    return resolvePiModelSpec(ctx,capability);
+  };
+  // 仅由已经核实原任务冻结Pi的宿主分支调用；当前偏好不参与历史凭据解析。
+  const resolvePiModelSpec=async(ctx:RequestContext,capability:string)=>{
     const cfg = await resolveLlmConfig(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
@@ -5969,14 +6008,30 @@ FAVORITES_PROMOTE_PER_RUN
     sourceReader:{listEnabledSources:c=>trendSourcesService.listEnabledSources(c)},
     resolveRun:async(c,id)=>{await dailyTopicRunIntents.ensureRunForTask(c,id);return dailyTopicRuns.resolveRun(c,id);},
     countCandidatesForDay:(c,day)=>countCandidatesForDay(db,c,day),
-    async hasConfiguredModel(c){try{await resolveModelSpec(c,"topic.generate");return true;}catch{return false;}},
+    async hasConfiguredModel(c,owner){try{await resolveModelSpec(c,"topic.generate",owner);return true;}catch{return false;}},
     dailyLimit:Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT),now:deps.now,
   });
-  const assetProcessingPreparation={assets:assetsService,async isModelConfigured(c:RequestContext,taskType:"asset.classify"|"material.extract"){
-    try{if(taskType==="asset.classify")await resolveMultimodalSpec(c,"asset.classify");else await resolveModelSpec(c,"script.draft");return true;}
+  const assetProcessingPreparation={assets:assetsService,async isModelConfigured(c:RequestContext,taskType:"asset.classify"|"material.extract",owner:{aiTaskId:string}){
+    const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
+    if(frozenExecutionEngine(runtime)==='codex')return true;
+    const authority=pinModelAuthority(await readChannelModelAuthority());
+    if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error('MODEL_AUTHORITY_CHANGED'),{code:'MODEL_AUTHORITY_CHANGED'});
+    try{await taskModelAuthorityScope.run(authority,()=>taskType==='asset.classify'?resolveMultimodalSpec(c,'asset.classify'):resolveModelSpec(c,'script.draft',owner));return true;}
     catch(error){if(error instanceof LlmCredentialError || (error instanceof Error && error.name==="MultimodalConfigError"))return false;throw error;}
   }};
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    ...createKnowledgeGenerationBusinessAdapters({
+      readAtoms:async(c,ids)=>Promise.all(ids.map(async id=>{const atom=await knowledgeService.getKnowledge(c,id);if(atom.status!=='active')throw new Error('知识节点不可用');return {id:atom.id,title:atom.title,knowledgeType:atom.knowledgeType,sourceNote:atom.sourceNote??null};})),
+      readComments:async(c,ids)=>{
+        const remaining=new Set(ids),found: Array<{signalId:string;rawText:string;likeCount:number|null}>=[];
+        for(let page=1;remaining.size;page++){
+          const result=await candidateService.listSignals(c,{offset:(page-1)*200,limit:200,source:'comment'});
+          for(const row of result.rows)if(remaining.delete(row.id))found.push({signalId:row.id,rawText:row.rawText,likeCount:row.likeCount??null});
+          if(page*200>=result.total||!result.rows.length)break;
+        }
+        if(remaining.size)throw new Error('评论不存在或不属于当前工作区');return found;
+      },
+    }),
     'production.rough-cut.propose':createProductionRoughCutBusinessAdapter(()=>productionRoughCut),
     ...createDiscoveryBusinessAdapters({projectsService,candidateService,trendSourcesService,deps,aiService,persistentTaskService,projectIntelligenceReferences,generationContext,makeGenerationReaders,makeProjectMaterialsReader,calibrationDiagnoseReaders,calibrationScoreReaders,dailyTopicAdapter,positioningWorksReader}),
 
@@ -5991,13 +6046,15 @@ FAVORITES_PROMOTE_PER_RUN
     ...momentsModelRoot.businessAdapters,
 
   }});
+  const knowledgeGeneration=createKnowledgeGenerationService(db,{ai:aiService,prepareTask:(c,id)=>businessExecution.prepare(c,id),wakeWorker:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();}});
   const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{console.error("EXECUTION_WORKER_BUILD_MISSING");return null;}})();
   const resolveWorkerCredential=async(c:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string})=>{
       const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
+      if(frozenExecutionEngine(runtime)==="codex")return codexExecutionSpec();
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error("MODEL_AUTHORITY_CHANGED"),{code:"MODEL_AUTHORITY_CHANGED"});
       try{return await taskModelAuthorityScope.run(authority,async()=>{
-        if(capability!=="asset.classify")return resolveModelSpec(c,capability);
+        if(capability!=="asset.classify")return resolveModelSpec(c,capability,owner);
         const spec=await resolveMultimodalSpec(c,"asset.classify");
         return {apiFormat:"openai_chat" as const,baseUrl:spec.baseUrl??"https://api.siliconflow.cn/v1",model:spec.model,token:spec.token};
       });}
@@ -6043,6 +6100,7 @@ FAVORITES_PROMOTE_PER_RUN
   const coverExecutionPorts={
     async resolveImageSpec(c:RequestContext,capability:"image.generate"|"image.edit",taskId:string){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
+      if(frozenExecutionEngine(runtime)==="codex"&&(capability==="image.generate"||capability==="image.edit"))return {...codexExecutionSpec(),kind:"image" as const};
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
       return taskModelAuthorityScope.run(authority,()=>resolveMultimodalSpec(c,capability));
@@ -6060,6 +6118,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
     async resolveSpec(c,capability,taskId){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
+      if(frozenExecutionEngine(runtime)==="codex"&&(capability==="image.generate"||capability==="image.edit"))return {...codexExecutionSpec(),kind:"image" as const};
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
       return taskModelAuthorityScope.run(authority,()=>resolveMultimodalSpec(c,capability));
@@ -6252,7 +6311,7 @@ FAVORITES_PROMOTE_PER_RUN
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{observabilityHost?.stop();stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),videoVisualReviewService.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);await observabilityObserver.drain();observabilityObserver.dispose();};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -6820,8 +6879,10 @@ FAVORITES_PROMOTE_PER_RUN
   const chatRuntime: ChatRuntime = {
     assistantSystem:assistantSystemRoot.preparation,
 
+    resolveWritingContext:(c,id,selection)=>workWritingContext.resolve(c,id,selection),
     readCreationTarget:async(c,target)=>(await workCreationRoot.read(c,target)).target,
     readEditorTarget:(c,target)=>workEditorCandidate.readTarget(c,target),
+    runKnowledgeGeneration:knowledgeGeneration.runKnowledgeGeneration,
     localCodexStatus:localCodexStatus.read,
     ...(workbenchHost?{workbenchHost}:{}),
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
@@ -7122,7 +7183,10 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
       ...(browserWorkbenchHost?{resolveWorkbenchScreenshot:screenshotMedia.resolve}:{}),
       ...(artifactWorkbenchHost?{verifyWorkbenchArtifacts:artifactWorkbenchHost.verifyArtifacts}:{}),
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
-      resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
+      resolveModelCredential:async(c,capability,owner)=>{
+        const engine=await readFrozenChatExecutionEngine(db,c,owner);
+        return engine==='codex'?codexExecutionSpec():resolveModelSpec(c,capability,owner);
+      },
       resolveFallbackModelCredential:resolveChatFallbackCredential,
       prepareTaskCommit:aiService.prepareTaskCommit,
       trend:{
@@ -7190,7 +7254,14 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
   agenticWorker?.start();
   modelWorker?.start();
 
+  observabilityHost=createObservabilityHost({ctx:observabilityCtx,collector:observability,ledger:observabilityLedger,
+    logDir:process.env.CREATOROS_LOG_DIR??null,appVersion:resolveObservabilityAppVersion(),
+    osName:process.platform==="darwin"?"macos":process.platform==="win32"?"windows":"linux",
+    online:()=>process.env.CREATOROS_OFFLINE!=="1",
+  });
+  if(process.env.CREATOROS_DESKTOP==="1"&&process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS!=="1")observabilityHost.start();
   return {
+    observability,observabilityHost,
     reportingLocal,
     readPageRevision: createPageReadRevisionReader(db),
     projectListCoverIds: (ctx, projectIds) => readProjectListCoverIds(ctx, projectIds, { projects: projectsService, publishing: publishingService }),
@@ -7402,6 +7473,9 @@ export async function getSettingsService(): Promise<SettingsService> {
 }
 
 /** 仅供可信服务端故障边界写入已授权的结构化诊断；浏览器无此端口。 */
+export async function getObservabilityCollector(){return (await getBundle()).observability;}
+export async function setObservabilityConnectivity(online:boolean){(await getBundle()).observabilityHost.setConnectivity(online);}
+
 export async function getReportingLocal() {
   return (await getBundle()).reportingLocal;
 }
@@ -7495,7 +7569,24 @@ export async function getWebSessionRuntime(): Promise<
 // Used by BOTH the server pages (contract-client.server) and the /api/v1 route,
 // so server reads and island writes share one pglite store — island mutations
 // persist and a router.refresh() reflects them.
-export const compositeTransport: Transport = withPageReadInvalidation(createApplicationTransport(getBundle));
+const observedApplicationTransport=createApplicationTransport(getBundle);
+export const compositeTransport:Transport=withPageReadInvalidation({
+  async request(endpoint,input,ctx){
+    const exclude=endpoint.id.startsWith("settings.logReporting.")||endpoint.id.startsWith("observability.");
+    const start=performance.now();
+    if(!exclude&&endpoint.method!=="GET"){
+      (await getBundle()).observabilityHost.pause();
+    }
+    try{
+      const result=await observedApplicationTransport.request(endpoint,input,ctx);
+      if(ctx&&!exclude)void getBundle().then(bundle=>bundle.observability.recordOutcome(ctx,{eventId:crypto.randomUUID(),operationId:endpoint.id,measurement:"request",result:"success",occurredAt:new Date().toISOString(),executionSeconds:(performance.now()-start)/1000})).catch(()=>{});
+      return result;
+    }catch(error){
+      if(ctx&&!exclude)void getBundle().then(bundle=>bundle.observability.recordOutcome(ctx,{eventId:crypto.randomUUID(),operationId:endpoint.id,measurement:"request",result:"failed",occurredAt:new Date().toISOString(),executionSeconds:(performance.now()-start)/1000})).catch(()=>{});
+      throw error;
+    }
+  },
+});
 
 // Test hook: drop the pglite singleton so each test starts from a fresh seed.
 export function __resetPersistenceForTests(): void {

@@ -25,7 +25,7 @@ export const fileWriteRequestDigest=(scopeKey:string,operationId:string,path:str
  * Legacy observed-state adoption is deliberately absent until quiescence review.
  */
 type RecoveryControl={signal:AbortSignal;shouldStop():boolean};
-export function createWorkbenchFileRecoveryService(db:Db,deps:{capabilities:readonly WorkbenchCapability[];readReceipt(query:FileReceiptQuery):Promise<unknown>;now?:()=>string;
+export function createWorkbenchFileRecoveryService(db:Db,deps:{capabilities:readonly WorkbenchCapability[];readReceipt(query:FileReceiptQuery,signal?:AbortSignal):Promise<unknown>;now?:()=>string;
  afterReconciled?:(taskId:string,control?:RecoveryControl)=>Promise<void>;shouldStop?:()=>boolean}){
  const now=deps.now??(()=>new Date().toISOString());
  const capabilities=deps.capabilities.filter(cap=>["files.write","files.edit"].includes(cap.name));
@@ -108,7 +108,7 @@ export function createWorkbenchFileRecoveryService(db:Db,deps:{capabilities:read
   const unknown={taskId,operationId,status:"unknown" as const,verificationKind:null,version:null,hash:null,size:null};
   // No transaction is held across Native I/O. Missing/damaged records never
   // authorize re-execution or legacy current-state inference.
-  let raw:unknown;try{raw=await deps.readReceipt(before.query!);}catch{return unknown;}
+  let raw:unknown;try{raw=await deps.readReceipt(before.query!,control?.signal);}catch{return unknown;}
   check(control);
   const reply=z.discriminatedUnion("status",[
    z.object({status:z.literal("absent")}).strict(),

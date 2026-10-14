@@ -5,7 +5,9 @@ use super::browser::{BrowserHost, BrowserLocationAction, BrowserSocketRequest};
 use rand::RngCore as _;
 use serde_json::{json, Value};
 use std::fs::{self, DirBuilder};
-use std::io::{self, BufRead, BufReader, Read, Write};
+use std::io::{self, Read, Write};
+#[cfg(test)]
+use std::io::{BufRead, BufReader};
 use std::os::fd::AsRawFd;
 use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -13,7 +15,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const MAX_REQUEST_BYTES: u64 = 1_400_000;
 const MAX_RESPONSE_BYTES: usize = 4_000_000;
@@ -58,23 +60,87 @@ fn bounded_response(reply: &Value) -> io::Result<Vec<u8>> {
     }))?)
 }
 
+// Positive framing and reply phases each freeze their deadline once. Polling
+// only wakes owned cancellation; partial bytes never extend either phase.
+const IO_PHASE: Duration = Duration::from_secs(120);
+
+fn io_remaining(deadline: Instant, stop: &AtomicBool) -> io::Result<Duration> {
+    if stop.load(Ordering::Acquire) {
+        return Err(io::Error::new(io::ErrorKind::Interrupted, "owned IPC stopped"));
+    }
+    deadline.checked_duration_since(Instant::now())
+        .filter(|remaining| !remaining.is_zero())
+        .ok_or_else(|| io::Error::new(io::ErrorKind::TimedOut, "IPC phase deadline exhausted"))
+}
+
+fn wait_ready(stream: &UnixStream, events: i16, deadline: Instant, stop: &AtomicBool) -> io::Result<()> {
+    loop {
+        let remaining = io_remaining(deadline, stop)?;
+        let milliseconds = remaining.as_millis().clamp(1, 100) as i32;
+        let mut descriptor = libc::pollfd { fd: stream.as_raw_fd(), events, revents: 0 };
+        let result = unsafe { libc::poll(&mut descriptor, 1, milliseconds) };
+        if result > 0 {
+            io_remaining(deadline, stop)?;
+            if descriptor.revents & libc::POLLNVAL != 0 {
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid owned socket"));
+            }
+            return Ok(());
+        }
+        if result < 0 {
+            let error = io::Error::last_os_error();
+            if error.kind() != io::ErrorKind::Interrupted { return Err(error); }
+        }
+    }
+}
+
+fn read_frame(stream: &mut UnixStream, maximum: usize, deadline: Instant, stop: &AtomicBool) -> io::Result<Vec<u8>> {
+    let mut body = Vec::new();
+    let mut chunk = [0u8; 8192];
+    while body.len() <= maximum {
+        wait_ready(stream, libc::POLLIN, deadline, stop)?;
+        let length = chunk.len().min(maximum + 1 - body.len());
+        match stream.read(&mut chunk[..length]) {
+            Ok(0) => break,
+            Ok(count) => {
+                let end = chunk[..count].iter().position(|byte| *byte == b'\n').map(|index| index + 1);
+                body.extend_from_slice(&chunk[..end.unwrap_or(count)]);
+                if end.is_some() { break; }
+            }
+            Err(error) if matches!(error.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => {}
+            Err(error) => return Err(error),
+        }
+    }
+    io_remaining(deadline, stop)?;
+    Ok(body)
+}
+
+fn write_frame(stream: &mut UnixStream, mut bytes: &[u8], deadline: Instant, stop: &AtomicBool) -> io::Result<()> {
+    while !bytes.is_empty() {
+        wait_ready(stream, libc::POLLOUT, deadline, stop)?;
+        match stream.write(bytes) {
+            Ok(0) => return Err(io::Error::new(io::ErrorKind::WriteZero, "empty owned socket write")),
+            Ok(count) => bytes = &bytes[count..],
+            Err(error) if matches!(error.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => {}
+            Err(error) => return Err(error),
+        }
+    }
+    io_remaining(deadline, stop)?;
+    Ok(())
+}
+
 fn serve_one(
     mut stream: UnixStream,
     expected_pid: u32,
     host: &BrowserHost,
     runtime: &tokio::runtime::Runtime,
+    read_deadline: Instant,
+    stop: &AtomicBool,
 ) -> io::Result<()> {
-    // Accepted sockets may inherit O_NONBLOCK from this bridge's listener.
-    // The request deadline below is the intended bound; avoid transient EAGAIN.
-    stream.set_nonblocking(false)?;
-    stream.set_read_timeout(Some(Duration::from_secs(10)))?;
-    stream.set_write_timeout(Some(Duration::from_secs(120)))?;
+    stream.set_nonblocking(true)?;
     if !peer_is_sidecar(&stream, expected_pid)? {
-        stream.write_all(b"{\"ok\":false,\"code\":\"UNAUTHORIZED_PEER\"}\n")?;
-        return Ok(());
+        return write_frame(&mut stream, b"{\"ok\":false,\"code\":\"UNAUTHORIZED_PEER\"}\n", Instant::now() + IO_PHASE, stop);
     }
-    let mut body = Vec::new();
-    BufReader::new((&stream).take(MAX_REQUEST_BYTES + 1)).read_until(b'\n', &mut body)?;
+    let body = read_frame(&mut stream, MAX_REQUEST_BYTES as usize, read_deadline, stop)?;
     let reply: Value = if body.len() as u64 > MAX_REQUEST_BYTES || body.last() != Some(&b'\n') {
         json!({"ok": false, "code": "INVALID_REQUEST"})
     } else {
@@ -118,10 +184,10 @@ fn serve_one(
             Err(_) => json!({"ok": false, "code": "INVALID_REQUEST"}),
         }
     };
-    let encoded = bounded_response(&reply)?;
-    stream.write_all(&encoded)?;
-    stream.write_all(b"\n")?;
-    Ok(())
+    let write_deadline = Instant::now() + IO_PHASE;
+    let mut encoded = bounded_response(&reply)?;
+    encoded.push(b'\n');
+    write_frame(&mut stream, &encoded, write_deadline, stop)
 }
 
 pub struct PendingBrowserBridge {
@@ -185,17 +251,18 @@ impl PendingBrowserBridge {
                 while !stop.load(Ordering::Acquire) {
                     match listener.accept() {
                         Ok((mut stream, _)) => {
+                            let read_deadline = Instant::now() + IO_PHASE;
                             if active.fetch_add(1, Ordering::AcqRel) >= MAX_CONNECTIONS {
                                 active.fetch_sub(1, Ordering::AcqRel);
-                                let _ =
-                                    stream.write_all(b"{\"ok\":false,\"code\":\"BROWSER_BUSY\"}\n");
+                                let _ = stream.set_nonblocking(true).and_then(|_| write_frame(&mut stream, b"{\"ok\":false,\"code\":\"BROWSER_BUSY\"}\n", read_deadline, &stop));
                                 continue;
                             }
                             let host = host.clone();
                             let runtime = runtime.clone();
                             let active = active.clone();
+                            let worker_stop = stop.clone();
                             workers.lock().unwrap().push(std::thread::spawn(move || {
-                                let _ = serve_one(stream, expected_pid, &host, &runtime);
+                                let _ = serve_one(stream, expected_pid, &host, &runtime, read_deadline, &worker_stop);
                                 active.fetch_sub(1, Ordering::AcqRel);
                             }));
                             workers
@@ -261,6 +328,58 @@ pub struct BrowserBridgeState(pub Mutex<Option<RunningBrowserBridge>>);
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn t1250_partial_frame_activity_does_not_renew_frozen_deadline() {
+        let (mut server, mut client) = UnixStream::pair().unwrap();
+        server.set_nonblocking(true).unwrap();
+        let finished = Arc::new(AtomicBool::new(false));
+        let sent = finished.clone();
+        let writer = std::thread::spawn(move || {
+            while !sent.load(Ordering::Acquire) {
+                if client.write_all(b"x").is_err() { break; }
+                std::thread::sleep(Duration::from_millis(10));
+            }
+        });
+        let started = Instant::now();
+        // Simulate an already almost exhausted frozen phase, not a new
+        // production execution cap. Production read/write slots remain 120s.
+        let result = read_frame(&mut server, 1400000, started + Duration::from_millis(120), &AtomicBool::new(false));
+        finished.store(true, Ordering::Release);
+        writer.join().unwrap();
+        assert_eq!(result.unwrap_err().kind(), io::ErrorKind::TimedOut);
+        assert!(started.elapsed() < Duration::from_secs(2));
+    }
+
+    #[test]
+    fn t1250_backpressured_reply_uses_one_deadline() {
+        let (mut server, _client) = UnixStream::pair().unwrap();
+        server.set_nonblocking(true).unwrap();
+        let started = Instant::now();
+        let bytes = vec![b'x'; 4000001];
+        let result = write_frame(&mut server, &bytes, started + Duration::from_millis(120), &AtomicBool::new(false));
+        assert_eq!(result.unwrap_err().kind(), io::ErrorKind::TimedOut);
+        assert!(started.elapsed() < Duration::from_secs(2));
+    }
+
+    #[test]
+    fn t1250_cancel_wakes_owned_reply_without_claiming_write_rollback() {
+        let (mut server, _client) = UnixStream::pair().unwrap();
+        server.set_nonblocking(true).unwrap();
+        let stop = Arc::new(AtomicBool::new(false));
+        let setter = stop.clone();
+        let cancel = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(100));
+            setter.store(true, Ordering::Release);
+        });
+        let started = Instant::now();
+        let result = write_frame(&mut server, &vec![b'x'; 4000001], started + IO_PHASE, &stop);
+        cancel.join().unwrap();
+        assert_eq!(result.unwrap_err().kind(), io::ErrorKind::Interrupted);
+        assert!(started.elapsed() < Duration::from_secs(2));
+        // Some bytes may already have been written; no receipt/effect rollback
+        // or new operation is inferred from this cancelled connection.
+    }
+
     use std::io::BufRead;
 
     #[test]
@@ -281,6 +400,52 @@ mod tests {
         let mut line = String::new();
         BufReader::new(stream).read_line(&mut line).unwrap();
         serde_json::from_str(&line).unwrap()
+    }
+
+    #[test]
+    fn t1250_browser_authorized_frame_after_thirty_seconds_keeps_original_id() {
+        let pending = PendingBrowserBridge::bind().unwrap();
+        let socket = pending.socket_path();
+        let root = std::env::temp_dir().join(format!("t1250-browser-slow-{}", rand::random::<u64>()));
+        let running = pending.start(std::process::id(), root.clone(), PathBuf::from("/missing/cft"));
+        let mut stream = UnixStream::connect(&socket).unwrap();
+        stream.set_read_timeout(Some(IO_PHASE)).unwrap();
+        std::thread::sleep(Duration::from_secs(31));
+        let sent = stream.write_all(format!("{}\n", json!({"operationId":"same-location-31", "action":{
+            "kind":"profile_location", "userId":"u", "accountId":"a", "taskId":"t", "identityMode":"anonymous"
+        }})).as_bytes());
+        let mut line = String::new();
+        let received = BufReader::new(stream).read_line(&mut line);
+        drop(running);
+        let _ = fs::remove_dir_all(root);
+        assert!(sent.is_ok(), "{sent:?}");
+        assert!(received.is_ok(), "{received:?}");
+        let reply: Value = serde_json::from_str(&line).unwrap();
+        assert_eq!(reply["ok"], true);
+        assert_eq!(reply["operationId"], "same-location-31");
+    }
+
+    #[test]
+    fn t1250_browser_stop_wakes_incomplete_frame_without_profile_creation() {
+        let pending = PendingBrowserBridge::bind().unwrap();
+        let socket = pending.socket_path();
+        let root = std::env::temp_dir().join(format!("t1250-browser-stop-{}", rand::random::<u64>()));
+        let running = pending.start(std::process::id(), root.clone(), PathBuf::from("/missing/cft"));
+        let mut client = UnixStream::connect(&socket).unwrap();
+        client.write_all(b"{\"operationId\":").unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+        let (tx, rx) = std::sync::mpsc::channel();
+        let started = Instant::now();
+        let join = std::thread::spawn(move || { drop(running); tx.send(()).unwrap(); });
+        let stopped = rx.recv_timeout(IO_PHASE);
+        let elapsed = started.elapsed();
+        drop(client);
+        join.join().unwrap();
+        let absent = !root.exists();
+        let _ = fs::remove_dir_all(root);
+        assert!(stopped.is_ok());
+        assert!(elapsed < Duration::from_secs(2), "{elapsed:?}");
+        assert!(absent, "incomplete request created a browser profile");
     }
 
     #[test]
@@ -403,6 +568,15 @@ mod tests {
     #[test]
     #[ignore = "external Node/DB integration fixture; requires fixed CfT and explicit environment"]
     fn external_node_host_fixture() {
+        // Test-only milliseconds, frozen once after ready; never extends a task/RPC deadline.
+        let wait_ms = match std::env::var("CREATOROS_TEST_WORKBENCH_FIXTURE_WAIT_MS") {
+            Ok(value) => value.parse::<u64>().expect("fixture wait must be unsigned milliseconds"),
+            Err(std::env::VarError::NotPresent) => 180_000,
+            Err(error) => panic!("fixture wait environment is invalid: {error}"),
+        };
+        assert!(wait_ms >= 120_000, "fixture wait must be at least 120000 milliseconds");
+        let wait_budget = Duration::from_millis(wait_ms);
+        std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
         let abrupt_exit = std::env::var("CREATOROS_BROWSER_E2E_ABRUPT_EXIT").as_deref() == Ok("1");
         if abrupt_exit {
             // Give the interrupted fixture its own owner process group so
@@ -433,7 +607,7 @@ mod tests {
         let socket = pending.socket_path();
         let running = pending.start(expected_pid, profile_root, bundled);
         fs::write(&ready, socket.to_string_lossy().as_bytes()).unwrap();
-        let deadline = std::time::Instant::now() + Duration::from_secs(180);
+        let deadline = std::time::Instant::now().checked_add(wait_budget).expect("fixture wait exceeds Instant range");
         while !done.exists() && std::time::Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(100));
         }

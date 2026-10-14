@@ -750,6 +750,20 @@
       "when": 1791043200005,
       "tag": "0132_legacy_scheduled_job_membership",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1791043200006,
+      "tag": "0133_assistant_execution_engine",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1791043200007,
+      "tag": "0134_client_observability",
+      "breakpoints": true
     }
   ]
 }

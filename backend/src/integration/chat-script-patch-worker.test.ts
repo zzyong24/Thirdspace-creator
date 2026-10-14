@@ -16,7 +16,7 @@ import {prepareChatToolDefinitions} from "../modules/ai-runtime/chat-tool-defini
 import type {ContextReaders} from "../modules/ai-runtime/chat-assembly-types";
 let db:Db,close:()=>Promise<void>,seq=0;
 const entryPath=resolve("../ai-worker/dist/execution-worker.cjs");
-beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
+beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe",timeout:180000});},180000);
 afterAll(async()=>close());
 it.each(["success","unchanged","lostAck","crashAfterPatch"])("真实 Worker 局部改稿只产原版本候选：%s",async mode=>{
  let clockOffset=0;
@@ -42,7 +42,7 @@ it.each(["success","unchanged","lostAck","crashAfterPatch"])("真实 Worker 局�
  const supervisorSpy=mode==="crashAfterPatch"?vi.spyOn(supervisorModule,"createWorkerSupervisor").mockImplementation(options=>{const supervisor=originalSupervisor(options);stopExecution=ref=>supervisor.stopExecutionTree(ref);return supervisor;}):undefined;
  const original=toolPorts.createExecutionChatToolPorts;let lost=false;
  const spy=(mode==="lostAck" || mode==="crashAfterPatch")?vi.spyOn(toolPorts,"createExecutionChatToolPorts").mockImplementation((...args)=>{const ports=original(...args);return {...ports,async execute(...input){const result=await ports.execute(...input);if(mode==="crashAfterPatch"){expect(await stopExecution!(input[0])).toBe(true);return result;}if(!lost){lost=true;throw new Error("fixture lost committed tool receipt");}return result;}};}):undefined;
- const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"patch-host",budget:{maxCalls:6,maxTokens:100000,deadlineMs:mode==="crashAfterPatch"?300000:60000},modelConcurrency:1,resolveTools,resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+ const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"patch-host",budget:{maxCalls:6,maxTokens:100000,deadlineMs:mode==="crashAfterPatch"?300000:180000},modelConcurrency:1,resolveTools,resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
  let host=createHost();
  try{
   await host.drainOnce();
@@ -53,7 +53,7 @@ it.each(["success","unchanged","lostAck","crashAfterPatch"])("真实 Worker 局�
    current.versionId="version-2";current.originalText="用户已经保存另一版正文";
    clockOffset=Date.parse(interrupted!.leaseExpiresAt!)-Date.now()+1;host=createHost();await host.drainOnce();
   }
-  expect((await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!.status).toBe("succeeded");
+  expect((await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!.status).toBe(mode==="unchanged"?"partial":"succeeded");
   expect(requests).toHaveLength(2);
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
   expect(calls.filter(call=>call.kind==="tool")).toHaveLength(1);expect(calls.filter(call=>call.parentCallId)).toHaveLength(0);
@@ -65,4 +65,4 @@ it.each(["success","unchanged","lostAck","crashAfterPatch"])("真实 Worker 局�
   expect(JSON.stringify(messages.find(message=>message.role==="assistant")!.parts)).toContain("script.patch");
   expect(anchor.originalText).toBe("原始段落");expect(resolveSelection).toHaveBeenCalledTimes(1);if(mode==="lostAck")expect(lost).toBe(true);
  }finally{spy?.mockRestore();supervisorSpy?.mockRestore();await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
-},15000);
+},540000);

@@ -414,3 +414,19 @@ it("T-1060 stdio EOF releases a transport that is still connecting", async () =>
   expect(server.close).toHaveBeenCalledTimes(1);
   expect(signals.listenerCount("SIGTERM")).toBe(0);
 });
+
+it("T1252 runCliCommand私有signal传到真实client，取消后原POST只一次", async () => {
+  const oldBase = process.env.CREATOROS_BASE_URL, oldFetch = globalThis.fetch;
+  const controller = new AbortController();
+  const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => await new Promise<Response>((_resolve, reject) => {
+    init!.signal!.addEventListener("abort", () => reject(Error("private caller cancelled")), { once: true });
+  }));
+  process.env.CREATOROS_BASE_URL = "http://127.0.0.1:43127";
+  globalThis.fetch = fetchImpl as typeof fetch;
+  try {
+    const promise = runCliCommand(["call", "projects.list", "--input", "{}"], { signal: controller.signal });
+    const rejected = expect(promise).rejects.toMatchObject({ name: "DispatchObservationError", outcomeUnknown: true });
+    await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(1), { timeout: 120_000 });
+    controller.abort(); await rejected; expect(fetchImpl).toHaveBeenCalledTimes(1);
+  } finally { globalThis.fetch = oldFetch; if (oldBase === undefined) delete process.env.CREATOROS_BASE_URL; else process.env.CREATOROS_BASE_URL = oldBase; }
+}, 180_000);

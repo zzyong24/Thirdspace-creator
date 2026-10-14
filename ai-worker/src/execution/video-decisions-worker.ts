@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {videoFrozenSchema,workerModelSpecSchema,workerReservationSchema,workerStartReceiptSchema,workerStructuredResultSchema,type structuredGenerationInputSchema,type WorkerPort,type WorkerStructuredResult} from "@creatoros/contract/execution-worker";
+import {videoFrozenSchema,executionModelSpecSchema,workerReservationSchema,workerStartReceiptSchema,workerStructuredResultSchema,type structuredGenerationInputSchema,type WorkerPort,type WorkerStructuredResult} from "@creatoros/contract/execution-worker";
 import {runVideoDecisions,type VideoDecisionsDeps,type BrollAssetRef,type StoryboardSectionRef} from "../runtime/video-decisions-runner";
 import {modelFor} from "../runtime/provider-factory";
 import {runStructuredNode} from "../nodes/structured-node";
@@ -18,7 +18,7 @@ export async function runVideoDecisionsInWorker(input:z.infer<typeof structuredG
   async readStoryboard(){signal.throwIfAborted();return frozen.storyboard as unknown as StoryboardSectionRef[];},
   async callStructured(node){
    signal.throwIfAborted();const index=(counts.get(node.skillId)??0)+1;counts.set(node.skillId,index);
-   const spec=workerModelSpecSchema.parse(await call("resolveVideoModel",{skillId:node.skillId},signal));
+   const spec=executionModelSpecSchema.parse(await call("resolveVideoModel",{skillId:node.skillId},signal));
    const model=createDurableGenerationModel({model:modelFor(spec),operationKey:`${input.operationKey}/video/${node.skillId}/${index}`,signal,ports:{
     async reserve(request){return workerReservationSchema.parse(await call("reserveVideoModel",{skillId:node.skillId,...JSON.parse(JSON.stringify(request))},signal));},
     async start(callId){const receipt=workerStartReceiptSchema.parse(await call("startCall",{callId},signal));if(receipt.callId!==callId)throw new Error("VIDEO_START_RECEIPT_MISMATCH");},

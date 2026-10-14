@@ -2486,3 +2486,87 @@ T-1014仅迁移看板原说明，状态和验收未改：
 <a id="b-2a871e9f9f38"></a>
 
 |T-1101|修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集|🔨|PASS[REV:146ff2046c2c]|待验|[SPEC](docs/features/t1101-canvas-binding-collection.md)|用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。|
+
+<a id="b-da2102ce12ea"></a>
+### T-1110 原执行记录
+
+原行 SHA256 `da2102ce12ea3ad08f27af7c5e1adb68303c59cf4e9f55f6bf5edc29bb412a92`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1110|核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态|📋 待办|—|—|[实际缺陷](docs/features/t1110-browser-development-resource-diagnosis.md)|用户要求有问题建task；fa09真实两条旅程0PASS/2FAIL，绑定页ChunkLoadError无法加载，第一例旧状态被仍运行页面自动保存覆盖。原trace/log保留；后者在T1108原范围先离开再准备，前者根因未知，核真实静态响应/开发缓存和并发，不删断言或用旧PASS代签。|
+
+<a id="b-2d26eed11574"></a>
+### T-1081 原执行记录
+
+原行 SHA256 `2d26eed11574bc21c19bdc5ac03deaf286eaa35f2e3e7a0df3e3803ecb593ef4`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1081|核对整合后原主线的14处短执行预算与超时扫描误报|📋 待办|—|待验|[根因证据](docs/verification/t1080/timeout-static-dispositions-corrected.json)|完整超时门实际exit1：14条既有短执行/有限观察来自原main/client，另13条为冻结编辑器调度/动画、已取消清理、TTL或已归一消费者；先按真实消费者复核，不改vendor洗绿、不延长取消。来源与原失败留存；本轮优先合并和出包，此任务尚未实施。|
+
+<a id="b-e634c6a1c42a"></a>
+### T-1097 原执行记录
+
+原行 SHA256 `e634c6a1c42a608e3efd0a5680fdfc20256098b6b912474cd7a6c0ebecb17205`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1097|修复文章编导参考资料与候选审读保护缺口|📋|—|—|[缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md)|用户要求有问题及时建task修复；T1096确认身份/文档只接不可触达旧generate，当前联合未接；事实替换对照及未请求元数据保护也需当前链实证。核真实来源与审读后独评闭合，不恢复旧快转，不把旧恢复/checkbox测试当新链通过。|
+
+<a id="b-bc5cecd384c8"></a>
+### T-1107 原执行记录
+
+原行 SHA256 `bc5cecd384c89bac64fdc110be7f5563b997370e6a525b59b6a334b5b6035477`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1107|核对平台公共接口新增操作与发布归属回归失败|🔨|PASS[REV:9c9181db2c1c]|待验|[实际缺陷](docs/features/t1107-platform-public-regression.md)|全功能验收额外公共真链24例实际22PASS/2FAIL：账号操作数5变6，发布锚冲突首轮200而旧断言期待拒绝；重试又409。先核main合并前基线与真实组/项目归属，再独评修复产品或过期夹具；保原断言/失败/权限，不删除历史洗绿。|
+
+<a id="b-024c8af10ce0"></a>
+### T-1092 原执行记录
+
+原行 SHA256 `024c8af10ce08e3566ff632d721646bb5780e333148fc42d034da6e36bce46bf`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1092|核对联合创作旧集成测试未解包可信回执的契约漂移|📋|—|—|[当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md)|T1091扩大回归154PASS/2FAIL，旧main隔离同2FAIL；原第104行严格parse含__creatorosOutcome的展示投影，页面先经原解包器。先独评实际旧断言/回执协议再校准，保可信元数据与两稿内容断言，不改生产schema或洗掉失败。本轮不实施。|
+
+<a id="b-4b6be3609803"></a>
+### T-1182 原执行记录
+
+原行 SHA256 `4b6be3609803d0bdb602ca26d9f61a58af271905243335c8c3875d79905edbbc`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1182|区分隐藏文件注入与真实上传按钮的刷新等待|🔨 待办|PASS[REV:456a0d53bb41]|—|[实验SPEC](docs/features/t1182-real-upload-button-control.md) · [研究卡](docs/research/t1182-upload-ui-refresh.md)|T1181两次MP4完成后公开库存有文件而列表等120秒不可见；原探针直接注入隐藏input，可能绕过真实按钮pending。冻结失败，一次已观测加一次真实按钮/filechooser区分实验，不改产品/权限/预算、不盲重跑或代签根因。|
+
+<a id="b-bc11f0a7b5b2"></a>
+### T-1196 原执行记录
+
+原行 SHA256 `bc11f0a7b5b2c1496fafa24f75a9a78068080c1eb8bddff27fae86b05e7bbc81`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1196|排查新安装版启动配置同步502与运行摘要拒绝|📋 待办|—|—|[实际诊断](docs/features/t1196-installed-config-sync-502.md)|T1194新包真启动HTTP首页正常、CLI连接正常；同时日志CHANNEL_RUNTIME_DIGEST_MISMATCH、展示副本同步502、config_sync blocked502。保失败和已激活事实，核真实同步消费者/返回来源，不猜网络或绕过摘要/验签，不重置激活。|
+
+<a id="b-3158c3fcebbd"></a>
+### T-1093 原执行记录
+
+原行 SHA256 `3158c3fcebbdbefc305f9ee4e5d318c582475093cc8abbb5b2d37c8074473842`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1093|校准编导数字参数、联合首次读取与真实候选失败恢复|🔨|PASS[REV:267bf399a6b1]|—|[SPEC](docs/features/t1093-director-method-recovery.md)|T1091真实安装6候选通过/2失败；Pi整数发字符串被拒后仍称就绪、联合首读猜错可省略digest。只改功能方法提示，不放宽schema/回执/owner/旧任务或重发未知；正式独评后RED/GREEN及新包真实Pi复验，旧失败保留。|
+
+<a id="b-26577d4c923f"></a>
+### T-1116 原执行记录
+
+原行 SHA256 `26577d4c923fef3ae591b376df4a1293c4829684c7f15f86b2bfc1b29a3317c9`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1116|核对稿件并发保存回归在本轮完整对账中的再次失败|🔨 待办|—|—|[实际诊断](docs/features/t1116-artifact-cas-global-regression.md)|T1114新增相对失败LED027，原41失败保留；实际全局没有保存内层断言，先原两段命令逐段取得真实失败，核CAS/事务/初始化预算。未确认产品根因，不删除竞争或版本断言，不能称已修或全功能PASS。|
+
+<a id="b-609973ed4950"></a>
+### T-1083 原执行记录
+
+原行 SHA256 `609973ed4950823ad8842c1db91fb224ec7e9d56618884fe172b1ff6a5be3f71`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1083|复核流程升级后的旧任务写集通配符兼容缺口|📋 待办|—|—|[根因证据](docs/verification/t1080/post-package-progress-block-failure.json)|progress原block命令实际exit2：T1026的docs/verification/t1026*被3.29路径校验拒绝，未写进度；taskctl已真实记T1080阻断。先盘点旧glob实际允许写集、独立复核等价迁移，不放宽guard或手改状态，本轮未实施。|
+
+<a id="b-19048143f3aa"></a>
+### T-1096 原执行记录
+
+原行 SHA256 `19048143f3aa8244da6a89dc75a603d45cc35a5042cf38da5f14f2b14835444f`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1096|核对文章工作流与任务父归属旧回归断言的实际漂移|📋|—|—|[当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md)|T1094正式回归文章9FAIL/任务6FAIL；原main770037原测试同名同因复现。先核用户确认的联合创作入口、保存回读与组父归属，再独评是否修fixture或真实代码；原断言/owner不洗绿，不恢复已删快转入口。|
+
+<a id="b-32f22df52b82"></a>
+### T-1098 原执行记录
+
+原行 SHA256 `32f22df52b820b1f90579369f64feea959430d600ab15f77b24f34046eeab6db`；ID、状态、审核、验收、正式文档及顺序保持。
+
+|T-1098|核对安装重启后的定期同步失败与采集未启动|📋|—|—|[缺陷登记](docs/features/t1098-installed-scheduled-failure-diagnosis.md)|用户要求发现问题及时建task；T1095真启动日志两scheduled.intelligence.sync为failed，另账号定期采集Error。保原ID与真实失败，先核公开归属/原回执/启动前事实后独评修复，不猜关联、清历史或重发。|

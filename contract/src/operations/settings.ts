@@ -1,3 +1,4 @@
+import {logReportingStatus,logReportingConsent,exceptionCapture} from "../observability";
 import { z } from "zod";
 import { defineEndpoint } from "../endpoint-definition";
 import {
@@ -43,6 +44,9 @@ export const reportingStatusResource = z.object({
   uploadAvailable: z.boolean(),
 }).strict();
 export const settingsOperations = {
+ getLogReporting:defineEndpoint({id:"settings.logReporting.get",method:"GET",path:"/settings/log-reporting",response:logReportingStatus,fr:["FR-REPORTING-CONSENT"]}),
+ setLogReporting:defineEndpoint({id:"settings.logReporting.set",method:"PUT",path:"/settings/log-reporting",body:logReportingConsent,response:logReportingStatus,fr:["FR-REPORTING-CONSENT"]}),
+ captureObservabilityException:defineEndpoint({id:"observability.exceptions.capture",method:"POST",path:"/local/observability",body:exceptionCapture,response:z.object({captured:z.boolean()}).strict(),fr:["FR-REPORTING-CONSENT"]}),
  getGroupOnboarding:defineEndpoint({id:"settings.onboarding.group.get",method:"GET",path:"/settings/group-onboarding/:groupId",params:z.object({groupId:z.string().min(1)}).strict(),response:groupOnboardingStateResource,fr:["FR-ONBOARDING"]}),
  patchGroupOnboarding:defineEndpoint({id:"settings.onboarding.group.patch",method:"PATCH",path:"/settings/group-onboarding/:groupId",params:z.object({groupId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:groupOnboardingStateResource,fr:["FR-ONBOARDING"]}),
  getReportingStatus:defineEndpoint({id:"settings.reporting.get",method:"GET",path:"/settings/reporting",response:reportingStatusResource,fr:["FR-REPORTING-CONSENT"]}),
@@ -82,6 +86,8 @@ export const settingsOperations = {
       autosaveEnabled: z.boolean().optional(),
       fileNamingRule: z.string().optional(),
       analyticsEnabled: z.boolean().optional(),
+      assistantExecutionEngine: z.enum(["pi", "codex"]).optional(),
+      initializeAssistantExecutionEngine: z.literal(true).optional(),
     }),
     response: userPreferenceResource,
     fr: ["FR-SETTINGS-PREFERENCES-UPDATE"],

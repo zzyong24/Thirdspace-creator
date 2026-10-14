@@ -63,3 +63,18 @@ it('T1086 V1 JSON schema 与产品改动前实际捕获的完整 definition 一�
  expect(assistantContract.assistantReadEndpoints['outputs.production.editor.get']?.method).toBe('GET');
  expect(Object.keys(assistantContract.assistantReadEndpoints)).toEqual([...v1Golden.parameters.properties.request.oneOf.map((branch:{properties:{kind:{const?:string;enum?:string[]}}})=>branch.properties.kind.const??branch.properties.kind.enum![0]),'outputs.production.editor.get']);
 });
+
+it('T1248 固定旧偏好候选schema只准原六字段并保其它refinements',()=>{
+ const old=(assistantContract as unknown as {assistantActionProposeInputSchemaV1:z.ZodType}).assistantActionProposeInputSchemaV1;
+ expect(old).toBeDefined();
+ const golden=JSON.parse(readFileSync(new URL('../../docs/verification/t1248/system-action-v1.definition.json',import.meta.url),'utf8'));
+ const raw=z.toJSONSchema(old,{target:'draft-7',io:'input'}) as unknown as {properties:{action:{oneOf:Array<{properties:{kind:{const:string}}}>}}};
+ const branch=raw.properties.action.oneOf.find(value=>value.properties.kind.const==='preferences.update');
+ expect(branch).toEqual(golden.parameters.properties.action.oneOf.find((value:{properties:{kind:{const:string}}})=>value.properties.kind.const==='preferences.update'));
+ // 全tool definition含已审JSON schema规范化，backend golden测试另外逐字段比较；此处核原严格偏好分支。
+ expect(old.parse({action:{kind:'preferences.update',autosaveEnabled:false}})).toEqual({action:{kind:'preferences.update',autosaveEnabled:false}});
+ for(const extra of [{assistantExecutionEngine:'codex'},{initializeAssistantExecutionEngine:true},{unknown:true}])expect(old.safeParse({action:{kind:'preferences.update',autosaveEnabled:false,...extra}}).success).toBe(false);
+ expect(old.safeParse({action:{kind:'preferences.update'}}).success).toBe(false);
+ expect(old.safeParse({action:{kind:'automation.createDraft',name:'采集',schedule:'0 8 * * *',sourceKind:'self.metrics',targetAccountId:null}}).success).toBe(false);
+ expect(assistantContract.assistantActionProposeInputSchema.safeParse({action:{kind:'preferences.update',assistantExecutionEngine:'codex'}}).success).toBe(true);
+});

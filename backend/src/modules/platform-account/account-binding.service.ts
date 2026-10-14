@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {and,eq,inArray,executionTasks,type Db} from '@creatoros/backend';
 import {accountGroupCommands} from '../../schema/account-groups';
 import {ENDPOINTS,type RequestContext,type CollectionRunResource} from '@creatoros/contract';
+import {executionRouteSchema} from '@creatoros/contract/execution-worker';
 import {createPersistentTaskService,createExecutionLeaseService,type PersistentTaskClaim} from '../execution';
 import {lockWorkspaceMembership} from './membership-lock.service';
 import {OwnershipError,ConflictError,ValidationError} from './platform-account.errors';
@@ -23,6 +24,13 @@ export interface AccountBindingDeps {db:Db;now:()=>string;nextId:(prefix:string)
  onBound?:(ctx:RequestContext,accountId:string,runId:string)=>Promise<void>;
  onBoundError?:(error:unknown,runId:string)=>void;}
 type Start=typeof ENDPOINTS.startAccountBinding.body['_output'];
+/** 宿主冻结的路由属于执行协议；其余字段仍按原扫码业务严格校验。 */
+function bindingInput(payload:unknown):Start{
+ if(!payload||typeof payload!=='object'||Array.isArray(payload))return ENDPOINTS.startAccountBinding.body.parse(payload);
+ const {executionRoute,...body}=payload as Record<string,unknown>;
+ if(executionRoute!==undefined)executionRouteSchema.parse(executionRoute);
+ return ENDPOINTS.startAccountBinding.body.parse(body);
+}
 type Run=typeof ENDPOINTS.getAccountBinding.response['_output'];
 type Task=Awaited<ReturnType<ReturnType<typeof createPersistentTaskService>['get']>>;
 type Phase='waiting_verification'|'verifying'|'finalizing';
@@ -58,7 +66,7 @@ export function createAccountBindingService(deps:AccountBindingDeps){
   let stagingKey:string|undefined,externalAccountId:string|undefined,stage:AccountBindingStagePort|undefined;let receipt:Awaited<ReturnType<AccountBindingStagePort["commit"]>>|undefined;
   const save=async(phase:Phase)=>{await tasks.saveCheckpoint({...tuple,checkpoint:{phase,stagingKey,externalAccountId}});};
   try{
-   stage=stageFor(ENDPOINTS.startAccountBinding.body.parse(claim.payload).platform);
+   stage=stageFor(bindingInput(claim.payload).platform);
    await guard(ref,signal);const created=await stage.createStaging(ctx,claim.task.id);stagingKey=created.stagingKey;if(!stagingKey)throw new ValidationError('临时扫码环境没有返回真实标识');
    await save('waiting_verification');await guard(ref,signal);
    const loggedIn=await stage.login(ctx,{stagingKey,signal});signal.throwIfAborted();if(!loggedIn)throw new ValidationError('未检测到完成扫码，请重新发起绑定');
@@ -100,7 +108,7 @@ export function createAccountBindingService(deps:AccountBindingDeps){
  async function recover(control:{signal:AbortSignal}){
   const rows=await db.select().from(executionTasks).where(and(eq(executionTasks.kind,'account_binding'),inArray(executionTasks.status,['running','cancel_requested'])));
   for(const row of rows){if(active.has(row.id)||(!row.leaseOwner)||(row.status!=='cancel_requested'&&row.leaseExpiresAt&&Date.parse(row.leaseExpiresAt)>Date.parse(now())))continue;
-   launch(row.id,control,"cleanup",async()=>{const ctx:RequestContext={userId:row.userId,accountId:null,groupId:row.groupId,requestId:`binding-recovery:${row.id}`,source:'user'},state=checkpoint(row.checkpoint);if(state.stagingKey)await stageFor(ENDPOINTS.startAccountBinding.body.parse(row.payload).platform).discard(ctx,{stagingKey:state.stagingKey,runId:row.id});const current=await read(ctx,row.id);if(terminal.has(current.status))return;const tuple={taskId:row.id,workerId:row.leaseOwner!,attempt:row.attempt};if(current.status==='cancel_requested')await tasks.acknowledgeControl(tuple);else await tasks.finish({...tuple,fenceToken:row.fenceToken??undefined,status:'failed',errorCode:'ACCOUNT_BINDING_INTERRUPTED',errorMessage:'上次扫码执行已停止并清理，请重新发起绑定'});stopFailures.delete(row.id);});
+   launch(row.id,control,"cleanup",async()=>{const ctx:RequestContext={userId:row.userId,accountId:null,groupId:row.groupId,requestId:`binding-recovery:${row.id}`,source:'user'},state=checkpoint(row.checkpoint);if(state.stagingKey)await stageFor(bindingInput(row.payload).platform).discard(ctx,{stagingKey:state.stagingKey,runId:row.id});const current=await read(ctx,row.id);if(terminal.has(current.status))return;const tuple={taskId:row.id,workerId:row.leaseOwner!,attempt:row.attempt};if(current.status==='cancel_requested')await tasks.acknowledgeControl(tuple);else await tasks.finish({...tuple,fenceToken:row.fenceToken??undefined,status:'failed',errorCode:'ACCOUNT_BINDING_INTERRUPTED',errorMessage:'上次扫码执行已停止并清理，请重新发起绑定'});stopFailures.delete(row.id);});
   }
  }
  async function reserveInTransaction(ctx:RequestContext,input:Start,tx:BindingTransaction):Promise<Run>{

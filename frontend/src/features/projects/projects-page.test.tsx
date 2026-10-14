@@ -45,6 +45,8 @@ vi.mock("next/link", () => ({
 // `useRouter()`. Stub `next/navigation` so the component tree renders without a
 // real Next.js router runtime.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
 }));
 

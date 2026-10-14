@@ -53,7 +53,7 @@ describe("桌面任务文件宿主",()=>{
     const host=createNativeFilesWorkbenchHost(db,{...options,filePort})!;
     const output=await host.dispatch(call("files.edit",{path:"草稿/报告.html",content:"你好",expectedVersion:2}),control);
     expect(filePort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
-      {kind:"write",path:"草稿/报告.html",contentBase64:Buffer.from("你好").toString("base64"),expectedVersion:2});
+      {kind:"write",path:"草稿/报告.html",contentBase64:Buffer.from("你好").toString("base64"),expectedVersion:2},{signal:control.signal});
     expect(output).toMatchObject({status:"succeeded",operationId:"op",content:[{type:"text",text:expect.stringContaining('"version":3')}]});
     const invalid=await host.dispatch(call("files.write",{path:"../other",content:"x"}),control);
     expect(invalid).toMatchObject({status:"failed",error:{code:"invalid_input",dispatched:false,nextAction:"fix_input"}});
@@ -64,7 +64,7 @@ describe("桌面任务文件宿主",()=>{
     const filePort=vi.fn(async()=>["报告.md"]);
     const host=createNativeFilesWorkbenchHost(db,{...options,platform,filePort})!;
     expect(await host.dispatch(call("files.list",{path:"."}),control)).toMatchObject({status:"succeeded"});
-    expect(filePort).toHaveBeenLastCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",{kind:"list"});
+    expect(filePort).toHaveBeenLastCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",{kind:"list"},{signal:control.signal});
     expect(await host.dispatch(call("files.list",{}),control)).toMatchObject({status:"succeeded"});
     for(const path of ["/","..","../outside","./../outside"]){
       expect(await host.dispatch(call("files.list",{path}),control)).toMatchObject({status:"failed",error:{dispatched:false}});
@@ -99,7 +99,7 @@ describe("Mac 受控命令能力",()=>{
     expect(host.catalog.find(item=>item.name==="execution.cancel")?.effects).toEqual(["process"]);
     const status=await host.dispatch(call("execution.status",{targetOperationId:"target-run"}),control);
     expect(commandPort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
-      {kind:"command_status",targetOperationId:"target-run"});
+      {kind:"command_status",targetOperationId:"target-run"},{signal:control.signal});
     expect(status).toMatchObject({status:"succeeded",operationId:"op"});
     expect(await host.dispatch(call("execution.status",{targetOperationId:"../other"}),control))
       .toMatchObject({status:"failed",error:{code:"invalid_input",dispatched:false}});
@@ -114,12 +114,12 @@ describe("Mac 受控命令能力",()=>{
     const run=await host.dispatch(call("execution.run",{argv:["-e","console.log(1)"],cwd:".",runtimeId:"bundled-node",timeoutMs:1000}),control);
     expect(run).toMatchObject({status:"succeeded",operationId:"op"});
     expect(commandPort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
-      {kind:"command_run",argv:["-e","console.log(1)"],cwd:".",runtimeId:"bundled-node",timeoutMs:1000});
+      {kind:"command_run",argv:["-e","console.log(1)"],cwd:".",runtimeId:"bundled-node",timeoutMs:1000},{signal:control.signal});
     const read=await host.dispatch(call("execution.read",{targetOperationId:"run-1",stream:"stdout",offset:0,limit:64}),control);
     expect(read).toMatchObject({status:"succeeded",content:[{type:"text",text:expect.stringContaining('"nextOffset":9')}]});
     await host.dispatch(call("execution.cancel",{targetOperationId:"run-1"}),control);
     expect(commandPort).toHaveBeenLastCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
-      {kind:"command_cancel",targetOperationId:"run-1"});
+      {kind:"command_cancel",targetOperationId:"run-1"},{signal:control.signal});
     expect(await host.dispatch(call("execution.run",{argv:["/bin/sh"],cwd:".",runtimeId:"unknown",timeoutMs:1000}),control))
       .toMatchObject({status:"failed",error:{code:"invalid_input",dispatched:false}});
   });
@@ -377,3 +377,16 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
     await rm(directory,{recursive:true,force:true});
   }
 },180_000);
+
+
+it("T1250 私有文件和命令端口传原dispatch signal，原operation/action不变",async()=>{
+ const filePort=vi.fn(async()=>({version:1})),commandPort=vi.fn(async()=>({status:"completed",exitCode:0,stdout:"",stderr:""}));
+ const host=createNativeFilesWorkbenchHost(db,{...options,filePort,commandPort})!;
+ const controller=new AbortController(),ownControl={signal:controller.signal,onProgress:()=>{}};
+ const read=call("files.read",{path:"report.txt",offset:0,limit:100});
+ await host.dispatch(read,ownControl);
+ expect(filePort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",{kind:"read",path:"report.txt",offset:0,limit:100},{signal:controller.signal});
+ const status=call("execution.status",{targetOperationId:"original"});
+ await host.dispatch(status,ownControl);
+ expect(commandPort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",{kind:"command_status",targetOperationId:"original"},{signal:controller.signal});
+},1800000);

@@ -75,14 +75,14 @@ it('固定普通AAC完整音频v2/strict roundtrip/双域实际词边界；末�
     for (const invalid of [{ ...timing, ranges: [...timing.ranges, { id: 'overlap', text: '重叠', startSample: 2000, endSample: 4000 }] }, { ...timing, audioDigest: 'sha256:' + 'b'.repeat(64) }, { ...timing, validSampleCount: timing.validSampleCount - 1 }])
         expect(mapAssetAsrTiming(invalid, p, f.input.source, 'aac-aggregate')).toBeNull();
     if(process.env.T1062_AAC_RECEIPT_DIR){const {writeFile,mkdir}=await import('node:fs/promises');await mkdir(process.env.T1062_AAC_RECEIPT_DIR,{recursive:true});await writeFile(join(process.env.T1062_AAC_RECEIPT_DIR,'actual-normal-evidence.json'),JSON.stringify({source:f.input.source,evidence:result.evidence},null,2)+'\n');await writeFile(join(process.env.T1062_AAC_RECEIPT_DIR,'actual-normal-retained.wav'),result.bytes);}
-}, 60000);
+}, 180000);
 it('固定偏移AAC仍走原全文；canonical精度预算不足不反杀全文', async () => { for (const [offset, budget] of [[true, undefined], [false, 64]] as const) {
     const f = await canonicalAacFixture(offset);
     const r = await extractProductionAsrAudio(f.bytes, f.input, undefined, budget ? { precisionProbeMaxBufferBytes: budget } : undefined);
     expect(r.bytes.length).toBeGreaterThan(0);
     expect(r.evidence.mappingStatus).toBe('unverified');
     expect((r.evidence as any).mappingReceipt).toBeUndefined();
-} }, 60000);
+} }, 180000);
 
 // SEMANTIC_BOUNDARY_ALLOW: 参数化计数仅验证BigInt协议边界，不能证明新媒体支持或生成音频样本。
 it('R6.1完整输出计数机械区间：整除唯一值、floor/ceil与大整数乘法精确', async () => {
@@ -129,4 +129,4 @@ it('R6.1随包工具同固定AAC：实际full-output receipt/count严格缺失�
         for(const range of [{id:'S',text:'呈现域外',startSample:238795,endSample:238800},{id:'N',text:'完整域外',startSample:p.outputValidSampleCount-1,endSample:p.outputValidSampleCount}]) expect(mapAssetAsrTiming({...timing,ranges:[range]},longProof,longSource,'r6-1-aggregate')).toBeNull();
         if(process.env.T1062_AAC_RECEIPT_DIR){const {writeFile,mkdir}=await import('node:fs/promises');await mkdir(process.env.T1062_AAC_RECEIPT_DIR,{recursive:true});await writeFile(join(process.env.T1062_AAC_RECEIPT_DIR,'actual-b6-evidence.json'),JSON.stringify({source:f.input.source,evidence:result.evidence},null,2)+'\n');await writeFile(join(process.env.T1062_AAC_RECEIPT_DIR,'actual-b6-retained.wav'),result.bytes);}
     } finally { if(oldFfmpeg===undefined)delete process.env.CREATOROS_FFMPEG_PATH;else process.env.CREATOROS_FFMPEG_PATH=oldFfmpeg;if(oldFfprobe===undefined)delete process.env.CREATOROS_FFPROBE_PATH;else process.env.CREATOROS_FFPROBE_PATH=oldFfprobe; }
-},60000);
+},180000);

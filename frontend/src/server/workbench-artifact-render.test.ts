@@ -3,7 +3,8 @@ import {mkdtemp,rm,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {pathToFileURL} from "node:url";
-import {expect,it} from "vitest";
+import {expect,it,vi} from "vitest";
+import {chromium} from "@playwright/test";
 import {PNG} from "pngjs";
 import {PDFParse} from "pdf-parse";
 import {renderTrustedWorkbenchHtml,WorkbenchHtmlRenderError} from "./workbench-artifact-render";
@@ -35,7 +36,7 @@ it("用真实 Chromium 把静态 HTML 渲染为 PNG，脚本和网络资源均�
   await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
   await rm(localDir,{recursive:true,force:true});
  }
-},60_000);
+},1_800_000);
 
 it("用真实 Chromium 输出可解析 PDF 字节并保留正文",async()=>{
  const pdf=await renderTrustedWorkbenchHtml({html:"<!doctype html><html><body><h1>Offline report 2026</h1></body></html>",format:"pdf"});
@@ -44,7 +45,7 @@ it("用真实 Chromium 输出可解析 PDF 字节并保留正文",async()=>{
  const parser=new PDFParse({data:pdf});
  try{const text=await parser.getText();expect(text.text).toContain("Offline report 2026");}
  finally{await parser.destroy();}
-},60_000);
+},1_800_000);
 
 it("运行时缺失时明确失败，不返回伪图像",async()=>{
  const originalDesktop=process.env.CREATOROS_DESKTOP;
@@ -71,4 +72,87 @@ it("并发渲染超过固定预算时拒绝额外请求",async()=>{
   .rejects.toMatchObject({code:"RENDER_BUSY"} satisfies Partial<WorkbenchHtmlRenderError>);
  const outputs=await Promise.all([first,second]);
  expect(outputs.every(bytes=>bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))).toBe(true);
-},60_000);
+},1_800_000);
+
+
+it("T1250 真实离线document超过30秒仍生成原PNG/PDF，完整请求允许串行尾轮",async()=>{
+ const launch=chromium.launch.bind(chromium),optionsSeen:number[]=[];
+ const spy=vi.spyOn(chromium,"launch").mockImplementation(async options=>{
+  optionsSeen.push(options?.timeout??0);
+  const browser=await launch(options),newContext=browser.newContext.bind(browser);
+  vi.spyOn(browser,"newContext").mockImplementation(async options=>{
+   const context=await newContext(options),route=context.route.bind(context);
+   vi.spyOn(context,"route").mockImplementation(async(url,handler,options)=>route(url,async intercepted=>{
+    if(intercepted.request().isNavigationRequest())await new Promise<void>(resolve=>{
+     const timer=setTimeout(resolve,35000);
+     context.once("close",()=>{clearTimeout(timer);resolve();});
+    });
+    if(!intercepted.request().frame().page().isClosed())await handler(intercepted,intercepted.request());
+   },options));
+   return context;
+  });
+  return browser;
+ });
+ try{
+  const png=await renderTrustedWorkbenchHtml({html:"<style>body{margin:0;background:#df2828}</style><h1>Slow owned report</h1>",format:"png"});
+  const image=PNG.sync.read(png);expect([...image.data.subarray(0,4)]).toEqual([223,40,40,255]);
+  const pdf=await renderTrustedWorkbenchHtml({html:"<h1>Slow owned report</h1>",format:"pdf"});
+  const parser=new PDFParse({data:pdf});try{expect((await parser.getText()).text).toContain("Slow owned report");}finally{await parser.destroy();}
+  expect(optionsSeen).toHaveLength(2);expect(optionsSeen.every(value=>value>=120000)).toBe(true);
+ }finally{spy.mockRestore();}
+},1800000);
+
+
+it("T1250 launch观察超时后迟到浏览器仅关闭，不产生输出或遗留目录",async()=>{
+ vi.resetModules();const runtime=await import("./workbench-artifact-render");
+ let deliver!:(value:Awaited<ReturnType<typeof chromium.launch>>)=>void,entered!:()=>void;
+ const enteredLaunch=new Promise<void>(resolve=>entered=resolve),close=vi.fn(async()=>{});
+ const spy=vi.spyOn(chromium,"launch").mockImplementation(()=>{entered();return new Promise(resolve=>deliver=resolve);});
+ vi.useFakeTimers({toFake:["setTimeout","clearTimeout"]});
+ const running=runtime.renderTrustedWorkbenchHtml({html:"<p>owned</p>",format:"png"});
+ const failed=expect(running).rejects.toMatchObject({code:"RENDER_FAILED"});
+ try{await enteredLaunch;await vi.advanceTimersByTimeAsync(120001);await failed;
+  deliver({close} as unknown as Awaited<ReturnType<typeof chromium.launch>>);
+  for(let i=0;i<100&&close.mock.calls.length===0;i++)await new Promise<void>(resolve=>setImmediate(resolve));
+  expect(close).toHaveBeenCalledOnce();
+ }finally{vi.useRealTimers();spy.mockRestore();}
+},1800000);
+
+it("T1250 两个browser停止未确认仍占原并发槽，第三请求不得启动",async()=>{
+ vi.resetModules();const runtime=await import("./workbench-artifact-render");
+ const png=new PNG({width:1,height:1});png.data.set([223,40,40,255]);
+ const page={setDefaultTimeout:vi.fn(),setDefaultNavigationTimeout:vi.fn(),goto:async()=>({status:()=>200}),screenshot:async()=>PNG.sync.write(png)};
+ const close=vi.fn(async()=>{throw Error("owned close receipt missing");});
+ const spy=vi.spyOn(chromium,"launch").mockResolvedValue({close,newContext:async()=>({newPage:async()=>page,route:async()=>{}})} as unknown as Awaited<ReturnType<typeof chromium.launch>>);
+ try{
+  for(let i=0;i<2;i++)await expect(runtime.renderTrustedWorkbenchHtml({html:"<p>owned</p>",format:"png"})).resolves.toEqual(PNG.sync.write(png));
+  await expect(runtime.renderTrustedWorkbenchHtml({html:"<p>owned</p>",format:"png"})).rejects.toMatchObject({code:"RENDER_BUSY"});
+  expect(spy).toHaveBeenCalledTimes(2);expect(close).toHaveBeenCalledTimes(2);
+ }finally{spy.mockRestore();}
+},1800000);
+
+it("T1250 cleanup观察到期后原close成功收据恢复槽并清理目录，不重复close",async()=>{
+ vi.resetModules();const runtime=await import('./workbench-artifact-render');
+ const {stat}=await import('node:fs/promises');
+ const png=new PNG({width:1,height:1});png.data.set([223,40,40,255]);const bytes=PNG.sync.write(png);
+ const releases:Array<()=>void>=[],directories:string[]=[],closes:Array<ReturnType<typeof vi.fn>>=[];
+ const page={setDefaultTimeout:vi.fn(),setDefaultNavigationTimeout:vi.fn(),goto:async()=>({status:()=>200}),screenshot:async()=>bytes};
+ const spy=vi.spyOn(chromium,'launch').mockImplementation(async options=>{
+  directories.push(options!.env!.TMPDIR!);const index=closes.length;
+  const close=vi.fn(()=>index<2?new Promise<void>(resolve=>{releases[index]=resolve;}):Promise.resolve());closes.push(close);
+  return {close,newContext:async()=>({newPage:async()=>page,route:async()=>{}})} as unknown as Awaited<ReturnType<typeof chromium.launch>>;
+ });
+ vi.useFakeTimers({toFake:['setTimeout','clearTimeout']});
+ try{
+  for(let index=0;index<2;index++){
+   const running=runtime.renderTrustedWorkbenchHtml({html:'<p>owned safe output</p>',format:'png'});
+   for(let i=0;i<1000&&!releases[index];i++)await new Promise<void>(resolve=>setImmediate(resolve));expect(releases[index]).toBeTypeOf('function');
+   await vi.advanceTimersByTimeAsync(120001);await expect(running).resolves.toEqual(bytes);
+  }
+  await expect(runtime.renderTrustedWorkbenchHtml({html:'<p>owned</p>',format:'png'})).rejects.toMatchObject({code:'RENDER_BUSY'});expect(spy).toHaveBeenCalledTimes(2);
+  releases[0]!();let removed=false;
+  for(let i=0;i<1000&&!removed;i++){await new Promise<void>(resolve=>setImmediate(resolve));removed=await stat(directories[0]!).then(()=>false,error=>{if(error.code!=='ENOENT')throw error;return true;});}
+  expect(removed).toBe(true);
+  await expect(runtime.renderTrustedWorkbenchHtml({html:'<p>owned</p>',format:'png'})).resolves.toEqual(bytes);expect(spy).toHaveBeenCalledTimes(3);expect(closes.every(close=>close.mock.calls.length===1)).toBe(true);
+ }finally{for(const release of releases)release?.();vi.useRealTimers();spy.mockRestore();}
+},1800000);

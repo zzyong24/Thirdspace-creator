@@ -7,7 +7,7 @@ import {runChatTextNodeInWorker} from "./chat-text-node-worker";
 import { tool, jsonSchema, modelMessageSchema, type ModelMessage, type ToolApprovalStatus, type UIMessageChunk } from "ai";
 import { z } from "zod";
 import {
-  chatWorkerInputSchema, workerModelSpecSchema, workerReservationSchema, workerStartReceiptSchema,
+  chatWorkerInputSchema, executionModelSpecSchema, workerReservationSchema, workerStartReceiptSchema,
   agenticToolReservationSchema, agenticToolOutcomeSchema, type WorkerPort, type WorkerProviderReceipt,
   chatModelReplayFingerprintsSchema,
 } from "@creatoros/contract/execution-worker";
@@ -33,8 +33,8 @@ export interface ChatWorkerPorts {
   readPlanStatus?(modelCallId:string,signal:AbortSignal):Promise<ChatPlanStatus|null>;
 }
 /** 执行回合而不提交业务终态；调用方须把返回消息/授权状态与任务原子保存。 */
-export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSchema>,rawSpec:z.infer<typeof workerModelSpecSchema>,parentSignal:AbortSignal,ports:ChatWorkerPorts){
-  const input=chatWorkerInputSchema.parse(rawInput),spec=workerModelSpecSchema.parse(rawSpec);
+export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSchema>,rawSpec:z.infer<typeof executionModelSpecSchema>,parentSignal:AbortSignal,ports:ChatWorkerPorts){
+  const input=chatWorkerInputSchema.parse(rawInput),spec=executionModelSpecSchema.parse(rawSpec);
   const stop=new AbortController(),signal=AbortSignal.any([parentSignal,stop.signal]);
   let failure:GenerationFailure|undefined,lastModelCallId:string|undefined;
   const modelForTool=new Map<string,string>(),toolCallIds=new Set<string>();
@@ -111,7 +111,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     replayFingerprints:initial.modelReplayFingerprints,legacyPrompt:()=>replayPrompt?.()??Promise.resolve(undefined),
     fallbackModel:async operationKey=>{
       const raw=await ports.call("resolveChatFallbackCredential",{operationKey},signal);
-      return raw===null?null:modelFor(workerModelSpecSchema.parse(raw));
+      return raw===null?null:modelFor(executionModelSpecSchema.parse(raw));
     },streamEvents:callId=>createChatModelStreamEvents(callId,batch=>ports.call("appendStreamEvents",batch,signal)),ports:{
     reserve:async(request)=>{
       const result=workerReservationSchema.parse(await ports.call("reserveGenerationCall",request,signal));

@@ -139,7 +139,8 @@ function makeFakeRepo(
         defaultVisibility: "private",
         autosaveEnabled: true,
         fileNamingRule: "",
-        analyticsEnabled: false, // 镜像 schema 默认关(PROTECTION.md §4)
+        analyticsEnabled: false,
+        assistantExecutionEngine: null, // 镜像 schema 默认关(PROTECTION.md §4)
       };
       const provided = Object.fromEntries(
         Object.entries(patch).filter(([, v]) => v !== undefined),
@@ -489,6 +490,9 @@ describe("settings.service", () => {
 
   // item B — storage config.
   it("getStorage defaults rootPath to ~/CreatorOS/media + sums usage by type", async () => {
+    const originalMediaRoot = process.env.CREATOROS_MEDIA_ROOT;
+    try {
+      delete process.env.CREATOROS_MEDIA_ROOT;
     const repo = makeFakeRepo({
       usage: [
         { assetType: "image", bytes: 1000 },
@@ -507,6 +511,12 @@ describe("settings.service", () => {
     const audio = s.breakdown.find((b) => b.assetType === "audio");
     expect(image?.bytes).toBe(1000);
     expect(audio?.bytes).toBe(0);
+    process.env.CREATOROS_MEDIA_ROOT = path.join(os.tmpdir(), "t1246-storage-path-only");
+    expect((await svc.getStorage(ctx)).rootPath).toBe(path.join(os.tmpdir(), "t1246-storage-path-only"));
+    } finally {
+      if (originalMediaRoot === undefined) delete process.env.CREATOROS_MEDIA_ROOT;
+      else process.env.CREATOROS_MEDIA_ROOT = originalMediaRoot;
+    }
   });
 
   it("updateStorage expands a `~`-prefixed rootPath via os.homedir()", async () => {

@@ -4,9 +4,9 @@ import { CreationFlowCtas } from "./creation-flow-ctas";
 
 // T-730:论点入口恢复为可选辅助，不替代上传与联网找资料。
 const openChat = vi.fn();
-const prepareScriptForCreation=vi.fn(),preparePair=vi.fn();
+const prepareScriptForCreation=vi.fn(),preparePair=vi.fn(),readWritingContext=vi.fn();
 vi.mock("./draft-chat-request", () => ({
-  useDraftChatRequest: () => ({ openChat,prepareScriptForCreation }),
+  useDraftChatRequest: () => ({ openChat,prepareScriptForCreation,readWritingContext }),
 }));
 vi.mock('./work-creation-request',()=>({prepareWorkCreationRequest:(...args:unknown[])=>preparePair(...args)}));
 
@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
-  beforeEach(() => {openChat.mockClear();prepareScriptForCreation.mockReset();preparePair.mockReset();sessionStorage.clear();});
+  beforeEach(() => {openChat.mockClear();prepareScriptForCreation.mockReset();preparePair.mockReset();readWritingContext.mockReset();sessionStorage.clear();});
 
   it("[T-730] 保留上传与联网找资料，并恢复可选的先梳理观点", () => {
     render(<CreationFlowCtas projectId="project-x" />);
@@ -112,4 +112,14 @@ describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
     expect(preparePair).toHaveBeenCalledOnce();expect(prepareScriptForCreation).toHaveBeenCalledOnce();
   });
 
+});
+
+it('T1097联合准备使用一次真实编辑器选择，unknown之后改变偏好仍只打开原冻结target',async()=>{
+ openChat.mockClear();preparePair.mockReset();prepareScriptForCreation.mockReset();readWritingContext.mockReset();sessionStorage.clear();
+ const choice={schemaVersion:1,brandProfileVersionId:'brand-original',sourceAssets:[{assetId:'doc',assetFileId:'file-original'}]},source={kind:'project_script',id:'script',versionId:'script-v'};
+ readWritingContext.mockReturnValue(choice);prepareScriptForCreation.mockResolvedValue(source);preparePair.mockImplementation(async(_client:any,state:any)=>({...state,clientRequestId:'original',scriptSourceRef:source}));
+ render(<CreationFlowCtas projectId="project-context"/>);fireEvent.click(screen.getByRole('button',{name:'一键生成文章和图文'}));await waitFor(()=>expect(openChat).toHaveBeenCalledOnce());
+ const original=openChat.mock.calls[0][0];expect(original.creationTarget.writingContext).toEqual(choice);act(()=>original.onCreationSubmission('submitted-unknown'));
+ readWritingContext.mockReturnValue({schemaVersion:1,brandProfileVersionId:null,sourceAssets:[]});fireEvent.click(screen.getByRole('button',{name:'查看原文章和图文生成'}));
+ expect(openChat.mock.calls[1][0].creationTarget).toEqual(original.creationTarget);expect(preparePair).toHaveBeenCalledOnce();
 });

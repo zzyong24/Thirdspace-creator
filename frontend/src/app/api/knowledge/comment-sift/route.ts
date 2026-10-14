@@ -1,3 +1,4 @@
+import {KnowledgeGenerationPendingError} from '@creatoros/backend/modules/ai-runtime';
 import { NextResponse } from "next/server";
 import type { RequestContext } from "@creatoros/contract";
 import {
@@ -53,7 +54,7 @@ export async function POST(req: Request): Promise<Response> {
     ctx = await resolveRequestContext(
       rawToken,
       readRequestAccountId(req),
-      { rejectInvalidToken: true },
+      { rejectInvalidToken: true,groupId:readRequestGroupId(req) },
     );
   } catch (err) {
     if (err instanceof AuthenticationError) {
@@ -131,8 +132,8 @@ export async function POST(req: Request): Promise<Response> {
       () =>
         runCommentQaSift(
           ctx,
-          { comments: siftInput },
-          { resolveModelSpec: runtime.resolveModelSpec },
+          { comments: siftInput,signal:req.signal },
+          { runKnowledgeGeneration: runtime.runKnowledgeGeneration },
         ),
     );
 
@@ -166,6 +167,6 @@ export async function POST(req: Request): Promise<Response> {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[api/knowledge/comment-sift] failed:", err);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: message,...(err instanceof KnowledgeGenerationPendingError?{taskId:err.taskId,executionTaskId:err.executionTaskId,runtimeStatus:err.runtimeStatus,errorCode:err.errorCode}:{}) }, { status: 400 });
   }
 }

@@ -58,6 +58,15 @@ describe("proxy default-deny (T-415)", () => {
     ).toBe(true);
   });
 
+  it("Next热更新升级绕过页面中间件，知识和dispatch仍受保护", () => {
+    for (const suffix of ["/_next/webpack-hmr", "/_next/webpack-hmr?id=original"]) {
+      expect(unstable_doesMiddlewareMatch({config,nextConfig:{},url: `${BASE}${suffix}`})).toBe(false);
+    }
+    for (const suffix of ["/api/knowledge/classify", "/api/v1/dispatch"]) {
+      expect(unstable_doesMiddlewareMatch({config,nextConfig:{},url: `${BASE}${suffix}`})).toBe(true);
+    }
+  });
+
   describe("桌面打包态(REQUIRED 烘焙=1,Rust 注入 token)", () => {
     beforeEach(() => {
       process.env.CREATOROS_HANDSHAKE_REQUIRED = "1";

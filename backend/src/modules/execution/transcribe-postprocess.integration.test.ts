@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { createDb, aiTasks, aiTaskSteps, executionTasks, projects, eq, sql, type Db } from '@creatoros/backend';
-import { transcribePostprocessResultSchema, transcribePostprocessPlanSchema, type AsrRequest, type WorkerPort } from '@creatoros/contract/execution-worker';
+import { codexExecutionSpec,createExecutionRoute,transcribePostprocessResultSchema, transcribePostprocessPlanSchema, type AsrRequest, type WorkerPort } from '@creatoros/contract/execution-worker';
 import { runTranscribeInWorker } from '../../../../ai-worker/src/execution/transcribe-worker-run';
 import { runTranscribePostprocessInWorker } from '../../../../ai-worker/src/execution/transcribe-postprocess-run';
 import { buildTranscriptPostprocessNode, TRANSCRIPT_POSTPROCESS_SCHEMA } from '../../../../ai-worker/src/runtime/transcript-postprocess';
@@ -95,6 +95,19 @@ it('共享节点保持原JSON schema并提供严格validator', async () => {
   expect(schema.validate).toBeTypeOf('function');
   expect(await schema.validate?.({ correctedText: corrected })).toMatchObject({ success: true });
   for (const bad of [{}, { correctedText: 1 }, { correctedText: corrected, extra: '不允许' }]) expect(await schema.validate?.(bad)).toMatchObject({ success: false });
+});
+
+it('T1238 Codex转录后处理读取原执行路由，不解析API凭据',async()=>{
+ const f=await fixture('unconfigured');
+ try{
+  const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+  await db.update(executionTasks).set({payload:{...(execution!.payload as Record<string,unknown>),executionRoute:createExecutionRoute('codex')}}).where(eq(executionTasks.id,f.ref.executionTaskId));
+  const resolveModelSpec=vi.fn(async()=>{throw Error('禁止调用API resolver');});
+  const post=createExecutionTranscribePostprocessService(db,{budget:{maxCalls:20,maxTokens:1_000_000,deadlineMs:300_000},resolveModelSpec,readContext:async()=>({})});
+  const prepared=await post.prepare(f.ref,{awemeId:f.awemeId});
+  expect(prepared).toMatchObject({status:'prepared',spec:codexExecutionSpec(),plan:{identity:{...codexExecutionSpec(),capability:'video.subtitles',schemaVersion:1}}});
+  expect(resolveModelSpec).not.toHaveBeenCalled();expect(f.requests).toBe(0);
+ }finally{await f.cleanup();}
 });
 
 it.each<Mode>(['sse', 'json', 'reject', 'bad-output', 'fidelity', 'unconfigured', 'budget'])('实际后端后处理端口保存并无网络恢复：%s', async mode => {

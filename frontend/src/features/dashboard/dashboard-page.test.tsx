@@ -27,6 +27,8 @@ import type { ReactNode } from "react";
 // (Module 01 G2). This test replicates the (creator) layout's AppShell wrapper;
 // the popover's mutation path is not exercised here.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({
     refresh: vi.fn(),
     replace: vi.fn(),

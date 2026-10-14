@@ -1727,7 +1727,9 @@ describe("ProductionWorkbench", () => {
   it("[FE-H01] 决策轮询持续不放弃:远超旧「~10 分钟(150 次)」上限仍在轮询(不静默退出)", async () => {
     vi.useFakeTimers();
     try {
-      // 用恢复路径把一个 running 决策任务挂上轮询;getTask 默认恒 running → 永不遇终态。
+      // 原公共读取必须返回本次请求的同任务ID；仍验证持续轮询，不以外来ID绕过归属。
+      mockClient.getTask.mockResolvedValue({ id: "dec-run", status: "running" });
+      // 用恢复路径把一个 running 决策任务挂上轮询;getTask 恒 running → 永不遇终态。
       mockClient.listAITasks.mockResolvedValueOnce([
         { id: "dec-run", status: "running" },
       ]);

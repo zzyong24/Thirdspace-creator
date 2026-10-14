@@ -22,6 +22,7 @@ use std::{
         Arc, Mutex,
     },
     thread::JoinHandle,
+    time::{Duration, Instant},
 };
 use windows_sys::Win32::{
     Foundation::{
@@ -49,7 +50,9 @@ use windows_sys::Win32::{
 };
 
 const MAX_REQUEST: usize = 1_400_000;
-const IO_TIMEOUT_MS: u32 = 10_000;
+// The pipe default is not an activity timer; every actual phase freezes below.
+const IO_TIMEOUT_MS: u32 = 120_000;
+const IO_PHASE: Duration = Duration::from_secs(120);
 
 struct Handle(HANDLE);
 unsafe impl Send for Handle {}
@@ -365,28 +368,51 @@ fn event() -> io::Result<Handle> {
         Ok(Handle(handle))
     }
 }
-fn finish_io(pipe: HANDLE, overlapped: &mut OVERLAPPED, timeout_ms: u32) -> io::Result<u32> {
-    let outcome = unsafe { WaitForSingleObject(overlapped.hEvent, timeout_ms) };
-    if outcome != WAIT_OBJECT_0 {
-        // Drain cancellation before the stack OVERLAPPED or its buffer is freed.
-        unsafe {
-            CancelIoEx(pipe, overlapped);
-            WaitForSingleObject(overlapped.hEvent, u32::MAX);
-        }
-        return Err(if outcome == WAIT_TIMEOUT {
-            io::Error::new(io::ErrorKind::TimedOut, "pipe I/O timed out")
-        } else {
-            io::Error::last_os_error()
-        });
+fn phase_remaining(deadline: Instant, stop: &AtomicBool) -> io::Result<Duration> {
+    if stop.load(Ordering::Acquire) {
+        return Err(io::Error::new(io::ErrorKind::Interrupted, "owned pipe stopped"));
     }
+    deadline.checked_duration_since(Instant::now())
+        .filter(|remaining| !remaining.is_zero())
+        .ok_or_else(|| io::Error::new(io::ErrorKind::TimedOut, "pipe phase deadline exhausted"))
+}
+fn completed_count(pipe: HANDLE, overlapped: &mut OVERLAPPED) -> io::Result<u32> {
     let mut count = 0;
     if unsafe { GetOverlappedResult(pipe, overlapped, &mut count, 0) } == 0 {
         Err(io::Error::last_os_error())
-    } else {
-        Ok(count)
+    } else { Ok(count) }
+}
+fn finish_io(pipe: HANDLE, overlapped: &mut OVERLAPPED, deadline: Instant, stop: &AtomicBool) -> io::Result<u32> {
+    loop {
+        let remaining = phase_remaining(deadline, stop);
+        let failure = match remaining {
+            Err(error) => Some(error),
+            Ok(remaining) => {
+                match unsafe { WaitForSingleObject(overlapped.hEvent, remaining.as_millis().clamp(1, 100) as u32) } {
+                    WAIT_OBJECT_0 => return completed_count(pipe, overlapped),
+                    WAIT_TIMEOUT => None,
+                    _ => Some(io::Error::last_os_error()),
+                }
+            }
+        };
+        if let Some(error) = failure {
+            // Cancellation is requested promptly, but an unconfirmed kernel
+            // drain is never success. Keep the stack OVERLAPPED and buffer alive
+            // until the original OS operation has really completed.
+            unsafe {
+                CancelIoEx(pipe, overlapped);
+                while WaitForSingleObject(overlapped.hEvent, u32::MAX) != WAIT_OBJECT_0 {
+                    // An unexpected wait error is not completion. Do not free
+                    // an OVERLAPPED/buffer that may still be owned by the OS.
+                    std::thread::sleep(Duration::from_millis(100));
+                }
+            }
+            return Err(error);
+        }
     }
 }
-fn read_chunk(pipe: HANDLE, buffer: &mut [u8]) -> io::Result<usize> {
+fn read_chunk(pipe: HANDLE, buffer: &mut [u8], deadline: Instant, stop: &AtomicBool) -> io::Result<usize> {
+    phase_remaining(deadline, stop)?;
     let guard = event()?;
     let mut overlapped = OVERLAPPED {
         hEvent: guard.0,
@@ -404,10 +430,11 @@ fn read_chunk(pipe: HANDLE, buffer: &mut [u8]) -> io::Result<usize> {
     if ok == 0 && unsafe { GetLastError() } != ERROR_IO_PENDING {
         return Err(io::Error::last_os_error());
     }
-    Ok(finish_io(pipe, &mut overlapped, IO_TIMEOUT_MS)? as usize)
+    Ok(finish_io(pipe, &mut overlapped, deadline, stop)? as usize)
 }
-fn write_all(pipe: HANDLE, mut bytes: &[u8]) -> io::Result<()> {
+fn write_all(pipe: HANDLE, mut bytes: &[u8], deadline: Instant, stop: &AtomicBool) -> io::Result<()> {
     while !bytes.is_empty() {
+        phase_remaining(deadline, stop)?;
         let guard = event()?;
         let mut overlapped = OVERLAPPED {
             hEvent: guard.0,
@@ -425,7 +452,7 @@ fn write_all(pipe: HANDLE, mut bytes: &[u8]) -> io::Result<()> {
         if ok == 0 && unsafe { GetLastError() } != ERROR_IO_PENDING {
             return Err(io::Error::last_os_error());
         }
-        let count = finish_io(pipe, &mut overlapped, IO_TIMEOUT_MS)? as usize;
+        let count = finish_io(pipe, &mut overlapped, deadline, stop)? as usize;
         if count == 0 {
             return Err(io::Error::new(io::ErrorKind::WriteZero, "empty pipe write"));
         }
@@ -448,14 +475,16 @@ fn accept(pipe: HANDLE, stop: &AtomicBool) -> io::Result<bool> {
     }
     while !stop.load(Ordering::Acquire) {
         match unsafe { WaitForSingleObject(guard.0, 100) } {
-            WAIT_OBJECT_0 => return finish_io(pipe, &mut overlapped, 0).map(|_| true),
+            WAIT_OBJECT_0 => return completed_count(pipe, &mut overlapped).map(|_| true),
             WAIT_TIMEOUT => {}
             _ => break,
         }
     }
     unsafe {
         CancelIoEx(pipe, &overlapped);
-        WaitForSingleObject(guard.0, u32::MAX);
+        while WaitForSingleObject(guard.0, u32::MAX) != WAIT_OBJECT_0 {
+            std::thread::sleep(Duration::from_millis(100));
+        }
     }
     Ok(false)
 }
@@ -464,24 +493,28 @@ fn serve(
     expected_pid: u32,
     base: &std::path::Path,
     commands: &CommandMode,
-) -> io::Result<()> {
+    read_deadline: Instant,
+    stop: &AtomicBool,
+) -> io::Result<Instant> {
     let mut client_pid = 0u32;
     if unsafe { GetNamedPipeClientProcessId(pipe, &mut client_pid) } == 0
         || client_pid != expected_pid
     {
         // An ACL-matching process is still not the sidecar. Do not read its body.
-        write_all(pipe, b"{\"ok\":false,\"code\":\"UNAUTHORIZED_PEER\"}\n")?;
-        return Ok(());
+        let write_deadline = Instant::now() + IO_PHASE;
+        write_all(pipe, b"{\"ok\":false,\"code\":\"UNAUTHORIZED_PEER\"}\n", write_deadline, stop)?;
+        return Ok(write_deadline);
     }
     let mut body = Vec::new();
     let mut chunk = [0u8; 8192];
     while body.len() <= MAX_REQUEST && !body.contains(&b'\n') {
-        let count = read_chunk(pipe, &mut chunk)?;
+        let count = read_chunk(pipe, &mut chunk, read_deadline, stop)?;
         if count == 0 {
             break;
         }
         body.extend_from_slice(&chunk[..count]);
     }
+    phase_remaining(read_deadline, stop)?;
     let reply = if body.len() > MAX_REQUEST || !body.contains(&b'\n') {
         json!({"ok":false,"code":"INVALID_REQUEST"})
     } else {
@@ -491,9 +524,11 @@ fn serve(
             Err(_) => json!({"ok":false,"code":"INVALID_REQUEST"}),
         }
     };
+    let write_deadline = Instant::now() + IO_PHASE;
     let mut bytes = serde_json::to_vec(&reply)?;
     bytes.push(b'\n');
-    write_all(pipe, &bytes)
+    write_all(pipe, &bytes, write_deadline, stop)?;
+    Ok(write_deadline)
 }
 
 pub struct PendingBridge {
@@ -569,11 +604,12 @@ impl PendingBridge {
                 while !stop_thread.load(Ordering::Acquire) {
                     match accept(raw, &stop_thread) {
                         Ok(true) => {
-                            if serve(raw, expected_pid, &base, &commands).is_ok() {
+                            let read_deadline = Instant::now() + IO_PHASE;
+                            if let Ok(reply_deadline) = serve(raw, expected_pid, &base, &commands, read_deadline, &stop_thread) {
                                 // Node closes after consuming the newline. Wait for that
                                 // close with the bounded I/O deadline before disconnecting.
                                 let mut trailing = [0u8; 1];
-                                let _ = read_chunk(raw, &mut trailing);
+                                let _ = read_chunk(raw, &mut trailing, reply_deadline, &stop_thread);
                             }
                             unsafe {
                                 DisconnectNamedPipe(raw);
@@ -596,7 +632,8 @@ impl Drop for RunningBridge {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Release);
         // ConnectNamedPipe checks stop at most 100 ms later. An in-flight
-        // sidecar request has a 10 s I/O deadline before the thread exits.
+        // framing/reply waiting checks stop every 100 ms; original OS I/O
+        // must really drain before freeing its OVERLAPPED or buffer.
         for thread in self.threads.drain(..) {
             let _ = thread.join();
         }
@@ -608,6 +645,14 @@ pub struct BridgeState(pub Mutex<Option<RunningBridge>>);
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn t1250_expired_phase_and_owned_stop_do_not_open_another_io_slot() {
+        let expired = Instant::now();
+        assert_eq!(phase_remaining(expired, &AtomicBool::new(false)).unwrap_err().kind(), io::ErrorKind::TimedOut);
+        assert_eq!(phase_remaining(Instant::now() + IO_PHASE, &AtomicBool::new(true)).unwrap_err().kind(), io::ErrorKind::Interrupted);
+        assert_eq!(IO_TIMEOUT_MS, 120000);
+    }
+
     use std::{
         fs::OpenOptions,
         io::{BufRead, BufReader, Write},

@@ -13,7 +13,7 @@
 import * as React from "react";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {writeAssistantEngine} from "./assistant-engine";
+import {loadAssistantEngine,writeAssistantEngine} from "./assistant-engine";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const listTasks = vi.fn();
@@ -23,6 +23,8 @@ const listMessages = vi.fn();
 const listConversations = vi.fn();
 // T-039b @项目引用:输入 @ 弹项目列表走这个只读 op。
 const listProjects = vi.fn();
+const getPreferences = vi.fn();
+const patchPreferences = vi.fn();
 
 // 「继续」 routing uses next/navigation's useRouter; mock it so the island mounts
 // under the test renderer (no real app-router provider).
@@ -59,6 +61,8 @@ vi.mock("@/lib/contract-client", () => ({
     listConversations: (...args: unknown[]) => listConversations(...args),
     // T-039b @项目引用:项目补全下拉的数据源。
     listProjects: (...args: unknown[]) => listProjects(...args),
+    getPreferences: (...args: unknown[]) => getPreferences(...args),
+    patchPreferences: (...args: unknown[]) => patchPreferences(...args),
   },
 }));
 
@@ -145,7 +149,16 @@ const VM: CopilotContentViewModel = {
   smartRecommendations: [],
 };
 
-beforeEach(() => {
+beforeEach(async () => {
+  // 引擎偏好以真实后端读/写回执为准；每例从明确Pi服务值开始，不借本地缓存造就绪。
+  getPreferences.mockReset();
+  getPreferences.mockResolvedValue({assistantExecutionEngine:'pi'});
+  patchPreferences.mockReset();
+  patchPreferences.mockImplementation(async (request: {body: {assistantExecutionEngine: 'pi'|'codex'}}) => {
+    const result={assistantExecutionEngine:request.body.assistantExecutionEngine};
+    getPreferences.mockResolvedValue(result);
+    return result;
+  });
   mockedLiveSession = null;
   listTasks.mockReset();
   listTasks.mockResolvedValue([]);
@@ -175,9 +188,12 @@ beforeEach(() => {
   // 每个用例从干净的会话存档起步(前一个用例可能写过 localStorage)。
   try {
     window.localStorage.clear();
+    // 本文件发送用例使用合法空组前提；服务/引擎仍是明示fixture，不代真实授权。
+    window.localStorage.setItem("creatoros:current-group", "fixture-valid-empty-group");
   } catch {
     /* noop */
   }
+  await loadAssistantEngine(true);
 });
 
 describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
@@ -202,7 +218,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(prepare("original").executionEngine).toBe("pi");
     mockStatus = "streaming";
     view.rerender(<AICopilotContent viewModel={VM} />);
-    act(() => writeAssistantEngine("codex"));
+    await act(async () => {await writeAssistantEngine("codex");});
+    expect(patchPreferences).toHaveBeenCalledWith({params:undefined,query:undefined,body:{assistantExecutionEngine:'codex'}});
     await waitFor(() => expect((mockedLiveSession as {executionEngine: string}).executionEngine).toBe("codex"));
     expect(initialChatTransport).toBe(transport);
     expect(stop).not.toHaveBeenCalled();
@@ -212,6 +229,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
 
   it("[T-1055] Codex 不可用时保留输入并指向真实设置卡", async () => {
     window.localStorage.setItem("creatoros:assistant-engine:v1", "codex");
+    getPreferences.mockResolvedValue({assistantExecutionEngine:'codex'});
+    await loadAssistantEngine(true);
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({engines: [{engine: "codex", installed: true, available: false, version: null, loginStatus: "unauthenticated"}]}), {status: 200}));
     const user = userEvent.setup();
     render(<AICopilotContent viewModel={VM} />);
@@ -367,6 +386,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用",async()=>{
+    // 本例保持原legacy account-only归属，不由默认空组替代。
+    window.localStorage.removeItem("creatoros:current-group");
     window.localStorage.setItem("creatoros:current-account","account-1");
     const plan={planRevision:1,steps:[{stepId:"report",title:"生成 HTML 报告",dependsOn:[],status:"succeeded",
       operationRefs:["call-1"],artifactRefs:["wa-valid@1"]}]};
@@ -1448,6 +1469,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     // 预置该 scope(裸打开 = global,不再借 topics 桶)的指针 + 后端返回两条历史消息。
     window.localStorage.setItem("copilot:conv:global", "conv-restore");
     listMessages.mockResolvedValueOnce([
@@ -1481,6 +1504,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     window.localStorage.setItem("copilot:conv:global", "conv-gone");
     listMessages.mockRejectedValueOnce(new Error("404 conversation not found"));
     render(<AICopilotContent viewModel={VM} />);
@@ -1502,6 +1527,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治)", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     // 无任何本地指针;服务端该 scope 有一条最近会话 → 自动恢复它的消息。
     listConversations.mockResolvedValueOnce([
       { id: "conv-latest", title: "上次的全局对话", createdAt: "2026-07-01T08:00:00.000Z" },
@@ -1533,6 +1560,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖)", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     const user = userEvent.setup();
     // 左下角(global)已有延续中的会话指针;当前面板从选题岛打开(surface=topics)。
     window.localStorage.setItem("copilot:conv:global", "conv-global-keep");
@@ -1599,6 +1628,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)", async () => {
+    // 本例恢复原无owner会话bucket前提；只读/清指针，不提交新的消息或生成任务。
+    window.localStorage.removeItem("creatoros:current-group");
     const user = userEvent.setup();
     window.localStorage.setItem("copilot:conv:global", "conv-existing");
     render(<AICopilotContent viewModel={VM} />);

@@ -54,3 +54,6 @@ await build({entryPoints:[fileURLToPath(new URL("../src/execution/codex-status-e
 
 // 固定上游源码经当前构建器打包；不运行上游脚本或浮动下载。
 await build({entryPoints:[fileURLToPath(new URL("../vendor/codex-acp/src/index.ts",import.meta.url))],outfile:fileURLToPath(new URL("../dist/codex-acp.cjs",import.meta.url)),bundle:true,platform:"node",target:"node24",format:"cjs",logLevel:"warning",banner:{js:'// Derived from codex-acp 2.1.1 (Apache-2.0), commit 68d7d2d5ddfc0ed5746f9f6130892dda685e65dd.'}});
+
+// 原成片任务的可选视觉审核，独立Worker共用原父任务期限与持久调用账本。
+await build({entryPoints:[fileURLToPath(new URL("../src/execution/video-visual-review-worker-entry.ts",import.meta.url))],outfile:fileURLToPath(new URL("../dist/video-visual-review-worker.cjs",import.meta.url)),bundle:true,platform:"node",target:"node24",format:"cjs",logLevel:"warning",external:["@openclaw/fs-safe"]});

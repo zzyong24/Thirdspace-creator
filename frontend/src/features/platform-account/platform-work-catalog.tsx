@@ -72,8 +72,8 @@ function MetricRows({ metrics }: { readonly metrics: readonly (AccountMetricSnap
   );
 }
 
-function worksUrl(cursor: string | null, workId?: string, metricCursor?: string | null, accountMetricCursor?: string | null) {
-  const query = new URLSearchParams();
+function worksUrl(accountId: string, cursor: string | null, workId?: string, metricCursor?: string | null, accountMetricCursor?: string | null) {
+  const query = new URLSearchParams({accountId});
   if (cursor) query.set("cursor", cursor);
   if (workId) query.set("workId", workId);
   if (metricCursor) query.set("metricCursor", metricCursor);
@@ -104,7 +104,7 @@ export function PlatformWorkCatalog({ model }: { readonly model: PlatformWorkCat
           <p className="mt-2 text-sm text-muted-foreground">暂无粉丝总量记录。</p>
         )}
         {model.accountMetricNextCursor ? (
-          <Link href={worksUrl(model.cursor, selectedWork?.id, model.workMetricCursor, model.accountMetricNextCursor)} className="mt-3 inline-block text-sm text-primary hover:underline">下一页账号数据</Link>
+          <Link href={worksUrl(model.accountId, model.cursor, selectedWork?.id, model.workMetricCursor, model.accountMetricNextCursor)} className="mt-3 inline-block text-sm text-primary hover:underline">下一页账号数据</Link>
         ) : null}
       </section>
 
@@ -118,7 +118,7 @@ export function PlatformWorkCatalog({ model }: { readonly model: PlatformWorkCat
               {works.map((work) => (
                 <li key={work.id}>
                   <Link
-                    href={worksUrl(model.cursor, work.id)}
+                    href={worksUrl(model.accountId, model.cursor, work.id)}
                     aria-current={selectedWork?.id === work.id ? "true" : undefined}
                     className="block rounded px-2 py-3 hover:bg-surface-subtle"
                   >
@@ -136,7 +136,7 @@ export function PlatformWorkCatalog({ model }: { readonly model: PlatformWorkCat
             </ul>
           )}
           {model.nextCursor ? (
-            <Link href={worksUrl(model.nextCursor)} className="mt-3 inline-block text-sm text-primary hover:underline">下一页作品</Link>
+            <Link href={worksUrl(model.accountId, model.nextCursor)} className="mt-3 inline-block text-sm text-primary hover:underline">下一页作品</Link>
           ) : null}
         </div>
 
@@ -164,7 +164,7 @@ export function PlatformWorkCatalog({ model }: { readonly model: PlatformWorkCat
                 <p className="mt-2 text-sm text-muted-foreground">暂无可查看的作品数据记录。</p>
               )}
               {model.workMetricNextCursor ? (
-                <Link href={worksUrl(model.cursor, selectedWork.id, model.workMetricNextCursor)} className="mt-3 inline-block text-sm text-primary hover:underline">下一页数据记录</Link>
+                <Link href={worksUrl(model.accountId, model.cursor, selectedWork.id, model.workMetricNextCursor)} className="mt-3 inline-block text-sm text-primary hover:underline">下一页数据记录</Link>
               ) : null}
             </>
           ) : (

@@ -204,7 +204,7 @@ describe("ChatDiagnosisCard(盲预测确认卡,T-103a)", () => {
     await user.click(screen.getByText("锁定为盲预测"));
     await waitFor(() => expect(confirmTask).toHaveBeenCalled());
     // 取不到 draft → 不 lockPrediction,不假装锁定,显式错误提示。
-    await waitFor(() => expect(screen.getByText(/锁定失败/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("尚未确认锁定完成，请查看原任务状态")).toBeTruthy());
     expect(lockPrediction).not.toHaveBeenCalled();
     expect(
       document.querySelector('[data-slot="chat-diagnosis-locked"]'),

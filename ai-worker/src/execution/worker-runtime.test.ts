@@ -1,9 +1,51 @@
 import {createHash} from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { GenerationFailure } from "./generation-error";
-import { createExecutionWorker } from "./worker-runtime";
+import { createExecutionWorker, type WorkerDependencies } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
+function intelligenceTextContext(){
+ return {kind:"model.structured",intelligenceText:"rewrite_only",operationKey:"intelligence:original",capability:"topic.generate",skillId:"intelligence.topic-adapted-draft",maxOutputTokens:8192,timeoutMs:600000,
+  facets:{mode:"topic_preview",target:JSON.stringify({generationMode:"rewrite_only"}),__videoDecisions:"{}",__assetProcessing:"{}",__dailyTopic:"{}"},
+  skillSnapshot:{snapshotVersion:1,userId:"u",accountId:"a",groupId:"g",resolvedAt:"now",platformPolicyVersion:"1",platformPolicy:"候选",skills:[{skillId:"intelligence.topic-adapted-draft",baseVersion:"v3",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"",template:"{{transcript}}",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
+}
+async function intelligenceRuntime(overrides:Partial<WorkerDependencies>={}){
+ const messages:WorkerMessage[]=[],generateStructured=vi.fn(),runVideo=vi.fn(),runAssetProcessing=vi.fn(),generateIntelligenceText=vi.fn(async()=>({callId:"original-model-call",text:"正文"}));
+ const worker=createExecutionWorker({generate:vi.fn(),generateStructured,runVideo,runAssetProcessing,generateIntelligenceText,...overrides,send(message){messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data:message.port==="readTaskContext"?intelligenceTextContext():message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"local",token:"secret"}:{}}));}});
+ worker.ready();worker.receive({version:1,type:"run",requestId:"rewrite",execution,deadlineAt:Date.now()+600000});
+ try{await vi.waitFor(()=>expect(messages.some(message=>message.type==="stopped")).toBe(true),{timeout:120000});return {messages,generateStructured,runVideo,runAssetProcessing,generateIntelligenceText};}finally{worker.close();}
+}
+it("专用正文标签先映射能力与依赖，不被视频/素材/每日选题抢走",async()=>{
+ const f=await intelligenceRuntime({capabilities:["intelligence.rewrite-text"]});
+ expect(f.messages.find(message=>message.type==="ready")).toMatchObject({capabilities:["intelligence.rewrite-text"]});
+ expect(f.generateIntelligenceText).toHaveBeenCalledOnce();expect(f.generateStructured).not.toHaveBeenCalled();expect(f.runVideo).not.toHaveBeenCalled();expect(f.runAssetProcessing).not.toHaveBeenCalled();
+ expect(f.messages.find(message=>message.type==="call"&&message.port==="commitResult")).toMatchObject({data:{outcome:"succeeded",callId:"original-model-call",text:"正文"}});
+});
+it.each(["generic", "capability-only", "dependency-excluded"])("%s 不获得正文执行权，拒绝发生在凭据/预留前",async mode=>{
+ const overrides:Partial<WorkerDependencies>=mode==="generic"?{generateIntelligenceText:undefined}:mode==="capability-only"?{generateIntelligenceText:undefined,capabilities:["intelligence.rewrite-text"]}:{capabilities:["model.structured"]};
+ const f=await intelligenceRuntime(overrides);
+ expect(f.messages.find(message=>message.type==="call"&&message.port==="commitResult")).toMatchObject({data:{outcome:"waiting_user",errorCode:"WORKER_CAPABILITY_UNAVAILABLE"}});
+ expect(f.messages.filter(message=>message.type==="call").map(message=>message.port)).not.toContain("resolveModelCredential");
+ expect(f.generateStructured).not.toHaveBeenCalled();expect(f.generateIntelligenceText).not.toHaveBeenCalled();expect(f.runVideo).not.toHaveBeenCalled();
+ const ready=f.messages.find(message=>message.type==="ready");expect(ready?.type==="ready" && ready.capabilities.includes("intelligence.rewrite-text")).toBe(false);
+});
+it("正文专用调用继承原取消 signal，错 fence 取消不生效，晚返回不提交正文",async()=>{
+ const messages:WorkerMessage[]=[],generateStructured=vi.fn();
+ let activeSignal:AbortSignal|undefined,release:()=>void=()=>{};
+ const generateIntelligenceText=vi.fn(async(_input,_model,signal:AbortSignal)=>{activeSignal=signal;await new Promise<void>(done=>{release=done;});return {callId:"late-call",text:"晚返回正文"};});
+ const worker=createExecutionWorker({generate:vi.fn(),generateStructured,generateIntelligenceText,capabilities:["intelligence.rewrite-text"],send(message){messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data:message.port==="readTaskContext"?intelligenceTextContext():message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"local",token:"secret"}:{}}));}});
+ try{
+  worker.receive({version:1,type:"run",requestId:"cancel-rewrite",execution,deadlineAt:Date.now()+600000});
+  await vi.waitFor(()=>expect(generateIntelligenceText).toHaveBeenCalledOnce(),{timeout:120000});
+  worker.receive({version:1,type:"cancel",requestId:"stale-cancel",execution:{...execution,fenceToken:"stale"}});
+  expect(activeSignal?.aborted).toBe(false);
+  worker.receive({version:1,type:"cancel",requestId:"owned-cancel",execution});
+  expect(activeSignal?.aborted).toBe(true);release();
+  await vi.waitFor(()=>expect(messages.find(message=>message.type==="stopped")).toMatchObject({reason:"cancelled"}),{timeout:120000});
+  expect(messages.filter(message=>message.type==="call").map(message=>message.port)).not.toContain("commitResult");
+  expect(generateStructured).not.toHaveBeenCalled();
+ }finally{release();worker.close();}
+},120000);
 it("图卡 Skill 进入持久图片 Worker 分支，不落普通结构化文本提交",async()=>{
  const messages:WorkerMessage[]=[],runCover=vi.fn(async()=>({callId:"image-call",text:"{}"}));
  const skillSnapshot={snapshotVersion:1,userId:"u",accountId:"a",resolvedAt:"now",platformPolicyVersion:"1",platformPolicy:"候选",

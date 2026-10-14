@@ -1,6 +1,8 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it} from 'vitest';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import {createRuntimeDb,type Db} from '../db';
 import {createAccountGroupService,createPlatformAccountService} from '../modules/platform-account';
@@ -13,7 +15,7 @@ const url=process.env.CREATOROS_TEST_POSTGRES_URL;
 const cleanups:Array<()=>Promise<unknown>>=[];
 afterEach(async()=>{for(const cleanup of cleanups.splice(0).reverse())await cleanup();});
 async function fixture(){
- if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');
+ if(!url)throw Error('隔离PG URL缺失');const parsed=new URL(url);assertOwnedPostgresUrl(parsed.toString());
  const name=`t1022_startup_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname=`/${name}`;
  const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());
  const pool=new Pool({connectionString:parsed.toString(),max:1,application_name:name+'_writer'});cleanups.push(()=>pool.end());const writer=drizzle(pool) as unknown as Db;

@@ -12,6 +12,7 @@ import {operationCatalog,describeOperation,operationDescribeInput} from "./opera
 import {
   DispatchClient,
   DispatchError,
+  DispatchObservationError,
   type DispatchCallOptions,
   type DispatchInput,
 } from "./dispatch";
@@ -46,7 +47,7 @@ export function createCreatorOsMcpServer(
     })),
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
     const tool = toolsByName.get(request.params.name);
     if (!tool) {
       return {
@@ -79,7 +80,7 @@ export function createCreatorOsMcpServer(
       const groupId=_creatoros?.groupId ?? options.defaultGroupId;
       // 显式切组时不把启动时原组的真实平台目标带过去。
       const accountId=_creatoros?.accountId ?? (_creatoros?.groupId && _creatoros.groupId!==options.defaultGroupId ? undefined : options.defaultAccountId);
-      const envelope = await dispatchClient.dispatch(tool.opId, input, {..._creatoros,groupId,accountId});
+      const envelope = await dispatchClient.dispatch(tool.opId, input, {..._creatoros,groupId,accountId}, {signal:extra.signal});
       return {
         content: [
           { type: "text" as const, text: JSON.stringify(envelope, null, 2) },
@@ -89,7 +90,7 @@ export function createCreatorOsMcpServer(
       // dispatch 层错误(4xx/5xx/网络)转成 MCP tool error,而非协议级异常 ——
       // 让调用方 AI 拿到可读的失败原因继续推理。
       const message =
-        err instanceof DispatchError
+        err instanceof DispatchError || err instanceof DispatchObservationError
           ? err.message
           : err instanceof Error
             ? `dispatch ${tool.opId} 失败:${err.message}(dev server 是否在运行?CREATOROS_BASE_URL 是否正确?)`

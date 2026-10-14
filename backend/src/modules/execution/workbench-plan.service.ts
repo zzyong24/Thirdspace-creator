@@ -164,7 +164,7 @@ export function validateTerminalToolFailures(calls:ReadonlyArray<TerminalToolCal
  return [match.failure];
 }
 export function hasLaterChatRoot(calls:ReadonlyArray<{kind:string;parentCallId:string|null;sequence:number;status?:string}>,anchorSequence:number):boolean{
-  return calls.some(call=>call.kind==="model"&&call.parentCallId===null&&call.sequence>anchorSequence);
+  return calls.some(call=>(call.kind==="model"||call.kind==='external_agent')&&call.parentCallId===null&&call.sequence>anchorSequence);
 }
 function successfulToolReceipt(text: string | null): boolean {
   if (!text) return false;
@@ -204,7 +204,7 @@ export function createWorkbenchPlanService(db: Db, deps: {
         const calls = anchor ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId, task.id)) : [];
         const plan = anchor ? await workbenchPlanAtModel(task, calls, anchor.modelCallId, current) : current;
         const anchorCall = anchor ? calls.find(call => call.id === anchor.modelCallId) : undefined;
-        if (anchor && (!anchorCall || anchorCall.kind !== "model" || anchorCall.status !== "settled")) throw new ConflictError("WORKBENCH_PLAN_HISTORY_UNPROVEN");
+        if (anchor && (!anchorCall || (anchorCall.kind !== "model"&&anchorCall.kind!=="external_agent") || anchorCall.status !== "settled")) throw new ConflictError("WORKBENCH_PLAN_HISTORY_UNPROVEN");
         const hasSuccessor = !!anchorCall && hasLaterChatRoot(calls,anchorCall.sequence);
         return plan ? {
           revision: plan.planRevision,

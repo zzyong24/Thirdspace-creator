@@ -70,3 +70,17 @@ helper分出明确仅供保护的root+item谓词，不能改变通用完整父fi
 share_import 真实执行只有 shareInput/collectionId 与 item_import/hash owner，无反向 sourceId；来源 run 单指针不足以证明可删。只有已证同工作区且确定终态、无在途/unknown/未完成控制时允许删除来源并保该无法证明可删的原 execution；不新增绑定或执行权，不复活任务，不保全部来源历史。其它可证明任务按原永久删除语义清理。任何错绑定/在途族零部分删除，并实际验原任务 ID/状态保持、显式重试保护、跨用户/组/内容指针负族与合法分享来源删除。
 
 share_import 无法证明可删的原终态 execution 保留后，既有 execution.tasks.get/list 可能仍显示该历史。这是避免误删的授权安全校正，不新增端点/权限/执行权；不能声称所有公开查询逐字不变。源列表、源 run/events、原 source ID 仍保持永久删除语义，保留任务不能复活、续期或自动重试。
+
+### 合法执行账号分离与终态审计父（最终实测补充）
+
+真实 RED 已证明不能强制 task.accountId=run.accountId：run 保存 source 的历史内容账号；startRun 的执行账号取明确 collector 或请求真实账号，纯组 RSS/web 可 NULL，也可由同组另一真实账号执行。creator_profile 的源/run 可 NULL，而 task 冻结真实 collector。任务删除证明改用原 execution.user/group/account/membershipVersion 与唯一真实历史 member 同 user/account/group/version 且可信 task.createdAt 在 joinedAt..leftAt 范围，再核 source_sync kind/ownerType/sourceId/payload.sourceId 与 run.executionTaskId 双向。纯组 task.account=NULL 不造 member；真实账号缺/错历史 member 不 bare。确定终态后原成员转出不要求重新成为 current；groupVersion 不强等当前组版本，不猜不存在的组版本历史或冻结 collector 配置。错 user/group/kind/owner/payload/成员版本仍整单拒绝且零变更，active/unknown/未完成控制仍挡删除。
+
+当前 updateSource 公共输入不能改 config/collector，不能把“用户公开切 collector”编成真实例。历史配置变化只有明确隔离注入才可验证；不以当前可变内容字段反推原执行账号。
+
+真实正常候选 reserve/start/settle 后，execution_calls FK 会阻止删除其 execution 父；不能删除计费/审计账本或关闭 FK 洗绿。已证 scope/双向绑定并确定终态的任务若有真实审计/产物引用，只保所需原 execution 父，来源业务与原可删内容仍清理；无引用且证明可删才删 task。引用盘点必须覆盖 execution_calls、execution_stream_events、execution_evidence，以及 ai_tasks.execution_task_id、workbench_artifact_lineages.pending_task_id / lineage_versions.task_id 等真实 FK，按实际 schema 命名，不声称前三表已穷尽。只读这些真实引用作保原判断，不改 execution/AI/产物模块、不删其历史，不新增字段/schema/执行权。已结算调用可保原，reserved/started/unknown 等未结算依旧挡删除。
+
+原保留的任务/账本/产物历史仍可能被既有公开查询读到；这是避免误删及 FK 整单失败的最小安全修复，不新增访问权或复活/续期。新增实际族：纯组 RSS 空执行账号与同组 B 执行 A 旧内容、profile 空内容账号/真实 collector、终态后成员转出、错成员版本/跨组零变更、未确认候选真实 settled/rejected 账本以及实际 stream/evidence/AI/产物引用保父。原 RED 和失败夹具日志保留，待实现/完整回归/独立复核/公共浏览器完成才签验收。
+
+### 真实结算但token用量未知的删除保护（本轮RED）
+
+historical-execution-and-unresolved-ledger-first.log 实际6族5通过/1失败：真实ledger reserve/start/settle(status=settled, usage={})、accountingBasis=tokens，inspect仍unknownUsage，原任务终态后来源删除却返回deleted。这里只复用 execution-call-ledger.service.ts assertResolved 的既有机械判据：未结算status集合之外，加 settled 且 totalTokens IS NULL 且 accountingBasis != requests，继续拒绝并零部分删除，原任务/来源/账本/ID保持。请求计量无需token用量，真实requests正例request-metered-delete-before-fix.log已通过，仍允许合法删除业务来源且保审计父，不能按inspect unknownUsage一刀切反杀请求计量。独立准入见final-independent-review；只改原intelligence.service.ts unresolvedCalls查询，原五源写集、不改executioncore/schema/产品deadline。新增两合法账号正族及reserved/started/unknown/token缺量/requests正负族、最终全量67和原76及公共浏览器旅程仍须自然终态后再验收。

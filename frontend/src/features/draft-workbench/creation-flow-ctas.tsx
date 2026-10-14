@@ -20,7 +20,7 @@ const UPLOAD_ACCEPT = "image/*,video/*,.pdf,.doc,.docx,.md,.txt";
 const CREATION_PREFILL="请使用已确认脚本与同一创作方法，一起生成完整文章和图文候选。我会分别预览采纳，再继续微调。不要生成视频、语音或插画。";
 
 export function CreationFlowCtas({ projectId }: { projectId: string }) {
-  const { openChat,prepareScriptForCreation } = useDraftChatRequest();
+  const { openChat,prepareScriptForCreation,readWritingContext } = useDraftChatRequest();
   const client=useCreationClient(),scope=useCreationScope(),scopeKey=creationScopeKey(scope);
   const storageKey=`creatoros:t1070:creation:${scopeKey}:${projectId}`;
   const intent=React.useRef<WorkCreationRequestState|null>(null),currentScope=React.useRef(scopeKey),mounted=React.useRef(true);
@@ -46,7 +46,7 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
       sessionStorage.removeItem(storageKey);intent.current=null;
       throw Error("原组合预约已恢复，原作品保留。当前脚本已有新版本，本次未生成；请再次点击确认当前脚本。");
     }
-    intent.current??={clientRequestId:crypto.randomUUID(),projectId,source};
+    intent.current??={clientRequestId:crypto.randomUUID(),projectId,source,writingContext:readWritingContext(scopeKey,projectId)??{schemaVersion:1,brandProfileVersionId:null,sourceAssets:[]}};
     const frozen=intent.current,persist=()=>sessionStorage.setItem(storageKey,JSON.stringify(frozen));persist();
     const creationTarget=await prepareWorkCreationRequest(client,frozen,persist);
     if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，原组合已保留。");

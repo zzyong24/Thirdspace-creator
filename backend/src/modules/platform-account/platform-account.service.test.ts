@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import { platformId, type RequestContext } from "@creatoros/contract";
+import {createAccountGroupService} from './account-group.service';
+import {createProjectRepository,createProjectsService} from '../projects';
 import {
   createPlatformAccountService,
   type PlatformAccountService,
@@ -193,37 +195,46 @@ describe("platform-account service", () => {
     });
   });
 
-  // [T-136§D-bind⑥ · 用户 2026-07-06 报障] 末号保护:不准移除最后一个 active 号。
-  describe("archiveAccount 末号保护", () => {
-    it("拒绝移除最后一个 active 号(ValidationError)", async () => {
-      const only = await svc.createAccount(ctxA, {
-        platform: "douyin",
-        accountHandle: "@only",
-      });
-      await expect(
-        svc.archiveAccount(ctxA, only.id),
-      ).rejects.toBeInstanceOf(ValidationError);
-      // 仍为 active(没被误移除)。
-      const after = await svc.getAccount(ctxA, only.id);
-      expect(after.status).toBe("active");
+  // T1022 允许账号组隐藏全部平台账号，保留组及其真实历史内容。
+  describe("archiveAccount 空组与历史保留", () => {
+    async function historyFor(accountId:string){
+      const groups=createAccountGroupService({db,now:()=>NOW,nextId:prefix=>`${prefix}-history`});
+      const membership=await groups.forAccount(ctxA,accountId),group=await groups.get(ctxA,membership.groupId);
+      const scope:RequestContext={...ctxA,accountId:null,groupId:group.id,groupVersion:group.version};
+      let historySequence=0;
+      const projects=createProjectsService(createProjectRepository(db),{now:()=>NOW,nextId:prefix=>`${prefix}-${accountId}-history-${++historySequence}`});
+      const project=await projects.createProject(scope,{title:'原账号组的历史创作'});
+      return {groups,group,membership,scope,projects,project};
+    }
+    it("允许隐藏最后一个active号，真0活跃且原组历史仍可读，外人仍拒绝", async () => {
+      const only = await svc.createAccount(ctxA, {platform:"douyin",accountHandle:"@only"});
+      const h=await historyFor(only.id);
+      await expect(svc.archiveAccount(ctxA,only.id)).resolves.toMatchObject({id:only.id,status:'archived'});
+      expect((await svc.getAccount(ctxA,only.id)).status).toBe('archived');
+      const all=await svc.listAccounts(ctxA,{limit:100,offset:0});
+      expect(all.rows.filter(row=>row.status==='active')).toEqual([]);
+      expect(all.rows).toHaveLength(1);
+      const group=await h.groups.get(h.scope,h.group.id);
+      expect(group).toMatchObject({id:h.group.id,status:'active',members:[{id:h.membership.id,accountId:only.id,status:'archived'}]});
+      expect(await h.projects.getProject(h.scope,h.project.id)).toEqual(h.project);
+      await expect(svc.archiveAccount(ctxB,only.id)).rejects.toBeInstanceOf(OwnershipError);
+      await expect(h.groups.get(ctxB,h.group.id)).rejects.toBeInstanceOf(OwnershipError);
+      expect((await svc.getAccount(ctxA,only.id)).status).toBe('archived');
     });
-
-    it("有多个 active 号时可移除其一,剩一个后再移除被拒", async () => {
-      const a1 = await svc.createAccount(ctxA, {
-        platform: "douyin",
-        accountHandle: "@a1",
-      });
-      const a2 = await svc.createAccount(ctxA, {
-        platform: "douyin",
-        accountHandle: "@a2",
-      });
-      // 两个 active → 移除一个 OK。
-      const archived = await svc.archiveAccount(ctxA, a1.id);
-      expect(archived.status).toBe("archived");
-      // 只剩 a2 一个 active → 再移除被拒。
-      await expect(
-        svc.archiveAccount(ctxA, a2.id),
-      ).rejects.toBeInstanceOf(ValidationError);
+    it("多active先隐藏其一，再隐藏末号成功，两账号与原组历史都保留", async () => {
+      const a1=await svc.createAccount(ctxA,{platform:'douyin',accountHandle:'@a1'});
+      const a2=await svc.createAccount(ctxA,{platform:'douyin',accountHandle:'@a2'});
+      const h=await historyFor(a2.id);
+      expect((await svc.archiveAccount(ctxA,a1.id)).status).toBe('archived');
+      expect((await svc.getAccount(ctxA,a2.id)).status).toBe('active');
+      expect((await svc.listAccounts(ctxA,{limit:100,offset:0})).rows.filter(row=>row.status==='active').map(row=>row.id)).toEqual([a2.id]);
+      expect((await svc.archiveAccount(ctxA,a2.id)).status).toBe('archived');
+      const all=await svc.listAccounts(ctxA,{limit:100,offset:0});
+      expect(all.rows).toHaveLength(2);expect(all.rows.filter(row=>row.status==='active')).toEqual([]);
+      expect(await h.projects.getProject(h.scope,h.project.id)).toEqual(h.project);
+      expect(await h.groups.get(h.scope,h.group.id)).toMatchObject({id:h.group.id,status:'active',members:[{accountId:a2.id,status:'archived'}]});
+      await expect(svc.archiveAccount(ctxB,a2.id)).rejects.toBeInstanceOf(OwnershipError);
+      await expect(h.projects.getProject({...h.scope,userId:ctxB.userId},h.project.id)).rejects.toBeInstanceOf(OwnershipError);
     });
   });
 

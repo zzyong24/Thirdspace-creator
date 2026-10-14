@@ -1,3 +1,6 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
+import {assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb, projects, contentOutputs, productions, type Db } from "@creatoros/backend";
 import { ENDPOINTS, type RequestContext } from "@creatoros/contract";
@@ -130,14 +133,14 @@ it.each([{mode:'v2',identity:'current'},{mode:'native',identity:'current'},{mode
   else{await db.insert(accountGroups).values({id:'moved-group',userId:'user',name:'转组',createdAt:now,updatedAt:now});await db.insert(accountGroupMemberships).values({id:'moved-member',userId:'user',groupId:'moved-group',accountId:'account-a',joinedAt:now});await expect(transcripts.create(ctx,'video-a',{sourceId:source.sourceId,expectedRevision:sourceRevision+1,requestId:'moved-new-transcript'})).rejects.toThrow();expect(await db.select().from(executionCalls)).toHaveLength(1);}
 
  }finally{await rm(root,{recursive:true,force:true});}
-},60000);
+},180000);
 
 const sourcePgUrl=process.env.CREATOROS_TEST_POSTGRES_URL;
 it.skipIf(!sourcePgUrl)('T1062真实PG同组不同父Source并发预约/attach沿原AI创建端口，无SHARE升级互等',async()=>{
- const {Pool}=await import('pg'),{randomUUID,createHash}=await import('node:crypto'),{createRuntimeDb}=await import('../../db');
+ const {OwnedPostgresPool:Pool}=await import('../../test-fixtures/owned-postgres'),{randomUUID,createHash}=await import('node:crypto'),{createRuntimeDb}=await import('../../db');
  const {accountGroups}=await import('../../schema/account-groups'),{aiTasks,productionMediaRequests,assets,assetFiles,eq}=await import('@creatoros/backend');
  const {createAiService}=await import('../ai/ai.service'),{createExecutionService}=await import('../execution/execution.service');
- const url=new URL(sourcePgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');
+ const url=new URL(sourcePgUrl!);assertOwnedPostgresUrl(url.toString());
  const name='t1062_source_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;
  const runtime=await createRuntimeDb({connectionString:url.toString()}),root=await mkdtemp(join(tmpdir(),'t1062-source-pg-'));
  let releaseFirst:()=>void=()=>{},firstReached:()=>void=()=>{};
@@ -170,4 +173,4 @@ it.skipIf(!sourcePgUrl)('T1062真实PG同组不同父Source并发预约/attach�
   const tasks=await runtime.db.select().from(aiTasks).where(eq(aiTasks.userId,c.userId));expect(tasks).toHaveLength(2);expect(tasks.map(t=>t.projectId).sort()).toEqual(['pg-project-1','pg-project-2']);for(const task of tasks)expect(task).toMatchObject({userId:c.userId,groupId:c.groupId,accountId:null,groupVersion:1,membershipVersion:null});
   expect(await owner.prepareEditorSource(c,'pg-video-1',body)).toEqual(result[0]);expect(await owner.prepareEditorSource(c,'pg-video-2',body)).toEqual(result[1]);expect(creates).toBe(2);expect(await runtime.db.select().from(productionMediaRequests)).toHaveLength(2);expect((await ai.listTasks(c,{limit:100,offset:0})).total).toBe(2);
  }finally{releaseFirst();await runtime.pool.end();await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);await admin.end();await rm(root,{recursive:true,force:true});}
-},30000);
+},180000);

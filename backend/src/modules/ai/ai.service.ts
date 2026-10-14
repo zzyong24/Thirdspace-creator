@@ -1,3 +1,4 @@
+import {frozenExecutionEngine} from '@creatoros/contract/execution-worker';
 import {PRIVATE_COLLECTION_SOURCE_KINDS} from '../scheduling';
 import {withWorkspaceParentWrite} from "../../workspace-write";
 import {requireWorkspace,workspaceKey,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
@@ -238,6 +239,7 @@ export interface AiAssetLibraryPort {
 }
 
 export interface ServiceDeps {
+  readWorkCandidateSource?:(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string;toolCallId:string})=>Promise<import("@creatoros/contract").WorkCandidateSourceResult>;
   prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot,options:AiPublicChatPrepareOptions)=>Promise<ChatTurnAssembly>;
   assertChatProject?: (ctx:RequestContext,projectId:string)=>Promise<unknown>;
   projectTranscriptionTargets?: {lock(tx:Db,ctx:RequestContext,projectId:string):Promise<unknown>;read(tx:Db,ctx:RequestContext,projectId:string):Promise<{awemeId:string;hasTranscript:boolean}>};
@@ -267,6 +269,7 @@ export interface ServiceDeps {
     ctx: RequestContext,
     taskType: string,
     inputData: Readonly<Record<string, unknown>>,
+    trustedRoute?: import("@creatoros/contract/execution-worker").ExecutionRoute,
   ) => Promise<Record<string, unknown>>;
 }
 
@@ -349,6 +352,7 @@ export interface AiService {
       modelKey?: string | null;
     },
   ): Promise<AIMessageResource>;
+  readWorkCandidateSource(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string;toolCallId:string}):Promise<import("@creatoros/contract").WorkCandidateSourceResult>;
   listMessages(
     ctx: RequestContext,
     conversationId: string,
@@ -822,6 +826,10 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toConversationDto(row);
     },
 
+    async readWorkCandidateSource(ctx,input){
+      if(!deps.readWorkCandidateSource)throw new ConflictError('候选来源读取服务尚未装配');
+      return deps.readWorkCandidateSource(ctx,input);
+    },
     async getConversation(ctx, conversationId) {
       // T-096:ownership 门复用 requireConversation(跨用户/未知 id → OwnershipError → 404,
       // 不泄漏存在性)。路由用它做续接的 scope 一致性校验。
@@ -927,7 +935,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const workspaceId=workspaceKey(ctx).id;
       const repo = repoFor(ctx, "ai.createTask", privateAdmission?scheduledCollectorJobId:undefined);
       const inputData = body.inputData ?? {};
-      const reservedFields = ["skillSnapshot", "platformPolicy"].filter((key) =>
+      const reservedFields = ["skillSnapshot", "platformPolicy", "executionRoute"].filter((key) =>
         Object.prototype.hasOwnProperty.call(inputData, key),
       );
       if (reservedFields.length > 0) {
@@ -1004,6 +1012,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       // 记录稳定展示值，既不回读本地默认模型冒充渠道模型，也不把 Growth 下发的 model 泄露
       // 到 task DTO / 日志。
       const modelKey =
+        frozenExecutionEngine(runtimeData)==="codex" ? "codex" :
         runtimeData.modelAuthority === "channel-managed"
           ? "channel-managed"
           : (await repo.getModelConfig(body.taskType))?.modelName ??

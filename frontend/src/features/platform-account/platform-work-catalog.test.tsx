@@ -62,8 +62,8 @@ describe("平台目录读侧", () => {
       selectedWork: { ...work, legacyProjectId: "project-a" },
       works: [{ ...work, legacyProjectId: "project-a" }],
     })} />);
-    expect(screen.getByText("下一页作品")).toHaveAttribute("href", "/accounts/works?cursor=20");
-    expect(screen.getByText("下一页账号数据")).toHaveAttribute("href", "/accounts/works?cursor=10&workId=work-1&accountMetricCursor=100");
+    expect(screen.getByText("下一页作品")).toHaveAttribute("href", "/accounts/works?accountId=acct-a&cursor=20");
+    expect(screen.getByText("下一页账号数据")).toHaveAttribute("href", "/accounts/works?accountId=acct-a&cursor=10&workId=work-1&accountMetricCursor=100");
     expect(screen.getByText("查看关联项目")).toHaveAttribute("href", "/projects/project-a");
     expect(screen.getByTestId("platform-work-catalog")).toHaveAttribute("data-account-id", "acct-a");
   });
@@ -106,4 +106,12 @@ describe("平台目录读侧", () => {
     expect(kuaishou?.textContent).toContain("作品目录尚未接入");
     expect(screen.queryByRole("button")).toBeNull();
   });
+});
+
+it("T1246 作品详情、作品与两类指标分页都携带原账号，完整保留各自游标",()=>{
+ render(<PlatformWorkCatalog model={model({accountId:"own account/一",cursor:"works-current",nextCursor:"works-next",workMetricCursor:"metrics-current",workMetricNextCursor:"metrics-next",accountMetricNextCursor:"account-next"})}/>);
+ const urls=screen.getAllByRole("link").map(link=>link.getAttribute("href")).filter((href):href is string=>!!href&&href.startsWith("/accounts/works"));
+ expect(urls).toHaveLength(4);
+ for(const href of urls)expect(new URL(href,"http://localhost").searchParams.get("accountId")).toBe("own account/一");
+ expect(screen.getByText("下一页数据记录")).toHaveAttribute("href","/accounts/works?accountId=own+account%2F%E4%B8%80&cursor=works-current&workId=work-1&metricCursor=metrics-next");
 });

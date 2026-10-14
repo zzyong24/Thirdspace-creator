@@ -13,6 +13,8 @@ const WORKBENCH_CONVERGENCE={tag:"0129_workbench_artifact_convergence",when:1791
 const LEGACY_SOURCE_OWNERSHIP={tag:"0130_legacy_source_ownership",when:1791043200003,hash:"cc25f17ac270d230b82f1697bd20c674931877459cc0a70f667cab3461a3fc70"};
 const NATIVE_REPORTS={tag:"0131_platform_native_reports",when:1791043200004,hash:"36a411fb6ee7a77923090fa346ed768365fa548746fa62d4735f561bf0a5e84f"};
 const LEGACY_SCHEDULED_MEMBERSHIP={tag:"0132_legacy_scheduled_job_membership",when:1791043200005,hash:"f45db49f8a826b15511cf27c23957fdf7d6d04322975ae13b34151d10a106eb6"};
+const ASSISTANT_EXECUTION_ENGINE={tag:"0133_assistant_execution_engine",when:1791043200006,hash:"0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6"};
+const CLIENT_OBSERVABILITY={tag:"0134_client_observability",when:1791043200007,hash:"d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494"};
 type QueryDb=Pick<Db,'execute'>;
 type Identity={hash:string;when:number};
 type Catalog=Record<'columns'|'constraints'|'indexes'|'functions'|'triggers'|'sequences',Record<string,unknown>[]>;
@@ -32,7 +34,7 @@ const allLineages={...lineages,...installedLineages};
 const sourceEntries=Object.values(lineages).flatMap(l=>l.entries);
 const canonicalEntries=new Map(sourceEntries.map(i=>[id(i),i]));
 const installedEntries=Object.values(installedLineages).flatMap(l=>l.entries).filter(i=>!canonicalEntries.has(id(i)));
-const entries=new Map([...sourceEntries,...installedEntries,WORKBENCH_CONVERGENCE,LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP].map(i=>[id(i),i]));
+const entries=new Map([...sourceEntries,...installedEntries,WORKBENCH_CONVERGENCE,LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP,ASSISTANT_EXECUTION_ENGINE,CLIENT_OBSERVABILITY].map(i=>[id(i),i]));
 const cache=new Map<string,Promise<Catalog>>();
 const repairable=new Set(['reporting_consents','reporting_outbox','reporting_consent_changes','creative_canvases','canvas_generation_links','canvas_agent_proposals']);
 async function rows(db:QueryDb,query:string){return(await db.execute(sql.raw(query))).rows as Record<string,unknown>[];}
@@ -43,7 +45,7 @@ async function readLedger(db:QueryDb):Promise<Identity[]>{
  for(const [name,type] of [['id','int4'],['hash','text'],['created_at','int8']])if(!cols.some(r=>r.column_name===name&&r.udt_name===type))fail('账本结构未知');
  return(await rows(db,'SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY created_at,id')).map(r=>{const when=Number(r.created_at);if(typeof r.hash!=='string'||!Number.isSafeInteger(when)||when<0)fail('账本身份类型无效');return{hash:r.hash as string,when};});
 }
-function sourceSQL(folder:string,item:Identity){for(const known of [WORKBENCH_CONVERGENCE,LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP])if(id(item)===id(known)){const raw=readFileSync(join(folder,known.tag+".sql"),"utf8");if(sha(raw)!==known.hash)fail(`${known.tag} SQL校验失败`);return raw;}for(const [name,lineage]of Object.entries(allLineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==item.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return raw;}}return fail('没有冻结SQL来源');}
+function sourceSQL(folder:string,item:Identity){for(const known of [WORKBENCH_CONVERGENCE,LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP,ASSISTANT_EXECUTION_ENGINE,CLIENT_OBSERVABILITY])if(id(item)===id(known)){const raw=readFileSync(join(folder,known.tag+".sql"),"utf8");if(sha(raw)!==known.hash)fail(`${known.tag} SQL校验失败`);return raw;}for(const [name,lineage]of Object.entries(allLineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==item.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return raw;}}return fail('没有冻结SQL来源');}
 const validatedFolders=new Set<string>();
 function validateSources(folder:string){
  if(validatedFolders.has(folder))return;
@@ -52,8 +54,8 @@ function validateSources(folder:string){
   for(const entry of lineage.entries){const content=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(content)!==entry.hash)fail(`冻结SQL校验失败 ${name}/${entry.tag}`);}
  }
  const normal=JSON.parse(readFileSync(join(folder,'meta','_journal.json'),'utf8'));const common=lineages.root.entries.slice(0,101);
- const tail=[{idx:101,tag:'0101_workbench_artifact_lineage',when:1789963200000,hash:WORKBENCH_CONVERGENCE.hash},{idx:102,tag:'0128_workspace_convergence',when:CONVERGENCE_WHEN,hash:'60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713'},{idx:103,...WORKBENCH_CONVERGENCE},{idx:104,...LEGACY_SOURCE_OWNERSHIP},{idx:105,...NATIVE_REPORTS},{idx:106,...LEGACY_SCHEDULED_MEMBERSHIP}];
- if(normal.entries.length!==107||tail.some(expected=>{const actual=normal.entries[expected.idx];return !actual||actual.idx!==expected.idx||actual.tag!==expected.tag||actual.when!==expected.when||(expected.hash&&sha(readFileSync(join(folder,expected.tag+'.sql'),'utf8'))!==expected.hash);}))fail('当前主journal不符合共同前缀+真实收敛及固定工作台/来源闭包');
+ const tail=[{idx:101,tag:'0101_workbench_artifact_lineage',when:1789963200000,hash:WORKBENCH_CONVERGENCE.hash},{idx:102,tag:'0128_workspace_convergence',when:CONVERGENCE_WHEN,hash:'60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713'},{idx:103,...WORKBENCH_CONVERGENCE},{idx:104,...LEGACY_SOURCE_OWNERSHIP},{idx:105,...NATIVE_REPORTS},{idx:106,...LEGACY_SCHEDULED_MEMBERSHIP},{idx:107,...ASSISTANT_EXECUTION_ENGINE},{idx:108,...CLIENT_OBSERVABILITY}];
+ if(normal.entries.length!==109||tail.some(expected=>{const actual=normal.entries[expected.idx];return !actual||actual.idx!==expected.idx||actual.tag!==expected.tag||actual.when!==expected.when||(expected.hash&&sha(readFileSync(join(folder,expected.tag+'.sql'),'utf8'))!==expected.hash);}))fail('当前主journal不符合共同前缀+真实收敛及固定工作台/来源闭包');
  for(let i=0;i<common.length;i++){const entry=normal.entries[i];if(entry.tag!==common[i]!.tag||entry.when!==common[i]!.when||sha(readFileSync(join(folder,entry.tag+'.sql'),'utf8'))!==common[i]!.hash)fail('共同旧迁移tag/SQL/时间漂移');}
  validatedFolders.add(folder);
 }
@@ -65,6 +67,7 @@ function assertKnownPrefixes(history:Identity[],folder:string){
  if(seen.has(id(LEGACY_SOURCE_OWNERSHIP))&&(!seen.has(id(newIdentity))||!seen.has(id(WORKBENCH_CONVERGENCE))))fail('0130来源归属修复缺真实0128/0129前置回执');
  if(seen.has(id(NATIVE_REPORTS))&&(!seen.has(id(newIdentity))||!seen.has(id(WORKBENCH_CONVERGENCE))||!seen.has(id(LEGACY_SOURCE_OWNERSHIP))))fail('0131微信报表缺真实0128/0129/0130前置回执');
  if(seen.has(id(LEGACY_SCHEDULED_MEMBERSHIP))&&!seen.has(id(NATIVE_REPORTS)))fail('0132旧计划归属版本修复缺真实0131前置回执');
+ if(seen.has(id(ASSISTANT_EXECUTION_ENGINE))&&!seen.has(id(LEGACY_SCHEDULED_MEMBERSHIP)))fail('0133引擎偏好缺真实0132前置回执');
  const common=lineages.root.entries.slice(0,101);let commonCount=0;for(const item of common){if(seen.has(id(item)))commonCount++;else break;}
  for(const item of common.slice(commonCount))if(seen.has(id(item)))fail('共同历史不是完整前缀');
  if(history.some(i=>!common.some(c=>id(c)===id(i)))&&commonCount!==101)fail('分支历史缺少共同0000–0100前缀');
@@ -80,9 +83,9 @@ function expectedCatalog(history:Identity[],folder:string,converged:boolean){
  const key=sha(JSON.stringify(identities.map(id).sort())+String(converged)+convergenceIdentity(folder).hash+LEGACY_SOURCE_OWNERSHIP.hash);
  let expected=cache.get(key);if(!expected){expected=(async()=>{// 只在全新隔离内存参考库执行原SQL；绝不在用户原库重放旧分组INSERT。
  const c=new PGlite();try{
-  for(const item of identities.filter(i=>id(i)!==id(LEGACY_SOURCE_OWNERSHIP)&&id(i)!==id(NATIVE_REPORTS)&&id(i)!==id(LEGACY_SCHEDULED_MEMBERSHIP)).sort((a,b)=>a.when-b.when))await c.exec(sourceSQL(folder,item));
+  for(const item of identities.filter(i=>id(i)!==id(LEGACY_SOURCE_OWNERSHIP)&&id(i)!==id(NATIVE_REPORTS)&&id(i)!==id(LEGACY_SCHEDULED_MEMBERSHIP)&&id(i)!==id(ASSISTANT_EXECUTION_ENGINE)&&id(i)!==id(CLIENT_OBSERVABILITY)).sort((a,b)=>a.when-b.when))await c.exec(sourceSQL(folder,item));
   if(converged)await c.exec(`BEGIN;\n${convergenceSQL(folder)}\nCOMMIT;`);
-  for(const tail of [LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP])if(identities.some(i=>id(i)===id(tail)))await c.exec(sourceSQL(folder,tail));
+  for(const tail of [LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP,ASSISTANT_EXECUTION_ENGINE,CLIENT_OBSERVABILITY])if(identities.some(i=>id(i)===id(tail)))await c.exec(sourceSQL(folder,tail));
   const cat={} as Catalog;for(const [key,query]of Object.entries(catalogQueries) as Array<[keyof Catalog,string]>)cat[key]=(await c.query<Record<string,unknown>>(query)).rows;return normalize(cat);
  }finally{await c.close();}})();cache.set(key,expected);}return expected;
 }
@@ -107,7 +110,7 @@ export async function inspectMigrationConvergence(db:QueryDb,folder:string){
  return{history,converged,needsUpgrade:!converged||needsRepair};
 }
 /** migrate之后只认可新迁移真实执行的回执，并核全量结构；不伪造旧125回执。 */
-export async function assertMigrationConverged(db:QueryDb,folder:string){const history=await readLedger(db);assertKnownPrefixes(history,folder);if(!history.some(i=>id(i)===id(convergenceIdentity(folder))))fail('收敛迁移没有真实新版本回执');if(!history.some(i=>id(i)===id(LEGACY_SOURCE_OWNERSHIP)))fail('来源归属修复没有真实0130回执');if(!history.some(i=>id(i)===id(NATIVE_REPORTS)))fail('微信报表没有真实0131回执');if(!history.some(i=>id(i)===id(LEGACY_SCHEDULED_MEMBERSHIP)))fail('旧计划归属版本修复没有真实0132回执');assertCatalog(normalize(await readCatalog(db)),await expectedCatalog(history,folder,true),false);}
+export async function assertMigrationConverged(db:QueryDb,folder:string){const history=await readLedger(db);assertKnownPrefixes(history,folder);if(!history.some(i=>id(i)===id(convergenceIdentity(folder))))fail('收敛迁移没有真实新版本回执');if(!history.some(i=>id(i)===id(LEGACY_SOURCE_OWNERSHIP)))fail('来源归属修复没有真实0130回执');if(!history.some(i=>id(i)===id(NATIVE_REPORTS)))fail('微信报表没有真实0131回执');if(!history.some(i=>id(i)===id(LEGACY_SCHEDULED_MEMBERSHIP)))fail('旧计划归属版本修复没有真实0132回执');if(!history.some(i=>id(i)===id(ASSISTANT_EXECUTION_ENGINE)))fail('执行引擎偏好没有真实0133回执');assertCatalog(normalize(await readCatalog(db)),await expectedCatalog(history,folder,true),false);}
 /** 有新回执却缺六张可恢复表时，在事务内执行同一版本DDL并保留真实repair执行收据。 */
 export async function repairConvergenceSchema(db:Db,folder:string){const status=await inspectMigrationConvergence(db,folder);if(!status.converged||!status.needsUpgrade)return;await db.transaction(async tx=>{
  for(const statement of convergenceSQL(folder).split('--> statement-breakpoint').map(s=>s.trim()).filter(Boolean))await tx.execute(sql.raw(statement));

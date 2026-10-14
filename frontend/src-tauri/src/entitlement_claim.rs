@@ -24,7 +24,11 @@ use crate::license::{
 const CONTRACT_VERSION: &str = "growth-entitlement-delivery-v1";
 const JOURNAL_VERSION: &str = "creator-pending-consume-v1";
 const CONSUME_PATH: &str = "/api/license/entitlement-claims/consume";
+fn create_path() -> &'static str { crate::secure_strings::s(crate::secure_strings::ids::ENTITLEMENT_SESSIONS_PATH) }
+#[cfg(test)]
 const CREATE_PATH: &str = "/api/v2/entitlement-claim-sessions";
+fn poll_path() -> &'static str { crate::secure_strings::s(crate::secure_strings::ids::ENTITLEMENT_POLL_PATH) }
+#[cfg(test)]
 const POLL_PATH: &str = "/api/v2/entitlement-claim-sessions/poll";
 const JOURNAL_SERVICE: &str = "com.creatoros.desktop.entitlement-consume";
 const JOURNAL_ACCOUNT: &str = "pending-consume-v1";
@@ -496,7 +500,7 @@ fn capability_enabled() -> bool {
         .unwrap_or("0")
         .trim();
     if cfg!(debug_assertions) {
-        std::env::var("CREATOROS_ENTITLEMENT_CLAIM_ENABLED")
+        std::env::var(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_ENTITLEMENT_CLAIM_ENABLED))
             .ok()
             .map(|value| value.trim() == "1")
             .unwrap_or(built_in == "1")
@@ -1060,7 +1064,7 @@ pub async fn entitlement_claim_start(
         }))
         .map_err(|_| "无法创建领取请求".to_string())?;
         let url = origin
-            .join(CREATE_PATH)
+            .join(create_path())
             .map_err(|_| "领取服务路径无效".to_string())?;
         let response = post_json(&url, &body)?;
         if response.status != 201 {
@@ -1150,7 +1154,7 @@ pub async fn entitlement_claim_poll(
         );
         let response = post_json(
             &origin
-                .join(POLL_PATH)
+                .join(poll_path())
                 .map_err(|_| "领取服务路径无效".to_string())?,
             body.as_str(),
         )?;

@@ -2,7 +2,7 @@ import * as React from "react";
 import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
 import {afterEach,beforeEach,expect,it,vi} from "vitest";
 import type {MomentsResource,WorkCompositionResource} from "@creatoros/contract";
-const api=vi.hoisted(()=>({createMomentsVersion:vi.fn(),getMoments:vi.fn(),getMomentsVersion:vi.fn(),listAssets:vi.fn(),createMaterialLink:vi.fn(),getAssetFileDownloadUrl:vi.fn(),getWorkCompositionBasisVersion:vi.fn(),saveWorkCompositionBasis:vi.fn(),saveWorkCompositionSelection:vi.fn(),getWorkComposition:vi.fn(),selectWorkSource:vi.fn()}));
+const api=vi.hoisted(()=>({createMomentsVersion:vi.fn(),getMoments:vi.fn(),getMomentsVersion:vi.fn(),listAssets:vi.fn(),searchAssets:vi.fn(),createMaterialLink:vi.fn(),getAssetFileDownloadUrl:vi.fn(),getWorkCompositionBasisVersion:vi.fn(),saveWorkCompositionBasis:vi.fn(),saveWorkCompositionSelection:vi.fn(),getWorkComposition:vi.fn(),selectWorkSource:vi.fn()}));
 vi.mock("@/lib/contract-client",()=>({client:api}));
 // 真实作品材料组件使用App Router；本文件只提供稳定导航端口，不替换业务组件。
 const navigation=vi.hoisted(()=>({push:vi.fn()}));
@@ -14,7 +14,7 @@ import {projectWorkspaceId} from "./project-workspaces";
 const initial={momentsId:"moments-a",artifactId:"artifact-a",projectId:"project-a",currentVersionId:"version-a",current:{schemaVersion:1,text:"已保存正文",imageUses:[],sourceRefs:[]},createdAt:"2026-10-02T00:00:00Z",updatedAt:"2026-10-02T00:00:00Z"} satisfies MomentsResource;
 const basis={schemaVersion:1 as const,topic:"共同主题",claims:[],factItems:[],sourceRefs:[],ruleRefs:[]};
 const work={compositionId:"work-a",projectId:"project-a",currentRevision:1,current:{schemaVersion:1,title:"四种表达",selection:[],members:[],basisVersionId:"basis-a"},memberCurrent:[],createdAt:"2026-10-02T00:00:00Z",updatedAt:"2026-10-02T00:00:00Z"} as unknown as WorkCompositionResource;
-beforeEach(()=>{Object.values(api).forEach(mock=>mock.mockReset());localStorage.clear();api.getMoments.mockResolvedValue(initial);api.getMomentsVersion.mockResolvedValue({versionId:initial.currentVersionId,document:initial.current});api.createMomentsVersion.mockResolvedValue({});api.listAssets.mockResolvedValue([{id:"image-a",name:"真实图片",assetType:"image",currentFileId:"file-a"}]);api.createMaterialLink.mockResolvedValue({id:"link-a"});api.getAssetFileDownloadUrl.mockResolvedValue({url:"/test.png"});api.getWorkCompositionBasisVersion.mockResolvedValue({document:basis});});
+beforeEach(()=>{Object.values(api).forEach(mock=>mock.mockReset());localStorage.clear();api.getMoments.mockResolvedValue(initial);api.getMomentsVersion.mockResolvedValue({versionId:initial.currentVersionId,document:initial.current});api.createMomentsVersion.mockResolvedValue({});api.listAssets.mockResolvedValue([{id:"image-a",name:"真实图片",assetType:"image",currentFileId:"file-a"}]);api.searchAssets.mockResolvedValue({items:[{id:"image-a",name:"真实图片",assetType:"image",currentFileId:"file-a"}],nextCursor:null,total:1});api.createMaterialLink.mockResolvedValue({id:"link-a"});api.getAssetFileDownloadUrl.mockResolvedValue({url:"/test.png"});api.getWorkCompositionBasisVersion.mockResolvedValue({document:basis});});
 afterEach(cleanup);
 it("未确认保存经卸载恢复完整原请求，采用实际原文件版本",async()=>{
  api.createMomentsVersion.mockRejectedValueOnce(Error("响应丢失"));
@@ -32,13 +32,15 @@ it("未确认保存经卸载恢复完整原请求，采用实际原文件版本"
 });
 it("图片先建立真实项目引用，重复配图不写入，保存完整精确文件",async()=>{
  render(<MomentsWorkbench initial={initial} accountId="account-a"/>);
- fireEvent.click(screen.getByRole("button",{name:"选择已有图片"}));
- await screen.findByRole("option",{name:"真实图片"});
- fireEvent.change(screen.getByRole("combobox",{name:"选择朋友圈配图"}),{target:{value:"image-a"}});
+ fireEvent.click(screen.getByRole("button",{name:"选择朋友圈配图"}));
+ await screen.findByRole("button",{name:"预览 真实图片"});
+ fireEvent.click(screen.getByRole("button",{name:"预览 真实图片"}));
  fireEvent.click(screen.getByRole("button",{name:"加入配图"}));
  await screen.findByText("图片已加入当前项目，请保存稿件确认配图。");
  expect(api.createMaterialLink).toHaveBeenCalledWith({params:undefined,query:undefined,body:{projectId:"project-a",entityType:"asset",entityId:"image-a",role:"reference",stage:"research",addedByType:"user"}});
- fireEvent.change(screen.getByRole("combobox",{name:"选择朋友圈配图"}),{target:{value:"image-a"}});
+ fireEvent.click(screen.getByRole("button",{name:"选择朋友圈配图"}));
+ await screen.findByRole("button",{name:"预览 真实图片"});
+ fireEvent.click(screen.getByRole("button",{name:"预览 真实图片"}));
  fireEvent.click(screen.getByRole("button",{name:"加入配图"}));await screen.findByRole("alert");
  expect(api.createMaterialLink).toHaveBeenCalledTimes(1);
  fireEvent.click(screen.getByRole("button",{name:"保存稿件"}));
@@ -48,9 +50,9 @@ it("图片先建立真实项目引用，重复配图不写入，保存完整精�
 it("项目引用失败保留正文且不加入未连接图片",async()=>{
  api.createMaterialLink.mockRejectedValue(Error("连接失败"));render(<MomentsWorkbench initial={initial} accountId="account-a"/>);
  fireEvent.change(screen.getByRole("textbox",{name:"朋友圈正文"}),{target:{value:"原编辑"}});
- fireEvent.click(screen.getByRole("button",{name:"选择已有图片"}));await screen.findByRole("option",{name:"真实图片"});
- fireEvent.change(screen.getByRole("combobox",{name:"选择朋友圈配图"}),{target:{value:"image-a"}});fireEvent.click(screen.getByRole("button",{name:"加入配图"}));
- await screen.findByRole("alert");expect(screen.getByRole("textbox",{name:"朋友圈正文"})).toHaveValue("原编辑");expect(screen.getByText(/^已记录来源 0 项 · 0 张配图$/)).toBeInTheDocument();
+ fireEvent.click(screen.getByRole("button",{name:"选择朋友圈配图"}));await screen.findByRole("button",{name:"预览 真实图片"});
+ fireEvent.click(screen.getByRole("button",{name:"预览 真实图片"}));fireEvent.click(screen.getByRole("button",{name:"加入配图"}));
+ await screen.findByRole("alert");fireEvent.click(screen.getByRole("button",{name:"取消"}));await waitFor(()=>expect(screen.queryByRole("dialog",{name:"选择朋友圈配图"})).not.toBeInTheDocument());expect(screen.getByRole("textbox",{name:"朋友圈正文"})).toHaveValue("原编辑");expect(screen.getByText(/^已记录来源 0 项 · 0 张配图$/)).toBeInTheDocument();
 });
 it("明确版本冲突可读最新基线，仍保留用户编辑",async()=>{
  api.createMomentsVersion.mockRejectedValueOnce({code:"VERSION_CONFLICT"});render(<MomentsWorkbench initial={initial} accountId="account-a"/>);

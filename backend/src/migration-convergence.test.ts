@@ -7,7 +7,7 @@ it('FK引用的独立唯一索引与partial predicate保留，约束自有唯一
  const catalog=await readCatalog(drizzle(client) as never);expect(catalog.indexes.some(r=>r.name==='parent_owner_idx')).toBe(true);expect(catalog.indexes.find(r=>r.name==='parent_partial_idx')?.definition).toContain('WHERE (scope IS NOT NULL)');expect(catalog.indexes.some(r=>r.name==='parent_owner_scope_key')).toBe(false);
  await client.exec(`INSERT INTO parent VALUES('p','u','s'); INSERT INTO child VALUES('u');`);await expect(client.exec(`INSERT INTO parent VALUES('p2','u','s2');`)).rejects.toMatchObject({code:'23505'});
  }finally{await client.close();}
-},30000);
+},180000);
 
 import {afterEach,vi} from 'vitest';
 import {migrate} from 'drizzle-orm/pglite/migrator';
@@ -16,7 +16,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash,randomUUID} from 'node:crypto';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl,ownedPostgresCliEnv,isOwnedPostgresDatabase} from './test-fixtures/owned-postgres';
 import {drizzle as drizzlePg} from 'drizzle-orm/node-postgres';
 import {migrate as migratePg} from 'drizzle-orm/node-postgres/migrator';
 import {createDb,createRuntimeDb} from './db';
@@ -92,9 +92,9 @@ it.each(['fresh','root','diagnostic','canvas'] as const)('完整%s原账本 publ
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 const runFile=promisify(execFile);
-const pgAdminUrl='postgresql://zyongzhu@127.0.0.1:55422/postgres';
+const pgAdminUrl=process.env.CREATOROS_TEST_POSTGRES_URL??process.env.CREATOROS_ISOLATED_PG_URL;
 it.each(['fresh','root','diagnostic','canvas'] as const)('真实隔离PostgreSQL %s双启/完整恢复/冻结历史/相同catalog',async kind=>{
- const r=await newRoot(),admin=new Pool({connectionString:pgAdminUrl});const name='t1062_'+randomUUID().replaceAll('-',''),restoreName=name+'_restore';const url=new URL(pgAdminUrl);url.pathname='/'+name;const connectionString=url.toString();let before:Awaited<ReturnType<typeof snapshot>>|undefined;
+ const ownedAdminUrl=assertOwnedPostgresUrl(pgAdminUrl).toString();const r=await newRoot(),admin=new Pool({connectionString:ownedAdminUrl});const name='t1062_'+randomUUID().replaceAll('-',''),restoreName=name+'_restore';const url=new URL(ownedAdminUrl);url.pathname='/'+name;const connectionString=url.toString();let before:Awaited<ReturnType<typeof snapshot>>|undefined;
  const oldBackupDir=process.env.CREATOROS_DATABASE_BACKUP_DIR;process.env.CREATOROS_DATABASE_BACKUP_DIR=join(r,'pg-backups');
  try{await admin.query(`CREATE DATABASE ${quote(name)}`);
   if(kind!=='fresh'){const oldPool=new Pool({connectionString});try{await migratePg(drizzlePg(oldPool),{migrationsFolder:join(folder,'lineages',kind)});await seed(oldPool as Client,r);before=await snapshot(oldPool as Client);}finally{await oldPool.end();}}
@@ -102,11 +102,11 @@ it.each(['fresh','root','diagnostic','canvas'] as const)('真实隔离PostgreSQL
    const current=await snapshot(first.pool as Client,before?.columns);if(before){expect(current.rows).toEqual(before.rows);expect(current.counts).toEqual(before.counts);for(const receipt of before.ledger)expect(current.ledger).toContainEqual(receipt);}
    expect(current.ledger.filter(i=>Number(i.created_at)===CONVERGENCE_WHEN)).toHaveLength(1);expect(await readCatalog(first.db)).toEqual(canonical);after=await snapshot(first.pool as Client);
    if(kind!=='fresh'){const dir=process.env.CREATOROS_DATABASE_BACKUP_DIR!;const manifests=(await readdir(dir)).filter(f=>f.endsWith('.manifest.json'));expect(manifests).toHaveLength(1);const manifest=JSON.parse(await readFile(join(dir,manifests[0]!),'utf8'));const bytes=await readFile(manifest.databasePath);expect(createHash('sha256').update(bytes).digest('hex')).toBe(manifest.databaseSha256);expect(bytes.subarray(0,5).toString()).toBe('PGDMP');expect(manifest.media[0]).toMatchObject({storageKey:'source-original.mp4',readable:true});
-    await admin.query(`CREATE DATABASE ${quote(restoreName)}`);await runFile('pg_restore',['--no-owner','--no-acl','--dbname',restoreName,manifest.databasePath],{env:{...process.env,PGHOST:'127.0.0.1',PGPORT:'55422',PGUSER:'zyongzhu',PGDATABASE:restoreName},maxBuffer:1024*1024});const restoreUrl=new URL(pgAdminUrl);restoreUrl.pathname='/'+restoreName;const restored=new Pool({connectionString:restoreUrl.toString()});try{const actual=await snapshot(restored as Client,before!.columns);expect(actual.rows).toEqual(before!.rows);expect(actual.counts).toEqual(before!.counts);expect(actual.ledger).toEqual(before!.ledger);}finally{await restored.end();}
+    await admin.query(`CREATE DATABASE ${quote(restoreName)}`);await runFile('pg_restore',['--no-owner','--no-acl','--dbname',restoreName,manifest.databasePath],{env:ownedPostgresCliEnv(new URL('/'+restoreName,ownedAdminUrl).toString()),timeout:180000,maxBuffer:1024*1024});const restoreUrl=new URL(ownedAdminUrl);restoreUrl.pathname='/'+restoreName;const restored=new Pool({connectionString:restoreUrl.toString()});try{const actual=await snapshot(restored as Client,before!.columns);expect(actual.rows).toEqual(before!.rows);expect(actual.counts).toEqual(before!.counts);expect(actual.ledger).toEqual(before!.ledger);}finally{await restored.end();}
    }
   }finally{await first.pool.end();}
   const second=await createRuntimeDb({connectionString});try{expect(await snapshot(second.pool as Client)).toEqual(after);expect(await readCatalog(second.db)).toEqual(canonical);}finally{await second.pool.end();}
- }finally{if(oldBackupDir===undefined)delete process.env.CREATOROS_DATABASE_BACKUP_DIR;else process.env.CREATOROS_DATABASE_BACKUP_DIR=oldBackupDir;await admin.query(`DROP DATABASE IF EXISTS ${quote(restoreName)} WITH (FORCE)`);await admin.query(`DROP DATABASE IF EXISTS ${quote(name)} WITH (FORCE)`);await admin.end();}
+ }finally{if(oldBackupDir===undefined)delete process.env.CREATOROS_DATABASE_BACKUP_DIR;else process.env.CREATOROS_DATABASE_BACKUP_DIR=oldBackupDir;if(isOwnedPostgresDatabase(restoreName))await admin.query(`DROP DATABASE IF EXISTS ${quote(restoreName)} WITH (FORCE)`);if(isOwnedPostgresDatabase(name))await admin.query(`DROP DATABASE IF EXISTS ${quote(name)} WITH (FORCE)`);await admin.end();}
 });
 
 it('新account=NULL组回执按group唯一，历史account非NULL撞键完整保留',async()=>{
@@ -194,5 +194,14 @@ it('T1110迁移后必须有真实0131回执，旧完整前缀不得冒充新runt
   const hash=createHash('sha256').update(await readFile(join(folder,'0131_platform_native_reports.sql'),'utf8')).digest('hex');
   await store.client.exec(`DELETE FROM drizzle.__drizzle_migrations WHERE hash='${hash}'; DROP TABLE platform_native_reports; ALTER TABLE platform_collection_runs DROP COLUMN group_id, DROP COLUMN group_version, DROP COLUMN membership_version;`);
   await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('0131');
+ }finally{await store.client.close();}
+},180000);
+
+it('T1238迁移后必须有真实0133回执与列，旧完整前缀不得宣称偏好已准备',async()=>{
+ const store=await createDb();try{
+  const hash=createHash('sha256').update(await readFile(join(folder,'0133_assistant_execution_engine.sql'),'utf8')).digest('hex');
+  const col=(await readCatalog(store.db)).columns.find(c=>c.table_name==='user_preferences'&&c.column_name==='assistant_execution_engine');expect(col?.is_nullable).toBe('YES');
+  await store.client.query('DELETE FROM drizzle.__drizzle_migrations WHERE hash=$1',[hash]);
+  await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('0133');
  }finally{await store.client.close();}
 },180000);

@@ -24,7 +24,9 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
-import { client } from "@/lib/contract-client";
+import { ENDPOINTS, createClient } from "@creatoros/contract";
+import { createHttpTransport, readCurrentAccountId, readCurrentGroupId } from "@/lib/http-transport";
+import { useAccountsChanged } from "@/lib/account-events";
 import type {
   AccountSkillOverlayPatchResource,
   AccountSkillOverlayVersionResource,
@@ -39,6 +41,9 @@ import {
   buildFacetCardRows,
   groupSkills,
   skillLabelOf,
+  skillWorkspaceOf,
+  skillWorkspaceKey,
+  type SkillWorkspace,
   type SkillItem,
 } from "./skills-data";
 
@@ -69,6 +74,8 @@ export function SkillsSection({
   }
 
   const groups = groupSkills(skills);
+  const scopeKey = skillWorkspaceKey(skills[0]!);
+  const coherent = skills.every((skill) => skillWorkspaceKey(skill) === scopeKey);
 
   return (
     <div data-slot="skills-section" className="flex flex-col gap-card-gap">
@@ -88,6 +95,7 @@ export function SkillsSection({
               <SkillRow
                 key={skill.id}
                 skill={skill}
+                coherent={coherent}
                 expanded={expanded === skill.id}
                 onToggle={() =>
                   setExpanded((cur) => (cur === skill.id ? null : skill.id))
@@ -107,10 +115,12 @@ export function SkillsSection({
 
 function SkillRow({
   skill,
+  coherent,
   expanded,
   onToggle,
 }: {
   skill: SkillItem;
+  coherent: boolean;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -162,8 +172,9 @@ function SkillRow({
       </button>
       {expanded ? (
         <SkillDetail
-          key={`${skill.accountId}:${skill.id}:${skill.rowRevision ?? "official"}:${skill.version}`}
+          key={`${skillWorkspaceKey(skill)}:${skill.id}:${skill.rowRevision ?? "official"}:${skill.version}`}
           skill={skill}
+          coherent={coherent}
         />
       ) : null}
     </li>
@@ -270,10 +281,63 @@ function PolicyNumberField({
   );
 }
 
-function SkillDetail({ skill }: { skill: SkillItem }) {
+function workspaceSelected(scope: SkillWorkspace): boolean {
+  return scope.groupId !== null
+    ? readCurrentGroupId() === scope.groupId
+    : readCurrentGroupId() === null && readCurrentAccountId() === scope.accountId;
+}
+
+/** 页面切组使旧实例永久失效，ABA不能让原在途回执重新生效。后台原请求不取消。 */
+function useSkillOperation(scope: SkillWorkspace | null, coherent: boolean) {
+  const [active, setActive] = React.useState(true);
+  const [pending, setPending] = React.useState(false);
+  const mounted = React.useRef(false);
+  const invalidated = React.useRef(false);
+  const generation = React.useRef(0);
+  const busy = React.useRef(false);
+  React.useLayoutEffect(() => {
+    mounted.current = true;
+    return () => {mounted.current = false; generation.current += 1;};
+  }, []);
+  React.useLayoutEffect(() => {
+    if (!coherent || scope === null || !workspaceSelected(scope)) {
+      invalidated.current = true;
+      generation.current += 1;
+    }
+  }, [coherent, scope]);
+  useAccountsChanged(React.useCallback(() => {
+    if (scope && !workspaceSelected(scope)) {
+      invalidated.current = true;
+      generation.current += 1;
+      setActive(false);
+    }
+  }, [scope]));
+  const current = React.useCallback((token?: number) =>
+    mounted.current && coherent && scope !== null && !invalidated.current &&
+    (token === undefined || token === generation.current) && workspaceSelected(scope), [scope, coherent]);
+  const begin = React.useCallback(() => {
+    if (!current() || busy.current) return null;
+    busy.current = true;
+    setPending(true);
+    return generation.current;
+  }, [current]);
+  const end = React.useCallback((token: number) => {
+    busy.current = false;
+    if (current(token)) setPending(false);
+  }, [current]);
+  return {active, pending, current, begin, end};
+}
+
+function SkillDetail({ skill, coherent }: { skill: SkillItem; coherent: boolean }) {
   const router = useRouter();
-  const canCustomize = skill.accountId !== null;
-  const canEditTemplate = skill.editableFields?.includes("template") ?? true;
+  const scope = React.useMemo(() => skillWorkspaceOf(skill), [skill]);
+  const scopedClient = React.useMemo(() => createClient(ENDPOINTS, createHttpTransport("/api/v1", scope ?? {groupId:null,accountId:null})), [scope]);
+  const operation = useSkillOperation(scope, coherent);
+  const canCustomize = scope !== null && coherent && operation.active && workspaceSelected(scope);
+  const canEditSystem = canCustomize && (skill.editableFields?.includes("system") ?? false);
+  const canEditTemplate = canCustomize && (skill.editableFields?.includes("template") ?? false);
+  const canEditPolicy = canCustomize && skill.completionPolicySupported && (skill.editableFields?.includes("completionPolicy") ?? false);
+  const pending = operation.pending;
   // 草稿初值 = 当前生效值(override ?? 内置,server 侧已归一投影)。
   const [system, setSystem] = React.useState<string>(skill.system);
   const [template, setTemplate] = React.useState<string>(skill.template);
@@ -297,36 +361,37 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
     String(policySeed.repairAttempts),
   );
   const [policyTouched, setPolicyTouched] = React.useState(false);
-  const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   const dirty =
-    system !== skill.system || template !== skill.template || policyTouched;
+    (canEditSystem && system !== skill.system) || (canEditTemplate && template !== skill.template) || (canEditPolicy && policyTouched);
 
   // 互斥跑一个 put；expectedRevision 让并发窗口只能有一个写入者成功。
   const runPut = React.useCallback(
     (patch: AccountSkillOverlayPatchResource) => {
-      if (pending) return;
-      if (!canCustomize) {
-        setError("请先选择账号，再保存技能定制。");
-        return;
-      }
-      setPending(true);
+      const permitted: AccountSkillOverlayPatchResource = {};
+      if (canEditSystem && "system" in patch) permitted.system = patch.system;
+      if (canEditTemplate && "template" in patch) permitted.template = patch.template;
+      if (canEditPolicy && "completionPolicy" in patch) permitted.completionPolicy = patch.completionPolicy;
+      if (Object.keys(permitted).length === 0) return;
+      const token = operation.begin();
+      if (token === null) return;
       setError(null);
       void (async () => {
         try {
-          await client.putPrompt({
+          await scopedClient.putPrompt({
             params: { id: skill.id },
             query: undefined,
             body: {
               expectedRevision: skill.rowRevision,
-              patch,
+              patch: permitted,
             },
           });
-          router.refresh();
+          if (operation.current(token)) router.refresh();
         } catch (cause) {
           // [T-513] CAS 冲突 / 基座不兼容必须可见；不能统一吞成“请重试”，否则用户会
           // 在旧 revision 上反复覆盖。HttpTransportError 的结构字段跨 bundle 也可稳定读取。
+          if (!operation.current(token)) return;
           const transportError = cause as {
             code?: unknown;
             details?: Record<string, unknown>;
@@ -345,17 +410,17 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
             setError("保存失败,请重试。");
           }
         } finally {
-          setPending(false);
+          operation.end(token);
         }
       })();
     },
-    [canCustomize, pending, router, skill.id, skill.rowRevision],
+    [canEditSystem, canEditTemplate, canEditPolicy, operation, scopedClient, router, skill.id, skill.rowRevision],
   );
 
   const save = React.useCallback(() => {
     if (!dirty) return;
-    const patch: AccountSkillOverlayPatchResource = { system, ...(canEditTemplate ? {template} : {}) };
-    if (skill.completionPolicySupported && policyTouched) {
+    const patch: AccountSkillOverlayPatchResource = { ...(canEditSystem ? {system} : {}), ...(canEditTemplate ? {template} : {}) };
+    if (canEditPolicy && policyTouched) {
       const parsed = parseCompletionPolicyDraft({
         minSegments: policyMinSegments,
         maxSegments: policyMaxSegments,
@@ -371,22 +436,23 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
     runPut(patch);
   }, [
     dirty,
+    canEditSystem,
     canEditTemplate,
+    canEditPolicy,
     policyMaxSegments,
     policyMinSegments,
     policyRepairAttempts,
     policyRequiredSequence,
     policyTouched,
     runPut,
-    skill.completionPolicySupported,
     system,
     template,
   ]);
 
   // 恢复默认:null 表示删除这两个账号增量字段，服务端回退 official 基座。
   const restore = React.useCallback(() => {
-    runPut({ system: null, ...(canEditTemplate ? {template: null} : {}) });
-  }, [runPut, canEditTemplate]);
+    runPut({ ...(canEditSystem ? {system:null} : {}), ...(canEditTemplate ? {template: null} : {}) });
+  }, [runPut, canEditSystem, canEditTemplate]);
 
   const restoreCompletionPolicy = React.useCallback(() => {
     runPut({ completionPolicy: null });
@@ -420,7 +486,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
           id={`skill-system-${skill.id}`}
           data-slot="skill-system-input"
           value={system}
-          disabled={pending || !canCustomize}
+          disabled={pending || !canEditSystem}
           rows={6}
           onChange={(event) => setSystem(event.target.value)}
           className="w-full resize-y rounded-md border border-border bg-background p-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -530,7 +596,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
               variant="ghost"
               size="sm"
               disabled={
-                pending || !canCustomize || !skill.completionPolicyCustomized
+                pending || !canEditPolicy || !skill.completionPolicyCustomized
               }
               onClick={restoreCompletionPolicy}
               title={
@@ -550,7 +616,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
               value={policyMinSegments}
               min={1}
               max={100}
-              disabled={pending || !canCustomize}
+              disabled={pending || !canEditPolicy}
               onChange={(value) => {
                 setPolicyMinSegments(value);
                 setPolicyTouched(true);
@@ -563,7 +629,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
               value={policyMaxSegments}
               min={1}
               max={100}
-              disabled={pending || !canCustomize}
+              disabled={pending || !canEditPolicy}
               onChange={(value) => {
                 setPolicyMaxSegments(value);
                 setPolicyTouched(true);
@@ -576,7 +642,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
               value={policyRepairAttempts}
               min={0}
               max={3}
-              disabled={pending || !canCustomize}
+              disabled={pending || !canEditPolicy}
               onChange={(value) => {
                 setPolicyRepairAttempts(value);
                 setPolicyTouched(true);
@@ -589,7 +655,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
             <input
               data-slot="skill-policy-required-sequence"
               value={policyRequiredSequence}
-              disabled={pending || !canCustomize}
+              disabled={pending || !canEditPolicy}
               onChange={(event) => {
                 setPolicyRequiredSequence(event.target.value);
                 setPolicyTouched(true);
@@ -617,7 +683,9 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
         <SkillVersionHistory
           skillId={skill.id}
           currentRevision={skill.rowRevision}
-          disabled={pending}
+          disabled={pending || !(canEditSystem || canEditTemplate || canEditPolicy)}
+          scopedClient={scopedClient}
+          operation={operation}
           onRolledBack={() => router.refresh()}
         />
       ) : null}
@@ -639,7 +707,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
           data-slot="skill-restore-default"
           variant="ghost"
           size="sm"
-          disabled={pending || !canCustomize || !skill.customized}
+          disabled={pending || !(canEditSystem || canEditTemplate) || !skill.customized}
           onClick={restore}
           title={
             skill.customized
@@ -674,11 +742,15 @@ function SkillVersionHistory({
   currentRevision,
   disabled,
   onRolledBack,
+  scopedClient,
+  operation,
 }: {
   skillId: string;
   currentRevision: number | null;
   disabled: boolean;
   onRolledBack: () => void;
+  scopedClient: ReturnType<typeof createClient<typeof ENDPOINTS>>;
+  operation: ReturnType<typeof useSkillOperation>;
 }) {
   const [versions, setVersions] = React.useState<
     AccountSkillOverlayVersionResource[] | null
@@ -688,49 +760,58 @@ function SkillVersionHistory({
   const [rollingId, setRollingId] = React.useState<string | null>(null);
 
   const load = React.useCallback(() => {
+    const token = operation.begin();
+    if (token === null) return;
     setLoading(true);
     setError(null);
     void (async () => {
       try {
-        const rows = await client.listPromptVersions({
+        const rows = await scopedClient.listPromptVersions({
           params: { id: skillId },
           query: undefined,
           body: undefined,
         });
-        setVersions(rows);
+        if (operation.current(token)) setVersions(rows);
       } catch {
-        setError("加载版本历史失败,请重试。");
+        if (operation.current(token)) setError("加载版本历史失败,请重试。");
       } finally {
-        setLoading(false);
+        operation.end(token);
+        if (operation.current(token)) setLoading(false);
       }
     })();
-  }, [skillId]);
+  }, [skillId, scopedClient, operation]);
 
   const rollback = React.useCallback(
     (versionId: string) => {
-      if (rollingId) return;
+      if (disabled || rollingId || currentRevision === null) return;
+      const token = operation.begin();
+      if (token === null) return;
+      let succeeded = false;
       setRollingId(versionId);
       setError(null);
       void (async () => {
         try {
-          await client.rollbackPrompt({
+          await scopedClient.rollbackPrompt({
             params: { id: skillId },
             query: undefined,
             body: {
               versionId,
-              expectedRevision: currentRevision ?? 1,
+              expectedRevision: currentRevision,
             },
           });
-          onRolledBack(); // 父 router.refresh 重取生效值(热更已在服务端)。
-          load(); // 回滚也进历史 → 重拉列表。
+          if (operation.current(token)) {succeeded = true; onRolledBack();}
         } catch {
-          setError("回滚失败,请重试。");
+          if (operation.current(token)) setError("回滚失败,请重试。");
         } finally {
-          setRollingId(null);
+          operation.end(token);
+          if (operation.current(token)) {
+            setRollingId(null);
+            if (succeeded) load();
+          }
         }
       })();
     },
-    [rollingId, skillId, currentRevision, onRolledBack, load],
+    [disabled, rollingId, skillId, currentRevision, onRolledBack, load, scopedClient, operation],
   );
 
   return (
@@ -771,7 +852,7 @@ function SkillVersionHistory({
                 data-slot="skill-version-rollback"
                 variant="ghost"
                 size="sm"
-                disabled={disabled || i === 0 || rollingId !== null}
+                disabled={disabled || currentRevision === null || i === 0 || rollingId !== null}
                 onClick={() => rollback(v.id)}
                 title="把这个历史版本重新生效为当前配置(回滚也会记一条新版本,可再回滚)"
               >

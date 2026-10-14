@@ -7,7 +7,7 @@ import {
   type Endpoint,
 } from "@creatoros/contract";
 import { createCreatorOsMcpServer } from "./server";
-import { DispatchClient, DispatchError, invocationReceipt, type DispatchInput } from "./dispatch";
+import { DispatchClient, DispatchError, DispatchObservationError, invocationReceipt, type DispatchInput, type DispatchControl } from "./dispatch";
 import {
   ConnectionError,
   discoverConnection,
@@ -256,7 +256,7 @@ async function waitForTask(
   }
 }
 
-async function clientFor(args: string[]): Promise<{
+async function clientFor(args: string[], control: DispatchControl = {}): Promise<{
   client: DispatchClient;
   connection: Awaited<ReturnType<typeof discoverConnection>> | null;
 }> {
@@ -265,6 +265,7 @@ async function clientFor(args: string[]): Promise<{
     return {
       connection: null,
       client: new DispatchClient({
+        control, cancelOnProcessSignal: true,
         baseUrl: explicitDevBaseUrl,
         email: process.env.CREATOROS_EMAIL,
         password: process.env.CREATOROS_PASSWORD,
@@ -279,6 +280,7 @@ async function clientFor(args: string[]): Promise<{
   return {
     connection,
     client: new DispatchClient({
+        control, cancelOnProcessSignal: true,
       baseUrl: connection.baseUrl,
       handshakeToken: connection.handshakeToken,
       cliAccessToken: connection.cliAccessToken,
@@ -342,7 +344,7 @@ export async function serveMcpStdio<Transport>(
 }
 const ARTIFACT_EXPORT_USAGE = "artifacts export <taskId> --artifact <artifactId> --artifact-version <positiveInt> --format raw|preview|png|pdf --output <localPath> --account <id>";
 
-export async function runCliCommand(args: string[]): Promise<unknown> {
+export async function runCliCommand(args: string[], control: DispatchControl = {}): Promise<unknown> {
   assertKnownFlags(args);
   const [group, action, target] = positional(args);
   if (group === "help" || hasFlag(args, "--help")) {
@@ -380,7 +382,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     return { ok: true, ...operationMetadata(endpoint) };
   }
   if (group === "status") {
-    const { connection } = await clientFor(args);
+    const { connection } = await clientFor(args, control);
     return {
       ok: true,
       mode: connection ? "installed" : "explicit-dev",
@@ -393,7 +395,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     };
   }
   if (group === "access" && action === "status") {
-    const { connection } = await clientFor(args);
+    const { connection } = await clientFor(args, control);
     return {
       ok: true,
       enabled: connection !== null,
@@ -403,7 +405,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     };
   }
   if (group === "access" && action === "revoke") {
-    const { connection } = await clientFor(args);
+    const { connection } = await clientFor(args, control);
     if (!connection) throw new Error("显式开发模式不能通过 CLI 撤销，请移除开发环境变量。");
     await revokeConnection(connection);
     return { ok: true, enabled: false, revoked: true };
@@ -412,13 +414,13 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     return {ok:true, groupId:await readDefaultGroupId()};
   }
   if (group === "groups" && action === "list") {
-    const {client}=await clientFor(args);
+    const {client}=await clientFor(args, control);
     const envelope=await client.dispatch("accountGroups.list", {query:{}});
     return {ok:true,operation:"accountGroups.list",data:envelopeData(envelope),meta:envelopeMeta(envelope),...envelopeReceiptFields(envelope)};
   }
   if (group === "groups" && action === "use") {
     if (!target) throw new Error("groups use 缺少 groupId。");
-    const {client}=await clientFor(args);
+    const {client}=await clientFor(args, control);
     await client.dispatch("accountGroups.get", {params:{groupId:target}}, {groupId:target});
     await writeDefaultGroupId(target);
     return {ok:true,groupId:target};
@@ -427,7 +429,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     return { ok: true, accountId: await readDefaultAccountId() };
   }
   if (group === "accounts" && action === "list") {
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const envelope = await client.dispatch("accounts.list", { query: {} });
     return {
       ok: true,
@@ -442,7 +444,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
   }
   if (group === "accounts" && action === "use") {
     if (!target) throw new Error("accounts use 缺少 accountId。");
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     await client.dispatch(
       "accounts.get",
       { params: { accountId: target } },
@@ -455,7 +457,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const accountId = await selectedAccountId(args);
     const groupId = await selectedGroupId(args);
     if (!accountId) throw new Error("douyin status 必须显式 --account <accountId>。");
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const envelope = await client.dispatch(
       "ingestion.douyin.status",
       { query: { accountId } },
@@ -479,7 +481,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     requireExecutionFlags(operation, policy, args);
     const accountId = await selectedAccountId(args);
     const groupId = await selectedGroupId(args);
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const envelope = await client.dispatch(
       operation,
       { body: { ...(accountId ? { accountId } : {}), forceNew: hasFlag(args, "--force-new") } },
@@ -513,7 +515,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const shareInput = flagValue(args, "--share");
     if (!shareInput) throw new Error("douyin import 必须提供 --share <抖音分享链接或分享文本>。");
     const idempotencyKey = flagValue(args, "--idempotency-key")!;
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const envelope = await client.dispatch(
       operation,
       {
@@ -551,7 +553,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const accountId = await selectedAccountId(args);
     const groupId = await selectedGroupId(args);
     if (!accountId) throw new Error("douyin refresh 必须显式 --account <accountId>。");
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const listed = await client.dispatch(
       "scheduledJobs.list",
       { query: { page: 1, pageSize: 100, sourceKind: "self.detail" } },
@@ -611,7 +613,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const output = requiredFlag("--output");
     const accountId = requiredFlag("--account");
     const operation = "workbench.artifacts.render";
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const envelope = await client.dispatch(
       operation,
       { params: { taskId: target, artifactId, version }, query: { format } },
@@ -634,7 +636,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const policy = getCliOperationPolicy(endpoint.id);
     if (!policy) throw new Error(`operation 缺 CLI policy: ${endpoint.id}`);
     requireExecutionFlags(endpoint.id, policy, args);
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const input = await parseInput(flagValue(args, "--input"));
     const accountId = await selectedAccountId(args);
     const groupId = await selectedGroupId(args);
@@ -659,7 +661,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
   }
   if (group === "tasks" && (action === "get" || action === "wait")) {
     if (!target) throw new Error(`tasks ${action} 缺少 taskId。`);
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const accountId = await selectedAccountId(args);
     const groupId = await selectedGroupId(args);
     const result = action === "wait"
@@ -677,7 +679,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     };
   }
   if (group === "mcp" && action === "serve") {
-    const { client } = await clientFor(args);
+    const { client } = await clientFor(args, control);
     const server = createCreatorOsMcpServer({ dispatchClient: client,defaultGroupId:await selectedGroupId(args),defaultAccountId:await selectedAccountId(args) });
     await serveMcpStdio(server, new StdioServerTransport());
     return undefined;
@@ -696,7 +698,9 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       ? error.code
       : error instanceof DispatchError
         ? `HTTP_${error.status}`
-        : "CLI_ERROR";
+        : error instanceof DispatchObservationError
+          ? error.code
+          : "CLI_ERROR";
     const message = error instanceof Error ? error.message : String(error);
     process.stdout.write(`${JSON.stringify({ ok: false, error: { code, message }, ...(error instanceof DispatchError ? envelopeReceiptFields(error) : {}) }, null, 2)}\n`);
     process.exitCode = error instanceof ConnectionError ? 3 : error instanceof DispatchError ? 4 : 2;

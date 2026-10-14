@@ -10,7 +10,7 @@
  */
 
 import * as React from "react";
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
@@ -18,6 +18,8 @@ vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 
 const mockClient = {
   putPrompt: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
+  listPromptVersions: vi.fn((): Promise<unknown[]> => Promise.resolve([])),
+  rollbackPrompt: vi.fn((): Promise<unknown> => Promise.resolve(null)),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -25,12 +27,20 @@ vi.mock("@/lib/contract-client", () => ({
   },
 }));
 
+// 固定 workspace client 与原旧 fixture 共用公开方法替身；HTTP header另用真实transport核。
+vi.mock("@creatoros/contract", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@creatoros/contract")>(),
+  createClient: vi.fn(() => mockClient),
+}));
+import { createClient } from "@creatoros/contract";
+import { writeCurrentGroupId, CURRENT_ACCOUNT_KEY, createHttpTransport } from "@/lib/http-transport";
 import { SkillsSection } from "./skills-section";
 import type { SkillItem } from "./skills-data";
 
 const SKILLS: readonly SkillItem[] = [
   {
     accountId: "account-a",
+    editableFields: ["system", "template", "completionPolicy"],
     id: "chatbox.topic",
     version: "v1",
     rowRevision: null,
@@ -47,6 +57,7 @@ const SKILLS: readonly SkillItem[] = [
   },
   {
     accountId: "account-a",
+    editableFields: ["system", "template", "completionPolicy"],
     id: "script.draft",
     version: "2",
     rowRevision: 2,
@@ -75,6 +86,7 @@ const SKILLS: readonly SkillItem[] = [
   },
   {
     accountId: "account-a",
+    editableFields: ["system", "template", "completionPolicy"],
     id: "knowledge.classify",
     version: "v1",
     rowRevision: null,
@@ -92,8 +104,14 @@ const SKILLS: readonly SkillItem[] = [
 ];
 
 beforeEach(() => {
+  vi.mocked(createClient).mockReset().mockImplementation(() => mockClient as unknown as ReturnType<typeof createClient>);
+  window.localStorage.clear();
+  window.localStorage.setItem("creatoros:current-account", "account-a");
   mockRouter.refresh.mockClear();
-  mockClient.putPrompt.mockClear();
+  mockClient.putPrompt.mockReset();
+  mockClient.putPrompt.mockImplementation((input:unknown) => Promise.resolve(input));
+  mockClient.listPromptVersions.mockReset().mockResolvedValue([]);
+  mockClient.rollbackPrompt.mockReset().mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -440,4 +458,223 @@ describe("SkillsSection 详情(行内展开)", () => {
     );
     expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
+});
+
+
+describe("[T-1234] 组编辑权限", () => {
+  it("合法纯组可首次编辑 system", () => {
+    window.localStorage.removeItem("creatoros:current-account");
+    window.localStorage.setItem("creatoros:current-group", "group-a");
+    const skill = {...SKILLS[0]!, groupId:"group-a", accountId:null};
+    const {container} = render(<SkillsSection skills={[skill]} />);
+    fireEvent.click(container.querySelector('[data-slot="skill-row-toggle"]')!);
+    expect(container.querySelector<HTMLTextAreaElement>('[data-slot="skill-system-input"]')!.disabled).toBe(false);
+  });
+  it("缺公开 editableFields 不增加编辑许可", () => {
+    const {container} = render(<SkillsSection skills={[{...SKILLS[0]!, editableFields:undefined}]} />);
+    fireEvent.click(container.querySelector('[data-slot="skill-row-toggle"]')!);
+    expect(container.querySelector<HTMLTextAreaElement>('[data-slot="skill-system-input"]')!.disabled).toBe(true);
+  });
+});
+
+// 以下仅补机械边界；旧26例的原行为断言保留。
+describe("[T-1234] workspace 生命周期、字段和历史", () => {
+  const observe = {timeout:120000};
+  function groupSkill(over: Partial<SkillItem> = {}): SkillItem {
+    return {...SKILLS[1]!, groupId:"group-a", accountId:null, ...over};
+  }
+  function select(groupId:string|null, accountId:string|null = null) {
+    act(() => {
+      writeCurrentGroupId(groupId);
+      if (accountId) window.localStorage.setItem(CURRENT_ACCOUNT_KEY,accountId);
+    });
+  }
+  function open(container: HTMLElement) {fireEvent.click(container.querySelector('[data-slot="skill-row-toggle"]')!);}
+  function edit(container:HTMLElement, value="本轮中性方法") {
+    fireEvent.change(container.querySelector('[data-slot="skill-system-input"]')!, {target:{value}});
+  }
+  function save(container:HTMLElement) {fireEvent.click(container.querySelector('[data-slot="skill-save"]')!);}
+  async function history(container:HTMLElement) {
+    const expectedCalls = mockClient.listPromptVersions.mock.calls.length + 1;
+    const details=container.querySelector<HTMLDetailsElement>('[data-slot="skill-version-history"]')!;
+    // jsdom真实details会自行派发toggle；不能另手发一次而制造第二个读取。
+    act(() => {details.open=true;});
+    await waitFor(() => expect(mockClient.listPromptVersions).toHaveBeenCalledTimes(expectedCalls), observe);
+  }
+  function deferred<T>() {
+    let resolve!: (value:T)=>void; let reject!: (cause:unknown)=>void;
+    const promise=new Promise<T>((yes,no)=>{resolve=yes;reject=no;});
+    return {promise,resolve,reject};
+  }
+  const versions=[2,1].map(rowRevision=>({id:`version-${rowRevision}`,skillId:"script.draft",groupId:"group-a",accountId:null,rowRevision,observedBaseVersion:"v1",overlayVersion:String(rowRevision),overlay:{system:`版本${rowRevision}`},savedCompatibility:"compatible",currentCompatibility:"compatible",currentCompatibilityErrors:[],updatedBy:"user-a",createdAt:"2026-10-11T00:00:00.000Z"}));
+
+  it("canonical 同组成员账号筛选仍可编辑，首次null CAS不造账号scope", async () => {
+    select("group-a","member-a");
+    const {container}=render(<SkillsSection skills={[groupSkill({rowRevision:null})]} />);open(container);edit(container);save(container);
+    await waitFor(()=>expect(mockClient.putPrompt).toHaveBeenCalledTimes(1),observe);
+    expect(mockClient.putPrompt.mock.calls[0]![0]).toMatchObject({body:{expectedRevision:null,patch:{system:"本轮中性方法"}}});
+    await waitFor(()=>expect(mockRouter.refresh).toHaveBeenCalledTimes(1),observe);
+  },240000);
+
+  it.each([
+    {groupId:"group-a",accountId:"account-a"},
+    {groupId:"",accountId:null},
+    {groupId:"  ",accountId:null},
+    {groupId:" group-a ",accountId:null},
+    {groupId:null,accountId:""},
+    {groupId:null,accountId:null},
+  ])("异常/无scope投影只读且无写: %j", (scope) => {
+    select("group-a");
+    const {container}=render(<SkillsSection skills={[groupSkill(scope)]} />);open(container);
+    expect(container.querySelector<HTMLTextAreaElement>('[data-slot="skill-system-input"]')!.disabled).toBe(true);
+    edit(container);save(container);
+    expect(mockClient.putPrompt).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-slot="skill-version-history"]')).toBeNull();
+  });
+
+  it("混组目录不凭第一项给其它条目授权", () => {
+    select("group-a");
+    const {container}=render(<SkillsSection skills={[groupSkill(),groupSkill({id:"chatbox.topic",groupId:"group-b"})]} />);open(container);
+    expect(container.querySelector<HTMLTextAreaElement>('[data-slot="skill-system-input"]')!.disabled).toBe(true);
+    edit(container);save(container);expect(mockClient.putPrompt).not.toHaveBeenCalled();
+  });
+
+  it.each(["system","template","completionPolicy"] as const)("仅获准%s字段可写，其它字段不能进入patch", async(field)=>{
+    select("group-a");
+    const {container}=render(<SkillsSection skills={[groupSkill({editableFields:[field],tools:["context.projects"]})]} />);open(container);
+    expect(container.querySelector<HTMLTextAreaElement>('[data-slot="skill-system-input"]')!.disabled).toBe(field!=="system");
+    expect(container.querySelector<HTMLTextAreaElement>('[data-slot="skill-template-input"]')!.disabled).toBe(field!=="template");
+    expect(container.querySelector<HTMLInputElement>('[data-slot="skill-policy-min-segments"]')!.disabled).toBe(field!=="completionPolicy");
+    const slot=field==="system"?"skill-system-input":field==="template"?"skill-template-input":"skill-policy-min-segments";
+    fireEvent.change(container.querySelector(`[data-slot="${slot}"]`)!,{target:{value:field==="completionPolicy"?"7":"新获准字段"}});save(container);
+    await waitFor(()=>expect(mockClient.putPrompt).toHaveBeenCalledTimes(1),observe);
+    const patch=(mockClient.putPrompt.mock.calls[0]![0] as {body:{patch:object}}).body.patch;
+    expect(Object.keys(patch)).toEqual([field]);
+    expect(container.querySelector('[data-slot="skill-tools"]')).not.toBeNull();
+  },240000);
+
+  it("缺字段/adapter不支持不能用dirty事件绕过写权限",()=>{
+    select("group-a");
+    const {container}=render(<SkillsSection skills={[groupSkill({editableFields:["completionPolicy"],completionPolicySupported:false})]} />);open(container);edit(container);save(container);
+    expect(mockClient.putPrompt).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-slot="skill-completion-policy"]')).toBeNull();
+  });
+  it("方法restore只清允许方法字段，policy restore保持独立",async()=>{
+    select("group-a");
+    const {container}=render(<SkillsSection skills={[groupSkill({editableFields:["template"]})]} />);open(container);
+    fireEvent.click(container.querySelector('[data-slot="skill-restore-default"]')!);
+    await waitFor(()=>expect(mockClient.putPrompt).toHaveBeenCalledTimes(1),observe);
+    expect(mockClient.putPrompt.mock.calls[0]![0]).toMatchObject({body:{expectedRevision:2,patch:{template:null}}});
+    expect(Object.keys((mockClient.putPrompt.mock.calls[0]![0] as {body:{patch:object}}).body.patch)).toEqual(["template"]);
+    expect(container.querySelector<HTMLButtonElement>('[data-slot="skill-policy-restore-default"]')!.disabled).toBe(true);
+  },240000);
+
+  it("浏览器已切B而RSC仍A时不能发新保存/history",()=>{
+    select("group-a");const {container}=render(<SkillsSection skills={[groupSkill()]} />);open(container);edit(container);select("group-b");save(container);
+    expect(mockClient.putPrompt).not.toHaveBeenCalled();
+    expect(container.querySelector<HTMLButtonElement>('[data-slot="skill-save"]')!.disabled).toBe(true);
+    expect(mockClient.listPromptVersions).not.toHaveBeenCalled();
+  });
+  it("无事件的selection不符仍在操作入口拒绝",()=>{
+    select("group-a");const {container}=render(<SkillsSection skills={[groupSkill()]} />);open(container);edit(container);
+    window.localStorage.setItem("creatoros:current-group","group-b");save(container);
+    expect(mockClient.putPrompt).not.toHaveBeenCalled();
+  });
+
+  it.each(["success","reject","aba","unmount"])("旧保存%s晚回执不刷新、不落新scope",async(mode)=>{
+    select("group-a");const pending=deferred<unknown>();mockClient.putPrompt.mockReturnValueOnce(pending.promise);
+    const {container,rerender,unmount}=render(<SkillsSection skills={[groupSkill()]} />);open(container);edit(container);save(container);
+    expect(mockClient.putPrompt).toHaveBeenCalledTimes(1);
+    if(mode==="unmount")unmount();else {
+      select("group-b");rerender(<SkillsSection skills={[groupSkill({groupId:"group-b"})]} />);
+      if(mode==="aba"){select("group-a");rerender(<SkillsSection skills={[groupSkill()]} />);}
+    }
+    await act(async()=>{if(mode==="reject")pending.reject(new Error("旧scope错误"));else pending.resolve(null);await pending.promise.catch(()=>{});});
+    expect(mockRouter.refresh).not.toHaveBeenCalled();expect(mockClient.putPrompt).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-slot="skill-save-error"]')).toBeNull();
+    if(mode!=="unmount")expect(container.querySelector<HTMLTextAreaElement>('[data-slot="skill-system-input"]')!.value).toBe("你是文案写手。");
+  },240000);
+
+  it("同组成员筛选变化不反杀已发合法组保存",async()=>{
+    select("group-a","member-a");const pending=deferred<unknown>();mockClient.putPrompt.mockReturnValueOnce(pending.promise);
+    const {container}=render(<SkillsSection skills={[groupSkill()]} />);open(container);edit(container);save(container);
+    act(()=>{window.localStorage.setItem(CURRENT_ACCOUNT_KEY,"member-b");window.dispatchEvent(new CustomEvent("creatoros:accounts-changed",{detail:{groupId:"group-a",source:"external",routeRefreshScheduled:false}}));});
+    await act(async()=>{pending.resolve(null);await pending.promise;});
+    expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+  },240000);
+  it("legacy A切legacy B旧editor不能保存",()=>{
+    const {container}=render(<SkillsSection skills={[SKILLS[1]!]} />);open(container);edit(container);
+    act(()=>{window.localStorage.setItem(CURRENT_ACCOUNT_KEY,"account-b");window.dispatchEvent(new CustomEvent("creatoros:accounts-changed",{detail:{groupId:null,source:"external",routeRefreshScheduled:false}}));});
+    save(container);expect(mockClient.putPrompt).not.toHaveBeenCalled();
+  });
+
+  it("history、rollback和保存共享在途互斥，回滚用原revision且再读历史",async()=>{
+    select("group-a");const pending=deferred<unknown[]>();mockClient.listPromptVersions.mockReturnValueOnce(pending.promise);
+    const {container}=render(<SkillsSection skills={[groupSkill()]} />);open(container);edit(container);await history(container);save(container);
+    expect(mockClient.listPromptVersions).toHaveBeenCalledTimes(1);expect(mockClient.putPrompt).not.toHaveBeenCalled();
+    await act(async()=>{pending.resolve(versions);await pending.promise;});
+    expect(container.querySelectorAll('[data-slot="skill-version-row"]')).toHaveLength(2);
+    fireEvent.click(container.querySelectorAll('[data-slot="skill-version-rollback"]')[1]!);
+    await waitFor(()=>expect(mockClient.rollbackPrompt).toHaveBeenCalledTimes(1),observe);
+    expect(mockClient.rollbackPrompt).toHaveBeenCalledWith({params:{id:"script.draft"},query:undefined,body:{versionId:"version-1",expectedRevision:2}});
+    await waitFor(()=>expect(mockClient.listPromptVersions).toHaveBeenCalledTimes(2),observe);
+    expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+  },240000);
+
+  it.each(["success","reject","aba"])("history %s晚回执不进入新组列表",async(mode)=>{
+    select("group-a");const pending=deferred<unknown[]>();mockClient.listPromptVersions.mockReturnValueOnce(pending.promise);
+    const {container,rerender}=render(<SkillsSection skills={[groupSkill()]} />);open(container);await history(container);
+    expect(mockClient.listPromptVersions).toHaveBeenCalledTimes(1);
+    select("group-b");rerender(<SkillsSection skills={[groupSkill({groupId:"group-b"})]} />);
+    if(mode==="aba"){select("group-a");rerender(<SkillsSection skills={[groupSkill()]} />);}
+    await act(async()=>{if(mode==="reject")pending.reject(new Error("旧历史错误"));else pending.resolve(versions);await pending.promise.catch(()=>{});});
+    expect(container.querySelectorAll('[data-slot="skill-version-row"]')).toHaveLength(0);
+    expect(container.querySelector('[data-slot="skill-version-error"]')).toBeNull();expect(mockRouter.refresh).not.toHaveBeenCalled();
+  },240000);
+
+  it.each(["success","reject","aba"])("rollback %s晚回执不refresh或重拉其它组",async(mode)=>{
+    select("group-a");mockClient.listPromptVersions.mockResolvedValueOnce(versions);
+    const pending=deferred<unknown>();mockClient.rollbackPrompt.mockReturnValueOnce(pending.promise);
+    const {container,rerender}=render(<SkillsSection skills={[groupSkill()]} />);open(container);await history(container);
+    await waitFor(()=>expect(container.querySelectorAll('[data-slot="skill-version-row"]')).toHaveLength(2),observe);
+    fireEvent.click(container.querySelectorAll('[data-slot="skill-version-rollback"]')[1]!);expect(mockClient.rollbackPrompt).toHaveBeenCalledTimes(1);
+    select("group-b");rerender(<SkillsSection skills={[groupSkill({groupId:"group-b"})]} />);
+    if(mode==="aba"){select("group-a");rerender(<SkillsSection skills={[groupSkill()]} />);}
+    await act(async()=>{if(mode==="reject")pending.reject(new Error("旧回滚错误"));else pending.resolve(null);await pending.promise.catch(()=>{});});
+    expect(mockRouter.refresh).not.toHaveBeenCalled();expect(mockClient.listPromptVersions).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-slot="skill-version-error"]')).toBeNull();
+  },240000);
+
+  it("当前history和rollback真实失败可见，不假成功",async()=>{
+    select("group-a");mockClient.listPromptVersions.mockRejectedValueOnce(new Error("history failure"));
+    const {container}=render(<SkillsSection skills={[groupSkill()]} />);open(container);await history(container);
+    await waitFor(()=>expect(container.querySelector('[data-slot="skill-version-error"]')?.textContent).toContain("加载版本历史失败"),observe);
+    const details=container.querySelector<HTMLDetailsElement>('[data-slot="skill-version-history"]')!;act(()=>{details.open=false;});
+    mockClient.listPromptVersions.mockResolvedValueOnce(versions);await history(container);
+    await waitFor(()=>expect(container.querySelectorAll('[data-slot="skill-version-row"]')).toHaveLength(2),observe);
+    mockClient.rollbackPrompt.mockRejectedValueOnce(new Error("rollback failure"));fireEvent.click(container.querySelectorAll('[data-slot="skill-version-rollback"]')[1]!);
+    await waitFor(()=>expect(container.querySelector('[data-slot="skill-version-error"]')?.textContent).toContain("回滚失败"),observe);
+    expect(mockRouter.refresh).not.toHaveBeenCalled();expect(mockClient.listPromptVersions).toHaveBeenCalledTimes(2);
+  },240000);
+
+  it("真实HTTP transport冻结canonical A，ambient B不会改原header",async()=>{
+    const actual=await vi.importActual<typeof import("@creatoros/contract")>("@creatoros/contract");
+    select("group-a","member-a");
+    vi.mocked(createClient).mockImplementationOnce(actual.createClient);
+    const pending=deferred<Response>();const fetchMock=vi.fn<(url:RequestInfo|URL,init?:RequestInit)=>Promise<Response>>().mockImplementation(()=>pending.promise);vi.stubGlobal("fetch",fetchMock);
+    const {container}=render(<SkillsSection skills={[groupSkill()]} />);open(container);edit(container);save(container);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const init=fetchMock.mock.calls[0]![1] as RequestInit;
+    expect(new Headers(init.headers).get("x-group-id")).toBe("group-a");
+    expect(new Headers(init.headers).get("x-account-id")).toBeNull();
+    expect(JSON.parse(init.body as string)).toMatchObject({id:"settings.prompts.put",input:{body:{expectedRevision:2,patch:{system:"本轮中性方法"}}}});
+    select("group-b");
+    const row={groupId:"group-a",accountId:null,skillId:"script.draft",baseVersion:"v1",editableFields:["system","template","completionPolicy"],completionPolicySupported:true,official:{system:"官方",template:"官方模板",requiredFacets:[],tools:[],outputSchema:null,completionPolicy:null},effective:{system:"本轮中性方法",template:"官方模板",requiredFacets:[],tools:[],outputSchema:null,completionPolicy:null},compatibility:"compatible",compatibilityErrors:[],rowRevision:3,validatedBaseVersion:"v1",overlayVersion:"3",overlay:{system:"本轮中性方法"},updatedAt:"2026-10-11T00:00:00.000Z"};
+    await act(async()=>{pending.resolve(new Response(JSON.stringify({data:row}),{status:200,headers:{"content-type":"application/json"}}));await pending.promise;});
+    expect(mockRouter.refresh).not.toHaveBeenCalled();expect(fetchMock).toHaveBeenCalledTimes(1);
+    // 另一真实 transport 在ambient B下也只发冻结A；不是 mock factory 的参数断言。
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({data:versions,meta:{total:2}}),{status:200}));
+    await createHttpTransport("/api/v1",{groupId:"group-a",accountId:null}).request(actual.ENDPOINTS.listPromptVersions,{params:{id:"script.draft"},query:undefined,body:undefined});
+    expect(new Headers((fetchMock.mock.calls[1]![1] as RequestInit).headers).get("x-group-id")).toBe("group-a");
+  },240000);
 });

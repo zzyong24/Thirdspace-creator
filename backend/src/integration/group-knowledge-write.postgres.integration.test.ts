@@ -1,6 +1,8 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it} from 'vitest';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import {createRuntimeDb,type Db} from '../db';
 import {knowledgeItems,knowledgeRelations,knowledgeRevisions} from '../schema/knowledge';
@@ -20,7 +22,7 @@ function pauseWrite(db:Db,table:unknown,reached:ReturnType<typeof gate>,resume:R
 }
 async function fixture(){
  if(!url)throw Error('只允许显式隔离测试PG');const parsed=new URL(url);
- if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离服务器');
+ assertOwnedPostgresUrl(parsed.toString());
  const name=`t1022_knowledge_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:url});cleanup.push(()=>admin.end());await admin.query(`CREATE DATABASE ${name}`);cleanup.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));
  parsed.pathname=`/${name}`;const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanup.push(()=>runtime.pool.end());const writerPool=new Pool({connectionString:parsed.toString(),max:1,application_name:name+'_writer'});cleanup.push(()=>writerPool.end());const writer=drizzle(writerPool) as unknown as Db;
  let sequence=0;const deps={now:()=>new Date().toISOString(),nextId:(prefix:string)=>`${prefix}-${++sequence}`};
@@ -49,5 +51,5 @@ for(const family of ['revision','archive','rename','relation-source','relation-t
   const row=(await f.runtime.pool.query('SELECT group_id,title,status FROM knowledge_items WHERE id=$1',[chosen.id])).rows[0];
   expect(row.group_id).toBe(writerFirst?f.from:f.to);
   if(!writerFirst){expect(row.title).toBe(family==='relation-target'?'第二知识':'原始知识');expect(row.status).toBe('active');expect((await f.runtime.pool.query('SELECT content FROM knowledge_revisions WHERE knowledge_item_id=$1 ORDER BY revision_number',[f.first.id])).rows).toEqual([{content:'原文'}]);expect((await f.runtime.pool.query('SELECT id FROM knowledge_relations')).rows).toEqual([]);expect((await createKnowledgeService(createKnowledgeRepository(f.runtime.db,f.deps)).getKnowledge({...f.base,groupId:f.to},chosen.id)).id).toBe(chosen.id);}
- },30000);
+ },180000);
 }

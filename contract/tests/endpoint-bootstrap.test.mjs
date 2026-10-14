@@ -58,7 +58,9 @@ describe("contract module initialization from every real entry", () => {
       const root = await import("../contract/src/index.ts");
       const legacy = await import("../contract/src/endpoints.ts");
       if (root.defineEndpoint !== legacy.defineEndpoint) throw new Error("legacy export changed");
-      if (Object.keys(root.ENDPOINTS).length !== 404) throw new Error("registry surface changed");
+      if (Object.keys(root.ENDPOINTS).length !== 428) throw new Error("registry surface changed");
+      if (root.ENDPOINTS.readWorkCandidateSource.method !== "GET" || root.ENDPOINTS.readWorkCandidateSource.id !== "ai.workCandidates.source") throw new Error("work candidate source operation missing");
+      if (Object.values(root.ENDPOINTS).filter(e => e.method === "GET" && e.path === "/accounts/:accountId/collection-plan-readiness").length !== 1) throw new Error("collection readiness sentinel changed");
       if (root.ENDPOINTS.createCanvas.id !== "canvas.create") throw new Error("canvas operation missing");
       if (root.ENDPOINTS.getCanvas.id !== "canvas.get") throw new Error("canvas read missing");
       console.log("CONTRACT_ENTRY_READY");

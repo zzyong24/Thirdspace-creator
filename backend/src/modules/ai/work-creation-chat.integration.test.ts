@@ -101,7 +101,9 @@ it.each([true,false])('纯组=%s 联合工具经原submit/lease/账本/完成消
  await chat.turns.commit(chat.ref,{callId:chat.turn.callId});
  const messages=await chat.repo.listMessages(chat.conversation.id);
  const part=(messages[1]!.parts as Array<{type?:string;output?:unknown}>).find(part=>part.type==='tool-work.creation.propose')!;
- expect(workCreationProposalResult.parse(part.output)).toEqual(actual);
+ const {__creatorosOutcome,...originalData}=part.output as Record<string,unknown>;
+ expect(__creatorosOutcome).toMatchObject({schemaVersion:1,callId:result.callId,status:"ok",sideEffect:"proposal",error:null});
+ expect(workCreationProposalResult.parse(originalData)).toEqual(actual);
  expect(await f.db.select().from(aiTasks)).toHaveLength(1);
  expect(await f.db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,chat.ref.executionTaskId))).toHaveLength(3);
  const articles=createArticlesTransport(()=>f.owned.articles),graphics=createGraphicPostsTransport(()=>f.owned.graphicPosts);

@@ -152,7 +152,7 @@ export async function runCoverGenerate(
 
     // 1) 结构化封面方案(文案接地）—— 复用 copy.generate 文本模型 + cover.brief 模板(硬锚 brief+script）。
     const spec = await deps.resolveModelSpec(ctx, "copy.generate");
-    channelManaged ||= spec.displayModelKey === "channel-managed";
+    channelManaged ||= !("engine" in spec) && spec.displayModelKey === "channel-managed";
     const {
       modelFor,
       runStructuredNode,

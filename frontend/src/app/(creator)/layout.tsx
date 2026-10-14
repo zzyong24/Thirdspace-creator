@@ -1,3 +1,4 @@
+import {ObservabilityClient} from "@/lib/observability-client";
 /**
  * (creator) segment layout — the single shell wrapping every authenticated
  * CreatorOS page, and (Module 00, Task 11) the SESSION GUARD.
@@ -164,6 +165,7 @@ export default async function CreatorLayout({
 
   return (
     <>
+    <ObservabilityClient />
       {/* [T-051 2c] ⌘K 全局热键 → /search(让 TopHeader 的 kbd 提示言行一致)。 */}
       <GlobalSearchHotkey />
       {/* [T-372 L3] 授权心跳桥:Rust 心跳(内测 60min/买断 30d)判定 licensed=false 时

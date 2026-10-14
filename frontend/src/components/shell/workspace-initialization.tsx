@@ -15,7 +15,8 @@ export interface WorkspaceInitialization {
   preservesInitialAccount(accountId: string | null): boolean;
   begin(): void;
   synchronizing(): void;
-  complete(scope: CreationScope): void;
+  serverMatches(scope: CreationScope): boolean;
+  complete(scope: CreationScope): boolean;
   fail(message: string): void;
   registerRetry(retry: () => void): () => void;
   retry(): void;
@@ -29,6 +30,10 @@ export function WorkspaceInitializationProvider({ initialScope, children }: {
   initialScope: CreationScope; children: React.ReactNode;
 }) {
   const initial = React.useRef(Object.freeze({...initialScope}));
+  const serverScopeKey=creationScopeKey(initialScope),serverScope=React.useRef(serverScopeKey);
+  // eslint-disable-next-line react-hooks/refs -- 事件只检查本次实际RSC提交的范围，不据本地选择猜测服务器已完成。
+  serverScope.current=serverScopeKey;
+  const serverMatches=React.useCallback((scope:CreationScope)=>serverScope.current===creationScopeKey(scope),[]);
   const ready = React.useRef(false);
   const retryRef = React.useRef<(() => void) | null>(null);
   const [state, setState] = React.useState<{phase: WorkspaceInitialization["phase"]; error: string | null}>({phase:"loading",error:null});
@@ -37,27 +42,28 @@ export function WorkspaceInitializationProvider({ initialScope, children }: {
   const begin = React.useCallback(() => { if (!ready.current) setState({phase:"loading",error:null}); }, []);
   const synchronizing = React.useCallback(() => { if (!ready.current) setState({phase:"synchronizing",error:null}); }, []);
   const complete = React.useCallback((scope: CreationScope) => {
-    if (creationScopeKey(scope) !== creationScopeKey(readCreationScope())) return;
+    if (!serverMatches(scope)||creationScopeKey(scope) !== creationScopeKey(readCreationScope())) return false;
     ready.current = true;
     setState({phase:"ready",error:null});
-  }, []);
+    return true;
+  }, [serverMatches]);
   const fail = React.useCallback((message: string) => {
     const current = readCreationScope();
     // 仅沿认证会话冻结的同一调用意图继续；授权仍由backend逐次严格执行。
     const sameInitialIntent = Boolean(initial.current.groupId || initial.current.accountId) &&
-      creationScopeKey(initial.current) === creationScopeKey(current);
+      creationScopeKey(initial.current) === creationScopeKey(current)&&serverMatches(current);
     if (ready.current || sameInitialIntent) {
       ready.current = true;
       setState({phase:"ready",error:message});
     } else setState({phase:"error",error:message});
-  }, []);
+  }, [serverMatches]);
   const registerRetry = React.useCallback((retry: () => void) => {
     retryRef.current = retry;
     return () => { if (retryRef.current === retry) retryRef.current = null; };
   }, []);
   const retry = React.useCallback(() => retryRef.current?.(), []);
-  const value = React.useMemo(() => ({ready:state.phase==="ready",phase:state.phase,error:state.error,isReady,preservesInitialAccount,begin,synchronizing,complete,fail,registerRetry,retry}),
-    [state,isReady,preservesInitialAccount,begin,synchronizing,complete,fail,registerRetry,retry]);
+  const value = React.useMemo(() => ({ready:state.phase==="ready",phase:state.phase,error:state.error,isReady,preservesInitialAccount,begin,synchronizing,serverMatches,complete,fail,registerRetry,retry}),
+    [state,serverScopeKey,isReady,preservesInitialAccount,begin,synchronizing,serverMatches,complete,fail,registerRetry,retry]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 

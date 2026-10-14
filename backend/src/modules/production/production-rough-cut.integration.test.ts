@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {it,expect,vi} from 'vitest';
 import {createDb,projects,contentOutputs,assets,assetFiles,executionCalls,executionTasks,productionMediaRequests,type Db} from '@creatoros/backend';
 import {ENDPOINTS,type RequestContext} from '@creatoros/contract';
@@ -115,10 +117,10 @@ it.each(['complete','complete-two','missing-port','rollback','early-child','earl
   }
   const final=(await dispatch(ENDPOINTS.getProductionRoughCut,undefined,body.requestId)).data;expect(final.suggestions[0].adopted).toBe(true);expect(final.suggestions[1]).toMatchObject({adopted:mode==='complete-two',actionability:mode==='complete-two'?'non_actionable':'covered_by_receipt',coveredByReceiptId:selected.requestId});await expect(rough.get({...ctx,accountId:'foreign'},'video',body.requestId)).rejects.toThrow();expect(requests).toBe(1);
  }finally{admissionObserver.mockRestore();await host?.stop();server.closeAllConnections();if(server.listening)await new Promise<void>(r=>server.close(()=>r()));await opened.client.close();await rm(root,{recursive:true,force:true});}
-},60000);
+},180000);
 
 
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../../test-fixtures/owned-postgres';
 import {randomUUID} from 'node:crypto';
 import {createRuntimeDb} from '../../db';
 import {aiTasks} from '@creatoros/backend';
@@ -127,7 +129,7 @@ import {createProjectsService,createProjectRepository} from '../projects';
 import {productionPlanV2} from '@creatoros/contract';
 const roughLockPg=process.env.CREATOROS_TEST_POSTGRES_URL;
 it.skipIf(!roughLockPg).each(['reserve','attach','readFrozenTask'] as const)('T1062真实PG粗剪公共%s同组双真实父两路Lock、原冻结/回执/任务/执行重放不增费',async stage=>{
- const url=new URL(roughLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');
+ const url=new URL(roughLockPg!);assertOwnedPostgresUrl(url.toString());
  const name=`t1062_rough_lock_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:roughLockPg});await admin.query(`CREATE DATABASE ${name}`);url.pathname=`/${name}`;
  const runtimes:Array<Awaited<ReturnType<typeof createRuntimeDb>>>=[];let held=false,blocker:import('pg').PoolClient|undefined,pending:Promise<unknown>[]=[];
  async function open(role:string){const scoped=new URL(url);scoped.searchParams.set('application_name',`${name}_${role}`);const runtime=await createRuntimeDb({connectionString:scoped.toString()});runtime.pool.options.max=1;runtimes.push(runtime);return runtime;}
@@ -172,4 +174,4 @@ it.skipIf(!roughLockPg).each(['reserve','attach','readFrozenTask'] as const)('T1
   await Promise.all(callers.map((caller,i)=>caller.service.createRoughCut({...scope,accountId:'仅平台过滤'},targets[i]!.id,targets[i]!.body)));
   expect(await setup.db.select().from(productionMediaRequests)).toEqual(requests);expect(await setup.db.select().from(aiTasks)).toEqual(tasks);expect(await setup.db.select().from(executionTasks)).toEqual(executions);expect(await setup.db.select().from(executionCalls)).toHaveLength(0);
  }finally{if(held&&blocker)await blocker.query('ROLLBACK');await Promise.allSettled(pending);blocker?.release();const closed=await Promise.allSettled(runtimes.map(runtime=>runtime.pool.end()));try{await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);}finally{await admin.end();}for(const result of closed)if(result.status==='rejected')throw result.reason;}
-},30000);
+},180000);

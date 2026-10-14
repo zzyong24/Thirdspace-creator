@@ -8,10 +8,16 @@ it("占用后真实释放才重获；只获取资源，不重发业务操作", a
   expect(acquire).toHaveBeenCalledTimes(2);
 });
 it("持续占用有界退出，保留同一个忙错误", async () => {
-  const busy = new BrowserProfileBusyError(), acquire = vi.fn(async () => { throw busy; });
-  await expect(waitForChatWebProfile(acquire, new AbortController().signal, { timeoutMs: 20, pollMs: 2 })).rejects.toBe(busy);
-  expect(acquire.mock.calls.length).toBeGreaterThan(1);
-  expect(acquire.mock.calls.length).toBeLessThan(30);
+  let elapsed = 0;
+  const clock = vi.spyOn(performance, "now").mockImplementation(() => elapsed);
+  const busy = new BrowserProfileBusyError(), acquire = vi.fn(async () => { elapsed += 10000; throw busy; });
+  try {
+    await expect(waitForChatWebProfile(acquire, new AbortController().signal, { timeoutMs: 20, pollMs: 2 })).rejects.toBe(busy);
+    expect(acquire.mock.calls.length).toBeGreaterThan(1);
+    expect(acquire.mock.calls.length).toBeLessThan(30);
+    expect(acquire).toHaveBeenCalledTimes(12);
+    expect(elapsed).toBe(120000);
+  } finally { clock.mockRestore(); }
 });
 it("等待中取消立即退出，此后不再获取", async () => {
   const controller = new AbortController(), reason = new Error("用户取消"), acquire = vi.fn(async () => { throw new BrowserProfileBusyError(); });

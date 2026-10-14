@@ -221,10 +221,10 @@ function DoocsEditorSession({accountId,projectId,outputId, sourceVersionId, valu
     finally { if(alive.current)setBusy(false); }
   }
 
-  return <section className="space-y-3 rounded-xl border p-4">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-medium">公众号排版编辑器</h3><p className="text-xs text-muted-foreground">{syncing?"正在同步当前正文与排版…":status}</p></div>
-      <div className="flex gap-2"><Button variant="outline" onClick={() => void exportFormalVersion()} disabled={busy || !editorReady || syncing || JSON.stringify(value) !== JSON.stringify(savedDocument)}>导出 HTML + 图片 ZIP</Button>
-        <Button onClick={() => void saveEditorDraft()} disabled={busy || !editorReady || syncing || checkpointConflict}>{busy ? "处理中…" : "保存正文与排版"}</Button></div></div>
+  return <section className="min-w-0 space-y-3 rounded-xl border p-2 sm:p-4">
+    <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><h3 className="font-medium">公众号排版编辑器</h3><p className="text-xs text-muted-foreground">{syncing?"正在同步当前正文与排版…":status}</p></div>
+      <div className="flex min-w-0 w-full flex-wrap gap-2 sm:w-auto"><Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" variant="outline" onClick={() => void exportFormalVersion()} disabled={busy || !editorReady || syncing || JSON.stringify(value) !== JSON.stringify(savedDocument)}>导出 HTML + 图片 ZIP</Button>
+        <Button className="h-auto min-h-8 w-full max-w-full whitespace-normal sm:h-8 sm:w-auto sm:whitespace-nowrap" onClick={() => void saveEditorDraft()} disabled={busy || !editorReady || syncing || checkpointConflict}>{busy ? "处理中…" : "保存正文与排版"}</Button></div></div>
     {error && <p role="alert" className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">{error}{syncing&&<Button className="ml-2" size="sm" variant="outline" disabled={busy} onClick={()=>void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);})}>重新读取当前稿</Button>}</p>}
     {checkpoint && <div role="status" className="rounded-md border border-warning/30 bg-warning/10 p-3 text-sm">
       {checkpointConflict ? <><span>标签页保存了旧版本草稿。当前正式稿已变化，请比较内容；旧草稿只读，不可直接覆盖当前版本。</span>

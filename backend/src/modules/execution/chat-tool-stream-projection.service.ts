@@ -1,10 +1,12 @@
+import {originalCodexReadBinding} from './codex-read-recovery';
+import {recoverableCodexProposalParents,recoverableCodexSettledProposalParents} from './chat-generation-recovery';
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import { eq,asc,desc,executionCalls,executionStreamEvents,type Db } from "@creatoros/backend";
 import { agenticToolOutcomeSchema,chatToolProviderName,chatWorkerInputSchema,checkpointToolCallSchema,workerToolResultReceiptSchema,executionStreamChunkSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { applyChatToolOutcome,readChatApprovalFacts } from "../ai/chat-receipt-projection";
 import { createExecutionLeaseService } from "./execution-lease.service";
-import { createAgenticToolBinding,type AgenticBackendTool } from "./agentic-tool-binding";
+import { agenticModelToolParts,agenticToolOperationKey,createAgenticToolBinding,type AgenticBackendTool } from "./agentic-tool-binding";
 import { ConflictError } from "./execution.errors";
 /** 后端从已确认事实补卡；不暴露任意chunks写入权给Worker。 */
 export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools:Record<string,AgenticBackendTool>}){
@@ -13,8 +15,9 @@ export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools
   const frozen=chatWorkerInputSchema.parse((task.payload as Record<string,unknown>).modelInput);
   const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
   const call=calls.find(row=>row.id===callId);if(!call || call.status!=="settled")throw new ConflictError("工具卡缺少已确认调用");
-  const bound=binding.forCall(task,calls,call),model=calls.find(row=>row.id===bound.modelCallId)!;
-  const proposed=checkpointToolCallSchema.parse((model.providerResult as {content:unknown[]}).content.find(raw=>raw && typeof raw==="object" && "toolCallId" in raw && raw.toolCallId===bound.toolCallId));
+  const readonlyRecovery=confirmedCodexProjectionCalls(task,calls,binding).includes(call.id);
+  const bound=binding.forCall(task,calls,call,readonlyRecovery?{readonlyRecovery:true}:undefined),model=calls.find(row=>row.id===bound.modelCallId)!;
+  const proposed=checkpointToolCallSchema.parse(agenticModelToolParts(task,model,readonlyRecovery?{readonlyRecovery:true}:undefined).find(raw=>raw && typeof raw==="object" && "toolCallId" in raw && raw.toolCallId===bound.toolCallId));
   const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText!));
   if(receipt.toolCallId!==bound.toolCallId || receipt.toolName!==bound.toolName)throw new ConflictError("工具卡回执绑定不符");
   let input:z.infer<ReturnType<typeof z.json>>,invalid=false;
@@ -34,7 +37,7 @@ export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools
     {type:"tool-approval-request",toolCallId:bound.toolCallId,approvalId},
     {type:"tool-approval-response",approvalId,approved:false,reason:(part.approval as {reason:string}).reason},
     {type:"tool-output-denied",toolCallId:bound.toolCallId}]:[{type:"tool-output-available",toolCallId:bound.toolCallId,output:part.output}]));
-  await ensureInputs(tx,task,model,now);
+  await ensureInputs(tx,task,model,now,Boolean(readonlyRecovery),binding);
   const allCallEvents=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.callId,call.id)).orderBy(asc(executionStreamEvents.callIndex));
   const progress=allCallEvents.filter(row=>row.chunk.type==="data-workbench-progress");
   const existing=allCallEvents.filter(row=>row.chunk.type!=="data-workbench-progress");
@@ -49,7 +52,9 @@ export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools
   if(decision.status==="unavailable")return;
   await leases.withLease(ref,"admission",async({tx,task})=>{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
-   const bound=binding.bind(task,calls,request);
+   const original=calls.find(call=>call.operationKey===agenticToolOperationKey(request.modelCallId,request.toolCallId));
+   const readonlyRecovery=original&&[...recoverableCodexProposalParents(task,calls),...recoverableCodexSettledProposalParents(task,calls)].includes(original.id);
+   const bound=binding.bind(task,calls,request,readonlyRecovery?{readonlyRecovery:true}:undefined);
    if(calls.some(call=>call.operationKey===bound.operationKey && call.status==="settled"))return;
    const model=calls.find(call=>call.id===bound.modelCallId)!;
    const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.callId,model.id)).orderBy(asc(executionStreamEvents.callIndex));
@@ -60,7 +65,7 @@ export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools
     ? {type:"tool-approval-request",toolCallId:bound.toolCallId,approvalId:id}
     : {type:"tool-approval-response",approvalId:id,approved:decision.status==="not-applicable",...(decision.reason?{reason:decision.reason}:{})});
    if(previous && isDeepStrictEqual(previous,chunk))return;
-   await ensureInputs(tx,task,model,now);
+   await ensureInputs(tx,task,model,now,Boolean(readonlyRecovery),binding);
    const [tail]=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(desc(executionStreamEvents.sequence)).limit(1);
    const [callTail]=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.callId,model.id)).orderBy(desc(executionStreamEvents.callIndex)).limit(1);
    await tx.insert(executionStreamEvents).values({executionTaskId:task.id,sequence:(tail?.sequence??0)+1,callId:model.id,callIndex:(callTail?.callIndex??-1)+1,chunk,createdAt:now()});
@@ -70,10 +75,15 @@ export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools
 }
 
 type Transaction=Parameters<Parameters<Db["transaction"]>[0]>[0];
-async function ensureInputs(tx:Transaction,task:typeof import("@creatoros/backend").executionTasks.$inferSelect,model:typeof executionCalls.$inferSelect,now:()=>string){
+async function ensureInputs(tx:Transaction,task:typeof import("@creatoros/backend").executionTasks.$inferSelect,model:typeof executionCalls.$inferSelect,now:()=>string,readonlyRecovery=false,binding?:ReturnType<typeof createAgenticToolBinding>){
  const frozen=chatWorkerInputSchema.parse((task.payload as Record<string,unknown>).modelInput);
   // SEMANTIC_BOUNDARY_ALLOW: 按模型原始声明顺序建立卡片，不按工具完成速度改变显示顺序。
-  const initial=(model.providerResult as {content:unknown[]}).content.flatMap(raw=>{
+  const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
+  const native=model.kind==='external_agent';
+  const permitted=new Set([...recoverableCodexProposalParents(task,calls),...(binding?confirmedCodexProjectionCalls(task,calls,binding):recoverableCodexSettledProposalParents(task,calls))]);
+  const parts=agenticModelToolParts(task,model,readonlyRecovery?{readonlyRecovery:true}:undefined).filter(raw=>!native||calls.some(call=>call.kind==='tool'&&(!readonlyRecovery||permitted.has(call.id))&&call.operationKey===agenticToolOperationKey(model.id,checkpointToolCallSchema.parse(raw).toolCallId)));
+  if(native)parts.sort((a,b)=>{const sequence=(raw:unknown)=>calls.find(call=>call.operationKey===agenticToolOperationKey(model.id,checkpointToolCallSchema.parse(raw).toolCallId))!.sequence;return sequence(a)-sequence(b);});
+  const initial=parts.flatMap(raw=>{
     const parsed=checkpointToolCallSchema.safeParse(raw);if(!parsed.success)return [];
     const tool=parsed.data;
     if(!frozen.tools.some(item=>chatToolProviderName(item.name)===tool.toolName))throw new ConflictError("工具卡超出冻结范围");
@@ -83,11 +93,26 @@ async function ensureInputs(tx:Transaction,task:typeof import("@creatoros/backen
   }).map(chunk=>executionStreamChunkSchema.parse(chunk));
   const modelEvents=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.callId,model.id)).orderBy(asc(executionStreamEvents.callIndex));
   const savedInputs=modelEvents.filter(event=>["tool-input-start","tool-input-available"].includes(String(event.chunk.type)));
-  if(savedInputs.length){if(savedInputs.length!==initial.length || savedInputs.some((event,i)=>!isDeepStrictEqual(event.chunk,initial[i])))throw new ConflictError("工具输入卡与模型回执不符");}
-  else {
+  if(savedInputs.length && (savedInputs.length>initial.length || (!native&&savedInputs.length!==initial.length) || savedInputs.some((event,i)=>!isDeepStrictEqual(event.chunk,initial[i]))))throw new ConflictError("工具输入卡与模型回执不符");
+  // SEMANTIC_BOUNDARY_ALLOW: 原生工具来源随真实call增长，只按Host账本次序追加未保存的输入前缀。
+  const remaining=initial.slice(savedInputs.length);
+  if(remaining.length){
     const [tail]=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(desc(executionStreamEvents.sequence)).limit(1);
-    if(tail?.chunk.type==="finish")throw new ConflictError("聊天结束后不能追加工具输入");
+    if(tail?.chunk.type==='finish')throw new ConflictError('聊天结束后不能追加工具输入');
     const index=(modelEvents.at(-1)?.callIndex??-1)+1,sequence=tail?.sequence??0;
-    await tx.insert(executionStreamEvents).values(initial.map((chunk,i)=>({executionTaskId:task.id,sequence:sequence+i+1,callId:model.id,callIndex:index+i,chunk,createdAt:now()})));
+    await tx.insert(executionStreamEvents).values(remaining.map((chunk,i)=>({executionTaskId:task.id,sequence:sequence+i+1,callId:model.id,callIndex:index+i,chunk,createdAt:now()})));
   }
+}
+
+/** 仅投影已结算原工具事实；普通未知工具仍没有执行或恢复许可。 */
+function confirmedCodexProjectionCalls(task:Parameters<typeof originalCodexReadBinding>[0],calls:Parameters<ReturnType<typeof createAgenticToolBinding>['forCall']>[1],binding:ReturnType<typeof createAgenticToolBinding>){
+ const originalRoots=calls.filter(call=>originalCodexReadBinding(task,call)&&call.kind==='external_agent');
+ if(originalRoots.length!==1)return [];
+ return calls.filter(call=>{
+  if(call.kind!=='tool'||call.parentCallId||call.status!=='settled'||call.totalTokens!==0||!call.resultText)return false;
+  try{
+   const bound=binding.forCall(task,calls,call,{readonlyRecovery:true}),receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText));
+   return bound.modelCallId===originalRoots[0]!.id&&receipt.toolCallId===bound.toolCallId&&receipt.toolName===bound.toolName&&agenticToolOutcomeSchema.safeParse(receipt.output).success;
+  }catch{return false;}
+ }).map(call=>call.id);
 }

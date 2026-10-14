@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import {z} from "zod";
+import { createDb, aiTasks, executionTasks, aiMessages, eq, type Db } from "@creatoros/backend";
 import {
   ENDPOINTS,
   type Endpoint,
@@ -32,6 +33,7 @@ function makeTransport(db: Db) {
   let seq = 0;
   const service = createAiService({
     db,
+    prepareChatReply: async (_owner,snapshot) => ({capability:"copilot.assist",system:"原契约用例明确的回复准备端口",messages:snapshot.messages.map(message=>({role:message.role as "user"|"assistant"|"system"|"tool",content:message.content})),tools:[],maxSteps:6,maxOutputTokens:128}),
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${++seq}`,
     artifacts: { createVersion: async () => ({}) },
@@ -55,10 +57,11 @@ function makeTransport(db: Db) {
 }
 
 describe("ai contract (each op validates against its DTO)", () => {
-  let db: Db;
+  let db: Db, close:()=>Promise<void>;
   beforeEach(async () => {
-    ({ db } = await createDb());
+    const opened=await createDb();db=opened.db;close=()=>opened.client.close();
   });
+  afterEach(async()=>close?.());
 
   it("ai.conversations.create → aiConversationResource", async () => {
     const transport = makeTransport(db);
@@ -106,6 +109,13 @@ describe("ai contract (each op validates against its DTO)", () => {
     const parsed = ENDPOINTS.createMessage.response.parse(env.data);
     expect(parsed.role).toBe("user");
     expect(parsed.content).toBe("改写开场");
+    const [message]=await db.select().from(aiMessages).where(eq(aiMessages.id,parsed.id));
+    const metadata=z.object({chatTaskId:z.string().min(1)}).passthrough().parse(message!.modelMetadata);
+    const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,metadata.chatTaskId));
+    const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,business!.executionTaskId!));
+    expect(business).toMatchObject({taskType:"copilot.assist",status:"queued",inputData:{kind:"chat.run",sourceMessageId:parsed.id,conversationId:convId}});
+    expect(execution).toMatchObject({kind:"ai_task",ownerType:"ai_task",ownerId:business!.id,status:"queued",payload:{aiTaskId:business!.id,modelInput:{kind:"chat.run",sourceMessageId:parsed.id}}});
+    expect(await db.select().from(aiTasks)).toHaveLength(1);expect(await db.select().from(executionTasks)).toHaveLength(1);
   });
 
   it("ai.conversations.messages.list → aiMessageResource[] (list envelope)", async () => {

@@ -155,7 +155,7 @@ it("真实 SDK 纯文本请求接宿主账本，重建模型包装后回放不�
     expect(bodies).toHaveLength(1);
     expect(bodies[0]?.messages).toEqual([
       { role: "system", content: prepared.system },
-      { role: "user", content: prepared.prompt },
+      { role: "user", content: [{ type: "text", text: prepared.prompt }] },
     ]);
     expect(
       (await f.hooks.complete(f.ref, { callId: f.parent.callId })).data,

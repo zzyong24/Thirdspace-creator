@@ -94,7 +94,16 @@ it("仅已确认坏输出可投影为节点失败，未知、篡改和多余回�
   if(initial.status!=="next-request")throw new Error("expected text request");
   const request=initial.request;
   const bad=settled(request,'{"wrong":true}');
-  expect(await replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts:[bad]},node)).toEqual({status:"failed",consumed:1});
+  const receipts=[bad];
+  for(let repair=0;repair<2;repair++){
+    const next=await replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts},node);
+    expect(next).toMatchObject({status:"next-request",consumed:repair+1});
+    if(next.status!=="next-request")throw Error("合法格式修复请求缺失");
+    expect(JSON.stringify(next.request.prompt)).toContain('wrong');
+    expect(generationRequestDigest(next.request)).not.toBe(bad.inputDigest);
+    receipts.push(settled(next.request,'{"wrong":true}'));
+  }
+  expect(await replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts},node)).toEqual({status:"failed",consumed:3});
   for(const status of ["unknown","rejected"] as const){
     await expect(replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts:[{...bad,status}]},node)).rejects.toThrow("REQUIRES_RECONCILIATION");
   }

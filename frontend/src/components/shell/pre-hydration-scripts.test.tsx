@@ -1,4 +1,5 @@
 import { cleanup, render } from "@testing-library/react";
+import { runInNewContext } from "node:vm";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -20,7 +21,14 @@ vi.mock("next/script", () => ({
 
 import { PreHydrationScripts } from "@/app/layout";
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+  delete document.documentElement.dataset.theme;
+  delete document.documentElement.dataset.density;
+  document.documentElement.classList.remove("dark");
+  vi.restoreAllMocks();
+});
 
 describe("PreHydrationScripts", () => {
   it("uses Next beforeInteractive scripts in theme-then-handshake order", () => {
@@ -53,5 +61,30 @@ describe("PreHydrationScripts", () => {
     expect(handshake).toContain("x-creatoros-handshake");
     expect(handshake).toContain("new URL(u,O).origin===O");
     expect(handshake).toContain("__CREATOROS_FETCH_PATCHED__");
+  });
+
+  it.each(["compact", "comfortable", null, "invalid"])(
+    "首帧实际脚本从%s恢复合法密度且不写回存储",
+    (density) => {
+      if (density !== null) localStorage.setItem("creatoros.settings.density", density);
+      localStorage.setItem("creatoros.settings.theme", "light");
+      document.documentElement.dataset.density = density === "compact" ? "comfortable" : "compact";
+      const { container } = render(<PreHydrationScripts />);
+      const script = container.querySelector("script")!.textContent!;
+      runInNewContext(script, { document, localStorage, window });
+      expect(document.documentElement.dataset.density).toBe(density === "compact" ? "compact" : "comfortable");
+      expect(document.documentElement.dataset.theme).toBe("light");
+      expect(document.documentElement.classList.contains("dark")).toBe(false);
+      expect(localStorage.getItem("creatoros.settings.density")).toBe(density);
+    },
+  );
+
+  it("主题读取失败时首帧仍独立恢复默认密度", () => {
+    document.documentElement.dataset.density = "compact";
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("unavailable"); });
+    const { container } = render(<PreHydrationScripts />);
+    const script = container.querySelector("script")!.textContent!;
+    expect(() => runInNewContext(script, { document, localStorage, window })).not.toThrow();
+    expect(document.documentElement.dataset.density).toBe("comfortable");
   });
 });

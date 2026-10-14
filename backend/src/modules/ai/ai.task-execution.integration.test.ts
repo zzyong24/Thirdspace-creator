@@ -1,3 +1,4 @@
+import {projects as originalProjects} from "../../schema/projects";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -69,6 +70,7 @@ describe("T-513 AI task idempotency and atomic execution ownership", () => {
   beforeEach(async () => {
     ({ db } = await createDb());
     clock = { now: "2026-07-24T00:00:00.000Z" };
+    for(const id of ["project-1","project-2"])await seedOriginalProject(db,ctx,id,clock.now);
   });
 
   it.each(["retryOfTaskId", "spec.params.retryOf"])("映射任务不得通过 %s 重建并重置执行预算", async field => {
@@ -697,3 +699,7 @@ describe("T-513 AI task idempotency and atomic execution ownership", () => {
     }
   });
 });
+
+async function seedOriginalProject(db:Db,owner:RequestContext,id:string,stamp:string){
+ await db.insert(originalProjects).values({id,userId:owner.userId,accountId:owner.accountId??null,groupId:owner.groupId??null,title:'原用例真实父项目',creationMode:'free',status:'active',currentStage:'review',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
+}

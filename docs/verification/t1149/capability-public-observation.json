@@ -2,13 +2,13 @@
   "surface": "browser",
   "mode": "non-fixture",
   "witnesses": {
-    "groupId": "grp-e50d0508-123",
-    "projectId": "project-e50d0508-125",
-    "canvasId": "7ef1cb05-e398-4720-9a0c-e663e61ce96f",
+    "groupId": "grp-a65785f2-4199",
+    "projectId": "project-a65785f2-4201",
+    "canvasId": "ee258750-20ad-4904-8e2b-c457fefa9e4d",
     "reference": {
-      "id": "asset-e50d0508-137",
-      "userId": "user-e50d0508-1",
-      "currentFileId": "afile-e50d0508-141",
+      "id": "asset-a65785f2-4213",
+      "userId": "user-a65785f2-1",
+      "currentFileId": "afile-a65785f2-4217",
       "assetType": "image",
       "name": "中性人物示意图.png",
       "description": "",
@@ -24,8 +24,8 @@
       "extractedText": null,
       "sourceUrl": null,
       "deletedAt": null,
-      "createdAt": "2026-10-09T19:05:25.307Z",
-      "updatedAt": "2026-10-09T19:05:25.307Z"
+      "createdAt": "2026-10-10T17:08:34.947Z",
+      "updatedAt": "2026-10-10T17:08:34.947Z"
     }
   },
   "capabilityFixture": true,

@@ -1,4 +1,5 @@
 import "server-only";
+import {AsyncLocalStorage} from "node:async_hooks";
 import {createHash,randomUUID} from "node:crypto";
 import {workbenchRendererDiagnostics} from "./workbench-html-diagnostics";
 import type {Db} from "@creatoros/backend";
@@ -6,10 +7,10 @@ import {ConflictError,OwnershipError,WorkbenchArtifactPendingError,createExecuti
 import type {ChatProductionCompositionDeps} from "@creatoros/backend/modules/ai-runtime";
 import {workbenchCapabilitySchema,workbenchHostCallSchema,workbenchResultSchema,workbenchArtifactRegisterRequestSchema,workbenchArtifactReadRequestSchema,workbenchArtifactVersionsRequestSchema,workbenchArtifactCopyRequestSchema,type WorkbenchResult} from "@creatoros/contract/agent-workbench";
 import {agenticToolOutcomeSchema,type ExecutionRef} from "@creatoros/contract/execution-worker";
-import {createWorkbenchNativeClient,NativeFileError,type NativeFileAction} from "./workbench-native-client";
+import {createWorkbenchNativeClient,NativeFileError,type NativeFileAction,type NativeCallControl} from "./workbench-native-client";
 
 type Host=NonNullable<ChatProductionCompositionDeps["workbenchHost"]>;
-type FilePort=(ref:ExecutionRef,operationId:string,action:NativeFileAction)=>Promise<unknown>;
+type FilePort=(ref:ExecutionRef,operationId:string,action:NativeFileAction,control?:NativeCallControl)=>Promise<unknown>;
 const MAX_BYTES=20*1024*1024;
 const registerSchema=workbenchArtifactRegisterRequestSchema;
 const readSchema=workbenchArtifactReadRequestSchema;
@@ -75,26 +76,33 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
   return action({context:{userId:context.userId,accountId:context.accountId},task});
  })},{platform,desktop,socketPath});
  const file=options.filePort??client.file;
+ // 每个宿主各自持有async上下文；并发dispatch不共享可变currentSignal。
+ const callSignals=new AsyncLocalStorage<AbortSignal>();
  const artifacts=createWorkbenchArtifactService(db,{blobs:options.blobs,now:options.now,
   async readTaskFile(scope,relativePath){
-   const stat=record(await file(scope.ref,randomUUID(),{kind:"stat",path:relativePath}));
+   const signal=callSignals.getStore();
+   const readFile=async(action:NativeFileAction)=>{
+    signal?.throwIfAborted();const value=await file(scope.ref,randomUUID(),action,{signal});signal?.throwIfAborted();return value;
+   };
+   const stat=record(await readFile({kind:"stat",path:relativePath}));
    const size=integer(stat.size),version=integer(stat.version);
    if(stat.isDirectory!==false||size<1||size>MAX_BYTES||version<1)throw new Error("INVALID_ARTIFACT_FILE");
    const bytes=Buffer.alloc(size);
    for(let offset=0;offset<size;){
-    const page=record(await file(scope.ref,randomUUID(),{kind:"read",path:relativePath,offset,limit:Math.min(128_000,size-offset)}));
+    const page=record(await readFile({kind:"read",path:relativePath,offset,limit:Math.min(128_000,size-offset)}));
     const slice=decodePage(page.contentBase64);
     if(integer(page.total)!==size||integer(page.version)!==version||slice.byteLength<1||slice.byteLength>size-offset)
      throw new Error("ARTIFACT_FILE_CHANGED");
     bytes.set(slice,offset);offset+=slice.byteLength;
    }
-   const final=record(await file(scope.ref,randomUUID(),{kind:"stat",path:relativePath}));
+   const final=record(await readFile({kind:"stat",path:relativePath}));
    if(final.isDirectory!==false||integer(final.size)!==size||integer(final.version)!==version)throw new Error("ARTIFACT_FILE_CHANGED");
    return {bytes,version};
   },
  });
  return {catalog,legacyFrozenCapabilities:[legacyCopy],platform:platform==="win32"?"windows":"macos",capabilities:["task.artifacts"],verifyArtifacts:artifacts.verifyArtifacts,
   async dispatch(rawCall,{signal}){
+   return callSignals.run(signal,async()=>{
    signal.throwIfAborted();
    const call=workbenchHostCallSchema.parse(rawCall),{context,invocation}=call;
    if(![...catalog,legacyCopy].some(item=>item.name===invocation.name&&item.schemaVersion===invocation.schemaVersion))return failed(context.operationId,"invalid_capability");
@@ -190,6 +198,7 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
     return workbenchResultSchema.parse({operationId:context.operationId,status:"succeeded",artifactRefs:[`${page.metadata.artifactId}@${page.metadata.version}`],progressCursor:null,
      content:[{type:"text",text:JSON.stringify({mime:page.metadata.mime,hash:page.metadata.hash,total:page.total,nextOffset:page.nextOffset,...content})}]});
    }catch(error){if(signal.aborted)throw error;return failed(context.operationId,"artifact_read_failed");}
+   });
   },
   async commitAndSettle(rawCall,input){
    const call=workbenchHostCallSchema.parse(rawCall),outcome=agenticToolOutcomeSchema.parse(input.outcome);

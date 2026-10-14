@@ -72,3 +72,43 @@ it("rejects a native location for a different identity mode before leasing a pro
  await expect(resolveManagedBrowserProfile(path,{userId:"u",accountId:"a",taskId:"t"},"primary"))
   .rejects.toMatchObject({code:"INVALID_BROWSER_PROFILE_LOCATION",dispatched:true});
 });
+
+
+it("T1250 活动socket不能续期原完整RPC墙钟，原派发结果保持unknown",async()=>{
+ let seen!:()=>void;const received=new Promise<void>(r=>seen=r);
+ const path=await listen(()=>seen());const controller=new AbortController();
+ vi.useFakeTimers({toFake:["setTimeout","clearTimeout"]});
+ let result:unknown,settled=false;
+ try{
+  const pending=exchangeBrowserSocket(path,{operationId:"wallclock-original"},"wallclock-original",controller.signal)
+   .then(value=>{settled=true;result=value;},error=>{settled=true;result=error;});
+  await received;
+  await vi.advanceTimersByTimeAsync(500000);
+  expect(settled).toBe(true);expect(result).toMatchObject({code:"BROWSER_RESULT_UNKNOWN",dispatched:true});
+  await pending;
+ }finally{controller.abort();vi.useRealTimers();}
+},180000);
+
+// 真实Unix字节在每轮推进后到达；墙钟不因部分响应/活动而续期。
+it("T1250 真实partial响应活动不能重置原RPC期限，原operation只发一次",async()=>{
+ let seen!:()=>void,connection:import("node:net").Socket|undefined,requests=0;
+ const received=new Promise<void>(resolve=>{seen=resolve;});
+ const path=await listen(()=>{requests++;seen();});
+ server!.prependListener("connection",socket=>{connection=socket;});
+ const controller=new AbortController();vi.useFakeTimers({toFake:["setTimeout","clearTimeout"]});
+ let settled=false,result:unknown,pending:Promise<void>|undefined;
+ try{
+  pending=exchangeBrowserSocket(path,{operationId:"trickle-original"},"trickle-original",controller.signal)
+   .then(value=>{settled=true;result=value;},error=>{settled=true;result=error;});
+  await received;
+  for(let round=0;round<4;round++){
+   await new Promise<void>((resolve,reject)=>connection!.write(" ",error=>error?reject(error):resolve()));
+   await new Promise<void>(resolve=>setImmediate(resolve));
+   await new Promise<void>(resolve=>setImmediate(resolve));
+   await vi.advanceTimersByTimeAsync(100000);expect(settled).toBe(false);
+  }
+  await vi.advanceTimersByTimeAsync(100000);
+  expect(settled).toBe(true);expect(result).toMatchObject({code:"BROWSER_RESULT_UNKNOWN",dispatched:true});expect(requests).toBe(1);
+  await pending;
+ }finally{controller.abort();vi.useRealTimers();if(pending)await pending;}
+},180000);

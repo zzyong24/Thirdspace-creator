@@ -275,12 +275,13 @@ describe("数据底座 §1.4 — 优先读 source:imported 真值,fixture 兜底
     expect(scoped.snapshotCount).toBe(1);
     expect(scoped.plays).toBe(128000);
 
-    // 边界:空集 publicationIds → all-zero(非"全量回退";收窄到空就是空)。
+    // 空集仍不回退全量；未测到播放值保持null，coverage准确为0。
     const emptyScoped = await analyticsService.getDashboardRollup(ctx, {
       publicationIds: [],
     });
     expect(emptyScoped.snapshotCount).toBe(0);
-    expect(emptyScoped.plays).toBe(0);
+    expect(emptyScoped.plays).toBeNull();
+    expect(emptyScoped.metricCoverage.plays).toEqual({measured:0,total:0});
   });
 
   // 指标 key 归一回归(bug2):rollup 必须把真采集的 `views` 与演示 fixture 的 `plays`

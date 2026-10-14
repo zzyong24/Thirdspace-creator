@@ -1,8 +1,9 @@
 import type {executionCalls,executionTasks} from "@creatoros/backend";
-import {chatWorkerInputSchema,executionCheckpointSchema,workerProviderReceiptSchema} from "@creatoros/contract/execution-worker";
+import {chatWorkerInputSchema,executionCheckpointSchema,workerProviderReceiptSchema,frozenExecutionEngine} from "@creatoros/contract/execution-worker";
 import {partitionExecutionCalls} from "./execution-call-tree";
 import {reconstructCheckpointMessages} from "./execution-checkpoint.service";
 import {isChatModelOperation,chatFallbackParent} from "./execution-chat-fallback.service";
+import {originalCodexReadBinding} from './codex-read-recovery';
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
 
@@ -69,7 +70,10 @@ export function recoverableChatModelRetryAnchor(task:Task,calls:readonly Call[])
  * Callers must still reject unresolved external actions and own the task lock.
  * No token usage or provider success is inferred from a missing response.
  */
-export function unconfirmedModelCalls(calls:readonly Call[]):Call[]{
+export function unconfirmedModelCalls(task:Task,calls:readonly Call[]):Call[]{
+ const input=(task.payload as {modelInput?:{kind?:string;executionEngine?:string}}|null)?.modelInput;
+ // SEMANTIC_BOUNDARY_ALLOW: 只按冻结执行协议防止对同一未知回合再提交，不选择内容。
+ if(frozenExecutionEngine(task.payload)==='codex'||input?.executionEngine==='codex'||input?.kind==='asset.generate')return [];
  return calls.filter(call=>call.kind==="model"&&["started","unknown"].includes(call.status)&&
   call.providerJob===null&&call.providerResult===null&&call.resultRef===null);
 }
@@ -83,8 +87,13 @@ export function resumableChatModelCalls(task:typeof executionTasks.$inferSelect,
   input.data.accountId!==task.accountId||payload?.aiTaskId!==task.ownerId)return [];
  if(calls.some(call=>call.executionTaskId!==task.id||(call.status==="settled"&&call.totalTokens===null)))return [];
  const pending=calls.filter(call=>["reserved","started","unknown"].includes(call.status));
- const safe=unconfirmedModelCalls(calls);
+ const safe=unconfirmedModelCalls(task,calls);
  if(!safe.length||safe.length!==pending.length||safe.some(call=>call.parentCallId!==null||call.resultText!==null||
   call.startedAttempt===null||call.startedAttempt<1||call.startedAttempt>task.attempt||calls.some(child=>child.parentCallId===call.id)))return [];
  return safe.sort((a,b)=>a.sequence-b.sequence);
+}
+
+/** SEMANTIC_BOUNDARY_ALLOW: 只凭原Codex call与真实thread/turn允许同键只读对账；不授权再次生成。 */
+export function recoverableCodexModelCalls(task:Task,calls:readonly Call[]):Call[]{
+ return calls.filter(call=>originalCodexReadBinding(task,call)!==null);
 }

@@ -4,13 +4,344 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 104,
+    "verticals": 148,
     "tasks_done": 62,
-    "tasks_total": 206,
-    "tasks_pending": 144,
+    "tasks_total": 250,
+    "tasks_pending": 188,
     "verticals_complete": 18
   },
   "verticals": [
+    {
+      "id": "T-1278",
+      "task_id": "T-1278",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {},
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1278-unified-license-capability-routing.md",
+        "docs/features/t1058-composable-agent-model-research.md",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/server/activation/client-config.server.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "contract/src/resources/settings.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "docs/features/t1278-unified-license-capability-routing.md",
+        "docs/features/t1278-unified-license-capability-routing.review.md",
+        "docs/verification/t1278/**",
+        "BACKLOG.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1278.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "exclusive_resources": [],
+      "step_depends_on": {},
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {}
+    },
+    {
+      "id": "T-1246",
+      "task_id": "T-1246",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1246/source-inventory-before.json"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "ai-worker/scripts/build.mjs",
+        "ai-worker/src/execution/agentic-worker-run.ts",
+        "ai-worker/src/execution/asset-codex-worker-run.test.ts",
+        "ai-worker/src/execution/asset-processing-worker.ts",
+        "ai-worker/src/execution/asset-worker-run.ts",
+        "ai-worker/src/execution/chat-generation-worker.ts",
+        "ai-worker/src/execution/chat-worker-run.ts",
+        "ai-worker/src/execution/codex-acp-host.ts",
+        "ai-worker/src/execution/codex-acp-policy.test.ts",
+        "ai-worker/src/execution/codex-acp-worker-run.test.ts",
+        "ai-worker/src/execution/codex-acp-worker-run.ts",
+        "ai-worker/src/execution/codex-agentic-worker-run.test.ts",
+        "ai-worker/src/execution/codex-agentic-worker-run.ts",
+        "ai-worker/src/execution/codex-app-server-protocol.ts",
+        "ai-worker/src/execution/codex-app-server.ts",
+        "ai-worker/src/execution/codex-call-context.ts",
+        "ai-worker/src/execution/codex-external-chat-native-run.test.ts",
+        "ai-worker/src/execution/codex-image-generation.ts",
+        "ai-worker/src/execution/codex-native-turn.test.ts",
+        "ai-worker/src/execution/codex-native-turn.ts",
+        "ai-worker/src/execution/codex-status-entry.ts",
+        "ai-worker/src/execution/cover-worker-run.ts",
+        "ai-worker/src/execution/durable-codex-provider.test.ts",
+        "ai-worker/src/execution/durable-generation-model.test.ts",
+        "ai-worker/src/execution/durable-generation-model.ts",
+        "ai-worker/src/execution/external-chat-native-images.ts",
+        "ai-worker/src/execution/external-chat-recovery.test.ts",
+        "ai-worker/src/execution/external-chat-recovery.ts",
+        "ai-worker/src/execution/external-chat-tools.test.ts",
+        "ai-worker/src/execution/external-chat-tools.ts",
+        "ai-worker/src/execution/external-chat-worker-run.test.ts",
+        "ai-worker/src/execution/external-chat-worker-run.ts",
+        "ai-worker/src/execution/flywheel-generation-worker.ts",
+        "ai-worker/src/execution/generation-error.ts",
+        "ai-worker/src/execution/intelligence-generation-worker-entry.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.test.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.ts",
+        "ai-worker/src/execution/knowledge-distill-worker.ts",
+        "ai-worker/src/execution/knowledge-worker-generation.test.ts",
+        "ai-worker/src/execution/structured-worker-generation.ts",
+        "ai-worker/src/execution/video-decisions-worker.ts",
+        "ai-worker/src/execution/video-visual-review-worker-entry.ts",
+        "ai-worker/src/execution/video-visual-review-worker-run.ts",
+        "ai-worker/src/execution/worker-entry.ts",
+        "ai-worker/src/execution/worker-runtime.test.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "ai-worker/src/runtime/codex-provider.ts",
+        "ai-worker/src/runtime/pi-provider-diagnostic.ts",
+        "ai-worker/src/runtime/pi-provider-embedding.ts",
+        "ai-worker/src/runtime/pi-provider-wire.test.ts",
+        "ai-worker/src/runtime/pi-provider.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "ai-worker/src/runtime/provider-identity.ts",
+        "ai-worker/vendor/codex-acp/src/CodexEventHandler.ts",
+        "ai-worker/vendor/codex-acp/src/CreatorOsPolicy.ts",
+        "backend/drizzle/0133_assistant_execution_engine.sql",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/application/generation/codex-runtime-freeze.test.ts",
+        "backend/src/application/generation/creative-canvas-root.ts",
+        "backend/src/application/generation/moments-model-runtime.ts",
+        "backend/src/application/generation/transactional-task-runtime.ts",
+        "backend/src/integration/chat-worker-entry.test.ts",
+        "backend/src/integration/intelligence-source-workspace.test.ts",
+        "backend/src/migration-convergence.test.ts",
+        "backend/src/migration-convergence.ts",
+        "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+        "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+        "backend/src/modules/ai-runtime/asset-generation-modes.ts",
+        "backend/src/modules/ai-runtime/asset-legacy-recovery.service.ts",
+        "backend/src/modules/ai-runtime/asset-processing-business-adapter.ts",
+        "backend/src/modules/ai-runtime/comment-qa-sift-runner.test.ts",
+        "backend/src/modules/ai-runtime/comment-qa-sift-runner.ts",
+        "backend/src/modules/ai-runtime/cover-runner.ts",
+        "backend/src/modules/ai-runtime/daily-topic-business-adapter.ts",
+        "backend/src/modules/ai-runtime/index.ts",
+        "backend/src/modules/ai-runtime/knowledge-classify-runner.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-classify-runner.ts",
+        "backend/src/modules/ai-runtime/knowledge-distill-runner.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-distill-runner.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation-business-adapters.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation-business-adapters.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation.integration.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation.service.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation.types.ts",
+        "backend/src/modules/ai-runtime/knowledge-relate-runner.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-relate-runner.ts",
+        "backend/src/modules/ai-runtime/knowledge-worker-routing.test.ts",
+        "backend/src/modules/ai-runtime/local-codex-status.service.ts",
+        "backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts",
+        "backend/src/modules/ai-runtime/script-runner.ts",
+        "backend/src/modules/ai-runtime/video-decisions-business-adapter.ts",
+        "backend/src/modules/ai/agentic-proposal-staging.service.ts",
+        "backend/src/modules/ai/ai-task-commit.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/ai/execution-agentic-candidate.service.ts",
+        "backend/src/modules/ai/execution-codex-agentic-candidate.test.ts",
+        "backend/src/modules/ai/external-chat-call-tree.ts",
+        "backend/src/modules/ai/external-chat-turn.service.test.ts",
+        "backend/src/modules/ai/external-chat-turn.service.ts",
+        "backend/src/modules/ai/external-task-tool.service.ts",
+        "backend/src/modules/assets/asset-processing-workspace.test.ts",
+        "backend/src/modules/assets/asset-processing.service.ts",
+        "backend/src/modules/assets/media-root.test.ts",
+        "backend/src/modules/assets/media-root.ts",
+        "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+        "backend/src/modules/execution/agentic-tool-binding.ts",
+        "backend/src/modules/execution/asset-execution-binding.ts",
+        "backend/src/modules/execution/chat-generation-recovery.ts",
+        "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+        "backend/src/modules/execution/claimed-worker-supervision.ts",
+        "backend/src/modules/execution/codex-read-recovery.fixture.ts",
+        "backend/src/modules/execution/codex-read-recovery.integration.test.ts",
+        "backend/src/modules/execution/codex-read-recovery.test.ts",
+        "backend/src/modules/execution/codex-read-recovery.ts",
+        "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+        "backend/src/modules/execution/execution-asset-ports.service.ts",
+        "backend/src/modules/execution/execution-asset-result.service.test.ts",
+        "backend/src/modules/execution/execution-asset-result.service.ts",
+        "backend/src/modules/execution/execution-authority.service.ts",
+        "backend/src/modules/execution/execution-call-ledger.service.ts",
+        "backend/src/modules/execution/execution-chat-generation.service.ts",
+        "backend/src/modules/execution/execution-chat-hooks.service.test.ts",
+        "backend/src/modules/execution/execution-chat-model-identity.service.test.ts",
+        "backend/src/modules/execution/execution-chat-model-identity.service.ts",
+        "backend/src/modules/execution/execution-chat-route.service.ts",
+        "backend/src/modules/execution/execution-chat-task-submission.service.ts",
+        "backend/src/modules/execution/execution-chat-text-node.service.ts",
+        "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+        "backend/src/modules/execution/execution-chat-web-read.service.ts",
+        "backend/src/modules/execution/execution-checkpoint.service.test.ts",
+        "backend/src/modules/execution/execution-checkpoint.service.ts",
+        "backend/src/modules/execution/execution-codex-call.service.test.ts",
+        "backend/src/modules/execution/execution-codex-call.service.ts",
+        "backend/src/modules/execution/execution-codex-chat-tool.test.ts",
+        "backend/src/modules/execution/execution-codex-research-evidence.test.ts",
+        "backend/src/modules/execution/execution-cover.service.ts",
+        "backend/src/modules/execution/execution-flywheel-generation.service.ts",
+        "backend/src/modules/execution/execution-generation-ports.service.test.ts",
+        "backend/src/modules/execution/execution-generation-ports.service.ts",
+        "backend/src/modules/execution/execution-model-identity.service.test.ts",
+        "backend/src/modules/execution/execution-model-identity.service.ts",
+        "backend/src/modules/execution/execution-research-evidence.service.ts",
+        "backend/src/modules/execution/execution-scheduled-child.service.test.ts",
+        "backend/src/modules/execution/execution-scheduled-child.service.ts",
+        "backend/src/modules/execution/execution-transcribe-postprocess.service.ts",
+        "backend/src/modules/execution/execution-video-codex-route.test.ts",
+        "backend/src/modules/execution/execution-video-visual-review.integration.test.ts",
+        "backend/src/modules/execution/execution-video-visual-review.service.ts",
+        "backend/src/modules/execution/execution-video.service.ts",
+        "backend/src/modules/execution/executor-registry.ts",
+        "backend/src/modules/execution/index.ts",
+        "backend/src/modules/execution/local-codex-worker-env.ts",
+        "backend/src/modules/execution/model-call-recovery.ts",
+        "backend/src/modules/execution/model-worker-dispatcher.ts",
+        "backend/src/modules/execution/persistent-task.service.test.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/execution/run-execution-task.test.ts",
+        "backend/src/modules/execution/run-execution-task.ts",
+        "backend/src/modules/execution/transcribe-postprocess.integration.test.ts",
+        "backend/src/modules/execution/video-render/executor.test.ts",
+        "backend/src/modules/execution/video-render/executor.ts",
+        "backend/src/modules/execution/video-visual-codex.fixture.ts",
+        "backend/src/modules/execution/workbench-plan-history.ts",
+        "backend/src/modules/execution/workbench-plan.service.ts",
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+        "backend/src/modules/intelligence/intelligence-rewrite-official.integration.test.ts",
+        "backend/src/modules/intelligence/intelligence-workspace-scope.ts",
+        "backend/src/modules/intelligence/intelligence.service.test.ts",
+        "backend/src/modules/intelligence/intelligence.service.ts",
+        "backend/src/modules/intelligence/project-reference.service.ts",
+        "backend/src/modules/intelligence/source-sync-runner.ts",
+        "backend/src/modules/intelligence/transcript-execution-binding.ts",
+        "backend/src/modules/settings/codex-engine-preferences.test.ts",
+        "backend/src/modules/settings/settings.repository.ts",
+        "backend/src/modules/settings/settings.service.test.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "backend/src/schema/settings.ts",
+        "contract/src/assistant-operation-catalog.ts",
+        "contract/src/internal/asset-generation.ts",
+        "contract/src/internal/execution-engine.ts",
+        "contract/src/internal/execution-worker.test.ts",
+        "contract/src/internal/execution-worker.ts",
+        "contract/src/internal/local-codex-status.ts",
+        "contract/src/operations/settings.ts",
+        "contract/src/resources/settings.ts",
+        "contract/tests/codex-assistant-tool-catalog.test.ts",
+        "contract/tests/codex-execution-route.test.ts",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.review.md",
+        "docs/verification/t1246/**",
+        "frontend/playwright.config.ts",
+        "frontend/scripts/desktop/execution-worker-runtime.mjs",
+        "frontend/scripts/desktop/execution-worker-runtime.test.mjs",
+        "frontend/src/app/api/chat/route.test.ts",
+        "frontend/src/app/api/knowledge/classify/route.test.ts",
+        "frontend/src/app/api/knowledge/classify/route.ts",
+        "frontend/src/app/api/knowledge/comment-sift/route.ts",
+        "frontend/src/app/api/knowledge/distill/route.test.ts",
+        "frontend/src/app/api/knowledge/distill/route.ts",
+        "frontend/src/app/api/knowledge/knowledge-worker-routes.test.ts",
+        "frontend/src/app/api/knowledge/relate/route.ts",
+        "frontend/src/app/layout.tsx",
+        "frontend/src/components/shell/pre-hydration-scripts.test.tsx",
+        "frontend/src/components/shell/theme-sync.test.tsx",
+        "frontend/src/components/shell/theme-sync.tsx",
+        "frontend/src/features/article/article-result-actions.tsx",
+        "frontend/src/features/assets/assets-interactive-region.tsx",
+        "frontend/src/features/automations/automations-island.tsx",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/features/copilot/assistant-engine-selector.tsx",
+        "frontend/src/features/copilot/assistant-engine-server.test.ts",
+        "frontend/src/features/copilot/assistant-engine.ts",
+        "frontend/src/features/copilot/use-assistant-engine.test.tsx",
+        "frontend/src/features/copilot/use-assistant-engine.ts",
+        "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+        "frontend/src/features/intelligence/intelligence-workbench.test.tsx",
+        "frontend/src/features/projects/graphic-post-results.tsx",
+        "frontend/src/features/projects/publication-result-actions.tsx",
+        "frontend/src/features/projects/video-output-workbench.tsx",
+        "frontend/src/features/settings/assistant-engine-card.test.tsx",
+        "frontend/src/features/settings/assistant-engine-card.tsx",
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/settings-model-region.codex.test.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/features/settings/settings-page.test.tsx",
+        "frontend/src/features/settings/settings-page.tsx",
+        "frontend/src/features/settings/skills-data.test.ts",
+        "frontend/src/features/settings/skills-data.ts",
+        "frontend/src/features/settings/skills-section.test.tsx",
+        "frontend/src/features/settings/skills-section.tsx",
+        "frontend/src/features/settings/text-model-configuration.tsx",
+        "frontend/src/features/settings/use-model-configuration-mutation.ts",
+        "frontend/src/lib/codex-capability-explanation.ts",
+        "frontend/src/proxy.test.ts",
+        "frontend/src/proxy.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "frontend/src/server/chat-model-message-snapshot.test.ts",
+        "frontend/src/server/chat-model-message-snapshot.ts",
+        "frontend/src/server/codex-frozen-preflight.integration.test.ts",
+        "frontend/src/server/execution-worker-path.ts",
+        "frontend/src/server/persistence-client.lifecycle.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/prepare-chat-reply.ts",
+        "frontend/tests-t1246-generated/**",
+        "frontend/tests/e2e/assets.spec.ts",
+        "frontend/tests/e2e/automations-run-now-public.spec.ts",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "frontend/tests/e2e/draft-ammo-media-preview.spec.ts",
+        "frontend/tests/e2e/group-skill-customization.spec.ts",
+        "frontend/tests/e2e/media-root-isolation.spec.ts",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "frontend/tests/e2e/settings-responsive-layout.spec.ts",
+        "frontend/tests/e2e/settings.spec.ts",
+        "frontend/tests/e2e/t1069-asset-picker.spec.ts",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/context/T-1246.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json"
+      ],
+      "commits": {}
+    },
     {
       "id": "T-1074",
       "archetype": [
@@ -7260,6 +7591,2501 @@
       "exclusive_resources": [
         "creatoros-next-e2e"
       ]
+    },
+    {
+      "task_id": "T-1225",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1225-assets-gallery-real-fixtures.md",
+        "frontend/tests/e2e/assets.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "contract/src/operations/assets.ts",
+        "frontend/specs/page-specs.md",
+        "docs/verification/t1208/20261011-remaining-contract-triage.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/assets.spec.ts",
+        "docs/verification/t1225/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-e2e"
+      ],
+      "id": "T-1225",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1226",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1226-playwright-media-root-isolation.md",
+        "backend/src/modules/assets/media-root.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/app/api/v1/blob/[...key]/route.ts",
+        "frontend/playwright.config.ts",
+        "contract/src/operations/assets.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/src/modules/assets/media-root.ts",
+        "backend/src/modules/assets/media-root.test.ts",
+        "frontend/playwright.config.ts",
+        "frontend/tests/e2e/media-root-isolation.spec.ts",
+        "docs/verification/t1226/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-e2e"
+      ],
+      "id": "T-1226",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1229",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1229-radar-topic-output-recovery-diagnosis.md",
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+        "backend/src/modules/execution/execution-flywheel-generation.service.ts",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1224/browser-3914/BROWSER_VERIFICATION_REPORT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "docs/verification/t1229/**"
+      ],
+      "exclusive_resources": [],
+      "id": "T-1229",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1231",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1231-radar-promoted-project-scope.md",
+        "docs/verification/t1229/browser-3918/trace-minimal-evidence.json",
+        "docs/verification/t1229/browser-3918/REPORT.md",
+        "docs/features/t1022-account-group-workspace.md",
+        "docs/features/t1221-group-switch-e2e.md",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "frontend/tests/e2e/zz-account-isolation.spec.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-api.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "frontend/src/components/shell/account-switcher.tsx",
+        "frontend/src/app/api/v1/dispatch/route.ts",
+        "backend/src/workspace-scope.ts",
+        "backend/src/modules/candidate/candidate.service.ts",
+        "backend/src/modules/projects/projects.service.ts",
+        "backend/src/modules/projects/projects.repository.ts",
+        "contract/src/operations/account-groups.ts",
+        "contract/src/resources/account-groups.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1231/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-e2e",
+        "creatoros-heavy-db-tests"
+      ],
+      "id": "T-1231",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1232",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1232-settings-dialog-public-verification.md",
+        "docs/verification/t1208/20261011-remaining-contract-triage.md",
+        "frontend/tests/e2e/settings.spec.ts",
+        "docs/features/t962-operations-sync-redfox.md",
+        "docs/superpowers/specs/2026-07-25-model-configuration-experience-redesign.page-spec.md",
+        "orchestrator/DECISION_LOG.md",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/settings-page.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/app/(creator)/settings/page.tsx",
+        "contract/src/operations/settings.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1232/diagnosis-and-candidate.md",
+        "contract/src/resources/settings.ts",
+        "contract/src/operations/auth.ts",
+        "frontend/src/features/settings/text-model-configuration.tsx",
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/redfox-configuration.tsx",
+        "frontend/src/features/settings/skills-data.ts",
+        "frontend/src/features/settings/skills-section.tsx",
+        "backend/src/modules/settings/settings.service.ts",
+        "backend/src/modules/settings/settings.repository.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "docs/verification/t1232/scope-independent-review.md",
+        "frontend/src/lib/contract-client.ts"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/settings.spec.ts",
+        "docs/verification/t1232/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1232",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1233",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1233-radar-body-fixture-protocol.md",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1231/browser-3919/REPORT.md",
+        "docs/verification/t1231/browser-3919/visible-copy/T-1231-visible-copy.json",
+        "contract/src/resources/intelligence.ts",
+        "contract/src/resources/projects.ts",
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-api.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/resources/candidate.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-types.ts",
+        "frontend/src/features/intelligence/topic-candidate-editor.tsx",
+        "ai-worker/src/execution/durable-generation-model.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "contract/src/operations/intelligence.ts",
+        "backend/src/modules/intelligence/topic-preview-runner.ts",
+        "frontend/src/features/draft-workbench/topic-card.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+        "frontend/src/features/script/script-rich-editor.tsx",
+        "frontend/src/features/script/script-structure-view.tsx",
+        "backend/src/modules/intelligence/intelligence.service.ts",
+        "docs/verification/t1233/diagnosis-and-candidate.md",
+        "docs/verification/t1233/scope-independent-review.md",
+        "ai-worker/src/runtime/pi-provider.ts",
+        "ai-worker/src/runtime/pi-provider-codec.ts",
+        "ai-worker/src/runtime/pi-provider-json-compat.test.ts",
+        "ai-worker/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js",
+        "docs/verification/t1233/scope-independent-review-round2.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1233/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1233",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1234",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1234-group-skill-customize-availability.md",
+        "docs/features/t1022-account-group-workspace.md",
+        "docs/superpowers/specs/2026-07-24-account-skill-overlay-replacement.md",
+        "docs/superpowers/specs/2026-07-24-account-skill-overlay-contract.md",
+        "frontend/src/app/(creator)/settings/page.tsx",
+        "frontend/src/features/settings/skills-data.ts",
+        "frontend/src/features/settings/skills-section.tsx",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "contract/src/operations/settings.ts",
+        "contract/src/resources/settings.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "backend/src/modules/settings/settings.repository.ts",
+        "backend/src/modules/settings/group-skill-overlay.integration.test.ts",
+        "frontend/tests/e2e/settings.spec.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/contract-client.ts",
+        "frontend/src/lib/account-events.ts",
+        "frontend/src/features/settings/skills-data.test.ts",
+        "frontend/src/features/settings/skills-section.test.tsx",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        ".agents/skills/oil-ui-pro/references/existing-project.md",
+        ".agents/skills/oil-ui-pro/references/interaction-and-state.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "frontend/src/styles/tokens.css",
+        "frontend/tests/e2e/assets.spec.ts",
+        "frontend/tests/e2e/media-root-isolation.spec.ts",
+        "frontend/src/components/shell/account-switcher.tsx",
+        "frontend/tests/e2e/zz-account-isolation.spec.ts",
+        "docs/verification/t1234/3922-test-candidate.md",
+        "frontend/src/app/(creator)/layout.tsx",
+        "frontend/src/app/(creator)/page.tsx",
+        "backend/src/db.ts",
+        "backend/src/workspace-scope.ts",
+        "backend/src/modules/platform-account/account-group.service.ts",
+        "backend/src/schema/platform-account.ts",
+        "contract/src/index.ts",
+        "docs/verification/t1234/browser-3927-green/history-recovery-candidate.md",
+        "docs/verification/t1234/browser-3927-green/case4-flow-candidate.md",
+        "docs/verification/t1234/browser-3927-independent-diagnosis.md",
+        "frontend/src/components/shell/sidebar.tsx",
+        "docs/verification/t1234/response-waiter-settlement-candidate.md",
+        "docs/verification/t1234/ui-rollback-default-diagnosis-and-candidate.md",
+        "docs/verification/t1234/ui-rollback-default-scope-review.md"
+      ],
+      "write_set": [
+        "frontend/src/features/settings/skills-data.ts",
+        "frontend/src/features/settings/skills-section.tsx",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/skills-data.test.ts",
+        "frontend/src/features/settings/skills-section.test.tsx",
+        "frontend/tests/e2e/group-skill-customization.spec.ts",
+        "docs/verification/t1234/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1234",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1235",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1235-density-reload-persistence.md",
+        "docs/features/t1232-settings-dialog-public-verification.md",
+        "frontend/src/app/layout.tsx",
+        "frontend/src/components/shell/theme-sync.tsx",
+        "frontend/src/components/shell/theme-sync.test.tsx",
+        "frontend/src/components/shell/pre-hydration-scripts.test.tsx",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/tests/e2e/settings.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/app/globals.css"
+      ],
+      "write_set": [
+        "frontend/src/app/layout.tsx",
+        "frontend/src/components/shell/theme-sync.tsx",
+        "frontend/src/components/shell/theme-sync.test.tsx",
+        "frontend/src/components/shell/pre-hydration-scripts.test.tsx",
+        "docs/verification/t1235/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1235",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1236",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1236-model-probe-visible-result.md",
+        "docs/features/t1232-settings-dialog-public-verification.md",
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/text-model-configuration.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/features/settings/use-model-configuration-mutation.ts",
+        "frontend/src/features/settings/use-settings-mutation.ts",
+        "frontend/src/features/settings/multimodal-model-configuration.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/tests/e2e/settings.spec.ts",
+        "frontend/src/lib/contract-client.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/account-events.ts",
+        "contract/src/operations/settings.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/features/settings/settings-page.tsx",
+        "frontend/src/app/(creator)/settings/page.tsx",
+        "contract/src/resources/settings.ts",
+        "docs/verification/t1236/diagnosis-and-candidate.md",
+        "docs/verification/t1236/late-refresh-candidate.md",
+        "docs/verification/t1236/implementation-independent-review.md"
+      ],
+      "write_set": [
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/features/settings/text-model-configuration.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/src/features/settings/use-model-configuration-mutation.ts",
+        "docs/verification/t1236/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1236",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "id": "T-1237",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {},
+      "task_id": "T-1237",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1237-settings-narrow-layout.md",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/src/features/settings/settings-page.tsx",
+        "frontend/tests/e2e/settings.spec.ts",
+        "frontend/src/components/ui/dialog.tsx",
+        "frontend/src/components/ui/tabs.tsx",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        ".agents/skills/oil-ui-pro/references/existing-project.md",
+        ".agents/skills/oil-ui-pro/references/interaction-and-state.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1237/diagnosis-and-candidate.md",
+        "frontend/playwright.config.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1208/budget-recheck.config.ts"
+      ],
+      "write_set": [
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/tests/e2e/settings-responsive-layout.spec.ts",
+        "docs/verification/t1237/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ]
+    },
+    {
+      "id": "T-1238",
+      "task_id": "T-1238",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "write_set": [
+        "contract/src/**",
+        "backend/src/**",
+        "backend/drizzle/0133_assistant_execution_engine.sql",
+        "backend/drizzle/meta/_journal.json",
+        "ai-worker/src/**",
+        "ai-worker/scripts/**",
+        "ai-worker/vendor/**",
+        "frontend/src/server/**",
+        "frontend/src/app/api/knowledge/**",
+        "frontend/src/features/settings/**",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/article/article-result-actions.tsx",
+        "frontend/src/features/projects/graphic-post-results.tsx",
+        "frontend/src/features/projects/publication-result-actions.tsx",
+        "frontend/src/features/projects/video-output-workbench.tsx",
+        "frontend/src/lib/codex-capability-explanation.ts",
+        "frontend/src/proxy.ts",
+        "frontend/src/proxy.test.ts",
+        "frontend/scripts/**",
+        "docs/verification/t1238/**",
+        "orchestrator/probes/T-1238/**",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "docs/features/t1238-codex-unified-text-image-engine.review.md",
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1238.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "BACKLOG.md",
+        "frontend/src/features/intelligence/intelligence-workbench.test.tsx"
+      ],
+      "read_set": [
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/**",
+        "backend/src/**",
+        "ai-worker/src/**",
+        "frontend/src/**"
+      ],
+      "commits": {}
+    },
+    {
+      "task_id": "T-1239",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1239-review-learning-public-acceptance.md",
+        "docs/verification/t1208/experience-followup-diagnosis.md",
+        "BACKLOG-details.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/tests/e2e/experience.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "contract/src/operations/learnings.ts",
+        "contract/src/operations/ai.ts",
+        "backend/src/modules/ai-runtime/chat-tools.ts",
+        "backend/src/modules/ai-runtime/review-context.ts",
+        "backend/src/modules/learnings/learnings.transport.ts",
+        "backend/src/modules/learnings/learnings.service.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "frontend/src/features/copilot/chat-result-cards.tsx",
+        "frontend/src/features/review/review-analyze-island.tsx",
+        "frontend/src/features/review/review-workspace-data.ts",
+        "frontend/src/features/review/analytics-review-page.tsx",
+        "frontend/src/features/review/analytics-review-interactive-region.tsx",
+        "frontend/src/features/review/current-period-learnings.test.tsx",
+        "frontend/src/features/knowledge/knowledge-data.ts",
+        "frontend/src/features/knowledge/knowledge-workspace-header.tsx",
+        "frontend/src/app/(creator)/knowledge/page.tsx",
+        "frontend/src/server/persistence-client.ts",
+        "docs/features/t1200-knowledge-workspace-redesign.md",
+        "docs/superpowers/specs/2026-07-04-experience-relocation-design.md",
+        "docs/superpowers/specs/2026-07-13-replication-loop-linkage-design.md",
+        "docs/superpowers/specs/2026-07-29-learning-radar-dedupe-and-transcript-url-fix.md",
+        "docs/verification/t1239/browser-candidate.md",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "frontend/playwright.config.ts",
+        "frontend/src/app/(creator)/projects/[projectId]/review/page.tsx",
+        "backend/src/application/context/review-subject.ts",
+        "backend/src/modules/ai-runtime/creative-context.ts",
+        "frontend/tests/visual/__setup__.ts",
+        "frontend/tests/visual/__teardown__.ts",
+        "contract/src/operations/account-groups.ts",
+        "contract/src/operations/projects.ts",
+        "contract/src/operations/artifacts.ts",
+        "contract/src/operations/analytics.ts",
+        "contract/src/resources/account-groups.ts",
+        "contract/src/resources/projects.ts",
+        "contract/src/resources/artifacts.ts",
+        "frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts",
+        "frontend/tests/e2e/semantic-material-generation.spec.ts",
+        "frontend/tests/e2e/t954-director-review.spec.ts",
+        "frontend/tests/e2e/new-project.spec.ts",
+        "frontend/tests/e2e/zz-account-isolation.spec.ts",
+        "docs/verification/t1239/browser-candidate-review.md"
+      ],
+      "write_set": [
+        "docs/features/t1239-review-learning-public-acceptance.md",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "docs/verification/t1239/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1239",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1240",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1240-asset-picker-public-recheck.md",
+        "frontend/tests/e2e/t1069-asset-picker.spec.ts",
+        "frontend/tests/e2e/media-root-isolation.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "docs/verification/t1207/scenario-index.ndjson",
+        "docs/features/t1226-playwright-media-root-isolation.md",
+        "frontend/src/components/media/asset-picker.tsx",
+        "frontend/src/components/media/use-asset-picker-source.ts",
+        "backend/src/modules/assets/assets.transport.ts",
+        "backend/src/modules/assets/assets.service.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1240/diagnosis-and-candidate.md",
+        "docs/verification/t1240/original-put-facts-redacted.json",
+        "docs/verification/t1240/asset-picker-budget-analysis.mjs",
+        "docs/verification/t1240/asset-picker-budget-analysis.json",
+        "backend/src/modules/assets/asset-search.ts",
+        "backend/src/modules/assets/assets.repository.ts",
+        "backend/src/modules/assets/workspace-blob.service.ts",
+        "backend/src/modules/assets/object-storage.ts",
+        "backend/src/modules/assets/localfs-object-storage.ts",
+        "backend/src/modules/assets/media-root.ts",
+        "frontend/src/app/api/v1/blob/[...key]/route.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/package.json",
+        "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js",
+        "docs/verification/t1240/scope-independent-review.md"
+      ],
+      "write_set": [
+        "docs/features/t1240-asset-picker-public-recheck.md",
+        "frontend/tests/e2e/t1069-asset-picker.spec.ts",
+        "docs/verification/t1240/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1240",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1241",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1241-review-dev-compiler-panic.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/package.json",
+        "frontend/next.config.ts",
+        "frontend/playwright.config.ts",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "docs/verification/t1239/browser-3931/execution-receipt.json",
+        "docs/verification/t1239/browser-3931/browser.log",
+        "docs/verification/t1241/cache-disposition-scope-review.md",
+        "docs/verification/t1241/cache-disposition/preflight.json",
+        "docs/verification/t1241/cache-disposition/result.json"
+      ],
+      "write_set": [
+        "docs/features/t1241-review-dev-compiler-panic.md",
+        "docs/verification/t1241/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1241",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1242",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1242-review-pure-group-cookie-assertion.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "frontend/src/lib/session.server.ts",
+        "docs/verification/t1239/browser-3933/account-cookie-diagnosis.md",
+        "docs/verification/t1242/scope-independent-review.md",
+        "docs/verification/t1242/implementation-independent-review.md",
+        "docs/verification/t1242/root-static-dd6-363/receipt.json",
+        "docs/verification/t1239/browser-3934/execution-receipt.json",
+        "docs/verification/t1239/browser-3934/independent-review.md"
+      ],
+      "write_set": [
+        "docs/features/t1242-review-pure-group-cookie-assertion.md",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "docs/verification/t1242/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1242",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1243",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1243-draft-video-preview-recheck.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/T853-FRONTEND-JOURNEY.md",
+        "docs/features/t1200-knowledge-workspace-redesign.md",
+        "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+        "frontend/src/features/draft-workbench/ammo-card-list.test.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+        "frontend/src/components/resources/material-summary.tsx",
+        "frontend/src/components/resources/asset-live-preview.tsx",
+        "frontend/src/components/resources/asset-preview-url.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/contract-client.ts",
+        "frontend/tests/e2e/draft-ammo-media-preview.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "output/content-samples/ai-copy-eval-loop/motion-preview.mp4",
+        "docs/verification/t1243/implementation-candidate.md",
+        "docs/verification/t1243/draft-ammo-media-preview.candidate.ts",
+        "docs/verification/t1243/scope-readiness-review.md",
+        "docs/verification/t1243/playback-candidate.md",
+        "docs/verification/t1243/draft-ammo-playback.candidate.ts",
+        "docs/verification/t1243/playback-scope-independent-review.md",
+        "docs/verification/t1243/browser-3936-green/independent-review.md"
+      ],
+      "write_set": [
+        "docs/features/t1243-draft-video-preview-recheck.md",
+        "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+        "frontend/tests/e2e/draft-ammo-media-preview.spec.ts",
+        "docs/verification/t1243/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1243",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1244",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1244-automation-run-now-login-wait.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1244/automations-run-now-public.candidate.ts",
+        "docs/verification/t1244/candidate-accuracy-and-budget.md",
+        "docs/verification/t1244/candidate-budget-analysis.json",
+        "docs/verification/t1244/scope-independent-review.md",
+        "contract/src/operations/account-groups.ts",
+        "contract/src/operations/platform-accounts.ts",
+        "contract/src/operations/scheduling.ts",
+        "contract/src/operations/ai.ts",
+        "contract/src/operations/execution.ts",
+        "contract/src/resources/scheduling.ts",
+        "contract/src/resources/ai.ts",
+        "contract/src/resources/intelligence.ts",
+        "contract/src/resources/platform-accounts.ts",
+        "contract/src/envelope.ts",
+        "frontend/src/features/automations/automations-island.tsx",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/application/scheduling/collection-execution.ts",
+        "backend/src/application/scheduling/platform-collector.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-scheduler.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.ts",
+        "backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts",
+        "backend/src/modules/ai/execution-task-projection.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.service.ts",
+        "frontend/playwright.config.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/worker/workerProcessEntry.js"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/automations-run-now-public.spec.ts",
+        "docs/verification/t1244/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1244",
+      "blocked_reason": null,
+      "step_depends_on": {}
+    },
+    {
+      "task_id": "T-1245",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1244-automation-run-now-login-wait.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1244/automations-run-now-public.candidate.ts",
+        "docs/verification/t1244/candidate-accuracy-and-budget.md",
+        "docs/verification/t1244/candidate-budget-analysis.json",
+        "docs/verification/t1244/scope-independent-review.md",
+        "contract/src/operations/account-groups.ts",
+        "contract/src/operations/platform-accounts.ts",
+        "contract/src/operations/scheduling.ts",
+        "contract/src/operations/ai.ts",
+        "contract/src/operations/execution.ts",
+        "contract/src/resources/scheduling.ts",
+        "contract/src/resources/ai.ts",
+        "contract/src/resources/intelligence.ts",
+        "contract/src/resources/platform-accounts.ts",
+        "contract/src/envelope.ts",
+        "frontend/src/features/automations/automations-island.tsx",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/application/scheduling/collection-execution.ts",
+        "backend/src/application/scheduling/platform-collector.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-scheduler.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.ts",
+        "backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts",
+        "backend/src/modules/ai/execution-task-projection.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.service.ts",
+        "frontend/playwright.config.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/worker/workerProcessEntry.js",
+        "docs/features/t1245-automations-narrow-layout.md",
+        "docs/verification/t1245/automations-run-now-layout.candidate.ts",
+        "docs/verification/t1245/automations-local-css.candidate.patch",
+        "docs/verification/t1245/diagnosis-and-implementation-candidate.md",
+        "docs/verification/t1245/independent-review.md",
+        "docs/verification/t1245/candidate-budget-analysis.json",
+        "frontend/src/components/shell/sidebar.tsx",
+        "frontend/src/components/shell/app-shell.tsx",
+        "frontend/src/components/ui/scroll-area.tsx",
+        "frontend/src/styles/tokens.css"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/automations-run-now-public.spec.ts",
+        "frontend/src/features/automations/automations-island.tsx",
+        "docs/features/t1245-automations-narrow-layout.md",
+        "docs/verification/t1245/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "id": "T-1245",
+      "blocked_reason": null,
+      "step_depends_on": {},
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/automations-run-now-public.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      }
+    },
+    {
+      "id": "T-1247",
+      "task_id": "T-1247",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1247-timeout-git-inventory-buffer.md",
+        "docs/verification/t1247/REVIEW.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "tools/timeout-policy/check.mjs",
+        "docs/features/t1247-timeout-git-inventory-buffer.md",
+        "docs/features/t1247-timeout-git-inventory-buffer.review.md",
+        "docs/features/t1247-timeout-git-inventory-buffer.review.history.json",
+        "docs/verification/t1247/**",
+        "orchestrator/context/T-1247.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json"
+      ],
+      "commits": {}
+    },
+    {
+      "id": "T-1249",
+      "task_id": "T-1249",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1249-durable-chat-current-receipts.md",
+        "docs/verification/t1246/first-diagnosis/t1249-durable-chat-spec-review.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "backend/src/integration/durable-chat-tool-ledger.test.ts",
+        "docs/features/t1249-durable-chat-current-receipts*",
+        "docs/verification/t1246/first-diagnosis/t1249-*",
+        "docs/verification/t1246/round-2/unit/**",
+        "orchestrator/context/T-1249.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json"
+      ],
+      "commits": {}
+    },
+    {
+      "id": "T-1248",
+      "task_id": "T-1248",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1248-frozen-system-action-compatibility.md",
+        "docs/verification/t1248/INDEPENDENT_SPEC_RECHECK.md",
+        "docs/verification/t1248/system-action-v1.definition.json",
+        "docs/verification/t1246/round-2/server-entry-calibration/REPORT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "contract/src/resources/assistant-system.ts",
+        "backend/src/modules/ai-runtime/chat-tools.ts",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+        "backend/src/application/chat/assistant-system-root.ts",
+        "backend/src/modules/ai/chat-proposal-source.service.ts",
+        "contract/src/assistant-system.test.ts",
+        "backend/src/modules/ai-runtime/chat-tools.test.ts",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts",
+        "backend/src/application/chat/assistant-system-root.integration.test.ts",
+        "backend/src/modules/ai/chat-proposal-source.service.test.ts",
+        "docs/features/t1248-frozen-system-action-compatibility*",
+        "docs/verification/t1248/**",
+        "orchestrator/context/T-1248.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原真实golden RED→contract/backend whole-known合同聚焦，retry0，严格原owner/claim/ack/digest/采用回执断言",
+          "原legacy4完整body，只读104原producer/当前migrator/hash/frozen/settled/130ownership，独占shared dist后实际EOF",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1250",
+      "task_id": "T-1250",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1250-positive-timeout-consumer-closure.md",
+        "docs/verification/t1246/first-diagnosis/timeout-22-consumer-readonly-audit.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+        "frontend/src/server/workbench-artifact-render.ts",
+        "frontend/src/server/workbench-browser-host.ts",
+        "frontend/src/server/workbench-browser-client.ts",
+        "frontend/src/server/workbench-native-client.ts",
+        "frontend/src/server/workbench-native-host.ts",
+        "frontend/src/server/workbench-artifact-host.ts",
+        "backend/src/modules/execution/workbench-file-recovery.service.ts",
+        "frontend/src-tauri/src/workbench/ipc.rs",
+        "frontend/src-tauri/src/workbench/ipc_windows.rs",
+        "frontend/src-tauri/src/workbench/browser_ipc.rs",
+        "tools/timeout-policy/check.mjs",
+        "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.test.ts",
+        "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.integration.test.ts",
+        "frontend/src/server/workbench-artifact-render.test.ts",
+        "frontend/src/server/workbench-artifact-representation.test.ts",
+        "frontend/src/server/workbench-public.integration.test.ts",
+        "frontend/src/server/workbench-browser-client.test.ts",
+        "frontend/src/server/workbench-browser-host.test.ts",
+        "frontend/src/server/workbench-native-client.test.ts",
+        "frontend/src/server/workbench-native-host.test.ts",
+        "frontend/src/server/workbench-artifact-host.test.ts",
+        "frontend/src/server/workbench-file-recovery.test.ts",
+        "tools/timeout-policy/check.test.mjs",
+        "docs/features/t1250-positive-timeout-consumer-closure*",
+        "docs/verification/t1250/**",
+        "orchestrator/context/T-1250.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "首轮原100及所有已封存证据",
+        "真实用户APP/DB/auth与未授权原生App",
+        "他人dist写窗与package封存"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node tools/timeout-policy/verify.mjs",
+          "按SPEC完整公共CDP/离线PNG/PDF/原profile恢复/owned Unix socket协议链与原聚焦安全回归；只由独评工具执行"
+        ]
+      },
+      "scope_note": "24精确路径，独立SPEC PASS前不实施；首轮标准frontend4个历史错误不删除/排除、不代签全局绿；纯Rust/owned socket不启动用户App。主会话写控制面，contract单写源码，独评后私有数据执行。",
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1251",
+      "task_id": "T-1251",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+        "docs/verification/t1246/round-2/unit/own-five-types-whole-attempt1-summary.json",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "ai-worker/src/execution/chat-generation-worker.ts",
+        "ai-worker/src/execution/chat-generation-worker.test.ts",
+        "backend/src/integration/chat-generation-worker.test.ts",
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.md",
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.review.md",
+        "docs/features/t1251-chat-generation-failure-and-fixture-closure.review.history.json",
+        "docs/verification/t1251/**",
+        "orchestrator/context/T-1251.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "PG27/78输入与shared dist写窗",
+        "首轮全部证据与用户真实DB/auth",
+        "非本任务生产/schema/原任务期限/未知结果"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原完整generation21及新增finite/叶失败负例，独评owned runner完整预算retry0",
+          "proper worker/backend类型、boundary/orphan、完整timeout Gate保真实全局失败"
+        ]
+      },
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1253",
+      "task_id": "T-1253",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+        "docs/verification/t1253/SPEC_CANDIDATE_SOURCE_BINDING.json",
+        "docs/verification/t1253/ROOT_SPEC_REVIEW.json",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "backend/src/integration/chat-hooks-worker.test.ts",
+        "backend/src/integration/chat-script-draft-worker.test.ts",
+        "backend/src/modules/execution/execution-worker-call-ports.integration.test.ts",
+        "BACKLOG.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.review.md",
+        "docs/features/t1253-worker-fixture-receipt-and-unknown-closure.review.history.json",
+        "docs/verification/t1253/**",
+        "orchestrator/context/T-1253.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "生产backend/worker/contract源码、schema、原预算/unknown/accounting",
+        "首轮和三包已有8红原证据、真实用户DB/auth与native App",
+        "其它Agent/frontend/T1252源码和shared worker dist并发build"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原3完整文件25例（先只观察保原刺激/断言），再原9文件46例；独评owned工具/SPEC/source绑定、retry0、原case540s/hook180s、完整外层与cleanup",
+          "proper backend/worker tsc；boundary/orphan、完整timeout Gate与公开>30s依赖实际报告，非零和App未验明确保留"
+        ]
+      },
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1252",
+      "task_id": "T-1252",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1252-cli-http-consumer-budget-closure.md",
+        "docs/verification/t1252/ROOT_SPEC_REVIEW.json",
+        "docs/verification/t1252/spec-review-initial.json",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "mcp-server/src/dispatch.ts",
+        "mcp-server/src/cli.ts",
+        "mcp-server/src/server.ts",
+        "mcp-server/package.json",
+        "pnpm-lock.yaml",
+        "tools/timeout-policy/check.mjs",
+        "mcp-server/tests/dispatch.test.ts",
+        "mcp-server/tests/cli.test.ts",
+        "mcp-server/tests/group-mcp-context.test.ts",
+        "mcp-server/tests/server-discovery.test.ts",
+        "mcp-server/tests/group-context.test.ts",
+        "mcp-server/tests/cli-artifacts.test.ts",
+        "frontend/src/server/workbench-file-recovery.test.ts",
+        "frontend/src/server/workbench-public.integration.test.ts",
+        "tools/timeout-policy/check.test.mjs",
+        "docs/verification/t1252/**",
+        "docs/features/t1252-cli-http-consumer-budget-closure*",
+        "orchestrator/context/T-1252.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "isolated_from": [
+        "T1250/frontend types与T1253 shared dist在途窗口；未释放前只私有候选/docs",
+        "原首轮全部源码/断言/证据与用户DB/HOME/CODEX_HOME/auth/未授权App",
+        "其他Undici版本/global fetch/global dispatcher/原业务期限与unknown恢复许可"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原6个MCP测试与scanner原回归/proper mcp-server tsc；Node25包creatoros.cjs真实bundle闭包",
+          "真实headers/body各>300秒RED与GREEN，owned工具独评后串行完整外层/close回执；同原HTTP/Rust journal及真实render累计>300完整公开链",
+          "node tools/timeout-policy/verify.mjs；boundary/orphan及reconcile保真实非零，不用helper代签"
+        ]
+      },
+      "scope_note": "SPEC f3b2413独评+root合同准入，integration REV fc42b1d42391 / canonical5ceaed23e00c；唯一6产品和9原tests，当前implementation pending，不修改T1026旧write_set。source/lock freeze窗口只读；真实300秒RED缺失不得补历史。原T1250 public body:undefined已授权真实476c4a差异保。",
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "id": "T-1254",
+      "task_id": "T-1254",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+        "docs/verification/t1254/DOOCS_CONTRACT_INVENTORY.json",
+        "docs/verification/t1254/BUILD_INPUT_COMPARISON.json",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "reference-editors/doocs-md/native/native-source.tar.gz",
+        "reference-editors/doocs-md/native/NATIVE_PATCHES_FROM_T1049.diff",
+        "reference-editors/doocs-md/native/native-delivery.json",
+        "reference-editors/doocs-md/native/SHA256.json",
+        "reference-editors/doocs-md/native/README.md",
+        "reference-editors/doocs-md/native/VERIFY.md",
+        "frontend/public/reference-editors/sources/doocs-md/native-source.tar.gz",
+        "frontend/public/reference-editors/sources/doocs-md/native-patches.diff",
+        "frontend/public/reference-editors/sources/doocs-md/request-budget-static-source.tar.gz",
+        "frontend/public/reference-editors/sources/doocs-md/request-budget-static-patches.diff",
+        "frontend/public/reference-editors/doocs-md/native/**",
+        "frontend/public/reference-editors/doocs-md/static/**",
+        "frontend/public/reference-editors/doocs-md/index.html",
+        "reference-editors/manifest.json",
+        "frontend/scripts/verify-native-editors.mjs",
+        "frontend/scripts/verify-doocs-static.mjs",
+        "frontend/scripts/build-doocs-request-budget.mjs",
+        "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+        "docs/features/t1254-doocs-request-budget-and-source-closure.review.md",
+        "docs/features/t1254-doocs-request-budget-and-source-closure.review.history.json",
+        "docs/verification/t1254/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1254.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "不可变a7原archive、原22/2失败和T1053/T1062历史build附件",
+        "root favicon/assets/notice与原bridge、其它三编辑器、CSP权限/外网平台/App",
+        "sharedworker/dist在途读写、真实用户库/.env/HOME/CODEX_HOME或依赖冒用"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "两对应源真实锁安装/完整构建；shared fetch原完整测试及新增边界/真实owned31s和120s+更长loopback；工具全源码/实际安装实现/完整生命周期独评",
+          "精确DELIVERY_EXACT_FILE_MANIFEST逐新增删除hash双审再copy，native原来源/manifest和static新增完整图验证故障负路；原编辑器Playwright留PNG/trace",
+          "完整timeout verify原8组、boundary/orphan、pmem sync与reconcile；保全局真实非零与App未验"
+        ]
+      },
+      "blocked_reason": null,
+      "commits": {}
+    },
+    {
+      "task_id": "T-1256",
+      "archetype": [
+        "orchestration"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1256-doocs-static-unused-bindings-build-closure.md",
+        "docs/verification/t1254/V13_ACTUAL_STATIC_ORIGINAL_TYPECHECK_FAILURE.json",
+        "docs/verification/t1254/candidates/static-unused-bindings-readonly-v1/**",
+        "docs/features/t1254-doocs-request-budget-and-source-closure.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md"
+      ],
+      "write_set": [
+        "docs/features/t1256-doocs-static-unused-bindings-build-closure.md",
+        "docs/features/t1256-doocs-static-unused-bindings-build-closure.review.md",
+        "docs/verification/t1256/**",
+        "docs/verification/t1254/**",
+        "frontend/public/reference-editors/sources/doocs-md/request-budget-static-source.tar.gz",
+        "frontend/public/reference-editors/sources/doocs-md/request-budget-static-patches.diff",
+        "frontend/public/reference-editors/doocs-md/static/**",
+        "frontend/public/reference-editors/doocs-md/index.html",
+        "reference-editors/manifest.json",
+        "BACKLOG.md",
+        "orchestrator/context/T-1256.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "native原源、a7不可变归档/55ab旧patch、其它编辑器、tsconfig/原build/typecheck策略、template/style/CSP/bridge与原FAIL",
+        "真实用户库/HOME/CODEX_HOME/App系统权限与共享worker/dist在途读写"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "精确三无用声明删除双审、原static完整build与vue-tsc实际0、template/style字节同、原剩9闭合与新对应源/patch真实检查",
+          "T1254精确交付列表ROOT和独审；完整原timeout/boundary/orphan与pmem/reconcile；不代签App或全T1246"
+        ]
+      },
+      "id": "T-1256",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1269",
+      "archetype": [
+        "frontend-interaction"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1269-managed-video-failure-diagnostic.md",
+        "docs/features/t1269-managed-video-failure-diagnostic.review.md",
+        "docs/verification/t1269/**",
+        "docs/verification/t1261/db4669-incremental/original170-failure-triage.json",
+        "frontend/src/features/production/production-workbench.tsx",
+        "frontend/src/features/production/production-resource-operations.ts",
+        "frontend/src/features/production/use-video-decision-task.ts",
+        "frontend/src/components/ai/task-runtime-actions.tsx",
+        "ai-worker/src/runtime/error-diagnostics.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "frontend/src/features/production/production-workbench.tsx",
+        "frontend/src/features/production/production-resource-operations.ts",
+        "frontend/src/features/production/use-video-decision-task.ts",
+        "frontend/src/features/production/production-workbench.test.tsx",
+        "frontend/src/features/production/use-video-decision-task.public.test.tsx",
+        "frontend/tests/e2e/ai-reliability-recovery.spec.ts",
+        "docs/verification/t1269/**",
+        "docs/features/t1269-managed-video-failure-diagnostic.md",
+        "docs/features/t1269-managed-video-failure-diagnostic.review.md",
+        "BACKLOG.md",
+        "orchestrator/context/T-1269.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "在途2627正常源码冻结；main和R写入仅Root在真实闭合后整合",
+        "backend/service/contract/SDK/真实用户task/DB/模型/授权与App；旧rawFAIL均保"
+      ],
+      "exclusive_resources": [
+        "T-1269-private-source-and-closed-test-runtime"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "真实公共组件RED与同例GREEN、原legacy全例、mapped失败/空字段/脱敏/原ID/晚到切组/卸载/原execution retry",
+          "正常相关frontend类型/production/LED047/timeout；真实公共原14同task/execution/deadline与宽窄截图；父任务新包与完整分母另验"
+        ]
+      },
+      "id": "T-1269",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1261",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1261-runtime-acceptance-defect-closure.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "ai-worker/src/execution/codex-native-turn.ts",
+        "ai-worker/src/execution/codex-agentic-worker-run.ts",
+        "ai-worker/src/execution/codex-acp-worker-run.ts",
+        "ai-worker/src/execution/codex-status-entry.ts",
+        "backend/src/modules/intelligence/intelligence.transport.ts",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/copilot-attachment-picker.tsx",
+        "frontend/src/features/article/doocs-article-editor.tsx",
+        "frontend/src/features/article/article-workbench.tsx",
+        "ai-worker/src/execution/codex-native-turn.test.ts",
+        "backend/src/modules/ai-runtime/local-codex-status-handoff.public.test.ts",
+        "backend/src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts",
+        "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+        "frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts",
+        "frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts",
+        "docs/features/t1261-runtime-acceptance-defect-closure.md",
+        "docs/features/t1261-runtime-acceptance-defect-closure.review.md",
+        "docs/features/t1261-runtime-acceptance-defect-closure.review.history.json",
+        "docs/verification/t1246/round-3/**",
+        "BACKLOG.md",
+        "orchestrator/progress.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1261.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx"
+      ],
+      "isolated_from": [
+        "用户App/DB/auth/媒体与系统AutomationMode",
+        "原round1/round2失败/receipt/driver字节",
+        "canonical其他会话代码和T1258日志任务"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm -C ai-worker exec vitest run src/execution/codex-native-turn.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000 --no-file-parallelism",
+          "pnpm -C frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000 --no-file-parallelism",
+          "pnpm -C backend exec vitest run src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000 --no-file-parallelism",
+          "pnpm -C backend exec vitest run src/modules/ai-runtime/local-codex-status-handoff.public.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000 --teardownTimeout=120000 --no-file-parallelism",
+          "pnpm -C frontend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "新干净源码实际开发打包并核验；子Agent完整170/103/7/1及Doocs2留图和同ID账本，App未验"
+        ]
+      },
+      "id": "T-1261",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1263",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1263-protocol-fixture-owned-temp-root.md",
+        "docs/features/t1263-protocol-fixture-owned-temp-root.review.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/verification/t1263/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "docs/verification/t1246/round-3/new-v3/source/fixtures/codex-protocol.cjs",
+        "docs/features/t1263-protocol-fixture-owned-temp-root.md",
+        "docs/features/t1263-protocol-fixture-owned-temp-root.review.md",
+        "docs/verification/t1263/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1263.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "已有所有raw红/未验与已绑定审核历史；不得重做原T1246周期",
+        "真实用户DB/task/HOME/CODEX_HOME/SDK/App授权与其他会话写集",
+        "所有shared源码应用仅Root在真实在途闭合后执行"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原19归属fixture+4 marker读顺序/反例；新包原七协议公共链独立验收",
+          "pmem sync/reconcile实证，父任务源码冻结新包和完整170/103/7/Pi1/Doocs2；App按用户拒绝未验"
+        ]
+      },
+      "id": "T-1263",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1264",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1264-protocol-ledger-next-closure-order.md",
+        "docs/features/t1264-protocol-ledger-next-closure-order.review.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/verification/t1264/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "docs/verification/t1246/round-3/new-v3/driver/launch.cjs",
+        "docs/features/t1264-protocol-ledger-next-closure-order.md",
+        "docs/features/t1264-protocol-ledger-next-closure-order.review.md",
+        "docs/verification/t1264/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1264.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "已有所有raw红/未验与已绑定审核历史；不得重做原T1246周期",
+        "真实用户DB/task/HOME/CODEX_HOME/SDK/App授权与其他会话写集",
+        "所有shared源码应用仅Root在真实在途闭合后执行"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原验证器与全生命周期正常/unknown/cancel/PGlite回执；新包真实七项及原PG关闭后账本",
+          "pmem sync/reconcile实证，父任务源码冻结新包和完整170/103/7/Pi1/Doocs2；App按用户拒绝未验"
+        ]
+      },
+      "id": "T-1264",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1265",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1265-codex-structured-output-schema-compatibility.md",
+        "docs/features/t1265-codex-structured-output-schema-compatibility.review.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/verification/t1265/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "ai-worker/src/runtime/codex-provider.ts",
+        "ai-worker/src/runtime/codex-provider-json-output.public.test.ts",
+        "docs/features/t1265-codex-structured-output-schema-compatibility.md",
+        "docs/features/t1265-codex-structured-output-schema-compatibility.review.md",
+        "docs/verification/t1265/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1265.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "已有所有raw红/未验与已绑定审核历史；不得重做原T1246周期",
+        "真实用户DB/task/HOME/CODEX_HOME/SDK/App授权与其他会话写集",
+        "所有shared源码应用仅Root在真实在途闭合后执行"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "真实AI SDK/provider/原3业务Zod public19、正常worker类型；新包原103真实官方公共链与旧400保留",
+          "pmem sync/reconcile实证，父任务源码冻结新包和完整170/103/7/Pi1/Doocs2；App按用户拒绝未验"
+        ]
+      },
+      "id": "T-1265",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1266",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1266-asr-menu-preference-layout-race.md",
+        "docs/features/t1266-asr-menu-preference-layout-race.review.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/verification/t1266/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/features/settings/multimodal-model-configuration.tsx",
+        "docs/features/t1266-asr-menu-preference-layout-race.md",
+        "docs/features/t1266-asr-menu-preference-layout-race.review.md",
+        "docs/verification/t1266/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1266.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "已有所有raw红/未验与已绑定审核历史；不得重做原T1246周期",
+        "真实用户DB/task/HOME/CODEX_HOME/SDK/App授权与其他会话写集",
+        "所有shared源码应用仅Root在真实在途闭合后执行"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原同六实际浏览器RED/GREEN、1280/390图片及键盘/保存/偏好真值；正常frontend/LED047/timeout及父完整新包",
+          "pmem sync/reconcile实证，父任务源码冻结新包和完整170/103/7/Pi1/Doocs2；App按用户拒绝未验"
+        ]
+      },
+      "id": "T-1266",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1267",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1267-pi-public-fixture-capability-and-http-audit.md",
+        "docs/features/t1267-pi-public-fixture-capability-and-http-audit.review.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/verification/t1267/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "docs/verification/t1246/round-3/new-v3/source/e2e/pi-support.ts",
+        "docs/features/t1267-pi-public-fixture-capability-and-http-audit.md",
+        "docs/features/t1267-pi-public-fixture-capability-and-http-audit.review.md",
+        "docs/verification/t1267/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1267.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "已有所有raw红/未验与已绑定审核历史；不得重做原T1246周期",
+        "真实用户DB/task/HOME/CODEX_HOME/SDK/App授权与其他会话写集",
+        "所有shared源码应用仅Root在真实在途闭合后执行"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "当前13实际HTTP受控族；原Pi1同case公共RED/GREEN及HTTP最终审计/关闭/同ID账本，新包复验",
+          "pmem sync/reconcile实证，父任务源码冻结新包和完整170/103/7/Pi1/Doocs2；App按用户拒绝未验"
+        ]
+      },
+      "id": "T-1267",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1268",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1268-integrated-contract-inventory-and-manual-save-test.md",
+        "docs/features/t1268-integrated-contract-inventory-and-manual-save-test.review.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/verification/t1268/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "contract/tests/endpoint-bootstrap.test.mjs",
+        "contract/tests/registry.test.ts",
+        "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+        "docs/features/t1268-integrated-contract-inventory-and-manual-save-test.md",
+        "docs/features/t1268-integrated-contract-inventory-and-manual-save-test.review.md",
+        "docs/verification/t1268/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1268.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "已有所有raw红/未验与已绑定审核历史；不得重做原T1246周期",
+        "真实用户DB/task/HOME/CODEX_HOME/SDK/App授权与其他会话写集",
+        "所有shared源码应用仅Root在真实在途闭合后执行"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "当前正常115契约+7既有日志/授权契约与frontend原tsconfig noEmit，保原43红、原六跳过与全包分母",
+          "pmem sync/reconcile实证，父任务源码冻结新包和完整170/103/7/Pi1/Doocs2；App按用户拒绝未验"
+        ]
+      },
+      "id": "T-1268",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1270",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1270-current-observability-migration-test-inventory.md",
+        "docs/features/t1270-current-observability-migration-test-inventory.review.md",
+        "backend/drizzle/meta/_journal.json",
+        "backend/drizzle/0134_client_observability.sql",
+        "docs/verification/t1270/**",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/src/legacy-source-migration.test.ts",
+        "backend/src/legacy-scheduled-job-migration.test.ts",
+        "docs/features/t1270-current-observability-migration-test-inventory.md",
+        "docs/features/t1270-current-observability-migration-test-inventory.review.md",
+        "docs/verification/t1270/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1270.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "当前2627原正常body source epoch封存之前禁止apply",
+        "生产/SQL/journal/他人0134与无0134打包树不改",
+        "六AAC素材前置失败不洗绿；App和旧六媒体未验保留"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "当前原48正常owned PG/PGlite回归retry0、固定新尾hash/when与旧前缀/双启/归属/SQL断言全保；原3FAIL/6AAC原证据保持",
+          "backend原tsconfig noEmit、pmem sync/reconcile实际、父全量新包另绑定108/109真库存"
+        ]
+      },
+      "id": "T-1270",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1271",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1271-codex-ephemeral-sessions.md",
+        "docs/features/t1271-codex-ephemeral-sessions.review.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "ai-worker/src/execution/codex-native-turn.ts",
+        "ai-worker/src/execution/codex-acp-worker-run.ts",
+        "ai-worker/src/runtime/codex-provider.ts"
+      ],
+      "write_set": [
+        "ai-worker/src/execution/codex-app-server.ts",
+        "ai-worker/vendor/codex-acp/src/CodexAcpClient.ts",
+        "ai-worker/src/execution/codex-app-server.test.ts",
+        "ai-worker/src/execution/codex-native-turn.test.ts",
+        "ai-worker/src/execution/codex-acp-policy.test.ts",
+        "ai-worker/src/execution/codex-acp-worker-run.test.ts",
+        "docs/features/t1271-codex-ephemeral-sessions.md",
+        "docs/features/t1271-codex-ephemeral-sessions.review.md",
+        "docs/verification/t1271/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1271.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "真实个人Codex登录与历史不读取/删除，不改HOME/CODEX_HOME或已安装App",
+        "T1261/T1265等共享增量按实际SHA保留，仅Root窄增量写源"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir ai-worker exec vitest run src/execution/codex-app-server.test.ts src/execution/codex-native-turn.test.ts src/execution/codex-acp-policy.test.ts src/execution/codex-acp-worker-run.test.ts",
+          "node docs/verification/t1271/native-probe/probe.mjs",
+          "pnpm --dir ai-worker build",
+          "pnpm --dir ai-worker typecheck",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      },
+      "id": "T-1271",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1272",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1272-current-observability-frontend-test-fixtures.md",
+        "docs/features/t1272-current-observability-frontend-test-fixtures.review.md",
+        "docs/verification/t1272/**",
+        "frontend/src/features/settings/encrypted-log-reporting-card.tsx",
+        "contract/src/observability.ts",
+        "backend/drizzle/meta/_journal.json",
+        "backend/drizzle/0134_client_observability.sql",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "write_set": [
+        "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "docs/features/t1272-current-observability-frontend-test-fixtures.md",
+        "docs/features/t1272-current-observability-frontend-test-fixtures.review.md",
+        "docs/verification/t1272/**",
+        "BACKLOG.md",
+        "orchestrator/context/T-1272.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "isolated_from": [
+        "foreign T1271 ephemeral现存ID/审核/写集保留",
+        "R108/425无观测，不复制109测试期望",
+        "不改生产/error policy/SQL/user DB/模型/SDK/App与未知fetch根因"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "原6FAIL保；private canonicalID映射完整85/独占PG/PGlite/真实fixture Worker、旧前缀与回执/重放/模型scope全部断言及完整预算、retry0/closed/sourceSame",
+          "Root精确应用后正常原85+frontend tsconfig noEmit、pmem/reconcile/taskctl真实；父新包和全E2E独立未验"
+        ]
+      },
+      "id": "T-1272",
+      "blocked_reason": null
+    },
+    {
+      "id": "T-1274",
+      "task_id": "T-1274",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/src/modules/production/production-script-markdown.ts",
+        "backend/src/modules/production/production-script-markdown.test.ts",
+        "backend/src/modules/production/chatcut-script-core/**",
+        "backend/src/modules/ai-runtime/work-editor-candidate.ts",
+        "backend/src/modules/ai-runtime/work-editor-candidate.test.ts",
+        "backend/src/modules/ai-runtime/chat-tools.ts",
+        "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+        "backend/src/modules/ai-runtime/chat-work-editor-tool-host.ts",
+        "backend/src/modules/ai-runtime/chat-work-editor-tool-host.test.ts",
+        "contract/src/resources/work-editor.ts",
+        "contract/src/resources/work-editor.test.ts",
+        "contract/src/resources/production-script-markdown.ts",
+        "contract/src/index.ts",
+        "ai-worker/src/prompt/templates/chatbox-turn.ts",
+        "ai-worker/src/prompt/director-methods.test.ts",
+        "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+        "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+        "frontend/src/features/reference-editors/native-editor-contract.ts",
+        "frontend/src/features/reference-editors/native-editor-surface.tsx",
+        "frontend/src/features/reference-editors/native-editor-surface.test.tsx",
+        "frontend/src/features/production/production-script-markdown-panel.tsx",
+        "frontend/src/features/production/production-script-markdown-panel.test.tsx",
+        "frontend/src/features/production/production-editor-entry.tsx",
+        "frontend/src/features/production/production-editor-entry.test.tsx",
+        "frontend/src/features/copilot/chat-work-editor-card.tsx",
+        "reference-editors/opencut-classic/native/**",
+        "frontend/public/reference-editors/opencut-classic/native/**",
+        "docs/features/t1274-chatcut-editing-redesign.md",
+        "docs/features/t1274-chatcut-editing-redesign/**",
+        "docs/verification/t1274/**",
+        "frontend/tests/e2e/t1274-editing-workspace.spec.ts",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/context/T-1274.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "contract/src/operations/production.ts",
+        "contract/src/cli-policy.ts",
+        "contract/src/workspace-operation-scope.ts",
+        "contract/src/resources/production-native-document.ts",
+        "contract/tests/production-script-markdown.test.ts",
+        "contract/tests/production-native-script-protection.test.ts",
+        "backend/src/modules/production/production.service.ts",
+        "backend/src/modules/production/production.transport.ts",
+        "backend/src/modules/production/production-script.public.test.ts",
+        "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+        "backend/src/modules/ai-runtime/work-editor-markdown-frozen.ts",
+        "backend/src/modules/ai-runtime/work-editor-markdown-frozen.test.ts",
+        "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+        "frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+        "frontend/src/features/draft-workbench/stage-chat-dock.tsx",
+        "frontend/src/features/draft-workbench/stage-chat-dock.test.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx",
+        "frontend/src/features/production/production-script-transcript.tsx",
+        "frontend/src/features/production/production-script-transcript.test.tsx",
+        "backend/src/modules/ai-runtime/chat-host-tool-adapter.ts",
+        "frontend/tests/e2e/t1274-aac-baseline.spec.ts",
+        "contract/tests/work-editor.test.ts",
+        "orchestrator/ID_REGISTRY.md",
+        "orchestrator/TRACEABILITY_MATRIX.md",
+        "frontend/src/components/navigation/project-stage-stepper.tsx",
+        "frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx",
+        "frontend/tests/e2e/t1274-speech-workspace.spec.ts"
+      ],
+      "read_set": [
+        "docs/features/t1274-chatcut-editing-redesign.md",
+        "docs/features/t1274-chatcut-editing-redesign.review.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/resources/production-native-document.ts",
+        "contract/src/resources/production-main-track.ts",
+        "frontend/src/features/draft-workbench/draft-chat-request.tsx"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1276",
+      "task_id": "T-1276",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {},
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/__module_integration__/production-source-group.persistence-client.test.ts",
+        "docs/features/t1276-production-source-transaction-runtime.md",
+        "docs/features/t1276-production-source-transaction-runtime.review.md",
+        "docs/verification/t1276/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1276.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "read_set": [
+        "docs/features/t1276-production-source-transaction-runtime.md",
+        "docs/features/t1276-production-source-transaction-runtime.review.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/production/production-sources.ts",
+        "backend/src/application/generation/transactional-task-runtime.ts",
+        "backend/src/modules/ai/ai.service.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {}
+    },
+    {
+      "id": "T-1279",
+      "task_id": "T-1279",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {},
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1278-unified-license-capability-routing.md",
+        "docs/features/t1058-composable-agent-model-research.md",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/server/activation/client-config.server.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "contract/src/resources/settings.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "docs/features/t1278-unified-license-capability-routing.md",
+        "docs/features/t1278-unified-license-capability-routing.review.md",
+        "docs/verification/t1278/**",
+        "BACKLOG.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1278.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "exclusive_resources": [],
+      "step_depends_on": {},
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {}
+    },
+    {
+      "id": "T-1280",
+      "task_id": "T-1280",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {},
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src/server/persistence-client.ts",
+        "docs/features/t1280-legacy-render-frozen-engine-authority.md",
+        "docs/features/t1280-legacy-render-frozen-engine-authority.review.md",
+        "docs/verification/t1280/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1280.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "frontend/src/server/task-model-authority.ts",
+        "frontend/src/server/task-model-authority.test.ts"
+      ],
+      "read_set": [
+        "docs/features/t1280-legacy-render-frozen-engine-authority.md",
+        "docs/features/t1280-legacy-render-frozen-engine-authority.review.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/internal/execution-engine.ts",
+        "backend/src/modules/production/production.service.ts",
+        "backend/src/modules/execution/execution.service.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {}
+    },
+    {
+      "id": "T-1281",
+      "task_id": "T-1281",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {},
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/src/modules/production/production.service.ts",
+        "backend/src/modules/production/production-v1-compile.ts",
+        "backend/src/modules/production/production-v1-compile.test.ts",
+        "backend/src/modules/production/production-editor.integration.test.ts",
+        "docs/features/t1281-legacy-v1-plain-source-render.md",
+        "docs/features/t1281-legacy-v1-plain-source-render.review.md",
+        "docs/verification/t1281/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1281.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "backend/src/modules/production/production-preview.ts"
+      ],
+      "read_set": [
+        "docs/features/t1281-legacy-v1-plain-source-render.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/execution/video-render/template.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {}
+    },
+    {
+      "id": "T-1282",
+      "task_id": "T-1282",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {},
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "reference-editors/opencut-classic/native/**",
+        "frontend/public/reference-editors/opencut-classic/native/**",
+        "docs/features/t1282-native-scene-effect-wasm-protocol.md",
+        "docs/features/t1282-native-scene-effect-wasm-protocol.review.md",
+        "docs/verification/t1282/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1282.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "read_set": [
+        "docs/features/t1282-native-scene-effect-wasm-protocol.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1274/native-effect-protocol/RESULT.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {}
+    },
+    {
+      "id": "T-1284",
+      "task_id": "T-1284",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "commits": {},
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/src/modules/execution/video-render/executor.ts",
+        "backend/src/modules/execution/video-render/executor.test.ts",
+        "backend/src/modules/production/production-rough-render.real.test.ts",
+        "docs/features/t1284-legacy-v1-render-source-audio.md",
+        "docs/features/t1284-legacy-v1-render-source-audio.review.md",
+        "docs/verification/t1284/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1284.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "read_set": [
+        "docs/features/t1284-legacy-v1-render-source-audio.md",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/execution/video-render/template.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {}
+    },
+    {
+      "task_id": "T-1286",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "in_progress"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1286-model-routing-frontend-fixtures.md",
+        "docs/verification/t1278/frontend-fixture-candidate/**",
+        "frontend/src/features/copilot/assistant-engine.ts",
+        "frontend/src/features/copilot/use-assistant-engine.ts",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/live-chat-session.ts",
+        "backend/drizzle/**"
+      ],
+      "write_set": [
+        "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "docs/features/t1286-model-routing-frontend-fixtures.md",
+        "docs/features/t1286-model-routing-frontend-fixtures.T-1286.review.md",
+        "docs/verification/t1278/frontend-fixture-candidate/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1286.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/ARTIFACT_MANIFEST.yaml"
+      ],
+      "isolated_from": [
+        "T1278生产写集只由Root接入；本任务仅三原测试",
+        "Main与W迁移库存不可互冒；真实模型/用户库/资金/Activity零调用",
+        "范围外intelligence旧1FAIL及T1278真实legacy write缺口保持"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/server/legacy-frozen-source-read.integration.test.ts src/features/copilot/ai-copilot-interactions.test.tsx src/server/ai-runtime/live-chat-session.consumer.test.tsx --retry 0",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "pnpm --dir frontend test"
+        ]
+      },
+      "id": "T-1286",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1288",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1288-integrated-editing-contract-inventory.md",
+        "docs/verification/t1288/**",
+        "contract/src/**",
+        "docs/features/t1274-chatcut-editing-redesign.md",
+        "SERVICE_CONTRACT.md"
+      ],
+      "write_set": [
+        "contract/tests/endpoint-bootstrap.test.mjs",
+        "contract/tests/registry.test.ts",
+        "docs/features/t1288-integrated-editing-contract-inventory.md",
+        "docs/features/t1288-integrated-editing-contract-inventory.T-1288.review.md",
+        "docs/verification/t1288/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1288.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/ARTIFACT_MANIFEST.yaml"
+      ],
+      "isolated_from": [
+        "测试库存修正；生产/SPEC安全契约不改",
+        "Root串行接入R，Main与W原字节保留；不调用用户库/资金/模型/Activity"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir contract exec vitest run --retry=0 --maxWorkers=1 --testTimeout=180000 --hookTimeout=180000",
+          "pnpm --dir contract typecheck"
+        ]
+      },
+      "id": "T-1288",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1290",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1290-merge-all-worktrees-local-package-cleanup.md",
+        "docs/features/t1278-unified-license-capability-routing.md",
+        "docs/features/t1289-native-build-graph-virtual-module.md",
+        "docs/verification/t1290/**",
+        ".agents/skills/packaging-creatoros-release/SKILL.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/**",
+        "contract/**",
+        "ai-worker/**",
+        "frontend/**",
+        "mcp-server/**",
+        "tools/**",
+        "reference-editors/**",
+        "docs/features/**",
+        "docs/research/**",
+        "docs/verification/t1290/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/**"
+      ],
+      "isolated_from": [
+        "用户库/激活/秘密/Activity不写，不push/部署/发布",
+        "Root唯一正式writer；worktree原dirty/hash先保存，其他Agent只候选/只读库存",
+        "本地包冻结前提交；交付后才清在用核验过的可再生空间"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git worktree list --porcelain",
+          "git status --porcelain=v1",
+          "git diff --check",
+          "pnpm -C frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs --retry=0",
+          "pnpm -C frontend desktop:package-local"
+        ]
+      },
+      "id": "T-1290",
+      "blocked_reason": null
     }
   ],
   "leases": {

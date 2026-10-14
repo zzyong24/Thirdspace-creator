@@ -236,6 +236,8 @@ describe("guardedLaunch 超时/失败诚实", () => {
     const failure = expect(
       guardedLaunch(profile, () => pending, { timeoutMs: 20, label: "测试窗口" }, fake.deps),
     ).rejects.toThrow(BrowserLaunchError);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(DEFAULT_LAUNCH_TIMEOUT_MS).toBeGreaterThanOrEqual(370000);
     await vi.advanceTimersByTimeAsync(DEFAULT_LAUNCH_TIMEOUT_MS);
     await failure;
     resolveLate(late); // 底层 launch 迟到成功
@@ -255,6 +257,7 @@ describe("guardedLaunch 超时/失败诚实", () => {
         fake.deps,
       ),
     ).rejects.toThrow(/启动超时.*请重试/);
+    await vi.advanceTimersByTimeAsync(0);
     await vi.advanceTimersByTimeAsync(DEFAULT_LAUNCH_TIMEOUT_MS);
     await failure;
   }, 120_000);

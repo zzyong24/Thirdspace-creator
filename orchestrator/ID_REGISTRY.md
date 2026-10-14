@@ -848,3 +848,23 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 ## T-1003 多步 Agent（PLANNED）
 
 FR-AW-01 至 FR-AW-08、AC-AW-01 至 AC-AW-09 的唯一正文见 [SPEC](../docs/features/t1003-agent-workbench.md)。用户已确认目标与迁移方向；实现和验收尚未发生。
+
+## T1274 / T1276 当轮实现追溯（验收待闭合）
+
+| ID | Type | Defined In | Traces To |
+|---|---|---|---|
+| FR-1274-01 | requirement | docs/features/t1274-chatcut-editing-redesign.md | PAGE-1274-WORKSPACE, API-1274-SCRIPT, TEST-1274-PUBLIC |
+| FR-1274-02 | requirement | docs/features/t1274-chatcut-editing-redesign.md | PAGE-1274-WORKSPACE, TEST-1274-JOURNEY |
+| FR-1274-03 | requirement | docs/features/t1274-chatcut-editing-redesign.md | PAGE-1274-WORKSPACE, TEST-1274-JOURNEY |
+| FR-1274-04 | requirement | docs/features/t1274-chatcut-editing-redesign.md | API-1274-SCRIPT, TEST-1274-PROTECTION |
+| PAGE-1274-WORKSPACE | page | frontend/src/features/reference-editors/video-reference-workbench.tsx | FR-1274-01, FR-1274-02, FR-1274-03 |
+| API-1274-SCRIPT | api | contract/src/operations/production.ts | FR-1274-01 |
+| TEST-1274-PUBLIC | test | backend/src/modules/production/production-script.public.test.ts | FR-1274-01 |
+| TEST-1274-PROTECTION | test | contract/tests/production-native-script-protection.test.ts | FR-1274-04 |
+| TEST-1274-JOURNEY | test | frontend/tests/e2e/t1274-editing-workspace.spec.ts | FR-1274-01, FR-1274-02, FR-1274-03 |
+| FR-1276-01 | requirement | docs/features/t1276-production-source-transaction-runtime.md | API-1276-ORIGINAL-SOURCE, TEST-1276-GROUP-SOURCE |
+| FR-1276-02 | requirement | docs/features/t1276-production-source-transaction-runtime.md | API-1276-ORIGINAL-SOURCE, TEST-1276-GROUP-SOURCE |
+| API-1276-ORIGINAL-SOURCE | api | frontend/src/server/persistence-client.ts | FR-1276-01, FR-1276-02 |
+| TEST-1276-GROUP-SOURCE | test | frontend/src/server/__module_integration__/production-source-group.persistence-client.test.ts | FR-1276-01, FR-1276-02 |
+
+测试路径存在不等于测试PASS，当前实测/失败与缺口见各任务RESULT。

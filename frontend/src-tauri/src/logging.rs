@@ -27,8 +27,8 @@
 //! **全降级为不写日志**(宁缺毋滥,绝不悄悄明文,不破坏机密性承诺)。
 
 use std::fs::{self, File, OpenOptions};
-use std::io::{BufWriter, Write};
-use std::path::Path;
+use std::io::{BufWriter, Read, Write};
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -268,12 +268,38 @@ impl EncState {
 #[derive(Clone)]
 pub struct SidecarLogger {
     inner: Arc<Mutex<EncState>>,
+    metadata_root: Option<Arc<PathBuf>>,
+    session_id: String,
 }
 
 impl SidecarLogger {
+    pub fn session_id(&self) -> &str {
+        &self.session_id
+    }
+
     /// 写一行:脱敏 → 加一帧密文。channel 形如 `sidecar`(stdout)/ `sidecar:err`(stderr)/ `shell`。
     /// **脱敏在加密前**(顺序不动):`redact_log_line` 遮掉永不该存在的机密,加密再护住正文。
     /// 锁中毒或写失败一律吞掉(日志 best-effort,绝不因落盘失败拖垮主流程)。
+    /// 原封包内保存有界宿主现场；本机仍只有原开发者公钥。
+    pub fn capture_exception(&self, code: &str, message: &str) {
+        let mut random = [0u8; 32];
+        OsRng.fill_bytes(&mut random);
+        let event_id = random
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>();
+        let context = serde_json::json!({"eventId": event_id, "module": "host", "code": code,
+            "occurredAt": format_rfc3339_utc_now(), "message": message.chars().take(8192).collect::<String>()});
+        self.log("host:exception", &context.to_string());
+        if let Some(root) = &self.metadata_root {
+            let metadata = serde_json::json!({"eventId":context["eventId"],"code":code,
+                "occurredAt":context["occurredAt"],"logSessionId":self.session_id});
+            if let Ok(_serial) = self.inner.lock() {
+                let _ = append_exception_metadata(root, &metadata);
+            }
+        }
+    }
+
     pub fn log(&self, channel: &str, line: &str) {
         // 注意:帧内不含结尾 `\n`(每帧即一行);解密器逐帧输出时补 `\n`。
         let stamped = format!(
@@ -286,6 +312,98 @@ impl SidecarLogger {
             let _ = st.write_frame(stamped.as_bytes());
         }
     }
+}
+
+/// 只加密保存panic现场，继续原panic hook与退出策略。
+pub fn install_exception_panic_hook(logger: SidecarLogger) {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        logger.capture_exception("HOST_PANIC", &info.to_string());
+        previous(info);
+    }));
+}
+
+/// 固定白名单元数据，正文始终在CRLOG；损坏尾行不进入下一次补读。
+fn append_exception_metadata(root: &Path, event: &serde_json::Value) -> std::io::Result<()> {
+    if fs::symlink_metadata(root)?.file_type().is_symlink() {
+        return Err(std::io::Error::other("异常元数据根不接受软链接"));
+    }
+    let target = root.join("host-exceptions.jsonl");
+    let appended = format!("{}\n", event);
+    if fs::symlink_metadata(&target)
+        .map(|m| m.file_type().is_symlink())
+        .unwrap_or(false)
+    {
+        return Err(std::io::Error::other("异常元数据不接受软链接"));
+    }
+    let mut options = OpenOptions::new();
+    options.create(true).read(true).append(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600).custom_flags(libc::O_NOFOLLOW);
+    }
+    let mut file = options.open(&target)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        file.set_permissions(fs::Permissions::from_mode(0o600))?;
+    }
+    // 正常异常数量很小；守护上限1MiB/5000条，超限保留最新元数据。
+    if file.metadata()?.len() > 1024 * 1024 {
+        return Err(std::io::Error::other("异常元数据容量已满"));
+    }
+    let mut raw = String::new();
+    (&mut file).take(1024 * 1024).read_to_string(&mut raw)?;
+    let cutoff = format_rfc3339_utc(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+            .saturating_sub(30 * 86400),
+        0,
+    );
+    let lines = raw
+        .split_inclusive('\n')
+        .filter(|line| line.ends_with('\n'))
+        .filter_map(|line| {
+            let value: serde_json::Value = serde_json::from_str(line).ok()?;
+            if value.get("occurredAt")?.as_str()? < cutoff.as_str() {
+                None
+            } else {
+                Some(line.to_string())
+            }
+        })
+        .collect::<Vec<_>>();
+    if lines.len() >= 5000
+        || lines.len() != raw.lines().count()
+        || raw.len() + appended.len() > 1024 * 1024
+    {
+        let temporary = root.join("host-exceptions.rewrite");
+        let mut rewrite = OpenOptions::new();
+        rewrite.create_new(true).write(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            rewrite.mode(0o600).custom_flags(libc::O_NOFOLLOW);
+        }
+        let mut output = rewrite.open(&temporary)?;
+        let mut skip = lines.len().saturating_sub(4999);
+        let mut size = lines.iter().skip(skip).map(String::len).sum::<usize>() + appended.len();
+        while size > 1024 * 1024 && skip < lines.len() {
+            size -= lines[skip].len();
+            skip += 1;
+        }
+        for line in lines.iter().skip(skip) {
+            output.write_all(line.as_bytes())?;
+        }
+        output.write_all(appended.as_bytes())?;
+        output.flush()?;
+        fs::rename(temporary, target)?;
+        return Ok(());
+    }
+    file.write_all(appended.as_bytes())?;
+    file.flush()
 }
 
 /// 用给定收件人开一个加密写入器:生成随机 `session_key` → 写 HEADER → 建 `cipher`。
@@ -478,6 +596,8 @@ pub fn init_sidecar_logger(logs_dir: &Path) -> Option<SidecarLogger> {
     match open_encrypted_writer(file, &recipients) {
         Some(st) => Some(SidecarLogger {
             inner: Arc::new(Mutex::new(st)),
+            metadata_root: Some(Arc::new(logs_dir.to_path_buf())),
+            session_id: fs::read(&current).ok().map(|header|Sha256::digest(header).iter().map(|b|format!("{b:02x}")).collect()).unwrap_or_default(),
         }),
         None => {
             let _ = fs::remove_file(&current);
@@ -1184,6 +1304,7 @@ mod tests {
             let st = open_encrypted_writer(file, &[r]).unwrap();
             let logger = SidecarLogger {
                 inner: Arc::new(Mutex::new(st)),
+                metadata_root: None,session_id:String::new(),
             };
             logger.log(
                 "sidecar",
@@ -1219,6 +1340,7 @@ mod tests {
             let st = open_encrypted_writer(file, &[r]).unwrap();
             let logger = SidecarLogger {
                 inner: Arc::new(Mutex::new(st)),
+                metadata_root: None,session_id:String::new(),
             };
             logger.log(
                 "sidecar:err",

@@ -1,4 +1,4 @@
-import { assetProcessingInputSchema, assetProcessingReadSchema, materialExtractionSchema, workerModelSpecSchema, type structuredGenerationInputSchema, type WorkerPort } from '@creatoros/contract/execution-worker';
+import { assetProcessingInputSchema, assetProcessingReadSchema, materialExtractionSchema, executionModelSpecSchema, type structuredGenerationInputSchema, type WorkerPort } from '@creatoros/contract/execution-worker';
 import type { z } from 'zod';
 import { extractDocumentText, classifyDocMime, truncateForSummary } from '../runtime/document-text';
 import { generateStructuredInWorker } from './structured-worker-generation';
@@ -56,7 +56,7 @@ export async function runAssetProcessingInWorker(input: z.infer<typeof structure
     }
     let model;
     try {
-        model = workerModelSpecSchema.parse(await controlled('resolveModelCredential', { capability: input.capability }));
+        model = executionModelSpecSchema.parse(await controlled('resolveModelCredential', { capability: input.capability }));
     }
     catch (error) {
         if (error instanceof GenerationFailure)

@@ -10,6 +10,12 @@ import { ChatToolUserError } from "./chat-tool-errors";
 
 // 白名单由已审计的调用方提供；副作用分类本身不能证明工具可留在宿主。
 
+/** 内部固定503分类；不携带原始错误、正文、URL或凭据，不进入公开工具DTO。 */
+export class ChatHostKnownReadFailure extends Error {
+  readonly reason = "http_503" as const;
+  constructor() { super("CHAT_HOST_READ_TEMPORARILY_UNAVAILABLE"); }
+}
+
 export type ResolveChatHostTools = (context: RequestContext, execution: ExecutionRef, signal?: AbortSignal) => Promise<ToolSet>;
 const outcome = (status: "error" | "blocked", code: "invalid_input" | "transient" | "no_evidence" | "permission" | "cancelled", retryable: boolean, summary: string) => agenticToolOutcomeSchema.parse({status, summary, evidence: [], error: {code, retryable, recovery: summary}, continuation: null, sideEffect: "none"});
 
@@ -68,7 +74,7 @@ export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: Re
           if (scope.signal.aborted) return failure("error", "cancelled", false, "读取已停止");
           // 仅当前任务冻结的新格式公开已审核输入错误；未知异常和旧任务继续原回执。
           if (options.toolFailureReceiptVersion===1 && error instanceof ChatToolUserError) return failure("error", "invalid_input", false, error.message);
-          const classified = classifyLlmError(error);
+          const classified = error instanceof ChatHostKnownReadFailure ? {retryable:true,reason:error.reason} : classifyLlmError(error);
           if (classified.reason === "auth_401" || classified.reason === "auth_403") return failure("blocked", "permission", false, "当前读取权限不可用");
           return failure("error", classified.retryable ? "transient" : "no_evidence", classified.retryable, "读取未完成，可检查权限与目标状态后继续");
         }

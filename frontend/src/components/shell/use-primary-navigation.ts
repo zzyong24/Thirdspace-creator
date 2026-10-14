@@ -1,11 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import {useSettingsReturn} from "./settings-return-context";
 import { useAccountsChanged } from "@/lib/account-events";
 
 /** 同一目标在途复用；不同目标立即切换。完成 token 防止旧过渡解开新导航的锁。 */
 export function usePrimaryNavigation() {
   const router = useRouter();
+  const settingsReturn=useSettingsReturn();
   const sequence = useRef(0);
   const latest = useRef<{target:string;token:number}|null>(null);
   const [pendingHref,setPendingHref] = useState<string|null>(null);
@@ -32,17 +34,19 @@ export function usePrimaryNavigation() {
     setPendingHref(href);
     startTransition(()=>{
       try {
+        settingsReturn?.capture(href,document.activeElement instanceof HTMLElement?document.activeElement:null,token);
         router.push(href);
         // 与路由在同一次 transition 中提交，即使缓存瞬时命中也会释放。
         setSettledToken(token);
       } catch {
+        settingsReturn?.discard(token);
         if(latest.current?.token===token) {
           clear();
           setError("页面暂时无法打开，请重试。");
         }
       }
     });
-  },[router,clear]);
+  },[router,clear,settingsReturn]);
   // 路由离开由稳定宿主保留原稿；只有实际更换作品或账号组才处理离开决定。
   const navigate=navigateNow;
   return {navigate,pendingHref,error};

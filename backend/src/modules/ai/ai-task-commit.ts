@@ -1,3 +1,5 @@
+import {eq,executionTasks} from '@creatoros/backend';
+import {createExecutionRoute,frozenExecutionEngine} from '@creatoros/contract/execution-worker';
 import {requireWorkspace} from "../../workspace-scope";
 import {z} from "zod";
 import type {RequestContext} from "@creatoros/contract";
@@ -23,13 +25,20 @@ export async function prepareAiTaskCommit(deps:ServiceDeps,ctx:RequestContext,in
  requireWorkspace(context);const accountId=context.accountId??null;
  if(typeof body.attemptId!=="string" || body.attemptId.length<16 || body.attemptId.length>128)throw new AttemptIdInvalidError();
  const inputData=body.inputData??{};
- const reserved=["skillSnapshot","platformPolicy"].filter(key=>Object.prototype.hasOwnProperty.call(inputData,key));
+ const reserved=["skillSnapshot","platformPolicy","executionRoute"].filter(key=>Object.prototype.hasOwnProperty.call(inputData,key));
  if(reserved.length)throw new ReservedInputFieldError(reserved);
  const runtimeData=structuredClone(await deps.resolveTaskRuntimeData?.(structuredClone(context),body.taskType,Object.freeze(structuredClone(inputData)))??{});
+ const piRuntimeData=frozenExecutionEngine(runtimeData)==='pi'?runtimeData:structuredClone(await deps.resolveTaskRuntimeData?.(structuredClone(context),body.taskType,Object.freeze(structuredClone(inputData)),createExecutionRoute('pi','parent'))??{});
  return {async commit(tx,rawBinding){
   const binding=bindingSchema.parse(rawBinding);
   const txDb=tx as unknown as Db;
-  const service=createAiService({...deps,db:txDb,resolveTaskRuntimeData:async()=>({...structuredClone(runtimeData),hostTaskSubmission:binding})});
+  const [parent]=await tx.select().from(executionTasks).where(eq(executionTasks.id,binding.executionTaskId));
+  if(!parent||parent.userId!==context.userId||parent.groupId!==(context.groupId??null)||parent.accountId!==(context.accountId??null))throw new ConflictError('父执行归属不符');
+  const payload=parent.payload as Record<string,unknown>,modelInput=payload.modelInput as Record<string,unknown>|undefined;
+  const inherited=createExecutionRoute(payload.executionRoute?frozenExecutionEngine(payload):modelInput?.executionEngine==='codex'?'codex':'pi','parent');
+  const selected=structuredClone(inherited.engine==='codex'?runtimeData:piRuntimeData);
+  if(inherited.engine==='codex'){delete selected.modelAuthority;delete selected.modelAuthorityDigest;}
+  const service=createAiService({...deps,db:txDb,resolveTaskRuntimeData:async()=>({...selected,executionRoute:inherited,hostTaskSubmission:binding})});
   const task=await service.createTask(context,structuredClone(body));
   const row=await createAiRepository(txDb,{now:deps.now,nextId:deps.nextId,userId:context.userId,accountId,groupId:context.groupId,membershipVersion:context.membershipVersion}).requireTask(task.id);
   // SEMANTIC_BOUNDARY_ALLOW:提交来源精确相等是事务幂等校验，不判断内容语义。

@@ -175,3 +175,28 @@ it('终审预算红测：深度裁剪的宽兄弟也计入发现预算，不能�
  const report=await host.start(identity);expect(report.ui.scannedNodes).toBeLessThanOrEqual(2000);expect(report.ui.coverage?.discoveryVisited).toBeLessThanOrEqual(1000);expect(report.ui.coverage?.limits).toContain('depth_limit');expect(report.ui.coverage?.discoveryComplete).toBe(false);
  expect(report.ui.coverage?.limits.some(reason=>reason==='discovery_limit'||reason==='time_limit'||reason==='node_limit')).toBe(true);
 }));
+
+
+it('T1250 真实控件active超过90秒不触发idle，结束后仍按原idle及life截止',async()=>{
+ const context=await browser.newContext();
+ await context.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<nav><button aria-expanded="false" aria-controls="sub" onclick="this.setAttribute(\'aria-expanded\',\'true\');document.getElementById(\'sub\').hidden=false">expand</button><div id="sub" hidden><a href="/creator-micro/interactive/comment">comments</a></div></nav>'}));
+ let nativeSignal:AbortSignal|undefined,release!:()=>void,entered!:()=>void;
+ const enteredQueue=new Promise<void>(r=>entered=r);let block=false;
+ const host=createCommentDiagnosisHost({open:async(_identity,signal)=>{nativeSignal=signal;return {newPage:()=>context.newPage(),close:()=>context.close()};},acquire:async()=>{if(block){entered();await new Promise<void>(r=>release=r);}},throttled:()=>{},settleMs:1});
+ let pending:Promise<unknown>|undefined;
+ try{
+  const original=await host.start(identity);const input=advance(original,'expand_navigation');
+  const expiresAt=original.expiresAt;block=true;
+  vi.useFakeTimers({toFake:['setTimeout','clearTimeout','Date']});
+  pending=host.step(identity,input);await enteredQueue;
+  await vi.advanceTimersByTimeAsync(95000);
+  expect(nativeSignal?.aborted).toBe(false);
+  release();let completed=false;void pending.then(()=>{completed=true;},()=>{completed=true;});
+  const {setTimeout:realDelay}=await import('node:timers/promises'),completionDeadline=performance.now()+120000;
+  while(!completed&&performance.now()<completionDeadline){await vi.advanceTimersByTimeAsync(1);await realDelay(50);}
+  expect(completed).toBe(true);const report=await pending as CommentDiagnosisReport;
+  expect(report.expiresAt).toBe(expiresAt);expect(report.phase).toBe('navigation');
+  await vi.advanceTimersByTimeAsync(90000);
+  expect(nativeSignal?.aborted).toBe(true);
+ }finally{release?.();vi.useRealTimers();await pending?.catch(()=>{});await host.dispose();}
+},1800000);

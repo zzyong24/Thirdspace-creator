@@ -65,6 +65,8 @@ export interface ArticlesService {
   getArticle(ctx: RequestContext, outputId: string): Promise<ArticleResource>;
   getVersion(ctx: RequestContext, outputId: string, versionId: string): Promise<ArticleWriteResult>;
   saveReceipt(ctx:RequestContext,outputId:string,input:Parameters<ArticlesService["createVersion"]>[2]):Promise<WorkCommitReceipt>;
+  readPreparedCandidateReceipt(ctx:RequestContext,outputId:string,input:{clientRequestId:string;intentDigest:string;aiTaskId:string}):Promise<ArticleWriteResult|null>;
+  createPreparedCandidateVersion(ctx:RequestContext,outputId:string,input:{expectedCurrentVersionId:string;document:ArticleDocument;clientRequestId:string;intentDigest:string;aiTaskId:string}):Promise<ArticleWriteResult>;
   createVersion(ctx: RequestContext, outputId: string, input: {expectedCurrentVersionId: string; document: ArticleDocument; clientRequestId: string}): Promise<ArticleWriteResult>;
   generateCandidate(ctx: RequestContext, outputId: string, clientRequestId: string, brandProfileVersionId?: string,
     sourceAssets?: Array<{assetId: string; assetFileId: string}>,conversion?:OutputConversionContext): Promise<{taskId: string; candidateId: string; status: AITaskStatus}>;
@@ -231,6 +233,21 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
       const receipt=await deps.artifacts(db).getVersionByAdoptionReceipt(ctx,artifact.id,`article-edit:${input.clientRequestId}`,sourceDigest);
       if(!receipt)throw new ArticleOwnership("保存回执不存在");
       return workCommitReceipt.parse({kind:"manual_save",owner:"wechat_article",clientRequestId:input.clientRequestId,requestDigest:receipt.adoptionSourceDigest!.slice(7),committedAt:receipt.createdAt,version:{kind:"artifact",artifactId:artifact.id,versionId:receipt.id}});
+    },
+    async readPreparedCandidateReceipt(ctx,outputId,input){
+      const {artifact}=await anchor(ctx,outputId);
+      const receipt=await deps.artifacts(db).getVersionByAdoptionReceipt(ctx,artifact.id,`article-assisted:${input.clientRequestId}`,input.intentDigest,input.aiTaskId);
+      return receipt?{versionId:receipt.id,document:articleDocument.parse(receipt.contentData)}:null;
+    },
+    async createPreparedCandidateVersion(ctx,outputId,input){
+      if(ctx.source!=='user')throw new Error('只有用户可以采纳候选');
+      const {row,artifact}=await anchor(ctx,outputId);
+      const receipt=await deps.artifacts(db).getVersionByAdoptionReceipt(ctx,artifact.id,`article-assisted:${input.clientRequestId}`,input.intentDigest,input.aiTaskId);
+      if(receipt)return {versionId:receipt.id,document:articleDocument.parse(receipt.contentData)};
+      const document=articleDocument.parse(input.document),prior=await documentFor(ctx,outputId,input.expectedCurrentVersionId);
+      await assertRefs(ctx, document, row.projectId, prior.document);
+      const version=await deps.artifacts(db).createVersion(ctx,artifact.id,{expectedCurrentVersionId:input.expectedCurrentVersionId,contentText:renderArticle(document),contentData:document,changeSummary:'用户采纳编导候选',createdByType:'user',aiTaskId:input.aiTaskId,adoptionKey:`article-assisted:${input.clientRequestId}`,adoptionSourceDigest:input.intentDigest});
+      return {versionId:version.id,document:articleDocument.parse(version.contentData)};
     },
     async createVersion(ctx, outputId, input) {
       const {row, artifact} = await anchor(ctx, outputId);

@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {afterEach,expect,it} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
 import {drizzle} from 'drizzle-orm/pglite';
@@ -7,7 +9,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {createDb,createRuntimeDb,type Db} from './db';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from './test-fixtures/owned-postgres';
 import {randomUUID} from 'node:crypto';
 import {drizzle as drizzlePg} from 'drizzle-orm/node-postgres';
 import {migrate as migratePg} from 'drizzle-orm/node-postgres/migrator';
@@ -136,14 +138,14 @@ it('T1209旧105库补尾，新作业和legacy共享作业沿原公共运行合�
   await Promise.all(c.dispatched);
   expect((await opened.client.query("SELECT membership_version,group_version FROM ai_tasks WHERE id='old-ai'")).rows).toEqual([{membership_version:null,group_version:null}]);
   expect((await opened.client.query("SELECT membership_version,group_version FROM execution_tasks WHERE id='old-execution'")).rows).toEqual([{membership_version:null,group_version:null}]);
-  expect((await opened.client.query<{created_at:number}>('SELECT created_at FROM drizzle.__drizzle_migrations WHERE created_at>=1791043200004 ORDER BY created_at')).rows.map(r=>Number(r.created_at))).toEqual([1791043200004,1791043200005]);
+  expect((await opened.client.query<{created_at:number}>('SELECT created_at FROM drizzle.__drizzle_migrations WHERE created_at>=1791043200004 ORDER BY created_at')).rows.map(r=>Number(r.created_at))).toEqual([1791043200004,1791043200005,1791043200006,1791043200007]);
  }finally{await opened.client.close();}
 });
 
 function gate(){let release!:()=>void;const promise=new Promise<void>(resolve=>{release=resolve;});return {promise,release};}
 async function pgFixture(){
  const url=process.env.CREATOROS_TEST_POSTGRES_URL;if(!url)throw Error('真实并发验收必须显式指定隔离PG');
- const parsed=new URL(url);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('只允许55422隔离PG');
+ const parsed=new URL(url);assertOwnedPostgresUrl(parsed.toString());
  const name='t1209_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url});pgCleanups.push(()=>admin.end());await admin.query(`CREATE DATABASE ${name}`);pgCleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));parsed.pathname='/'+name;
  const pool=new Pool({connectionString:parsed.toString(),application_name:name+'_test'});pgCleanups.push(()=>pool.end());const {staged}=await staged106();await migratePg(drizzlePg(pool),{migrationsFolder:staged});await seedLegacy(pool);
  const db=drizzlePg(pool) as unknown as Db,groups=createAccountGroupService({db,now:()=>time,nextId:p=>p+randomUUID()});

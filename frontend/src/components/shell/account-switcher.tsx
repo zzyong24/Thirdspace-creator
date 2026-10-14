@@ -105,9 +105,9 @@ export function AccountSwitcher({collapsed}:{collapsed:boolean}) {
           }
           setCurrentId(selected.currentId);setState({kind:"ready",groups});
           const scope=readCreationScope();
-          if(selected.shouldPersist||refreshRequired.current){
+          if(selected.shouldPersist||refreshRequired.current||initializationRef.current?.serverMatches(scope)===false){
             refreshInitialScope(scope,version);
-          }else{firstReady.current=true;initializationRef.current?.complete(scope);}
+          }else if(!initializationRef.current||initializationRef.current.complete(scope)){firstReady.current=true;}
         }catch(error){
           if(alive.current&&version===epoch.current){epoch.current++;setState({kind:"error"});initializationRef.current?.fail(error instanceof Error?error.message:"账号组列表暂不可用，请重试。");}
         }finally{clearTimeout(timer);if(controller.current===abort)controller.current=null;}
@@ -131,9 +131,11 @@ export function AccountSwitcher({collapsed}:{collapsed:boolean}) {
     const pending=refreshCompletion.current;
     if(!pending||!alive.current||pending.epoch!==epoch.current)return;
     if(creationScopeKey(pending.scope)!==creationScopeKey(readCreationScope()))return;
+    const currentInitialization=initializationRef.current;
+    if(currentInitialization&&!currentInitialization.complete(pending.scope))return;
     cancelInitialRefresh();refreshRequired.current=false;refreshFailed.current=false;
-    firstReady.current=true;initializationRef.current?.complete(pending.scope);
-  },[refreshPending,state,cancelInitialRefresh]);
+    firstReady.current=true;
+  },[refreshPending,state,initialization,cancelInitialRefresh]);
   React.useEffect(()=>{
     alive.current=true;load();
     const unregister=initializationRef.current?.registerRetry(retry);

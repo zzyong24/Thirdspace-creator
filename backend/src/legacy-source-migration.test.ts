@@ -1,3 +1,5 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {afterEach,expect,it} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
 import {drizzle} from 'drizzle-orm/pglite';
@@ -7,7 +9,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {createHash,randomUUID} from 'node:crypto';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from './test-fixtures/owned-postgres';
 import {drizzle as drizzlePg} from 'drizzle-orm/node-postgres';
 import {migrate as migratePg} from 'drizzle-orm/node-postgres/migrator';
 import {createDb,createRuntimeDb,type Db} from './db';
@@ -65,7 +67,8 @@ it('正常104升级仅修复可证明三来源NULL，所有内容/父归属/历�
   after=await snapshot(opened.client);
   for(const [table,values] of Object.entries(before!))expect(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?omitGroup(after[table]!):after[table]).toEqual(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?omitGroup(values):values);
   const ledger=(await opened.client.query<{hash:string;created_at:number}>('SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id')).rows;
-  expect(ledger.slice(0,oldLedger!.length)).toEqual(oldLedger!);expect(ledger).toHaveLength(oldLedger!.length+3);expect(ledger.at(-1)?.created_at).toBe(1791043200005);
+  expect(ledger.slice(0,oldLedger!.length)).toEqual(oldLedger!);expect(ledger).toHaveLength(oldLedger!.length+5);expect(ledger.slice(oldLedger!.length).map(row=>Number(row.created_at))).toEqual([1791043200003,1791043200004,1791043200005,1791043200006,1791043200007]);expect(ledger.at(-1)?.created_at).toBe(1791043200007);
+   expect(ledger.at(-1)).toEqual({hash:'d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494',created_at:1791043200007});
  }finally{await opened.client.close();}
  const second=await createDb({dataDir});try{expect(await snapshot(second.client)).toEqual(after!);expect((await second.client.query('SELECT * FROM drizzle.__drizzle_migrations WHERE created_at=1791043200003')).rows).toHaveLength(1);}finally{await second.client.close();}
 });
@@ -98,12 +101,16 @@ it.each(['transfer','return-with-history','wrong-artifact-type','wrong-artifact-
  }finally{await opened.client.close();}
 });
 
-it('0130SQL身份及当前107尾精确追加，旧104 journal及历史迁移固定不漂移',{timeout:120000,retry:0},async()=>{
+it('0130SQL身份及当前109尾精确追加，旧104 journal及历史迁移固定不漂移',{timeout:120000,retry:0},async()=>{
  const journal=JSON.parse(await readFile(join(folder,'meta/_journal.json'),'utf8'));
- expect(journal.entries).toHaveLength(107);expect(journal.entries[104]).toEqual({idx:104,version:'7',when:1791043200003,tag:'0130_legacy_source_ownership',breakpoints:true});
+ expect(journal.entries).toHaveLength(109);expect(journal.entries[104]).toEqual({idx:104,version:'7',when:1791043200003,tag:'0130_legacy_source_ownership',breakpoints:true});
  expect(journal.entries[105]).toEqual({idx:105,version:'7',when:1791043200004,tag:'0131_platform_native_reports',breakpoints:true});
  expect(journal.entries[106]).toEqual({idx:106,version:'7',when:1791043200005,tag:'0132_legacy_scheduled_job_membership',breakpoints:true});
+ expect(journal.entries[107]).toEqual({idx:107,version:'7',when:1791043200006,tag:'0133_assistant_execution_engine',breakpoints:true});
+ expect(journal.entries[108]).toEqual({idx:108,version:'7',when:1791043200007,tag:'0134_client_observability',breakpoints:true});
  const digest=(value:string)=>createHash('sha256').update(value).digest('hex');
+ expect(digest(await readFile(join(folder,'0134_client_observability.sql'),'utf8'))).toBe('d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494');
+ expect(digest(await readFile(join(folder,'0133_assistant_execution_engine.sql'),'utf8'))).toBe('0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6');
  expect(digest(await readFile(join(folder,'0128_workspace_convergence.sql'),'utf8'))).toBe('60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713');
  expect(digest(await readFile(join(folder,'0129_workbench_artifact_convergence.sql'),'utf8'))).toBe('e4a8e08ec392d781ba6401d6f6389ec0fcaf4fb18a06aa51945864ce63951113');
 });
@@ -113,7 +120,7 @@ function outcome<T>(promise:Promise<T>){return promise.then(value=>({value,error
 async function pgFixture(){
  const connectionString=process.env.CREATOROS_TEST_POSTGRES_URL;
  if(!connectionString)throw Error('T1089必须显式配置独立PG，不得skip后宣称并发通过');
- const parsed=new URL(connectionString);if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw Error('仅允许独立55422测试服务器');
+ const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.toString());
  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString});
  try{await admin.query(`CREATE DATABASE ${name}`);}catch(error){await admin.end();throw error;}parsed.pathname='/'+name;
  const pool=new Pool({connectionString:parsed.toString()});

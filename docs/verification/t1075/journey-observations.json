@@ -1,23 +1,23 @@
 {
-  "commit_sha": "a030dab73ba94e688bce0928afa3e5c9d47406d1",
+  "commit_sha": "4985fd526f9a8c2b81bf04bf7b38c0d29c12bcd4",
   "witnesses": [
     {
-      "id": "knowledge-3a689b9d-22",
+      "id": "knowledge-a65785f2-1692",
       "role": "primary-knowledge"
     },
     {
-      "id": "knowledge-3a689b9d-62",
+      "id": "knowledge-a65785f2-1734",
       "role": "secondary-knowledge"
     },
     {
-      "id": "knowledge-3a689b9d-1221",
+      "id": "knowledge-a65785f2-2904",
       "role": "primary-knowledge"
     },
     {
-      "id": "knowledge-3a689b9d-1261",
+      "id": "knowledge-a65785f2-2946",
       "role": "secondary-knowledge"
     }
   ],
-  "observed_at": "2026-10-09T16:04:39.246Z",
+  "observed_at": "2026-10-10T17:02:29.921Z",
   "data_mode": "non-fixture"
 }

@@ -38,6 +38,8 @@ import type { ReactNode } from "react";
 // Stub `next/navigation` so the island mounts without a real App Router provider;
 // these structural tests never trigger a write, so a no-op router suffices.
 vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
 }));
 

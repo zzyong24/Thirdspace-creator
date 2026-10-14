@@ -93,7 +93,7 @@ it('原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才
   expect(await f.client.newSession(f.request)).toMatchObject({sessionId:'thread-actual'});
   expect(f.native.configRead).toHaveBeenCalledWith({includeLayers:true,cwd:'/tmp/task'});
   const submitted = f.native.threadStart.mock.calls[0][0];
-  expect(submitted).toMatchObject({approvalPolicy:'on-request',approvalsReviewer:'user',sandbox:'read-only',cwd:'/tmp/task',
+  expect(submitted).toMatchObject({ephemeral:true,approvalPolicy:'on-request',approvalsReviewer:'user',sandbox:'read-only',cwd:'/tmp/task',
     config:{mcp_servers:{personal:{enabled:false},creatoros_task:{url:f.request.mcpServers[0]!.url}}}});
   expect(f.native.listMcpServerStatus).toHaveBeenCalledTimes(2);
   expect(f.native.listMcpServerStatus).toHaveBeenLastCalledWith({threadId:'thread-actual',detail:'toolsAndAuthOnly',limit:100,cursor:'next'});
@@ -174,4 +174,28 @@ it('v2 声明只与原唯一任务 MCP 匹配，argv 不得沿旧布尔值或额
   const old=environment();
   expect(policyApi.readCreatorOsPolicy(old).profile).toBe('creatoros-acp-readonly-v1');
   expect(()=>policyApi.readCreatorOsPolicy({...old,CODEX_CONFIG:env.CODEX_CONFIG})).toThrow('CODEX_CAPABILITY_UNVERIFIED');
+});
+
+it('原官方tokenUsage total透传真实thread/turn，不把上下文used当结算费用，旧无来源仍无扩展',async()=>{
+ const path='../../vendor/codex-acp/src/CreatorOsPolicy';const {creatorOsUsageMeta}=await import(path);
+ expect(creatorOsUsageMeta('thread','turn',{inputTokens:12,outputTokens:4,totalTokens:18,cachedInputTokens:2})).toEqual({creatoros:{codex:{threadId:'thread',turnId:'turn',usage:{inputTokens:12,outputTokens:4,totalTokens:18}}}});
+ for(const tuple of [['thread',null,{inputTokens:12,outputTokens:4,totalTokens:18}],['thread','turn',{used:18,size:200000}],['thread','turn',{inputTokens:12,outputTokens:4,totalTokens:-1}]])expect(creatorOsUsageMeta(...tuple)).toBeUndefined();
+});
+
+it('官方usage事件适配保total累计事实，旧无CreatorOS协议不新增元数据',async()=>{
+ const path='../../vendor/codex-acp/src/CodexEventHandler';const {CodexEventHandler}=await import(path),handler=Object.create(CodexEventHandler.prototype);handler.sessionState={};
+ const params={threadId:'actual-thread',turnId:'actual-turn',tokenUsage:{last:{inputTokens:4,cachedInputTokens:1,outputTokens:2,reasoningOutputTokens:1,totalTokens:6},total:{inputTokens:20,cachedInputTokens:3,outputTokens:8,reasoningOutputTokens:2,totalTokens:28},modelContextWindow:200000}};
+ vi.stubEnv('CREATOROS_ACP_POLICY','creatoros-acp-readonly-v2');expect(handler.createUsageUpdate(params)).toMatchObject({sessionUpdate:'usage_update',used:6,size:200000,_meta:{creatoros:{codex:{threadId:'actual-thread',turnId:'actual-turn',usage:{inputTokens:20,outputTokens:8,totalTokens:28}}}}});
+ vi.unstubAllEnvs();expect(handler.createUsageUpdate(params)).toEqual({sessionUpdate:'usage_update',used:6,size:200000});
+});
+
+it('T1271 通用ACP会话保原默认，不替其他使用者改变历史策略',async()=>{
+ const f=clientFixture();vi.unstubAllEnvs();
+ const client=new CodexAcpClient(f.native,config());
+ vi.spyOn(client as any,'refreshSkills').mockResolvedValue(undefined);
+ vi.spyOn(client,'fetchAvailableModels').mockResolvedValue([{} as any]);
+ (client as any).createModelId=()=>({toString:()=>'gpt-model'});
+ await client.newSession(f.request);
+ expect(f.native.threadStart).toHaveBeenCalledTimes(1);
+ expect(f.native.threadStart.mock.calls[0]?.[0]).not.toHaveProperty('ephemeral');
 });

@@ -1,3 +1,11 @@
+# T-1254 当前请求预算与两份真实源码交付
+
+当前归档、patch和完整文件摘要以 manifest/native-delivery.json 的 T1254 字段及 V15 当场证据为准。两根均使用各自原锁和 pnpm 12.6.0 实际安装、原类型检查与原构建；原请求每根24测试、真实31秒／120秒／130秒和清理断言通过。静态保原CSP和消息bridge；native上传仍由宿主负责。浏览器公开链路由独立后续验收提供；App自动化因用户暂不授权保持未完成。下文全部旧T1053/T1062附件仅作为历史保留。
+
+复现工具 `frontend/scripts/build-doocs-request-budget.mjs` 要求HOME外两自有源码根、原锁安装完整库存、Node非系统dyld递归闭包与精确审查回执。先 `--prepare` 形成完整binding；经独立与ROOT审核后才可 `--execute --binding ... --binding-sha256 ... --review ...`，不会安装依赖、复制生产或读取真实用户配置。当前static后处理入口随源码位于 `scripts/creatoros-request-budget-static-delivery.mjs`。
+
+---
+
 # T-1062 当前原生候选
 
 当前source与输出以本次candidate及校验清单为准，真实原命令记录见 VERIFY.md/VERIFICATION.md。宿主18、浏览器视觉、试听与安装尚未执行。

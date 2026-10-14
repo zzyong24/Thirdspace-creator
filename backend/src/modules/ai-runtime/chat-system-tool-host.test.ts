@@ -89,3 +89,49 @@ it.each([1,2] as const)('T1086 V%s schema/描述/版本/副作用/其它系统�
   expect(read).not.toHaveBeenCalled();
  }
 },120000);
+
+const historicalAction=JSON.parse(readFileSync(new URL('../../../../docs/verification/t1248/system-action-v1.definition.json',import.meta.url),'utf8'));
+it('T1248 真实旧action golden恢复，原冻结完整定义不更新',async()=>{
+ const definitions=[structuredClone(historicalAction)],before=structuredClone(definitions);
+ const reader={read:async()=>({context:systemCtx,modelInput:{tools:definitions},hostContext:{chatContext:{surface:'topics'}}})};
+ const tools=await createChatSystemToolHost(reader as never,{features:vi.fn(),read:vi.fn(),propose:vi.fn(),createCanvas:vi.fn()} as never)(systemCtx,{} as never,systemRef,new AbortController().signal);
+ expect((await prepareChatToolDefinitions(buildChatTools(['system.action.propose'],{assistantActionCatalogVersion:1} as never))).definitions).toEqual(definitions);
+ expect(tools['system.action.propose']!.version).toBe(historicalAction.version);expect(definitions).toEqual(before);
+},120000);
+
+import {matchFrozenAssistantReadCatalog,matchFrozenAssistantSystemCatalog} from './chat-system-tool-host';
+it.each([[1,1],[1,2],[2,1],[2,2]] as const)('T1248 已知完整read%s/action%s组合与合法子集保持定义、范围与参数严格性',async(readVersion,actionVersion)=>{
+ const names=['system.features','system.read','system.action.propose','canvas.create.propose','canvas.generate.propose'];
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(names,{assistantReadCatalogVersion:readVersion,assistantActionCatalogVersion:actionVersion} as never))).definitions,before=structuredClone(definitions);
+ const read=vi.fn(async()=>({kind:'system.read',text:'[]'})),propose=vi.fn(async()=>({schemaVersion:1,kind:'system.action.proposal',request:{action:{kind:'preferences.update',autosaveEnabled:false}},observations:{}}));
+ const reader={read:async()=>({context:systemCtx,modelInput:{tools:definitions},hostContext:{chatContext:{surface:'topics'}}})};
+ expect(await matchFrozenAssistantReadCatalog(definitions)).toBe(readVersion);
+ expect(await matchFrozenAssistantSystemCatalog(definitions)).toEqual({assistantReadCatalogVersion:readVersion,assistantActionCatalogVersion:actionVersion});
+ const host=createChatSystemToolHost(reader as never,{read,propose,features:vi.fn(),createCanvas:vi.fn(),generateCanvas:vi.fn()} as never);
+ const tools=await host(systemCtx,{} as never,systemRef,new AbortController().signal),scope={execution:systemRef,aiTaskId:'known-task',callId:'known-call',toolCallId:'known-tool',signal:new AbortController().signal};
+ for(const extra of [{unknown:true},...(actionVersion===1?[{assistantExecutionEngine:'codex'},{initializeAssistantExecutionEngine:true}]:[])]){
+  const outcome=await tools['system.action.propose']!.execute!(systemCtx,JSON.parse(JSON.stringify({action:{kind:'preferences.update',autosaveEnabled:false,...extra}})),scope);expect(outcome.status).toBe('error');expect(propose).not.toHaveBeenCalled();
+ }
+ expect(await tools['system.read']!.execute!(systemCtx,{request:{kind:'projects.outputs.list',params:{projectId:'original-project'}}},scope)).toMatchObject({status:'ok',sideEffect:'none'});expect(read).toHaveBeenCalledTimes(1);
+ await expect(host({...systemCtx,userId:'foreign'},{} as never,systemRef,scope.signal)).rejects.toThrow('范围');expect(propose).not.toHaveBeenCalled();
+ expect(definitions).toEqual(before);
+ const actionOnly=definitions.filter(d=>d.name==='system.action.propose');expect((await matchFrozenAssistantSystemCatalog(actionOnly)).assistantActionCatalogVersion).toBe(actionVersion);
+ for(const mutate of [
+  (d:typeof definitions)=>{d[2]!.description+='tampered';},(d:typeof definitions)=>{d[2]!.version+='tampered';},
+  (d:typeof definitions)=>{d[2]!.effect='none';},(d:typeof definitions)=>{d[2]!.execution='worker.web-read';},
+  (d:typeof definitions)=>{d[2]!.parameters={...d[2]!.parameters,additionalProperties:true};},
+  (d:typeof definitions)=>{d[2]!.name='system.unknown';},(d:typeof definitions)=>{d.push(structuredClone(d[2]!));},
+ ]){const changed=structuredClone(definitions);mutate(changed);await expect(matchFrozenAssistantSystemCatalog(changed)).rejects.toThrow('定义');}
+},120000);
+
+it('T1248 unknown-only整套显式拒绝，正常non-system空子集仍按原earlyreturn且owner0',async()=>{
+ const definition=(await prepareChatToolDefinitions(buildChatTools(['system.read'],{} as never))).definitions[0]!;
+ const read=vi.fn(),propose=vi.fn(),features=vi.fn(),createCanvas=vi.fn();
+ const ports={read,propose,features,createCanvas};
+ const reader=(tools:typeof definition[])=>({read:async()=>({context:systemCtx,modelInput:{tools},hostContext:{chatContext:{surface:'topics'}}})});
+ const normal=createChatSystemToolHost(reader([{...definition,name:'context.project.detail'}]) as never,ports as never);
+ expect(await normal(systemCtx,{} as never,systemRef,new AbortController().signal)).toEqual({});
+ const unknown=createChatSystemToolHost(reader([{...definition,name:'system.unknown'}]) as never,ports as never);
+ await expect(unknown(systemCtx,{} as never,systemRef,new AbortController().signal)).rejects.toThrow('定义');
+ for(const owner of [read,propose,features,createCanvas])expect(owner).not.toHaveBeenCalled();
+},180000);

@@ -45,6 +45,7 @@ export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapsh
   else if(mismatched)reason='重试输入或项目与原素材意图不同，请核对原提交';
   else if(modelInput){
    const input=assetGenerationInputSchema.parse(modelInput);
+   if("engine" in input)throw new Error("旧素材迁移不能接收新Codex执行输入");
    const fingerprint=generationFingerprint({intentId:current.retryOfTaskId??current.id,capability:input.capability,prompt:input.prompt,aspectRatio:input.aspectRatio,durationSec:input.durationSec,resolution:input.mediaKind==='video'?input.resolution:'768P',spec:input});
    const checkpoints=rows.map(row=>({row,raw:(row.runtimeData as Record<string,unknown>).multimodalProviderCheckpoint})).filter(item=>item.raw!==undefined);
    const parsed=checkpoints.map(item=>parseProviderCheckpoint(item.raw,fingerprint));

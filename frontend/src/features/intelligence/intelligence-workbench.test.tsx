@@ -2917,7 +2917,7 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByText("拆解和选题已保留，正在重试改写初稿"),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "重试生成选题卡" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "确认写入选题池" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "确认写入选题池" })).toBeDisabled();
 
     expect(stub.previewTopic).not.toHaveBeenCalled();
   });
@@ -3064,8 +3064,8 @@ describe("T-482 内容雷达工作区", () => {
         screen.getByDisplayValue("这是一版已经成功但用户想重试的改写稿。"),
       ).toBeInTheDocument();
       expect(
-        screen.queryByRole("button", { name: "确认写入选题池" }),
-      ).not.toBeInTheDocument();
+        screen.getByRole("button", { name: "确认写入选题池" }),
+      ).toBeDisabled();
       expect(screen.getByLabelText("选题候选标题")).toBeDisabled();
       expect(
         screen.queryByRole("button", { name: "重新生成改写稿" }),

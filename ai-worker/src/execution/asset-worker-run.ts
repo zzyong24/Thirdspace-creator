@@ -1,3 +1,5 @@
+import {generateCodexImage} from './codex-image-generation';
+import {codexAssetCredentialSchema} from '@creatoros/contract/execution-worker';
 import {setTimeout as delay} from "node:timers/promises";
 import {z} from "zod";
 import {assetGenerationInputSchema,assetCredentialSchema,assetResultReceiptSchema,workerReservationSchema,workerStartReceiptSchema,providerJobSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
@@ -13,6 +15,7 @@ const recoverySchema=z.discriminatedUnion("status",[z.object({status:z.literal("
 type Call=(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>;
 type Generate=(input:Input,spec:Credential,signal:AbortSignal,options:{resumeJobId?:string;idempotencyKey:string;onJobSubmitted:(id:string)=>Promise<void>;referenceImage?:{bytes:Uint8Array;mimeType:string}})=>Promise<GeneratedAsset>;
 export const generateAssetInWorkerRuntime:Generate=async(input,spec,signal,options)=>{
+ if("engine" in input)throw new Error("CODEX_IMAGE_REQUIRES_NATIVE_TRANSPORT");
  const fetchBound:typeof fetch=(url,init)=>{signal.throwIfAborted();return fetch(url,{...init,signal});};
  const sleep=(ms:number)=>delay(ms,undefined,{signal});
  const omnihi=createOmnihiVideoAdapter({fetch:fetchBound,sleep,pollIntervalMs:5000,maxPollAttempts:120,maxTransientAttempts:1});
@@ -21,8 +24,32 @@ export const generateAssetInWorkerRuntime:Generate=async(input,spec,signal,optio
  signal.throwIfAborted();return result;
 };
 /** 恢复先于供应商动作；只使用后端持久化的原调用和原任务号。 */
-export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,generateAsset:Generate=generateAssetInWorkerRuntime){
+export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,generateAsset:Generate=generateAssetInWorkerRuntime,readOwnedReference?: (callId:string,signal:AbortSignal)=>Promise<{bytes:Uint8Array;mimeType:string}|undefined>){
  const reservation=workerReservationSchema.parse(await call("reserveAssetCall",{},signal)),callId=reservation.callId;
+ if("engine" in input){
+  if(!['reserved','started','unknown','settled'].includes(reservation.status))throw new GenerationFailure('unknown_result','CODEX_IMAGE_CALL_UNKNOWN');
+  if(reservation.status!=='reserved'){
+   const recovered=recoverySchema.parse(await call('recoverAssetResult',{callId},signal));
+   if(recovered.status==='committed')return {callId,text:JSON.stringify(recovered.receipt)};
+  }
+  const credential=codexAssetCredentialSchema.parse(await call('resolveAssetCredential',{callId},signal));
+  if(credential.runtimeVersion!==input.runtimeVersion)throw new GenerationFailure('waiting_user','CODEX_IMAGE_IDENTITY_MISMATCH');
+  let reference:{bytes:Uint8Array;mimeType:string}|undefined;
+  if(readOwnedReference)reference=await readOwnedReference(callId,signal);
+  else if(input.reference)reference=z.object({bytes:z.instanceof(Uint8Array),mimeType:z.string()}).parse(await call('readAssetReference',{callId},signal));
+  if(reservation.status==='reserved')workerStartReceiptSchema.parse(await call('startAssetCall',{callId},signal));
+  try{
+   const result=await generateCodexImage(input,callId,signal,call,reservation.status!=='reserved',reference);
+   try{
+    const receipt=assetResultReceiptSchema.parse(await call('saveAssetResult',{callId,bytes:result.assetBytes},signal));
+    return {callId,text:JSON.stringify(receipt)};
+   }catch(error){
+    signal.throwIfAborted();const saved=recoverySchema.parse(await call('recoverAssetResult',{callId},signal));
+    if(saved.status!=='committed')throw error;
+    return {callId,text:JSON.stringify(saved.receipt)};
+   }
+  }catch(error){await call('settleAssetCall',{callId,status:'unknown'}).catch(()=>{});throw error;}
+ }
  let started=false,jobKnown=false;
  try{
   let job:z.infer<typeof providerJobSchema>|null=null;

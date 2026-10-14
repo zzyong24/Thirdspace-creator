@@ -40,6 +40,7 @@ describe("POST /api/v1/local/reset-workspace", () => {
     tmp = await fs.mkdtemp(path.join(os.tmpdir(), "reset-ws-route-"));
     vi.stubEnv("CREATOROS_DESKTOP", "1");
     vi.stubEnv("CREATOROS_DB_DIR", path.join(tmp, "db"));
+    vi.stubEnv("CREATOROS_APP_DATA_DIR", "");
   });
 
   afterEach(async () => {
@@ -120,6 +121,15 @@ describe("POST /api/v1/local/reset-workspace", () => {
     expect((await POST(makeReq())).status).toBe(200);
     expect((await POST(makeReq())).status).toBe(200);
     expect(await markerExists()).toBe(true);
+  });
+
+  it("新壳 APP_DATA_DIR 优先，标记只写本例指定根", async () => {
+    const appRoot = path.join(tmp, "app");
+    await fs.mkdir(appRoot);
+    vi.stubEnv("CREATOROS_APP_DATA_DIR", appRoot);
+    expect((await POST(makeReq())).status).toBe(200);
+    expect(JSON.parse(await fs.readFile(path.join(appRoot, RESET_PENDING_MARKER), "utf8"))).toMatchObject({ source: "settings/reset-workspace" });
+    expect(await markerExists()).toBe(false);
   });
 
   it("桌面态但 CREATOROS_DB_DIR 未注入 → 500(不猜路径)", async () => {

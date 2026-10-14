@@ -26,14 +26,16 @@ import type {
 } from "./settings-page";
 
 import { API_FORMAT_OPTIONS, PROVIDER_SUGGESTIONS, ProviderPresetRow, type ApiFormat } from "./model-configuration-fields";
-import { TestConnectionButton } from "./model-connection-test";
+import { TestConnectionButton, type ModelConnectionTestSession, type ModelTestOperation } from "./model-connection-test";
 import { SettingsFormRow } from "./settings-form-row";
 import { useModelConfigurationMutation } from "./use-model-configuration-mutation";
 const MODEL_CAPABILITY = "default";
 export function ModelConfigurationCard({
   model,
+  testSession,
 }: {
   model: SettingsViewModel["model"];
+  testSession?: ModelConnectionTestSession;
 }) {
   const [provider, setProvider] = React.useState<string>(model.provider);
   const [modelName, setModelName] = React.useState<string>(model.modelName);
@@ -59,6 +61,7 @@ export function ModelConfigurationCard({
   // [T-325] 选中预设:一次性填 provider/baseUrl/接口格式(custom 不填,回全自由填)。
   // 模型不强制覆盖(预设是起点不锁死),只把候选切成该家 —— 见下方 datalist。
   const handleSelectPreset = React.useCallback((preset: ModelProviderPreset) => {
+    testSession?.invalidate();
     setPresetId(preset.id);
     if(preset.id === CUSTOM_PRESET_ID) {
       setShowAdvanced(true);
@@ -67,7 +70,7 @@ export function ModelConfigurationCard({
     setProvider(preset.id);
     setBaseUrl(preset.baseUrl);
     setApiFormat(preset.apiFormat);
-  }, []);
+  }, [testSession]);
 
   const canSave =
     provider.trim().length > 0 && modelName.trim().length > 0 && !pending;
@@ -75,9 +78,9 @@ export function ModelConfigurationCard({
   // One PUT upserts the whole "default" config; an empty secret is omitted so a
   // re-save without re-typing the key preserves the stored one.
   const persistDraft = React.useCallback(
-    () =>
-      client
-        .putModel({
+    async (operation?: ModelTestOperation) => {
+      if(operation && !operation.isCurrent()) return;
+      const reply = await client.putModel({
           params: { capability: MODEL_CAPABILITY },
           query: undefined,
           body: {
@@ -88,18 +91,22 @@ export function ModelConfigurationCard({
             secret: secret.length > 0 ? secret : undefined,
             settings: { temperature },
           },
-        })
-        .then(() => setSecret("")),
+        });
+      if(operation && !operation.isCurrent()) return;
+      operation?.saved(reply);
+      setSecret("");
+    },
     [provider, modelName, baseUrl, apiFormat, secret, temperature],
   );
 
   const save = React.useCallback(() => {
     if(!canSave) return;
-    void run(persistDraft);
-  }, [canSave, persistDraft, run]);
+    testSession?.invalidate();
+    void run(() => persistDraft());
+  }, [canSave, persistDraft, run, testSession]);
 
   const saveBeforeTest = React.useCallback(
-    () => (canSave ? run(persistDraft) : Promise.resolve(false)),
+    (operation: ModelTestOperation) => (canSave && operation.isCurrent() ? run(() => persistDraft(operation), operation.isCurrent) : Promise.resolve(false)),
     [canSave, persistDraft, run],
   );
 
@@ -130,7 +137,7 @@ export function ModelConfigurationCard({
             list="model-name-suggestions"
             value={modelName}
             disabled={pending}
-            onChange={(event) => setModelName(event.target.value)}
+            onChange={(event) => { testSession?.invalidate(); setModelName(event.target.value); }}
             aria-label="模型名称"
           />
           {/* [T-325] 候选随选中预设切换;custom / 无候选时为空(纯自由输入)。 */}
@@ -157,7 +164,7 @@ export function ModelConfigurationCard({
               value={secret}
               disabled={pending}
               placeholder={model.hasSecret ? "已配置(留空不变)" : "粘贴 API Key"}
-              onChange={(event) => setSecret(event.target.value)}
+              onChange={(event) => { testSession?.invalidate(); setSecret(event.target.value); }}
               aria-label="模型密钥"
             />
             {model.hasSecret ? (
@@ -198,7 +205,7 @@ export function ModelConfigurationCard({
               list="model-provider-suggestions"
               value={provider}
               disabled={pending}
-              onChange={(event) => setProvider(event.target.value)}
+              onChange={(event) => { testSession?.invalidate(); setProvider(event.target.value); }}
               aria-label="模型提供商"
             />
             <datalist id="model-provider-suggestions">
@@ -219,6 +226,7 @@ export function ModelConfigurationCard({
               disabled={pending}
               placeholder="https://example.com/v1"
               onChange={(event) => {
+                testSession?.invalidate();
                 const next = event.target.value;
                 setBaseUrl(next);
                 setPresetId(
@@ -236,6 +244,7 @@ export function ModelConfigurationCard({
             <Select
               value={apiFormat}
               onValueChange={(value) => {
+                testSession?.invalidate();
                 const next = value as ApiFormat;
                 setApiFormat(next);
                 setPresetId(
@@ -278,7 +287,7 @@ export function ModelConfigurationCard({
               disabled={pending}
               onChange={(event) => {
                 const next = Number(event.target.value);
-                if(!Number.isNaN(next)) setTemperature(next);
+                if(!Number.isNaN(next)) { testSession?.invalidate(); setTemperature(next); }
               }}
               aria-label="模型温度"
             />
@@ -301,6 +310,7 @@ export function ModelConfigurationCard({
             beforeTest={saveBeforeTest}
             label="保存并测试"
             disabled={!canSave}
+            session={testSession}
           />
         </div>
       </div>
@@ -308,4 +318,3 @@ export function ModelConfigurationCard({
     </SectionCard>
   );
 }
-

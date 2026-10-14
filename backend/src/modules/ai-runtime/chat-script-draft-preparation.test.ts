@@ -35,8 +35,8 @@ describe("宿主整稿输入准备",()=>{
  });
  it("拒绝未授权、坏决策、伪锚点与截断来源",()=>{
   const prepared=prepareScriptDraftInput({mode:"verbatim",sourceRef:source.ref},[source],"只发稿件");if(prepared.mode!=="verbatim")throw new Error();
-  expect(()=>finalizeScriptDraftImport(prepared,'{"authorized":false,"reason":"尚未授权"}')).toThrow("尚未授权");
-  expect(()=>finalizeScriptDraftImport(prepared,'{"authorized":"true"}')).toThrow("AI 没能可靠识别完整稿件边界");
+  expect(()=>finalizeScriptDraftImport(prepared,'{"authorized":false,"reason":"尚未授权"}')).toThrow("这轮只收到了稿件，还没有明确要求写入稿面；请确认后再生成候选。");
+  expect(()=>finalizeScriptDraftImport(prepared,'{"authorized":"true"}')).toThrow("没能可靠识别完整稿件边界，请再明确哪一段是稿件正文后重试。");
   expect(()=>finalizeScriptDraftImport(prepared,'{"authorized":true,"startAnchor":"不存在"}')).toThrow();
   const truncated=prepareScriptDraftInput({mode:"verbatim",sourceRef:source.ref},[{...source,truncated:true}],"导入");if(truncated.mode!=="verbatim")throw new Error();
   expect(()=>finalizeScriptDraftImport(truncated,'{"authorized":true}')).toThrow();

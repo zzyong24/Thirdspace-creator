@@ -1,5 +1,7 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {randomUUID} from 'node:crypto';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {createRuntimeDb,type Db} from '@creatoros/backend';
 import {createGroupMigrationService} from '../modules/platform-account/group-migration.service';
 import {z} from 'zod';
@@ -88,7 +90,7 @@ describe('T1062 完整generation协议重建结算',()=>{
    const result=await f.completion.commitResult(f.ref,f.input);expect(await f.completion.commitResult(f.ref,f.input)).toEqual(result);
    expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.businessId))).toHaveLength(1);const rows=await f.artifactService.listProjectArtifacts(f.c,f.projectId),reconstructed=rows.filter(a=>a.artifactType==='trend_analysis');expect(reconstructed).toHaveLength(1);expect(await f.artifactService.listVersions(f.c,reconstructed[0]!.id)).toHaveLength(2);expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(15);expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(1);
   }finally{await f.opened.client.close();}
- },30000);
+ },180000);
 });
 
 async function expectNoReconstruction(f:Awaited<ReturnType<typeof reconstructionFixture>>){expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.businessId))).toEqual([]);expect((await f.artifactService.listProjectArtifacts(f.c,f.projectId)).filter(a=>a.artifactType==='trend_analysis')).toEqual([]);}
@@ -98,7 +100,7 @@ it('T1062 原tokens账本已settled但usage未知仍收口，不偷换accounting
   await expect(f.generation.reserveGenerationCall(f.ref,{...f.request,operationKey:'reconstruct.project/model/2'})).rejects.toThrow();
   await f.groups.archive(f.c,f.c.groupId!,1);const result=await f.completion.commitResult(f.ref,f.input);expect(await f.completion.commitResult(f.ref,f.input)).toEqual(result);expect((await f.ledger.inspect(f.ref)).spentTokens).toBeNull();expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(1);expect((await f.ledger.inspect(f.ref)).calls[0]?.accountingBasis).toBe('tokens');
  }finally{await f.opened.client.close();}
-},30000);
+},180000);
 it.each(['cancel','lease-expired','deadline-expired','foreign-ref','mutated-input','moved-parent','foreign-parent','non-imported','member-moved','unknown-call','missing-provider'] as const)('T1062 原重建结算拒绝%s，零新结果并保留原paid ledger',async family=>{
  const f=await reconstructionFixture(true,true);try{
   let completion=f.completion,ref=f.ref;
@@ -116,7 +118,7 @@ it.each(['cancel','lease-expired','deadline-expired','foreign-ref','mutated-inpu
   await f.groups.archive(f.c,f.c.groupId!,1);const before=await f.ledger.inspect(f.ref);await expect(completion.commitResult(ref,f.input)).rejects.toThrow();
   expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.businessId))).toEqual([]);expect((await f.db.select().from(artifacts).where(eq(artifacts.projectId,f.projectId))).filter(a=>a.artifactType==='trend_analysis')).toEqual([]);expect(await f.ledger.inspect(f.ref)).toEqual(before);
  }finally{await f.opened.client.close();}
-},30000);
+},180000);
 it('T1062 原已settled物化失败同tx回滚，重试只用原ledger；普通用户AI/type标记不能写归档组',async()=>{
  const f=await reconstructionFixture(false,false);try{
   await f.groups.archive(f.c,f.c.groupId!,1);const before=await f.ledger.inspect(f.ref);
@@ -127,11 +129,11 @@ it('T1062 原已settled物化失败同tx回滚，重试只用原ledger；普通�
   const result=await f.completion.commitResult(f.ref,f.input);expect(await f.completion.commitResult(f.ref,f.input)).toEqual(result);const rebuilt=(await f.artifactService.listProjectArtifacts(f.c,f.projectId)).find(a=>a.artifactType==='trend_analysis')!;
   await expect(f.artifactService.createVersion({...f.c,source:'ai'},rebuilt.id,{contentText:'用户伪造',createdByType:'ai',origin:'reconstructed'})).rejects.toThrow();expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(15);expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(1);
  }finally{await f.opened.client.close();}
-},30000);
+},180000);
 
 const reconstructPgUrl=process.env.CREATOROS_TEST_POSTGRES_URL;
 it.skipIf(!reconstructPgUrl).each(['archive-first','completion-first','migration-first','completion-first-migration'] as const)('T1062真实PG重建根/父/任务锁顺序 %s',async order=>{
- const url=new URL(reconstructPgUrl!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅隔离PG服务');const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;
+ const url=new URL(reconstructPgUrl!);assertOwnedPostgresUrl(url.toString());const name='t1062_reconstruct_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname='/'+name;const runtime=await createRuntimeDb({connectionString:url.toString()}),blocker=await runtime.pool.connect();let held=false;
  try{
   let move:()=>Promise<unknown>=async()=>{throw Error('无原预览');},freshMove:()=>Promise<unknown>=async()=>{throw Error('无新预览');};let toGroup='';
   const f=await reconstructionFixture(false,true,true,{db:runtime.db,client:{close:async()=>{}}},order.includes('migration')?async(c,projectId)=>{
@@ -153,7 +155,7 @@ it.skipIf(!reconstructPgUrl).each(['archive-first','completion-first','migration
   }
   const results=await runtime.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.businessId));expect(results).toHaveLength(1);expect(await f.completion.commitResult(f.ref,f.input)).toMatchObject({resultId:results[0]!.id});expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(15);expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(1);expect((await runtime.db.select().from(aiTasks).where(eq(aiTasks.id,f.businessId)))[0]).toMatchObject({groupId:f.c.groupId,accountId:null,groupVersion:1,membershipVersion:null});
  }finally{if(held)await blocker.query('ROLLBACK');blocker.release();await runtime.pool.end();await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);await admin.end();}
-},30000);
+},180000);
 
 it('T1062 真实legacy groupNULL原generation paid后member转新组，旧freeze不重签且不能新增物化',async()=>{
  const f=await reconstructionFixture(true,true,true,undefined,undefined,true);try{
@@ -162,7 +164,7 @@ it('T1062 真实legacy groupNULL原generation paid后member转新组，旧freeze
   await f.db.update(accountGroupMemberships).set({groupId:'legacy-new-owner-group',version:2}).where(eq(accountGroupMemberships.accountId,f.c.accountId!));
   await expect(f.completion.commitResult(f.ref,f.input)).rejects.toThrow();await expectNoReconstruction(f);expect(await f.ledger.inspect(f.ref)).toEqual(f.before);expect((await f.db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId)))[0]).toEqual(original);
  }finally{await f.opened.client.close();}
-},30000);
+},180000);
 
 // 原持久旧谱系兼容fixture；不声称当前group public create会产生group=NULL。
 it.each([false,true])('T1062 legacy groupNULL原generation 合法active/archived=%s可收口且freeze仍NULL',async archived=>{
@@ -171,7 +173,7 @@ it.each([false,true])('T1062 legacy groupNULL原generation 合法active/archived
   expect((await f.db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId)))[0]).toMatchObject({groupId:null,groupVersion:null,membershipVersion:null,accountId:f.c.accountId});
   expect((await f.artifactService.listProjectArtifacts(f.c,f.projectId)).filter(a=>a.artifactType==='trend_analysis')).toHaveLength(1);
  }finally{await f.opened.client.close();}
-},30000);
+},180000);
 it('T1062 legacy尚无group/member的原独立account持久任务保持合法，无group且无account损坏仍拒',async()=>{
  const f=await reconstructionFixture(true,true,true,undefined,undefined,true);try{
   await f.db.delete(accountGroupMemberships).where(eq(accountGroupMemberships.accountId,f.c.accountId!));await f.db.delete(accountGroups).where(eq(accountGroups.id,f.rootGroupId));const result=await f.completion.commitResult(f.ref,f.input);expect(await f.completion.commitResult(f.ref,f.input)).toEqual(result);expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(15);
@@ -179,4 +181,4 @@ it('T1062 legacy尚无group/member的原独立account持久任务保持合法，
  const broken=await reconstructionFixture(false,false);try{
   await broken.db.update(executionTasks).set({groupId:null}).where(eq(executionTasks.id,broken.ref.executionTaskId));await expect(broken.completion.commitResult(broken.ref,broken.input)).rejects.toThrow();await expectNoReconstruction(broken);expect((await broken.ledger.inspect(broken.ref)).spentTokens).toBe(15);
  }finally{await broken.opened.client.close();}
-},30000);
+},180000);

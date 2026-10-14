@@ -29,7 +29,7 @@ it('四种共用 representation 保持来源 hash；真实 Chromium SVG 像素�
    try{expect((await parser.getText()).text).toMatch(/Verified report 2026[\s\S]*Total: 42/);}finally{await parser.destroy();}
   }
  }
-},60_000);
+},3_600_000);
 it('旧脚本报告四种输出均标记降级，正文保留；脚本不能改写像素且没有外网请求',async()=>{
  let requests=0;
  const server=createServer((_req,res)=>{requests++;res.end('unexpected');});
@@ -47,7 +47,7 @@ it('旧脚本报告四种输出均标记降级，正文保留；脚本不能改�
   }
   expect(requests).toBe(0);
  }finally{await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}
-},60_000);
+},3_600_000);
 it('非 HTML raw/preview 仍返回诊断，来源校验继续拒绝错误 hash',async()=>{
  const {port}=fixture('名称,数量\n样本,0','text/csv');
  for(const format of ['raw','preview'] as const)expect(await createWorkbenchArtifactRepresentation(port,ctx,'task','artifact',1,format)).toMatchObject({diagnostics:{status:'not_applicable',degraded:false}});

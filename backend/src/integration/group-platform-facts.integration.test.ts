@@ -49,15 +49,19 @@ describe('T-1022 真实平台事实',()=>{
  it('公开external ID与指标追加跨组拒绝，不能借真实账号读取旧组',async()=>{
   const s=services(),p=await s.publishing.createImportedPublication(a,'output',{platform:'douyin',externalId:'external-a'});
   const b={...a,groupId:'group-b'};await store.client.exec("UPDATE account_group_memberships SET group_id='group-b',version=2 WHERE id='member-a'");
-  await expect(s.publishing.resolvePublication(b,{platform:'douyin',externalId:'external-a'})).rejects.toMatchObject({name:'OwnershipError'});
+  await expect(s.publishing.resolvePublication(b,{platform:'douyin',externalId:'external-a'})).resolves.toBeNull();
+  const before=await store.client.query('SELECT id,raw_metrics FROM metric_snapshots ORDER BY id');
   await expect(s.analytics.appendSnapshot(b,{publicationId:p.id,capturedAt:NOW,source:'test',rawMetrics:{views:9}})).rejects.toMatchObject({name:'OwnershipError'});
+  expect((await store.client.query('SELECT id,raw_metrics FROM metric_snapshots ORDER BY id')).rows).toEqual(before.rows);
  });
  it('首个累计样本不算增长，邻日增量只含可比作品',async()=>{
   const {repo}=services();
   for(const [id,publicationId,capturedAt,views] of [['m1','p1','2026-10-01T02:00:00Z',100],['m2','p1','2026-10-02T02:00:00Z',120],['new','p2','2026-10-02T02:00:00Z',1000]] as const)
    await repo.seedSnapshots([{id,userId:'owner',groupId:'group-a',accountId:'account-a',publicationId,ingestionRunId:null,capturedAt,source:'same',rawMetrics:{views},createdAt:NOW}]);
   const points=await repo.getDailyPlayTrend('owner',{groupId:'group-a'},undefined,7);
-  expect(points[0]?.plays).toBe(20);
+  expect(points).toEqual([{day:'2026-10-02',plays:null,complete:false,sampleCount:1,correction:null}]);
+  const comparable=await repo.getDailyPlayTrend('owner',{groupId:'group-a'},['p1'],7);
+  expect(comparable).toEqual([{day:'2026-10-02',plays:20}]);
  });
  it('北京时间归日，漏采与负修正保留真实含义',async()=>{
   const {repo}=services();

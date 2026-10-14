@@ -319,6 +319,9 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
     devDependencies:
+      '@noble/hashes':
+        specifier: 1.8.0
+        version: 1.8.0
       '@axe-core/playwright':
         specifier: 4.11.3
         version: 4.11.3(playwright-core@1.60.0)
@@ -415,6 +418,9 @@ importers:
       tsx:
         specifier: ^4.19.2
         version: 4.22.4
+      undici:
+        specifier: 7.27.2
+        version: 7.27.2
       zod:
         specifier: ^4.4.3
         version: 4.4.3

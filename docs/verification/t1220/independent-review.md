@@ -43,3 +43,15 @@ flowchart LR
 当前 creative-canvas.spec.ts 的 T1220 增补只在 T994 空态：真实搜索/空态取代已被 T1069 覆盖的虚假 bounded total，保真实 link；增加两个视口截图、标题 dirty 后上传导航、公共 canvas.get 原 ID/项目/标题/revision/空 nodes 回读与返回原画布。其余差异属于已独评 T1219 的精确 header/card selector，原保存/预览/刷新/隔离断言未删除。回读 revision 证明真实保存，组件 pending Promise 另外证明必须等待保存，不能只凭浏览器标题回读判断等待顺序。
 
 尚未将 3903 正在运行的 13 画布 + 2 新建项目记成 PASS，也未观测本轮最终两视口截图、键盘可达性或真上传。默认无 callback/page 不显示可由当前条件直接确认，本轮未新增独立组件用例覆盖这两分支；真实浏览器操作/截图通过后方可签 UI 与完整链验收。
+
+## 最终实际证据复核（2026-10-11）
+
+**T1220 局部实现、两视口表面与公共浏览器旅程 PASS。** 本次只读核对 FRONTEND_VALIDATION_REPORT、visible-copy、last-run、driver 源码、实际 observation/components/browser 日志及两张图片；未重新运行 driver/Next，不改产品或控制面，保留上面所有前置和待验证记录。
+
+`last-run.json` 指向 `run-1791693576382-48272`、commit `9fde2af65605fa5b3fd643290fa7bac999cc683c`、exitCode=0。driver 是先实际组件测试、再无 retry 单浏览器用例，两步非零即停止，成功后读取浏览器写出的 observation 并核 HEAD 才生成 last-run。实际 components.log 两文件 46/46；browser.log T994 1/1 PASS，运行端口 3904、独立隔离数据根，非先前 3903 的整套日志。原十五例首轮 14 PASS/1 新增 heading 断言 FAIL 已在报告保留，不冒签首次整套十五例全绿。
+
+observation 实际 canvasId=`77e900f2-cf83-4278-937e-11b7d7984e66`，groupId=`grp-d5a99ba8-6`、projectId=`project-d5a99ba8-14`，原 revision 2→3，标题“新品广告 · 上传前待保存”。当前实际用例在 link 点击后核 /assets 的 main 和上传控件，公共 canvas.get 核同 ID/项目/标题/revision/零 nodes，再返回原画布并 reload 核标题；没有通过私有数据库证明结果。组件延迟保存用例另外证明等待及失败/重复保护，报告正确区分组件端口负例与服务器 CAS 竞争。
+
+已实际查看 `after-upload-1024.png` 与 `after-upload-1536.png`：两图都显示真实空态、搜索/筛选和完整“去素材中心上传”链接，链接没有越界、裁切或被遮挡；紫色次级描边沿现有 tokens，没有新增假统计。图库作为抽屉覆盖画布原内容属于存量呈现，不据此宣称整页重新设计通过。两张顶层图片与该 run 内相应截图 SHA256 一致；visible-copy 文件 SHA 与收据一致，PAGE_SPEC 的 SHA 前缀也与 contract_sha 一致，三处 capture 的文案包含入口及返回刷新。
+
+收据 required checks/conditions 与当前 PAGE_SPEC 对齐，可签本局部空态上传导航、保存回读、返回刷新及组件错误/重复保护；主会话报告收据校验 PASS。本次未额外运行校验器。浏览器用例实际采用鼠标 click，未独立操作新增链接的键盘 Enter，源码为原生 anchor/onClick，可确认机制但不冒签独立键盘实测；也不签真实文件上传、原生 App、真人账号/模型、T1217 或全功能/全局 reconcile 通过。

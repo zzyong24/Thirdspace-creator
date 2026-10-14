@@ -11,6 +11,7 @@ import {
 import { articleDocument, graphicPostDocument } from "@creatoros/contract";
 import { ChatWorkCreationCard } from "./chat-work-creation-card";
 const api = vi.hoisted(() => ({
+  readWorkCandidateSource: vi.fn(),
   createArticleVersion: vi.fn(),
   getArticleVersion: vi.fn(),
   getArticle: vi.fn(),
@@ -114,14 +115,13 @@ const result = {
 };
 afterEach(() => {
   cleanup();
+  sessionStorage.clear();
   vi.clearAllMocks();
 });
 it("两候选分别预览/独立采纳：文章成功后图文未知不回滚；恢复同body/key而不冒充旧candidateId", async () => {
+  api.readWorkCandidateSource.mockResolvedValue({assistantSource:{taskId:"source-task",callId:"source-call",toolCallId:"tool-real",candidateDigest:"sha256:"+"d".repeat(64)},candidate:result});
   api.createArticleVersion.mockResolvedValue({ versionId: "article-saved" });
-  api.getArticleVersion.mockResolvedValue({
-    versionId: "article-saved",
-    document: article,
-  });
+  api.getArticleVersion.mockImplementation(async({params}:any)=>({versionId:params.versionId,document:params.versionId==="article-base"?{...article,title:""}:article}));
   api.getArticle.mockResolvedValue({
     currentVersionId: "article-saved",
     current: article,
@@ -129,16 +129,13 @@ it("两候选分别预览/独立采纳：文章成功后图文未知不回滚；
   api.createGraphicPostVersion
     .mockRejectedValueOnce(Error("图文回执未知"))
     .mockResolvedValue({ versionId: "graphic-saved" });
-  api.getGraphicPostVersion.mockResolvedValue({
-    versionId: "graphic-saved",
-    document: graphic,
-  });
+  api.getGraphicPostVersion.mockImplementation(async({params}:any)=>({versionId:params.versionId,document:params.versionId==="graphic-base"?{...graphic,title:""}:graphic}));
   api.getGraphicPost.mockResolvedValue({
     currentVersionId: "graphic-saved",
     current: graphic,
   });
   const { container } = render(
-    <ChatWorkCreationCard result={result} toolCallId="tool-real" />,
+    <ChatWorkCreationCard result={result} toolCallId="tool-real" location={{conversationId:"conversation-real",sourceMessageId:"source-message",toolCallId:"tool-real"}} />,
   );
   const rows = container.querySelectorAll("article"),
     a = within(rows[0]),
@@ -170,9 +167,11 @@ it("两候选分别预览/独立采纳：文章成功后图文未知不回滚；
   expect(api.createGraphicPostVersion.mock.calls[1][0]).toEqual(original);
   expect(original.body).toMatchObject({
     expectedCurrentVersionId: "graphic-base",
-    document: { sourceRefs: [source], cardBriefs: [{ cardId: "card-real" }] },
+    adoptionMode:"assistant",
+    fieldSelection:["title","summary","tags"],
   });
   expect(original.body).not.toHaveProperty("candidateId");
+  expect(original.body).not.toHaveProperty("document");
   expect(a.getByRole("link", { name: "打开文章" })).toHaveAttribute(
     "href",
     "/projects/p/article?outputId=article-real",

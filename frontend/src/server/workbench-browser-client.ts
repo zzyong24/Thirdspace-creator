@@ -2,6 +2,7 @@ import "server-only";
 import {createConnection} from "node:net";
 import {randomUUID} from "node:crypto";
 import {isAbsolute} from "node:path";
+import {completionWaitMs,executionTimeoutMs,MIN_EXECUTION_TIMEOUT_MS} from "@creatoros/contract/timeout-policy";
 
 const MAX_REQUEST_BYTES=1_400_000;
 const MAX_REPLY_BYTES=16_000_000;
@@ -19,11 +20,23 @@ export function exchangeBrowserSocket(socketPath:string,request:object,operation
  let encoded:string;
  try {encoded=`${JSON.stringify(request)}\n`;}catch{return Promise.reject(new BrowserSocketError("INVALID_BROWSER_REQUEST",false));}
  if(Buffer.byteLength(encoded,"utf8")>MAX_REQUEST_BYTES)return Promise.reject(new BrowserSocketError("INVALID_BROWSER_REQUEST",false));
+ // 原host已经验证的更长原动作等待只扩大本次观察，不修改action/admission或任务deadline。
+ const action=(request as {action?:{kind?:unknown;input?:{timeout_ms?:unknown}}}).action;
+ const requested=action?.kind==='execute'?action.input?.timeout_ms:undefined;
+ let waitMs:number;
+ try{
+  // 未指定/原SDK的0值不改action语义；本次RPC仍有独立有限观察。只保留已知正值的更长槽。
+  const responseMs=typeof requested==='number'&&Number.isSafeInteger(requested)&&requested>0
+   ?Math.max(125_000,executionTimeoutMs(requested,125_000)):125_000;
+  waitMs=completionWaitMs([MIN_EXECUTION_TIMEOUT_MS,responseMs,MIN_EXECUTION_TIMEOUT_MS],60_000);
+ }catch{return Promise.reject(new BrowserSocketError("INVALID_BROWSER_REQUEST",false));}
  return new Promise((resolve,reject)=>{
   let dispatched=false,settled=false,body="";
   const socket=createConnection({path:socketPath});
-  socket.setTimeout(125_000);
-  const cleanup=()=>{signal?.removeEventListener("abort",onAbort);socket.destroy();};
+  socket.setTimeout(waitMs);
+  // 一次完整墙钟期限，不在connect/data/partial reply时重建。
+  const timer=setTimeout(()=>fail(dispatched?"BROWSER_RESULT_UNKNOWN":"BROWSER_UNAVAILABLE"),waitMs);
+  const cleanup=()=>{clearTimeout(timer);signal?.removeEventListener("abort",onAbort);socket.destroy();};
   const fail=(code:string)=>{if(settled)return;settled=true;cleanup();reject(new BrowserSocketError(code,dispatched));};
   const onAbort=()=>fail(dispatched?"BROWSER_RESULT_UNKNOWN":"BROWSER_ABORTED");
   signal?.addEventListener("abort",onAbort,{once:true});

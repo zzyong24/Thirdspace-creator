@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 423edb766
+LAST_SYNCED: main @ afabbf728
 
 ## 这是什么(定位)
 
@@ -23,6 +23,54 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [open] T-1283 核对Codex账号工作区路由预检拒绝并恢复粗剪
+- [wip] T-1279 接入模型来源新迁移的真实数据库谱系护栏
+- [wip] T-1278 统一激活授权并允许官方、自配和本地Codex按能力组合
+- [open] T-1277 核对原生AAC首尾有效样本与音画对齐
+- [wip] T-1273 CreatorOS反逆向加固严格零性能损耗
+- [wip] T-1271 CreatorOS Codex调用不保存个人历史会话
+- [wip] T-1265 修复本地Codex结构化输出Schema适配导致真实400
+- [wip] T-1264 修复协议账本读取前Next元数据恢复顺序
+- [wip] T-1263 修复协议验收替身与隔离临时根的归属校验冲突
+- [wip] T-1272 校准新增观测后的前端回归夹具与迁移库存
+- [wip] T-1270 校准当前观测迁移后的原回归库存
+- [wip] T-1268 闭合集成契约测试库存与手工保存类型
+- [wip] T-1267 校准Pi公共聊天验收能力键与HTTP最终审计
+- [wip] T-1266 核对并修复设置偏好首载时ASR菜单不可达
+- [wip] T-1269 补齐原持久分场失败的可读诊断与原任务重试验收
+- [wip] T-1261 修复开发包验收暴露的运行时缺陷与用例合同
+- [open] T-1260 核对T1255审核绑定生成PROJECT造成收据漂移
+- [wip] T-1255 加密日志直传Growth、异常采集与运行指标观测
+- [wip] T-1256 修复Doocs静态原适配三处无用绑定编译失败
+- [wip] T-1254 闭合内置Doocs两份真实请求30秒默认预算与源码交付一致性
+- [wip] T-1253 闭合原Worker夹具可信回执与未知恢复验收
+- [wip] T-1246 整合完成会话并打开发包及浏览器和App逐项验收
+- [wip] T-1252 闭合CLI/MCP HTTP默认300秒早于合法原生RPC的消费者预算
+- [wip] T-1250 闭合真实短执行预算与静态消费者误判
+- [wip] T-1251 保留结构化生成可信失败状态并校准原受控崩溃验收
+- [wip] T-1249 校准持久聊天原八例的当前受控回执合同
+- [wip] T-1247 修复超时门完整Git库存读取缓冲区溢出
+- [wip] T-1248 恢复已知旧冻结系统候选工具的严格合同兼容
+- [wip] T-1238 本地Codex统一执行文本与生图并免独立模型配置
+- [wip] T-1245 修复自动化窄窗口筛选挤出与任务查看不便
+- [wip] T-1244 验收自动化立即运行的准入与授权等待
+- [wip] T-1243 复验项目稿面视频素材的真实预览
+- [wip] T-1239 验证复盘经验采纳与知识库回流并核候选裁决可见性
+- [wip] T-1241 排查复盘页浏览器验收时开发编译器崩溃
+- [wip] T-1242 核对复盘刷新后纯组账号镜像的测试断言
+- [wip] T-1240 复验素材选择器全库分页与真实照片操作
+- [open] T-1228 核对审核和发布物料子任务的父执行partial结果
+- [wip] T-1229 核对内容雷达选题生成持续无效输出及检查点恢复
+- [wip] T-1231 核对雷达升级项目后原账号读取404的范围分歧
+- [wip] T-1233 校准雷达正文模型替身并验证正文真实贯通
+- [wip] T-1232 验证设置对话框分类交互与公开读回持久性
+- [wip] T-1235 修复外观密度关闭设置后刷新未恢复
+- [wip] T-1236 修复模型保存并测试成功后界面结果丢失
+- [wip] T-1237 修复设置窄窗口分类栏挤压内容与裁切
+- [wip] T-1234 验证账号组下Skill定制按钮的真实可用性
+- [wip] T-1230 修正素材空态仍宣称按抖音号隔离的旧文案
+- [wip] T-1226 补齐浏览器上传验收媒体目录隔离
+- [wip] T-1225 补齐素材中心有数据画廊与选择详情的真实上传夹具
 - [wip] T-1224 校准内容雷达公共旅程的短测试预算与证据输出
 - [wip] T-1223 修复截图总览把历史运行记录当用例数及重复锚点
 - [open] T-1222 核对文章图文编导的空态与功能指引脱离当前稿件
@@ -63,7 +111,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 - [wip] T-1094 修复部分完成AI任务公开查询状态合同缺口
 - [open] T-1096 核对文章工作流与任务父归属旧回归断言的实际漂移
 - [open] T-1098 核对安装重启后的定期同步失败与采集未启动
-- [open] T-1097 修复文章编导参考资料与候选审读保护缺口
+- [wip] T-1097 修复文章编导参考资料与候选审读保护缺口
 - [wip] T-1093 校准编导数字参数、联合首次读取与真实候选失败恢复
 - [wip] T-1091 补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收
 - [open] T-1092 核对联合创作旧集成测试未解包可信回执的契约漂移
@@ -228,4 +276,4 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 模块地图(生成自 backend/src/modules)
 
-`ai` · `ai-runtime` · `analytics` · `articles` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `creative-canvas` · `creative-results` · `execution` · `favorites` · `graphic-posts` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `moments` · `notifications` · `output-scripts` · `platform-account` · `platform-collection` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources` · `work-compositions`
+`ai` · `ai-runtime` · `analytics` · `articles` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `creative-canvas` · `creative-results` · `execution` · `favorites` · `graphic-posts` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `moments` · `notifications` · `observability` · `output-scripts` · `platform-account` · `platform-collection` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources` · `work-compositions`

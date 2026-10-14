@@ -62,9 +62,9 @@ it("取消后只补记已提交事实，不准读取启动后续动作或改终�
 });
 it("新租约回读同一个 job，旧凭证不能记录或读取",async()=>{
  const f=await fixture();await f.ledger.start(f.ref,f.call.id);await f.service.record(f.ref,{callId:f.call.id,job});
- await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"pause",idempotencyKey:"pause"});
+ await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"pause",idempotencyKey:"pause-"+f.ref.executionTaskId});
  await f.tasks.acknowledgeControl({taskId:f.ref.executionTaskId,workerId:"worker",attempt:f.ref.attempt});
- await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"resume",idempotencyKey:"resume"});
+ await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"resume",idempotencyKey:"resume-"+f.ref.executionTaskId});
  const claim=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"new-worker"}))!;
  const ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  expect(await f.service.read(ref,{callId:f.call.id})).toEqual(job);
@@ -116,9 +116,9 @@ it.each([{mediaKind:"image"},{mediaKind:"image",capability:"image.generate",dura
 });
 it("换租约后不能冒充原提交者补写此前未知的任务号",async()=>{
  const f=await fixture();await f.ledger.start(f.ref,f.call.id);
- await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"pause",idempotencyKey:"pause"});
+ await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"pause",idempotencyKey:"pause-"+f.ref.executionTaskId});
  await f.tasks.acknowledgeControl({taskId:f.ref.executionTaskId,workerId:"worker",attempt:f.ref.attempt});
- await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"resume",idempotencyKey:"resume"});
+ await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"resume",idempotencyKey:"resume-"+f.ref.executionTaskId});
  const claim=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"new-worker"}))!;
  const ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  await expect(f.service.record(ref,{callId:f.call.id,job})).rejects.toThrow("当前启动权");

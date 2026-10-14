@@ -1,3 +1,4 @@
+import {workCandidateSourceResult} from '../resources/work-candidate-adoption';
 import { z } from "zod";
 import { defineEndpoint } from "../endpoint-definition";
 import { id, paginationQuery } from "../primitives";
@@ -15,6 +16,7 @@ const taskParams = z.object({ taskId: id });
 
 // SPEC §13 "AI 助手" group.
 export const aiOperations = {
+  readWorkCandidateSource:defineEndpoint({id:'ai.workCandidates.source',method:'GET',path:'/ai/conversations/:conversationId/work-candidates/source',params:conversationParams,query:z.object({sourceMessageId:id,toolCallId:id}).strict(),response:workCandidateSourceResult,fr:['FR-1097-CANDIDATE-SOURCE']}),
   listConversations: defineEndpoint({
     id: "ai.conversations.list",
     method: "GET",

@@ -62,7 +62,7 @@ describe("review.insights prompt — 本项目真数据注入(T-039a)", () => {
     expect(prompt).toContain("【本次复盘作品·观众评论】");
   });
 
-  it("空块诚实省略:只有文案时,数据/评论块连标题都不出现;无未替换占位残留", () => {
+  it("只有文案时指标明确证据边界，空评论省略，无未替换占位残留", () => {
     const { prompt } = bindPrompt(
       REVIEW_INSIGHTS_TEMPLATE,
       reviewFacets(
@@ -75,20 +75,23 @@ describe("review.insights prompt — 本项目真数据注入(T-039a)", () => {
     expect(prompt).toContain("SCRIPT_ONLY");
     expect(prompt).toContain("【本次复盘作品·文案】");
     // 数据/评论为空 → 该块整块省略(块小标题不出现;任务段引导文字里的裸词不算)。
-    expect(prompt).not.toContain("【本次复盘作品·真实数据】");
+    expect(prompt).toContain("【本次复盘作品·真实数据】未取得发布指标，不能归因传播或成交效果。");
     expect(prompt).not.toContain("【本次复盘作品·观众评论】");
     // 不留任何未替换的 {{facet}} 占位。
     expect(prompt).not.toMatch(/\{\{[a-zA-Z]/);
   });
 
-  it("完全无真数据(账号级兜底)→ subject 为兜底文案,三块全省略,prompt 仍合法(不抛 requiredFacet)", () => {
+  it("完全无真数据保兜底subject、缺稿缺指标限制与空评论省略，prompt仍合法", () => {
     // 不抛错本身即证明 subject 兜底非空(positioning 也兜底非空)。
     const { prompt } = bindPrompt(
       REVIEW_INSIGHTS_TEMPLATE,
       reviewFacets(makeContext()),
     );
     expect(prompt).toContain("按这个账号的整体表现");
-    expect(prompt).not.toContain("本次复盘作品·");
+    expect(prompt).toContain("【本次复盘作品·文案】未取得真实稿件，不能评价具体开头台词、段落或叙事结构。");
+    expect(prompt).toContain("【本次复盘作品·真实数据】未取得发布指标，不能归因传播或成交效果。");
+    expect(prompt).not.toContain("【本次复盘作品·观众评论】");
+    expect(prompt).not.toMatch(/\{\{[a-zA-Z]/);
   });
 
   // [T-081①] extraBrief 第三参 → 模板 {{extraBrief}} 占位:对话洞察真的进最终 prompt;

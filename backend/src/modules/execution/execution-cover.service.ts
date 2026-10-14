@@ -1,3 +1,4 @@
+import {executionAssetCredentialSchema} from '@creatoros/contract/execution-worker';
 import {workspaceFilter} from "../../workspace-scope";
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
@@ -113,14 +114,20 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
       reference={assetId:source.referenceAssetId,...(source.referenceFileId?{assetFileId:source.referenceFileId}:{}),checksum,mimeType:value.mimeType};
     }else if(source.referenceFileId)throw new ConflictError("统一参考的精确文件无法读取，可明确取消参考后重试文生图");
    }
-   const capability=reference?"image.edit":"image.generate",credential=assetCredentialSchema.parse(await deps.resolveImageSpec(initial.context,capability,initial.business.id));signal?.throwIfAborted();
+   const capability=reference?"image.edit":"image.generate",credential=executionAssetCredentialSchema.parse(await deps.resolveImageSpec(initial.context,capability,initial.business.id));signal?.throwIfAborted();
+   let value:ReturnType<typeof coverImagePreparationSchema.parse>;
+   if("engine" in credential){
+    if(referenceBytes&&referenceBytes.byteLength>30*1024*1024)throw new ConflictError('参考图超过原大小限制');
+    value=coverImagePreparationSchema.parse({input:{kind:'asset.generate',operationKey:`${initial.input.operationKey}/image`,mediaKind:'image',capability,prompt:resultData.prompt,...(source.aspectRatio?{aspectRatio:source.aspectRatio}:{}),engine:'codex',protocolKind:credential.protocolKind,runtimeVersion:credential.runtimeVersion},reference,resultData:{...resultData,referenceImage:{requestedAssetId:source.referenceAssetId,status:source.referenceAssetId?(reference?'used':'not_used'):'not_requested',used:Boolean(reference)}}});
+   }else{
    const {token:_token,provider,model,baseUrl,serviceId,kind,...options}=credential;
    if(kind!=="image")throw new ConflictError("封面图片能力配置错误");
    if(source.referenceFileId){
      if(!supportsAssetGenerationMode(credential,"image_to_image")||!reference||!referenceBytes||!referenceImageAllowed(credential,"image_to_image",reference.mimeType,referenceBytes))throw new ConflictError("当前图片模型不支持这份参考图片，可明确取消参考后文生图");
    }
    if(source.aspectRatio){const issue=assetGenerationParameterError(credential,reference?"image_to_image":"text_to_image",{prompt:resultData.prompt,aspectRatio:source.aspectRatio});if(issue)throw new ConflictError(issue);}
-   const value=coverImagePreparationSchema.parse({input:{kind:"asset.generate",operationKey:`${initial.input.operationKey}/image`,mediaKind:"image",capability,prompt:resultData.prompt,...("aspectRatio" in resultData && resultData.aspectRatio?{aspectRatio:resultData.aspectRatio}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest:`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`},reference,resultData:{...resultData,referenceImage:{requestedAssetId:source.referenceAssetId,...(source.referenceFileId?{requestedAssetFileId:source.referenceFileId}:{}),status:source.referenceAssetId?(reference?"used":"not_used"):"not_requested",used:Boolean(reference)}}});
+   value=coverImagePreparationSchema.parse({input:{kind:"asset.generate",operationKey:`${initial.input.operationKey}/image`,mediaKind:"image",capability,prompt:resultData.prompt,...("aspectRatio" in resultData && resultData.aspectRatio?{aspectRatio:resultData.aspectRatio}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest:`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`},reference,resultData:{...resultData,referenceImage:{requestedAssetId:source.referenceAssetId,...(source.referenceFileId?{requestedAssetFileId:source.referenceFileId}:{}),status:source.referenceAssetId?(reference?"used":"not_used"):"not_requested",used:Boolean(reference)}}});
+   }
    return access(ref,"admission",async(scope,state,rows)=>{
     signal?.throwIfAborted();if(state.payload.coverImage){const saved=await readCoverImageBinding(scope);return {status:"prepared" as const,value:coverImagePreparationSchema.parse({input:saved.input,reference:saved.reference,resultData:saved.resultData})};}
     if(state.sourceDigest!==initial.sourceDigest||!isDeepStrictEqual(rows,initial.rows))throw new ConflictError("封面准备期间原调用改变");

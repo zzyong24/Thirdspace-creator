@@ -1,6 +1,7 @@
 import * as React from "react";
 import {cleanup,fireEvent,render,screen} from "@testing-library/react";
 import {afterEach,describe,expect,it,vi} from "vitest";
+vi.mock("next/navigation",()=>({usePathname:()=>window.location.pathname,useSearchParams:()=>new URLSearchParams(window.location.search)}));
 vi.mock("./sidebar",()=>({Sidebar:()=>null}));
 vi.mock("./top-header",()=>({TopHeader:()=>null}));
 import {AppShell} from "./app-shell";

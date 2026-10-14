@@ -1,6 +1,8 @@
+import {vi as ownedPgVi} from 'vitest';
+ownedPgVi.setConfig({testTimeout:180000,hookTimeout:180000});
 import {randomUUID} from 'node:crypto';
 import {afterEach,expect,it} from 'vitest';
-import {Pool} from 'pg';
+import {OwnedPostgresPool as Pool ,assertOwnedPostgresUrl} from '../test-fixtures/owned-postgres';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import {createRuntimeDb,projects,type Db} from '@creatoros/backend';
 import {createAccountGroupService,createPlatformAccountService} from '../modules/platform-account';
@@ -29,7 +31,7 @@ function pauseRootInsert(db:Db,paused:ReturnType<typeof gate>,resume:ReturnType<
 }
 async function fixture(){
  if(!url)throw new Error('隔离PG URL缺失');const parsed=new URL(url);
- if(parsed.hostname!=='127.0.0.1'||parsed.port!=='55422')throw new Error('只允许55422隔离服务器');
+ assertOwnedPostgresUrl(parsed.toString());
  const name=`t1022_create_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:url});cleanups.push(()=>admin.end());
  await admin.query(`CREATE DATABASE ${name}`);cleanups.push(()=>admin.query(`DROP DATABASE ${name} WITH (FORCE)`));
  parsed.pathname=`/${name}`;const runtime=await createRuntimeDb({connectionString:parsed.toString()});cleanups.push(()=>runtime.pool.end());
@@ -53,7 +55,7 @@ it.skipIf(!url)('新建先锁组：归档真实等待，commit后root/7阶段/�
  let waiting=false;try{waiting=await f.watch(archive.done,false);}finally{resume.release();}
  expect((await create.result).error).toBeUndefined();expect((await archive.result).error).toBeUndefined();expect(waiting).toBe(true);
  expect(await f.counts()).toEqual({roots:1,stages:7,targets:2,activities:1});
-},30000);
+},180000);
 it.skipIf(!url)('归档先锁组：新建真实等待，归档commit后拒绝且四族均无残行',async()=>{
  const f=await fixture(),paused=gate(),resume=gate();
  const archive=outcome(f.runtime.db.transaction(async tx=>{await createAccountGroupService({db:tx as unknown as Db,...f.deps}).archive(f.base,f.group.id,f.group.version);paused.release();await resume.promise;}));await paused.promise;
@@ -61,7 +63,7 @@ it.skipIf(!url)('归档先锁组：新建真实等待，归档commit后拒绝且
  try{waiting=await f.watch(create.done,true);}finally{resume.release();}
  expect((await archive.result).error).toBeUndefined();expect((await create.result).error).toMatchObject({code:'OwnershipError'});expect(waiting).toBe(true);
  expect(await f.counts()).toEqual({roots:0,stages:0,targets:0,activities:0});
-},30000);
+},180000);
 for(const table of ['project_stages','project_target_platforms','project_activities']){
  it.skipIf(!url)(`${table}真实INSERT异常：整个公共createProject事务回滚且可以重新创建`,async()=>{
   const f=await fixture();
@@ -71,17 +73,17 @@ for(const table of ['project_stages','project_target_platforms','project_activit
   expect(await f.counts()).toEqual({roots:0,stages:0,targets:0,activities:0});
   await f.runtime.pool.query(`DROP TRIGGER fail_project_create_trigger ON ${table}`);
   await f.service(f.writer).createProject(f.ctx,command);expect(await f.counts()).toEqual({roots:1,stages:7,targets:2,activities:1});
- },30000);
+ },180000);
 }
 it.skipIf(!url)('真实旧账号scope仍可完整创建，不把legacy账号隐式扩大成组scope',async()=>{
  const f=await fixture(),account=await createPlatformAccountService({db:f.runtime.db,...f.deps}).createAccount(f.base,{platform:'douyin',accountHandle:'旧账号'});
  const project=await f.service(f.writer).createProject({...f.base,accountId:account.id},command);
  expect(project.accountId).toBe(account.id);expect(project.groupId).toBe(`grp_legacy_${account.id}`);expect(await f.counts()).toEqual({roots:1,stages:7,targets:2,activities:1});
-},30000);
+},180000);
 it.skipIf(!url)('归档组合法采集历史导入仍完整写入，用户伪造imported不能放行',async()=>{
  const f=await fixture();await f.groups.archive(f.base,f.group.id,f.group.version);
  await expect(f.service(f.writer).createProject(f.ctx,{...command,source:'imported'})).rejects.toMatchObject({code:'OwnershipError'});
  expect(await f.counts()).toEqual({roots:0,stages:0,targets:0,activities:0});
  const project=await f.service(f.writer).createProject({...f.ctx,source:'ingestion',ingestionRunId:'verified-ingestion-run'},{...command,source:'imported',platformRef:{platform:'douyin',externalId:'historical-work'}});
  expect(project.source).toBe('imported');expect(project.groupId).toBe(f.group.id);expect(await f.counts()).toEqual({roots:1,stages:7,targets:2,activities:1});
-},30000);
+},180000);

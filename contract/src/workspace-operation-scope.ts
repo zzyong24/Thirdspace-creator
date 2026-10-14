@@ -7,6 +7,9 @@ import type { EndpointId } from "./cli-policy";
  */
 export type WorkspaceOperationScope = "user" | "group" | "platform-account" | "project-derived";
 export const WORKSPACE_OPERATION_SCOPES = {
+  "settings.logReporting.get":"user",
+  "settings.logReporting.set":"user",
+  "observability.exceptions.capture":"user",
   "workbench.modelCalls.summary": "group",
   // account-groups
   "groupResourceGrants.list": "group",
@@ -25,6 +28,7 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "accountGroups.migration.status": "group",
   "accountGroups.migration.undo": "group",
   // ai
+  "ai.workCandidates.source": "group",
   "ai.assistantActions.adopt": "group",
   "ai.assistantActions.receipt": "group",
   "canvas.create.adopt": "group",

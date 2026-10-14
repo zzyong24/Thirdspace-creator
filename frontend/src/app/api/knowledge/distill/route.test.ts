@@ -5,8 +5,9 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // 顶层直出)、失败诚实 4xx(倾倒场据此内联展示,原始输入保留)。真模型调用在 runner 层另测。
 
 const resolveContextFromToken = vi.fn();
+const resolveRequestContext = vi.fn();
 const resolveLocalContext = vi.fn();
-const resolveModelSpec = vi.fn();
+const runKnowledgeGeneration = vi.fn();
 const runKnowledgeDistill = vi.fn();
 
 vi.mock("@/server/persistence-client", () => ({
@@ -15,7 +16,7 @@ vi.mock("@/server/persistence-client", () => ({
     resolveLocalContext,
   }),
   getChatRuntime: async () => ({
-    resolveModelSpec,
+    runKnowledgeGeneration,
     runWithEffectiveSkills: async (
       _ctx: unknown,
       _skillIds: readonly string[],
@@ -24,7 +25,10 @@ vi.mock("@/server/persistence-client", () => ({
   }),
 }));
 
-vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
+vi.mock("@/lib/request-context.server",async original=>({...await original<typeof import('@/lib/request-context.server')>(),resolveRequestContext:(...args:unknown[])=>{resolveRequestContext(...args);return resolveLocalContext();}}));
+
+vi.mock("@creatoros/backend/modules/ai-runtime", async original => ({
+  ...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),
   runKnowledgeDistill: (...args: unknown[]) => runKnowledgeDistill(...args),
 }));
 
@@ -40,6 +44,7 @@ function distillReq(body: unknown): Request {
 
 beforeEach(() => {
   resolveContextFromToken.mockReset();
+  resolveRequestContext.mockReset();
   resolveLocalContext.mockReset();
   resolveLocalContext.mockResolvedValue({ userId: "u-1" });
   runKnowledgeDistill.mockReset();
@@ -80,11 +85,12 @@ describe("POST /api/knowledge/distill", () => {
     expect(json.atoms[0]!.title).toBe("一条观点");
     expect(json.suggestedTags).toEqual(["主题"]);
     expect(resolveLocalContext).toHaveBeenCalledTimes(1);
-    // runner 收到 trim 后的 content + 组合根的 resolveModelSpec 端口
+    expect(resolveRequestContext).toHaveBeenCalledWith(null,null,{rejectInvalidToken:true,groupId:null});
+    // runner 收到 trim 后的 content + 组合根的受控 Worker 候选端口和请求取消信号
     expect(runKnowledgeDistill).toHaveBeenCalledWith(
       { userId: "u-1" },
-      { content: "倒入的原文" },
-      { resolveModelSpec },
+      { content: "倒入的原文", signal: expect.any(AbortSignal) },
+      { runKnowledgeGeneration },
     );
   });
 
@@ -93,6 +99,6 @@ describe("POST /api/knowledge/distill", () => {
     const res = await POST(distillReq({ content: "原文" }));
     expect(res.status).toBe(400);
     const json = (await res.json()) as { error: string };
-    expect(json.error).toContain("无可用 LLM 凭据");
+    expect(json.error).toBe("还没有可用的 AI 模型。完成设置后，回到这里即可继续。");
   });
 });

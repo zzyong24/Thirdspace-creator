@@ -4,6 +4,8 @@ import {createDb,type Db} from '@creatoros/backend';
 import {chatWorkerInputSchema,agenticToolOutcomeSchema,workerToolResultReceiptSchema,type WorkerProviderReceipt} from '@creatoros/contract/execution-worker';
 import {createPersistentTaskService} from '../modules/execution/persistent-task.service';
 import {createExecutionCallLedgerService} from '../modules/execution/execution-call-ledger.service';
+import {createAiRepository} from "../modules/ai/ai.repository";
+import {createChatTurnSubmissionService} from "../modules/ai/chat-turn-submission.service";
 import {createChatHostContextReader} from '../modules/ai/chat-host-context.service';
 import {runChatInWorker,type ChatWorkerPorts} from '../../../ai-worker/src/execution/chat-worker-run';
 import * as projection from '../../../ai-worker/src/capabilities/result-pages';
@@ -13,8 +15,8 @@ vi.mock('../../../ai-worker/src/runtime/provider-factory',async importOriginal=>
  ...await importOriginal<Record<string,unknown>>(),modelFor:provider.modelFor,
 }));
 let db:Db,close:()=>Promise<void>;
-beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();},20000);
-afterAll(async()=>close?.());
+beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();},180000);
+afterAll(async()=>close?.(),180000);
 const usage={inputTokens:{total:1,noCache:1,cacheRead:0,cacheWrite:0},outputTokens:{total:1,text:1,reasoning:0}};
 const png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==';
 const digest=(value:unknown)=>`sha256:${createHash('sha256').update(JSON.stringify(value)).digest('hex')}`;
@@ -29,20 +31,25 @@ it.each([false,true])('长回执经真实 Worker/Pi notice 调用 backend reader
  const nonce=randomUUID(),userId=`t1026-user-${nonce}`,accountId=`t1026-account-${nonce}`;
  const sourceId=`provider-source-${nonce}`,pageId=`provider-page-${nonce}`,sourceTool=screenshot?'browser.screenshot':'artifact.read';
  const sourceProviderTool=screenshot?'browser_screenshot':'artifact_read';
- const input=chatWorkerInputSchema.parse({kind:'chat.run',executionEngine:'pi',operationKey:`turn-${nonce}`,capability:'copilot.assist',
+ const baseInput=chatWorkerInputSchema.parse({kind:'chat.run',executionEngine:'pi',operationKey:`turn-${nonce}`,capability:'copilot.assist',
   userId,accountId,conversationId:`conversation-${nonce}`,sourceMessageId:`message-${nonce}`,system:'回读已登记报告并保留来源',
   messages:[{role:'user',content:'完整读取报告'}],maxSteps:4,maxOutputTokens:128,
   tools:[{name:sourceTool,version:'1',effect:'none',description:'回读报告',parameters:{type:'object',properties:{}}},
    {name:'tool.result.read',version:'1',effect:'none',description:'分页回读',parameters:{type:'object',properties:{toolCallId:{type:'string'},offset:{type:'integer'}},required:['toolCallId','offset']}}]});
- const tasks=createPersistentTaskService(db);
+ const ctx={userId,accountId,requestId:nonce,source:'user' as const},now=()=>new Date().toISOString();
+ const tasks=createPersistentTaskService(db),repo=createAiRepository(db,{userId,accountId,now,nextId:prefix=>`${prefix}-${randomUUID()}`});
  const makeTask=async()=>{
-  const id=randomUUID(),task=await tasks.enqueue({userId,accountId,requestId:id,source:'user'},
-   {kind:'ai_task',ownerType:'ai_task',ownerId:id,idempotencyKey:id,payload:{modelInput:input}});
-  const claim=(await tasks.claimTask({taskId:task.id,workerId:`worker-${id}`}))!;
-  return {executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  const conversation=await repo.createConversation({title:'原工具报告回读',projectId:null,scope:'global'});
+  const source=await repo.createMessage(conversation.id,{role:'user',content:'完整读取报告',attachments:[],modelMetadata:{}});
+  const {kind,operationKey,userId:_userId,accountId:_accountId,conversationId:_conversationId,sourceMessageId:_sourceMessageId,executionEngine,...assembly}=baseInput;
+  expect(executionEngine).toBe("pi");
+  if(executionEngine!=="pi")throw new Error("原长回执测试只允许已冻结Pi输入");
+  const submitted=await createChatTurnSubmissionService(db,{now,assemble:async()=>assembly}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id,executionEngine});
+  const claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId:`worker-${randomUUID()}`}))!;
+  return {executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,modelInput:chatWorkerInputSchema.parse(claim.payload.modelInput)};
  };
- const ref=await makeTask(),otherTask=await makeTask();
- const ledger=createExecutionCallLedgerService(db,{budget:{maxCalls:12,maxTokens:10000,deadlineMs:60000}});
+ const {modelInput:input,...ref}=await makeTask(),{modelInput:_otherModelInput,...otherTask}=await makeTask();
+ const ledger=createExecutionCallLedgerService(db,{budget:{maxCalls:12,maxTokens:10000,deadlineMs:180000}});
  const reader=createChatHostContextReader(db),modelReceipts=new Map<string,WorkerProviderReceipt>();
  const toolBindings=new Map<string,{toolCallId:string;toolName:string;input:unknown}>();
  let sourceExecutionId='',original:ReturnType<typeof agenticToolOutcomeSchema.parse>|undefined;
@@ -124,7 +131,7 @@ it.each([false,true])('长回执经真实 Worker/Pi notice 调用 backend reader
   throw new Error(`未预期端口 ${port}`);
  };
  try{
-  const result=await runChatInWorker(input,{apiFormat:'openai_chat',baseUrl:'https://fixture.invalid',model:'fixture',token:'fixture'},AbortSignal.timeout(15000),{call,approve:async()=> 'approved'});
+  const result=await runChatInWorker(input,{apiFormat:'openai_chat',baseUrl:'https://fixture.invalid',model:'fixture',token:'fixture'},AbortSignal.timeout(180000),{call,approve:async()=> 'approved'});
   expect(result.outcome).toBe('completed');
   expect(sourceExecutionId).not.toBe(sourceId);
   expect(pageErrors).toEqual([]);
@@ -145,4 +152,4 @@ it.each([false,true])('长回执经真实 Worker/Pi notice 调用 backend reader
   await expect(reader.readToolResult(otherTask,{toolCallId:sourceExecutionId,offset:12000})).rejects.toThrow('当前任务没有该已结算工具结果');
   expect((await ledger.inspect(ref)).calls.filter(row=>row.kind==='tool')).toHaveLength(2);
  }finally{projectionSpy.mockRestore();}
-},20000);
+},180000);

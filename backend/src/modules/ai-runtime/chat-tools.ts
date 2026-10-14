@@ -1,3 +1,4 @@
+import {ChatHostKnownReadFailure} from "./chat-host-tool-adapter";
 import {workEditorReadInput,workEditorReadInputV1,workEditorProposeInputV1,workEditorProposeInput,workCreationReadInput,workCreationProposalInput,type WorkEditorTarget,type WorkEditorContext,type WorkEditorCandidate,type WorkEditorReadInput,type WorkEditorProposeInput,type WorkCreationTarget,type WorkCreationReadResult,type WorkCreationProposalResult,type WorkCreationProposalInput} from "@creatoros/contract";
 import {buildRedfoxTool} from "./chat-redfox-tool";
 import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
@@ -20,7 +21,7 @@ import type { DetectToolsResult } from "./local-env-probe";
 // [T-326·RT-H05] 不可信外部内容定界包裹(spotlighting 缓解提示词注入;非根治,见该模块头注释)。
 import { wrapUntrustedContent } from "./untrusted-content";
 import { ChatToolUserError } from "./chat-tool-errors";
-import {assistantFeaturesInputSchema,assistantReadInputSchema,assistantReadInputSchemaV1,type AssistantReadCatalogVersion,assistantActionProposeInputSchema,canvasCreateProposalInputSchema,canvasGenerateProposalInputSchema,canvasProposalOperationSchema} from '@creatoros/contract';
+import {assistantFeaturesInputSchema,assistantReadInputSchema,assistantReadInputSchemaV1,type AssistantReadCatalogVersion,assistantActionProposeInputSchema,assistantActionProposeInputSchemaV1,type AssistantActionCatalogVersion,canvasCreateProposalInputSchema,canvasGenerateProposalInputSchema,canvasProposalOperationSchema} from '@creatoros/contract';
 import {z} from 'zod';
 import { formatErrorDiagnostic } from "./error-diagnostics";
 
@@ -62,6 +63,7 @@ function safeFinalSourceUrl(value: string | undefined): string | undefined {
 export interface ChatToolDeps {
   /** 仅宿主恢复代码内固定旧协议；新任务默认 V2，不接受自由 schema。 */
   assistantReadCatalogVersion?:AssistantReadCatalogVersion;
+  assistantActionCatalogVersion?:AssistantActionCatalogVersion;
   assistantSystem?:{
     features:(input:import('zod').z.infer<typeof assistantFeaturesInputSchema>)=>Promise<unknown>;
     read:(input:import('zod').z.infer<typeof assistantReadInputSchema>)=>Promise<{kind:string}>;
@@ -4067,6 +4069,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           const {dirs}=await deps.listAuthorizedDirs();
           return {kind:"local.workspace",dirs:Array.isArray(dirs)?dirs:[],error:null};
         } catch (error) {
+          // 短只读宿主的明确503拒绝在内部保留机器分类；公开gated结果仍使用安全信封。
+          if (error && typeof error === "object" && ((error as {statusCode?:unknown;status?:unknown}).statusCode ?? (error as {status?:unknown}).status) === 503) throw new ChatHostKnownReadFailure();
           const message = error instanceof Error ? error.message : "";
           return {
             kind: "local.workspace",
@@ -4128,7 +4132,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute:async input=>{if(!deps.assistantSystem)throw new ChatToolUserError('业务读取端口未装配，请保留当前任务并检查客户端服务');return deps.assistantSystem.read(input);},
     },deps.humanizeError),
     "system.action.propose":defineChatTool("system.action.propose",{
-      description:'参数为{action:{kind,...严格字段}}，一次准备一个可预览改动；先通过system.read读取真实对象/版本。此工具不写正式数据、不绑定成功、不启用自动化、不发布。用户采用后原服务执行。当前文章/图文编辑器精调使用work.editor.propose，保护未保存输入。',inputSchema:assistantActionProposeInputSchema,
+      description:'参数为{action:{kind,...严格字段}}，一次准备一个可预览改动；先通过system.read读取真实对象/版本。此工具不写正式数据、不绑定成功、不启用自动化、不发布。用户采用后原服务执行。当前文章/图文编辑器精调使用work.editor.propose，保护未保存输入。',inputSchema:deps.assistantActionCatalogVersion===1?assistantActionProposeInputSchemaV1:assistantActionProposeInputSchema,
       execute:async input=>{if(!deps.assistantSystem)throw new ChatToolUserError('候选准备端口未装配，请保留当前任务并检查客户端服务');return deps.assistantSystem.propose(input);},
     },deps.humanizeError),
     "canvas.create.propose":defineChatTool("canvas.create.propose",{

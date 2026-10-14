@@ -2,27 +2,27 @@
   "surface": "browser",
   "mode": "non-fixture",
   "witnesses": {
-    "groupId": "grp-986b3311-37",
-    "projectId": "project-986b3311-51",
-    "entryId": "cal-986b3311-65"
+    "groupId": "grp-a65785f2-3962",
+    "projectId": "project-a65785f2-3976",
+    "entryId": "cal-a65785f2-3990"
   },
   "finalEntry": {
-    "id": "cal-986b3311-65",
-    "userId": "user-986b3311-1",
+    "id": "cal-a65785f2-3990",
+    "userId": "user-a65785f2-1",
     "accountId": null,
-    "groupId": "grp-986b3311-37",
+    "groupId": "grp-a65785f2-3962",
     "membershipVersion": null,
     "targetStatus": "unassigned",
-    "projectId": "project-986b3311-51",
-    "plannedDate": "2026-10-10",
-    "plannedAt": "2026-10-10T12:00:00.000Z",
+    "projectId": "project-a65785f2-3976",
+    "plannedDate": "2026-10-11",
+    "plannedAt": "2026-10-11T12:00:00.000Z",
     "contentOutputId": null,
     "candidateId": null,
     "status": "planned",
     "note": "",
     "publishedAt": null,
-    "createdAt": "2026-10-09T16:43:23.709Z",
-    "updatedAt": "2026-10-09T16:43:33.107Z"
+    "createdAt": "2026-10-10T17:07:49.898Z",
+    "updatedAt": "2026-10-10T17:08:01.446Z"
   },
   "faultFixture": {
     "operation": "calendar.entries.target",
@@ -33,7 +33,7 @@
   "captures": [
     {
       "name": "calendar-save-error-900",
-      "url": "http://127.0.0.1:31436/publishing",
+      "url": "http://127.0.0.1:3887/publishing",
       "viewport": {
         "width": 900,
         "height": 900
@@ -72,7 +72,7 @@
     },
     {
       "name": "calendar-empty-target-900",
-      "url": "http://127.0.0.1:31436/publishing",
+      "url": "http://127.0.0.1:3887/publishing",
       "viewport": {
         "width": 900,
         "height": 900

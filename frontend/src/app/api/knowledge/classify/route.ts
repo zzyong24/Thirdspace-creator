@@ -1,3 +1,4 @@
+import {KnowledgeGenerationPendingError} from '@creatoros/backend/modules/ai-runtime';
 import { NextResponse } from "next/server";
 import type { RequestContext } from "@creatoros/contract";
 import {
@@ -50,7 +51,7 @@ export async function POST(req: Request): Promise<Response> {
     ctx = await resolveRequestContext(
       rawToken,
       readRequestAccountId(req),
-      { rejectInvalidToken: true },
+      { rejectInvalidToken: true,groupId:readRequestGroupId(req) },
     );
   } catch (err) {
     if (err instanceof AuthenticationError) {
@@ -70,8 +71,8 @@ export async function POST(req: Request): Promise<Response> {
       () =>
         runKnowledgeClassify(
           ctx,
-          { content },
-          { resolveModelSpec: runtime.resolveModelSpec },
+          { content,signal:req.signal },
+          { runKnowledgeGeneration: runtime.runKnowledgeGeneration },
         ),
     );
     return NextResponse.json({ classification });
@@ -79,6 +80,6 @@ export async function POST(req: Request): Promise<Response> {
     // 没配 model key(LlmCredentialError)/模型产出不可用等 → 诚实 4xx(不假绿、不静默)。
     const message = err instanceof Error ? err.message : String(err);
     console.error("[api/knowledge/classify] failed:", err);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: message,...(err instanceof KnowledgeGenerationPendingError?{taskId:err.taskId,executionTaskId:err.executionTaskId,runtimeStatus:err.runtimeStatus,errorCode:err.errorCode}:{}) }, { status: 400 });
   }
 }

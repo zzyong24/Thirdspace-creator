@@ -1,3 +1,5 @@
+import type {CodexModelSpec} from '@creatoros/contract/execution-worker';
+import {createCodexProviderModel} from './codex-provider';
 import { isStructuredResponseCompatibilityError } from "../nodes/structured-response-errors";
 import {structuredModeForIdentity} from "./provider-identity";
 import { createPiProviderModel } from "./pi-provider";
@@ -26,7 +28,7 @@ export type ApiFormat =
   | "openai_responses";
 
 /** 一次运行需要的最小模型规格(由上层 resolveLlmConfig 按 capability 解析后投影)。 */
-export interface ModelSpec {
+export interface ApiModelSpec {
   apiFormat: ApiFormat;
   /** 自定义端点(relay / DeepSeek / MiniMax);null = 用该 provider 的官方默认端点。 */
   baseUrl: string | null;
@@ -42,6 +44,8 @@ export interface ModelSpec {
    */
   structuredOutputs?: boolean;
 }
+
+export type ModelSpec=ApiModelSpec|CodexModelSpec;
 
 export type StructuredOutputMode = "native" | "text";
 
@@ -389,7 +393,7 @@ export function protectChannelEmbeddingModel(
   });
 }
 
-function safePiRejection(spec:ModelSpec,facts:{statusCode:number;responseHeaders:Record<string,string>;message:string}):Error{
+function safePiRejection(spec:ApiModelSpec,facts:{statusCode:number;responseHeaders:Record<string,string>;message:string}):Error{
   if(spec.displayModelKey==="channel-managed" && isManagedAiCreditExhaustedError(facts))return new ManagedAiCreditExhaustedError();
   const message=isStructuredResponseCompatibilityError(facts)?"response_format unsupported":`Pi provider HTTP ${facts.statusCode}`;
   return Object.assign(new Error(message),{statusCode:facts.statusCode,responseHeaders:facts.responseHeaders});
@@ -397,6 +401,7 @@ function safePiRejection(spec:ModelSpec,facts:{statusCode:number;responseHeaders
 
 /** 把模型配置绑定到 Pi 网络适配及既有任务账本协议。 */
 export function modelFor(spec: ModelSpec): LanguageModel {
+  if("engine" in spec)return markStructuredOutputMode(createCodexProviderModel(spec),"native");
   if(!["anthropic","openai_chat","openai_responses"].includes(spec.apiFormat))throw new ModelConfigurationError();
   const model=createPiProviderModel(spec,facts=>safePiRejection(spec,facts));
   const protectedModel=spec.displayModelKey==="channel-managed"?protectChannelModel(model):model;
@@ -404,7 +409,7 @@ export function modelFor(spec: ModelSpec): LanguageModel {
 }
 
 /** Pi 不提供向量 API；此独立 HTTP 适配复用向量账本协议与受管错误保护。 */
-export function embeddingModelFor(spec: ModelSpec): EmbeddingModel {
+export function embeddingModelFor(spec: ApiModelSpec): EmbeddingModel {
   try {
     if(spec.apiFormat==="anthropic")throw new Error("anthropic 协议不提供 embedding 端点，请配置 OpenAI 兼容向量模型");
     if(!["openai_chat","openai_responses"].includes(spec.apiFormat))throw new ModelConfigurationError();
