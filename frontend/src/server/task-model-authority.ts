@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
+import { frozenExecutionEngine } from "@creatoros/contract/execution-worker";
 
 import type {
   ChannelModelPayload,
@@ -79,5 +80,20 @@ export class TaskModelAuthorityScope {
     execute: () => T,
   ): T {
     return this.storage.run(pinned, execute);
+  }
+
+  async runFrozen(
+    runtimeData: Record<string, unknown>,
+    readAuthority: () => Promise<ChannelModelAuthority>,
+    execute: () => Promise<void>,
+  ): Promise<boolean> {
+    if (frozenExecutionEngine(runtimeData) === "codex") {
+      await this.storage.exit(execute);
+      return true;
+    }
+    const pinned = pinModelAuthority(await readAuthority());
+    if (!matchesPinnedModelAuthority(runtimeData, pinned)) return false;
+    await this.run(pinned, execute);
+    return true;
   }
 }

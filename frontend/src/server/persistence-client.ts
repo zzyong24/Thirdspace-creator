@@ -2979,20 +2979,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         `[T-513] AI task ${taskId} 的 Skill snapshot 属主不匹配`,
       );
     }
-    const liveModelAuthority = pinModelAuthority(
-      await readChannelModelAuthority(),
-    );
-    if (
-      !matchesPinnedModelAuthority(runtimeData, liveModelAuthority)
-    ) {
-      await aiService.cancelTask(
-        ctx,
-        taskId,
-        "模型配置已变化，请重新发起",
-      );
-      return;
-    }
-    await taskModelAuthorityScope.run(liveModelAuthority, () =>
+    const authorityMatched = await taskModelAuthorityScope.runFrozen(
+      runtimeData, readChannelModelAuthority, () =>
       runWithEffectiveSkillSnapshot(skillSnapshot, async () => {
       const execution = await aiService.runClaimedTaskExecution(
         ctx,
@@ -3005,6 +2993,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if (!execution.claimed) return;
       }),
     );
+    if (!authorityMatched) {
+      await aiService.cancelTask(ctx, taskId, "模型配置已变化，请重新发起");
+    }
   };
   // 确定性执行使用真实任务冻结归属；collection的signal-only闭包仍沿上方原ctx wrapper。
   const runExecutionWithFrozenSkills=async(ctx:RequestContext,taskId:string,
@@ -3036,14 +3027,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           !validVersion(stamp.groupVersion)||stamp.groupVersion===null||stamp.groupVersion!==owner.groupVersion||
           !validVersion(stamp.membershipVersion)||stamp.membershipVersion!==owner.membershipVersion)mismatch();
       }
-      const liveModelAuthority=pinModelAuthority(await readChannelModelAuthority());
-      if(!matchesPinnedModelAuthority(runtimeData,liveModelAuthority)){
-        await aiService.cancelTask(executionContext,taskId,"模型配置已变化，请重新发起");return;
-      }
-      await taskModelAuthorityScope.run(liveModelAuthority,()=>runWithEffectiveSkillSnapshot(snapshot,async()=>{
+      const authorityMatched=await taskModelAuthorityScope.runFrozen(runtimeData,readChannelModelAuthority,()=>runWithEffectiveSkillSnapshot(snapshot,async()=>{
         const execution=await aiService.runClaimedTaskExecution(executionContext,taskId,async({signal})=>execute(signal,executionContext));
         if(!execution.claimed)return;
       }));
+      if(!authorityMatched)await aiService.cancelTask(executionContext,taskId,"模型配置已变化，请重新发起");
     }catch(error){
       const message=error instanceof Error?error.message:String(error);
       await aiService.markFailed(executionContext,taskId,message).catch(()=>undefined);

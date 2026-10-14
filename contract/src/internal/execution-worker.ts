@@ -1,3 +1,4 @@
+export {frozenExecutionEngine} from './execution-engine';
 import {assetAsrInput} from './asset-asr';
 import {assetAsrPortInputs} from './asset-asr-ports';
 export * from './asset-asr';
