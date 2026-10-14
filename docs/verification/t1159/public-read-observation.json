@@ -2,10 +2,10 @@
   "surface": "browser",
   "mode": "non-fixture",
   "witnesses": {
-    "groupId": "grp-59a8d5e8-6",
+    "groupId": "grp-9afc2a54-6",
     "accountIds": [
-      "acct-59a8d5e8-10",
-      "acct-59a8d5e8-13"
+      "acct-9afc2a54-10",
+      "acct-9afc2a54-13"
     ]
   },
   "domainResponsesReplaced": false,
@@ -14,7 +14,7 @@
   "bindingStarts": 0,
   "observations": [
     {
-      "accountId": "acct-59a8d5e8-10",
+      "accountId": "acct-9afc2a54-10",
       "platform": "wechatVideo",
       "externalAccountId": null,
       "before": {
@@ -36,7 +36,7 @@
       "back": true
     },
     {
-      "accountId": "acct-59a8d5e8-13",
+      "accountId": "acct-9afc2a54-13",
       "platform": "wechatOfficial",
       "externalAccountId": null,
       "before": {

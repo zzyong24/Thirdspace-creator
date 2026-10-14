@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 2/3 (recheck)
 - Spec receipt: 4066ef913b7b
-- Review receipt: 433e70ede4d7
+- Review receipt: 1ebe2f90de0b
 
 ## 当前有效问题
 
@@ -31,7 +31,7 @@
   "model": "unknown",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "5be0a88c68e2dc78dc1aa5d5131f9350f5b85113db9c75d2b1866926e635da6f",
+  "latest_event_hash": "c064b7fa82c4cf2ae1f5d0686006deff3c4312d2fede5b58b36bd6d6afb41f2b",
   "open_findings": [],
   "resolved_findings": [
     {
@@ -39,6 +39,6 @@
       "resolution_evidence": "SPEC-LINE:42:abe103b62248f721：唯一实际root index.html明确准入，完整静态图从该HTML出发；原CSP/local base保留，必要inline外置仅static内exact清单双审，其它root favicon/assets/notice和既有bridge冻结，未准变化需精确复评。当前实际root入口SHA仍原字节，未应用产品。"
     }
   ],
-  "receipt": "433e70ede4d7"
+  "receipt": "1ebe2f90de0b"
 }
 ```

@@ -1,4 +1,4 @@
-// PRIVATE 待正式SPEC独评通过后运行；仅AppServer边界为明确合成fixture。
+// 公共调用链回归；仅AppServer边界为明确合成fixture。
 // 不 mock AI SDK、Codex provider、native turn、账本上下文或三个原Zod。
 import {beforeEach,afterEach,expect,it,vi} from 'vitest';
 import {generateText,Output,asSchema} from 'ai';
@@ -76,7 +76,7 @@ it.each(originalCases)('原公共 $name Zod/default/refine 不被native strict�
  const result=await publicGenerate(business,value);expect(result.output).toEqual(business.parse(value));expect(schema.safeParse(result.output).success).toBe(true);
  const turn=singleTurn();expect(turn.params).not.toHaveProperty('outputSchema');expect(turn.params.input[0].text).toContain(JSON.stringify(await asSchema(business).jsonSchema));onlyOriginalBindings();
 },180000);
-const structureCases=[
+const structureCases:Array<{name:string;schema:z.ZodType;value:unknown}>=[
  {name:'严格合法闭合对象',schema:z.object({required:z.string()}),value:{required:'fixture'}},
  {name:'optional字段省略仍合法',schema:z.object({required:z.string(),optional:z.string().optional()}),value:{required:'fixture'}},
  {name:'嵌套optional/default',schema:z.object({nested:z.object({key:z.string(),optional:z.string().optional(),defaulted:z.string().default('original-default')})}),value:{nested:{key:'fixture'}}},

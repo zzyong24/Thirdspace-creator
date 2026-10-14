@@ -239,3 +239,16 @@ it('T1278 已记账0136却缺embedding_identity列拒绝，不伪造重建',asyn
   await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('embedding_identity');
  }finally{await store.client.close();}
 },180000);
+
+
+it('T1278 canonical111完整固定journal与ordered SQL receipts，原110 prefix及bridge身份不漂移',async()=>{
+ const raw=await readFile(join(folder,'meta/_journal.json'),'utf8');
+ expect(createHash('sha256').update(raw).digest('hex')).toBe('d72d1f1b459d5d35695ac6671d49bf8959551d09ebe647972163f82a4dea69eb');
+ const current=JSON.parse(raw) as {entries:Array<{idx:number;version:string;when:number;tag:string;breakpoints:boolean}>};
+ expect(current.entries).toHaveLength(111);
+ expect(current.entries[109]).toEqual({idx:109,version:'7',when:1791043200009,tag:'0136_embedding_identity',breakpoints:true});
+ expect(current.entries[110]).toEqual({idx:110,version:'7',when:1791043200010,tag:'0137_observability_routing_convergence',breakpoints:true});
+ const receipts=await Promise.all(current.entries.map(async entry=>({hash:createHash('sha256').update(await readFile(join(folder,entry.tag+'.sql'),'utf8')).digest('hex'),created_at:entry.when})));
+ expect(createHash('sha256').update(JSON.stringify(receipts)).digest('hex')).toBe('78c9c4af5305a709cd9fdab6367cd9e3a0b0dd6dacd51b97470e20b6b2d585af');
+ expect(receipts[110]).toEqual({hash:'d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494',created_at:1791043200010});
+});

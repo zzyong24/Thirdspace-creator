@@ -2,13 +2,13 @@
   "surface": "browser",
   "mode": "non-fixture",
   "witnesses": {
-    "groupId": "grp-ff1d77a1-5",
-    "canvasId": "fd99e152-2c35-41d2-8533-373124ebfae8",
+    "groupId": "grp-a65785f2-4522",
+    "canvasId": "524d9ecf-cdb0-4e32-828c-4d31881b0c46",
     "assets": [
       {
-        "id": "asset-ff1d77a1-8",
-        "userId": "user-ff1d77a1-1",
-        "currentFileId": "afile-ff1d77a1-12",
+        "id": "asset-a65785f2-4525",
+        "userId": "user-a65785f2-1",
+        "currentFileId": "afile-a65785f2-4529",
         "assetType": "image",
         "name": "素材预览长图-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png",
         "description": "",
@@ -24,13 +24,13 @@
         "extractedText": null,
         "sourceUrl": null,
         "deletedAt": null,
-        "createdAt": "2026-10-09T18:12:21.646Z",
-        "updatedAt": "2026-10-09T18:12:21.646Z"
+        "createdAt": "2026-10-10T17:11:47.534Z",
+        "updatedAt": "2026-10-10T17:11:47.534Z"
       },
       {
-        "id": "asset-ff1d77a1-15",
-        "userId": "user-ff1d77a1-1",
-        "currentFileId": "afile-ff1d77a1-19",
+        "id": "asset-a65785f2-4532",
+        "userId": "user-a65785f2-1",
+        "currentFileId": "afile-a65785f2-4536",
         "assetType": "image",
         "name": "素材预览横图.png",
         "description": "",
@@ -46,8 +46,8 @@
         "extractedText": null,
         "sourceUrl": null,
         "deletedAt": null,
-        "createdAt": "2026-10-09T18:12:21.777Z",
-        "updatedAt": "2026-10-09T18:12:21.777Z"
+        "createdAt": "2026-10-10T17:11:48.693Z",
+        "updatedAt": "2026-10-10T17:11:48.693Z"
       }
     ]
   },
@@ -83,7 +83,7 @@
   "captures": [
     {
       "name": "portrait-1366x900",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 1366,
         "height": 900
@@ -614,7 +614,7 @@
     },
     {
       "name": "landscape-1366x900",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 1366,
         "height": 900
@@ -868,7 +868,7 @@
     },
     {
       "name": "portrait-1024x680",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 1024,
         "height": 680
@@ -1399,7 +1399,7 @@
     },
     {
       "name": "landscape-1024x680",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 1024,
         "height": 680
@@ -1653,7 +1653,7 @@
     },
     {
       "name": "portrait-683x450",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 683,
         "height": 450
@@ -2184,7 +2184,7 @@
     },
     {
       "name": "landscape-683x450",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 683,
         "height": 450
@@ -2438,7 +2438,7 @@
     },
     {
       "name": "portrait-390x900",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 390,
         "height": 900
@@ -2969,7 +2969,7 @@
     },
     {
       "name": "landscape-390x900",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 390,
         "height": 900
@@ -3223,7 +3223,7 @@
     },
     {
       "name": "portrait-390x450",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 390,
         "height": 450
@@ -3761,7 +3761,7 @@
     },
     {
       "name": "landscape-390x450",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 390,
         "height": 450
@@ -4022,7 +4022,7 @@
     },
     {
       "name": "portrait-512x340",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 512,
         "height": 340
@@ -4560,7 +4560,7 @@
     },
     {
       "name": "landscape-512x340",
-      "url": "http://127.0.0.1:31440/canvases/fd99e152-2c35-41d2-8533-373124ebfae8",
+      "url": "http://127.0.0.1:3887/canvases/524d9ecf-cdb0-4e32-828c-4d31881b0c46",
       "viewport": {
         "width": 512,
         "height": 340

@@ -28,6 +28,10 @@ import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,assertWorkerEx
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
+import { runSidecarSigning, sidecarSigningRequired } from "./sign-sidecar.mjs";
+const SIDECAR_CLEAN_POLICY = "t1273-clean-no-obfuscation-v2";
+// 只由专用签名子进程接收；直接release构建也不向Next/tar/编译器继承此路径。
+const sidecarSigningEnv = { CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH: process.env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH };
 import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, statSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync, openSync, readSync, closeSync, renameSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -140,8 +144,48 @@ export function assertNoPackagedBuildArtifacts(runtimeRoot) {
  * 会变成 signed `server.app` 内的新增文件，AMFI 随即用 SIGKILL 拦截 sidecar。 */
 export function portableTarEnv(baseEnv = process.env, targetPlatform = platform) {
   return targetPlatform === "darwin"
-    ? { ...baseEnv, COPYFILE_DISABLE: "1" }
-    : { ...baseEnv };
+    ? { ...nonSigningBuildEnv(baseEnv), COPYFILE_DISABLE: "1" }
+    : nonSigningBuildEnv(baseEnv);
+}
+
+export function nonSigningBuildEnv(baseEnv = process.env) {
+  const env = { ...baseEnv };
+  delete env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH;
+  return env;
+}
+
+// SEMANTIC_BOUNDARY_ALLOW: 构建缓存按字节绑定，防止复用历史混淆/字节码/诱饵；不做内容或创作选择。
+function cleanSidecarDigest(root) {
+  const hash = createHash("sha256");
+  const visit = (dir) => {
+    for (const name of readdirSync(dir).sort()) {
+      const path = join(dir, name);
+      const stat = lstatSync(path);
+      if (stat.isSymbolicLink() || name === "node_modules") continue;
+      if (stat.isDirectory()) visit(path);
+      else if (/\.(?:js|mjs|cjs|jsc)$/.test(name)) {
+        const rel = relative(root, path).replaceAll("\\", "/");
+        hash.update(JSON.stringify(rel) + "\n");
+        hash.update(createHash("sha256").update(readFileSync(path)).digest());
+      }
+    }
+  };
+  visit(root);
+  return hash.digest("hex");
+}
+
+export function writeCleanSidecarPolicy(root, env = process.env) {
+  writeFileSync(join(root, ".creatoros-clean-policy"), JSON.stringify({
+    policy: SIDECAR_CLEAN_POLICY, releaseCsp: sidecarSigningRequired(env), digest: cleanSidecarDigest(root),
+  }));
+}
+
+export function cleanSidecarReusable(root) {
+  try {
+    const marker = JSON.parse(readFileSync(join(root, ".creatoros-clean-policy"), "utf8"));
+    return marker.policy === SIDECAR_CLEAN_POLICY && marker.releaseCsp === true
+      && marker.digest === cleanSidecarDigest(root);
+  } catch { return false; }
 }
 
 function collectPortableMetadataFiles(root) {
@@ -253,7 +297,8 @@ function targetTriple() {
 
 function run(cmd, args, opts = {}) {
   console.log(`[build-sidecar] $ ${cmd} ${args.join(" ")}`);
-  const r = spawnSync(cmd, args, { stdio: "inherit", cwd: FRONTEND, ...opts });
+  const r = spawnSync(cmd, args, { stdio: "inherit", cwd: FRONTEND, ...opts,
+    env: nonSigningBuildEnv(opts.env ?? process.env) });
   if (r.status !== 0) {
     // status=null = 进程被信号杀/未能 spawn(非正常退出码);把 signal/error 一并暴露,
     // 否则「exit null」无从诊断(Windows 首次构建曾因此看不出崩因)。
@@ -509,6 +554,13 @@ function packSidecarTarball() {
   });
   if (r.status !== 0) throw new Error(`[build-sidecar] tar 打包失败(exit ${r.status})`);
   assertNoAppleDoubleTarEntries(tarball, tarBin);
+  // 最终tar唯一出口覆盖普通构建和skip/reuse；dev不要求签名。
+  if (sidecarSigningRequired()) {
+    const signed = runSidecarSigning({ tarball, env: sidecarSigningEnv });
+    console.log(`[build-sidecar] sidecar签名104B digest=${signed.digest}`);
+  } else {
+    rmSync(`${tarball}.sig`, { force: true });
+  }
   verifyMacSidecarSignatureAfterTar(tarball, tarBin);
   console.log(`[build-sidecar]   → ${tarball}`);
 }
@@ -2256,6 +2308,7 @@ function bundleMediaTools(triple) {
 }
 
 function main() {
+  delete process.env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH;
   if (process.env.CREATOROS_SKIP_PI === "1") {
     throw new Error("[build-sidecar] CREATOROS_SKIP_PI 不再允许：独立 Agent Worker 必须随包提供 Pi");
   }
@@ -2309,7 +2362,11 @@ function main() {
   //   build-sidecar + obfuscate,故此阶段注入 CREATOROS_SKIP_SIDECAR_REBUILD=1 让本脚本短路
   //   (保住已混淆的 sidecar)。前提:sidecar 已存在(package.mjs 保证步1先建)。
   //   直接 `pnpm desktop:build` / `desktop:dev`(不经 package.mjs)不设此 env → 照常重建。
-  if (process.env.CREATOROS_SKIP_SIDECAR_REBUILD === "1") {
+  // 发布重活前校验key；正式skip只能复用本版本clean来源。
+  if (sidecarSigningRequired() && process.env.CREATOROS_SKIP_TARBALL !== "1") runSidecarSigning({ preflight: true, env: sidecarSigningEnv });
+  const cleanPolicyPath = join(SIDECAR_RUNTIME, ".creatoros-clean-policy");
+  const cleanReusable = !sidecarSigningRequired() || cleanSidecarReusable(SIDECAR_RUNTIME);
+  if (process.env.CREATOROS_SKIP_SIDECAR_REBUILD === "1" && cleanReusable) {
     const existing = join(SIDECAR_RUNTIME, "frontend", "server.js");
     if (existsSync(existing)) {
       assertBakedVerdictPublicKey();
@@ -2354,7 +2411,8 @@ function main() {
   console.log("[build-sidecar] 1/3 next standalone build (CREATOROS_DESKTOP=1)…");
   const nextBin = join(FRONTEND, "node_modules", "next", "dist", "bin", "next");
   run(process.execPath, [nextBin, "build"], {
-    env: { ...process.env, CREATOROS_DESKTOP: "1" },
+    env: { ...process.env, CREATOROS_DESKTOP: "1",
+      ...(sidecarSigningRequired() ? { CREATOROS_SIDECAR_SIGNING_REQUIRED: "1" } : {}) },
   });
   if (!existsSync(join(STANDALONE_SRC, "frontend", "server.js"))) {
     throw new Error(
@@ -2597,6 +2655,8 @@ function main() {
     identity: process.env.APPLE_SIGNING_IDENTITY,
     jitEntitlementsPath: join(SRC_TAURI, "runtime-jit-entitlements.plist"),
   });
+
+  writeCleanSidecarPolicy(SIDECAR_RUNTIME);
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。

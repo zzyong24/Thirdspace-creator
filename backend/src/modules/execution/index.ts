@@ -24,6 +24,11 @@ export {
 
 export {
   createPersistentTaskService,
+  registerPersistentTaskObserver,
+  observeCommittedTaskAttempt,
+  observeCommittedTaskSettlement,
+  type PersistentTaskAttemptObservation,
+  type PersistentTaskSettlementObservation,
   type PersistentTaskService,
   type PersistentTaskServiceDeps,
   type PersistentTaskClaim,

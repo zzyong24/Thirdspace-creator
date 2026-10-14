@@ -18,6 +18,8 @@ name = "creatoros_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
+blake3 = "1.8"
+ed25519-dalek = "2"
 tauri-build = { version = "2", features = [] }
 # [T-372/T-446] mac/Linux 构建期算 sidecar.tar.gz SHA-256；Windows 直接资源算
 # sidecar/frontend/server.js SHA-256，经 cargo:rustc-env 注入壳层做入口完整性校验。
@@ -32,6 +34,7 @@ rand = "0.8"
 zeroize = "1"
 
 [dependencies]
+blake3 = "1.8"
 # [T-365] macOS 进程组树杀(killpg):app 退出必须带走 sidecar 全家(node+Chrome+ffmpeg)。
 libc = "0.2"
 # [T-535] macOS sidecar 句柄需要被退出 watcher 与 App 退出树杀同时持有。
@@ -160,9 +163,9 @@ windows-sys = { version = "0.61", features = [
 [profile.release]
 panic = "abort"
 codegen-units = 1
-lto = true
-opt-level = "s"
-strip = true
+lto = "fat"
+opt-level = 3
+strip = "symbols"
 
 # [T-452] release-fast:日常开发/内测打包用,把 LTO 从 fat 降到 thin + 恢复 codegen 并行。
 #   收益(实测预估):cargo build 从单核 15-30 分钟(fat LTO 串行合并 300+ crate)降到 5-8 分钟。

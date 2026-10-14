@@ -2,13 +2,13 @@
   "surface": "browser",
   "mode": "non-fixture",
   "witnesses": {
-    "groupId": "grp-e50d0508-5",
-    "projectId": "project-e50d0508-7",
-    "canvasId": "aa55e9cd-dfdd-42fa-80ed-125c45ca97f9",
+    "groupId": "grp-a65785f2-4084",
+    "projectId": "project-a65785f2-4086",
+    "canvasId": "395e9542-8b03-4227-89e3-af34be8a8a06",
     "reference": {
-      "id": "asset-e50d0508-19",
-      "userId": "user-e50d0508-1",
-      "currentFileId": "afile-e50d0508-23",
+      "id": "asset-a65785f2-4098",
+      "userId": "user-a65785f2-1",
+      "currentFileId": "afile-a65785f2-4102",
       "assetType": "image",
       "name": "中性人物示意图.png",
       "description": "",
@@ -24,13 +24,13 @@
       "extractedText": null,
       "sourceUrl": null,
       "deletedAt": null,
-      "createdAt": "2026-10-09T19:05:11.910Z",
-      "updatedAt": "2026-10-09T19:05:11.910Z"
+      "createdAt": "2026-10-10T17:08:10.413Z",
+      "updatedAt": "2026-10-10T17:08:10.413Z"
     },
     "staticImage": {
-      "id": "asset-e50d0508-26",
-      "userId": "user-e50d0508-1",
-      "currentFileId": "afile-e50d0508-30",
+      "id": "asset-a65785f2-4105",
+      "userId": "user-a65785f2-1",
+      "currentFileId": "afile-a65785f2-4109",
       "assetType": "image",
       "name": "横版示意图.png",
       "description": "",
@@ -46,8 +46,8 @@
       "extractedText": null,
       "sourceUrl": null,
       "deletedAt": null,
-      "createdAt": "2026-10-09T19:05:12.039Z",
-      "updatedAt": "2026-10-09T19:05:12.039Z"
+      "createdAt": "2026-10-10T17:08:10.534Z",
+      "updatedAt": "2026-10-10T17:08:10.534Z"
     }
   },
   "capabilityFixture": true,
@@ -83,8 +83,8 @@
             "type": "image_generation",
             "prompt": "中性图片描述一",
             "mode": "image_to_image",
-            "referenceAssetId": "asset-e50d0508-19",
-            "referenceFileId": "afile-e50d0508-23",
+            "referenceAssetId": "asset-a65785f2-4098",
+            "referenceFileId": "afile-a65785f2-4102",
             "aspectRatio": "16:9"
           },
           {
@@ -115,8 +115,8 @@
               "height": 300
             },
             "type": "image",
-            "assetId": "asset-e50d0508-26",
-            "fileId": "afile-e50d0508-30",
+            "assetId": "asset-a65785f2-4105",
+            "fileId": "afile-a65785f2-4109",
             "checksum": "69f5af085dd8d01989a516c124680b01b96d2a67efff107e88f5672813721b54"
           },
           {
@@ -133,8 +133,8 @@
             "type": "image_generation",
             "prompt": "中性图片描述一",
             "mode": "image_to_image",
-            "referenceAssetId": "asset-e50d0508-19",
-            "referenceFileId": "afile-e50d0508-23",
+            "referenceAssetId": "asset-a65785f2-4098",
+            "referenceFileId": "afile-a65785f2-4102",
             "aspectRatio": "16:9"
           }
         ],
@@ -215,8 +215,8 @@
             "type": "image_generation",
             "prompt": "中性图片描述一",
             "mode": "image_to_image",
-            "referenceAssetId": "asset-e50d0508-19",
-            "referenceFileId": "afile-e50d0508-23",
+            "referenceAssetId": "asset-a65785f2-4098",
+            "referenceFileId": "afile-a65785f2-4102",
             "aspectRatio": "3:4"
           },
           {
@@ -247,8 +247,8 @@
               "height": 300
             },
             "type": "image",
-            "assetId": "asset-e50d0508-26",
-            "fileId": "afile-e50d0508-30",
+            "assetId": "asset-a65785f2-4105",
+            "fileId": "afile-a65785f2-4109",
             "checksum": "69f5af085dd8d01989a516c124680b01b96d2a67efff107e88f5672813721b54"
           },
           {
@@ -265,8 +265,8 @@
             "type": "image_generation",
             "prompt": "中性图片描述一",
             "mode": "image_to_image",
-            "referenceAssetId": "asset-e50d0508-19",
-            "referenceFileId": "afile-e50d0508-23",
+            "referenceAssetId": "asset-a65785f2-4098",
+            "referenceFileId": "afile-a65785f2-4102",
             "aspectRatio": "16:9"
           }
         ],

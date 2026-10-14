@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { client } from "@/lib/contract-client";
 import { handshakeHeaders } from "@/lib/handshake-client";
 import { fetchCreatorApi, readCurrentAccountId, readCurrentGroupId } from "@/lib/http-transport";
-import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
-import { openAiCreditCenter } from "@/lib/open-ai-credit-center";
+import { executionTimeoutMs, completionWaitMs } from "@creatoros/contract/timeout-policy";
+import { openAiCreditCenter, waitForAiCreditCenter, withAiCreditCenterBudget, AI_CREDIT_CENTER_OPEN_WAIT_MS } from "@/lib/open-ai-credit-center";
 import { cn } from "@/lib/utils";
 import {
   Loader2
@@ -28,22 +28,36 @@ export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?:
   const [opening, setOpening] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const openingGeneration = React.useRef(0);
+  const openingController = React.useRef<AbortController | null>(null);
+  React.useEffect(() => {
+    let scope = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+    const change = () => {
+      const next = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+      if (next === scope) return;
+      scope = next; openingGeneration.current++; openingController.current?.abort(); openingController.current = null;
+      setOpening(false); setError(null);
+    };
+    window.addEventListener("creatoros:accounts-changed", change); window.addEventListener("storage", change);
+    return () => {
+      openingGeneration.current++; openingController.current?.abort();
+      window.removeEventListener("creatoros:accounts-changed", change); window.removeEventListener("storage", change);
+    };
+  }, []);
   const openCredits = React.useCallback(async () => {
-    if(opening) return;
-    setOpening(true);
-    setError(null);
+    if (openingController.current) return;
+    const current = ++openingGeneration.current;
+    const controller = new AbortController(); openingController.current = controller;
+    const live = () => current === openingGeneration.current && !controller.signal.aborted;
+    setOpening(true); setError(null);
     try {
-      await openAiCreditCenter();
-    } catch(cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "暂时无法打开 AI 额度，请稍后重试",
-      );
+      await openAiCreditCenter({ signal: controller.signal, isCurrent: live });
+    } catch (cause) {
+      if (live()) setError(cause instanceof Error ? cause.message : "暂时无法打开 AI 额度，请稍后重试");
     } finally {
-      setOpening(false);
+      if (current === openingGeneration.current) { openingController.current = null; setOpening(false); }
     }
-  }, [opening]);
+  }, []);
 
   return (
     <SectionCard
@@ -286,6 +300,14 @@ export function ChannelManagedModelCard({
 // (stored key preferred over env-ref) with a global-default fallback.
 // [T-325] 顶部加「供应商预设」下拉:选一家 → 填 baseUrl/接口格式 + 切模型候选 datalist。
 
+// 已到账后同步/开窗是独立completion；不续reserve/resume的资金operation deadline。
+const AI_CREDIT_CONFIG_SYNC_WAIT_MS = completionWaitMs([120_000, 120_000, 120_000, 120_000]);
+// cold readiness120000+execution120000+原completion grace10000，再留HTTP观察余量10000。
+// FIFO无公开长度上界：超出有限观察保原shared GET/后端任务，不重发、不称全队列worst。
+const AI_CREDIT_ROUTING_OBSERVER_WAIT_MS = completionWaitMs([120_000, 120_000], 20_000);
+const AI_CREDIT_PAID_COMPLETION_WAIT_MS = completionWaitMs([
+  AI_CREDIT_CONFIG_SYNC_WAIT_MS, AI_CREDIT_ROUTING_OBSERVER_WAIT_MS, AI_CREDIT_CENTER_OPEN_WAIT_MS,
+]);
 type BootstrapView = {
   contractVersion: "growth-ai-credit-bootstrap-v1"; operationRef: string;
   status: "pending" | "provider_unknown" | "applied" | "expired";
@@ -336,13 +358,14 @@ function AiCreditBootstrapForm() {
     const current = generation.current;
     const scope = { groupId: readCurrentGroupId(), accountId: readCurrentAccountId() };
     const controller = new AbortController(); abort.current = controller;
-    const timer = setTimeout(() => controller.abort(), executionTimeoutMs(900_000));
-    const live = () => current === generation.current && !controller.signal.aborted;
+    const timer = setTimeout(() => controller.abort(), action === "connect" ? AI_CREDIT_PAID_COMPLETION_WAIT_MS : executionTimeoutMs(900_000));
+    const live = () => current === generation.current && !controller.signal.aborted &&
+      scope.groupId === readCurrentGroupId() && scope.accountId === readCurrentAccountId();
     let sent = false;
     try {
       if (action === "reserve") {
         // 只在当前提交中持有充值码；未确认时只保摘要和原幂等键，显式恢复不得换码。
-        const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(submittedCode));
+        const bytes = await waitForAiCreditCenter(() => crypto.subtle.digest("SHA-256", new TextEncoder().encode(submittedCode)), controller.signal);
         const digest = Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, "0")).join("");
         if (!live()) return;
         if (attempt.current && attempt.current.digest !== digest) { setError("本次结果尚未确认，请输入原充值码恢复同一次提交"); return; }
@@ -350,27 +373,37 @@ function AiCreditBootstrapForm() {
       }
       if (action === "connect") {
         if (operation?.status !== "applied") return;
-        const sync = await fetchCreatorApi("/api/v1/local/client-config", { method: "POST", cache: "no-store", signal: controller.signal, headers: { "x-creatoros-config-trigger": "bootstrap" } }, scope);
-        const body = await sync.json() as { outcome?: string; authority?: string; action?: string };
+        const { sync, body } = await withAiCreditCenterBudget(AI_CREDIT_CONFIG_SYNC_WAIT_MS, controller.signal, async signal => {
+          const sync = await waitForAiCreditCenter(() => fetchCreatorApi("/api/v1/local/client-config", { method: "POST", cache: "no-store", signal, headers: { "x-creatoros-config-trigger": "bootstrap" } }, scope), signal);
+          if (!live()) throw new DOMException("当前账号组已变化，请保留原操作", "AbortError");
+          const body = await waitForAiCreditCenter(() => sync.json(), signal) as { outcome?: string; authority?: string; action?: string };
+          return { sync, body };
+        });
         if (!live()) return;
         if (!sync.ok || body.outcome !== "configured" || body.authority !== "channel") throw new Error("兑换已到账，但配置同步暂未完成，请保留原操作后重试同步");
         window.dispatchEvent(new CustomEvent("creatoros:client-config-synced", { detail: { outcome: "configured" } }));
         router.refresh();
-        const { loadModelRouting } = await import("@/features/copilot/assistant-engine");
-        await loadModelRouting(true);
+        await withAiCreditCenterBudget(AI_CREDIT_ROUTING_OBSERVER_WAIT_MS, controller.signal, async signal => {
+          const { loadModelRouting } = await waitForAiCreditCenter(() => import("@/features/copilot/assistant-engine"), signal);
+          if (!live()) throw new DOMException("当前账号组已变化，请保留原操作", "AbortError");
+          // 借等原shared GET，取消的是本观察者，不能清除/abort全局读者或另发GET。
+          await waitForAiCreditCenter(() => loadModelRouting(true), signal);
+        });
         if (!live()) return;
-        await openAiCreditCenter();
+        await openAiCreditCenter({ signal: controller.signal, isCurrent: live });
         return;
       }
       const path = action === "reserve" ? "/api/v1/local/ai-credits/bootstrap" :
         `/api/v1/local/ai-credits/bootstrap/${encodeURIComponent(ref)}${action === "resume" ? "/resume" : ""}`;
-      sent = true;
-      const response = await fetchCreatorApi(path, {
+      const response = await waitForAiCreditCenter(() => {
+        sent = true; // 原signal已取消则thunk不调用，不把未发出的请求当成未知资金提交。
+        return fetchCreatorApi(path, {
         method: action === "read" ? "GET" : "POST", cache: "no-store", signal: controller.signal,
         headers: action === "read" ? {} : { "Content-Type": "application/json", ...(action === "reserve" ? { "Idempotency-Key": attempt.current!.key } : {}) },
         ...(action === "reserve" ? { body: JSON.stringify({ serviceId: "omnihi-main", code: submittedCode }) } : action === "resume" ? { body: "{}" } : {}),
-      }, scope);
-      const value: unknown = await response.json();
+        }, scope);
+      }, controller.signal);
+      const value: unknown = await waitForAiCreditCenter(() => response.json(), controller.signal);
       if (!live()) return;
       if (!response.ok) {
         const failed = value && typeof value === "object" ? value as { error?: unknown; uncertain?: unknown } : {};
@@ -386,7 +419,9 @@ function AiCreditBootstrapForm() {
     } catch (cause) {
       if (current !== generation.current) return;
       if (action === "reserve" && sent && attempt.current) setUncertain(true);
-      setError(cause instanceof Error ? cause.message : "到账结果尚未确认，请保留原操作并查询");
+      setError(action === "connect" && (cause as { name?: unknown } | null)?.name === "AbortError"
+        ? "本次等待已结束或取消，兑换已到账，请保留原操作后重试同步"
+        : cause instanceof Error ? cause.message : "到账结果尚未确认，请保留原操作并查询");
     } finally {
       clearTimeout(timer);
       if (current === generation.current) { inFlight.current = false; setBusy(false); }

@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 3/3 (recheck)
 - Spec receipt: 3cb9dd0b8302
-- Review receipt: 908ff8f5d3da
+- Review receipt: e890e7d4ffac
 
 ## 当前有效问题
 
@@ -31,9 +31,9 @@
   "model": "unknown",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "c504d83ed1cc4f46bf271e428c215a586a83ca768a8ba949fe23bd665284318e",
+  "latest_event_hash": "dc7f6bab81c7e87cef494fee538d19d26bf12583fbaabf7637f136db5068cd31",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "908ff8f5d3da"
+  "receipt": "e890e7d4ffac"
 }
 ```

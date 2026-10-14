@@ -15,9 +15,13 @@ import { modelFor } from "../runtime/provider-factory";
 import { createExecutionWorker } from "./worker-runtime";
 import { generationFailure } from "./generation-error";
 
+const observeException=(event:unknown)=>{if(process.connected)process.send?.({version:1,type:"observability",event});};
+process.on("uncaughtExceptionMonitor",error=>{try{observeException({eventId:crypto.randomUUID(),module:"worker",code:"UNCLASSIFIED_EXCEPTION",occurredAt:new Date().toISOString(),referenceId:null,stack:Buffer.from(error.stack??"").subarray(0,16000).toString("utf8"),message:Buffer.from(error.message).subarray(0,4000).toString("utf8")});}catch{/* 保原崩溃 */}});
+
 if (!process.send) throw new Error("执行 Worker 只能由宿主私有 IPC 启动");
 // 包内 Pi 引擎能力尚待真实产物验证；未装配 runAgentic 时不声明该 capability。
 const worker = createExecutionWorker({
+  observeException,
   runAssetProcessing:runAssetProcessingInWorker,
   runAsset:runAssetInWorker,
   runVideo:runVideoDecisionsInWorker,

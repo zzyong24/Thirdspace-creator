@@ -73,8 +73,46 @@ type TaskRow = typeof executionTasks.$inferSelect;
 export interface PersistentTaskServiceDeps {
   /** 私有同store根快照；已有payload/可信父优先，重放不捕获当前选择。 */
   resolveRootExecutionRoute?(ctx:RequestContext,input:EnqueuePersistentTaskInput,tx:Db):Promise<ExecutionRoute>;
+  observeSettlement?: (event:{taskId:string;userId:string;attempt:number;kind:string;status:string;occurredAt:string})=>Promise<void>;
+  observeAttempt?: (event: PersistentTaskAttemptObservation) => Promise<void>;
   now?: () => string;
   nextId?: (prefix: string) => string;
+}
+
+export type PersistentTaskAttemptObservation = { taskId:string; userId:string; attempt:number; createdAt:string; startedAt:string };
+export type PersistentTaskSettlementObservation = { taskId:string; userId:string; attempt:number; kind:string; status:string; occurredAt:string };
+type TaskObserver = Pick<PersistentTaskServiceDeps, "observeAttempt" | "observeSettlement">;
+type ObserverRegistration = { observer:TaskObserver; pending:Map<string,Promise<void>> };
+const taskObservers = new WeakMap<Db, ObserverRegistration>();
+/** 由正式装配按Db绑定可选typed事实端口；其它Db/事务不会继承或提前观察。 */
+export function registerPersistentTaskObserver(db:Db, observer:TaskObserver) {
+  const registration = { observer, pending:new Map<string,Promise<void>>() };
+  taskObservers.set(db,registration);
+  return {
+    drain:async()=>{await Promise.all([...registration.pending.values()]);},
+    dispose:()=>{if(taskObservers.get(db)===registration)taskObservers.delete(db);},
+  };
+}
+function queueTaskObservation(db:Db, key:string, invoke:()=>Promise<void>|undefined) {
+  const registration = taskObservers.get(db);
+  let pending:Promise<void>;
+  try {
+    const previous = registration?.pending.get(key);
+    // 首个claim立即调用端口，可同步pause上报；同attempt结算等待其记录，业务不等待。
+    pending = (previous ? previous.then(invoke) : Promise.resolve(invoke())).then(()=>{}).catch(()=>{});
+  } catch { return; }
+  if(registration) {
+    registration.pending.set(key,pending);
+    void pending.then(()=>{if(registration.pending.get(key)===pending)registration.pending.delete(key);});
+  }
+}
+export function observeCommittedTaskAttempt(db:Db,event:PersistentTaskAttemptObservation,explicit?:PersistentTaskServiceDeps["observeAttempt"]) {
+  const observe = explicit ?? taskObservers.get(db)?.observer.observeAttempt;
+  if(observe)queueTaskObservation(db,`${event.taskId}:${event.attempt}`,()=>observe(event));
+}
+export function observeCommittedTaskSettlement(db:Db,event:PersistentTaskSettlementObservation,explicit?:PersistentTaskServiceDeps["observeSettlement"]) {
+  const observe = explicit ?? taskObservers.get(db)?.observer.observeSettlement;
+  if(observe)queueTaskObservation(db,`${event.taskId}:${event.attempt}`,()=>observe(event));
 }
 
 export interface EnqueuePersistentTaskInput {
@@ -103,6 +141,9 @@ export interface PersistentTaskClaim {
 }
 
 export interface PersistentTaskService {
+  hasActiveTasks(ctx:RequestContext):Promise<boolean>;
+  readObservabilityLedger(ctx:RequestContext,cursor:{updatedAt:string;taskId:string}):Promise<Array<{id:string;user_id:string;kind:string;status:string;attempt:number;created_at:string;updated_at:string}>>;
+
   enqueue(
     ctx: RequestContext,
     input: EnqueuePersistentTaskInput,
@@ -332,6 +373,8 @@ export function createPersistentTaskService(
   }
 
   return {
+    async hasActiveTasks(ctx){return (await db.execute(sql`SELECT id FROM execution_tasks WHERE user_id=${ctx.userId} AND status IN('running','pause_requested','cancel_requested') LIMIT 1`)).rows.length>0;},
+    async readObservabilityLedger(ctx,cursor){return (await db.execute(sql`SELECT id,user_id,kind,status,attempt,created_at,updated_at FROM execution_tasks WHERE user_id=${ctx.userId} AND (updated_at>${cursor.updatedAt} OR (updated_at=${cursor.updatedAt} AND id>${cursor.taskId})) ORDER BY updated_at,id LIMIT 100`)).rows as Array<{id:string;user_id:string;kind:string;status:string;attempt:number;created_at:string;updated_at:string}>;},
     async enqueue(ctx, input) {
       requireWorkspace(ctx);
       return db.transaction(async tx => {
@@ -550,7 +593,9 @@ export function createPersistentTaskService(
       };
       const routeRows=await db.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
       const workspaceWrite=await routeTranscribeCommand(db,ctx,routeRows,taskIds,input.idempotencyKey);
+      let committedChanges:TaskRow[]=[];
       const execute=async(tx:WorkspaceWriteTx)=>{
+        committedChanges=[];
         const discovered = await tx.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
         const lockIds=[...new Set([...taskIds,...discovered.map(scheduledChildId).filter((id):id is string=>Boolean(id))])];
         const rows = await tx
@@ -690,18 +735,24 @@ export function createPersistentTaskService(
           updated.push(row);
         }
         for(const parent of parents){const child=updated.find(row=>row.id===scheduledChildId(parent))!;const [projected]=await tx.update(executionTasks).set({...scheduledParentProjection(child),updatedAt:stamp}).where(eq(executionTasks.id,parent.id)).returning();updated.push(projected!);}
+        committedChanges=updated;
         const result=taskIds.map(id=>toResource(updated.find(row=>row.id===id)!));
         if(accountId)await tx.insert(executionControlReceipts).values({id:nextId("control-receipt"),userId:ctx.userId,accountId,idempotencyKey:input.idempotencyKey,requestDigest,result,createdAt:stamp});
         return result;
       };
-      try{return await (workspaceWrite?withWorkspaceWrite(db,ctx,execute):db.transaction(execute));}catch(error){
+      const committed=async(operation:()=>Promise<ExecutionTaskResourceV2[]>)=>{
+        const result=await operation();
+        for(const row of committedChanges)observeCommittedTaskSettlement(db,{taskId:row.id,userId:row.userId,attempt:row.attempt,kind:row.kind,status:row.status,occurredAt:row.updatedAt},deps.observeSettlement);
+        return result;
+      };
+      try{return await committed(()=>workspaceWrite?withWorkspaceWrite(db,ctx,execute):db.transaction(execute));}catch(error){
         // 唯一冲突后事务已回滚；重新鉴权再恢复真实赢家，不重复执行命令。
         const owned=await db.select({id:executionTasks.id}).from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
         if(owned.length!==taskIds.length)throw new OwnershipError("Execution task not found");
         const [winner]=await db.select().from(executionControlReceipts).where(receiptWhere);
         if(winner){
-          if(workspaceWrite)return withWorkspaceWrite(db,ctx,execute);
-          if(input.receiptProtocol==="transcribe-command-v1")return db.transaction(execute);
+          if(workspaceWrite)return committed(()=>withWorkspaceWrite(db,ctx,execute));
+          if(input.receiptProtocol==="transcribe-command-v1")return committed(()=>db.transaction(execute));
           return restore(winner);
         }
         throw error;
@@ -778,7 +829,7 @@ export function createPersistentTaskService(
           }
         }
         return null;
-      });
+      }).then(result=>{if(result){observeCommittedTaskAttempt(db,{taskId:result.task.id,userId:result.task.userId,attempt:result.lease.attempt,createdAt:result.task.createdAt,startedAt:stamp},deps.observeAttempt);}return result;});
     },
 
     async claimTask(input) {
@@ -821,7 +872,7 @@ export function createPersistentTaskService(
           fenceToken: claimed.fenceToken!,
         },
       };
-      });
+      }).then(result=>{if(result){observeCommittedTaskAttempt(db,{taskId:result.task.id,userId:result.task.userId,attempt:result.lease.attempt,createdAt:result.task.createdAt,startedAt:stamp},deps.observeAttempt);}return result;});
     },
 
     async heartbeat(input) {
@@ -911,6 +962,7 @@ export function createPersistentTaskService(
       if (!updated) {
         throw new ConflictError("控制命令确认时租约或任务状态已变化");
       }
+      observeCommittedTaskSettlement(db,{taskId:updated.id,userId:updated.userId,attempt:updated.attempt,kind:updated.kind,status:updated.status,occurredAt:updated.updatedAt},deps.observeSettlement);
       return toResource(updated);
     },
 
@@ -943,7 +995,7 @@ export function createPersistentTaskService(
             lastErrorMessage:status==='failed'?(continuousGeneration?'生成恢复策略已停止，请保留原任务并查看诊断':'分享读取重试次数已用尽，请检查网络或原链接'):input.errorMessage??null,updatedAt:stamp,
           }).where(and(eq(executionTasks.id,row.id),eq(executionTasks.fenceToken,input.fenceToken))).returning();
           if(!updated)throw new ConflictError('分享读取恢复时执行凭证已变化');return toResource(updated);
-        });
+        }).then(result=>{observeCommittedTaskSettlement(db,{taskId:result.id,userId:result.userId,attempt:result.attempt,kind:result.kind,status:result.runtimeStatus??result.status,occurredAt:result.updatedAt},deps.observeSettlement);return result;});
       }
       if(input.fenceToken&&input.fenceToken!==current.fenceToken)throw new ConflictError("任务完成时 fence 已变化");
       const legal =
@@ -980,6 +1032,7 @@ export function createPersistentTaskService(
         )
         .returning();
       if (!updated) throw new ConflictError("任务完成时租约已变化");
+      observeCommittedTaskSettlement(db,{taskId:updated.id,userId:updated.userId,attempt:updated.attempt,kind:updated.kind,status:updated.status,occurredAt:updated.updatedAt},deps.observeSettlement);
       return toResource(updated);
     },
 
@@ -992,6 +1045,7 @@ export function createPersistentTaskService(
         paused: 0,
         cancelled: 0,
       };
+      const recoveredChanges:PersistentTaskSettlementObservation[]=[];
       await db.transaction(async (tx) => {
         const expired = await tx
           .select()
@@ -1113,6 +1167,7 @@ export function createPersistentTaskService(
               ),
             ).returning({id: executionTasks.id});
           if (updated.length) {
+            recoveredChanges.push({taskId:row.id,userId:row.userId,attempt:row.attempt,kind:row.kind,status:target,occurredAt:stamp});
             if (target === "queued") report.requeued++;
             else if (target === "paused") report.paused++;
             else if (target === "cancelled") report.cancelled++;
@@ -1121,6 +1176,7 @@ export function createPersistentTaskService(
           }
         }
       });
+      for(const event of recoveredChanges)observeCommittedTaskSettlement(db,event,deps.observeSettlement);
       return report;
     },
   };

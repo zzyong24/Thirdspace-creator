@@ -1,0 +1,13 @@
+# T1274剪辑契约实现明细
+
+范围承接已审主SPEC和DEC-T1274用户整体确认；以下是具体实现选择，不新增领域/DB/执行权。
+
+- work.editor.read新增script_markdown视图，产现有work.editor.context与scriptMarkdown可选字段；全文场景/真实track范围由当前saved target注入。work.editor.propose新增markdown_timeline候选输入：sceneId/markdown/declaredTrackIds/stateStamp/libraryStamp，沿原base/baseDigest/summary。输出沿native_scene候选，增加scriptDiagnostics可选字段（warnings/errors/operations）；safe保留的局部错误不得伪装全部成功。
+- 普通手工/高级用户通过两个生产模块的只读/候选公共包装调用同一服务：readProductionEditorScript（outputs.production.editor.script.read）与proposeProductionEditorScript（outputs.production.editor.script.propose）。两者POST接受冻结production workEditorTarget；前者不创建正式工程/任务，后者仅算候选。public端点禁止body target.outputId与params不一致/非production，group等从RequestContext来；二者列入CLI read效果（proposal不写正式实体），workspace project-derived。采纳仍是已有applyProductionEditor，不加第三写入口。
+- user/Agent输入必须经过已有prepareForTurn冻结保存与二次核对。读取回执含完整state/source stamp；工程/scene/source/归属变更沿原ConflictError拒绝并保留输入；缺格式信息仅在本轮可信base唯一恢复，不猜来源。时间单位原生120000 ticks，转录来自已有冻结sourceTranscripts。
+- 旧work.editor.read/propose冻结任务定义使用固定旧schema/描述与版本哈希校验；新任务使用Markdown能力标识。只接受可机械重算的已知旧定义，拒绝任意旧版本/篡改，不重建旧execution或重发模型。
+- NativeEditorSurface addons仅是布局协议：宿主light DOM named slots投影入原生左转录、右编导，既有chat唯一固定portal容器停靠。正式JSON不含addon/panel状态。native disabled仅作用原生控件，宿主诊断/原任务恢复仍可用；hidden仍停播放，owner改变同步收回addon且generation拒绝旧回调。
+
+- 普通转录按钮只机械修改本轮MD草稿（已知词行删留、完整片段重排/重复）；解析仍后端。用户“应用为可撤销草稿”调用既有native apply-tracks，不调用正式DB写入口；正式保存沿saveProductionEditor。原采纳候选只有明确用户采用才applyProductionEditor。两条操作的原requestId/pendingKind分别冻结，未知ACK不换ID或覆盖后续dirty。
+- 已保存未知图层由只读输出投影承载，新增/改写仍走严格typed_snapshot/input和before-aware同轨完整前值validator；不扩大模型任意新增未知类型的写权。
+- 缺文件的原非修改引用保留，Markdown read不下载旧保护媒体；propose/apply只核实际新增/变更元素的真实媒体，权限失败仍拒绝。删除/原样保留没有下载旧可选文件的前提；新增/变更不能靠原猜媒体时长。末轮该公共输入族因PGlite初始化超时尚未验证。

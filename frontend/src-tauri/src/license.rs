@@ -123,7 +123,7 @@ impl LicenseConfig {
             .ok()
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| "https://license.aitongban.cloud".to_string());
+            .unwrap_or_else(|| crate::secure_strings::s(crate::secure_strings::ids::LICENSE_BASE_URL).to_string());
         let project_key = crate::product_identity::resolve_project_key(
             std::env::var("CREATOROS_LICENSE_PROJECT_KEY").ok(),
         );
@@ -1217,7 +1217,7 @@ pub(crate) fn parse_signed_channel_runtime(
                 support_url,
             })
         }
-        Some(serde_json::Value::String(schema)) if schema == "channel-runtime-v2" => {
+        Some(serde_json::Value::String(schema)) if schema == crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V2) => {
             if !has_exact_keys(value, &RUNTIME_V2_KEYS) {
                 return Err("CHANNEL_RUNTIME_SCHEMA_INVALID");
             }
@@ -1243,7 +1243,7 @@ pub(crate) fn parse_signed_channel_runtime(
             if project_key != expected_project_key || signed_channel_ref != Some(channel_ref) {
                 return Err("CHANNEL_RUNTIME_IDENTITY_MISMATCH");
             }
-            if string("contractVersion")? != "growth-channel-runtime-v1"
+            if string("contractVersion")? != crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V1)
                 || string("source")? != "thirdspace-growth"
             {
                 return Err("CHANNEL_RUNTIME_VALUE_INVALID");
@@ -1293,8 +1293,8 @@ pub(crate) fn parse_signed_channel_runtime(
                 return Err("CHANNEL_RUNTIME_VALUE_INVALID");
             }
             Ok(CachedChannelRuntime {
-                schema_version: "channel-runtime-v2".to_string(),
-                contract_version: Some("growth-channel-runtime-v1".to_string()),
+                schema_version: crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V2).to_string(),
+                contract_version: Some(crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V1).to_string()),
                 project_key: project_key.to_string(),
                 channel_ref: channel_ref.to_string(),
                 snapshot_version: Some(snapshot_version),
@@ -1391,8 +1391,8 @@ fn resolve_channel_runtime(
         };
     };
     // v2 绝不被 legacy/null/未知 schema 降级覆盖。
-    if old.schema_version == "channel-runtime-v2"
-        && candidate.schema_version != "channel-runtime-v2"
+    if old.schema_version == crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V2)
+        && candidate.schema_version != crate::secure_strings::s(crate::secure_strings::ids::CHANNEL_RUNTIME_V2)
     {
         return RuntimeResolution {
             channel_ref: new_ref,
@@ -1772,15 +1772,15 @@ pub fn run_license_chain(
             }
             (
                 c.to_string(),
-                "/api/license/activate",
-                "post /api/license/activate",
+                crate::secure_strings::s(crate::secure_strings::ids::LICENSE_ACTIVATE_PATH),
+                crate::secure_strings::license_activate_target(),
             )
         }
         LicenseOp::Status => match existing {
             Some(s) => (
                 s.code.clone(),
-                "/api/license/status",
-                "post /api/license/status",
+                crate::secure_strings::s(crate::secure_strings::ids::LICENSE_STATUS_PATH),
+                crate::secure_strings::license_status_target(),
             ),
             None => {
                 return ChainOutcome {
@@ -2596,7 +2596,7 @@ pub fn sync_mirror_to_sidecar(ctx: &ShellLicenseCtx, snap: &LicenseSnapshot) {
     match client
         .post(&url)
         .header("Content-Type", "application/json")
-        .header("x-creatoros-handshake", &ctx.handshake_token)
+        .header(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_HANDSHAKE_HEADER), &ctx.handshake_token)
         .body(body)
         .send()
     {
@@ -2678,7 +2678,7 @@ pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx, trigger: ClientConfi
         .header("Accept", "application/json")
         .header("Content-Length", "0")
         .header("x-creatoros-config-trigger", trigger.as_str())
-        .header("x-creatoros-handshake", &ctx.handshake_token)
+        .header(crate::secure_strings::s(crate::secure_strings::ids::CREATOROS_HANDSHAKE_HEADER), &ctx.handshake_token)
         .send();
     match response {
         Ok(value) => {
@@ -2769,7 +2769,7 @@ pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
     std::thread::spawn(move || {
         // [T-391 H-native §7] 启动期反调试硬化(best-effort,绝不阻断):PT_DENY_ATTACH +
         // 关 core dump + Windows DACL/anti-tracer。仅 release 生效(见 harden_anti_debug)。
-        harden_anti_debug();
+        // T-1273: release硬化已在run入口执行，避免重复系统调用。
         let d = run_chain_and_persist(&ctx, LicenseOp::Status);
         eprintln!(
             "[license] 启动校验: licensed={} status={} mode={} 验签={}({})",
@@ -3125,7 +3125,7 @@ pub fn fetch_latest_version(
         None
     };
 
-    let path = "/api/app/latest-version";
+    let path = crate::secure_strings::s(crate::secure_strings::ids::APP_VERSION_PATH);
     let url = format!("{}{}", cfg.base_url.trim_end_matches('/'), path);
     let host = host_of(&cfg.base_url);
     let target = format!("post {path}");

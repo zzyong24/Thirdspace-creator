@@ -4,7 +4,7 @@
   "moduleCount": 430,
   "modules": [
     {
-      "module": "../../../../../__vite-plugin-wasm-helper",
+      "module": "\u0000/__vite-plugin-wasm-helper",
       "renderedLength": 1154
     },
     {

@@ -353,6 +353,8 @@ export function ChatWorkEditorCard({
         </span>
       </div>
       <p>{value.summary}</p>
+      {value.scriptDiagnostics?.warnings.map((warning,index)=><p key={`warning:${index}`} className="text-text-muted">{warning}</p>)}
+      {value.scriptDiagnostics?.errors.length?<details><summary className="cursor-pointer">{value.scriptDiagnostics.errors.length} 个文字问题 · 原段已保留</summary>{value.scriptDiagnostics.errors.map((issue,index)=><p key={index} className="mt-2">第 {issue.line} 行：{issue.message}{issue.hint?`；${issue.hint}`:''}</p>)}</details>:null}
       {value.error ? (
         <p role="alert" className="text-destructive">
           {value.error}

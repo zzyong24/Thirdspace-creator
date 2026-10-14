@@ -1,3 +1,7 @@
+# T-1289 构建虚拟模块身份规范化候选
+
+唯一实现为归档内build-native.mjs；同一原wasmPlugin的resolveId真实识别helper，清单加原\0虚拟标记，所有物理路径和430module/renderedLength不改。隔离两深度七产物相同，六runtime不变；原86测试380断言、types及AST通过。完整715源码/标准patch F0与归档再构建回执见docs/verification/t1289/candidate，正式scope/独审与整包仍由ROOT接入；原实际深度FAIL保留，以下历史回执不重签。
+
 # T-1274 缺失原素材的候选预览降级
 
 旧renderer的video/image缺file/url、upload audio缺媒体都跳过原引用；纯色背景和文字独立绘制。先以未修改production公开load→export运行六族64×64/24fps/12帧真实MP4：可用主图+缺叠加、main全缺+纯色、main全缺+文字、缺upload音轨保持合法画面；main全缺且透明/blur无其它层只得全黑，原文件与解码证据保留。

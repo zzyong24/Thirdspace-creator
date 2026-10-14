@@ -31,6 +31,13 @@ LED052当前总命令没带原T1198所需隔离PG变量，另原归档入口显�
 
 最终完整reconcile-stable-final.txt实际exit1、25ERROR/0WARN：backlog-health1、旧review19、LED052/018/057/053四项，以及阶段记录日期陈旧1项。日期是本轮控制面问题，已更新为真实2026-10-11；manifest-date-recheck.txt重新执行原日期护栏exit0。没有再签完整24ERROR回执；其余24项按本次完整错误清单保留给T1204。完整执行中LED014/042/047/054/058/059/061均当场OK，相关产品回归不再报错。记录更新与测试器清理之后未改产品源码。
 
-2026-10-12 T1246稳定集成树当场完整非concise对账：session94775实际EOF1；pmem exit0/7838ms，reconcile exit1/1412051ms，两child真实closed/group0/signals[]。完整原档案与23项列表见docs/verification/t1246/round-2/control-close-94775/；RESULT_AND_PRIOR_COMPARISON.json SHAd6709a075f064878c1a65dd6a79461bdcf08f22e0b11cfbfd626308c2cb2ac71。23条原文均逐字存在于T1238原reconcile-stable-final25条中；本轮不再报告旧阶段日期和LED053两项，不改旧25回执。当前保留backlog-health RUNAWAY1、19项旧reviewreceipt与LED052/018/057三项；底层命令被原reconcile stdio ignore隐藏，三项真实前置/当前源进一步独核，不能据同错误标签断言业务全绿。T1171保留看板容量责任，T1204继续上述历史对账责任，T1246实际8组超时/边界/孤儿/精确来源审计通过不抵销该全局失败；本地冻结打包仍只走原基本预检，不把本记录当公开发布批准。
 
-2026-10-12当前前置独核：LED052实际control cleanEnv删除原两PG URL，原wrapper在spawn前拒绝。393f及owned-postgres.ts明确拒55422，不能借外来55422或拼分散startup30/lease4/ledger25同SHA绿为原同runPASS，独评25c9ccdf保留。LED018/057 observer原PATH缺Cargo，当前二进制/tar/lib资源与首轮成功同SHA；补全PATH后唯一原两完整检查78569当场155Vitest/17Rust/15no-default Rust全部PASS，源码/资源beforeafter一致、两child0闭合，详细原档案docs/verification/t1246/round-2/two-led-leaf-78569。原94775原23及旧25不改、全局仍失败，Windows/App原生未验。
+2026-10-14：T1278恢复过程中旧14条prefix/embedded glob再次阻断全队列读取。仅将原六任务八数组展开为当前真实源路径/精确目录/**，不放宽progress或parallel守卫；独立v1候选因417依赖符号链接越界及1重复FAIL，原字节保留。v2经独立辅助生成后Root运行reproduce.py --verify实际exit0，并核仅八数组改变、417依赖排除、只对受改数组去重1项，才应用SHA6e033d58候选。原始配置保存docs/verification/t1278/queue-control-v2/modules.before-application.json。未来新增文件须原任务显式补入，不能据旧prefix自动获得写权限。T1111/T1125四条历史绝对路径原样保留，仍可能阻断全量progress；不为本次生产并行绕过它们。T1278采用Root串行实现，辅助agent仅只读审计，不伪造并行lease或称全局对账恢复。该操作为无可执行行为的配置纠正，未制造红测、不改原任务状态/审核/verify/业务代码。
+
+
+2026-10-14 T1274末轮完整非concise对账实际exit1/29ERROR/0WARN，原文docs/verification/t1274/reconcile-final.txt：看板1、审核收据20、lesson8（052/006/018/031/041/046/051/057）。T1274及T1276审核没有新报错，LED047/053/054/058/059/061均当场OK。不把29项全部推定为旧债。进一步只读诊断原LED006命令实际2FAIL/41PASS（startup-safety-contract和windows-runtime-config静态断言），LED051原node两文件exit1，production-closure测试要求package.mjs含CREATOROS_PRODUCTION_CLOSURE不匹配；完整输出保留global-startup-diagnostic.txt/global-windows-closure-diagnostic.txt。这些检查目标是未被T1274修改的桌面Rust/打包脚本，但未独评根因、未修断言或产品，也不能据静态断言推断真实安装不可用。其余合并guard底层根因未在本轮逐项复现，继续本任务核对。T1274真实模型/ASR等必要验收仍进行中，不签全局绿。
+
+
+2026-10-14 T1274最后兼容修复收尾：`docs/verification/t1274/reconcile-after-fixes.txt`实际exit1、29ERROR/0WARN，与此前`reconcile-final.txt`的29条错误逐字一致，新0/移除0，机械对比`reconcile-error-comparison.json`。LED043/047/053/054/058/059/061等相关门实际通过；不改变本任务原根因库存，也不把剪辑窄修通过签成全局绿。
+
+2026-10-14 T1285最终收尾对账：docs/verification/t1285/reconcile.txt实际exit1，29ERROR/0WARN，与T1274/reconcile-after-fixes.txt逐条完全相同，无新增/移除；比较证据t1285/reconcile-comparison.json。保原归属与待处理状态，不将本轮剪辑专项通过冒全局PASS。

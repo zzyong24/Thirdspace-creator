@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 2/3 (recheck)
 - Spec receipt: b9dc30e952da
-- Review receipt: ed320dba0189
+- Review receipt: b3d116e19a48
 
 ## 当前有效问题
 
@@ -31,7 +31,7 @@
   "model": "unknown",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "36fbf5b1ca3eb38327032d76d48c5ff2e1ef742ffa88dde76c3171a9aa76b139",
+  "latest_event_hash": "3e345d06814fb75374a9a9b1c9690fbfc0c512ba1c203d77202be2f4a9bdf5bc",
   "open_findings": [],
   "resolved_findings": [
     {
@@ -39,6 +39,6 @@
       "resolution_evidence": "SPEC-LINE:22:73ceb9871251930f：明确V6实际适配原mode0644、库存420与当前0644一致；a7成员0664不作为应用后模式。独立当场lstat/原V6inventory420与a076字节已核，不新增chmod。"
     }
   ],
-  "receipt": "ed320dba0189"
+  "receipt": "b3d116e19a48"
 }
 ```

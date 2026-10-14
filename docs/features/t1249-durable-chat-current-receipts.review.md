@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 1/3 (initial)
 - Spec receipt: 627e62fa21b4
-- Review receipt: ea71437a2662
+- Review receipt: 19cbaf3743b6
 
 ## 当前有效问题
 
@@ -31,9 +31,9 @@
   "model": "unknown",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "04a14494bfb774e63594799bd76ece162b2f22db7a2d7ba6ed6c91357561a763",
+  "latest_event_hash": "87df95cce161dfdb99753c3bb9ce858d0b05bfaf50ebdad2b1d5cccb1285fa9b",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "ea71437a2662"
+  "receipt": "19cbaf3743b6"
 }
 ```

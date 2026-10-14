@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 1/3 (initial)
 - Spec receipt: f3b2413cba9f
-- Review receipt: fc42b1d42391
+- Review receipt: 5ceaed23e00c
 
 ## 当前有效问题
 
@@ -31,9 +31,9 @@
   "model": "unknown",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "9ee40cba4345d63089e9d6956712a4535d701417bf7585373edc774847884adb",
+  "latest_event_hash": "c5cea545f440e2068a205a12dab96d756b1ebb2c87bbd064ecbbebc179c6700b",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "fc42b1d42391"
+  "receipt": "5ceaed23e00c"
 }
 ```

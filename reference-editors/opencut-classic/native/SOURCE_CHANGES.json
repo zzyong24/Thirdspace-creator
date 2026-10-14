@@ -189,5 +189,11 @@
     "apps/web/src/services/renderer/compositor/wasm-compositor.ts",
     "README.creatoros.md",
     "NATIVE_REBUILD_CONSISTENCY.json"
-  ]
+  ],
+  "t1289VirtualModuleChangedFromParent": [
+    "NATIVE_REBUILD_CONSISTENCY.json",
+    "README.creatoros.md",
+    "apps/web/scripts/build-native.mjs"
+  ],
+  "t1289Evidence": "docs/verification/t1289/candidate"
 }

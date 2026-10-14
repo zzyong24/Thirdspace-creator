@@ -93,6 +93,15 @@ vi.mock("@/lib/contract-client", () => ({
     putModelRouting: (input:unknown) => mockClient.putModelRouting(input),
     getPreferences: () => mockClient.getPreferences(),
     getReportingStatus: () => Promise.resolve({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
+    getLogReporting: async () => {
+      const { logReportingStatus } = await import("@creatoros/contract");
+      return logReportingStatus.parse({consentVersion:2,enabled:false,metricsEnabled:false,installationAlias:"78de57f2-4ba1-42a7-af33-62d561ba46b1",changedAt:null,lastAttemptAt:null,nextAttemptAt:null,lastUploadedAt:null,lastReceiptId:null,pendingCount:0,lastErrorCode:null,uploadAvailable:false,remotePaused:false});
+    },
+    setLogReporting: async (input: {body: {enabled:boolean;metricsEnabled:boolean;consentVersion:2}}) => {
+      const { logReportingConsent, logReportingStatus } = await import("@creatoros/contract");
+      const consent = logReportingConsent.parse(input.body);
+      return logReportingStatus.parse({consentVersion:2,enabled:consent.enabled,metricsEnabled:consent.metricsEnabled,installationAlias:"78de57f2-4ba1-42a7-af33-62d561ba46b1",changedAt:null,lastAttemptAt:null,nextAttemptAt:null,lastUploadedAt:null,lastReceiptId:null,pendingCount:0,lastErrorCode:null,uploadAvailable:false,remotePaused:false});
+    },
     patchPreferences: (input: unknown) => mockClient.patchPreferences(input),
     putModel: (input: unknown) => mockClient.putModel(input),
     putChannelModelCredential: (input: unknown) =>
@@ -710,7 +719,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
         "/api/v1/local/ai-credits/connect",
-        { method: "POST", headers: {} },
+        expect.objectContaining({ method: "POST", headers: {}, cache: "no-store", redirect: "manual", signal: expect.any(AbortSignal) }),
       ),
     );
     await waitFor(() =>
@@ -770,7 +779,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
         "/api/v1/local/ai-credits/connect",
-        { method: "POST", headers: {} },
+        expect.objectContaining({ method: "POST", headers: {}, cache: "no-store", redirect: "manual", signal: expect.any(AbortSignal) }),
       ),
     );
     await waitFor(() =>
@@ -2131,4 +2140,190 @@ describe("T1278 settings authority 真实账户状态传卡片", () => {
     expect(screen.getByText("使用充值码开通官方额度")).toBeInTheDocument();
     expect(mockClient.putModel).not.toHaveBeenCalled(); expect(mockClient.putModelRouting).not.toHaveBeenCalled();
   }, 180_000);
+});
+
+
+describe("T1278 额度唯一打开链的等待期取消与原scope隔离（待scope审核）", () => {
+  const link = { openUrl: "https://growth.example/credits/connect#SAFE_LINK_CODE", expiresAt: "2026-10-14T12:05:00Z", expiresIn: 60 };
+  const reply = () => Response.json(link, { headers: { "cache-control": "private, no-store" } });
+  const noBrowser = () => vi.spyOn(window, "open").mockImplementation(() => { throw Error("取消后禁止浏览器fallback"); });
+  beforeEach(() => { localStorage.setItem(CURRENT_GROUP_KEY,"open-scope-a");localStorage.setItem(CURRENT_ACCOUNT_KEY,"open-account-a"); });
+  it.each(["aborted", "not-current"] as const)("%s在发送前就拒绝，原connect零POST/零打开",async(reason)=>{
+    const {openAiCreditCenter}=await import("@/lib/open-ai-credit-center");const controller=new AbortController();if(reason==='aborted')controller.abort();
+    const fetchMock=vi.spyOn(globalThis,'fetch').mockResolvedValue(reply()),browser=noBrowser();
+    await expect(openAiCreditCenter({signal:controller.signal,isCurrent:()=>reason!=='not-current'})).rejects.toMatchObject({name:'AbortError'});
+    expect(fetchMock).not.toHaveBeenCalled();expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(browser).not.toHaveBeenCalled();
+  },180_000);
+  it.each(["group", "account", "unmount"] as const)("原card connect等待%s后即使fetch不遵守signal也不晚打开",async(change)=>{
+    const {AiCreditCenterCard}=await import('./channel-model-configuration');let finish!:(value:Response)=>void;
+    const fetchMock=vi.spyOn(globalThis,'fetch').mockImplementation(()=>new Promise(r=>{finish=r;})),browser=noBrowser();
+    const mounted=rtlRender(<AiCreditCenterCard/>);await userEvent.click(screen.getByRole('button',{name:'查看 AI 额度与消耗'}));
+    await waitFor(()=>expect(fetchMock).toHaveBeenCalledOnce(),{timeout:120_000});const init=fetchMock.mock.calls[0]![1]!;
+    expect(String(fetchMock.mock.calls[0]![0])).toBe('/api/v1/local/ai-credits/connect');expect(init).toMatchObject({method:'POST',headers:{},cache:'no-store',redirect:'manual'});expect(init.body).toBeUndefined();
+    await act(async()=>{if(change==='unmount')mounted.unmount();else{localStorage.setItem(change==='group'?CURRENT_GROUP_KEY:CURRENT_ACCOUNT_KEY,'open-scope-b');window.dispatchEvent(new Event('creatoros:accounts-changed'));}finish(reply());});
+    expect(init.signal?.aborted).toBe(true);expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(browser).not.toHaveBeenCalled();expect(fetchMock).toHaveBeenCalledOnce();
+  },180_000);
+  it('原card JSON读取等待切组也不打开旧链接，空POST不重发',async()=>{
+    const {AiCreditCenterCard}=await import('./channel-model-configuration');let finish!:(value:unknown)=>void;const response=reply();const json=vi.spyOn(response,'json').mockImplementation(()=>new Promise(r=>{finish=r;}));
+    const fetchMock=vi.spyOn(globalThis,'fetch').mockResolvedValue(response),browser=noBrowser();rtlRender(<AiCreditCenterCard/>);
+    await userEvent.click(screen.getByRole('button',{name:'查看 AI 额度与消耗'}));await waitFor(()=>expect(json).toHaveBeenCalledOnce(),{timeout:120_000});
+    await act(async()=>{localStorage.setItem(CURRENT_GROUP_KEY,'json-other-group');window.dispatchEvent(new Event('creatoros:accounts-changed'));finish(link);});
+    expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(browser).not.toHaveBeenCalled();expect(fetchMock).toHaveBeenCalledOnce();
+  },180_000);
+  it('原isCurrent在JSON等待后失效，即使scope未变也不打开',async()=>{
+    const {openAiCreditCenter}=await import('@/lib/open-ai-credit-center');let current=true,finish!:(value:unknown)=>void;const response=reply();const json=vi.spyOn(response,'json').mockImplementation(()=>new Promise(r=>{finish=r;}));
+    vi.spyOn(globalThis,'fetch').mockResolvedValue(response);const browser=noBrowser();const pending=openAiCreditCenter({isCurrent:()=>current});const rejected=expect(pending).rejects.toMatchObject({name:'AbortError'});
+    await waitFor(()=>expect(json).toHaveBeenCalledOnce(),{timeout:120_000});current=false;finish(link);await rejected;expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(browser).not.toHaveBeenCalled();
+  },180_000);
+  it('原opener import后的current检查拒绝副作用，取消不能进入fallback',async()=>{
+    const {openAiCreditCenter}=await import('@/lib/open-ai-credit-center');const fetchMock=vi.spyOn(globalThis,'fetch').mockResolvedValue(reply()),browser=noBrowser();let checks=0;
+    // 明确checkpoint控制，不把mock当成真实宿主模块加载或网络取消证据。
+    await expect(openAiCreditCenter({isCurrent:()=>++checks<4})).rejects.toMatchObject({name:'AbortError'});
+    expect(checks).toBeGreaterThanOrEqual(4);expect(fetchMock).toHaveBeenCalledOnce();expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(browser).not.toHaveBeenCalled();
+  },180_000);
+  it('Tauri明确AbortError不触发浏览器fallback',async()=>{
+    const {openAiCreditCenter}=await import('@/lib/open-ai-credit-center');vi.spyOn(globalThis,'fetch').mockResolvedValue(reply());mockOpenExternalUrl.mockRejectedValueOnce(new DOMException('native cancelled','AbortError'));const browser=noBrowser();
+    await expect(openAiCreditCenter()).rejects.toMatchObject({name:'AbortError'});expect(mockOpenExternalUrl).toHaveBeenCalledWith(link.openUrl);expect(browser).not.toHaveBeenCalled();
+  },180_000);
+  it('原Tauri已发出后拒绝且scope已变，不再开第二个浏览器窗口',async()=>{
+    const {openAiCreditCenter}=await import('@/lib/open-ai-credit-center');vi.spyOn(globalThis,'fetch').mockResolvedValue(reply());let reject!:(cause:unknown)=>void;mockOpenExternalUrl.mockImplementationOnce(()=>new Promise((_resolve,r)=>{reject=r;}));const browser=noBrowser();
+    const pending=openAiCreditCenter();const rejected=expect(pending).rejects.toMatchObject({name:'AbortError'});await waitFor(()=>expect(mockOpenExternalUrl).toHaveBeenCalledOnce(),{timeout:120_000});
+    localStorage.setItem(CURRENT_GROUP_KEY,'opener-other-group');window.dispatchEvent(new Event('creatoros:accounts-changed'));reject(Error('native unavailable'));await rejected;expect(browser).not.toHaveBeenCalled();
+  },180_000);
+  it('合法同scope Tauri不可用仍沿原noopener/noreferrer浏览器fallback，不重发connect',async()=>{
+    const {openAiCreditCenter}=await import('@/lib/open-ai-credit-center');const fetchMock=vi.spyOn(globalThis,'fetch').mockResolvedValue(reply());mockOpenExternalUrl.mockRejectedValueOnce(Error('native unavailable'));const browser=vi.spyOn(window,'open').mockReturnValue({} as Window);
+    await openAiCreditCenter();expect(browser).toHaveBeenCalledWith(link.openUrl,'_blank','noopener,noreferrer');expect(fetchMock).toHaveBeenCalledOnce();expect(fetchMock.mock.calls[0]![1]?.body).toBeUndefined();
+  },180_000);
+  it('helper有限预算覆盖原串行连接，outer仅剩1500ms时继承耗尽，不重置成两分钟',async()=>{
+    const {openAiCreditCenter}=await import('@/lib/open-ai-credit-center');const controller=new AbortController();let finish!:(value:Response)=>void;const fetchMock=vi.spyOn(globalThis,'fetch').mockImplementation(()=>new Promise(r=>{finish=r;}));const timers=vi.spyOn(globalThis,'setTimeout'),browser=noBrowser();
+    let pending:Promise<void>|undefined,rejected:Promise<unknown>|undefined;
+    try{
+      pending=openAiCreditCenter({signal:controller.signal});rejected=expect(pending).rejects.toMatchObject({name:'AbortError'});expect(timers).toHaveBeenCalledWith(expect.any(Function),600_000);
+      await new Promise<void>(resolve=>setTimeout(()=>{controller.abort();resolve();},1500));expect(fetchMock.mock.calls[0]![1]?.signal?.aborted).toBe(true);finish(reply());await rejected;
+      expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(browser).not.toHaveBeenCalled();expect(fetchMock).toHaveBeenCalledOnce();
+    }finally{
+      // 旧源缺timer导致前置断言失败时也完成替身，避免Vitest自动等待挂起的rejects。
+      controller.abort();if(finish)finish(reply());timers.mockRestore();await pending?.catch(()=>{});await rejected?.catch(()=>{});
+    }
+  },180_000);
+  it('已到账原connect在内层等待切组后不打开，不另reserve/resume原资金操作',async()=>{
+    const {webcrypto}=await import('node:crypto');vi.stubGlobal('crypto',webcrypto);const {AiCreditCenterCard}=await import('./channel-model-configuration');const originalRef='AICLE-T1278LATEOPEN';const code=`AICR-${'x'.repeat(43)}`;let finish!:(value:Response)=>void;const calls:string[]=[];const browser=noBrowser();
+    try{
+      vi.spyOn(globalThis,'fetch').mockImplementation(async(url)=>{calls.push(String(url));if(String(url)==='/api/v1/local/ai-credits/bootstrap')return Response.json({contractVersion:'growth-ai-credit-bootstrap-v1',operationRef:originalRef,status:'applied',creditUnits:123,expiresAt:'2026-10-14T12:30:00+00:00'});if(String(url)==='/api/v1/local/client-config')return Response.json({authority:'channel',outcome:'configured'});if(String(url)==='/api/v1/local/ai-credits/connect')return new Promise(r=>{finish=r;});throw Error('unexpected route');});
+      rtlRender(<AiCreditCenterCard/>);await userEvent.click(screen.getByText('使用充值码开通官方额度'));await userEvent.type(screen.getByLabelText('官方额度充值码'),code);await userEvent.click(screen.getByRole('button',{name:'兑换并开通'}));await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('本次兑换已到账'),{timeout:120_000});
+      expect(screen.getByLabelText('原操作编号')).toHaveValue(originalRef);await userEvent.click(screen.getByRole('button',{name:'同步并打开额度中心'}));await waitFor(()=>expect(calls).toContain('/api/v1/local/ai-credits/connect'),{timeout:120_000});
+      await act(async()=>{localStorage.setItem(CURRENT_GROUP_KEY,'paid-other-group');window.dispatchEvent(new Event('creatoros:accounts-changed'));finish(reply());});
+      expect(calls).toEqual(['/api/v1/local/ai-credits/bootstrap','/api/v1/local/client-config','/api/v1/local/ai-credits/connect']);expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(browser).not.toHaveBeenCalled();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+    }finally{vi.unstubAllGlobals();}
+  },180_000);
+});
+
+
+describe("T1278 completion各await必须随原signal结束（预算修订）", () => {
+  const link={openUrl:'https://growth.example/credits/connect#BOUNDED_ORIGINAL_LINK',expiresAt:'2026-10-14T12:05:00Z',expiresIn:60};
+  const reply=()=>Response.json(link,{headers:{'cache-control':'private, no-store'}});
+  const flush=async()=>{for(let n=0;n<30;n++)await Promise.resolve();};
+  it.each(['fetch','json','native'] as const)('实际helper %s永久等待到取消时promise立即结束/finally，无第二fallback',async(stage)=>{
+    const {openAiCreditCenter}=await import('@/lib/open-ai-credit-center');const controller=new AbortController();let release!:(value:any)=>void;
+    const held=new Promise<any>(resolve=>{release=resolve;});const response=reply();const browser=vi.spyOn(window,'open').mockImplementation(()=>{throw Error('cancelled waiter must not fallback');});
+    const json=stage==='json'?vi.spyOn(response,'json').mockImplementation(()=>held):null;
+    const fetchMock=vi.spyOn(globalThis,'fetch').mockImplementation(async()=>stage==='fetch'?held:response);
+    if(stage==='native')mockOpenExternalUrl.mockImplementationOnce(()=>held);
+    let settled=false;const pending=openAiCreditCenter({signal:controller.signal}).then(()=>{settled=true;},cause=>{settled=true;expect(cause).toMatchObject({name:'AbortError'});});
+    try{
+      await flush();if(stage==='json')expect(json).toHaveBeenCalledOnce();if(stage==='native')expect(mockOpenExternalUrl).toHaveBeenCalledOnce();
+      controller.abort();await flush();expect(settled).toBe(true);expect(browser).not.toHaveBeenCalled();expect(fetchMock).toHaveBeenCalledOnce();
+    }finally{controller.abort();release(stage==='fetch'?response:stage==='json'?link:undefined);await pending;}
+  },180_000);
+  it('实际native永久pending时600000预算到就结束promise，不只abort已经完成的fetch',async()=>{
+    const {openAiCreditCenter}=await import('@/lib/open-ai-credit-center');vi.useFakeTimers();let release!:()=>void;
+    const native=new Promise<void>(resolve=>{release=resolve;});const fetchMock=vi.spyOn(globalThis,'fetch').mockResolvedValue(reply());mockOpenExternalUrl.mockImplementationOnce(()=>native);const browser=vi.spyOn(window,'open').mockReturnValue(null);
+    let settled=false;const pending=openAiCreditCenter().then(()=>{settled=true;},cause=>{settled=true;expect(cause).toMatchObject({name:'AbortError'});});
+    try{
+      await flush();expect(mockOpenExternalUrl).toHaveBeenCalledOnce();await vi.advanceTimersByTimeAsync(600_000);expect(fetchMock.mock.calls[0]![1]?.signal?.aborted).toBe(true);expect(settled).toBe(true);expect(browser).not.toHaveBeenCalled();expect(vi.getTimerCount()).toBe(0);
+    }finally{release();await pending;vi.useRealTimers();}
+  },180_000);
+});
+
+describe("T1278 paid completion真实公共链的有限观察（预算修订）", () => {
+  const ref='AICLE-T1278BUDGET001';const code=`AICR-${'x'.repeat(43)}`;
+  const resource=(revision=0)=>({schemaVersion:1,revision,choices:null,legacyExecutionEngine:'pi',effectiveChoices:{},capabilities:[]});
+  const flush=async()=>{for(let n=0;n<50;n++)await Promise.resolve();};
+  const receipt=()=>Response.json({contractVersion:'growth-ai-credit-bootstrap-v1',operationRef:ref,status:'applied',creditUnits:123,expiresAt:'2026-10-14T12:30:00+00:00'});
+  const sync=()=>Response.json({authority:'channel',outcome:'configured'});
+  let restoreCrypto:()=>void;
+  beforeEach(async()=>{const {webcrypto}=await import('node:crypto');vi.stubGlobal('crypto',webcrypto);restoreCrypto=()=>vi.unstubAllGlobals();});
+  afterEach(()=>restoreCrypto());
+  async function paid(){const {AiCreditCenterCard}=await import('./channel-model-configuration');const view=rtlRender(<AiCreditCenterCard/>);await userEvent.click(screen.getByText('使用充值码开通官方额度'));await userEvent.type(screen.getByLabelText('官方额度充值码'),code);await userEvent.click(screen.getByRole('button',{name:'兑换并开通'}));await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('本次兑换已到账'),{timeout:120_000});return view;}
+  it.each(['sync-fetch','sync-json','route-get'] as const)('原已到账%s永久pending阶段预算结束保原ref/真实applied，不重投资金或开第二窗',async(stage)=>{
+    const calls:string[]=[];let finish!:(value:any)=>void;const held=new Promise<any>(resolve=>{finish=resolve;});const body=sync();if(stage==='sync-json')vi.spyOn(body,'json').mockImplementation(()=>held);
+    vi.spyOn(globalThis,'fetch').mockImplementation(async(url)=>{calls.push(String(url));if(String(url)==='/api/v1/local/ai-credits/bootstrap')return receipt();if(String(url)==='/api/v1/local/client-config')return stage==='sync-fetch'?held:body;throw Error('no connect/fund retry before stage completes');});
+    const view=await paid();if(stage==='route-get')mockClient.getModelRouting.mockImplementationOnce(()=>held);
+    vi.useFakeTimers();
+    try{
+      await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'同步并打开额度中心'}));await flush();});
+      expect(screen.getByRole('button',{name:'同步并打开额度中心'})).toBeDisabled();
+      await act(async()=>{await vi.advanceTimersByTimeAsync(stage==='route-get'?260_000:490_000);await flush();});
+      expect(screen.getByRole('button',{name:'同步并打开额度中心'})).toBeEnabled();expect(screen.getByLabelText('原操作编号')).toHaveValue(ref);expect(screen.getByRole('status')).toHaveTextContent('本次兑换已到账');expect(screen.getByRole('alert')).toHaveTextContent('本次等待已结束或取消');
+      expect(calls).toEqual(['/api/v1/local/ai-credits/bootstrap','/api/v1/local/client-config']);expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+    }finally{
+      view.unmount();finish(stage==='sync-fetch'?body:stage==='sync-json'?{authority:'channel',outcome:'configured'}:resource());await flush();vi.useRealTimers();
+    }
+  },180_000);
+  it('本窗口route observer结束不取消同scope合法共享读者，晚GET仍供原读者而不晚开本窗',async()=>{
+    const calls:string[]=[];vi.spyOn(globalThis,'fetch').mockImplementation(async(url)=>{calls.push(String(url));if(String(url)==='/api/v1/local/ai-credits/bootstrap')return receipt();if(String(url)==='/api/v1/local/client-config')return sync();throw Error('retired observer must not open');});const view=await paid();const store=await import('@/features/copilot/assistant-engine');let finish!:(value:unknown)=>void;mockClient.getModelRouting.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));const reads=mockClient.getModelRouting.mock.calls.length;vi.useFakeTimers();let sibling:Promise<void>|undefined;
+    try{
+      await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'同步并打开额度中心'}));await flush();});expect(mockClient.getModelRouting).toHaveBeenCalledTimes(reads+1);sibling=store.loadModelRouting(true);
+      await act(async()=>{await vi.advanceTimersByTimeAsync(260_000);await flush();});expect(screen.getByRole('button',{name:'同步并打开额度中心'})).toBeEnabled();expect(store.readModelRoutingPreference().reading).toBe(true);
+      await act(async()=>{finish(resource(3));await sibling;await flush();});expect(store.readModelRoutingPreference()).toMatchObject({ready:true,reading:false,resource:{revision:3,choices:null}});expect(mockClient.getModelRouting).toHaveBeenCalledTimes(reads+1);expect(mockOpenExternalUrl).not.toHaveBeenCalled();expect(screen.getByLabelText('原操作编号')).toHaveValue(ref);expect(calls).toEqual(['/api/v1/local/ai-credits/bootstrap','/api/v1/local/client-config']);
+    }finally{view.unmount();finish?.(resource(3));await sibling;await flush();vi.useRealTimers();}
+  },180_000);
+  it('cold完整250000链后原GET成功只打开一次，paid outer覆盖config+route+open完整组合',async()=>{
+    const calls:string[]=[];vi.spyOn(globalThis,'fetch').mockImplementation(async(url)=>{calls.push(String(url));if(String(url)==='/api/v1/local/ai-credits/bootstrap')return receipt();if(String(url)==='/api/v1/local/client-config')return sync();if(String(url)==='/api/v1/local/ai-credits/connect')return Response.json({openUrl:'https://growth.example/credits/connect#ORIGINAL_COLD_CHAIN',expiresIn:60,expiresAt:'2026-10-14T12:05:00Z'});throw Error('unexpected route');});const view=await paid();let finish!:(value:unknown)=>void;mockClient.getModelRouting.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));vi.useFakeTimers();
+    try{
+      await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'同步并打开额度中心'}));await flush();});await act(async()=>{await vi.advanceTimersByTimeAsync(250_000);finish(resource(4));await flush();});
+      expect(mockOpenExternalUrl).toHaveBeenCalledWith('https://growth.example/credits/connect#ORIGINAL_COLD_CHAIN');expect(calls).toEqual(['/api/v1/local/ai-credits/bootstrap','/api/v1/local/client-config','/api/v1/local/ai-credits/connect']);expect(screen.getByLabelText('原操作编号')).toHaveValue(ref);expect(screen.getByRole('status')).toHaveTextContent('本次兑换已到账');
+    }finally{view.unmount();finish?.(resource(4));await flush();vi.useRealTimers();}
+  },180_000);
+  it('真实串行config480000→cold route250000→native500000完成超过旧900000，保applied且完整completion有余量',async()=>{
+    const calls:string[]=[];let configDone!:(value:Response)=>void,routeDone!:(value:unknown)=>void,nativeDone!:()=>void;
+    vi.spyOn(globalThis,'fetch').mockImplementation(async(url)=>{calls.push(String(url));if(String(url)==='/api/v1/local/ai-credits/bootstrap')return receipt();if(String(url)==='/api/v1/local/client-config')return new Promise(r=>{configDone=r;});if(String(url)==='/api/v1/local/ai-credits/connect')return Response.json({openUrl:'https://growth.example/credits/connect#FULL_ORIGINAL_COMPLETION',expiresIn:600,expiresAt:'2026-10-14T12:15:00Z'});throw Error('unexpected route');});
+    const view=await paid();mockClient.getModelRouting.mockImplementationOnce(()=>new Promise(r=>{routeDone=r;}));mockOpenExternalUrl.mockImplementationOnce(()=>new Promise<void>(r=>{nativeDone=r;}));vi.useFakeTimers();
+    try{
+      await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'同步并打开额度中心'}));await flush();});
+      await act(async()=>{await vi.advanceTimersByTimeAsync(480_000);configDone(sync());await flush();});
+      await act(async()=>{await vi.advanceTimersByTimeAsync(250_000);routeDone(resource(5));await flush();});expect(mockOpenExternalUrl).toHaveBeenCalledOnce();
+      await act(async()=>{await vi.advanceTimersByTimeAsync(500_000);nativeDone();await flush();});
+      expect(screen.getByRole('button',{name:'同步并打开额度中心'})).toBeEnabled();expect(screen.queryByRole('alert')).not.toBeInTheDocument();expect(screen.getByLabelText('原操作编号')).toHaveValue(ref);expect(screen.getByRole('status')).toHaveTextContent('本次兑换已到账');expect(mockOpenExternalUrl).toHaveBeenCalledWith('https://growth.example/credits/connect#FULL_ORIGINAL_COMPLETION');expect(calls).toEqual(['/api/v1/local/ai-credits/bootstrap','/api/v1/local/client-config','/api/v1/local/ai-credits/connect']);
+    }finally{view.unmount();configDone?.(sync());routeDone?.(resource(5));nativeDone?.();await flush();vi.useRealTimers();}
+  },180_000);
+
+});
+
+
+describe("T1278 原资金等待只继承原900000截止，unknown保原idem（预算修订）",()=>{
+  const code=`AICR-${'x'.repeat(43)}`;
+  const receipt=()=>Response.json({contractVersion:'growth-ai-credit-bootstrap-v1',operationRef:'AICLE-T1278ORIGINALWAIT',status:'applied',creditUnits:123,expiresAt:'2026-10-14T12:30:00+00:00'});
+  const flush=async()=>{for(let n=0;n<50;n++)await Promise.resolve();};
+  it.each(['fetch','json'] as const)('原reserve %s永久等待耗尽，结束本观察保原key，晚applied不回写也不自动第二POST',async(stage)=>{
+    const {webcrypto}=await import('node:crypto');vi.stubGlobal('crypto',webcrypto);const {AiCreditCenterCard}=await import('./channel-model-configuration');let release!:(value:any)=>void;
+    const held=new Promise<any>(resolve=>{release=resolve;});const response=receipt();if(stage==='json')vi.spyOn(response,'json').mockImplementation(()=>held);
+    const fetchMock=vi.spyOn(globalThis,'fetch').mockImplementation(async()=>stage==='fetch'?held:response);
+    const view=rtlRender(<AiCreditCenterCard/>);await userEvent.click(screen.getByText('使用充值码开通官方额度'));await userEvent.type(screen.getByLabelText('官方额度充值码'),code);vi.useFakeTimers();
+    try{
+      await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'兑换并开通'}));await flush();});
+      // webcrypto digest uses the real platform queue; own original timer stays fake.
+      for(let n=0;n<20&&fetchMock.mock.calls.length===0;n++)await act(async()=>{await new Promise<void>(r=>setImmediate(r));await flush();});
+      expect(fetchMock).toHaveBeenCalledOnce();const originalKey=new Headers(fetchMock.mock.calls[0]![1]!.headers).get('Idempotency-Key');expect(originalKey).toMatch(/^bootstrap-/);
+      await act(async()=>{await vi.advanceTimersByTimeAsync(900_000);await flush();});
+      expect(screen.getByRole('button',{name:'恢复原提交'})).toBeDisabled(); // 清空码；结束busy仍能重新输入原码。
+      expect(screen.getByLabelText('官方额度充值码')).toBeEnabled();expect(screen.getByText('本次请求结果尚未确认。只恢复同一次提交；已有操作编号时，请查询原操作。')).toBeInTheDocument();
+      expect(fetchMock).toHaveBeenCalledOnce();
+      await act(async()=>{release(stage==='fetch'?receipt():{contractVersion:'growth-ai-credit-bootstrap-v1',operationRef:'AICLE-T1278ORIGINALWAIT',status:'applied',creditUnits:123,expiresAt:'2026-10-14T12:30:00+00:00'});await flush();});
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();expect(screen.getByLabelText('原操作编号')).toHaveValue('');expect(mockOpenExternalUrl).not.toHaveBeenCalled();
+      fetchMock.mockResolvedValue(receipt());await act(async()=>{fireEvent.change(screen.getByLabelText('官方额度充值码'),{target:{value:code}});fireEvent.click(screen.getByRole('button',{name:'恢复原提交'}));await flush();});
+      for(let n=0;n<20&&fetchMock.mock.calls.length<2;n++)await act(async()=>{await new Promise<void>(r=>setImmediate(r));await flush();});
+      expect(fetchMock).toHaveBeenCalledTimes(2);expect(new Headers(fetchMock.mock.calls[1]![1]!.headers).get('Idempotency-Key')).toBe(originalKey);expect(screen.getByRole('status')).toHaveTextContent('本次兑换已到账');
+    }finally{view.unmount();release?.(stage==='fetch'?receipt():{});await flush();vi.useRealTimers();vi.unstubAllGlobals();}
+  },180_000);
 });

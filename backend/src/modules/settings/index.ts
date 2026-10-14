@@ -84,3 +84,5 @@ export {createRedfoxSubmissions} from "./redfox-submissions";
 
 export { createOnboardingState, type OnboardingAccountReader } from "./onboarding-state";
 export { createReportingLocal, REPORTING_CONSENT_VERSION } from "./reporting-local";
+
+export {createEncryptedLogReporting} from "./encrypted-log-reporting";

@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-638",
-  "commit_sha": "5f931f78acebcb942a11c9ab46fbd675c64f8bde",
+  "commit_sha": "4985fd526f9a8c2b81bf04bf7b38c0d29c12bcd4",
   "captures": [
     {
       "checkpoint": "normal-sidebar",
@@ -14,7 +14,7 @@
         "width": 1440,
         "height": 900
       },
-      "text": "CreatorOS\n首页\n定位中心\n内容雷达\n选题\n项目\n知识库\n素材中心\n发布中心\n自动化\n设置\nAI 助手\n\n，今天想先做点什么？\n\n打开 AI 助手\n帮助与反馈\n当前抖音号\n载入账号…\n?\n个人版"
+      "text": "CreatorOS\n首页\n创作者总览\n定位中心\n内容雷达\n选题\n项目\n知识库\n素材中心\n创作画布\n发布中心\n运营分析\n自动化\n设置\nAI 助手\n\n创作者，今天想先做点什么？\n\n打开 AI 助手\n帮助与反馈\n当前账号组\n载入账号组…\n?\n创作者\n个人版"
     },
     {
       "checkpoint": "short-sidebar",
@@ -27,7 +27,7 @@
         "width": 1024,
         "height": 640
       },
-      "text": "帮助与反馈\n当前抖音号\n未绑定账号\n?\n个人版"
+      "text": "?"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # T-1207 浏览器场景逐例截图索引
 
-本索引按 scenario-index.ndjson 每行保留一次运行记录：345 条历史运行记录、224 个不同 Test ID（独立用例）、67 个 spec；251 PASS、86 FAIL、8 TIMEOUT、0 SKIP。重复 Test ID 不合并，状态按历史记录逐次统计，不代表全功能通过。
+本索引按 scenario-index.ndjson 每行保留一次运行记录：394 条历史运行记录、239 个不同 Test ID（独立用例）、72 个 spec；286 PASS、100 FAIL、8 TIMEOUT、0 SKIP。重复 Test ID 不合并，状态按历史记录逐次统计，不代表全功能通过。
 
 [打开静态截图总览](E2E-GALLERY.html) · [完整 E2E](full-e2e.log) · [扩展路由矩阵](route-matrix-expanded.log) · [视觉基线](visual.log) · [无障碍矩阵](accessibility.log) · [媒体导入/导出](media-tab.log) · [Appium 探测](appium-probe.md)
 
@@ -256,7 +256,7 @@ Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpect
 
 | 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
 |---|---|---|---|---|---|
-| FAIL | renders the assets gallery with toolbar, type sidebar, and detail panel | [http://127.0.0.1:3887/assets](http://127.0.0.1:3887/assets) | [查看原图](screenshots/assets--Assets-Center-page-renders-the-assets-gallery-with-toolbar-type-sidebar---44126b7305134232970f5652803659ac95522f7c619b0ab96feba9a0bdd0cbea.png) | `7d95edad6f617a74a29d-605171d5500a33bc7afb` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fassets.spec.ts--7d95edad6f617a74a29d-605171d5500a33bc7afb--39) |
+| FAIL | renders the assets gallery with toolbar, type sidebar, and detail panel | [http://127.0.0.1:3887/assets](http://127.0.0.1:3887/assets) | [查看原图](../t1225/before/39-assets--Assets-Center-page-renders-the-assets-gallery-with-toolbar-type-sidebar---44126b7305134232970f5652803659ac95522f7c619b0ab96feba9a0bdd0cbea.png) | `7d95edad6f617a74a29d-605171d5500a33bc7afb` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fassets.spec.ts--7d95edad6f617a74a29d-605171d5500a33bc7afb--39) |
 
 失败证据：
 
@@ -274,7 +274,7 @@ Call log:
 
 ```
 
-| FAIL | clicking a different card updates the AssetDetailPanel | [http://127.0.0.1:3887/assets](http://127.0.0.1:3887/assets) | [查看原图](screenshots/assets--Assets-Center-page-clicking-a-different-card-updates-the-AssetDetailPane--f21980d5915100846d6929d8b5992e863c21b0f0a8fb212526d77c118921ab16.png) | `7d95edad6f617a74a29d-425739d7596a7f96ed34` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fassets.spec.ts--7d95edad6f617a74a29d-425739d7596a7f96ed34--40) |
+| FAIL | clicking a different card updates the AssetDetailPanel | [http://127.0.0.1:3887/assets](http://127.0.0.1:3887/assets) | [查看原图](../t1225/before/40-assets--Assets-Center-page-clicking-a-different-card-updates-the-AssetDetailPane--f21980d5915100846d6929d8b5992e863c21b0f0a8fb212526d77c118921ab16.png) | `7d95edad6f617a74a29d-425739d7596a7f96ed34` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fassets.spec.ts--7d95edad6f617a74a29d-425739d7596a7f96ed34--40) |
 
 失败证据：
 
@@ -285,6 +285,28 @@ Expected: [32mtrue[39m
 Received: [31mfalse[39m
 ```
 
+| PASS | renders the assets gallery with toolbar, type sidebar, and detail panel | [http://127.0.0.1:3916/assets](http://127.0.0.1:3916/assets) | [查看原图](../t1225/before-3916/348-assets--Assets-Center-page-renders-the-assets-gallery-with-toolbar-type-sidebar---44126b7305134232970f5652803659ac95522f7c619b0ab96feba9a0bdd0cbea.png) | `7d95edad6f617a74a29d-605171d5500a33bc7afb` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fassets.spec.ts--7d95edad6f617a74a29d-605171d5500a33bc7afb--348) |
+| FAIL | clicking a different card updates the AssetDetailPanel | [http://127.0.0.1:3916/assets](http://127.0.0.1:3916/assets) | [查看原图](../t1225/before-3916/349-assets--Assets-Center-page-clicking-a-different-card-updates-the-AssetDetailPane--f21980d5915100846d6929d8b5992e863c21b0f0a8fb212526d77c118921ab16.png) | `7d95edad6f617a74a29d-425739d7596a7f96ed34` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fassets.spec.ts--7d95edad6f617a74a29d-425739d7596a7f96ed34--349) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+
+[32m- Expected  - 6[39m
+[31m+ Received  + 1[39m
+
+[32m- Set {[39m
+[32m-   "asset-a53cc88b-59",[39m
+[32m-   "asset-a53cc88b-66",[39m
+[32m-   "asset-a53cc88b-73",[39m
+[32m-   "asset-a53cc88b-80",[39m
+[32m- }[39m
+[31m+ Set {}[39m
+```
+
+| PASS | 真实空账号组显示零素材并能打开系统文件选择器 | [http://127.0.0.1:3916/assets](http://127.0.0.1:3916/assets) | [查看原图](../t1225/before-3916/350-assets--Assets-Center-page-真实空账号组显示零素材并能打开系统文件选择器--cdfedab7c91e289eaf94858d945c85f205b77b2d948e49e99d7d23824380d602.png) | `7d95edad6f617a74a29d-2617a317b34fe013a71a` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fassets.spec.ts--7d95edad6f617a74a29d-2617a317b34fe013a71a--350) |
+| PASS | clicking a different card updates the AssetDetailPanel | [http://127.0.0.1:3917/assets](http://127.0.0.1:3917/assets) | [查看原图](screenshots/assets--Assets-Center-page-clicking-a-different-card-updates-the-AssetDetailPane--f21980d5915100846d6929d8b5992e863c21b0f0a8fb212526d77c118921ab16.png) | `7d95edad6f617a74a29d-425739d7596a7f96ed34` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fassets.spec.ts--7d95edad6f617a74a29d-425739d7596a7f96ed34--351) |
 
 ## frontend/tests/e2e/audience-task-topics.spec.ts
 
@@ -330,7 +352,7 @@ Received: [31mfalse[39m
 Error: 等待采集 intelligence-run-a65785f2-560 超时
 ```
 
-| FAIL | 内容雷达只有改写初稿和局部选题字段时仍可一键升级项目 | [about:blank](about:blank) | [查看原图](screenshots/content-radar-one-click-project--内容雷达只有改写初稿和局部选题字段时仍可一键升级项目--7b172b275f363a9dbe59f4cb912cbea2a12a3cbb438632902bf1f8793b74625e.png) | `24be249374a0952f42fe-4c8c214b8ca5c531b6bf` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fcontent-radar-one-click-project.spec.ts--24be249374a0952f42fe-4c8c214b8ca5c531b6bf--315) |
+| FAIL | 内容雷达只有改写初稿和局部选题字段时仍可一键升级项目 | [about:blank](about:blank) | [查看原图](../t1224/before/content-radar-one-click-project--内容雷达只有改写初稿和局部选题字段时仍可一键升级项目--7b172b275f363a9dbe59f4cb912cbea2a12a3cbb438632902bf1f8793b74625e.png) | `24be249374a0952f42fe-4c8c214b8ca5c531b6bf` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fcontent-radar-one-click-project.spec.ts--24be249374a0952f42fe-4c8c214b8ca5c531b6bf--315) |
 
 失败证据：
 
@@ -338,6 +360,29 @@ Error: 等待采集 intelligence-run-a65785f2-560 超时
 Error: 等待采集 intelligence-run-07d196a4-17 超时
 ```
 
+| FAIL | 内容雷达只有改写初稿和局部选题字段时仍可一键升级项目 | [http://127.0.0.1:3914/intelligence](http://127.0.0.1:3914/intelligence) | [查看原图](../t1229/before-3918/346-content-radar-one-click-project--内容雷达只有改写初稿和局部选题字段时仍可一键升级项目--7b172b275f363a9dbe59f4cb912cbea2a12a3cbb438632902bf1f8793b74625e.png) | `24be249374a0952f42fe-4c8c214b8ca5c531b6bf` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fcontent-radar-one-click-project.spec.ts--24be249374a0952f42fe-4c8c214b8ca5c531b6bf--346) |
+
+失败证据：
+
+```text
+Error: 等待选题生成 intelligence-transform-7a95d888-115 超时
+```
+
+| FAIL | 内容雷达只有改写初稿和局部选题字段时仍可一键升级项目 | [http://127.0.0.1:3918/projects/project-e8f3bee7-128](http://127.0.0.1:3918/projects/project-e8f3bee7-128) | [查看原图](../t1231/before-3919/352-content-radar-one-click-project--内容雷达只有改写初稿和局部选题字段时仍可一键升级项目--7b172b275f363a9dbe59f4cb912cbea2a12a3cbb438632902bf1f8793b74625e.png) | `24be249374a0952f42fe-4c8c214b8ca5c531b6bf` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fcontent-radar-one-click-project.spec.ts--24be249374a0952f42fe-4c8c214b8ca5c531b6bf--352) |
+
+失败证据：
+
+```text
+Error: projects.get 应成功，实得 404：Project not found: project-e8f3bee7-128
+
+[2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+Expected: [32mtrue[39m
+Received: [31mfalse[39m
+```
+
+| PASS | 内容雷达只有改写初稿和局部选题字段时仍可一键升级项目 | [http://127.0.0.1:3919/projects/project-5eb36882-130](http://127.0.0.1:3919/projects/project-5eb36882-130) | [查看原图](../t1233/before-3920/353-content-radar-one-click-project--内容雷达只有改写初稿和局部选题字段时仍可一键升级项目--7b172b275f363a9dbe59f4cb912cbea2a12a3cbb438632902bf1f8793b74625e.png) | `24be249374a0952f42fe-4c8c214b8ca5c531b6bf` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fcontent-radar-one-click-project.spec.ts--24be249374a0952f42fe-4c8c214b8ca5c531b6bf--353) |
+| PASS | 内容雷达只有改写初稿和局部选题字段时仍可一键升级项目 | [http://127.0.0.1:3920/projects/project-cd0949c5-130](http://127.0.0.1:3920/projects/project-cd0949c5-130) | [查看原图](screenshots/content-radar-one-click-project--内容雷达只有改写初稿和局部选题字段时仍可一键升级项目--7b172b275f363a9dbe59f4cb912cbea2a12a3cbb438632902bf1f8793b74625e.png) | `24be249374a0952f42fe-4c8c214b8ca5c531b6bf` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fcontent-radar-one-click-project.spec.ts--24be249374a0952f42fe-4c8c214b8ca5c531b6bf--354) |
 
 ## frontend/tests/e2e/copilot-project-reference.spec.ts
 
@@ -443,7 +488,7 @@ Call log:
 
 | 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
 |---|---|---|---|---|---|
-| FAIL | 稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持 | [http://127.0.0.1:3887/projects/project-a65785f2-1642](http://127.0.0.1:3887/projects/project-a65785f2-1642) | [查看原图](screenshots/draft-ammo-media-preview--稿面视频素材双击与键盘均可真实预览-刷新和小窗口仍保持--e4f25be30aee71098adba0b216729950a59f84e1775af1bf723f64ae73875e71.png) | `f676eec36554c6fe6d79-3013d162e18de07e3592` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fdraft-ammo-media-preview.spec.ts--f676eec36554c6fe6d79-3013d162e18de07e3592--64) |
+| FAIL | 稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持 | [http://127.0.0.1:3887/projects/project-a65785f2-1642](http://127.0.0.1:3887/projects/project-a65785f2-1642) | [查看原图](../t1243/before-source/original-failure.png) | `f676eec36554c6fe6d79-3013d162e18de07e3592` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fdraft-ammo-media-preview.spec.ts--f676eec36554c6fe6d79-3013d162e18de07e3592--64) |
 
 失败证据：
 
@@ -463,6 +508,28 @@ Call log:
 
 ```
 
+| FAIL | 稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持 | [http://127.0.0.1:3935/projects/project-04255ce9-9](http://127.0.0.1:3935/projects/project-04255ce9-9) | [查看原图](../t1243/browser-3935-red/original-common-failure.png) | `f676eec36554c6fe6d79-3013d162e18de07e3592` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fdraft-ammo-media-preview.spec.ts--f676eec36554c6fe6d79-3013d162e18de07e3592--387) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+
+Locator: getByRole('button', { name: '预览 编导智能体实拍.mp4' })
+Expected substring: [32m"双击预览"[39m
+Received string:    [31m"素材编导智能体实拍.mp4↳ 素材 · video点击阅读"[39m
+Timeout: 120000ms
+
+Call log:
+[2m  - Expect "toContainText" with timeout 120000ms[22m
+[2m  - waiting for getByRole('button', { name: '预览 编导智能体实拍.mp4' })[22m
+[2m    242 × locator resolved to <div tabindex="0" role="button" data-kind="asset" data-slot="draft-ammo-card" aria-label="预览 编导智能体实拍.mp4" class="w-[220px] shrink-0 cursor-pointer rounded-[10px] border border-border bg-surface px-3 py-2.5 transition-colors hover:border-brand/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">…</div>[22m
+[2m        - unexpected value "素材编导智能体实拍.mp4↳ 素材 · video点击阅读"[22m
+
+```
+
+| PASS | 稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持 | [http://127.0.0.1:3936/projects/project-26bf6b03-9](http://127.0.0.1:3936/projects/project-26bf6b03-9) | [查看原图](../t1243/browser-3936-green/original-common-pass.png) | `f676eec36554c6fe6d79-3013d162e18de07e3592` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fdraft-ammo-media-preview.spec.ts--f676eec36554c6fe6d79-3013d162e18de07e3592--388) |
+| PASS | 稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持 | [http://127.0.0.1:3937/projects/project-42f002a8-9](http://127.0.0.1:3937/projects/project-42f002a8-9) | [查看原图](screenshots/draft-ammo-media-preview--稿面视频素材双击与键盘均可真实预览-刷新和小窗口仍保持--e4f25be30aee71098adba0b216729950a59f84e1775af1bf723f64ae73875e71.png) | `f676eec36554c6fe6d79-3013d162e18de07e3592` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fdraft-ammo-media-preview.spec.ts--f676eec36554c6fe6d79-3013d162e18de07e3592--389) |
 
 ## frontend/tests/e2e/experience.spec.ts
 
@@ -855,8 +922,8 @@ Call log:
 
 | 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
 |---|---|---|---|---|---|
-| PASS | [T-606] 模型来源状态在桌面与 390px 都可辨认且本地表单可用 | [http://127.0.0.1:3887/settings](http://127.0.0.1:3887/settings) | [查看原图](screenshots/settings--Settings-page-T-606-模型来源状态在桌面与-390px-都可辨认且本地表单可用--22d2205f0d939ec14e5d2ae054da8c50d99a139ddccb0ce38f4434469b1647c0.png) | `87418b536bb3b16b9965-1ee4cd8caf242f0696b5` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1ee4cd8caf242f0696b5--91) |
-| FAIL | renders the settings structure on the /settings route | [http://127.0.0.1:3887/settings](http://127.0.0.1:3887/settings) | [查看原图](screenshots/settings--Settings-page-renders-the-settings-structure-on-the-settings-route--3bbd8db718cbc889382b928e65341a5271f7da93d3867f172e612644b18c2964.png) | `87418b536bb3b16b9965-9d167bbc2a2b29b9bb07` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-9d167bbc2a2b29b9bb07--92) |
+| PASS | [T-606] 模型来源状态在桌面与 390px 都可辨认且本地表单可用 | [http://127.0.0.1:3887/settings](http://127.0.0.1:3887/settings) | [查看原图](../t1232/before-3921/91-settings--Settings-page-T-606-模型来源状态在桌面与-390px-都可辨认且本地表单可用--22d2205f0d939ec14e5d2ae054da8c50d99a139ddccb0ce38f4434469b1647c0.png) | `87418b536bb3b16b9965-1ee4cd8caf242f0696b5` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1ee4cd8caf242f0696b5--91) |
+| FAIL | renders the settings structure on the /settings route | [http://127.0.0.1:3887/settings](http://127.0.0.1:3887/settings) | [查看原图](../t1232/before-3921/92-settings--Settings-page-renders-the-settings-structure-on-the-settings-route--3bbd8db718cbc889382b928e65341a5271f7da93d3867f172e612644b18c2964.png) | `87418b536bb3b16b9965-9d167bbc2a2b29b9bb07` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-9d167bbc2a2b29b9bb07--92) |
 
 失败证据：
 
@@ -874,6 +941,58 @@ Call log:
 
 ```
 
+| PASS | [T-606] 模型来源状态在桌面与 390px 都可辨认且本地表单可用 | [http://127.0.0.1:3921/settings](http://127.0.0.1:3921/settings) | [查看原图](../t1232/before-next-settings-run/settings--Settings-page-T-606-模型来源状态在桌面与-390px-都可辨认且本地表单可用--22d2205f0d939ec14e5d2ae054da8c50d99a139ddccb0ce38f4434469b1647c0.png) | `87418b536bb3b16b9965-1ee4cd8caf242f0696b5` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1ee4cd8caf242f0696b5--355) |
+| PASS | renders the settings structure on the /settings route | [http://127.0.0.1:3921/accounts](http://127.0.0.1:3921/accounts) | [查看原图](../t1232/before-next-settings-run/settings--Settings-page-renders-the-settings-structure-on-the-settings-route--3bbd8db718cbc889382b928e65341a5271f7da93d3867f172e612644b18c2964.png) | `87418b536bb3b16b9965-9d167bbc2a2b29b9bb07` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-9d167bbc2a2b29b9bb07--356) |
+| PASS | [T-1232] 账户昵称由真实 UI 保存并公开读回同用户及刷新 | [http://127.0.0.1:3921/settings](http://127.0.0.1:3921/settings) | [查看原图](../t1232/before-next-settings-run/settings--Settings-page-T-1232-账户昵称由真实-UI-保存并公开读回同用户及刷新--8dc05fc8596e012261af4ec3e9c2b50899771aea8ec9eba0a719aff68cbafd5f.png) | `87418b536bb3b16b9965-704b26032c057270be80` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-704b26032c057270be80--357) |
+| PASS | [T-1232] 自动保存偏好由真实开关保存并读回 userId 及刷新 | [http://127.0.0.1:3921/settings](http://127.0.0.1:3921/settings) | [查看原图](../t1232/before-next-settings-run/settings--Settings-page-T-1232-自动保存偏好由真实开关保存并读回-userId-及刷新--dd68bb82908d621e9a5ab109febb0c4c1aa6c108990145b048b5bcb376bbaae5.png) | `87418b536bb3b16b9965-e9339554743858848790` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-e9339554743858848790--358) |
+| FAIL | [T-1232] 外观主题与密度按本地消费者持久并返回刷新 | [http://127.0.0.1:3921/accounts](http://127.0.0.1:3921/accounts) | [查看原图](../t1232/before-next-settings-run/settings--Settings-page-T-1232-外观主题与密度按本地消费者持久并返回刷新--d5365957c511f405ee9c0f4c97406aa620490a547284b73502b3f1e4a4fa94d6.png) | `87418b536bb3b16b9965-1daf9239c5bf49000f59` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1daf9239c5bf49000f59--359) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveAttribute[2m([22m[32mexpected[39m[2m)[22m failed
+
+Locator:  locator('html')
+Expected: [32m"compact"[39m
+Received: [31m""[39m
+Timeout:  120000ms
+
+Call log:
+[2m  - Expect "toHaveAttribute" with timeout 120000ms[22m
+[2m  - waiting for locator('html')[22m
+[2m    241 × locator resolved to <html lang="en" data-desktop="0" class="font-sans" data-theme="light">…</html>[22m
+[2m        - unexpected value "null"[22m
+
+```
+
+| FAIL | [T-1232] 默认本地模型真实保存及正式流式文本探针并脱敏读回 | [http://127.0.0.1:3921/settings](http://127.0.0.1:3921/settings) | [查看原图](../t1232/before-next-settings-run/settings--Settings-page-T-1232-默认本地模型真实保存及正式流式文本探针并脱敏读回--1264206794464268716ec1456184ad0060a95c050c48db65fee1aaa8f1a63fbf.png) | `87418b536bb3b16b9965-1a438f56dfd094b5ed4d` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1a438f56dfd094b5ed4d--360) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveAttribute[2m([22m[32mexpected[39m[2m)[22m failed
+
+Locator: locator('[data-slot="model-test-result"]')
+Expected: [32m"ok"[39m
+Timeout: 120000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toHaveAttribute" with timeout 120000ms[22m
+[2m  - waiting for locator('[data-slot="model-test-result"]')[22m
+
+```
+
+| PASS | [T-1232] RedFox 密钥真实保存及移除公开脱敏读回并刷新 | [http://127.0.0.1:3921/settings](http://127.0.0.1:3921/settings) | [查看原图](../t1232/before-next-settings-run/settings--Settings-page-T-1232-RedFox-密钥真实保存及移除公开脱敏读回并刷新--38912f81465c6e345e6d4a27f332f5fa8fa43bb3eb72c2246faeb9c52fc4d091.png) | `87418b536bb3b16b9965-7b3de1d78b1ff07a6009` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-7b3de1d78b1ff07a6009--361) |
+| PASS | [T-1232] 外观主题与密度按本地消费者持久并返回刷新 | [http://127.0.0.1:3923/settings](http://127.0.0.1:3923/settings) | [查看原图](../t1235/before-next-density-run/settings--Settings-page-T-1232-外观主题与密度按本地消费者持久并返回刷新--d5365957c511f405ee9c0f4c97406aa620490a547284b73502b3f1e4a4fa94d6.png) | `87418b536bb3b16b9965-1daf9239c5bf49000f59` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1daf9239c5bf49000f59--363) |
+| PASS | [T-1232] 默认本地模型真实保存及正式流式文本探针并脱敏读回 | [http://127.0.0.1:3926/settings](http://127.0.0.1:3926/settings) | [查看原图](../t1236/before-next-public-run/screenshots/settings--Settings-page-T-1232-默认本地模型真实保存及正式流式文本探针并脱敏读回--1264206794464268716ec1456184ad0060a95c050c48db65fee1aaa8f1a63fbf.png) | `87418b536bb3b16b9965-1a438f56dfd094b5ed4d` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1a438f56dfd094b5ed4d--365) |
+| PASS | [T-606] 模型来源状态在桌面与 390px 都可辨认且本地表单可用 | [http://127.0.0.1:3929/settings](http://127.0.0.1:3929/settings) | [查看原图](screenshots/settings--Settings-page-T-606-模型来源状态在桌面与-390px-都可辨认且本地表单可用--22d2205f0d939ec14e5d2ae054da8c50d99a139ddccb0ce38f4434469b1647c0.png) | `87418b536bb3b16b9965-1ee4cd8caf242f0696b5` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1ee4cd8caf242f0696b5--375) |
+| PASS | renders the settings structure on the /settings route | [http://127.0.0.1:3929/accounts](http://127.0.0.1:3929/accounts) | [查看原图](screenshots/settings--Settings-page-renders-the-settings-structure-on-the-settings-route--3bbd8db718cbc889382b928e65341a5271f7da93d3867f172e612644b18c2964.png) | `87418b536bb3b16b9965-9d167bbc2a2b29b9bb07` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-9d167bbc2a2b29b9bb07--376) |
+| PASS | [T-1232] 账户昵称由真实 UI 保存并公开读回同用户及刷新 | [http://127.0.0.1:3929/settings](http://127.0.0.1:3929/settings) | [查看原图](screenshots/settings--Settings-page-T-1232-账户昵称由真实-UI-保存并公开读回同用户及刷新--8dc05fc8596e012261af4ec3e9c2b50899771aea8ec9eba0a719aff68cbafd5f.png) | `87418b536bb3b16b9965-704b26032c057270be80` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-704b26032c057270be80--377) |
+| PASS | [T-1232] 自动保存偏好由真实开关保存并读回 userId 及刷新 | [http://127.0.0.1:3929/settings](http://127.0.0.1:3929/settings) | [查看原图](screenshots/settings--Settings-page-T-1232-自动保存偏好由真实开关保存并读回-userId-及刷新--dd68bb82908d621e9a5ab109febb0c4c1aa6c108990145b048b5bcb376bbaae5.png) | `87418b536bb3b16b9965-e9339554743858848790` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-e9339554743858848790--378) |
+| PASS | [T-1232] 外观主题与密度按本地消费者持久并返回刷新 | [http://127.0.0.1:3929/settings](http://127.0.0.1:3929/settings) | [查看原图](screenshots/settings--Settings-page-T-1232-外观主题与密度按本地消费者持久并返回刷新--d5365957c511f405ee9c0f4c97406aa620490a547284b73502b3f1e4a4fa94d6.png) | `87418b536bb3b16b9965-1daf9239c5bf49000f59` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1daf9239c5bf49000f59--379) |
+| PASS | [T-1232] 默认本地模型真实保存及正式流式文本探针并脱敏读回 | [http://127.0.0.1:3929/settings](http://127.0.0.1:3929/settings) | [查看原图](screenshots/settings--Settings-page-T-1232-默认本地模型真实保存及正式流式文本探针并脱敏读回--1264206794464268716ec1456184ad0060a95c050c48db65fee1aaa8f1a63fbf.png) | `87418b536bb3b16b9965-1a438f56dfd094b5ed4d` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-1a438f56dfd094b5ed4d--380) |
+| PASS | [T-1232] RedFox 密钥真实保存及移除公开脱敏读回并刷新 | [http://127.0.0.1:3929/settings](http://127.0.0.1:3929/settings) | [查看原图](screenshots/settings--Settings-page-T-1232-RedFox-密钥真实保存及移除公开脱敏读回并刷新--38912f81465c6e345e6d4a27f332f5fa8fa43bb3eb72c2246faeb9c52fc4d091.png) | `87418b536bb3b16b9965-7b3de1d78b1ff07a6009` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings.spec.ts--87418b536bb3b16b9965-7b3de1d78b1ff07a6009--381) |
 
 ## frontend/tests/e2e/shared-resource-lifecycle.spec.ts
 
@@ -964,7 +1083,7 @@ Call log:
 
 | 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
 |---|---|---|---|---|---|
-| FAIL | 公共全库分页与模板照片选择：后页可见、搜索和取消保留精确照片 | [http://127.0.0.1:3887/](http://127.0.0.1:3887/) | [查看原图](screenshots/t1069-asset-picker--公共全库分页与模板照片选择-后页可见-搜索和取消保留精确照片--66bd6c3d1bb661763bbd2f92b3cffe30610812a6cccb05470a658cf7925fbf6e.png) | `a844202c27c9dc804afd-b543d2def1d2dfcba95f` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Ft1069-asset-picker.spec.ts--a844202c27c9dc804afd-b543d2def1d2dfcba95f--104) |
+| FAIL | 公共全库分页与模板照片选择：后页可见、搜索和取消保留精确照片 | [http://127.0.0.1:3887/](http://127.0.0.1:3887/) | [查看原图](../t1240/before-source/original-failure.png) | `a844202c27c9dc804afd-b543d2def1d2dfcba95f` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Ft1069-asset-picker.spec.ts--a844202c27c9dc804afd-b543d2def1d2dfcba95f--104) |
 
 失败证据：
 
@@ -975,6 +1094,7 @@ Expected: [32mtrue[39m
 Received: [31mfalse[39m
 ```
 
+| PASS | 公共全库分页与模板照片选择：后页可见、搜索和取消保留精确照片 | [http://127.0.0.1:3932/canvases?tab=cases&library=cover&scope=builtin&page=1&template=real-person-notes](http://127.0.0.1:3932/canvases?tab=cases&library=cover&scope=builtin&page=1&template=real-person-notes) | [查看原图](screenshots/t1069-asset-picker--公共全库分页与模板照片选择-后页可见-搜索和取消保留精确照片--66bd6c3d1bb661763bbd2f92b3cffe30610812a6cccb05470a658cf7925fbf6e.png) | `a844202c27c9dc804afd-b543d2def1d2dfcba95f` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Ft1069-asset-picker.spec.ts--a844202c27c9dc804afd-b543d2def1d2dfcba95f--385) |
 
 ## frontend/tests/e2e/t1069-media-tab-session.spec.ts
 
@@ -2293,3 +2413,160 @@ Call log:
 | PASS | settings (/settings) has a single h1 and all controls are named | [http://127.0.0.1:3892/settings](http://127.0.0.1:3892/settings) | [查看原图](screenshots/all-pages--Accessibility-matrix-Task-26-settings-settings-has-a-single-h1-and-all-c--f3a5ae7f3476105d8d3e7ba6a136d8ad7d17b539231f94d2cc8dfc4910012ac0.png) | `d9c4c0f61b73d0d5a1d9-00c19154462a95d559d3` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Faccessibility%2Fall-pages.spec.ts--d9c4c0f61b73d0d5a1d9-00c19154462a95d559d3--273) |
 | PASS | new-project-overlay (/projects/new) has a single h1 and all controls are named | [http://127.0.0.1:3892/projects/new](http://127.0.0.1:3892/projects/new) | [查看原图](screenshots/all-pages--Accessibility-matrix-Task-26-new-project-overlay-projects-new-has-a-sing--ba463a5b2faaf02f83a73498a705ecb4b90cc5bf111627042cc23148d611ef9d.png) | `d9c4c0f61b73d0d5a1d9-cc9c9a26f6136eeaff74` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Faccessibility%2Fall-pages.spec.ts--d9c4c0f61b73d0d5a1d9-cc9c9a26f6136eeaff74--274) |
 | PASS | ai-copilot-overlay (/?copilot=open) has a single h1 and all controls are named | [http://127.0.0.1:3892/?copilot=open](http://127.0.0.1:3892/?copilot=open) | [查看原图](screenshots/all-pages--Accessibility-matrix-Task-26-ai-copilot-overlay-copilot-open-has-a-singl--6cc55038611c5c6e90e8be718806c6ed126bbafa1666d1622d05d503e04e3bd9.png) | `d9c4c0f61b73d0d5a1d9-61b57ca79955e158a998` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Faccessibility%2Fall-pages.spec.ts--d9c4c0f61b73d0d5a1d9-61b57ca79955e158a998--275) |
+
+## frontend/tests/e2e/media-root-isolation.spec.ts
+
+| 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
+|---|---|---|---|---|---|
+| PASS | T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根 | [http://127.0.0.1:3915/assets](http://127.0.0.1:3915/assets) | [查看原图](screenshots/media-root-isolation--T-1226-上传-公开下载与错组拒绝都使用本轮隔离媒体根--a288d1cd277759942e6df98e2b54363340d83b0538a5e7d0dcaa3bb689f1910e.png) | `37c0a50c9e3744722adf-720e6f026bb155ed6457` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fmedia-root-isolation.spec.ts--37c0a50c9e3744722adf-720e6f026bb155ed6457--347) |
+
+## frontend/tests/e2e/group-skill-customization.spec.ts
+
+| 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
+|---|---|---|---|---|---|
+| FAIL | 空账号组通过设置页定制官方 Skill 的首写入口可用 | [http://127.0.0.1:3922/](http://127.0.0.1:3922/) | [查看原图](../t1234/before-next-skill-run/group-skill-customization--空账号组通过设置页定制官方-Skill-的首写入口可用--c1e9245b2e80759ea81ea10d348ec369d8a175879feaf8f7cc38ca7140ca6a8d.png) | `41050249d47ab09b44f8-452e9ace5f8248c451ed` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-452e9ace5f8248c451ed--362) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: getByTestId('account-switcher-menu')
+Expected: visible
+Timeout: 120000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" with timeout 120000ms[22m
+[2m  - waiting for getByTestId('account-switcher-menu')[22m
+
+```
+
+| FAIL | 空账号组通过设置页定制官方 Skill 的首写入口可用 | [http://127.0.0.1:3924/settings](http://127.0.0.1:3924/settings) | [查看原图](../t1234/before-next-skill-green/screenshots/group-skill-customization--空账号组通过设置页定制官方-Skill-的首写入口可用--c1e9245b2e80759ea81ea10d348ec369d8a175879feaf8f7cc38ca7140ca6a8d.png) | `41050249d47ab09b44f8-452e9ace5f8248c451ed` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-452e9ace5f8248c451ed--366) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeEnabled[2m([22m[2m)[22m failed
+
+Locator:  locator('[data-slot="settings-panel"][data-tab-id="skills"]').locator('[data-slot="skill-row"][data-skill-id="script.draft"]').locator('[data-slot="skill-detail"]').getByRole('textbox', { name: /system 提示$/ })
+Expected: enabled
+Received: disabled
+Timeout:  120000ms
+
+Call log:
+[2m  - Expect "toBeEnabled" with timeout 120000ms[22m
+[2m  - waiting for locator('[data-slot="settings-panel"][data-tab-id="skills"]').locator('[data-slot="skill-row"][data-skill-id="script.draft"]').locator('[data-slot="skill-detail"]').getByRole('textbox', { name: /system 提示$/ })[22m
+[2m    242 × locator resolved to <textarea disabled rows="6" aria-label="写文案 system 提示" id="skill-system-script.draft" data-slot="skill-system-input" class="w-full resize-y rounded-md border border-border bg-background p-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">你是这位创作者的「分镜脚本 agent」,像专业短视频编导那样写可拍的分镜脚本。↵事实范围：个人经…</textarea>[22m
+[2m        - unexpected value "disabled"[22m
+
+```
+
+| PASS | 空账号组通过设置页定制官方 Skill 的首写入口可用 | [http://127.0.0.1:3927/settings](http://127.0.0.1:3927/settings) | [查看原图](../t1234/before-next-skill-3927/screenshots/group-skill-customization--空账号组通过设置页定制官方-Skill-的首写入口可用--c1e9245b2e80759ea81ea10d348ec369d8a175879feaf8f7cc38ca7140ca6a8d.png) | `41050249d47ab09b44f8-452e9ace5f8248c451ed` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-452e9ace5f8248c451ed--367) |
+| FAIL | 账号组 Skill 首写、刷新、二次 CAS、历史与跨组版本归属 | [http://127.0.0.1:3927/settings](http://127.0.0.1:3927/settings) | [查看原图](../t1234/before-next-skill-3927/screenshots/group-skill-customization--账号组-Skill-首写-刷新-二次-CAS-历史与跨组版本归属--d7e4362a7c4a18057d69f3813aaa998e0cecba90a2751c73772e242a4b6d0fea.png) | `41050249d47ab09b44f8-02c8831d8b2cee5f6098` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-02c8831d8b2cee5f6098--368) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+Locator:  locator('[data-slot="settings-panel"][data-tab-id="skills"]').locator('[data-slot="skill-row"][data-skill-id="script.draft"]').locator('[data-slot="skill-detail"]').locator('[data-slot="skill-version-history"]').locator('[data-slot="skill-version-row"]')
+Expected: [32m2[39m
+Received: [31m0[39m
+Timeout:  120000ms
+
+Call log:
+[2m  - Expect "toHaveCount" with timeout 120000ms[22m
+[2m  - waiting for locator('[data-slot="settings-panel"][data-tab-id="skills"]').locator('[data-slot="skill-row"][data-skill-id="script.draft"]').locator('[data-slot="skill-detail"]').locator('[data-slot="skill-version-history"]').locator('[data-slot="skill-version-row"]')[22m
+[2m    242 × locator resolved to 0 elements[22m
+[2m        - unexpected value "0"[22m
+
+```
+
+| PASS | 同组双页面保存只接受一个 CAS revision 并保留冲突草稿 | [http://127.0.0.1:3927/settings](http://127.0.0.1:3927/settings) | [查看原图](../t1234/before-next-skill-3927/screenshots/group-skill-customization--同组双页面保存只接受一个-CAS-revision-并保留冲突草稿--29f54c472befc53e21af9e35c9fe84d5f2099737b2c8e190fd8e9bb59f0db39a.png) | `41050249d47ab09b44f8-423785e0a5cb655ecee8` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-423785e0a5cb655ecee8--369) |
+| FAIL | 切组 RSC 与原组保存回执迟到时阻止旧写并通过 ABA 保持归属 | [http://127.0.0.1:3927/settings](http://127.0.0.1:3927/settings) | [查看原图](../t1234/before-next-skill-3927/screenshots/group-skill-customization--切组-RSC-与原组保存回执迟到时阻止旧写并通过-ABA-保持归属--e9dd63d7087947d9b911c406cf5b0dfcba906bf84d7df0509b985072c9078c3d.png) | `41050249d47ab09b44f8-5f46a3ee6f7111f081eb` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-5f46a3ee6f7111f081eb--370) |
+
+失败证据：
+
+```text
+TimeoutError: locator.click: Timeout 120000ms exceeded.
+Call log:
+[2m  - waiting for getByTestId('account-switcher-trigger')[22m
+[2m    - locator resolved to <button type="button" data-state="closed" aria-haspopup="menu" aria-expanded="false" id="radix-_R_bqp9eslb_" data-slot="account-switcher-trigger" data-testid="account-switcher-trigger" title="T1234 延迟组 A f804748f-ff60-40ac-8e9b-7c215cb0168e" aria-label="当前账号组：T1234 延迟组 A f804748f-ff60-40ac-8e9b-7c215cb0168e" class="flex cursor-pointer items-center rounded-card border border-border bg-surface text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring w-full gap-2 p…>…</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div data-state="open" aria-hidden="true" data-aria-hidden="true" data-slot="dialog-overlay" class="fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[sta
+```
+
+| PASS | 空账号组通过设置页定制官方 Skill 的首写入口可用 | [http://127.0.0.1:3928/settings](http://127.0.0.1:3928/settings) | [查看原图](screenshots/group-skill-customization--空账号组通过设置页定制官方-Skill-的首写入口可用--c1e9245b2e80759ea81ea10d348ec369d8a175879feaf8f7cc38ca7140ca6a8d.png) | `41050249d47ab09b44f8-452e9ace5f8248c451ed` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-452e9ace5f8248c451ed--371) |
+| PASS | 账号组 Skill 首写、刷新、二次 CAS、历史与跨组版本归属 | [http://127.0.0.1:3928/](http://127.0.0.1:3928/) | [查看原图](screenshots/group-skill-customization--账号组-Skill-首写-刷新-二次-CAS-历史与跨组版本归属--d7e4362a7c4a18057d69f3813aaa998e0cecba90a2751c73772e242a4b6d0fea.png) | `41050249d47ab09b44f8-02c8831d8b2cee5f6098` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-02c8831d8b2cee5f6098--372) |
+| PASS | 同组双页面保存只接受一个 CAS revision 并保留冲突草稿 | [http://127.0.0.1:3928/settings](http://127.0.0.1:3928/settings) | [查看原图](screenshots/group-skill-customization--同组双页面保存只接受一个-CAS-revision-并保留冲突草稿--29f54c472befc53e21af9e35c9fe84d5f2099737b2c8e190fd8e9bb59f0db39a.png) | `41050249d47ab09b44f8-423785e0a5cb655ecee8` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-423785e0a5cb655ecee8--373) |
+| PASS | 切组 RSC 与原组保存回执迟到时阻止旧写并通过 ABA 保持归属 | [http://127.0.0.1:3928/settings](http://127.0.0.1:3928/settings) | [查看原图](screenshots/group-skill-customization--切组-RSC-与原组保存回执迟到时阻止旧写并通过-ABA-保持归属--e9dd63d7087947d9b911c406cf5b0dfcba906bf84d7df0509b985072c9078c3d.png) | `41050249d47ab09b44f8-5f46a3ee6f7111f081eb` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-5f46a3ee6f7111f081eb--374) |
+| PASS | 组内 Skill 历史回滚与恢复默认通过真实按钮新增版本并刷新保留 | [http://127.0.0.1:3930/settings](http://127.0.0.1:3930/settings) | [查看原图](screenshots/group-skill-customization--组内-Skill-历史回滚与恢复默认通过真实按钮新增版本并刷新保留--57352a0a1492cde91d6ebf4644d27246a1e56660752abcc440b501afaf21d62c.png) | `41050249d47ab09b44f8-dad7adaf2e2937b1a61b` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fgroup-skill-customization.spec.ts--41050249d47ab09b44f8-dad7adaf2e2937b1a61b--382) |
+
+## frontend/tests/e2e/settings-responsive-layout.spec.ts
+
+| 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
+|---|---|---|---|---|---|
+| PASS | [T-1237] 设置在窄屏与桌面保持分类可达、正文完整和未提交草稿 | [http://127.0.0.1:3925/accounts](http://127.0.0.1:3925/accounts) | [查看原图](../t1237/before-next-public-run/screenshots/settings-responsive-layout--T-1237-设置在窄屏与桌面保持分类可达-正文完整和未提交草稿--fe76113c7ea4d4298257790c89b689ce8d5171e06e4218fda9fce95ccf3e151b.png) | `ef59e2dd8c06c89eb461-ae977654a04f5ceaa6c2` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fsettings-responsive-layout.spec.ts--ef59e2dd8c06c89eb461-ae977654a04f5ceaa6c2--364) |
+
+## frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts
+
+| 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
+|---|---|---|---|---|---|
+| FAIL | 真实同组稿件在桌面、窄屏与刷新后显示内容诊断入口 | [about:blank](about:blank) | 缺失（error） | `06662ba4d91dfb67c911-cb7606d38df3caad6f63` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Freview-empty-diagnosis-entry.spec.ts--06662ba4d91dfb67c911-cb7606d38df3caad6f63--383) |
+
+失败证据：
+
+```text
+TimeoutError: page.goto: Timeout 120000ms exceeded.
+Call log:
+[2m  - navigating to "http://127.0.0.1:3931/projects/project-68bbd811-8/review", waiting until "load"[22m
+
+```
+
+| FAIL | 真实同组稿件在桌面、窄屏与刷新后显示内容诊断入口 | [http://127.0.0.1:3933/projects/project-b001cb60-8/review](http://127.0.0.1:3933/projects/project-b001cb60-8/review) | [查看原图](../t1242/before-source/original-failure.png) | `06662ba4d91dfb67c911-cb7606d38df3caad6f63` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Freview-empty-diagnosis-entry.spec.ts--06662ba4d91dfb67c911-cb7606d38df3caad6f63--384) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+Expected: [32m""[39m
+Received: [31mundefined[39m
+```
+
+| PASS | 真实同组稿件在桌面、窄屏与刷新后显示内容诊断入口 | [http://127.0.0.1:3934/projects/project-b931ef39-8/review](http://127.0.0.1:3934/projects/project-b931ef39-8/review) | [查看原图](screenshots/review-empty-diagnosis-entry--T-1239-无指标项目复盘入口与诚实空态-真实同组稿件在桌面-窄屏与刷新后显示内容诊断入口--d7cfe8901e4a7040f50f51023105e70bb12b88e628bc89b29b505d23dd9cecfe.png) | `06662ba4d91dfb67c911-cb7606d38df3caad6f63` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Freview-empty-diagnosis-entry.spec.ts--06662ba4d91dfb67c911-cb7606d38df3caad6f63--386) |
+
+## frontend/tests/e2e/automations-run-now-public.spec.ts
+
+| 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |
+|---|---|---|---|---|---|
+| PASS | 组内真实作业通过立即运行准入并保原任务显示待扫码 | [http://127.0.0.1:3938/automations](http://127.0.0.1:3938/automations) | [查看原图](../t1244/browser-3938/original-common-pass.png) | `6d09fca92676595ee8d1-925a30d511adcca21d02` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fautomations-run-now-public.spec.ts--6d09fca92676595ee8d1-925a30d511adcca21d02--390) |
+| FAIL | 组内真实作业通过立即运行准入并保原任务显示待扫码 | [http://127.0.0.1:3939/automations](http://127.0.0.1:3939/automations) | [查看原图](../t1245/browser-3939-original/original-common-failure.png) | `6d09fca92676595ee8d1-925a30d511adcca21d02` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fautomations-run-now-public.spec.ts--6d09fca92676595ee8d1-925a30d511adcca21d02--391) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThanOrEqual[2m([22m[32mexpected[39m[2m)[22m
+
+Expected: <= [32m327.5[39m
+Received:    [31m530[39m
+```
+
+| FAIL | 组内真实作业通过立即运行准入并保原任务显示待扫码 | [http://127.0.0.1:3940/automations](http://127.0.0.1:3940/automations) | [查看原图](../t1245/browser-3940-filters/original-common-failure.png) | `6d09fca92676595ee8d1-925a30d511adcca21d02` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fautomations-run-now-public.spec.ts--6d09fca92676595ee8d1-925a30d511adcca21d02--392) |
+
+失败证据：
+
+```text
+Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+Expected: [32mtrue[39m
+Received: [31mfalse[39m
+```
+
+| PASS | 组内真实作业通过立即运行准入并保原任务显示待扫码 | [http://127.0.0.1:3941/automations](http://127.0.0.1:3941/automations) | [查看原图](../t1245/browser-3941-final/original-common-pass.png) | `6d09fca92676595ee8d1-925a30d511adcca21d02` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fautomations-run-now-public.spec.ts--6d09fca92676595ee8d1-925a30d511adcca21d02--393) |
+| PASS | 组内真实作业通过立即运行准入并保原任务显示待扫码 | [http://127.0.0.1:3942/automations](http://127.0.0.1:3942/automations) | [查看原图](screenshots/automations-run-now-public--组内真实作业通过立即运行准入并保原任务显示待扫码--4c83cfc4891336584a6d18f5f6f9fe57ea7c6fb261be338409a5cc32a0cbfed9.png) | `6d09fca92676595ee8d1-925a30d511adcca21d02` | [查看记录](E2E-GALLERY.html#record-frontend%2Ftests%2Fe2e%2Fautomations-run-now-public.spec.ts--6d09fca92676595ee8d1-925a30d511adcca21d02--394) |

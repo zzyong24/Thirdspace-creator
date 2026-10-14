@@ -26,6 +26,7 @@ import type {
 // PERSISTED_OPS from SETTINGS_OP_IDS (adding the module = registering it).
 
 export const SETTINGS_OP_IDS = [
+  "settings.logReporting.get", "settings.logReporting.set", "observability.exceptions.capture",
   "settings.reporting.get", "settings.reporting.consent.set", "settings.reporting.pending.clear",
   "settings.onboarding.get", "settings.onboarding.patch",
   "settings.onboarding.group.get", "settings.onboarding.group.patch",
@@ -71,12 +72,16 @@ export function createSettingsTransport(
   integrations?: ReturnType<typeof import("./integration-credentials").createIntegrationCredentials>,
   onboarding?: ReturnType<typeof import("./onboarding-state").createOnboardingState>,
   reporting?: ReturnType<typeof import("./reporting-local").createReportingLocal>,
+  observability?: import("../observability/collector").ObservabilityCollector,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
       // Every settings op is persisted (owned). No ctx ⇒ unauthenticated dispatch
       // ⇒ reject before touching the store.
       if (!ctx) throw new AuthenticationError();
+      if(endpoint.id==="settings.logReporting.get"){if(!observability)throw new UnsupportedOperationError(endpoint.id);return {data:await observability.status(ctx),meta:{requestId:ctx.requestId}};}
+      if(endpoint.id==="settings.logReporting.set"){if(!observability)throw new UnsupportedOperationError(endpoint.id);return {data:await observability.setConsent(ctx,(input as Input).body),meta:{requestId:ctx.requestId}};}
+      if(endpoint.id==="observability.exceptions.capture"){if(!observability)throw new UnsupportedOperationError(endpoint.id);return {data:{captured:await observability.recordException(ctx,(input as Input).body)},meta:{requestId:ctx.requestId}};}
       const service = serviceFactory(ctx);
 
       const { params, body } = (input ?? {}) as Input;

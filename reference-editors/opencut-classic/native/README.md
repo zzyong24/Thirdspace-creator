@@ -1,3 +1,7 @@
+# T-1289 构建虚拟模块身份规范化候选
+
+唯一实现为归档内build-native.mjs；同一原wasmPlugin的resolveId真实识别helper，清单加原\0虚拟标记，所有物理路径和430module/renderedLength不改。隔离两深度七产物相同，六runtime不变；原86测试380断言、types及AST通过。完整715源码/标准patch F0与归档再构建回执见docs/verification/t1289/candidate，正式scope/独审与整包仍由ROOT接入；原实际深度FAIL保留，以下历史回执不重签。
+
 # T-1282 场景效果 WASM 字段协议兼容
 
 仅在 WasmCompositor.render 为 sceneEffect 创建临时 effect_pass_groups 字段，内部继续使用 effectPassGroups；layer 与无 scene 帧保持原对象。效果组/参数/顺序不变，不改工程或 WASM 0.2.10 二进制。

@@ -2,12 +2,12 @@
   "surface": "browser",
   "mode": "non-fixture",
   "witnesses": {
-    "groupId": "grp-ff1d77a1-160",
-    "canvasId": "197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+    "groupId": "grp-a65785f2-4672",
+    "canvasId": "ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
     "selected": {
-      "id": "asset-ff1d77a1-170",
-      "userId": "user-ff1d77a1-1",
-      "currentFileId": "afile-ff1d77a1-174",
+      "id": "asset-a65785f2-4682",
+      "userId": "user-a65785f2-1",
+      "currentFileId": "afile-a65785f2-4686",
       "assetType": "image",
       "name": "素材预览横图.png",
       "description": "",
@@ -23,15 +23,15 @@
       "extractedText": null,
       "sourceUrl": null,
       "deletedAt": null,
-      "createdAt": "2026-10-09T18:12:44.487Z",
-      "updatedAt": "2026-10-09T18:12:44.487Z"
+      "createdAt": "2026-10-10T17:12:22.603Z",
+      "updatedAt": "2026-10-10T17:12:22.603Z"
     },
-    "nodeId": "2860e20f-e6d8-4bdb-8ba5-467111fbc846"
+    "nodeId": "e802f90e-48ea-41c7-881c-46b7ec5caa3f"
   },
   "beforeRevision": 2,
   "savedRevision": 3,
   "exactReference": {
-    "id": "2860e20f-e6d8-4bdb-8ba5-467111fbc846",
+    "id": "e802f90e-48ea-41c7-881c-46b7ec5caa3f",
     "position": {
       "x": 281,
       "y": 48
@@ -44,8 +44,8 @@
     "type": "image_generation",
     "prompt": "",
     "mode": "image_to_image",
-    "referenceAssetId": "asset-ff1d77a1-170",
-    "referenceFileId": "afile-ff1d77a1-174"
+    "referenceAssetId": "asset-a65785f2-4682",
+    "referenceFileId": "afile-a65785f2-4686"
   },
   "refresh": true,
   "back": true,
@@ -62,7 +62,7 @@
   "captures": [
     {
       "name": "exact-before-confirm",
-      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+      "url": "http://127.0.0.1:3887/canvases/ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
       "viewport": {
         "width": 1024,
         "height": 680
@@ -107,7 +107,7 @@
     },
     {
       "name": "gallery-preview-1366x900",
-      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+      "url": "http://127.0.0.1:3887/canvases/ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
       "viewport": {
         "width": 1366,
         "height": 900
@@ -567,7 +567,7 @@
     },
     {
       "name": "gallery-preview-1024x680",
-      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+      "url": "http://127.0.0.1:3887/canvases/ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
       "viewport": {
         "width": 1024,
         "height": 680
@@ -1027,7 +1027,7 @@
     },
     {
       "name": "gallery-preview-683x450",
-      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+      "url": "http://127.0.0.1:3887/canvases/ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
       "viewport": {
         "width": 683,
         "height": 450
@@ -1487,7 +1487,7 @@
     },
     {
       "name": "gallery-preview-390x900",
-      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+      "url": "http://127.0.0.1:3887/canvases/ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
       "viewport": {
         "width": 390,
         "height": 900
@@ -1947,7 +1947,7 @@
     },
     {
       "name": "gallery-preview-390x450",
-      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+      "url": "http://127.0.0.1:3887/canvases/ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
       "viewport": {
         "width": 390,
         "height": 450
@@ -2407,7 +2407,7 @@
     },
     {
       "name": "gallery-preview-512x340",
-      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+      "url": "http://127.0.0.1:3887/canvases/ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
       "viewport": {
         "width": 512,
         "height": 340
@@ -2867,7 +2867,7 @@
     },
     {
       "name": "read-error",
-      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
+      "url": "http://127.0.0.1:3887/canvases/ca7a391b-f845-4b34-9e71-41bbfa3cd84f",
       "viewport": {
         "width": 1024,
         "height": 680

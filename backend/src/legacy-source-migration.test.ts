@@ -67,7 +67,7 @@ it('正常104升级仅修复可证明三来源NULL，所有内容/父归属/历�
   after=await snapshot(opened.client);
   for(const [table,values] of Object.entries(before!))expect(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?omitGroup(after[table]!):after[table]).toEqual(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?omitGroup(values):values);
   const ledger=(await opened.client.query<{hash:string;created_at:number}>('SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id')).rows;
-  expect(ledger.slice(0,oldLedger!.length)).toEqual(oldLedger!);expect(ledger).toHaveLength(oldLedger!.length+6);expect(ledger.slice(oldLedger!.length).map(row=>Number(row.created_at))).toEqual([1791043200003,1791043200004,1791043200005,1791043200006,1791043200008,1791043200009]);expect(ledger.at(-1)?.created_at).toBe(1791043200009);
+  expect(ledger.slice(0,oldLedger!.length)).toEqual(oldLedger!);expect(ledger).toHaveLength(oldLedger!.length+7);expect(ledger.slice(oldLedger!.length).map(row=>Number(row.created_at))).toEqual([1791043200003,1791043200004,1791043200005,1791043200006,1791043200008,1791043200009,1791043200010]);expect(ledger.at(110)?.created_at).toBe(1791043200010);
  }finally{await opened.client.close();}
  const second=await createDb({dataDir});try{expect(await snapshot(second.client)).toEqual(after!);expect((await second.client.query('SELECT * FROM drizzle.__drizzle_migrations WHERE created_at=1791043200003')).rows).toHaveLength(1);}finally{await second.client.close();}
 });
@@ -100,15 +100,17 @@ it.each(['transfer','return-with-history','wrong-artifact-type','wrong-artifact-
  }finally{await opened.client.close();}
 });
 
-it('0130SQL身份及当前110尾精确追加，旧104 journal及历史迁移固定不漂移',{timeout:120000,retry:0},async()=>{
+it('0130SQL身份及当前111尾精确追加，旧104 journal及历史迁移固定不漂移',{timeout:120000,retry:0},async()=>{
  const journal=JSON.parse(await readFile(join(folder,'meta/_journal.json'),'utf8'));
- expect(journal.entries).toHaveLength(110);expect(journal.entries[104]).toEqual({idx:104,version:'7',when:1791043200003,tag:'0130_legacy_source_ownership',breakpoints:true});
+ expect(journal.entries).toHaveLength(111);expect(journal.entries[104]).toEqual({idx:104,version:'7',when:1791043200003,tag:'0130_legacy_source_ownership',breakpoints:true});
  expect(journal.entries[105]).toEqual({idx:105,version:'7',when:1791043200004,tag:'0131_platform_native_reports',breakpoints:true});
  expect(journal.entries[106]).toEqual({idx:106,version:'7',when:1791043200005,tag:'0132_legacy_scheduled_job_membership',breakpoints:true});
  expect(journal.entries[107]).toEqual({idx:107,version:'7',when:1791043200006,tag:'0133_assistant_execution_engine',breakpoints:true});
  expect(journal.entries[108]).toEqual({idx:108,version:'7',when:1791043200008,tag:'0135_model_routing',breakpoints:true});
  const digest=(value:string)=>createHash('sha256').update(value).digest('hex');
  expect(journal.entries[109]).toEqual({idx:109,version:'7',when:1791043200009,tag:'0136_embedding_identity',breakpoints:true});
+ expect(journal.entries[110]).toEqual({idx:110,version:'7',when:1791043200010,tag:'0137_observability_routing_convergence',breakpoints:true});
+ expect(digest(await readFile(join(folder,'0137_observability_routing_convergence.sql'),'utf8'))).toBe('d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494');
  expect(digest(await readFile(join(folder,'0136_embedding_identity.sql'),'utf8'))).toBe('2f279e1cb378dd60d4878d8883a8335955834cf1bacfc70a15b05e423fe13477');
  expect(digest(await readFile(join(folder,'0135_model_routing.sql'),'utf8'))).toBe('6fae4e865bf2fbabaf16127644e0abb6b1179bc3fc246b563a3a3c5c663233e8');
  expect(digest(await readFile(join(folder,'0133_assistant_execution_engine.sql'),'utf8'))).toBe('0f51f97932dd96244d1402eaebcc8e5716b0c85eff848afac3a4111884238af6');

@@ -17,7 +17,7 @@
     "nativeHashes": {
       "native.js": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
       "native.css": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
-      "NATIVE_BUILD_GRAPH.json": "a5a6d38f6fcf1d07100853313ea9b7adb302692ef93e404ea940eb0ea9e81667",
+      "NATIVE_BUILD_GRAPH.json": "96257b6479fd3e17332c35254d52d1ca702013bb39c0499c3ab201111acec322",
       "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
       "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
@@ -31,20 +31,20 @@
   "source": {
     "files": 715,
     "changedFiles": 83,
-    "archiveBytes": 774056,
-    "patchBytes": 456802,
+    "archiveBytes": 775215,
+    "patchBytes": 458728,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "f9d035cad877a90f1fefcaf3e34653454695ebf38ad7753bd380342ee2c45d9b",
-      "native-from-t1046.patch": "5a59aa96cf3bddd2fcc7b55403d4513661fd9355280ca22abcd6cf46a4f5fad9",
+      "native-source.tar.gz": "2256f7503ef14834cc2137f064536c58ec53b46c114de7eccb40c65c70dd785b",
+      "native-from-t1046.patch": "2e38e9f9b31b8de6d763618de6316f724e1183b3f32f98f8f4dae86a7b638716",
       "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "verification/t1282-scene-effect-protocol/source-reconstruction.json",
-    "productionReconstructionEvidence": "verification/t1282-scene-effect-protocol/production-reconstruction.json",
-    "archiveSha256": "f9d035cad877a90f1fefcaf3e34653454695ebf38ad7753bd380342ee2c45d9b",
-    "patchSha256": "5a59aa96cf3bddd2fcc7b55403d4513661fd9355280ca22abcd6cf46a4f5fad9"
+    "reconstructionEvidence": "docs/verification/t1289/candidate",
+    "productionReconstructionEvidence": "PENDING_FORMAL_ROOT_REVIEW",
+    "archiveSha256": "2256f7503ef14834cc2137f064536c58ec53b46c114de7eccb40c65c70dd785b",
+    "patchSha256": "2e38e9f9b31b8de6d763618de6316f724e1183b3f32f98f8f4dae86a7b638716"
   },
   "verification": {
     "totalTests": 86,
@@ -2286,5 +2286,75 @@
     "patchFuzz": 0,
     "publicPreviewMp4": "pending_root",
     "createdAt": "2026-10-14T08:07:58.274355+00:00"
+  },
+  "historicalT1289BeforeVirtualModuleIds": {
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6640702,
+      "cssBytes": 131527,
+      "licensedDependencies": 59,
+      "renderedModules": 430,
+      "nativeHashes": {
+        "native.js": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
+        "native.css": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
+        "NATIVE_BUILD_GRAPH.json": "a5a6d38f6fcf1d07100853313ea9b7adb302692ef93e404ea940eb0ea9e81667",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "本次复用上一轮真实冻结安装，锁文件未变",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 715,
+      "changedFiles": 83,
+      "archiveBytes": 774056,
+      "patchBytes": 456802,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "f9d035cad877a90f1fefcaf3e34653454695ebf38ad7753bd380342ee2c45d9b",
+        "native-from-t1046.patch": "5a59aa96cf3bddd2fcc7b55403d4513661fd9355280ca22abcd6cf46a4f5fad9",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "verification/t1282-scene-effect-protocol/source-reconstruction.json",
+      "productionReconstructionEvidence": "verification/t1282-scene-effect-protocol/production-reconstruction.json",
+      "archiveSha256": "f9d035cad877a90f1fefcaf3e34653454695ebf38ad7753bd380342ee2c45d9b",
+      "patchSha256": "5a59aa96cf3bddd2fcc7b55403d4513661fd9355280ca22abcd6cf46a4f5fad9"
+    }
+  },
+  "t1289VirtualModuleVerification": {
+    "status": "PASS_OWNED_PROTOTYPE_PENDING_FORMAL_REVIEW",
+    "files": {
+      "native.js": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90",
+      "native.css": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
+      "NATIVE_BUILD_GRAPH.json": "96257b6479fd3e17332c35254d52d1ca702013bb39c0499c3ab201111acec322",
+      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    },
+    "source": "同一wasmPlugin真实resolveId识别虚拟helper；两个不同目录深度全部七产物字节相同、六runtime不变。旧t1274/T1282历史与Root实际不同深度FAIL保留。",
+    "moduleCount": 430,
+    "sourceFiles": 715,
+    "nativeTests": 86,
+    "nativeAssertions": 380,
+    "typesAndProcessGlobalAstExit": 0,
+    "productionWrites": 0,
+    "oldRootMismatchEvidence": "docs/verification/t1278/integration-candidate/native-owned-644ebbd6336048a9b92daa4cca6fbd67/REBUILD_MISMATCH.json",
+    "evidenceDirectory": "docs/verification/t1289/candidate",
+    "fullStandardPatchFuzz0": true,
+    "archiveSource715AllBytesMatch": true,
+    "archiveBuildSevenBytesMatch": true,
+    "archiveNativeVerifyExit": 0
   }
 }

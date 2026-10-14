@@ -902,9 +902,9 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B�
     await expect(page.getByRole('dialog', { name: '新建项目', exact: true })).toHaveCount(0);
     await expect(page.locator('[data-slot="new-project-submit"]')).toHaveCount(0);
     expect(browserCreates).toBe(0); expect(browserProjectCreates).toBe(0);
-    // 等待产品真实15s超时状态，不sleep、不给挂起响应放行。
+    // 观察原120s RSC请求结束及UI落地；不sleep、不给挂起响应放行。
     const error = page.getByTestId('workspace-initialization-error');
-    // 覆盖真实120s RSC请求结束及UI落地；原失败/重试/晚响应拒绝断言保持。
+    // 沿已审SourceRoot保留300s观察预算，不变产品期限与失败/重试/晚响应拒绝断言。
     await expect(error).toContainText('工作区页面打开超时，请重试。', { timeout: 300_000 });
     observation.elapsedToErrorMs = Date.now() - started;
     await expect(page.locator('[data-page="article-workbench"]')).toHaveCount(0);

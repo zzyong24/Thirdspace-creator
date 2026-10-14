@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/integrated-dev-package-acceptance @ 533224f33
+LAST_SYNCED: main @ afabbf728
 
 ## 这是什么(定位)
 
@@ -23,6 +23,24 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [open] T-1283 核对Codex账号工作区路由预检拒绝并恢复粗剪
+- [wip] T-1279 接入模型来源新迁移的真实数据库谱系护栏
+- [wip] T-1278 统一激活授权并允许官方、自配和本地Codex按能力组合
+- [open] T-1277 核对原生AAC首尾有效样本与音画对齐
+- [wip] T-1273 CreatorOS反逆向加固严格零性能损耗
+- [wip] T-1271 CreatorOS Codex调用不保存个人历史会话
+- [wip] T-1265 修复本地Codex结构化输出Schema适配导致真实400
+- [wip] T-1264 修复协议账本读取前Next元数据恢复顺序
+- [wip] T-1263 修复协议验收替身与隔离临时根的归属校验冲突
+- [wip] T-1272 校准新增观测后的前端回归夹具与迁移库存
+- [wip] T-1270 校准当前观测迁移后的原回归库存
+- [wip] T-1268 闭合集成契约测试库存与手工保存类型
+- [wip] T-1267 校准Pi公共聊天验收能力键与HTTP最终审计
+- [wip] T-1266 核对并修复设置偏好首载时ASR菜单不可达
+- [wip] T-1269 补齐原持久分场失败的可读诊断与原任务重试验收
+- [wip] T-1261 修复开发包验收暴露的运行时缺陷与用例合同
+- [open] T-1260 核对T1255审核绑定生成PROJECT造成收据漂移
+- [wip] T-1255 加密日志直传Growth、异常采集与运行指标观测
 - [wip] T-1256 修复Doocs静态原适配三处无用绑定编译失败
 - [wip] T-1254 闭合内置Doocs两份真实请求30秒默认预算与源码交付一致性
 - [wip] T-1253 闭合原Worker夹具可信回执与未知恢复验收
@@ -258,4 +276,4 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 模块地图(生成自 backend/src/modules)
 
-`ai` · `ai-runtime` · `analytics` · `articles` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `creative-canvas` · `creative-results` · `execution` · `favorites` · `graphic-posts` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `moments` · `notifications` · `output-scripts` · `platform-account` · `platform-collection` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources` · `work-compositions`
+`ai` · `ai-runtime` · `analytics` · `articles` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `creative-canvas` · `creative-results` · `execution` · `favorites` · `graphic-posts` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `moments` · `notifications` · `observability` · `output-scripts` · `platform-account` · `platform-collection` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources` · `work-compositions`

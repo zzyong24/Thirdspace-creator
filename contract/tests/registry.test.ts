@@ -8,6 +8,10 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/outputs/:outputId/production/editor/script/propose"],
   ["GET", "/settings/model-routing"],
   ["PUT", "/settings/model-routing"],
+  // T-1255已确认并保留的用户级日志授权和本机异常采集契约。
+  ["GET", "/settings/log-reporting"],
+  ["PUT", "/settings/log-reporting"],
+  ["POST", "/local/observability"],
   // T-1074正式服务契约：候选由用户采纳，来源/账号归属仍由backend验证。
   ["POST", "/ai/assistant-actions/adopt"],
   ["GET", "/ai/assistant-actions/receipt"],

@@ -1,5 +1,8 @@
 import {createSelectedModelSnapshotReader,freezeSelectedModelRoutes,type SelectedModelSnapshot,resolveFrozenModelCredential,type FrozenModelCredential,frozenTranscribeLocalSpec,isFrozenAsrRoutingError,type TranscribeModelOwner,type MultimodalSpec,prepareSelectedModelRoute,assertFrozenRouteIdentity,selectedModelIdentityDigest,CapabilityModelRoutingError} from '@creatoros/backend/modules/ai-runtime';
 import {modelRouteCatalog,projectFrozenModelSettings,frozenExecutionRoute,readFrozenModelRoute,type ExecutionRoute,type FrozenModelRoute,type ModelRouteMode} from '@creatoros/contract/execution-worker';
+import {activeEncryptedLogSession} from "./feedback/encrypted-log-upload.server";
+import {createObservabilityCollector,createObservabilityTaskLedger} from "@creatoros/backend/modules/observability";
+import {createObservabilityHost,resolveObservabilityAppVersion} from "./observability-host.server";
 import {createWorkCandidateAdoption,createWorkCandidateSourceService} from '@creatoros/backend/application/generation/work-candidate-adoption';
 import {createWorkWritingContext} from '@creatoros/backend/application/generation/work-writing-context';
 import {createKnowledgeGenerationService,createKnowledgeGenerationBusinessAdapters} from '@creatoros/backend/modules/ai-runtime';
@@ -212,7 +215,7 @@ import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creato
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, registerPersistentTaskObserver, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
@@ -666,6 +669,8 @@ const FAVORITES_PROMOTE_PER_RUN = 50;
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
+  observability: ReturnType<typeof createObservabilityCollector>;
+  observabilityHost: ReturnType<typeof createObservabilityHost>;
   reportingLocal: ReturnType<typeof createReportingLocal>;
   projectListCoverIds: (ctx: RequestContext, projectIds: readonly string[]) => Promise<Record<string, string | null>>;
   readPageRevision: () => Promise<string>;
@@ -1337,6 +1342,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const identityRepo = createIdentityRepository(db, deps);
   const identity = createIdentityService(identityRepo, deps);
   const localUser = await ensureLocalUser(identityRepo, deps);
+  const observabilityCtx:RequestContext={userId:localUser.id,requestId:"observability-host",source:"ingestion"};
+  let observabilityHost:ReturnType<typeof createObservabilityHost>|undefined;
+  const observability=createObservabilityCollector(db,{
+    now:deps.now,uploadAvailable:()=>Boolean(process.env.CREATOROS_LOG_DIR),
+    onRevoke:()=>observabilityHost?.pause(),
+    logSessionId:()=>process.env.CREATOROS_LOG_DIR?activeEncryptedLogSession(process.env.CREATOROS_LOG_DIR):Promise.resolve(null),
+    // Rust原stderr tee先脱敏再以原公钥封帧；服务器不存明文异常副本。
+    writeEncryptedContext:event=>console.error(`[observability-exception] ${JSON.stringify(event)}`),
+  });
+  const observabilityLedger=createObservabilityTaskLedger(db,observability);
+  const observabilityObserver=registerPersistentTaskObserver(db,{observeAttempt:async event=>{observabilityHost?.pause();await observabilityLedger.observeAttempt(event);},observeSettlement:observabilityLedger.observeSettlement});
+  (globalThis as {__creatorosCaptureException?:(event:unknown)=>void}).__creatorosCaptureException=event=>{
+    void observability.recordException(observabilityCtx,event).catch(()=>{});
+  };
+
 
   // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
   // 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):
@@ -5843,7 +5863,7 @@ FAVORITES_PROMOTE_PER_RUN
       freeze:(capability:string,mode:'text'|'vision')=>freezeSelectedModelRoutes({choices,revision,main:{mode,capability},explicitEngine:input.executionEngine,read})};
   }
   const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id), (ctx, id) => accountGroupService.get(ctx, id));
-  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState,reportingLocal);
+  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState,reportingLocal,observability);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
       officialSkills: {
@@ -6516,7 +6536,7 @@ FAVORITES_PROMOTE_PER_RUN
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),videoVisualReviewService.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{observabilityHost?.stop();stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),videoVisualReviewService.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);await observabilityObserver.drain();observabilityObserver.dispose();};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -7528,7 +7548,14 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
   agenticWorker?.start();
   modelWorker?.start();
 
+  observabilityHost=createObservabilityHost({ctx:observabilityCtx,collector:observability,ledger:observabilityLedger,
+    logDir:process.env.CREATOROS_LOG_DIR??null,appVersion:resolveObservabilityAppVersion(),
+    osName:process.platform==="darwin"?"macos":process.platform==="win32"?"windows":"linux",
+    online:()=>process.env.CREATOROS_OFFLINE!=="1",
+  });
+  if(process.env.CREATOROS_DESKTOP==="1"&&process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS!=="1")observabilityHost.start();
   return {
+    observability,observabilityHost,
     reportingLocal,
     readPageRevision: createPageReadRevisionReader(db),
     projectListCoverIds: (ctx, projectIds) => readProjectListCoverIds(ctx, projectIds, { projects: projectsService, publishing: publishingService }),
@@ -7740,6 +7767,9 @@ export async function getSettingsService(): Promise<SettingsService> {
 }
 
 /** 仅供可信服务端故障边界写入已授权的结构化诊断；浏览器无此端口。 */
+export async function getObservabilityCollector(){return (await getBundle()).observability;}
+export async function setObservabilityConnectivity(online:boolean){(await getBundle()).observabilityHost.setConnectivity(online);}
+
 export async function getReportingLocal() {
   return (await getBundle()).reportingLocal;
 }
@@ -7833,7 +7863,24 @@ export async function getWebSessionRuntime(): Promise<
 // Used by BOTH the server pages (contract-client.server) and the /api/v1 route,
 // so server reads and island writes share one pglite store — island mutations
 // persist and a router.refresh() reflects them.
-export const compositeTransport: Transport = withPageReadInvalidation(createApplicationTransport(getBundle));
+const observedApplicationTransport=createApplicationTransport(getBundle);
+export const compositeTransport:Transport=withPageReadInvalidation({
+  async request(endpoint,input,ctx){
+    const exclude=endpoint.id.startsWith("settings.logReporting.")||endpoint.id.startsWith("observability.");
+    const start=performance.now();
+    if(!exclude&&endpoint.method!=="GET"){
+      (await getBundle()).observabilityHost.pause();
+    }
+    try{
+      const result=await observedApplicationTransport.request(endpoint,input,ctx);
+      if(ctx&&!exclude)void getBundle().then(bundle=>bundle.observability.recordOutcome(ctx,{eventId:crypto.randomUUID(),operationId:endpoint.id,measurement:"request",result:"success",occurredAt:new Date().toISOString(),executionSeconds:(performance.now()-start)/1000})).catch(()=>{});
+      return result;
+    }catch(error){
+      if(ctx&&!exclude)void getBundle().then(bundle=>bundle.observability.recordOutcome(ctx,{eventId:crypto.randomUUID(),operationId:endpoint.id,measurement:"request",result:"failed",occurredAt:new Date().toISOString(),executionSeconds:(performance.now()-start)/1000})).catch(()=>{});
+      throw error;
+    }
+  },
+});
 
 // Test hook: drop the pglite singleton so each test starts from a fresh seed.
 export function __resetPersistenceForTests(): void {

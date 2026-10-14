@@ -6,6 +6,7 @@
     ],
     "resources": [
       "sidecar.tar.gz",
+      "sidecar.tar.gz.sig",
       "THIRD_PARTY_NOTICES.md"
     ],
     "windows": {

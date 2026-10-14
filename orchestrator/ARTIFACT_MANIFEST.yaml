@@ -63,11 +63,13 @@ stages:
     gate_status: "pass"
     confirmation_required: false
     artifacts:
+      - existing: "docs/features/t1274-chatcut-editing-redesign.md"
+      - existing: "docs/features/t1274-chatcut-editing-redesign/layout.html"
       - existing: "frontend/src"
       - existing: "docs/features/t1075-knowledge-redesign/RESEARCH.md"
       - existing: "docs/features/t1075-knowledge-redesign/style-explorer.html"
       - existing: "docs/verification/t1075/DESIGN_REVIEW.md"
-    notes: "迁移只映射既有成熟产品，不替代后续页面任务的设计与真机验收。T-1075仅完成研究和A/B方向小样，候选待用户选择；未进入生产实现，未独立视觉评分，不继承本行历史passed为新设计PASS。"
+    notes: "迁移只映射既有成熟产品，不替代后续页面任务的设计与真机验收。T-1075仅完成研究和A/B方向小样，候选待用户选择；未进入生产实现，未独立视觉评分，不继承本行历史passed为新设计PASS。T-1274统一剪辑IA及Markdown候选范围已获用户确认，SPEC独评55a3f14a70a5；BUILD进行中。真实媒体、窄屏操作与CLI/MCP专项已有证据，整体AC/Gate未完成；独立视觉末轮8.2，具体限度见t1274/RESULT。"
 
   "4-build":
     status: "draft"
@@ -866,3 +868,14 @@ agent_workbench_change:
   acceptance_status: not-started
   global_reconcile: "fail: 233 existing errors; docs/verification/t1003-reconcile.log; T-916 tracks governance drift"
   notes: "用户已确认多步执行与NomiFun迁移方向；本轮仅SPEC和任务拆分，独立规格评审PASS（hash回执见review文件），不是实现验收通过。"
+
+chatcut_editing_change:
+  task_id: T-1274
+  spec: docs/features/t1274-chatcut-editing-redesign.md
+  review: docs/features/t1274-chatcut-editing-redesign.review.md
+  user_confirmation: "用户：整体上是认可的；DEC-T1274"
+  implementation_status: in-progress
+  acceptance_status: in-progress
+  gate_status: fail
+  evidence: docs/verification/t1274/RESULT.md
+  notes: "T1274集成b6f133456/a76563099/f131f3344；真实完整媒体旅程、390独立操作及三项复验、Fit控件、CLI/MCP各自read/propose/apply/同ID重放与错组拒绝通过。视觉6.5/7.7/8.2，生产build通过；真实模型/ASR准备完成待执行，全输入族与完整对账待闭合，保持in-progress/fail，不替换安装。"

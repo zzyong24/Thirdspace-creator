@@ -4,7 +4,7 @@
 - Verdict: PASS
 - Round: 3/3 (recheck)
 - Spec receipt: a815e5da23ef
-- Review receipt: 657048db2fb1
+- Review receipt: 2d9887301cb3
 
 ## 当前有效问题
 
@@ -31,7 +31,7 @@
   "model": "unknown",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "7f4d7ebc569f32257821f14dca7e767b7f6dec3a4b022cbcf7747aae897685f3",
+  "latest_event_hash": "53ec2d61b1e3726750e1c05e2832bf8145a3641783e00a7017c5179dcca3199f",
   "open_findings": [],
   "resolved_findings": [
     {
@@ -47,6 +47,6 @@
       "resolution_evidence": "既有SPEC a815… FR-1248-STRICT与AC-1248-CLOSURE明示未知/整套definition漂移拒绝；最新host候选512966ce…只移动原完整matcher到empty earlyreturn之前，scope原门先行，normal无system子集仍matcher null→{}。hosttest1ec1beb…新增unknown-only拒绝及non-system空子集成功/4owner0正负例；root44c031…仍真实stored reverse owner.adopt0/receipt0/CAS数据与原call保持。独评仅闭合原范围合同及具体实现候选，不签实际全量GREEN或原source前后历史证明。"
     }
   ],
-  "receipt": "657048db2fb1"
+  "receipt": "2d9887301cb3"
 }
 ```

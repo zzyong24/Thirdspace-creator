@@ -5167,13 +5167,6 @@ Status: decided within DEC-T1238-001 confirmed scope
 **可审证据**：[正式SPEC](../docs/features/t1097-article-director-options-diagnosis.md)SHA8221447156d8ae0194ab343cde1413a378e2fa18a552dbf869b576b5eb26b232；[初评需修订](../docs/verification/t1246/first-diagnosis/t1097-formal-spec-independent-review.md)与[真实复评](../docs/verification/t1246/first-diagnosis/t1097-formal-spec-independent-rereview.md)均保留。实际控制面receipt由reviewctl另记；本DEC不等于typed process-review-cycle capability，也不代签实现或测试。
 
 
-## DEC-T1246-CONCENTRATED-REPAIR-002 — 首轮完整结束后的精确集中实施
-
-依据用户2026-10-11已授权首轮逐项记录后统一修复/重包/复测，以及实际App暂不授权回复。本次四包Vitest与四types全部真实结束，原结果与源指纹封存。b295cb6f正式parent修订由独立Agent完成复评并真实reviewctl PASS（integration fbf854b33596、canonical3364f753ed46）；T1097正式822144合同已有独评回执。本决定只落实既有用户授权和该准确写集，不补新用户回答/历史红测，不是发布或AC5 accepted-risk。
-
-解除冻结仅供198绑定中明确的产品/测试窄修、两份现存历史fixture和已列新工具；不以69文件或195 ENV许可扫改其他断言，余205新根因须精准追加/独评。真实公共Codex/ACP/Pi/图片文件/同ID恢复与包、UI图及操作、原负例下游、所有实际checks仍待，原红和未知保持。App不建立原生会话、不启动，T1246不得完整complete。
-
-
 ## DEC-T1246-CONCENTRATED-REPAIR-003（2026-10-12）
 
 沿用户2026-10-11原授权完成首轮登记后集中修复；最后精确71追加路径与后端205正文完整map通过真实独立复核，T1246 SPEC SHA fae56e87e751a17012f0be7b929eed400e2813e33a1076a31537c96f5b114d7a，reviewctl integration REV:e75e32a6b7a8 / canonical REV:883f7fe733ba，cycle1 round3/3。这是合同批准，不是实现验收。B044未知授权policy仍冻结，B045/B046因果UNKNOWN；不得改expect粉饰。FF001/PB001原41、D01/D02 34、BA001 37、设置controller/Shell/nav13及真实Dialog3 targeted exit0，各自回执单列，原全套首红不变，完整外层超时/公共浏览器/打新包仍待执行。App按用户原回复“暂不授权，保留App验收未完成”，不启授权、不代签AC5、不complete整任务。
@@ -5233,17 +5226,169 @@ root b2951412和独立route f469a7e4实际18输入闭包核无漂移，reviewctl
 
 用户T1246集中修复/整合/打包/逐项自动验收与“继续”的既有授权覆盖V13当场完整build三TS6133的最小清理。仅owned static EditorPanel.vue三个无用声明，保V6实际0644/inode/UID、模板/样式/操作/原命令/类型策略；对应新source/combined patch经T1254exact清单双审交付。首SPEC模式描述CONCERNS真实保留，第二轮ed320dba0189/b3d116e19a48 PASS；候选仍待V14精确工具准入。原V12/V13失败/missing不补，App仍未授权未验，不新增发布或系统权限。
 
+## DEC-T1255-DIRECT-ENCRYPTED-LOGS（2026-10-12）
 
-## DEC-T1258-LOCAL-DMG-001（2026-10-12）
+用户明确“直接上传…我自己统一在这个growth端去解密”，修订为CreatorOS原脱敏加密日志通过HTTPS直传Growth；Growth持久存密文、官方安全管理员按需解密。之前Activity限定批准不使用，Activity未改。旧结构化及账号共享范围保留，不借旧授权自动扩成完整日志。新合同记录wire/公私钥归属/只写收件和独立官方读权/回执去重/限量/30天保留与关闭语义。用户授权可逆实现与隔离验收，正式部署/实际服务器私钥配置留具体候选交接，不发送真实用户日志或开发者私钥。当前待独评，不沿用原三仓PASS。
 
-沿T1246用户整合/开发包/实际验收/真实失败后集中修复的授权，保用户暂不授权App原生自动化的决定。e718两轮90012/66832基础45均通过、包均自然退出1；第二轮仅增强日志，证实hdiutil创建/挂载与资源复制成功，Finder外观AppleScript open权限错误-10004，detach成功。原58文件411610B归档及PRIVATE原件全部保留，不把未知首轮直接改写成已知根因或洗成PASS。
+## DEC-T1255-DAILY-IDLE-UPLOAD（2026-10-12）
 
-项目T975真实Tauri step强制IGNORE_CI=true，因此单独父CI变量无效。选择显式本地安全输出：仅macOS、buildOnly、非完整release、四local标志字面1时，在原T975环境后叠CI=true/IGNORE_CI=false，仅影响Tauri步骤；正式默认背景/图标位置合同与原guide4断言保持。无界面本地包明确未应用自定义Finder背景/位置，完整封盘/签名/产物校验仍必验；不改系统权限、不启App、不公证或发布、不新增模型配置。
+用户明确：“上报的频率不需要这么高…对用户无感…不要影响用户的使用…离线软件…用户在开启软件的情况下一天上报一次”。替代原5分钟日志/60秒指标建议：异常即时本机采集，日志和指标仅运行期间每天最多一轮、等待空闲，活动生成/渲染/导出/发布推迟，退出不等网络；离线/失败保留到后续每日机会，不高频重试。不驻留关机后台，不轮询远端配置，配置随每日响应交接且不可提频。持久lastAttemptAt/租约保护重启/多窗口，单轮限并发/速度/总量作为候选上限待实测。后台显示每日汇总/历史诊断和数据水位，不冒充实时监控。用户频率决定已确认；旧直传PASS不覆盖新指标、排期与性能验收，生产实现前复审。
 
-T1258 SPEC d4a4a22e6d0c2d363257f032935512a82aa72c0a66c5084f543dee30d199fa10，独立packet9a79f82a1022d938df06c350b087847ec84145ecc407b90b3e6b8863db60244e；reviewctl当场PASS[REV:fb5a6d98ce63]、taskctl start及context-compile当场0。仅package.mjs接线、新配置函数与其测试三源码路径。此为实施准入，不签TDD/新包/Worker/browser/App已通过；新修复提交与全部实际回执闭合后再报告结果。
+## DEC-T1255-OWNER-ADMIN-IMPLEMENT（2026-10-12）
 
-## DEC-T1261-CONCENTRATED-REPAIR-001（2026-10-13）
+用户确认每日无感观测方案并授权开始执行，指定Growth日志查看管理端只允许Admin手机号17362936917。server真实官方登录+现有Admin角色+phone hash候选定位统一保护日志、指标、异常、下载、解密与配置，其他Admin也不可读；可复用MIT社区日志虚拟列表，沿当前Shell与oil-ui-pro。最新范围并入原T1255，旧PASS不代签新合同；Activity排除，生产/私钥配置待具体候选就绪后交接。
 
-用户T1246授权记录实际问题后集中修复、整合源码、开发打包并由子Agent完整Playwright留图。当前T1261为50c7运行真正关闭后发现故障的合法叶任务，原母任务三轮审核与所有旧失败不迁移/重置。正式SPEC初评4bca、仅LED047旧fixture前置两次复审07444/45b4均实际记录。产品严格9源，便携回归4文件，旧generated仅2类型修正；LED047旧61测试只补空组发送前提并恢复6个legacy/无owner族，保原断言、budget和两次实际失败。正式当前SPEC fc0b5ff07d6ae357e6a7c80a96d2eb0d93a32bafc24d3d3fb756165b45263899。
+## DEC-106903（2026-10-12）T1255用户授权一次当前快照评审周期
 
-真实正常命令109聚焦（43/49/12/5）retry0通过，LED047最终174通过；全前端类型及boundary/orphan/semantic/timeout相关门已通过，原162/12和169/5保留。此处只是源码回归，不签官方模型、全功能浏览器、Doocs新视觉、新包或App通过。新round3工具使用新源与同ID四header读回/正确项目入口/严格schema/正常就绪截图与PG短socket；旧round1/2驱动原字节保持。原发布、安装、认证授权未增加；App按用户暂不授权继续未完成。新干净提交后固定本地入口实际打包，再完整170/103/7/1和Doocs2复验。
+用户实际回复“允许重建一次评审周期”。只恢复当前PROJECT生成快照与T1255已确认需求的合法评审绑定，不新增功能范围/用途或生产、密钥许可。LED-053原明确最短两分钟并覆盖真实消费者；共同SPEC将原120秒措辞精确为网络余量加实际有界body/rate，避免合法10MiB低速上传被默认300秒截断，不改变24小时下限/10MiB/限速/退出/原deadline。旧round2与private历史都保留，不改PROJECT生成段或旧receipt。
+
+```text
+ID: DEC-106903
+Authorization-Kind: process-review-cycle
+Task-ID: T-1255
+Previous-Spec-SHA256: 71b9889a5b699ee631bcde0602e2df111414582949592b5414032445ef6ea6d5
+Previous-Constitution-SHA256: dc1df9e9e90e2c74557d9ed7486fa964b7de9f037be0822c4dbba2216bb686fc
+Allowed-Change-IDs: T1255-CURRENT-SNAPSHOT
+Max-Cycles: 1
+Nonce: 7cf8c1d0-2e7d-4c7b-9866-ac0180c2c90b
+Owner: user
+Status: active
+```
+
+## DEC-T1255-REAL-PRODUCERS（2026-10-12）
+
+依据用户已确认完整轻注入/真实指标范围，独立实际dispatcher RED证明central单实例不覆盖真实model/chat/agentic等factory；共享Db typed端口接所有正式生产者，真实outcome结算后及visual-review外层commit后窄观察，严格不记回滚、不得推断前attempt或改变业务事务/可用性。ROOT库存新增exact三路径execution/index.ts、execution-worker-outcome.service.ts、execution-video-visual-review.service.ts；不增加指标用途/Worker直写库/公网端点/任何部署许可。被动浏览器联网状态只经已受控本地strict布尔端口送Host，单在途合并，offline暂停，不探测网络、不立即上报、不重置24小时排期。共同SPEC先独评，RED与缺失证据保留。
+
+
+## DEC-T1255-PRODUCTION-CUTOVER（2026-10-13）
+
+用户本次明确回复“允许部署 Growth 并安装本机验收包”。绑定已冻结Creator90f3a6f48f62961b0a6af3605b17f199c7589d1d、Growth日志候选f2cfcfdc851267de7cac1e8439e629a7e8ad8aa5、兼容回滚a8a33e83ddd4a642b1bf720d6359af1a92d88069，真实备份和隔离恢复先于0071→0075、正式c01钥匙配置及API/worker重启；本机正常退出/冷备/安装。现场发现Growth网关默认1MiB与原已确认10MiB日志合同不一致，按完整feature部署范围仅精确日志上传路径设置10MiB、复制原限流和proxy参数并nginx -t/reload，不改认证/其它URL/DNS。20个MCP映射旧同版本缓存：本次安装先保旧cache，以同包全部文件外部核验后的独占runtime单次启动，默认自动展开另待安全释放验证，不能用此覆盖冒充默认首启。真实用户内容不用于夹具上报，不重置真实日排期；缺真实owner会话先交人正常登录，不伪造凭证。
+## DEC-T1246-MISSING-ORIGINAL-MEDIA-SKIP（2026-10-13）
+
+用户在本轮验收中明确回复“找不到了就跳过啊。”，接受跳过因原始素材丢失而无法执行的旧粗剪用例。该素材为232875字节、SHA-256 `0b22998e8238f35c9c3447c01234ce03f0ee03770db229c53f1e3de9f6905914`；本轮111–116六项共用的beforeEach先因原manifest缺失失败，之后还要求该素材，完整映射留在本轮PRIVATE验收记录。原六项framework FAIL、第一实际缺文件及未达后置全部保留；最终分类为“缺原始输入，用户确认跳过”，不算产品PASS、不合成替代素材、不继续追索或重复询问。其他失败和功能验收不受此决定豁免，原170及各独立分母保持。正在执行的隔离冻结源码、manifest及旧审核回执不改；本决定在完整运行结束后同步其验收报告。App继续按原用户决定保留未完成。
+
+
+
+## DEC-T1255-DESKTOP-ERROR-WORKSPACE（2026-10-13）
+
+用户正式登录后明确电脑使用、进入即看错误、检索可选、原话先提COS，随后明确纠正“是 cls 啊”，参考据此确认为腾讯云CLS日志服务工作台。该确认修订同一T1255/T229的管理端主要构图和默认读取流程：1440×900最近异常日志正文为首屏，时间/来源/字段与详情同页，默认最近真实异常及其关联日志单份按需解密；无异常真实空态并保最近日志入口，不用关键词造异常。服务合同/0075/正式钥匙/唯一真实17362936917 owner/每日空闲24小时排期与原用途开关不改变，仅Growth前端同域及必要测试。原390验收视口恢复电脑，不声称响应式缺陷。当前真实owner可访问但异常total0、只有两份虚拟transport日志，故真实异常关联和安装端dailyhost不能据此签过。原部署授权持续有效；先规格独立复核、当前候选unit/build、现有方向独立视觉评审及真实ownerUAT，再由Root串行切换；保旧审核、漂移与失败，不从本次确认推定新增review-cycle capability。
+
+
+## DEC-106904（2026-10-13）CLS桌面日志工作区的一次当前快照完整评审授权
+
+用户实际回复“允许，按CLS继续实现”，对应问题为“是否允许Creator T1255、Growth T229各重建一次当前范围评审周期”。本仓仅为T-1255重建一次，恢复已确认CLS桌面布局/default read及当前宪法快照的合法评审绑定；前端同域写集和原服务/0075/正式密钥/唯一owner/每日排期保持，不能扩为客户端代码或独立新周期授权。本次原旧cycle/r2、constit漂移及context-compile失败保留，不改生成PROJECT或PRODUCT_SPEC历史值。现绑定SPEC 2af28ffecf4bea7d92957c8608407b6bc1305708f0294d695f0a0caae8bcf1c4、当前constitution 09ddad223f77418a2efc2d037f386542a2c121fe782427b00d0ece6ea3ac68f6；终端旧事件 f5a03dbfb867dede127dc7ea25a1f2a21732d605805b3364e25cc47e0d3d6f93。生产切换沿原既有部署授权，不从评审授权引申其他生产写入。
+
+```text
+ID: DEC-106904
+Authorization-Kind: process-review-cycle
+Task-ID: T-1255
+Previous-Spec-SHA256: 6bcf82dd42d1a98391d0e1e3576d06a6b97d91a2900c224bf2b0b03ebd283cf7
+Previous-Constitution-SHA256: 15c177f592797eaf1873492aa7d45b55e2e2cc2cc1a4739b63fd85e3e789a56a
+Allowed-Change-IDs: T1255-CLS-DESKTOP,T1255-CURRENT-SNAPSHOT
+Max-Cycles: 1
+Nonce: 62ecbfc8-5d3f-44d9-85f5-2107a32f9b87
+Owner: user
+Status: active
+```
+
+
+## DEC-T1255-AGENT-DIAGNOSTIC-PACK（2026-10-13）
+
+用户明确不会亲自看页面，将交Agent定时排查，要求“主要完整，充分基于日志知道客户上下文，发现问题解决问题”，不追优雅可视化。沿同T1255/T229现有cycle r2独立复核，本次仅原Growth四前端范围增加owner当前选中异常/日志完整JSON诊断包，含真实receipt/session/header元数据、发生/收件/已知上报时间、版本/平台/匿名安装、reference/module/code/count、原完整lines/truncated和exact eventId原frame的message/stack/位置；unknown/missing明确，普通日志exception=null，不把alias当实名或激活验证。JSON保存owner下载，不服务器明文落副本、不上传业务DB，不新backend/API/Agent身份token/CLS服务、定时任务或现场自动重发真实任务；后续具体缺陷凭真实证据登记原属主修复回归。本次不建新review-cycle，当前constitution未变，保r1及原未验门，诊断包尚待真实下载与操作验收。
+
+## DEC-T1265-CODEX-JSON-SCHEMA-ADAPTER（2026-10-13）
+
+用户已明确要求继续实现本地Codex执行、免独立文本和生图模型配置，并授权记录验收问题后集中修复、合并打开发包、子Agent浏览器完整复验。本次是该授权范围内的实现选择，用户没有逐项确认某种Schema算法；不补造新的用户确认。原三个同归属回合实际failed且HTTP400 invalid_json_schema已读核。
+
+拟采用最小适配：所有JSON responseFormat在首次turn之前以原完整Schema文字约束同一本地Codex，结果仍经原AI SDK/Zod/业务校验；非JSON保持原行为。避免把可选字段强制必填或补null、禁止关闭开放record、禁止按业务名判断内容，禁止错误后自动第二turn或转独立provider。选择由T1265独立SPEC评审与当场公共consumer TDD验证，未正式通过前不应用生产源。原模型配置、权限/归属、deadline、调用身份/usage/费用及候选采纳合同保持；原任务和原UNKNOWN不重发、不改写。
+
+## DEC-T1255-NATIVE-DAILY-ACCEPTANCE（2026-10-13）
+
+用户本次明确回复：“永远不要问我…你的首要任务是给我完成我的任务”，并对完整日志与指标用途回复“允许开启并按每日排期上报”。已有Growth部署、本机安装许可持续有效；本次正常退出/打开、沿公开CLI保存用途开关并权威回读、到期空闲日轮次真实回执由Agent自行执行，不反复要求用户确认常规可逆验收步骤。持久24小时fence、原用途/脱敏加密、唯一owner、30天保留不改变；不强制tick、不改时钟或数据库、不重提真实业务任务，不将尚未发生的回执签为完成。真实本机日志发送已获本次明确许可，不再沿用之前“保持关闭”的验收状态。
+
+### T1255到期复验的自主执行记录（2026-10-13）
+
+沿用户此前明确“我会让Agent定时去排查”及本次“首要任务是完成任务，不再反复问”的授权，选择当前聊天Codex heartbeat每日北京时间03:10继续原到期验收和只读异常排查；id=creatoros，ACTIVE，目标当前聊天。仅原安装自然运行/到期/空闲时由原dailyhost上传；Agent不启动关闭的Creator、不改日fence、不制造额外轮次，也不新增Creator/Growth后台身份/API。无新可行动变化不重复通知，实际新异常或首次真实回执留证后继续对应缺陷与验收闭环。客户端用途已公开保存/读回true，原最早轮次为10/14 03:00:19.905，不借“自主完成”伪造尚未发生的网络回执。
+
+## DEC-T1271-CODEX-EPHEMERAL（2026-10-13）
+
+用户明确“我觉得不需要保存这个历史对话”，指CreatorOS发起的Codex调用新增个人Codex历史。新受控原生/ACP会话使用官方ephemeral:true，保CreatorOS自身聊天/任务/结算与产物；旧Codex历史和登录不动。临时会话跨进程缺失时，原回合只读对账不能取得结果就保unknown，不自动重发提示词/工具，不把用户隐私选择降为后台归档个人历史。独立初评只覆盖合同，实际TDD与隔离无模型协议证据另记；不把源码完成冒充已经运行的安装版生效。
+
+### T1271验收类型登记更正
+
+本任务仅Worker内部协议参数与同域测试，不新增/重构产品页面，也没有frontend journey contract。初建任务误把验收列填为待验（taskctl会按该值强制要求UI旅程报告），现更正为非UI任务的—；任务状态仍由taskctl转换。SPEC要求的原生/ACP公共链、未知不重发、类型/build/timeout/boundary及真实隔离协议检查照常执行，不豁免或冒充个人Codex UI/当前安装版验收。
+
+## DEC-T1273-RELEASE-HARDENING-PREPARATION（2026-10-13）
+
+用户确认严格零性能损耗的7项反逆向基线；本轮明确取消额外5项。完整范围与来源见docs/features/t1273-release-anti-reverse-hardening.md。只准备可审候选与隔离实证，不用估算替代<200μs。首次签名文件读取/解析/Ed25519实测220.708μs，原FAIL保留，未接入正式启动链。CSP需Next内联启动与既有sandbox预览例外、首次展开需验完再运行、缓存后台全量检查改变原每次tar前置校验时序；具体兼容候选已呈交用户，尚未确认。未生成新root、未替换当前App、未对生产路径或新App签PASS。验收真相见docs/verification/t1273/VERIFICATION.md。
+
+
+## DEC-T1274-CHATCUT-EDITING-PROPOSAL（2026-10-13，具体IA/合同待确认）
+
+用户已明确重做/优化剪辑，并直接copy已分析ChatCut模块的实现模式，不重新设计算法。这一授权及沿用现有CreatorOS品牌持续有效。Agent核当前默认OpenCut原生工作台、v3原生预览导出与既有候选采纳/版本单写者，提出统一素材/转录、画面、时间轴和编导/属性工作区；Markdown作为当前工程的候选投影，沿已有work.editor与applyProductionEditor，保留旧工程和预览导出内核。
+
+本条记录具体待确认方案，不冒称用户已选定新IA/输入格式。完整范围、参考模块缺口、既有消费者证据和验收见 `docs/features/t1274-chatcut-editing-redesign.md`。业务未修改、没有发布或安装动作；静态草图和独立规格审核不等于业务可用性或视觉/操作验收。用户确认后在本条追加真实决定，再通过taskctl进入实现。
+
+### T1274整体方向确认与开工（2026-10-13）
+
+用户对上轮完整接入方案和布局草图回复“整体上是认可的。”，确认统一素材/转录、画面、时间轴、编导/属性工作区，以及Markdown候选接入、保留现有预览/导出内核与旧工程范围。此确认承接已审SPEC，不改变算法/数据归属或扩展为完整专业NLE；不再重复询问整体方向。正常可逆实现、窄补参考接口/占位缺口、独立视觉与任务走查、必要验收持续执行；发布/换安装包未在本轮请求内。
+
+### DEC-T1273-COMPATIBLE-CSP-INTEGRITY（2026-10-13用户确认）
+
+用户明确“采用兼容修正版（推荐）”并“继续”：允许必要Next内联脚本与受限本地预览；首次展开仍验完才启动，已有完成cache保原抽样，首屏完成后全量tar后台核验。<200μs及包不增硬门保持，既有性能FAIL保留。详细安全与发布接线已增补原T1273 SPEC，独立评审与实际Gate之后才可声明通过；无需再次就同一决定询问。
+
+
+### DEC-T1273-CONSUMER-CLOSURE（2026-10-13继续授权）
+
+继续落实已确认兼容修正版：按真实消费者为sandbox预览放行既有精确GSAP脚本；开发资源去新增sig前置要求；clean缓存增加字节与release模式绑定。细节属原7基线的可用性、release-only及禁止旧转换闭包，未新增产品功能或线上发布授权。独立源码审查PASS，原性能FAIL及所有实包未验保持。正式候选为隔离工作树9c70afc00；原共享dirty、已安装App及用户数据保持。
+
+## DEC-T1278-UNIFIED-LICENSE-CAPABILITY-CHOICE（2026-10-14用户明确方向）
+
+用户明确目前自带模型/自配模型两类激活码后续不再区分，用户可在官方模型、自配模型、本地Codex之间按能力自行切换和组合。软件授权与能力来源选择分开；Codex免独立文本/生图配置按所选能力继续成立，官方模型沿真实权益和额度，不从统一授权推导无限免费调用。新任务按能力冻结、历史与在途保持原事实。具体跨系统协议、旧码兼容与迁移需先核真实上游并独评，当前冻结64ca包与T1246真实验收不静默替换。本条记录方向确认，不代签实现/上线，详见T1278 SPEC。
+
+## DEC-T1274-MEDIA-ASSERTION（原确认范围内的实物断言校正）
+
+2026-10-14。用户此前确认统一剪辑与沿用原预览/导出内核并要求继续。本次真实旧83b完整kernel同输入AAC已证明与新候选PCM逐字节相等、容器2.089796秒；画面仍48@24=2秒。此前测试把HTML/container duration视为画面2秒，原FAIL保留，不能扩大0.05容差洗绿。最终旅程将精确核视频2秒/48帧/24fps，并对旧同输入实物逐帧PTS/decoded framemd5/完整PCM及容器时长严格相等，不新增AAC裁剪标准，不改codec或模型。新候选8次重复源帧是真回归，仍必须修；该断言校正不掩盖当前差异，也不签完整媒体PASS。旧AAC有效样本欠债另登记T1277，用户accepted-risk未发生。
+
+
+## DEC-T1278-IMPLEMENTATION-CAPABILITY-SOURCES（2026-10-14）
+
+用户已确认单一软件授权及官方／自配／本地Codex按能力组合，继续实施无需重问方向。采用原user_preferences nullable model_routing及revision CAS、首次显式PUT后新根v2、完整逐mode:capability冻结、带图联合请求整体走vision、v2不隐式发送全局engine、主Codex native图关闭但宿主按选择来源生图。官方真实额度独立核验，目录同步existingOnly不开户／赠额；旧原任务保持原ID/冻结/期限。独立初评CONCERNS收据0c10e42352e6两问题已按精确恢复消费者与旧入口bootstrap预约保护收敛，实际复评PASS收据9458e31d10e9；随后真实新增operation类型/加载失败要求补原CLI及用户scope登记，补审在途，未绕过穷尽门。
+
+Creator源码在codex/unified-capability-models隔离64ca分支由Root串行实现，Main foreign变更不整树拷入；辅助审计只读生产。Activity全仓空写集，Growth精确迁移/隔离另绑定；不运行真实充值或发布。App原生授权用户明确暂不提供，保未验。目录不具scope旧码仍保具体HARD，不猜归属或构造grant。真实模型/付费/新包未验，不能以本DEC或局部测试称交付。
+
+
+## DEC-127801 T1278 消费者补充的一次新独立审核（2026-10-14）
+
+用户具体答复：“同意，按清单补齐并开启一次新审核（推荐）”。只授权原清单三个变化ID，原三轮终结PASS不重置；本capability由reviewctl绑定旧事件并一次消费。生产接线仍需实际独评与测试；Activity空写集、真实资金/App授权与发布边界均不变。
+
+```text
+ID: DEC-127801
+Authorization-Kind: process-review-cycle
+Task-ID: T-1278
+Previous-Spec-SHA256: be170a8947a9d57bdb11cc0a55bc7bf56b59760a6ded57e32577674b7ebd76d8
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: MC-1278-CHAT MC-1278-ASR MC-1278-EMBED
+Max-Cycles: 1
+Nonce: af6bfeeb-436a-4223-9ee6-174ab03b7cac
+Owner: user
+Status: active
+```
+
+
+## DEC-127802 T1278 收尾两项补充与一次新独立审核（2026-10-14）
+
+用户在本会话具体回复：“同意补齐并开启新审核（推荐）”，准确对应 FINAL_INTEGRATION_ADDENDUM_PROPOSED.md 的额度页取消/预算和双旧库迁移桥。此前102项原型的覆盖限制及独立预审三缺口均保留，新的114项与公共DB候选证据另存，不将其当正式完成。仅授权 MC-1278-OPEN 与 MC-1278-MIGRATION 两个变化，原cycle2第三轮PASS及原资金/激活期限/归属不重置。用户未授权原生App系统操作，保持未验；真实充值/生产码/付费模型/Activity/部署和公开发布边界未改变。
+
+```text
+ID: DEC-127802
+Authorization-Kind: process-review-cycle
+Task-ID: T-1278
+Previous-Spec-SHA256: f20727182b5fb634da44fc2fe5ed4d054eb41092205c52491fef44aaa9456e14
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: MC-1278-OPEN MC-1278-MIGRATION
+Max-Cycles: 1
+Nonce: e597cd1c-dd96-4680-af03-27a75be1a4ee
+Owner: user
+Status: active
+```
