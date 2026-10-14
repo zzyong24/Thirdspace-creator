@@ -177,6 +177,7 @@ export default async function SettingsRoutePage() {
         video: multimodalRow("video.generate"),
         audio: multimodalRow("transcribe.audio"),
         vision: multimodalRow("asset.classify"),
+        imageEdit: multimodalRow("image.edit"),
         // [T-093] 知识库语义搜索 embedding(未配 = AI 搜索诚实降级关键词)。
         embed: multimodalRow("knowledge.search.embed"),
         // [T-084a] 联网搜索(未配 = 素材来自模型记忆,卡片黄条+需核实徽标)。
@@ -331,13 +332,18 @@ export default async function SettingsRoutePage() {
     } as const;
     let capabilities: ModelAuthorityState["capabilities"];
     let services: ModelAuthorityState["services"];
+    let managedAccountStatus: ModelAuthorityState["managedAccountStatus"] = "unverified";
     let action: string = actions[authority.outcome];
     if (authority.authority === "channel") {
+      managedAccountStatus = authority.managedCredentials?.["omnihi-main"]?.accountStatus ?? "unverified";
       const visibleCapabilities = [
         "default",
         "transcribe.audio",
         "image.generate",
         "video.generate",
+        "asset.classify",
+        "image.edit",
+        "knowledge.search.embed",
       ] as const;
       let credentialStatuses: readonly {
         serviceId: string;
@@ -463,6 +469,7 @@ export default async function SettingsRoutePage() {
       action,
       capabilities,
       services,
+      managedAccountStatus,
     };
   }
 

@@ -10,7 +10,7 @@ async function fixture(patch:Partial<typeof aiTasks.$inferInsert>={}){
  return {id,resolveSpec,service:createTranscribeBusinessExecutionService(db,{budget,resolveSpec})};
 }
 it('任务冻结无密钥配置，重复准备复用同一执行且不重读配置',async()=>{
- const f=await fixture(),first=await f.service.prepare(ctx,f.id),second=await f.service.prepare(ctx,f.id);expect(first).toEqual(second);expect(f.resolveSpec).toHaveBeenCalledTimes(1);
+ const f=await fixture(),first=await f.service.prepare(ctx,f.id),second=await f.service.prepare(ctx,f.id);expect(first).toEqual(second);expect(f.resolveSpec).toHaveBeenCalledTimes(1);expect(f.resolveSpec).toHaveBeenCalledWith(ctx,{aiTaskId:f.id});
  const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,first.executionTaskId!));expect(row!.payload).toMatchObject({modelInput:{kind:'transcribe.douyin',awemeIds:['one','two'],language:'zh',configuration:{provider:'qwen',settings:{maxBytes:1000}}}});expect(JSON.stringify(row)).not.toContain('private-token');expect(JSON.stringify(row)).not.toContain('must-not-persist');
 });
 it('配置等待期间取消不创建执行',async()=>{

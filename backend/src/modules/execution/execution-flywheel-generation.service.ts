@@ -1,4 +1,4 @@
-import {frozenExecutionEngine,codexExecutionSpec} from '@creatoros/contract/execution-worker';
+import {frozenExecutionEngine,codexExecutionSpec,readFrozenModelRoute} from '@creatoros/contract/execution-worker';
 import {createExecutionCodexCallService} from './execution-codex-call.service';
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
@@ -21,7 +21,7 @@ const json=(value:unknown)=>z.json().parse(JSON.parse(JSON.stringify(value)));
 export type FlywheelCapability='benchmark.teardown'|'topic.attribution'|'favorites.triage'|'knowledge.distill';
 export interface FlywheelGenerationDeps {
  entryPath:string|(()=>string);
- resolveModelSpec(ctx:RequestContext,capability:FlywheelCapability):Promise<unknown>;
+ resolveModelSpec(ctx:RequestContext,capability:FlywheelCapability,owner:{ref:ExecutionRef;mode:'structured'}):Promise<unknown>;
  budget:Parameters<typeof createExecutionCallLedgerService>[1]["budget"];
  now?:()=>string;
 }
@@ -34,14 +34,14 @@ export function createExecutionFlywheelGenerationService(db:Db,deps:FlywheelGene
   const bound=await leases.withLease(ref,'admission',scope=>bindScheduledFlywheel(scope));
   const allowed:Record<string,readonly FlywheelCapability[]>={benchmark:['benchmark.teardown'],'self.detail':['topic.attribution'],'self.metrics':['topic.attribution'],favorites:['favorites.triage','knowledge.distill']};
   if(!allowed[bound.input.sourceKind]?.includes(capability))throw new Error('飞轮能力超出原调度范围');
-  return executionModelSpecSchema.parse(frozenExecutionEngine(bound.task.payload)==='codex'?codexExecutionSpec():await deps.resolveModelSpec(bound.context,capability));
+  return executionModelSpecSchema.parse(!readFrozenModelRoute(bound.task.payload,'structured',capability)&&frozenExecutionEngine(bound.task.payload)==='codex'?codexExecutionSpec():await deps.resolveModelSpec(bound.context,capability,{ref,mode:'structured'}));
  },
  async generate(ref:ExecutionRef,capability:FlywheelCapability,resourceId:string,facets:Record<string,string|undefined>){
   const verify=()=>leases.withLease(ref,'admission',scope=>bindScheduledFlywheel(scope));
   const bound=await verify(),stageKey=`${capability==='benchmark.teardown'?'benchmark':capability}:${resourceId}`,operationKey=`flywheel:${hash(stageKey)}`,outputSchema=flywheelOutputSchema(capability);
   const allowed:Record<string,readonly FlywheelCapability[]>={benchmark:['benchmark.teardown'],'self.detail':['topic.attribution'],'self.metrics':['topic.attribution'],favorites:['favorites.triage','knowledge.distill']};
   if(!allowed[bound.input.sourceKind]?.includes(capability))throw new Error('飞轮能力超出原调度范围');
-  const spec=executionModelSpecSchema.parse(frozenExecutionEngine(bound.task.payload)==="codex"?codexExecutionSpec():await deps.resolveModelSpec(bound.context,capability));
+  const spec=executionModelSpecSchema.parse(!readFrozenModelRoute(bound.task.payload,'structured',capability)&&frozenExecutionEngine(bound.task.payload)==='codex'?codexExecutionSpec():await deps.resolveModelSpec(bound.context,capability,{ref,mode:'structured'}));
   const identity=json(prepareExecutionModelIdentity(capability,spec).identity);
   const saved=frozenSchema.parse(await leases.withLease(ref,'admission',async scope=>{
    const {payload,input}=await bindScheduledFlywheel(scope),stages=(payload.flywheelStages??{}) as Record<string,unknown>;

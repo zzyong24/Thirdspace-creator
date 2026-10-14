@@ -1,3 +1,4 @@
+import {assetGenerationInputSchema} from '../src/internal/asset-generation';
 import {localCodexStatusSchema} from '../src/internal/local-codex-status';
 import {describe, expect, it} from 'vitest';
 import {modelRoutingChoicesSchema, modelRoutingPutSchema, modelRoutingResourceSchema} from '../src/internal/model-routing';
@@ -17,6 +18,9 @@ describe('T1278 按能力模型来源的公开合同', () => {
     const identity={provider:'api',model:'model',apiFormat:'openai_chat',authStyle:'bearer',endpoint:null,configIdentityDigest:`sha256:${'a'.repeat(64)}`,configuration:{kind:'row',id:'config',capability:'default'}};
     expect(frozenSelfModelIdentitySchema.safeParse({...identity,settings:{headers:{Authorization:'fixture-private-token'},apiKey:'fixture-private-key'}}).success).toBe(false);
     expect(projectFrozenModelSettings({headers:{Authorization:'fixture-private-token'},apiKey:'fixture-private-key',size:'1024x1024',reasoning:true})).toEqual({size:'1024x1024',reasoning:true});
+  });
+  it('保留真实文本消费者structuredOutputs参数，不把协议开关当未知字段丢弃',()=>{
+    expect(projectFrozenModelSettings({structuredOutputs:true,headers:{Authorization:'fixture-private-key'}})).toEqual({structuredOutputs:true});
   });
   it('完整保存六种用途，允许文本和图片来源不同', () => {
     expect(modelRoutingPutSchema.parse({schemaVersion:1, choices, expectedRevision:0}).choices).toEqual(choices);
@@ -70,4 +74,19 @@ describe('T1278 完整任务冻结与原v1兼容',()=>{
     expect(()=>readFrozenModelRoute({executionRoute:route},'image','image.generate')).toThrow('MODEL_ROUTE_NOT_FROZEN');
     expect(executionRouteV2Schema.safeParse({...frozen(),routes:{...frozen().routes,'image:unknown':{}}}).success).toBe(false);
   });
+});
+
+it('Codex图片输入保真实requestedModel，旧v1不补默认且仍strict',()=>{
+ const old={kind:'asset.generate',operationKey:'asset.generate',mediaKind:'image',capability:'image.generate',prompt:'原描述',engine:'codex',protocolKind:'codex-app-server',runtimeVersion:'0.159.3'};
+ expect(assetGenerationInputSchema.parse(old)).toEqual(old);
+ expect(assetGenerationInputSchema.parse({...old,requestedModel:'fixture-model-list-id'})).toMatchObject({requestedModel:'fixture-model-list-id'});
+ expect(assetGenerationInputSchema.safeParse({...old,requestedModel:''}).success).toBe(false);
+ expect(assetGenerationInputSchema.safeParse({...old,model:'spoofed-api'}).success).toBe(false);
+});
+
+it('Codex可选模型清单来自真实model/list，旧status无清单仍合法，身份/模态不容空ID',()=>{
+ const old={engine:'codex',installed:true,available:true,version:'0.159.3',loginStatus:'authenticated'};
+ expect(localCodexStatusSchema.parse(old)).toEqual(old);
+ expect(localCodexStatusSchema.parse({...old,availableModels:[{id:'actual-id',inputModalities:['text','image']}]})).toHaveProperty('availableModels');
+ expect(localCodexStatusSchema.safeParse({...old,availableModels:[{id:'',inputModalities:[]}]}).success).toBe(false);
 });

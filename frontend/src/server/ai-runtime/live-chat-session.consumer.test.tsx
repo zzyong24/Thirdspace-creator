@@ -3,7 +3,7 @@ import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/reac
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {AICopilotContent} from '@/features/copilot/ai-copilot-content';
 import {getLiveChatSession as getLiveChatSessionWithFactory} from '@/features/copilot/live-chat-session';
-import {loadAssistantEngine} from '@/features/copilot/assistant-engine';
+import {loadAssistantEngine,loadModelRouting} from '@/features/copilot/assistant-engine';
 import {Chat} from '@ai-sdk/react';
 import type {ChatTransport,UIMessage} from 'ai';
 import {readStoredConversationId,writeStoredConversationId} from '@/features/copilot/conversation-persistence';
@@ -23,15 +23,16 @@ function getLiveChatSession(key: string) {
 
 const query='copilot=open&selKind=project&selId=revisit';
 vi.mock('next/navigation',()=>({useSearchParams:()=>new URLSearchParams(query),useRouter:()=>({push:vi.fn(),replace:vi.fn(),refresh:vi.fn()})}));
-const api=vi.hoisted(()=>({listAITasks:vi.fn(async()=>[]),listConversations:vi.fn(async()=>[]),listMessages:vi.fn(),getPreferences:vi.fn(),patchPreferences:vi.fn()}));
+const api=vi.hoisted(()=>({listAITasks:vi.fn(async()=>[]),listConversations:vi.fn(async()=>[]),listMessages:vi.fn(),getPreferences:vi.fn(),getModelRouting:vi.fn(),patchPreferences:vi.fn()}));
 vi.mock('@/lib/contract-client',()=>({client:api}));
 beforeEach(async()=>{
  // 真实SDK消费者提交前仍须取得后端引擎偏好；不让SSE fetch替身冒充偏好回执。
  api.getPreferences.mockReset();api.getPreferences.mockResolvedValue({assistantExecutionEngine:'pi'});
+ api.getModelRouting.mockReset();api.getModelRouting.mockImplementation(async()=>({schemaVersion:1,revision:0,choices:null,legacyExecutionEngine:(await api.getPreferences()).assistantExecutionEngine,effectiveChoices:{},capabilities:[]}));
  api.patchPreferences.mockReset();api.patchPreferences.mockImplementation(async(request:{body:{assistantExecutionEngine:'pi'|'codex'}})=>{
   const result={assistantExecutionEngine:request.body.assistantExecutionEngine};api.getPreferences.mockResolvedValue(result);return result;
  });
- await loadAssistantEngine(true);
+ await loadModelRouting(true);await loadAssistantEngine(true);
 });
 afterEach(cleanup);
 it('真实Copilot取得/释放观察者，淘汰回访恢复服务端历史且切账号组不串内容',async()=>{
@@ -73,6 +74,7 @@ async function startConsumer(group:string){
  await act(async()=>{await Promise.resolve();});
  const textarea=screen.getByLabelText('我能帮你做什么');
  fireEvent.change(textarea,{target:{value:'合成测试请求'}});
+ await waitFor(()=>expect(screen.getByLabelText('提交提示给 Copilot')).toBeEnabled());
  fireEvent.submit(mounted.container.querySelector('[data-slot="prompt-form"]')!);
  const key=JSON.stringify([`group:${group}`,'project:revisit']);
  return {mounted,key,original:getLiveChatSession(key)};
@@ -223,6 +225,7 @@ it.each(['turn','scope'])('迟到旧stop不停止新的%s流，也不覆盖其�
   current=getLiveChatSession(JSON.stringify(['group:late-stop-scope-b','project:revisit']));
  }
  fireEvent.change(screen.getByLabelText('我能帮你做什么'),{target:{value:'新的独立回合'}});
+ await waitFor(()=>expect(screen.getByLabelText('提交提示给 Copilot')).toBeEnabled());
  fireEvent.submit(mounted.container.querySelector('[data-slot="prompt-form"]')!);
  await waitFor(()=>expect(current.chat.status).toBe('streaming'));
  await waitFor(()=>expect(streams).toHaveLength(2));

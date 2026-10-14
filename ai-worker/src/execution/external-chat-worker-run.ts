@@ -5,10 +5,13 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {z} from 'zod';
 import {isCanonicalBase64} from '@creatoros/contract/agent-workbench';
-import {chatWorkerInputSchema,chatToolProviderName,externalChatTurnStateSchema,externalChatReceiptSchema,externalTaskToolListSchema,externalTaskToolResultSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
+import {chatWorkerInputSchema,executionModelSpecSchema,agenticToolOutcomeSchema,workerStartReceiptSchema,chatToolProviderName,externalChatTurnStateSchema,externalChatReceiptSchema,externalTaskToolListSchema,externalTaskToolResultSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {createControlledCodexSession,CodexHostError} from './codex-app-server';
 import {runCodexNativeTurn,recoverCodexNativeTurn} from './codex-native-turn';
 import {runCodexAcpInWorker} from './codex-acp-worker-run';
+import {runChatTextNodeInWorker} from './chat-text-node-worker';
+import {runChatGenerationInWorker} from './chat-generation-worker';
+import {modelFor} from '../runtime/provider-factory';
 import {createExternalChatToolConsumer} from './external-chat-tools';
 import {saveNativeChatImages} from './external-chat-native-images';
 import {GenerationFailure} from './generation-error';
@@ -63,18 +66,49 @@ export function externalChatPrompt(input:ChatInput,images?:Array<{url:string}>){
  }
  return blocks.join('\n\n');
 }
+/** v2只消费同一宿主checkpoint名单；不沿旧helper借用主Codex规格。 */
+async function recoverRoutedChatChildren(signal:AbortSignal,call:Call){
+ const ids=z.array(z.string().min(1));
+ const checkpoint=z.object({replayableGenerationToolCallIds:ids.default([]),completableToolCallIds:ids.default([]),resumableToolCallIds:ids.default([]),replayableScriptDraftToolCallIds:ids.default([])}).parse(await call('readCheckpoint',{},signal));
+ const restore=async(port:'restoreChatGeneration'|'restoreChatHooks'|'restoreChatScriptDraft',callId:string)=>{
+  const saved=workerStartReceiptSchema.parse(await call(port,{callId},signal));
+  if(saved.callId!==callId)throw new GenerationFailure('unknown_result','CHAT_CHILD_RESTORE_RECEIPT_UNKNOWN');
+ };
+ for(const callId of checkpoint.completableToolCallIds)agenticToolOutcomeSchema.parse(await call('completeChatHooks',{callId},signal));
+ for(const callId of checkpoint.resumableToolCallIds)await restore('restoreChatHooks',callId);
+ for(const callId of checkpoint.replayableGenerationToolCallIds)await restore('restoreChatGeneration',callId);
+ for(const callId of checkpoint.replayableScriptDraftToolCallIds)await restore('restoreChatScriptDraft',callId);
+ for(const callId of checkpoint.replayableGenerationToolCallIds)await runChatGenerationInWorker(callId,signal,call);
+ const run=async(callId:string,node:'hooks'|'script-draft')=>{
+  const prepared=await call(node==='hooks'?'prepareChatHooks':'prepareChatScriptDraft',{callId},signal) as {noModel?:boolean};
+  if(prepared.noModel)return agenticToolOutcomeSchema.parse(await call(node==='hooks'?'completeChatHooks':'completeChatScriptDraft',{callId},signal));
+  const selected=executionModelSpecSchema.parse(await call('resolveChatGenerationCredential',{callId},signal));
+  return runChatTextNodeInWorker(callId,modelFor(selected),signal,call,node);
+ };
+ for(const callId of checkpoint.resumableToolCallIds)await run(callId,'hooks');
+ for(const callId of checkpoint.replayableScriptDraftToolCallIds)await run(callId,'script-draft');
+}
 export async function runExternalChatInWorker(raw:ChatInput,signal:AbortSignal,call:Call,onText?:(text:string)=>void|Promise<void>):Promise<{callId:string}>{
  const input=chatWorkerInputSchema.parse(raw);
- if(input.externalAgentBinding)return runCodexAcpInWorker(input,signal,call,onText);
+ if(input.externalAgentBinding){
+  if(input.modelRoutingVersion===2)throw new GenerationFailure('waiting_user','CODEX_V2_PROTOCOL_MISMATCH');
+  return runCodexAcpInWorker(input,signal,call,onText);
+ }
+ if(input.modelRoutingVersion===2&&(!input.requestedModel||input.codexNativeImageGeneration!==false))throw new GenerationFailure('waiting_user','MODEL_ROUTE_NOT_FROZEN');
  if(input.executionEngine!=='codex')throw new GenerationFailure('waiting_user','CODEX_ENGINE_UNAVAILABLE');
  const images:Array<{url:string}>=[],prompt=externalChatPrompt(input,images),cwd=await externalAgentWorkingDirectory(input);
  const reservation=externalChatTurnStateSchema.parse(await call('reserveExternalChatTurn',{},signal));
  if(reservation.status==='settled')return {callId:reservation.callId};
  if(reservation.status==='rejected')throw new GenerationFailure('waiting_user','CODEX_PREVIOUS_TURN_REJECTED');
  if(reservation.status==='reserved'&&reservation.sessionId)throw new GenerationFailure('waiting_user','CODEX_PREPARED_THREAD_REQUIRES_RECONCILIATION');
+ if(input.modelRoutingVersion===2&&reservation.status==='reserved'){
+  const selected=executionModelSpecSchema.parse(await call('resolveModelCredential',{capability:input.capability},signal));
+  if(!('engine' in selected)||selected.engine!=='codex'||selected.requestedModel!==input.requestedModel)throw new GenerationFailure('waiting_user','MODEL_ROUTE_IDENTITY_CHANGED');
+ }
+ const nativeImages=input.modelRoutingVersion!==2;
  let owned:Awaited<ReturnType<typeof createControlledCodexSession>>;
- try{owned=await createControlledCodexSession(cwd,signal,undefined,true);}catch(error){
-  if(!(error instanceof CodexHostError)||!['CODEX_IMAGE_CAPABILITY_UNAVAILABLE','CODEX_IMAGE_MODEL_UNAVAILABLE'].includes(error.code))throw error;
+ try{owned=await createControlledCodexSession(cwd,signal,undefined,nativeImages);}catch(error){
+  if(!nativeImages||!(error instanceof CodexHostError)||!['CODEX_IMAGE_CAPABILITY_UNAVAILABLE','CODEX_IMAGE_MODEL_UNAVAILABLE'].includes(error.code))throw error;
   owned=await createControlledCodexSession(cwd,signal);
  }
  let admission=false,sessionId:string|undefined,actualTurnId:string|undefined,recoveredFacts:{model:string|null;modelProvider:string|null}|undefined;
@@ -86,14 +120,14 @@ export async function runExternalChatInWorker(raw:ChatInput,signal:AbortSignal,c
    if(reservation.protocolKind!=='codex-app-server'||!reservation.sessionId||!reservation.providerTurnId)throw new CodexHostError('CODEX_TURN_RESULT_UNKNOWN');
    const binding=await call('readCodexCall',{callId:reservation.callId},signal) as {threadId?:string;turnId?:string;modelFacts?:typeof recoveredFacts};
    if(binding.threadId!==reservation.sessionId||binding.turnId!==reservation.providerTurnId)throw new CodexHostError('CODEX_TURN_RESULT_UNKNOWN');recoveredFacts=binding.modelFacts;
-   await recoverExternalChatChildren(signal,call);
+   if(input.modelRoutingVersion===2)await recoverRoutedChatChildren(signal,call);else await recoverExternalChatChildren(signal,call);
    result=await recoverCodexNativeTurn(owned.rpc,reservation.sessionId,reservation.providerTurnId);
   }else{
    if(!owned.authenticated)throw new CodexHostError('CODEX_LOGIN_REQUIRED');
    const definitions=externalTaskToolListSchema.parse(await call('listExternalTaskTools',{},signal)).tools;
    const tools=definitions.map(tool=>({name:chatToolProviderName(tool.name),description:tool.description,inputSchema:tool.inputSchema}));
    const names=new Map(definitions.map(tool=>[chatToolProviderName(tool.name),tool.name]));
-   result=await runCodexNativeTurn({rpc:owned.rpc,mcpNames:owned.mcpNames,cwd,prompt,signal,tools,images,
+   result=await runCodexNativeTurn({rpc:owned.rpc,mcpNames:owned.mcpNames,cwd,prompt,signal,tools,images,...(input.modelRoutingVersion===2?{model:input.requestedModel}:{}),
     onUsage:async usage=>{if(!sessionId||!actualTurnId)throw new CodexHostError('CODEX_TURN_RECEIPT_UNKNOWN');const saved=await call('bindCodexCall',{callId:reservation.callId,observedUsage:{inputTokens:usage.inputTokens??undefined,outputTokens:usage.outputTokens??undefined,totalTokens:usage.totalTokens??undefined}}) as {budgetExceeded?:boolean};return saved.budgetExceeded===true||(usage.outputTokens!==null&&usage.outputTokens>input.maxOutputTokens);},
     onThread:async threadId=>{sessionId=threadId;const saved=externalChatTurnStateSchema.parse(await call('prepareExternalChatThread',{callId:reservation.callId,sessionId:threadId,protocolKind:'codex-app-server',protocolVersion:1},signal));if(saved.callId!==reservation.callId||saved.sessionId!==threadId||saved.status!=='reserved')throw new CodexHostError('CODEX_THREAD_RECEIPT_UNKNOWN');},
     onAdmission:async sessionId=>{admission=true;const saved=externalChatTurnStateSchema.parse(await call('startExternalChatTurn',{callId:reservation.callId,sessionId,protocolKind:'codex-app-server',protocolVersion:1},signal));if(saved.callId!==reservation.callId||saved.status!=='started')throw new CodexHostError('CODEX_START_RECEIPT_UNKNOWN');},

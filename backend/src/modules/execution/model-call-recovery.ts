@@ -4,6 +4,7 @@ import {partitionExecutionCalls} from "./execution-call-tree";
 import {reconstructCheckpointMessages} from "./execution-checkpoint.service";
 import {isChatModelOperation,chatFallbackParent} from "./execution-chat-fallback.service";
 import {originalCodexReadBinding} from './codex-read-recovery';
+import {frozenChatModelRouteForCall,frozenNonChatModelBindingForCall} from './execution-model-identity.service';
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
 
@@ -73,8 +74,12 @@ export function recoverableChatModelRetryAnchor(task:Task,calls:readonly Call[])
 export function unconfirmedModelCalls(task:Task,calls:readonly Call[]):Call[]{
  const input=(task.payload as {modelInput?:{kind?:string;executionEngine?:string}}|null)?.modelInput;
  // SEMANTIC_BOUNDARY_ALLOW: 只按冻结执行协议防止对同一未知回合再提交，不选择内容。
- if(frozenExecutionEngine(task.payload)==='codex'||input?.executionEngine==='codex'||input?.kind==='asset.generate')return [];
- return calls.filter(call=>call.kind==="model"&&["started","unknown"].includes(call.status)&&
+ const payload=task.payload as Record<string,unknown>|null,v2Chat=input?.kind==='chat.run'&&(payload?.executionRoute as {schemaVersion?:unknown}|undefined)?.schemaVersion===2;
+ const v2=(payload?.executionRoute as {schemaVersion?:unknown}|undefined)?.schemaVersion===2;
+ // v2 Agent未知原回合只对账；API也不能被通用安全模型族授权重新计费。
+ if(v2&&input?.kind==='agentic.run')return [];
+ if(!v2&&(frozenExecutionEngine(task.payload)==='codex'||input?.executionEngine==='codex'||input?.kind==='asset.generate'))return [];
+ return calls.filter(call=>(!v2||((v2Chat||['text','structured','vision'].includes(frozenNonChatModelBindingForCall(task,call)?.mode??''))&&['self','official'].includes((v2Chat?frozenChatModelRouteForCall(payload!,call):frozenNonChatModelBindingForCall(task,call)?.route)?.source??'')))&&call.kind==="model"&&["started","unknown"].includes(call.status)&&
   call.providerJob===null&&call.providerResult===null&&call.resultRef===null);
 }
 

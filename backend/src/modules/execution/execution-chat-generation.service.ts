@@ -33,7 +33,7 @@ const parentRequest=workerPortInputSchemas.prepareChatGeneration;
 export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&{
  tools:Record<string,ChatBackendTool>;
  check(ref:ExecutionRef,input:{modelCallId:string;toolCallId:string},signal?:AbortSignal):Promise<{status:string}>;
- resolveCredential(context:RequestContext,capability:string,ref:ExecutionRef,signal?:AbortSignal):Promise<unknown>;
+ resolveCredential(context:RequestContext,capability:string,ref:ExecutionRef,signal?:AbortSignal,parentCallId?:string,mode?:'text'|'structured',readonlyCodexRecovery?:boolean):Promise<unknown>;
 }){
  const leases=createExecutionLeaseService(db,deps),ledger=createExecutionCallLedgerService(db,deps),binding=createAgenticToolBinding(deps.tools);
  const reader=createChatHostContextReader(db,deps),preparations=createExecutionNodePreparationService(db,deps),identities=createExecutionChatModelIdentityService(db,deps);
@@ -140,8 +140,16 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    });
   },
   async resolveCredential(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
+   const {callId}=parentRequest.parse(raw),descriptor=await identities.describe(ref,callId);
+   if(descriptor.v2&&descriptor.execution!=='worker.structured-node'){
+    const frozen=await reader.read(ref);
+    const approval=await deps.check(ref,{modelCallId:descriptor.modelCallId,toolCallId:descriptor.toolCallId},signal);
+    if(approval.status!=="not-applicable")throw new ConflictError("文本节点未取得真实宿主授权");
+    const credential=await deps.resolveCredential(structuredClone(frozen.context),descriptor.capability,ref,signal,callId,descriptor.mode,descriptor.readonlyCodexRecovery);
+    signal?.throwIfAborted();return identities.pin(ref,callId,credential);
+   }
    const value=await base(ref,raw,signal);signal?.throwIfAborted();
-   const credential=await deps.resolveCredential(structuredClone(value.context),chatGenerationSkillId(value.node.capability),ref,signal);
+   const credential=await deps.resolveCredential(structuredClone(value.context),chatGenerationSkillId(value.node.capability),ref,signal,descriptor.v2?callId:undefined,descriptor.v2?descriptor.mode:undefined,descriptor.v2&&descriptor.readonlyCodexRecovery);
    signal?.throwIfAborted();return identities.pin(ref,value.parent.id,credential);
   },
   async prepare(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){

@@ -71,7 +71,7 @@ export const modelRoutingSettingsSchema=z.object({
   aspect_ratio:z.enum(['1:1','9:16','16:9','3:4','4:3']).optional(),
   duration:z.number().finite().optional(),durationSeconds:z.number().finite().optional(),
   generate_audio:z.boolean().optional(),audio:z.boolean().optional(),prompt_max_length:z.number().finite().optional(),
-  reasoning:z.boolean().optional(),contextWindow:positiveNumber.optional(),maxTokens:positiveNumber.optional(),
+  reasoning:z.boolean().optional(),structuredOutputs:z.boolean().optional(),contextWindow:positiveNumber.optional(),maxTokens:positiveNumber.optional(),
   maxDurationSeconds:positiveNumber.optional(),maxBytes:positiveNumber.optional(),chargeUnits:positiveNumber.optional(),
 }).strict();
 /** SEMANTIC_BOUNDARY_ALLOW: 只投影真实协议消费的参数类型，不判断创作内容；未知参数按原适配器忽略。 */

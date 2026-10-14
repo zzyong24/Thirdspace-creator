@@ -39,7 +39,7 @@ export function createScheduledFavoritesAsrService(db:Db,deps:ScheduledFavorites
   const existing=(initial.payload.favoritesAsrResources as Record<string,unknown>|undefined)?.[input.awemeId];
   if(!existing){
    if(initial.item.transcript?.trim())return initial.item.transcript;
-   const configuration=transcribeConfiguration(await deps.resolveSpec(ctx));signal.throwIfAborted();
+   const configuration=transcribeConfiguration(await deps.resolveSpec(ctx,{ref}));signal.throwIfAborted();
    await leases.withLease(ref,'admission',async scope=>{
     signal.throwIfAborted();const bound=await owned(scope,input.itemId,input.awemeId),resources=(bound.payload.favoritesAsrResources??{}) as Record<string,unknown>;
     if(resources[input.awemeId])return;

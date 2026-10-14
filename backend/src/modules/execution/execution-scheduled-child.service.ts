@@ -1,4 +1,5 @@
-import {createExecutionRoute,frozenExecutionEngine} from '@creatoros/contract/execution-worker';
+import {frozenExecutionRoute,inheritExecutionRoute} from '@creatoros/contract/execution-worker';
+import {isDeepStrictEqual} from 'node:util';
 import {workspaceFilter} from "../../workspace-scope";
 import {and,asc,eq,inArray,sql,executionTasks,executionCalls,jobRuns,scheduledJobs,aiTasks,type Db} from '@creatoros/backend';
 import type {ExecutionRef} from '@creatoros/contract/execution-worker';
@@ -38,7 +39,13 @@ export function createExecutionScheduledChildService(db:Db,deps:{now?:()=>string
  // 同一事务更新两处权威，避免Worker读业务runtime与飞轮读payload得到不同引擎。
  const calls=await tx.select({id:executionCalls.id}).from(executionCalls).where(eq(executionCalls.executionTaskId,child.id)).limit(1);
  const inherit=!reverse&&child.status==='queued'&&child.attempt===0&&!child.leaseOwner&&calls.length===0;
- const route=inherit?createExecutionRoute(frozenExecutionEngine(payload(parent)),"parent"):undefined;
+ const original=inheritExecutionRoute(payload(parent));
+ if(original.schemaVersion===2){
+  // v2必须在创建/入队时已继承，attach只核同一完整图，不修补已经可能被Worker读取的快照。
+  const business=(ai.runtimeData as Record<string,unknown>??{});
+  if(!isDeepStrictEqual(frozenExecutionRoute(payload(child)),original)||!isDeepStrictEqual(frozenExecutionRoute(business),original))throw new ConflictError('调度子任务完整模型路由与父任务不符');
+ }
+ const route=original.schemaVersion===1&&inherit?original:undefined;
  await tx.update(executionTasks).set({payload:{...payload(child),...(route?{executionRoute:route}:{}),parentExecutionTaskId:parent.id}}).where(eq(executionTasks.id,child.id));
  if(route)await tx.update(aiTasks).set({runtimeData:{...(ai.runtimeData as Record<string,unknown>??{}),executionRoute:route}}).where(eq(aiTasks.id,ai.id));
  const existing=scheduledChildId(parent);if(existing&&existing!==child.id)throw new ConflictError('调度父任务已有不同子任务');

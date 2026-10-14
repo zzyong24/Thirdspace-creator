@@ -8,11 +8,36 @@
  */
 
 import * as React from "react";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render as rtlRender, screen, waitFor } from "@testing-library/react";
 import { ENDPOINTS } from "@creatoros/contract";
 import { CURRENT_ACCOUNT_KEY, CURRENT_GROUP_KEY } from "@/lib/http-transport";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+
+// 显式测试操作：legacy GET 不造 effectiveChoices；打开原配置必须真实选择来源、再点配置。
+// 这里不点击来源保存，不发 routing PUT，不模拟官方模型调用。
+function openSourceConfiguration(family:string,source='self') {
+ const row=document.querySelector(`[data-model-family="${family}"]`);
+ if(!row)return;
+ const select=row.querySelector('select') as HTMLSelectElement;
+ if(select.value!==source)fireEvent.change(select,{target:{value:source}});
+ const button=row.querySelector('button[aria-label^="配置"]') as HTMLButtonElement;
+ if(button&&button.getAttribute('aria-expanded')!=='true')fireEvent.click(button);
+}
+function modelAuthorityInTree(node:React.ReactNode):import('./settings-page').ModelAuthorityState|undefined {
+ if(!React.isValidElement<Record<string,unknown>>(node))return undefined;
+ if(node.props.modelAuthority)return node.props.modelAuthority as import('./settings-page').ModelAuthorityState;
+ let found:import('./settings-page').ModelAuthorityState|undefined;
+ React.Children.forEach(node.props.children as React.ReactNode,child=>{found??=modelAuthorityInTree(child);});return found;
+}
+function render(...args:Parameters<typeof rtlRender>) {
+ const tree=rtlRender(...args),authority=modelAuthorityInTree(args[0]);
+ const caps:Record<string,string>={text:'default',vision:'asset.classify',image:'image.generate',video:'video.generate',audio:'transcribe.audio',embed:'knowledge.search.embed'};
+ for(const [family,capability] of Object.entries(caps))openSourceConfiguration(family,(document.querySelector(`[data-model-family="${family}"] select`) as HTMLSelectElement)?.value||((authority?.capabilities as Record<string,{authority?:string}>|undefined)?.[capability]?.authority==='channel'?'official':'self'));
+ const textSource=(document.querySelector('[data-model-family="text"] select') as HTMLSelectElement)?.value||(authority?.capabilities?.default?.authority==='channel'?'official':'self');openSourceConfiguration('text',textSource);
+ return tree;
+}
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
 const mockOpenExternalUrl = vi.fn();
@@ -27,6 +52,8 @@ vi.mock("@tauri-apps/plugin-opener", () => ({
 }));
 
 const mockClient = {
+  getModelRouting: vi.fn().mockResolvedValue({schemaVersion:1,revision:0,choices:null,legacyExecutionEngine:'pi',effectiveChoices:{},capabilities:[]}),
+  putModelRouting: vi.fn(),
   getPreferences: vi.fn().mockResolvedValue({assistantExecutionEngine:"pi"}),
   patchPreferences: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   putModel: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
@@ -62,6 +89,8 @@ const mockClient = {
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    getModelRouting: () => mockClient.getModelRouting(),
+    putModelRouting: (input:unknown) => mockClient.putModelRouting(input),
     getPreferences: () => mockClient.getPreferences(),
     getReportingStatus: () => Promise.resolve({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
     patchPreferences: (input: unknown) => mockClient.patchPreferences(input),
@@ -191,7 +220,8 @@ beforeEach(async () => {
   });
   mockOpenExternalUrl.mockReset();
   const {loadAssistantEngine}=await import("@/features/copilot/assistant-engine");
-  await loadAssistantEngine(true);
+  const {loadModelRouting}=await import("@/features/copilot/assistant-engine");
+  mockClient.getModelRouting.mockResolvedValue({schemaVersion:1,revision:0,choices:null,legacyExecutionEngine:'pi',effectiveChoices:{},capabilities:[]});await loadModelRouting(true);
 });
 
 afterEach(() => {
@@ -235,19 +265,21 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
   }
   function element(slot: string) { return document.querySelector(`[data-slot="${slot}"]`)!; }
   function category(id: string) { fireEvent.click(document.querySelector(`[role="tab"][data-tab-id="${id}"]`)!); }
-  function scopeChanged(group: string, account: string | null = null) {
+  async function scopeChanged(group: string, account: string | null = null) {
     localStorage.setItem(CURRENT_GROUP_KEY, group);
     if(account) localStorage.setItem(CURRENT_ACCOUNT_KEY, account);
     else localStorage.removeItem(CURRENT_ACCOUNT_KEY);
     window.dispatchEvent(new CustomEvent("creatoros:accounts-changed", {detail: {groupId: group, source: "external", routeRefreshScheduled: true}}));
+    const {loadModelRouting}=await import("@/features/copilot/assistant-engine");await loadModelRouting(true);if(localStorage.getItem(CURRENT_GROUP_KEY)===group)openSourceConfiguration("text","self");
   }
   let previousGroup: string | null;
   let previousAccount: string | null;
-  beforeEach(() => {
+  beforeEach(async () => {
     previousGroup = localStorage.getItem(CURRENT_GROUP_KEY);
     previousAccount = localStorage.getItem(CURRENT_ACCOUNT_KEY);
     localStorage.setItem(CURRENT_GROUP_KEY, "t1236-group-a");
     localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+    const {loadModelRouting}=await import("@/features/copilot/assistant-engine");await loadModelRouting(true);
   });
   afterEach(() => {
     if(previousGroup === null) localStorage.removeItem(CURRENT_GROUP_KEY);
@@ -327,7 +359,7 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
   it.each([true, false])("group-only切组拒绝旧%s结果（account都null）", async ok => {
     const run = await startProbe();
     category("account");
-    act(() => scopeChanged("t1236-group-b"));
+    await act(async () => {await scopeChanged("t1236-group-b");});
     await act(async () => { run.probe.resolve({ok, detail: "t1236 old group result"}); });
     category("models");
     expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
@@ -336,7 +368,7 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
 
   it("切账号拒绝迟到结果", async () => {
     const run = await startProbe();
-    act(() => scopeChanged("t1236-group-a", "t1236-account-b"));
+    await act(async () => {await scopeChanged("t1236-group-a", "t1236-account-b");});
     await act(async () => { run.probe.resolve({ok: true, detail: "old account"}); });
     expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
   }, 240000);
@@ -384,7 +416,7 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
     category("models");
     fireEvent.click(element("model-test-connection"));
     await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1), {timeout: 120000});
-    act(() => scopeChanged("t1236-group-b"));
+    await act(async () => {await scopeChanged("t1236-group-b");});
     await act(async () => { save.resolve(data.saved); });
     expect(mockClient.testModelConnection).not.toHaveBeenCalled();
     expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
@@ -412,7 +444,7 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
     category("models");
     fireEvent.click(element("model-test-connection"));
     await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1), {timeout: 120000});
-    act(() => scopeChanged("t1236-group-b"));
+    await act(async () => {await scopeChanged("t1236-group-b");});
     await act(async () => { save.reject(new Error("t1236 previous scope save error")); });
     expect(document.querySelector('[role="alert"]')).toBeNull();
     expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
@@ -429,7 +461,7 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
 
   it("旧finally不会清新scope的正在测试或写入旧结果", async () => {
     const run = await startProbe();
-    act(() => scopeChanged("t1236-group-b"));
+    await act(async () => {await scopeChanged("t1236-group-b");});
     const next = deferred<ProbeReply>();
     mockClient.putModel.mockResolvedValueOnce(run.saved);
     mockClient.testModelConnection.mockImplementationOnce(() => next.promise);
@@ -452,9 +484,11 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
         serviceId: "t1236-channel", serviceName: "测试权益", provider: "openai-compatible",
         modelName: "managed-model", model: "managed-model", baseUrl: "https://example.invalid/v1", hasSecret: true}},
     }} />);
+    openSourceConfiguration("text","official");
     await act(async () => { run.probe.resolve({ok: true, detail: "old local result"}); });
-    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
-    expect(document.querySelector('[data-slot="model-configuration-card"]')).toBeNull();
+    const active=document.querySelector('[data-slot="model-source-configuration"]:not([hidden])');
+    expect(active?.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(active?.querySelector('[data-slot="model-configuration-card"]')).toBeNull();
     expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
   }, 240000);
 
@@ -500,7 +534,7 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
     category("models");
     fireEvent.click(element("model-test-connection"));
     await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1), {timeout: 120000});
-    act(() => { scopeChanged("t1236-group-b"); scopeChanged("t1236-group-a"); });
+    await act(async () => { await scopeChanged("t1236-group-b"); await scopeChanged("t1236-group-a"); });
     await act(async () => { save.resolve(data.saved); });
     expect(mockRouter.refresh).not.toHaveBeenCalled();
     expect(mockClient.testModelConnection).not.toHaveBeenCalled();
@@ -510,7 +544,7 @@ describe("[T-1236] 模型探针会话与配置生命周期", () => {
 
   it("实际scope ABA后旧probe也不能恢复连通结果", async () => {
     const run = await startProbe();
-    act(() => { scopeChanged("t1236-group-b"); scopeChanged("t1236-group-a"); });
+    await act(async () => { await scopeChanged("t1236-group-b"); await scopeChanged("t1236-group-a"); });
     await act(async () => { run.probe.resolve({ok: true, detail: "obsolete ABA result"}); });
     expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
     expect(mockClient.putModel).toHaveBeenCalledTimes(1);
@@ -556,50 +590,17 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。",
       );
     });
-
-    it("本地文本模型未配置时仍显示真实可操作状态", () => {
-      render(
-        <SettingsDialog
-          viewModel={VM}
-          modelAuthority={{
-            authority: "local",
-            outcome: "not_configured",
-            action: "请配置本地文本模型",
-            capabilities: {},
-            services: [],
-          }}
-        />,
-      );
-
-      const status = document.querySelector(
-        '[data-slot="model-authority-status"]',
-      );
-      expect(status).not.toBeNull();
-      expect(status?.textContent).toContain("请配置本地文本模型");
+    it("本地配置缺项保持可操作，来源状态未取得不伪造 ready",()=>{
+      render(<SettingsDialog viewModel={VM} modelAuthority={{authority:'local',outcome:'not_configured',action:'请配置本地文本模型',capabilities:{},services:[]}}/>);
+      expect(document.querySelector('[data-slot="model-source-status-text"]')).toHaveTextContent('状态未核实');
+      expect(document.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();
+      expect(document.querySelector('[data-slot="model-save"]')).toBeEnabled();
     });
-
-    it("渠道接管时即使本地已有密钥也仍显示渠道状态", () => {
-      render(
-        <SettingsDialog
-          viewModel={{
-            ...VM,
-            model: { ...VM.model, hasSecret: true },
-          }}
-          modelAuthority={{
-            authority: "channel",
-            outcome: "configured",
-            action: "模型已由当前权益配置",
-            capabilities: {},
-            services: [],
-          }}
-        />,
-      );
-
-      const status = document.querySelector(
-        '[data-slot="model-authority-status"]',
-      );
-      expect(status).not.toBeNull();
-      expect(status).toHaveAttribute("data-authority", "channel");
+    it("只有用户选择官方才打开官方缺项说明，不以渠道全局状态接管 self",()=>{
+      render(<SettingsDialog viewModel={{...VM,model:{...VM.model,hasSecret:true}}} modelAuthority={{authority:'channel',outcome:'configured',action:'模型已由当前权益配置',capabilities:{},services:[]}}/>);
+      expect(document.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();openSourceConfiguration('text','official');
+      expect(document.querySelector('[data-slot="model-source-configuration"]:not([hidden])')).toHaveTextContent('当前官方配置尚未取得');
+      expect(document.querySelector('[data-slot="model-source-configuration"]:not([hidden]) [data-slot="model-secret-input"]')).toBeNull();
     });
   });
 
@@ -718,65 +719,13 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       ),
     );
   });
-
-  it("[T-679] 受管权益缺少语音路由时提示重新同步，不回退为用户填写 ASR Key", () => {
-    render(
-      <SettingsDialog
-        viewModel={VM}
-        modelAuthority={{
-          authority: "channel",
-          outcome: "configured",
-          action: "当前权益已同步 1/4 类模型，缺失能力请重新同步",
-          capabilities: {
-            default: {
-              capability: "default",
-              authority: "channel",
-              serviceId: "managed-main",
-              serviceName: "隐藏服务",
-              provider: "openai-compatible",
-              modelName: "MiniMax M3",
-              model: "minimax-m3",
-              baseUrl: "https://provider.example/v1",
-              hasSecret: true,
-            },
-          },
-          services: [
-            {
-              serviceId: "managed-main",
-              serviceName: "隐藏服务",
-              credentialSource: "activation_managed",
-              hasSecret: true,
-              portalUrl: null,
-              purchaseUrl: null,
-              rechargeUrl: null,
-              helpUrl: null,
-            },
-          ],
-        }}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("tab", { name: "模型配置" }));
-    const audio = document.querySelector(
-      '[data-slot="asr-model"][data-capability="transcribe.audio"]',
-    );
-    expect(audio).not.toBeNull();
-    expect(audio?.textContent).toContain("重新校验并同步当前权益");
-    expect(
-      document.querySelector('[data-slot="multimodal-audio-card"]'),
-    ).toBeNull();
-    expect(
-      document.querySelector('[data-slot="channel-model-service-secret"]'),
-    ).toBeNull();
-    expect(document.body.textContent).not.toContain("ASR 供应商");
-    expect(document.body.textContent).toContain(
-      "无需填写服务商、接口地址或密钥",
-    );
-    expect(
-      screen.getByRole("button", {
-        name: "重新校验激活权益并重试配置同步",
-      }),
-    ).toBeInTheDocument();
+  it("[T1278/T679] official ASR缺项不要求手填官方Key，self/local仍可显式选择",()=>{
+    render(<SettingsDialog viewModel={VM} modelAuthority={{authority:'channel',outcome:'configured',action:'当前权益缺少ASR',capabilities:{},services:[]}}/>);
+    fireEvent.click(screen.getByRole('tab',{name:'模型配置'}));openSourceConfiguration('audio','official');
+    const official=document.querySelector('[data-slot="model-source-configuration"]:not([hidden])');expect(official).toHaveTextContent('当前官方配置尚未取得');expect(official?.querySelector('[data-slot="multimodal-audio-secret-input"]')).toBeNull();
+    expect(screen.getByRole('button',{name:'重新校验激活权益并重试配置同步'})).toBeInTheDocument();
+    openSourceConfiguration('audio','self');expect(document.querySelector('[data-slot="model-source-configuration"]:not([hidden]) [data-slot="multimodal-audio-card"]')).not.toBeNull();
+    openSourceConfiguration('audio','local');expect(document.querySelector('[data-slot="model-source-configuration"]:not([hidden])')).toHaveTextContent('本地 Whisper');expect(mockClient.putModel).not.toHaveBeenCalled();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
   });
 
   it("[T-715] 即使本地接口异常返回管理端地址，也不会打开任何非用户额度页面", async () => {
@@ -1159,21 +1108,9 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       }),
     );
   });
-
-  it("[T-645] 普通设置只展示文本、ASR、生图和生视频模型", () => {
-    const doc = renderDialog();
-
-    expect(doc.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();
-    expect(doc.querySelector('[data-slot="multimodal-audio-card"]')).not.toBeNull();
-    expect(doc.querySelector('[data-slot="multimodal-image-card"]')).not.toBeNull();
-    expect(doc.querySelector('[data-slot="multimodal-video-card"]')).not.toBeNull();
-
-    for (const kind of ["review", "embed", "vision", "search", "fallback"]) {
-      expect(doc.querySelector(`[data-slot="multimodal-${kind}-card"]`)).toBeNull();
-    }
-    expect(doc.querySelector('[data-slot="models-more-count"]')?.textContent).toContain(
-      "2 项",
-    );
+  it("[T1278/T645] 六槽可达，旧四类原配置保留且新增 vision/embed/edit，不新增雷达/search",()=>{
+    const doc=renderDialog();for(const kind of ['audio','image','imageEdit','video','embed','vision'])expect(doc.querySelector(`[data-slot="multimodal-${kind}-card"]`)).not.toBeNull();
+    expect(doc.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();for(const kind of ['review','search','fallback'])expect(doc.querySelector(`[data-slot="multimodal-${kind}-card"]`)).toBeNull();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
   });
 
   it("[T-590] 模型配置不再增加内容雷达专用卡", () => {
@@ -1207,7 +1144,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("saving the 文生图 form PUTs the image.generate capability (provider/model/baseUrl/secret, no apiFormat/temperature)", async () => {
-    const doc = renderDialog();
+    const doc = renderDialog();openSourceConfiguration('image','self');
     const provider = doc.querySelector(
       '[data-slot="multimodal-image-provider-input"]',
     ) as HTMLInputElement;
@@ -1256,7 +1193,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("saving the 文生视频 form PUTs the video.generate capability", async () => {
-    const doc = renderDialog();
+    const doc = renderDialog();openSourceConfiguration('video','self');
     const provider = doc.querySelector(
       '[data-slot="multimodal-video-provider-input"]',
     ) as HTMLInputElement;
@@ -1340,21 +1277,20 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   it("ASR 与文本模型同属重点配置区，并明确云端建议、本地可用", async () => {
     const user = userEvent.setup();
     const doc = renderDialog();
-    const requiredGroup = doc.querySelector('[data-slot="models-required-group"]');
+    const requiredGroup = doc.querySelector('[data-model-family="audio"]');
     expect(
       requiredGroup?.querySelector('[data-capability="transcribe.audio"]'),
     ).not.toBeNull();
     const moreBody = doc.querySelector('[data-slot="models-more-body"]');
-    expect(
-      moreBody?.querySelector('[data-capability="transcribe.audio"]'),
-    ).toBeNull();
-    expect(requiredGroup?.textContent).toContain("重点配置");
+    expect(moreBody).toBeNull();
+    expect(requiredGroup?.textContent).toContain("语音转文字");
     expect(requiredGroup?.textContent).toContain(
       "建议配置 ASR 转录模型，避免本地转录时间过长",
     );
     expect(requiredGroup?.textContent).toContain("未配置时仍可使用本地 Whisper");
 
     await user.click(screen.getByRole("tab", { name: "模型配置" }));
+    openSourceConfiguration("text","self");
     await user.click(screen.getByRole("button", { name: "打开模型配置手册" }));
     const manual = await screen.findByRole("dialog", { name: "模型配置手册" });
     expect(manual.textContent).toContain("先选供应商");
@@ -1376,7 +1312,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("renders the 逐字稿(audio) card without regressing the image/video cards", async () => {
-    const doc = renderDialog();
+    const doc = renderDialog();openSourceConfiguration('audio','self');
     // 逐字稿(audio)卡渲出,capability=transcribe.audio。
     const audioCard = doc.querySelector('[data-slot="multimodal-audio-card"]');
     expect(audioCard).not.toBeNull();
@@ -1430,7 +1366,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
 
   it("选择小米 MiMo 预设会自动填模型和技术参数，普通路径只需再填 Key", async () => {
     const user = userEvent.setup();
-    const doc = renderDialog();
+    const doc = renderDialog();openSourceConfiguration("audio","self");
     await user.click(
       doc.querySelector(
         '[data-slot="multimodal-audio-preset-trigger"]',
@@ -1468,7 +1404,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
 
   it("选择通义千问 Qwen 预设会自动填方言 ASR 模型和百炼地址", async () => {
     const user = userEvent.setup();
-    const doc = renderDialog();
+    const doc = renderDialog();openSourceConfiguration("audio","self");
     await user.click(
       doc.querySelector(
         '[data-slot="multimodal-audio-preset-trigger"]',
@@ -1793,7 +1729,7 @@ describe("SettingsDialog — ?highlight 深链定位", () => {
     const card = doc.querySelector('[data-highlight="assistant-engine"]');
     expect(card).not.toBeNull();
     expect(doc.querySelector('[data-slot="settings-panel"][data-tab-id="models"]')).toHaveAttribute("data-active", "true");
-    expect(screen.getByRole("combobox", {name: "编导引擎"})).toBeInTheDocument();
+    expect(screen.getByRole("combobox", {name: "文本创作与结构化模型来源"})).toBeInTheDocument();
   });
 
   it("highlight=text-model → 滚动到文本模型配置卡并加高亮 ring", async () => {
@@ -2054,15 +1990,145 @@ describe("Settings 测试连接 (T-377)", () => {
     expect(result.textContent ?? "").not.toContain("✗ 失败");
   });
 });
+it("T1278/T1246 选定 text/image Codex 才免其 API 配置，ASR/video 不受覆盖",async()=>{
+ mockClient.getModelRouting.mockResolvedValue({schemaVersion:1,revision:1,choices:{text:'codex',vision:'codex',image:'codex',video:'self',audio:'self',embed:'self'},legacyExecutionEngine:'pi',effectiveChoices:{},capabilities:[]});
+ const {loadModelRouting}=await import("@/features/copilot/assistant-engine");await loadModelRouting(true);
+ renderDialog();expect(document.querySelector('[data-slot="model-configuration-card"]')).toBeNull();expect(document.querySelector('[data-slot="multimodal-image-card"]')).toBeNull();expect(document.body).toHaveTextContent('Codex');expect(document.querySelector('[data-slot="multimodal-audio-card"]')).not.toBeNull();expect(document.querySelector('[data-slot="multimodal-video-card"]')).not.toBeNull();expect(mockClient.putModel).not.toHaveBeenCalled();expect(mockClient.testModelConnection).not.toHaveBeenCalled();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+});
 
-it("T1246 Codex执行引擎不要求独立文本和图片配置，ASR与视频仍保独立入口",async()=>{
- mockClient.getPreferences.mockResolvedValue({assistantExecutionEngine:"codex"});
- const {loadAssistantEngine}=await import("@/features/copilot/assistant-engine");await loadAssistantEngine(true);
- renderDialog();
- expect(document.querySelector('[data-slot="model-configuration-card"]')).toBeNull();
- expect(document.querySelector('[data-slot="multimodal-image-card"]')).toBeNull();
- expect(document.body).toHaveTextContent("Codex");
- expect(document.querySelector('[data-slot="multimodal-audio-card"]')).not.toBeNull();
- expect(document.querySelector('[data-slot="multimodal-video-card"]')).not.toBeNull();
- expect(mockClient.putModel).not.toHaveBeenCalled();expect(mockClient.testModelConnection).not.toHaveBeenCalled();
+describe("T1278 真实额度卡首次充值与原操作恢复", () => {
+  const code = `AICR-${"x".repeat(43)}`;
+  const ref = "AICLE-T1278UI0001";
+  const receipt = (status = "pending", override = {}) => ({ contractVersion: "growth-ai-credit-bootstrap-v1", operationRef: ref, status, creditUnits: 123, expiresAt: "2026-10-14T12:30:00+00:00", ...override });
+  const reply = (value: unknown, status = 200) => Response.json(value, { status, headers: { "cache-control": "private, no-store" } });
+  beforeEach(async () => {
+    const { webcrypto } = await import("node:crypto");
+    vi.stubGlobal("crypto", webcrypto);
+  });
+  afterEach(() => { vi.unstubAllGlobals(); });
+  async function card() {
+    const { AiCreditCenterCard } = await import("./channel-model-configuration");
+    rtlRender(<AiCreditCenterCard/>);
+    await userEvent.click(screen.getByText("使用充值码开通官方额度"));
+  }
+  it("真实not_configured账户不展示明知失败的额度连接，显式充值码入口仍可用", async () => {
+    const { AiCreditCenterCard } = await import("./channel-model-configuration");
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);
+    expect(screen.queryByRole("button", { name: "查看 AI 额度与消耗" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText("使用充值码开通官方额度"));
+    expect(screen.getByLabelText("官方额度充值码")).toHaveValue("");
+    expect(screen.getByRole("button", { name: "兑换并开通" })).toBeDisabled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  }, 180_000);
+
+  it("空输入零开通；真实body/no-store，pending→unknown查询→同ref恢复，清充值码且不轮询", async () => {
+    const calls: { url: string; init: RequestInit }[] = [];
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (url, init) => {
+      calls.push({ url: String(url), init: init ?? {} });
+      return reply(receipt(String(url).endsWith("/resume") ? "applied" : init?.method === "GET" ? "provider_unknown" : "pending"));
+    });
+    await card(); expect(screen.getByRole("button", { name: "兑换并开通" })).toBeDisabled(); expect(fetchMock).not.toHaveBeenCalled();
+    await userEvent.type(screen.getByLabelText("官方额度充值码"), code);
+    await userEvent.click(screen.getByRole("button", { name: "兑换并开通" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("开通处理中"), { timeout: 120_000 });
+    expect(screen.queryByLabelText("官方额度充值码")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("原操作编号")).toHaveValue(ref);
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ serviceId: "omnihi-main", code });
+    expect(calls[0].init.cache).toBe("no-store"); expect(calls[0].init.credentials).toBe("same-origin");
+    expect(calls).toHaveLength(1);
+    await userEvent.click(screen.getByRole("button", { name: "查询原操作" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("到账确认中"), { timeout: 120_000 });
+    await userEvent.click(screen.getByRole("button", { name: "恢复原操作" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("本次兑换已到账"), { timeout: 120_000 });
+    expect(calls.map(row => [row.url, row.init.method, row.init.body])).toEqual([
+      ["/api/v1/local/ai-credits/bootstrap", "POST", JSON.stringify({ serviceId: "omnihi-main", code })],
+      [`/api/v1/local/ai-credits/bootstrap/${ref}`, "GET", undefined],
+      [`/api/v1/local/ai-credits/bootstrap/${ref}/resume`, "POST", "{}"],
+    ]);
+    expect(mockOpenExternalUrl).not.toHaveBeenCalled(); expect(mockClient.putModel).not.toHaveBeenCalled(); expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+    expect(JSON.stringify(localStorage)).not.toContain(code); expect(JSON.stringify(sessionStorage)).not.toContain(code);
+  }, 180_000);
+
+  it("提交未知只能显式重输同码恢复原幂等键，不能换码再开，StrictMode无自动开通", async () => {
+    const { AiCreditCenterCard } = await import("./channel-model-configuration");
+    const calls: RequestInit[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, init) => {
+      calls.push(init ?? {});
+      if (calls.length === 1) throw new TypeError("fixture offline");
+      return reply(receipt("provider_unknown"));
+    });
+    rtlRender(<React.StrictMode><AiCreditCenterCard/></React.StrictMode>);
+    await userEvent.click(screen.getByText("使用充值码开通官方额度"));
+    expect(calls).toHaveLength(0);
+    await userEvent.type(screen.getByLabelText("官方额度充值码"), code);
+    await userEvent.click(screen.getByRole("button", { name: "兑换并开通" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "恢复原提交" })).toBeInTheDocument(), { timeout: 120_000 });
+    expect(screen.getByLabelText("官方额度充值码")).toHaveValue("");
+    await userEvent.type(screen.getByLabelText("官方额度充值码"), `AICR-${"y".repeat(43)}`);
+    await userEvent.click(screen.getByRole("button", { name: "恢复原提交" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("本次结果尚未确认，请输入原充值码恢复同一次提交"), { timeout: 120_000 });
+    expect(calls).toHaveLength(1);
+    await userEvent.type(screen.getByLabelText("官方额度充值码"), code);
+    await userEvent.click(screen.getByRole("button", { name: "恢复原提交" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("到账确认中"), { timeout: 120_000 });
+    expect(calls).toHaveLength(2); expect(calls[1].headers).toEqual(calls[0].headers); expect(calls[1].body).toEqual(calls[0].body);
+  }, 180_000);
+
+  it("已到账先实际同步再沿原connect打开，失败保原ref/到账状态且不重发bootstrap", async () => {
+    const calls: string[] = []; let failSync = true;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+      calls.push(String(url));
+      if (String(url) === "/api/v1/local/ai-credits/bootstrap") return reply(receipt("applied"));
+      if (String(url) === "/api/v1/local/client-config") return reply(failSync ? { authority: "local", outcome: "unreachable" } : { authority: "channel", outcome: "configured" });
+      if (String(url) === "/api/v1/local/ai-credits/connect") return reply({ openUrl: "https://growth.example/credits/connect#SAFE_LINK_CODE", expiresAt: "2026-10-14T12:05:00Z", expiresIn: 60 });
+      throw new Error("unexpected route");
+    });
+    await card(); await userEvent.type(screen.getByLabelText("官方额度充值码"), code);
+    await userEvent.click(screen.getByRole("button", { name: "兑换并开通" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("本次兑换已到账"), { timeout: 120_000 });
+    await userEvent.click(screen.getByRole("button", { name: "同步并打开额度中心" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("兑换已到账，但配置同步暂未完成"), { timeout: 120_000 });
+    expect(screen.getByLabelText("原操作编号")).toHaveValue(ref); expect(mockOpenExternalUrl).not.toHaveBeenCalled();
+    failSync = false;
+    await userEvent.click(screen.getByRole("button", { name: "同步并打开额度中心" }));
+    await waitFor(() => expect(mockOpenExternalUrl).toHaveBeenCalledWith("https://growth.example/credits/connect#SAFE_LINK_CODE"), { timeout: 120_000 });
+    expect(calls).toEqual(["/api/v1/local/ai-credits/bootstrap", "/api/v1/local/client-config", "/api/v1/local/client-config", "/api/v1/local/ai-credits/connect"]);
+    expect(mockRouter.refresh).toHaveBeenCalled();
+  }, 180_000);
+
+  it("切组中断旧结果，不把旧operation显示到新scope；expired保编号且无另开/恢复按钮", async () => {
+    let finish!: (response: Response) => void;
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise<Response>(resolve => { finish = resolve; }));
+    localStorage.setItem(CURRENT_GROUP_KEY, "group-a");
+    await card(); await userEvent.type(screen.getByLabelText("官方额度充值码"), code);
+    await userEvent.click(screen.getByRole("button", { name: "兑换并开通" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1), { timeout: 120_000 });
+    await act(async () => { localStorage.setItem(CURRENT_GROUP_KEY, "group-b"); window.dispatchEvent(new Event("creatoros:accounts-changed")); finish(reply(receipt("applied"))); });
+    expect(screen.getByLabelText("原操作编号")).toHaveValue(""); expect(screen.queryByRole("status")).not.toBeInTheDocument(); expect(mockOpenExternalUrl).not.toHaveBeenCalled();
+    fetchMock.mockResolvedValue(reply(receipt("expired")));
+    await userEvent.type(screen.getByLabelText("原操作编号"), ref);
+    await userEvent.click(screen.getByRole("button", { name: "查询原操作" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("原操作期限已到"), { timeout: 120_000 });
+    expect(screen.queryByRole("button", { name: "兑换并开通" })).not.toBeInTheDocument(); expect(screen.queryByRole("button", { name: "恢复原操作" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("原操作编号")).toHaveValue(ref);
+  }, 180_000);
+});
+
+describe("T1278 settings authority 真实账户状态传卡片", () => {
+  it.each(["ready", "not_configured", "unverified"] as const)("账户%s按安全authority保留，与合成hasSecret独立", async (managedAccountStatus) => {
+    const { sanitizeModelAuthorityForClient } = await import("./settings-page");
+    const { SettingsModelRegion } = await import("./settings-model-region");
+    const raw = { authority: "channel" as const, outcome: "configured" as const, action: "原目录", managedAccountStatus, capabilities: {}, services: [{ serviceId: "omnihi-main", serviceName: "private-provider", credentialSource: "activation_managed" as const, hasSecret: true, portalUrl: null, purchaseUrl: null, rechargeUrl: null, helpUrl: null }] };
+    const safe = sanitizeModelAuthorityForClient(raw);
+    expect(safe?.managedAccountStatus).toBe(managedAccountStatus);
+    expect(safe?.services?.[0].serviceId).toBe("managed-ai-credits");
+    expect(safe?.services?.[0].hasSecret).toBe(true); // 保旧合成接口；账户按钮不能消费它猜ready。
+    expect(JSON.stringify(safe)).not.toContain("omnihi-main"); expect(JSON.stringify(safe)).not.toContain("private-provider");
+    rtlRender(<SettingsModelRegion viewModel={VM} modelAuthority={safe} highlight={null}/>);
+    const button = screen.queryByRole("button", { name: "查看 AI 额度与消耗" });
+    if (managedAccountStatus === "not_configured") expect(button).not.toBeInTheDocument(); else expect(button).toBeInTheDocument();
+    expect(screen.getByText("使用充值码开通官方额度")).toBeInTheDocument();
+    expect(mockClient.putModel).not.toHaveBeenCalled(); expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+  }, 180_000);
 });

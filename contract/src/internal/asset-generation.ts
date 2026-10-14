@@ -28,6 +28,7 @@ const apiAssetGenerationInputSchema=z.object({
 export const codexAssetCredentialSchema=z.object({engine:z.literal('codex'),protocolKind:z.literal('codex-app-server'),runtimeVersion:z.literal('0.159.3'),kind:z.literal('image'),requestedModel:z.string().min(1).optional()}).strict();
 const codexAssetGenerationInputSchema=z.object({...apiAssetGenerationInputSchema.shape,
  engine:z.literal('codex'),protocolKind:z.literal('codex-app-server'),runtimeVersion:z.literal('0.159.3'),
+ requestedModel:z.string().min(1).optional(),
  provider:z.never().optional(),model:z.never().optional(),baseUrl:z.never().optional(),serviceId:z.never().optional(),runtimeOptionsDigest:z.never().optional(),
  mediaKind:z.literal('image'),capability:z.enum(['image.generate','image.edit']),durationSec:z.never().optional(),resolution:z.never().optional(),
 }).strict().superRefine((value,ctx)=>{

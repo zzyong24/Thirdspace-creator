@@ -21,8 +21,8 @@ const object=(value:unknown):Record<string,unknown>=>value&&typeof value==='obje
 /** 私有命名恢复证明：仅原结构化提案的最后原生子模型可以只读对账。不是通用工具重发许可。 */
 function recoverableCodexNodeParents(task:Task,calls:readonly Call[],node:'structured'|'hooks'|'script-draft'):string[]{
  try{
-  const payload=object(task.payload),input=chatWorkerInputSchema.parse(payload.modelInput);
-  if(task.kind!=='ai_task'||task.ownerType!=='ai_task'||payload.aiTaskId!==task.ownerId||input.executionEngine!=='codex'||
+  const payload=object(task.payload),input=chatWorkerInputSchema.parse(payload.modelInput),v2=object(payload.executionRoute).schemaVersion===2;
+  if(task.kind!=='ai_task'||task.ownerType!=='ai_task'||payload.aiTaskId!==task.ownerId||(!v2&&input.executionEngine!=='codex')||
    input.userId!==task.userId||input.accountId!==task.accountId||(input.groupId??null)!==(task.groupId??null)||
    calls.some(call=>call.executionTaskId!==task.id)||new Set(calls.map(call=>call.id)).size!==calls.length)return [];
   const root=[...calls].filter(call=>!call.parentCallId&&['model','external_agent'].includes(call.kind)).sort((a,b)=>a.sequence-b.sequence).at(-1);
@@ -46,7 +46,7 @@ function recoverableCodexNodeParents(task:Task,calls:readonly Call[],node:'struc
    if(entry.schemaVersion!==1||entry.inputDigest!==parent.inputDigest||entry.nodeVersion!==(node==='structured'?'chat.structured.v1':node==='hooks'?'script.hooks.v1':'script.draft.v1')||
     entry.digest!==`sha256:${createHash('sha256').update(canonicalJson({inputDigest:entry.inputDigest,nodeVersion:entry.nodeVersion,value:entry.value})).digest('hex')}`)continue;
    const identityEntry=object(object(payload.chatModelIdentities)[parent.id]),identity=executionModelIdentitySchema.parse(identityEntry.identity);
-   if(identityEntry.inputDigest!==parent.inputDigest||!('engine' in identity)||identity.engine!=='codex'||identity.capability!==(node==='structured'?(definition.name==='review.analyze'?'review.insights':definition.name):input.capability))continue;
+   if(identityEntry.inputDigest!==parent.inputDigest||!('engine' in identity)||identity.engine!=='codex'||identity.capability!==(node==='structured'?(definition.name==='review.analyze'?'review.insights':definition.name):v2?definition.name:input.capability))continue;
    let key:string;
    if(node==='structured'){
     const prepared=preparationSchema.parse(entry.value);
@@ -96,11 +96,19 @@ export function recoverableChatNodeParents(task:Task,calls:Call[],evidence:(type
  const input=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown}|null)?.modelInput);
  if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !input.success || input.data.userId!==task.userId || input.data.accountId!==task.accountId)return empty();
  if(calls.some(call=>call.executionTaskId!==task.id || call.status==="unknown" || (call.status==="settled" && (call.totalTokens===null || (call.kind==="model" && !workerProviderReceiptSchema.safeParse(call.providerResult).success)))))return empty();
- const model=calls.filter(call=>call.kind==="model" && !call.parentCallId).sort((a,b)=>a.sequence-b.sequence).at(-1);
- if(!model || model.status!=="settled")return empty();
- const receipt=workerProviderReceiptSchema.safeParse(model.providerResult);
- if(!receipt.success || receipt.data.finishReason.unified!=="tool-calls")return empty();
- const proposed=receipt.data.content.map(part=>checkpointToolCallSchema.safeParse(part)).filter(value=>value.success).map(value=>value.data);
+ const v2=object(object(task.payload).executionRoute).schemaVersion===2;
+ const model=calls.filter(call=>!call.parentCallId&&(call.kind==='model'||v2&&call.kind==='external_agent')).sort((a,b)=>a.sequence-b.sequence).at(-1);
+ if(!model)return empty();
+ let proposed:Array<z.infer<typeof checkpointToolCallSchema>>;
+ if(model.kind==='external_agent'){
+  if(!originalCodexReadBinding(task,model))return empty();
+  proposed=agenticModelToolParts(task,model,{readonlyRecovery:true}).map(part=>checkpointToolCallSchema.safeParse(part)).filter(value=>value.success).map(value=>value.data);
+ }else{
+  if(model.status!=='settled')return empty();
+  const receipt=workerProviderReceiptSchema.safeParse(model.providerResult);
+  if(!receipt.success||receipt.data.finishReason.unified!=='tool-calls')return empty();
+  proposed=receipt.data.content.map(part=>checkpointToolCallSchema.safeParse(part)).filter(value=>value.success).map(value=>value.data);
+ }
  const result=empty();
  for(const parent of calls){
   if(parent.kind!=="tool" || parent.parentCallId || parent.status!=="started" || parent.toolExecutionClaimId || parent.resultText || parent.sequence<=model.sequence)continue;

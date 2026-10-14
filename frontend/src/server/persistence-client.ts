@@ -1,5 +1,5 @@
-import {prepareSelectedModelRoute,assertFrozenRouteIdentity,selectedModelIdentityDigest,CapabilityModelRoutingError} from '@creatoros/backend/modules/ai-runtime';
-import {modelRouteCatalog,projectFrozenModelSettings,type FrozenModelRoute} from '@creatoros/contract/execution-worker';
+import {createSelectedModelSnapshotReader,freezeSelectedModelRoutes,type SelectedModelSnapshot,resolveFrozenModelCredential,type FrozenModelCredential,frozenTranscribeLocalSpec,isFrozenAsrRoutingError,type TranscribeModelOwner,type MultimodalSpec,prepareSelectedModelRoute,assertFrozenRouteIdentity,selectedModelIdentityDigest,CapabilityModelRoutingError} from '@creatoros/backend/modules/ai-runtime';
+import {modelRouteCatalog,projectFrozenModelSettings,frozenExecutionRoute,readFrozenModelRoute,type ExecutionRoute,type FrozenModelRoute,type ModelRouteMode} from '@creatoros/contract/execution-worker';
 import {createWorkCandidateAdoption,createWorkCandidateSourceService} from '@creatoros/backend/application/generation/work-candidate-adoption';
 import {createWorkWritingContext} from '@creatoros/backend/application/generation/work-writing-context';
 import {createKnowledgeGenerationService,createKnowledgeGenerationBusinessAdapters} from '@creatoros/backend/modules/ai-runtime';
@@ -9,7 +9,7 @@ import {createExecutionVideoVisualReviewService} from '@creatoros/backend/module
 import {resolveVideoVisualReviewWorkerPath} from './execution-worker-path';
 import {createAccountCollectionQueue} from '@creatoros/backend/application/scheduling/account-collection-queue';
 import {createPlatformMetricsCollector,PlatformCollectionNeedsAuthError} from '@creatoros/backend/application/scheduling/platform-collector';
-import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
+import { remainingDeadlineMs,executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import {runAccountGroupStartup} from '@creatoros/backend/application/workspace/startup';
 import {hasLegacyDouyinCredentialEvidence} from '@creatoros/backend/application/workspace/credential-evidence';
 import {createTaxonomyEntityAccess} from "@creatoros/backend/application/taxonomy-entity-access";
@@ -32,7 +32,7 @@ import {createWorkMomentsLineageService} from "@creatoros/backend/modules/work-c
 import {createAssetAsrOwner} from '@creatoros/backend/modules/execution';
 import {createProductionRoughCutReservations,createProductionRoughCutBusinessAdapter,createProductionTranscripts,createProductionAsrExactReader,extractProductionAsrAudio} from '@creatoros/backend/modules/production';
 import {transcribeConfiguration} from '@creatoros/backend/modules/ai-runtime';
-import {createExecutionAuthorityService} from '@creatoros/backend/modules/execution';
+import {createExecutionLeaseService,createExecutionAuthorityService} from '@creatoros/backend/modules/execution';
 import {canonical,hash} from '@creatoros/backend/modules/production';
 import {createWorkbenchPublicService,createWorkbenchPublicTransport,createWorkbenchPublicStreamService,WORKBENCH_OP_IDS} from "@creatoros/backend/modules/execution";
 import {selectBuiltinWorkbenchCapabilities,workbenchBuiltins,workbenchDependencyLock} from "./workbench-builtin-manifest";
@@ -146,7 +146,8 @@ import { ENDPOINTS } from "@creatoros/contract";
 import {createAssistantSystemRoot,createAssistantActionOwners} from "@creatoros/backend/application/chat/assistant-system-root";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
-import { readChannelModelAuthority } from "@/server/activation/client-config.server";
+import { requestFreshClientConfigAccess,readChannelModelAuthority } from "@/server/activation/client-config.server";
+import {requestManagedAsrLease} from "@/server/activation/managed-credential-lease.server";
 import { prepareManagedTranscribeSpec } from "@/server/activation/managed-asr.server";
 import { getScriptReviewBlockReason } from "@/server/script-review-readiness";
 import { contentRadarDraftSeedOf, selectReadableProjectScriptArtifact } from "@/server/project-script-truth";
@@ -819,6 +820,12 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  /** 捕获一次无秘密模型元数据；engine仅装配工具，freeze等待真实capability/mode。 */
+  prepareChatRouting?:(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"})=>Promise<{
+    executionEngine:"pi"|"codex";
+    engineForMode:(mode:"text"|"vision")=>"pi"|"codex";
+    freeze:(capability:string,mode:"text"|"vision")=>Promise<ExecutionRoute>;
+  }>;
   resolveWritingContext?: (ctx:RequestContext,projectId:string,selection:import("@creatoros/contract").WritingContext)=>Promise<import("@creatoros/contract").ResolvedWritingContext>;
   readCreationTarget?: (ctx:RequestContext,target:WorkCreationTarget)=>Promise<WorkCreationTarget>;
   readEditorTarget?: (ctx:RequestContext,target:WorkEditorTarget)=>Promise<WorkEditorTarget>;
@@ -844,6 +851,7 @@ export interface ChatRuntime {
   resolveModelSpec: (
     ctx: RequestContext,
     capability: string,
+    owner?:{aiTaskId:string;mode?:ModelRouteMode},
   ) => Promise<import("@creatoros/ai-worker").ModelSpec>;
   /** [T-652] Copilot 生成定位卡前读取最新前采真值，避免旧 revision 候选。 */
   getPositioningDiscovery: (
@@ -2815,11 +2823,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createFromAIResult:createTopicCandidateInTransaction,
   },deps.now);
   const aiOwnerDeps:Parameters<typeof createAiService>[0] = {
-    prepareChatReply:(ctx,snapshot,options)=>{
+    prepareChatReply:(ctx,snapshot,options,explicit)=>{
       if(stoppingPreparation)throw new Error("应用正在停止，无法启动新聊天");
       void chatRuntime.durable;
       return prepareChatReply(chatRuntime,ctx,snapshot,{
-        executionEngine:options.executionEngine,
+        executionEngine:explicit?explicit.executionEngine:options.executionEngine,
+        legacyExecutionEngine:options.executionEngine,
         ...(options.chatContext?{chatContext:{...options.chatContext,surface:'project',projectId:snapshot.conversation.projectId}}:{}),
       });
     },
@@ -2836,8 +2845,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: deps.now,
     nextId: deps.nextId,
     resolveTaskRuntimeData: async (ctx, taskType, inputData,trustedRoute) => {
-      const preference=await settingsService.getPreferences(ctx);
-      const executionRoute=trustedRoute??createExecutionRoute(preference.assistantExecutionEngine==='codex'?'codex':'pi');
+      const executionRoute=await resolveRootExecutionRoute(ctx,db,trustedRoute);
       // 纯 ASR 使用业务提交冻结的音源/配置及按次凭据，不申请文本 Skill。
       if(taskType==="benchmark.transcribe")return {executionRoute};
       if (!resolveEffectiveSkillSnapshotForRuntime) {
@@ -2847,7 +2855,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       const requiredSkillIds = requiredSkillIdsForTask(taskType, inputData);
       const skillSnapshot=await resolveEffectiveSkillSnapshotForRuntime(ctx,requiredSkillIds);
-      if(frozenExecutionEngine({executionRoute})==='codex')return {skillSnapshot,executionRoute};
+      if(executionRoute.schemaVersion===2||frozenExecutionEngine({executionRoute})==='codex')return {skillSnapshot,executionRoute};
       const modelAuthority = pinModelAuthority(
         await readChannelModelAuthority(),
       );
@@ -2987,20 +2995,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         `[T-513] AI task ${taskId} 的 Skill snapshot 属主不匹配`,
       );
     }
-    const liveModelAuthority = pinModelAuthority(
-      await readChannelModelAuthority(),
-    );
-    if (
-      !matchesPinnedModelAuthority(runtimeData, liveModelAuthority)
-    ) {
-      await aiService.cancelTask(
-        ctx,
-        taskId,
-        "模型配置已变化，请重新发起",
-      );
-      return;
-    }
-    await taskModelAuthorityScope.run(liveModelAuthority, () =>
+    const authorityMatched = await taskModelAuthorityScope.runFrozen(
+      runtimeData, readChannelModelAuthority, () =>
       runWithEffectiveSkillSnapshot(skillSnapshot, async () => {
       const execution = await aiService.runClaimedTaskExecution(
         ctx,
@@ -3013,6 +3009,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if (!execution.claimed) return;
       }),
     );
+    if (!authorityMatched) {
+      await aiService.cancelTask(ctx, taskId, "模型配置已变化，请重新发起");
+    }
   };
   // 确定性执行使用真实任务冻结归属；collection的signal-only闭包仍沿上方原ctx wrapper。
   const runExecutionWithFrozenSkills=async(ctx:RequestContext,taskId:string,
@@ -3044,14 +3043,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           !validVersion(stamp.groupVersion)||stamp.groupVersion===null||stamp.groupVersion!==owner.groupVersion||
           !validVersion(stamp.membershipVersion)||stamp.membershipVersion!==owner.membershipVersion)mismatch();
       }
-      const liveModelAuthority=pinModelAuthority(await readChannelModelAuthority());
-      if(!matchesPinnedModelAuthority(runtimeData,liveModelAuthority)){
-        await aiService.cancelTask(executionContext,taskId,"模型配置已变化，请重新发起");return;
-      }
-      await taskModelAuthorityScope.run(liveModelAuthority,()=>runWithEffectiveSkillSnapshot(snapshot,async()=>{
+      const authorityMatched=await taskModelAuthorityScope.runFrozen(runtimeData,readChannelModelAuthority,()=>runWithEffectiveSkillSnapshot(snapshot,async()=>{
         const execution=await aiService.runClaimedTaskExecution(executionContext,taskId,async({signal})=>execute(signal,executionContext));
         if(!execution.claimed)return;
       }));
+      if(!authorityMatched)await aiService.cancelTask(executionContext,taskId,"模型配置已变化，请重新发起");
     }catch(error){
       const message=error instanceof Error?error.message:String(error);
       await aiService.markFailed(executionContext,taskId,message).catch(()=>undefined);
@@ -3410,7 +3406,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     assertOutputVersionSource:(c,ref,id)=>workConversionFor(store).assertReference(c,ref,id),
     async assertIntelligenceSourceRef(c,ref){
       if(ref.kind!=="intelligence")throw new Error("雷达来源类型不匹配");
-      const detail=await createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now})}).getItem(c,ref.id);
+      const detail=await createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now,resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx)})}).getItem(c,ref.id);
       if(!detail.snapshots.some(row=>row.id===ref.versionId&&row.safeExtract?.trim())&&!(detail.transcript.status==="done"&&detail.transcript.completedAt===ref.versionId&&detail.transcript.text?.trim()))throw new Error("雷达来源版本不存在或正文不可用");
     },
     assertRuleSnapshotRef:async(c,id)=>{await workPositioningFor(store).getStatement(c,id);},
@@ -3824,7 +3820,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const executorRegistry = createExecutorRegistry();
   const videoVisualReviewService=createExecutionVideoVisualReviewService(db,{now:deps.now,entryPath:resolveVideoVisualReviewWorkerPath,
     resolvePiModelSpec:async(c,owner)=>{
-      const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId),authority=pinModelAuthority(await readChannelModelAuthority());
+      const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId),route=readFrozenModelRoute(runtime,'vision','asset.classify');
+      if(route){if(route.readiness==='unavailable')return null;return resolveFrozenExecutionSpec(c,route);}
+      const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error('MODEL_AUTHORITY_CHANGED'),{code:'MODEL_AUTHORITY_CHANGED'});
       try{return await taskModelAuthorityScope.run(authority,async()=>{
         const spec=await resolveMultimodalSpec(c,'asset.classify');
@@ -3875,6 +3873,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     abortRun: abortExecutionTask,
   });
   const persistentTaskService = createPersistentTaskService(db, {
+    resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx),
     now: deps.now,
     nextId: deps.nextId,
   });
@@ -4010,7 +4009,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }),
   });
   const intelligenceGeneration=createIntelligenceGenerationBridge(db,{
-    entryPath:resolveIntelligenceGenerationWorkerPath,tasks:persistentTaskService,resolveModelSpec:(c,capability)=>resolvePiModelSpec(c,capability),
+    entryPath:resolveIntelligenceGenerationWorkerPath,tasks:persistentTaskService,resolveModelSpec:(c,capability,owner)=>resolveModelSpec(c,capability,owner),
     resolveSkillSnapshot:(c,ids)=>{
       if(!resolveEffectiveSkillSnapshotForRuntime)throw new Error("Skill 服务未就绪");
       return resolveEffectiveSkillSnapshotForRuntime(c,ids);
@@ -5081,8 +5080,8 @@ dispatchIntelligenceRun});
     // ASR 最小分片限额(Qwen) raw=2,324,982；MP3 帧≤1,441 B，2 GiB 输入≤925片。
     // 2048覆盖925云请求+1本地回退并留同规模恢复余量；原token/时限与已冻结预算不重置。
     budget:{maxCalls:2048,maxTokens:1_000_000,deadlineMs:1_800_000},objectStorageForCtx,now:deps.now,
-    resolveSpec:c=>resolveTranscribeRuntimeSpec(c),
-    prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
+    resolveSpec:(c,owner)=>resolveTranscribeRuntimeSpec(c,owner),
+    prepareSpec:prepareOwnedTranscribeSpec,
     async readSource(c,awemeId,signal){
       const cdp=await loadDouyinCdp();
       const source=await cdp.fetchDouyinVideoSource({awemeId,authDir:await douyinAuthDirFor(c.accountId,signal,c.userId),gateway:douyinGateway,signal});
@@ -5091,11 +5090,11 @@ dispatchIntelligenceRun});
     extractAudio:async(playUrl,signal)=>(await loadDouyinCdp()).streamAudioFromVideo(playUrl,undefined,signal),
   };
   const intelligenceTranscriptBridge=createIntelligenceTranscriptBridge(db,{...asrResourceDeps,entryPath:resolveIntelligenceTranscriptWorkerPath,tasks:persistentTaskService});
-  const benchmarkTranscription=createBenchmarkTranscriptionService(db,{...asrResourceDeps,ai:aiService,entryPath:resolveIntelligenceTranscriptWorkerPath,wake:()=>recoveryWake?.wake("benchmark")});
+  const benchmarkTranscription=createBenchmarkTranscriptionService(db,{...asrResourceDeps,captureConfiguration:captureAsrConfiguration,createTaskWithRoute:createTaskWithFrozenRouting,ai:aiService,entryPath:resolveIntelligenceTranscriptWorkerPath,wake:()=>recoveryWake?.wake("benchmark")});
   const scheduledSignals=new AsyncLocalStorage<AbortSignal>();
   const checkScheduledSignal=()=>scheduledSignals.getStore()?.throwIfAborted();
   const scheduledFlywheel=createScheduledFlywheelExecutionService(db,{
-    entryPath:resolveFlywheelWorkerPath,resolveModelSpec:(c,capability)=>resolvePiModelSpec(c,capability),
+    entryPath:resolveFlywheelWorkerPath,resolveModelSpec:(c,capability,owner)=>resolveModelSpec(c,capability,owner),
     // 收藏每轮 3 条 × 至多 29 个知识分块；预算同时覆盖 ASR、判库与结构修复。
     // 每轮最多 3 条收藏；覆盖音频分片、知识分块和有界修复，仍服从 token/截止时间。
     budget:{maxCalls:6144,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
@@ -5766,10 +5765,83 @@ FAVORITES_PROMOTE_PER_RUN
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('creatoros:preferences'),hashtext(${ctx.userId}))`);
       return write(createSettingsRepository(tx as unknown as typeof db,{...deps,masterKey}));
     }),
+    async(ctx,value)=>{
+      // 旧null配置不补造整套来源；明确保存的选择才投影各真实消费者元数据。
+      if(!value.choices)return {effectiveChoices:{},capabilities:[]};
+      const choices=structuredClone(value.choices),snapshot=await captureSelectedModelSnapshot(ctx,store,Object.values(choices)),read=createSelectedModelSnapshotReader(snapshot);
+      const capabilities=await Promise.all(modelRouteCatalog.map(async entry=>{
+        const source=choices[entry.family],metadata=await read(entry,source);
+        return {capability:entry.capability,mode:entry.mode,source,status:metadata.status,reasonCode:metadata.reasonCode??null};
+      }));
+      return {effectiveChoices:choices,capabilities};
+    },
   );
   const settingsService=settingsServiceFor(db);
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
+  async function captureSelectedModelSnapshot(ctx:RequestContext,store:Db,sources:readonly string[],signal?:AbortSignal):Promise<SelectedModelSnapshot>{
+    signal?.throwIfAborted();
+    const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey});
+    const [rows,authority,codex]=await Promise.all([
+      repo.listModels(ctx),
+      sources.includes('official')?readChannelModelAuthority():Promise.resolve(null),
+      sources.includes('codex')?localCodexStatus.read(ctx,signal).catch(()=>null):Promise.resolve(null),
+    ]);
+    signal?.throwIfAborted();
+    let official:SelectedModelSnapshot['official']=null;
+    if(authority?.authority==='channel'&&authority.bundleDigest){
+      const selections:Record<string,string|null>={},credentialAvailable:Record<string,boolean>={},selectionErrors:Record<string,boolean>={};
+      const capabilities=new Set(['default',...modelRouteCatalog.map(entry=>entry.mode==='vision'?'asset.classify':entry.capability)]);
+      // 同一个store/同一个验签scope；不从root连接重读tx配置，不申请按次Key。
+      for(const capability of capabilities){
+        let raw:string|null;
+        try{raw=await repo.getChannelModelCredential(ctx,authority.scopeId,`__model_selection__:${capability}`);}
+        catch{selectionErrors[capability]=true;selections[capability]=null;continue;}
+        if(!raw)selections[capability]=null;
+        else try{const value=JSON.parse(raw) as {id?:unknown};selections[capability]=typeof value?.id==='string'&&value.id.trim()?value.id.trim():null;}
+        catch{selections[capability]=raw.trim()||null;}
+      }
+      for(const capability of capabilities){
+        const models=authority.payload.models;
+        const selectionCapability=models&&typeof models==='object'&&!Array.isArray(models)&&Object.hasOwn(models,capability)?capability:'default';
+        let route:ReturnType<typeof resolveChannelCapabilityRoute>;
+        try{route=resolveChannelCapabilityRoute(authority.payload,capability,{allowDefaultFallback:true,selectedOptionId:selections[selectionCapability]});}
+        catch{continue;} // 未用目录项的错误由该项reader投影unavailable，不能阻断其它合法能力。
+        if(route?.serviceId&&!Object.hasOwn(credentialAvailable,route.serviceId)){
+          let token:string|null;
+          try{token=await repo.getChannelModelCredential(ctx,authority.scopeId,route.serviceId);}catch{token=null;}
+          const observed=authority.managedCredentials?.[route.serviceId];
+          credentialAvailable[route.serviceId]=!!token&&token!==SECRET_DECRYPT_FAIL_SENTINEL&&observed?.status!=='not_configured'&&observed?.status!=='unavailable';
+        }
+      }
+      official={scopeId:authority.scopeId,bundleDigest:authority.bundleDigest,payload:authority.payload,selections,credentialAvailable,selectionErrors};
+    }
+    return {ctx,rows:rows.map(row=>({...row,settings:row.settings&&typeof row.settings==='object'&&!Array.isArray(row.settings)?row.settings as Record<string,unknown>:{}})),env:{...process.env},official,codex};
+  }
+  async function resolveRootExecutionRoute(ctx:RequestContext,store:Db,trustedRoute?:ExecutionRoute):Promise<ExecutionRoute>{
+    if(trustedRoute)return frozenExecutionRoute({executionRoute:trustedRoute});
+    const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey});
+    const preference=await repo.getPreferences(ctx);
+    if(!preference?.modelRouting)return createExecutionRoute(preference?.assistantExecutionEngine==='codex'?'codex':'pi');
+    const choices=structuredClone(preference.modelRouting);
+    const snapshot=await captureSelectedModelSnapshot(ctx,store,Object.values(choices));
+    // 通用任务还未由业务adapter产生真实模型步骤；这里只冻结完整map，实际消费者再核自己的项。
+    return freezeSelectedModelRoutes({choices,revision:preference.modelRoutingRevision,read:createSelectedModelSnapshotReader(snapshot)});
+  }
+  async function prepareChatRouting(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"}){
+    const preference=await settingsRepo.getPreferences(ctx);
+    if(!preference?.modelRouting){
+      const engine=input.executionEngine??input.legacyExecutionEngine??(preference?.assistantExecutionEngine==='codex'?'codex':'pi');
+      return {executionEngine:engine,engineForMode:()=>engine,freeze:async()=>createExecutionRoute(engine,input.executionEngine===undefined?'preference':'chat-explicit')};
+    }
+    const choices=structuredClone(preference.modelRouting),revision=preference.modelRoutingRevision;
+    const snapshot=await captureSelectedModelSnapshot(ctx,db,[...Object.values(choices),...(input.executionEngine==='codex'?['codex']:[])]);
+    const read=createSelectedModelSnapshotReader(snapshot);
+    const engineForMode=(mode:'text'|'vision'):'pi'|'codex'=>input.executionEngine==='codex'||choices[mode]==='codex'?'codex':'pi';
+    // 不提前以text可用性拦截vision；显式pi冲突由真实主route的freeze准确拒绝。
+    return {executionEngine:engineForMode(input.mode),engineForMode,
+      freeze:(capability:string,mode:'text'|'vision')=>freezeSelectedModelRoutes({choices,revision,main:{mode,capability},explicitEngine:input.executionEngine,read})};
+  }
   const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id), (ctx, id) => accountGroupService.get(ctx, id));
   const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState,reportingLocal);
   resolveEffectiveSkillSnapshotForRuntime =
@@ -5793,6 +5865,7 @@ FAVORITES_PROMOTE_PER_RUN
   // T1045 审核根使用同tx原owner。task runtime不可捕获根Settings repo；无需第二队列。
   const workReviewAiFor=(store:typeof db)=>createAiService({...aiOwnerDeps,db:store,
     resolveTaskRuntimeData:createTransactionalTaskRuntimeResolver(store,{...deps,masterKey,
+      resolveExecutionRoute:(c,tx)=>resolveRootExecutionRoute(c,tx),
       officialSkills:{get:getOfficialSkillBase,list:listOfficialSkillBases,
         platformPolicy:()=>({version:PLATFORM_POLICY_VERSION,text:PLATFORM_POLICY_TEXT})},
       readPinnedAuthority:async()=>pinModelAuthority(await readChannelModelAuthority()),
@@ -5860,18 +5933,49 @@ FAVORITES_PROMOTE_PER_RUN
     const status=await localCodexStatus.read(ctx);
     if(!status.available||status.capabilities?.[capability]!==true)throw Object.assign(new Error(capability==='imageGeneration'?status.capabilities?.imageErrorCode??status.errorCode??'CODEX_IMAGE_CAPABILITY_UNAVAILABLE':status.errorCode??'CODEX_CAPABILITY_UNAVAILABLE'),{code:capability==='imageGeneration'?status.capabilities?.imageErrorCode??status.errorCode??'CODEX_IMAGE_CAPABILITY_UNAVAILABLE':status.errorCode??'CODEX_CAPABILITY_UNAVAILABLE'});
   };
+  type ModelRuntimeOwner={aiTaskId?:string;executionTaskId?:string;ref?:import('@creatoros/contract/execution-worker').ExecutionRef;mode?:ModelRouteMode};
+  async function readOwnedModelRuntime(c:RequestContext,owner:ModelRuntimeOwner):Promise<Record<string,unknown>>{
+    if(owner.ref)return createExecutionLeaseService(db,{now:deps.now}).withLease(owner.ref,'admission',async scope=>{
+      if(scope.context.userId!==c.userId||(scope.context.accountId??null)!==(c.accountId??null)||(scope.context.groupId??null)!==(c.groupId??null))throw new OwnershipError('原模型执行归属不符');
+      if(owner.aiTaskId&&scope.task.ownerId!==owner.aiTaskId)throw new OwnershipError('原模型业务任务不符');
+      return structuredClone(scope.task.payload as Record<string,unknown>);
+    });
+    if(!owner.aiTaskId)throw new OwnershipError('模型解析缺少原任务');
+    if(owner.executionTaskId&&(await aiService.getTask(c,owner.aiTaskId)).executionTaskId!==owner.executionTaskId)throw new OwnershipError('模型执行与原业务任务不符');
+    return aiService.getTaskRuntimeData(c,owner.aiTaskId);
+  }
+  async function resolveFrozenExecutionSpec(c:RequestContext,route:FrozenModelRoute,signal?:AbortSignal){
+    const value=await resolveFrozenCredential(c,route,false,signal);
+    if(value.kind==='codex')return value.spec;
+    if(value.kind!=='api')throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
+    const spec=value.spec;
+    if(!['anthropic','openai_chat','openai_responses'].includes(spec.apiFormat))throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
+    return {apiFormat:spec.apiFormat as 'anthropic'|'openai_chat'|'openai_responses',authStyle:spec.authStyle,baseUrl:spec.baseUrl,model:spec.model,token:spec.token,
+      ...(spec.displayModelKey?{displayModelKey:spec.displayModelKey}:{}),...(typeof spec.settings.structuredOutputs==='boolean'?{structuredOutputs:spec.settings.structuredOutputs}:{})};
+  }
+  async function resolveFrozenAssetSpec(c:RequestContext,route:FrozenModelRoute,store:typeof db=db):Promise<MultimodalSpec|(CodexModelSpec&{kind:'image'})>{
+    const value=await resolveFrozenCredential(c,route,false,undefined,store);
+    if(value.kind==='codex')return {...value.spec,kind:'image'};
+    if(value.kind!=='api'||!['image','video','vision'].includes(route.mode))throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
+    const spec=value.spec;
+    return {kind:route.mode==='video'?'video':route.mode==='vision'?'vision':'image',provider:spec.provider,model:spec.model,baseUrl:spec.baseUrl,token:spec.token,settings:spec.settings,apiFormat:spec.apiFormat,
+      ...(spec.displayModelKey?{displayModelKey:spec.displayModelKey}:{}),...(spec.serviceId?{serviceId:spec.serviceId}:{}),...(spec.credentialLifecycle?{credentialLifecycle:spec.credentialLifecycle}:{})};
+  }
   const assertImageCapability=async(ctx:RequestContext,capability:'image.generate'|'image.edit'|'asset.classify',store?:typeof db)=>{
-    const preferences=await (store?settingsServiceFor(store):settingsService).getPreferences(ctx);
-    if(preferences.assistantExecutionEngine==='codex'){
+    const executionRoute=await resolveRootExecutionRoute(ctx,store??db),route=readFrozenModelRoute({executionRoute},capability==='asset.classify'?'vision':'image',capability);
+    if(route)return resolveFrozenAssetSpec(ctx,route,store??db);
+    if(frozenExecutionEngine({executionRoute})==='codex'){
       await assertCodexCapability(ctx,capability==='asset.classify'?'imageUnderstanding':'imageGeneration');
       return codexExecutionSpec();
     }
     return resolveMultimodalSpec(ctx,capability,store);
   };
-  // 只解析冻结模型配置；实际模型调用归独立 Worker。
-  const resolveModelSpec = async (ctx: RequestContext, capability: string,owner?:{aiTaskId:string}) => {
-    const engine=owner?frozenExecutionEngine(await aiService.getTaskRuntimeData(ctx,owner.aiTaskId)):(await settingsService.getPreferences(ctx)).assistantExecutionEngine;
-    if(engine==="codex"){
+  // 无任务的公开准备读取一次新根；原任务和后台步骤只消费原冻结route。
+  const resolveModelSpec = async (ctx: RequestContext, capability: string,owner?:ModelRuntimeOwner) => {
+    const runtime=owner?await readOwnedModelRuntime(ctx,owner):{executionRoute:await resolveRootExecutionRoute(ctx,db)};
+    const route=readFrozenModelRoute(runtime,owner?.mode??(capability==='asset.classify'?'vision':'structured'),capability);
+    if(route)return resolveFrozenExecutionSpec(ctx,route);
+    if(frozenExecutionEngine(runtime)==='codex'){
       if(!owner)await assertCodexCapability(ctx,capability==='asset.classify'?'imageUnderstanding':'text');
       return codexExecutionSpec();
     }
@@ -5903,7 +6007,11 @@ FAVORITES_PROMOTE_PER_RUN
     };
   };
 
-  const resolveChatFallbackCredential=async(ctx:RequestContext)=>{
+  const resolveChatFallbackCredential=async(ctx:RequestContext,owner?:{ref:import('@creatoros/contract/execution-worker').ExecutionRef;signal?:AbortSignal})=>{
+    if(owner){
+      const runtime=await readOwnedModelRuntime(ctx,owner),route=readFrozenModelRoute(runtime,'text','chat.fallback');
+      if(route){if(route.readiness==='unavailable'||route.source==='codex')return null;return resolveFrozenExecutionSpec(ctx,route,owner.signal);}
+    }
     const cfg=await resolveDedicatedLlmConfig(ctx,"chat.fallback",{
       getModelConfig:(c,cap)=>settingsService.getModelConfig(c,cap),env:process.env,
       getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(ctx,serviceId),
@@ -6008,6 +6116,12 @@ FAVORITES_PROMOTE_PER_RUN
   });
   const assetProcessingPreparation={assets:assetsService,async isModelConfigured(c:RequestContext,taskType:"asset.classify"|"material.extract",owner:{aiTaskId:string}){
     const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
+    const route=readFrozenModelRoute(runtime,taskType==='asset.classify'?'vision':'structured',taskType==='asset.classify'?'asset.classify':'script.draft');
+    if(route){
+      if(route.readiness==='unavailable')return false;
+      try{await resolveFrozenExecutionSpec(c,route);return true;}
+      catch(error){if(error instanceof CapabilityModelRoutingError&&['MODEL_NOT_CONFIGURED','MODEL_CREDENTIAL_UNAVAILABLE','MODEL_CONFIGURATION_UNAVAILABLE'].includes(error.details.domainCode))return false;throw error;}
+    }
     if(frozenExecutionEngine(runtime)==='codex')return true;
     const authority=pinModelAuthority(await readChannelModelAuthority());
     if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error('MODEL_AUTHORITY_CHANGED'),{code:'MODEL_AUTHORITY_CHANGED'});
@@ -6043,23 +6157,114 @@ FAVORITES_PROMOTE_PER_RUN
   }});
   const knowledgeGeneration=createKnowledgeGenerationService(db,{ai:aiService,prepareTask:(c,id)=>businessExecution.prepare(c,id),wakeWorker:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();}});
   const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{console.error("EXECUTION_WORKER_BUILD_MISSING");return null;}})();
-  const resolveWorkerCredential=async(c:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string})=>{
-      const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
+  const resolveWorkerCredential=async(c:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string;mode?:ModelRouteMode;signal?:AbortSignal})=>{
+      const runtime=await readOwnedModelRuntime(c,owner);
+      const route=readFrozenModelRoute(runtime,owner.mode??(capability==='asset.classify'?'vision':'structured'),capability);
+      if(route)return resolveFrozenExecutionSpec(c,route,owner.signal);
       if(frozenExecutionEngine(runtime)==="codex")return codexExecutionSpec();
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error("MODEL_AUTHORITY_CHANGED"),{code:"MODEL_AUTHORITY_CHANGED"});
       try{return await taskModelAuthorityScope.run(authority,async()=>{
-        if(capability!=="asset.classify")return resolveModelSpec(c,capability,owner);
+        if(capability!=="asset.classify")return resolvePiModelSpec(c,capability);
         const spec=await resolveMultimodalSpec(c,"asset.classify");
         return {apiFormat:"openai_chat" as const,baseUrl:spec.baseUrl??"https://api.siliconflow.cn/v1",model:spec.model,token:spec.token};
       });}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
-  function resolveTranscribeRuntimeSpec(c:RequestContext){
-    return resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)});
+  async function readOriginalAsrRuntime(c:RequestContext,owner:TranscribeModelOwner):Promise<Record<string,unknown>>{
+    if('executionRoute' in owner)return {executionRoute:frozenExecutionRoute(owner)};
+    if('aiTaskId' in owner)return aiService.getTaskRuntimeData(c,owner.aiTaskId);
+    return createExecutionLeaseService(db,{now:deps.now}).withLease(owner.ref,'admission',async scope=>{
+      if(scope.context.userId!==c.userId||(scope.context.accountId??null)!==(c.accountId??null)||(scope.context.groupId??null)!==(c.groupId??null))throw new OwnershipError('原ASR执行归属不符');
+      return structuredClone(scope.task.payload as Record<string,unknown>);
+    });
   }
+  async function resolveFrozenCredential(c:RequestContext,route:FrozenModelRoute,deferAsrPerRequest=false,signal?:AbortSignal,store:typeof db=db):Promise<FrozenModelCredential>{
+    return resolveFrozenModelCredential(c,route,{
+      ...(deferAsrPerRequest?{deferAsrPerRequest:true as const}:{}),
+      readSnapshot:()=>captureSelectedModelSnapshot(c,store,[route.source],signal),
+      readOfficialPersistent:(_c,identity)=>(store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey})).getChannelModelCredential(c,identity.scopeId,identity.serviceId),
+      // ASR在原prepareSpec持真实音频/intent后经既有租约端口领取，其它能力没有按次Key协议。
+      acquireOfficialPerRequest:async()=>{throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);},
+    },signal);
+  }
+  async function resolveTranscribeRuntimeSpec(c:RequestContext,owner:TranscribeModelOwner):Promise<MultimodalSpec>{
+    const runtime=await readOriginalAsrRuntime(c,owner),route=readFrozenModelRoute(runtime,'asr','transcribe.audio');
+    if(!route)return resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)});
+    if(route.source==='local'||route.readiness==='unavailable')return frozenTranscribeLocalSpec(runtime);
+    let value:FrozenModelCredential;
+    try{value=await resolveFrozenCredential(c,route,true);}
+    catch(error){if(isFrozenAsrRoutingError(error))throw error;return frozenTranscribeLocalSpec(runtime);}
+
+    if(value.kind==='codex')throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
+    if(value.kind==='local')return value.spec;
+    const spec=value.spec;
+    return {kind:'audio',provider:spec.provider,model:spec.model,baseUrl:spec.baseUrl,token:spec.token,settings:spec.settings,apiFormat:spec.apiFormat,...(spec.displayModelKey?{displayModelKey:spec.displayModelKey}:{}),...(spec.serviceId?{serviceId:spec.serviceId}:{}),...(spec.credentialLifecycle?{credentialLifecycle:spec.credentialLifecycle}:{})};
+  }
+  async function prepareOwnedTranscribeSpec(c:RequestContext,spec:MultimodalSpec,input:{audioBytes:Uint8Array;intentId:string},owner:TranscribeModelOwner,signal?:AbortSignal):Promise<MultimodalSpec>{
+    signal?.throwIfAborted();const original=await readOriginalAsrRuntime(c,owner),route=readFrozenModelRoute(original,'asr','transcribe.audio');
+    signal?.throwIfAborted();
+    const routeKey=route?.routeKey??'asr:transcribe.audio';
+    if(spec.provider==='whisper-local')return route?frozenTranscribeLocalSpec(original):spec;
+    // 申请短效Key之前再核原选中身份；当前choices/option选择不参与。
+    const fresh=await resolveTranscribeRuntimeSpec(c,owner);
+    signal?.throwIfAborted();
+    // 凭据在两次读取之间丢失时，resolveSpec已经核对原允许的本地安全路径。
+    // 远端是否已开始仍由原ASR owner/plan处理，不能在此重发远端或更换来源。
+    if(fresh.provider==='whisper-local')return route?frozenTranscribeLocalSpec(original):fresh;
+    if(canonical(transcribeConfiguration(fresh))!==canonical(transcribeConfiguration(spec)))throw new CapabilityModelRoutingError('MODEL_ROUTE_IDENTITY_CHANGED',routeKey);
+    let requestLease:Parameters<typeof prepareManagedTranscribeSpec>[3];
+    if(fresh.credentialLifecycle==='per_request'){
+      if(!('ref' in owner))throw new CapabilityModelRoutingError('ASR_EXECUTION_REF_REQUIRED',routeKey);
+      const deadlineAt=await createExecutionLeaseService(db,{now:deps.now}).withLease(owner.ref,'admission',async scope=>scope.task.deadlineAt);
+      signal?.throwIfAborted();
+      const remainingMs=remainingDeadlineMs(deadlineAt===null?null:Date.parse(deadlineAt));
+      if(remainingMs===0)throw new CapabilityModelRoutingError('EXECUTION_BUDGET_EXHAUSTED',routeKey);
+      // 原绝对期限只创建一次，覆盖票据与租约完整串行，不能由内层两分钟下限续期。
+      const deadlineSignal=remainingMs===undefined?undefined:AbortSignal.timeout(remainingMs);
+      const originalSignal=signal&&deadlineSignal?AbortSignal.any([signal,deadlineSignal]):signal??deadlineSignal;
+      const assertDispatch=async()=>{
+        originalSignal?.throwIfAborted();await readOriginalAsrRuntime(c,owner);
+        if(route)await resolveFrozenCredential(c,route,true,originalSignal);
+        else{
+          const current=await resolveTranscribeRuntimeSpec(c,owner);
+          if(canonical(transcribeConfiguration(current))!==canonical(transcribeConfiguration(fresh)))throw new CapabilityModelRoutingError('MODEL_ROUTE_IDENTITY_CHANGED',routeKey);
+        }
+        originalSignal?.throwIfAborted();
+      };
+      const fetchForOriginal:typeof fetch=async(resource,init)=>{
+        await assertDispatch();
+        const requestSignal=init?.signal&&originalSignal?AbortSignal.any([init.signal,originalSignal]):init?.signal??originalSignal;
+        requestSignal?.throwIfAborted();return fetch(resource,{...init,signal:requestSignal});
+      };
+      requestLease={requestLease:leaseInput=>requestManagedAsrLease(leaseInput,{
+        requestAccess:async()=>{
+          await assertDispatch();
+          return requestFreshClientConfigAccess({fetchImpl:fetchForOriginal,...(route?.source==='official'&&route.readiness==='configured'?{expectedScopeId:route.identity.scopeId}:{})});
+        },
+        fetchImpl:fetchForOriginal,
+      })};
+    }
+    signal?.throwIfAborted();
+    const prepared=await prepareManagedTranscribeSpec(c,fresh,input,requestLease);signal?.throwIfAborted();
+    // Key回复后重核租约与选中身份；迟到回复不会改变原plan或调用权。
+    await readOriginalAsrRuntime(c,owner);if(route)await resolveFrozenCredential(c,route,true,signal);signal?.throwIfAborted();
+    return route&&prepared.provider==='whisper-local'?frozenTranscribeLocalSpec(original):prepared;
+  }
+  async function captureAsrConfiguration(c:RequestContext){
+    const executionRoute=await resolveRootExecutionRoute(c,db);
+    let spec:MultimodalSpec;
+    try{spec=await resolveTranscribeRuntimeSpec(c,{executionRoute});}
+    catch(error){if(isFrozenAsrRoutingError(error))throw error;spec=frozenTranscribeLocalSpec({executionRoute});}
+    return {configuration:transcribeConfiguration(spec),executionRoute};
+  }
+  function createTaskWithFrozenRouting(c:RequestContext,body:Parameters<AiService['createTask']>[1],route?:ExecutionRoute){
+    if(!route)return aiService.createTask(c,body);
+    return createAiService({...aiOwnerDeps,resolveTaskRuntimeData:(ctx,type,input)=>aiOwnerDeps.resolveTaskRuntimeData!(ctx,type,input,route)}).createTask(c,body);
+  }
+
   const productionExactAsrFile=createProductionAsrExactReader({assets:(_c,tx)=>tx?createAssetsService(createAssetRepository(tx,deps),objectStorageForStore(tx),deps):assetsService,assertProjectAsset:assertProductionEditorAsset});
-  const assetAsrOwner=createAssetAsrOwner(db,{...deps,assertProductionReservation:(c,proof,tx)=>productionService.assertAssetAsrReservation(c,proof,tx),budget:workerBudget,objectStorageForCtx,readExactFile:(c,input,signal)=>productionExactAsrFile(c,input,undefined,signal),extractAudio:extractProductionAsrAudio,prepareSpec:async(c,configuration,intentId,audioBytes)=>{const spec=await resolveTranscribeRuntimeSpec(c);if(canonical(transcribeConfiguration(spec))!==canonical(configuration))throw new ProductionConflictError("冻结转写配置已变化，不能替换原执行");return prepareManagedTranscribeSpec(c,spec,{intentId,audioBytes});}});
+  const assetAsrOwner=createAssetAsrOwner(db,{...deps,assertProductionReservation:(c,proof,tx)=>productionService.assertAssetAsrReservation(c,proof,tx),budget:workerBudget,objectStorageForCtx,readExactFile:(c,input,signal)=>productionExactAsrFile(c,input,undefined,signal),extractAudio:extractProductionAsrAudio,prepareSpec:async(c,configuration,intentId,audioBytes,owner,signal)=>{const spec=await resolveTranscribeRuntimeSpec(c,owner);if(spec.provider!=='whisper-local'&&canonical(transcribeConfiguration(spec))!==canonical(configuration))throw new ProductionConflictError("冻结转写配置已变化，不能替换原执行");return prepareOwnedTranscribeSpec(c,spec,{intentId,audioBytes},owner,signal);}});
   productionRoughCut=createProductionRoughCutReservations(db,{
     ...deps,onVersionSaved:productionOwnerDeps.onVersionSaved,onRecoveryError:()=>console.warn("[T850] 粗剪原预约恢复失败，请核对原请求"),
     readAuthoritativeScript:async(c,projectId,outputId)=>{const script=await outputScriptsService.getSavedScript(c,outputId);if(script&&script.projectId!==projectId)throw new Error("粗剪权威稿归属不符");return script;},
@@ -6072,6 +6277,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
     createTask:(c,body,tx,protocolVersion)=>tx?createAiService({...aiOwnerDeps,db:tx,
       resolveTaskRuntimeData:createTransactionalTaskRuntimeResolver(tx,{...deps,masterKey,
+        resolveExecutionRoute:(c,store)=>resolveRootExecutionRoute(c,store),
         officialSkills:{get:id=>getOfficialSkillBase(id,protocolVersion===3?{protocolVersion:3}:undefined),list:listOfficialSkillBases,platformPolicy:()=>({version:PLATFORM_POLICY_VERSION,text:PLATFORM_POLICY_TEXT})},
         readPinnedAuthority:async()=>pinModelAuthority(await readChannelModelAuthority()),
       }),
@@ -6081,7 +6287,7 @@ FAVORITES_PROMOTE_PER_RUN
     readResults:(c,id,tx)=>(tx?createAiService({...aiOwnerDeps,db:tx}):aiService).listResults(c,id),
     async bindExecution(c,id){const bound=await businessExecution.prepare(c,id);if(!stoppingPreparation)modelWorker?.start();return bound;},
   });
-  productionTranscripts=createProductionTranscripts(db,{...deps,onVersionSaved:productionOwnerDeps.onVersionSaved,onRecoveryError:()=>console.warn("[T850] 资产转写预约恢复失败，请从原请求核对"),asr:assetAsrOwner,readAiTaskState:(c,id)=>aiService.getTask(c,id),resolveConfiguration:async c=>transcribeConfiguration(await resolveTranscribeRuntimeSpec(c)),readExactFile:productionExactAsrFile,aiCreateTask:(c,body)=>aiService.createTask(c,body),bindExecution:async(c,id)=>{const actual=await assetAsrOwner.readAggregate(c,id),task=await aiService.getTask(c,id);const bound=await createExecutionAuthorityService(db,{now:deps.now}).bindAiTask(c,id,{requestFingerprint:task.requestFingerprint,modelInput:actual.input,budget:workerBudget});if(!stoppingPreparation)modelWorker?.start();return bound;}});
+  productionTranscripts=createProductionTranscripts(db,{...deps,onVersionSaved:productionOwnerDeps.onVersionSaved,onRecoveryError:()=>console.warn("[T850] 资产转写预约恢复失败，请从原请求核对"),asr:assetAsrOwner,readAiTaskState:(c,id)=>aiService.getTask(c,id),resolveConfiguration:captureAsrConfiguration,readExactFile:productionExactAsrFile,aiCreateTask:createTaskWithFrozenRouting,bindExecution:async(c,id)=>{const actual=await assetAsrOwner.readAggregate(c,id),task=await aiService.getTask(c,id);const bound=await createExecutionAuthorityService(db,{now:deps.now}).bindAiTask(c,id,{requestFingerprint:task.requestFingerprint,modelInput:actual.input,budget:workerBudget});if(!stoppingPreparation)modelWorker?.start();return bound;}});
   const transcribeBusiness=createTranscribeBusinessExecutionService(db,{
     budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
     resolveSpec:resolveTranscribeRuntimeSpec,
@@ -6095,6 +6301,8 @@ FAVORITES_PROMOTE_PER_RUN
   const coverExecutionPorts={
     async resolveImageSpec(c:RequestContext,capability:"image.generate"|"image.edit",taskId:string){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
+      const route=readFrozenModelRoute(runtime,'image',capability);
+      if(route)return resolveFrozenAssetSpec(c,route);
       if(frozenExecutionEngine(runtime)==="codex"&&(capability==="image.generate"||capability==="image.edit"))return {...codexExecutionSpec(),kind:"image" as const};
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
@@ -6113,6 +6321,8 @@ FAVORITES_PROMOTE_PER_RUN
     },
     async resolveSpec(c,capability,taskId){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
+      const route=readFrozenModelRoute(runtime,capability==='video.generate'?'video':'image',capability);
+      if(route)return resolveFrozenAssetSpec(c,route);
       if(frozenExecutionEngine(runtime)==="codex"&&(capability==="image.generate"||capability==="image.edit"))return {...codexExecutionSpec(),kind:"image" as const};
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
@@ -6241,7 +6451,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
     transcribePreparation:{
       resolveSpec:resolveTranscribeRuntimeSpec,
-      prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
+      prepareSpec:prepareOwnedTranscribeSpec,
     },
     cover:coverExecutionPorts,
     readAssetReference:creativeCanvasRoot.readAssetReference,
@@ -6868,7 +7078,7 @@ FAVORITES_PROMOTE_PER_RUN
     forStore:(store,deferred)=>{
       const projects=workProjectsFor(store),artifacts=workArtifactsFor(store,deferred),knowledge=workKnowledgeFor(store),publishing=workPublishingFor(store);
       return {projects,artifacts,knowledge,candidates:assistantCandidateFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),
-        intelligence:store===db?intelligenceService:createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now})}),
+        intelligence:store===db?intelligenceService:createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now,resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx)})}),
         positioning:workPositioningFor(store),groups:createAccountGroupService({db:store,...deps}),accounts:store===db?platformAccountService:createPlatformAccountService({db:store,...deps}),
         calendar:calendarFor(store),scheduling:createSchedulingService({db:store,...deps}),settings:settingsServiceFor(store),
         writes:{projects:createProjectsTransport(()=>({service:projects,repo:createProjectRepository(store)})),artifacts:createArtifactsTransport(()=>artifacts),knowledge:createKnowledgeTransport(()=>knowledge),publishing:createPublishingTransport(()=>publishing)},
@@ -6930,6 +7140,7 @@ FAVORITES_PROMOTE_PER_RUN
     reconcileFile:fileRecovery.reconcile,
   });
   const chatRuntime: ChatRuntime = {
+    prepareChatRouting,
     assistantSystem:assistantSystemRoot.preparation,
 
     resolveWritingContext:(c,id,selection)=>workWritingContext.resolve(c,id,selection),
@@ -7238,7 +7449,17 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:async(c,capability,owner)=>{
         const engine=await readFrozenChatExecutionEngine(db,c,owner);
-        return engine==='codex'?codexExecutionSpec():resolveModelSpec(c,capability,owner);
+        const runtime=await readOwnedModelRuntime(c,owner),mode=owner.mode??(runtime.chatModelMode==='vision'?'vision':'text');
+        const route=readFrozenModelRoute(runtime,mode,capability);
+        if(owner.readonlyCodexRecovery){
+          // 该私有标记来自原父工具的精确只读恢复名单，Worker端口不接收此字段。
+          if(!owner.chatParentCallId||!route||route.readiness!=='configured'||route.source!=='codex')throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',`${mode}:${capability}`);
+          owner.signal?.throwIfAborted();const status=await localCodexStatus.read(c,owner.signal);owner.signal?.throwIfAborted();
+          if(!status.available||status.version!==route.identity.runtimeVersion)throw new CapabilityModelRoutingError(status.errorCode??'CODEX_LOGIN_REQUIRED',route.routeKey);
+          return {engine:'codex' as const,...route.identity};
+        }
+        if(route)return resolveFrozenExecutionSpec(c,route,owner.signal);
+        return engine==='codex'?codexExecutionSpec():resolvePiModelSpec(c,capability);
       },
       resolveFallbackModelCredential:resolveChatFallbackCredential,
       prepareTaskCommit:aiService.prepareTaskCommit,

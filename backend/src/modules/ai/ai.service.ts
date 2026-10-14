@@ -240,7 +240,7 @@ export interface AiAssetLibraryPort {
 
 export interface ServiceDeps {
   readWorkCandidateSource?:(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string;toolCallId:string})=>Promise<import("@creatoros/contract").WorkCandidateSourceResult>;
-  prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot,options:AiPublicChatPrepareOptions)=>Promise<ChatTurnAssembly>;
+  prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot,options:AiPublicChatPrepareOptions,explicit?:{executionEngine?:'pi'|'codex'})=>Promise<ChatTurnAssembly>;
   assertChatProject?: (ctx:RequestContext,projectId:string)=>Promise<unknown>;
   projectTranscriptionTargets?: {lock(tx:Db,ctx:RequestContext,projectId:string):Promise<unknown>;read(tx:Db,ctx:RequestContext,projectId:string):Promise<{awemeId:string;hasTranscript:boolean}>};
   scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string,outputId?:string):Promise<string>};
@@ -865,7 +865,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       };
       const snapshot={conversation,messages:[...history,sourceMessage],sourceMessage};
       // 所有跨服务读取在事务外完成；PGlite 单连接不能在锁内等待全局读取。
-      const assembly=await deps.prepareChatReply(ctx,structuredClone(snapshot),options);
+      const assembly=await deps.prepareChatReply(ctx,structuredClone(snapshot),options,{executionEngine:parsed.executionEngine});
       return deps.db.transaction(async membershipTx=>{
         await lockWorkspaceMembership(membershipTx,ctx);
         return withWorkspaceParentWrite(membershipTx as unknown as Db,ctx,{table:aiConversations,id:aiConversations.id,userId:aiConversations.userId,groupId:aiConversations.groupId,accountId:aiConversations.accountId,lock:"update"},[conversationId],async tx=>{

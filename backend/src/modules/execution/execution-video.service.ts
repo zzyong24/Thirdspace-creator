@@ -3,7 +3,7 @@ import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {eq,and,aiTasks,aiTaskSteps,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
-import {codexExecutionSpec,frozenExecutionEngine,videoFrozenSchema,structuredGenerationInputSchema,workerPortInputSchemas,workerStructuredResultSchema,type ExecutionRef,type WorkerPort} from "@creatoros/contract/execution-worker";
+import {codexExecutionSpec,frozenExecutionEngine,readFrozenModelRoute,videoFrozenSchema,structuredGenerationInputSchema,workerPortInputSchemas,workerStructuredResultSchema,type ExecutionRef,type WorkerPort} from "@creatoros/contract/execution-worker";
 import {createExecutionLeaseService} from "./execution-lease.service";
 import {createExecutionCallLedgerService} from "./execution-call-ledger.service";
 import {prepareExecutionModelIdentity} from "./execution-model-identity.service";
@@ -12,12 +12,12 @@ const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).d
 /** 视频只读项目快照、每Skill模型身份、原调用预算与结果均绑定同一业务执行。 */
 export function createExecutionVideoService(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&{resolveModelSpec(ctx:RequestContext,skillId:string,owner:{aiTaskId:string}):Promise<unknown>}){
  const leases=createExecutionLeaseService(db,deps),ledger=createExecutionCallLedgerService(db,deps);
- const access=<T>(ref:ExecutionRef,action:(scope:{input:ReturnType<typeof structuredGenerationInputSchema.parse>;frozen:ReturnType<typeof videoFrozenSchema.parse>;context:RequestContext;aiTaskId:string;engine:'pi'|'codex'})=>Promise<T>)=>leases.withLease(ref,"admission",async({tx,task,context})=>{
+ const access=<T>(ref:ExecutionRef,action:(scope:{input:ReturnType<typeof structuredGenerationInputSchema.parse>;frozen:ReturnType<typeof videoFrozenSchema.parse>;context:RequestContext;aiTaskId:string;engine:'pi'|'codex';payload:unknown})=>Promise<T>)=>leases.withLease(ref,"admission",async({tx,task,context})=>{
   const input=structuredGenerationInputSchema.parse((task.payload as {modelInput?:unknown}).modelInput),frozen=videoFrozenSchema.parse(JSON.parse(input.facets.__videoDecisions??"null"));
   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context)));
   if(task.kind!=="ai_task"||!business||business.taskType!=="video.decisions"||business.id!==frozen.task.id||business.projectId!==frozen.task.projectId||!isDeepStrictEqual(business.inputData,frozen.task.inputData))throw new ConflictError("视频任务与冻结来源不符");
   if(input.skillSnapshot.userId!==context.userId||input.skillSnapshot.accountId !== (context.accountId??null) || (input.skillSnapshot.groupId??null)!==(context.groupId??null))throw new ConflictError("视频Skill归属不符");
-  return action({input,frozen,context,aiTaskId:business.id,engine:frozenExecutionEngine(task.payload)});
+  return action({input,frozen,context,aiTaskId:business.id,engine:frozenExecutionEngine(task.payload),payload:task.payload});
  });
  return {async invoke(ref:ExecutionRef,port:WorkerPort,raw:unknown,signal?:AbortSignal):Promise<unknown>{
   signal?.throwIfAborted();
@@ -25,7 +25,7 @@ export function createExecutionVideoService(db:Db,deps:Parameters<typeof createE
    const {skillId}=workerPortInputSchemas.resolveVideoModel.parse(raw);
    const source=await access(ref,async scope=>scope);
    if(!source.frozen.modelIdentities[skillId])throw new ConflictError("原任务不需要此模型阶段");
-   const {credential,identity}=prepareExecutionModelIdentity(skillId,source.engine==='codex'?codexExecutionSpec():await deps.resolveModelSpec(source.context,skillId,{aiTaskId:source.aiTaskId}));
+   const {credential,identity}=prepareExecutionModelIdentity(skillId,!readFrozenModelRoute(source.payload,'structured',skillId)&&source.engine==='codex'?codexExecutionSpec():await deps.resolveModelSpec(source.context,skillId,{aiTaskId:source.aiTaskId}));
    signal?.throwIfAborted();await access(ref,async({frozen})=>{if(!isDeepStrictEqual(frozen.modelIdentities[skillId],identity))throw new ConflictError("视频阶段模型配置与原任务不符");});return credential;
   }
   if(port==="reserveVideoModel"){

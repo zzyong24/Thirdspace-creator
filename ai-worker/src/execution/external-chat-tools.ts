@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {isAssistantEngineToolAllowed} from '@creatoros/contract';
-import {agenticToolOutcomeSchema,agenticToolReservationSchema,chatToolApprovalReceiptSchema,chatToolProviderName,chatWorkerInputSchema,codexExecutionSpec,externalTaskToolResultSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
+import {agenticToolOutcomeSchema,agenticToolReservationSchema,chatToolApprovalReceiptSchema,chatToolProviderName,chatWorkerInputSchema,codexExecutionSpec,executionModelSpecSchema,externalTaskToolResultSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {runDurableAgenticTool} from './durable-agentic-tool';
 import {runChatGenerationInWorker} from './chat-generation-worker';
 import {runChatTextNodeInWorker} from './chat-text-node-worker';
@@ -35,7 +35,14 @@ export function createExternalChatToolConsumer(input:z.infer<typeof chatWorkerIn
     if(def.execution==='worker.web-read'){webRead??=createChatWebReadResources(parentSignal,call);return webRead.run(callId,signal);}
     if(def.execution==='worker.redfox')return runChatRedfoxInWorker(callId,signal,call);
     if(def.execution==='worker.structured-node')return runChatGenerationInWorker(callId,signal,call);
-    if(def.execution==='worker.script-hooks'||def.execution==='worker.script-draft')return runChatTextNodeInWorker(callId,modelFor(codexExecutionSpec()),signal,call,def.execution==='worker.script-hooks'?'hooks':'script-draft');
+    if(def.execution==='worker.script-hooks'||def.execution==='worker.script-draft'){
+     const node=def.execution==='worker.script-hooks'?'hooks':'script-draft';
+     if(input.modelRoutingVersion!==2)return runChatTextNodeInWorker(callId,modelFor(codexExecutionSpec()),signal,call,node);
+     const prepared=await call(node==='hooks'?'prepareChatHooks':'prepareChatScriptDraft',{callId},signal) as {noModel?:boolean};
+     if(prepared.noModel)return agenticToolOutcomeSchema.parse(await call(node==='hooks'?'completeChatHooks':'completeChatScriptDraft',{callId},signal));
+     const selected=executionModelSpecSchema.parse(await call('resolveChatGenerationCredential',{callId},signal));
+     return runChatTextNodeInWorker(callId,modelFor(selected),signal,call,node);
+    }
     if(def.execution==='worker.research'){research??=await createChatResearchResources(parentSignal,call);return runChatResearchInWorker(callId,signal,call,research);}
     if(def.execution==='host.task-submit'||(def.execution??'host')==='host')return agenticToolOutcomeSchema.parse(await call('executeAgenticTool',{callId},signal));
     throw new GenerationFailure('waiting_user','CODEX_TOOL_UNAVAILABLE');

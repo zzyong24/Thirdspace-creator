@@ -1,4 +1,5 @@
-import {userPreferences} from '@creatoros/backend';
+import {inheritExecutionRoute,frozenExecutionRoute,type ExecutionRoute} from '@creatoros/contract/execution-worker';
+import {userPreferences,intelligenceSyncRuns,itemSourceObservations} from '@creatoros/backend';
 import {createExecutionRoute} from '@creatoros/contract/execution-worker';
 import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob,assertExecutionTaskWorkspaceAdmission} from '../scheduling';
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
@@ -70,11 +71,15 @@ export type PersistentTaskCommand = "pause" | "resume" | "cancel" | "retry";
 type TaskRow = typeof executionTasks.$inferSelect;
 
 export interface PersistentTaskServiceDeps {
+  /** 私有同store根快照；已有payload/可信父优先，重放不捕获当前选择。 */
+  resolveRootExecutionRoute?(ctx:RequestContext,input:EnqueuePersistentTaskInput,tx:Db):Promise<ExecutionRoute>;
   now?: () => string;
   nextId?: (prefix: string) => string;
 }
 
 export interface EnqueuePersistentTaskInput {
+  /** 私有宿主父执行权，不进入公共enqueue DTO。缺fence仅兼容原share_import内部lease。 */
+  modelRouteParent?:{taskId:string;workerId:string;attempt:number;fenceToken?:string};
   kind: PersistentTaskKind;
   ownerType: PersistentTaskOwnerType;
   ownerId: string;
@@ -347,10 +352,62 @@ export function createPersistentTaskService(
       if (!Number.isInteger(maxAttempts) || maxAttempts <= 0) {
         throw new ExecutionValidationError("maxAttempts 必须是正整数");
       }
+      const replay=(existing:typeof executionTasks.$inferSelect)=>{
+        // 模型身份、恢复认可等宿主执行状态不改变最初入队请求的幂等身份。
+        const existingRequestPayload = {...asPayload(existing?.payload)};
+        delete existingRequestPayload.modelIdentity;
+        // 宿主补的默认冻结值不改变原入队请求；显式父路由仍逐字核验。
+        if(input.payload.executionRoute===undefined)delete existingRequestPayload.executionRoute;
+        delete existingRequestPayload.filePredispatchRecoveries;
+        delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
+        delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
+        delete existingRequestPayload.__scheduledChild;
+        delete existingRequestPayload.parentExecutionTaskId;
+        if (input.kind === "ai_task" && isTranscribeCommandInput(input.payload)) delete existingRequestPayload[TRANSCRIBE_COMMAND_RECEIPTS];
+        if (
+          !existing ||
+          existing.ownerType !== input.ownerType ||
+          existing.ownerId !== input.ownerId ||
+          stableJson(existingRequestPayload) !== stableJson(input.payload) ||
+          existing.priority !== (input.priority ?? 0) ||
+          existing.maxAttempts !== maxAttempts ||
+          stableJson(existing.costEstimate) !==
+            stableJson(input.costEstimate ?? null)
+        ) {
+          throw new ConflictError(
+            "idempotencyKey 已被另一份任务请求使用",
+          );
+        }
+        return toResource(existing);
+      };
+      const [prior]=await tx.select().from(executionTasks).where(and(eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx),eq(executionTasks.kind,input.kind),eq(executionTasks.idempotencyKey,input.idempotencyKey))).limit(1);
+      if(prior)return replay(prior);
       const stamp = now();
       const executionBudget = input.executionBudget === undefined ? null : executionBudgetSchema.parse(isContinuousExecutionBudget(input.executionBudget)&&input.maxAttempts!==undefined?{...input.executionBudget,maxAttempts:input.maxAttempts}:input.executionBudget);
-      const [preference]=await tx.select().from(userPreferences).where(eq(userPreferences.userId,ctx.userId));
-      const executionRoute=input.payload.executionRoute??createExecutionRoute(preference?.assistantExecutionEngine==='codex'?'codex':'pi');
+      let executionRoute=input.payload.executionRoute===undefined?undefined:frozenExecutionRoute(input.payload);
+      if(input.modelRouteParent){
+        const proof=input.modelRouteParent;
+        const [parent]=await tx.select().from(executionTasks).where(eq(executionTasks.id,proof.taskId)).for('update');
+        if(!parent||parent.userId!==ctx.userId||parent.accountId!==frozen.accountId||parent.groupId!==frozen.groupId||parent.groupVersion!==frozen.groupVersion||parent.membershipVersion!==frozen.membershipVersion||parent.status!=='running'||parent.attempt!==proof.attempt||parent.leaseOwner!==proof.workerId||!parent.leaseExpiresAt||!Number.isFinite(Date.parse(parent.leaseExpiresAt))||Date.parse(parent.leaseExpiresAt)<=Date.parse(stamp)||(proof.fenceToken!==undefined?parent.fenceToken!==proof.fenceToken:parent.kind!=='share_import'))throw new ExecutionValidationError('原父执行权失效，不能创建转写子任务');
+        if(input.kind!=='transcribe'||input.ownerType!=='item'||!['share_import','radar_project_upgrade'].includes(parent.kind))throw new ExecutionValidationError('父执行与转写子任务类型不符');
+        if(parent.deadlineAt!==null&&(!Number.isFinite(Date.parse(parent.deadlineAt))||Date.parse(parent.deadlineAt)<=Date.parse(stamp)))throw new ExecutionValidationError('原父执行期限已耗尽');
+        const parentPayload=asPayload(parent.payload);
+        if(input.payload.itemId!==input.ownerId)throw new ExecutionValidationError('转写作品与原请求不符');
+        if(parent.kind==='radar_project_upgrade'){
+          if(parent.ownerType!=='item'||parent.ownerId!==input.ownerId||parentPayload.itemId!==input.ownerId)throw new ExecutionValidationError('雷达父任务与转写作品不符');
+        }else{
+          if(parent.ownerType!=='item_import'||parentPayload.transcribeAfterImport!==true)throw new ExecutionValidationError('原分享任务没有转录授权');
+          // 原同步运行/作品观察是导入事实，不能从链接文本或幂等前缀猜作品。
+          const observations=await tx.select({id:itemSourceObservations.id}).from(itemSourceObservations).innerJoin(intelligenceSyncRuns,and(eq(itemSourceObservations.runId,intelligenceSyncRuns.id),eq(itemSourceObservations.sourceId,intelligenceSyncRuns.sourceId))).where(and(eq(intelligenceSyncRuns.executionTaskId,parent.id),eq(intelligenceSyncRuns.userId,parent.userId),workspaceFilter(intelligenceSyncRuns,{accountId:parent.accountId,groupId:parent.groupId}),eq(itemSourceObservations.userId,parent.userId),workspaceFilter(itemSourceObservations,{accountId:parent.accountId,groupId:parent.groupId}),eq(itemSourceObservations.itemId,input.ownerId))).limit(1);
+          if(!observations.length)throw new ExecutionValidationError('原分享任务尚未导入此转写作品');
+        }
+        executionRoute=inheritExecutionRoute(parent.payload);
+        if(input.payload.executionRoute!==undefined&&stableJson(input.payload.executionRoute)!==stableJson(executionRoute))throw new ConflictError('指定路由与原父执行不符');
+      }
+      if(!executionRoute){
+        if(deps.resolveRootExecutionRoute)executionRoute=frozenExecutionRoute({executionRoute:await deps.resolveRootExecutionRoute(ctx,input,tx as unknown as Db)});
+        else{const [preference]=await tx.select().from(userPreferences).where(eq(userPreferences.userId,ctx.userId));executionRoute=createExecutionRoute(preference?.assistantExecutionEngine==='codex'?'codex':'pi');}
+      }
       const row = {
         executionBudget,
         deadlineAt: executionBudget === null ? null : newExecutionBudgetDeadline(executionBudget, stamp),
@@ -421,32 +478,8 @@ export function createPersistentTaskService(
           .limit(1);
         if (activeOwnerTask) return toResource(activeOwnerTask);
       }
-      // 模型身份、恢复认可等宿主执行状态不改变最初入队请求的幂等身份。
-      const existingRequestPayload = {...asPayload(existing?.payload)};
-      delete existingRequestPayload.modelIdentity;
-      // 宿主补的默认冻结值不改变原入队请求；显式父路由仍逐字核验。
-      if(input.payload.executionRoute===undefined)delete existingRequestPayload.executionRoute;
-      delete existingRequestPayload.filePredispatchRecoveries;
-      delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
-      delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
-      delete existingRequestPayload.__scheduledChild;
-      delete existingRequestPayload.parentExecutionTaskId;
-      if (input.kind === "ai_task" && isTranscribeCommandInput(input.payload)) delete existingRequestPayload[TRANSCRIBE_COMMAND_RECEIPTS];
-      if (
-        !existing ||
-        existing.ownerType !== input.ownerType ||
-        existing.ownerId !== input.ownerId ||
-        stableJson(existingRequestPayload) !== stableJson(input.payload) ||
-        existing.priority !== (input.priority ?? 0) ||
-        existing.maxAttempts !== maxAttempts ||
-        stableJson(existing.costEstimate) !==
-          stableJson(input.costEstimate ?? null)
-      ) {
-        throw new ConflictError(
-          "idempotencyKey 已被另一份任务请求使用",
-        );
-      }
-      return toResource(existing);
+      if(!existing)throw new ConflictError('idempotencyKey 已被另一份任务请求使用');
+      return replay(existing);
       });
     },
 

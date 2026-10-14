@@ -1,5 +1,5 @@
 import {userPreferences} from '@creatoros/backend';
-import {createExecutionRoute} from '@creatoros/contract/execution-worker';
+import {createExecutionRoute,executionRouteSchema,frozenExecutionEngine,type ExecutionRoute} from '@creatoros/contract/execution-worker';
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {lockWorkspaceMembership} from "../platform-account/membership-lock.service";
 import { createContinuousExecutionBudget } from "@creatoros/contract/execution-worker";
@@ -16,8 +16,8 @@ import { selectFrozenChatHistory } from "./chat-turn-history";
 type ChatInput=z.infer<typeof chatWorkerInputSchema>;
 type Message=typeof aiMessages.$inferSelect;
 export type ChatTurnSnapshot={conversation:typeof aiConversations.$inferSelect;messages:Message[];sourceMessage:Message};
-export type ChatTurnAssembly=Omit<ChatInput,"kind"|"operationKey"|"userId"|"accountId"|"groupId"|"groupVersion"|"membershipVersion"|"conversationId"|"sourceMessageId"|"externalAgentBinding"|"toolOutcomeProjectionVersion"> & {hostContext?:ChatHostContext};
-export type ChatPrepareOptions={executionEngine:"pi"|"codex"};
+export type ChatTurnAssembly=Omit<ChatInput,"kind"|"operationKey"|"userId"|"accountId"|"groupId"|"groupVersion"|"membershipVersion"|"conversationId"|"sourceMessageId"|"externalAgentBinding"|"toolOutcomeProjectionVersion"> & {hostContext?:ChatHostContext;executionRoute?:ExecutionRoute;chatModelMode?:"text"|"vision"};
+export type ChatPrepareOptions={executionEngine?:"pi"|"codex"};
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
 export const chatInputDigest=(value:unknown)=>createHash("sha256").update(canonicalJson(value)).digest("hex");
 export const chatHistoryDigest=(snapshot:ChatTurnSnapshot)=>chatInputDigest({
@@ -65,6 +65,11 @@ export function createChatTurnSubmissionService(db:Db,deps:{
     const [execution]=await store.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
     const frozen=chatWorkerInputSchema.safeParse(object(execution?.payload).modelInput);
     if(!execution || execution.kind!=="ai_task" || input.modelInputDigest!==chatInputDigest(object(execution.payload).modelInput) || execution.ownerType!=="ai_task" || execution.ownerId!==id || object(execution.payload).aiTaskId!==id || !frozen.success || frozen.data.sourceMessageId!==snapshot.sourceMessage.id || frozen.data.conversationId!==snapshot.conversation.id || frozen.data.userId!==ctx.userId || frozen.data.accountId!==(ctx.accountId??null) || (frozen.data.groupId??null)!==task.groupId)throw new ConflictError("聊天执行映射无效");
+    if(object(object(execution.payload).executionRoute).schemaVersion===2){
+      const executionRoute=executionRouteSchema.parse(object(execution.payload).executionRoute);
+      const businessRoute=executionRouteSchema.parse(object(task.runtimeData).executionRoute);
+      if(canonicalJson(executionRoute)!==canonicalJson(businessRoute))throw new ConflictError("聊天根路由与原任务不符");
+    }
     readChatHostContextPair(object(execution.payload).hostContext,input.hostContextDigest,{userId:task.userId,accountId:task.accountId,groupId:task.groupId,projectId:snapshot.conversation.projectId});
     return {taskId:task.id,executionTaskId:execution.id,sourceMessageId:snapshot.sourceMessage.id,replayed:true};
   }
@@ -86,12 +91,25 @@ export function createChatTurnSubmissionService(db:Db,deps:{
         await deps.assertProject(ctx,snapshot.conversation.projectId);
       }
       const historyDigest=chatHistoryDigest(snapshot);
-      const [preference]=requestedEngine===undefined?await db.select().from(userPreferences).where(eq(userPreferences.userId,ctx.userId)):[];
-      const executionEngine=requestedEngine??(preference?.assistantExecutionEngine==="codex"?"codex":"pi");
-      const {hostContext:rawHostContext,...assembly}=await deps.assemble(ctx,structuredClone(snapshot),{executionEngine});
+      const [preference]=await db.select().from(userPreferences).where(eq(userPreferences.userId,ctx.userId));
+      const legacyEngine=requestedEngine??(preference?.assistantExecutionEngine==="codex"?"codex":"pi");
+      // host-only字段先剥离，不能混入严格Worker JSON。
+      const {hostContext:rawHostContext,executionRoute:rawRoute,chatModelMode,...assembly}=await deps.assemble(ctx,structuredClone(snapshot),{executionEngine:preference?.modelRouting?requestedEngine:legacyEngine});
+      if(preference?.modelRouting&&rawRoute===undefined)throw new ConflictError("MODEL_ROUTE_NOT_FROZEN");
+      const preparedRoute=rawRoute===undefined?undefined:executionRouteSchema.parse(rawRoute);
+      const executionRoute=preparedRoute?.schemaVersion===2?preparedRoute:createExecutionRoute(preparedRoute?.engine??legacyEngine,requestedEngine===undefined?"preference":"chat-explicit");
+      const executionEngine=frozenExecutionEngine({executionRoute});
+      if(assembly.executionEngine!==undefined&&assembly.executionEngine!==executionEngine)throw new ConflictError("聊天准备引擎与冻结路由不符");
+      if(executionRoute.schemaVersion===2){
+        if(chatModelMode!=="text"&&chatModelMode!=="vision")throw new ConflictError("MODEL_ROUTE_NOT_FROZEN");
+        const main=executionRoute.routes[`${chatModelMode}:${assembly.capability}`];
+        if(!main||main.readiness!=="configured"||(main.source==="codex")!==(executionEngine==="codex"))throw new ConflictError("MODEL_ROUTE_NOT_FROZEN");
+      }
       // 先通过严格 schema，再统一成数据库 JSON 形态；可选 undefined 不得进入摘要后在落库时消失。
       const hostContext=rawHostContext===undefined?undefined:JSON.parse(JSON.stringify(validateChatHostContext(rawHostContext,{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,projectId:snapshot.conversation.projectId}))) as ChatHostContext;
-      const modelInput=JSON.parse(JSON.stringify(chatWorkerInputSchema.parse({...assembly,executionEngine,toolOutcomeProjectionVersion:1,...(executionEngine==="codex"?{externalAgentBinding:codexAcpBinding}:{}),recoverMissingFinal:true,terminalToolFailurePolicyVersion:1,...(assembly.tools.some(tool=>tool.name==="history.read")?{contextPolicyVersion:2}:{}),kind:"chat.run",operationKey:`chat:${snapshot.sourceMessage.id}`,userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null,groupVersion:ctx.groupVersion??null,membershipVersion:ctx.membershipVersion??null,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id}))) as ChatInput;
+      const mainRoute=executionRoute.schemaVersion===2?executionRoute.routes[`${chatModelMode}:${assembly.capability}`]:undefined;
+      const routingInput=executionRoute.schemaVersion===2?{modelRoutingVersion:2 as const,codexNativeImageGeneration:false as const,...(mainRoute?.readiness==='configured'&&mainRoute.source==='codex'?{requestedModel:mainRoute.identity.requestedModel}:{})}:{};
+      const modelInput=JSON.parse(JSON.stringify(chatWorkerInputSchema.parse({...assembly,executionEngine,...routingInput,toolOutcomeProjectionVersion:1,...(executionEngine==="codex"&&executionRoute.schemaVersion===1?{externalAgentBinding:codexAcpBinding}:{}),recoverMissingFinal:true,terminalToolFailurePolicyVersion:1,...(assembly.tools.some(tool=>tool.name==="history.read")?{contextPolicyVersion:2}:{}),kind:"chat.run",operationKey:`chat:${snapshot.sourceMessage.id}`,userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null,groupVersion:ctx.groupVersion??null,membershipVersion:ctx.membershipVersion??null,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id}))) as ChatInput;
 
       return db.transaction(async tx=>{
         const frozenScope=await lockWorkspaceMembership(tx,ctx);
@@ -107,8 +125,8 @@ export function createChatTurnSubmissionService(db:Db,deps:{
         }
         if(chatHistoryDigest(current)!==historyDigest)throw new ConflictError("聊天来源在装配期间改变，请重新提交");
         const taskId=nextId("ai-task"),stamp=now();
-        await tx.insert(aiTasks).values({id:taskId,userId:ctx.userId,accountId:frozenScope.accountId,groupId:frozenScope.groupId,groupVersion:frozenScope.groupVersion,membershipVersion:frozenScope.membershipVersion,projectId:current.conversation.projectId,taskType:"copilot.assist",status:"queued",requestedAt:stamp,idempotencyKey:`chat:${current.sourceMessage.id}`,inputData:{kind:"chat.run",conversationId:current.conversation.id,sourceMessageId:current.sourceMessage.id,historyMessageIds:current.messages.map(message=>message.id),historyDigest,modelInputDigest:chatInputDigest(modelInput),...(hostContext?{hostContextDigest:chatHostContextDigest(hostContext)}:{})}});
-        const execution=await createPersistentTaskService(store,{now,nextId}).enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:taskId,idempotencyKey:`chat:${current.sourceMessage.id}`,executionBudget:createContinuousExecutionBudget(),payload:{aiTaskId:taskId,executionRoute:createExecutionRoute(executionEngine,requestedEngine===undefined?"preference":"chat-explicit"),artifactProtocolVersion:2,terminalPlanFailurePolicyVersion:1,toolValidationRecoveryVersion:1,toolFailureReceiptVersion:1,modelInput,...(hostContext?{hostContext}:{})}});
+        await tx.insert(aiTasks).values({id:taskId,userId:ctx.userId,accountId:frozenScope.accountId,groupId:frozenScope.groupId,groupVersion:frozenScope.groupVersion,membershipVersion:frozenScope.membershipVersion,projectId:current.conversation.projectId,taskType:"copilot.assist",runtimeData:{executionRoute,...(executionRoute.schemaVersion===2?{chatModelMode}:{})},status:"queued",requestedAt:stamp,idempotencyKey:`chat:${current.sourceMessage.id}`,inputData:{kind:"chat.run",conversationId:current.conversation.id,sourceMessageId:current.sourceMessage.id,historyMessageIds:current.messages.map(message=>message.id),historyDigest,modelInputDigest:chatInputDigest(modelInput),...(hostContext?{hostContextDigest:chatHostContextDigest(hostContext)}:{})}});
+        const execution=await createPersistentTaskService(store,{now,nextId}).enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:taskId,idempotencyKey:`chat:${current.sourceMessage.id}`,executionBudget:createContinuousExecutionBudget(),payload:{aiTaskId:taskId,executionRoute,...(executionRoute.schemaVersion===2?{chatModelMode}:{}),artifactProtocolVersion:2,terminalPlanFailurePolicyVersion:1,toolValidationRecoveryVersion:1,toolFailureReceiptVersion:1,modelInput,...(hostContext?{hostContext}:{})}});
 
         if(execution.ownerId!==taskId)throw new ConflictError("源消息已有不同的执行绑定");
         await tx.update(aiTasks).set({executionTaskId:execution.id}).where(eq(aiTasks.id,taskId));

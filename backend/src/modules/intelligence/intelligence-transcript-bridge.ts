@@ -65,7 +65,7 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
    if(!awemeId)return skipped('NO_AUDIO_SOURCE');
    let payload=initial.task.payload as Record<string,unknown>;
    if(!payload.modelInput){
-    const configuration=transcribeConfiguration(await deps.resolveSpec(ctx));
+    const configuration=transcribeConfiguration(await deps.resolveSpec(ctx,{ref}));
     const input=transcribeTaskInputSchema.parse({kind:'transcribe.douyin',awemeIds:[awemeId],language:'zh',configuration});
     await leases.withLease(ref,'admission',async scope=>{
      const bound=await bindIntelligenceTranscript(scope);if(bound.awemeId!==awemeId)throw new Error('INTELLIGENCE_TRANSCRIPT_SOURCE_CHANGED');

@@ -53,3 +53,12 @@ it('显式creation基点漂移在共同公开准备端口停止，不修改用�
  await expect(prepareChatReply(f.runtime as never,f.owner as never,f.snapshot as never,{chatContext:{surface:'project',projectId:'probe-project',creationTarget} as never})).rejects.toThrow('已变化');
  expect(creationTarget.compositionRevision).toBe(3);
 });
+
+it('先真实消息部件确定模式，准备一次路由后用实际capability冻结完整map',async()=>{
+ const f=creationRuntime(),freeze=vi.fn(async()=>({schemaVersion:1,engine:'codex',source:'preference',protocolKind:'codex-app-server',runtimeVersion:'0.159.3'} as const));
+ const prepareChatRouting=vi.fn(async()=>({executionEngine:'codex' as const,engineForMode:()=> 'codex' as const,freeze}));
+ const result=await prepareChatReply({...f.runtime,prepareChatRouting} as never,f.owner as never,f.snapshot as never);
+ expect(prepareChatRouting).toHaveBeenCalledTimes(1);expect(prepareChatRouting).toHaveBeenCalledWith(f.owner,{mode:'text',executionEngine:undefined,legacyExecutionEngine:undefined});
+ expect(freeze).toHaveBeenCalledWith(result.capability,'text');expect(result.executionEngine).toBe('codex');expect(result.chatModelMode).toBe('text');
+ expect(result.executionRoute).toMatchObject({engine:'codex'});
+},180_000);

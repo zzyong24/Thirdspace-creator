@@ -3,7 +3,7 @@ import {isDeepStrictEqual} from 'node:util';
 import {and,eq,aiTasks,executionTasks,executionCalls,OwnershipError,type Db} from '@creatoros/backend';
 import {executionTaskSpec,type RequestContext} from '@creatoros/contract';
 import {executionTimeoutMs} from '@creatoros/contract/timeout-policy';
-import {createExecutionRoute,frozenExecutionEngine,codexExecutionSpec,modelGenerationInputSchema,workerPortInputSchemas,type ExecutionRef} from '@creatoros/contract/execution-worker';
+import {inheritExecutionRoute,readFrozenModelRoute,frozenExecutionEngine,codexExecutionSpec,modelGenerationInputSchema,workerPortInputSchemas,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import {workspaceFilter} from '../../workspace-scope';
 import {createPersistentTaskService} from './persistent-task.service';
 import {createExecutionLeaseService} from './execution-lease.service';
@@ -57,7 +57,7 @@ export function createExecutionVideoVisualReviewService(db:Db,deps:VideoVisualRe
   // 可选审核必须给单次模型完整的两分钟，并给成片收割留下余量。剩余不足时保留已有成片。
   const stamp=Date.parse(now()),deadlineAt=Math.min(stamp+180_000,scope.deadlineAt===null?Infinity:scope.deadlineAt-5_000);
   if(deadlineAt-stamp<120_000)throw Error('原视频剩余期限不足完整审核预算，已保留生成的成片');
-  const executionRoute=createExecutionRoute(frozenExecutionEngine(runtime),'parent'),requestDigest=hash([original.id,original.inputData,input.mimeType,Buffer.from(input.bytes).toString('base64'),input.prompt]);
+  const executionRoute=inheritExecutionRoute(runtime),requestDigest=hash([original.id,original.inputData,input.mimeType,Buffer.from(input.bytes).toString('base64'),input.prompt]);
   const idempotencyKey=`video-visual-review:${original.id}`;
   const existing=(await db.select().from(executionTasks).where(and(eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx),eq(executionTasks.kind,'ai_task'),eq(executionTasks.idempotencyKey,idempotencyKey))))[0];
   if(existing){
@@ -67,7 +67,7 @@ export function createExecutionVideoVisualReviewService(db:Db,deps:VideoVisualRe
    if(receipt?.status==='settled'&&receipt.resultText)return receipt.resultText;
    throw Error(`原成片审核尚未完成，请核对执行 ${existing.id}（${existing.status}）`);
   }
-  const spec=executionRoute.engine==='codex'?codexExecutionSpec():await deps.resolvePiModelSpec(ctx,{aiTaskId:original.id});
+  const spec=executionRoute.schemaVersion===1&&executionRoute.engine==='codex'?codexExecutionSpec():await deps.resolvePiModelSpec(ctx,{aiTaskId:original.id});
   scope.signal.throwIfAborted();if(spec===null)return null;
   const prepared=prepareExecutionModelIdentity('asset.classify',spec);
   const reviewInput=modelGenerationInputSchema.parse({kind:'model.generate',operationKey:'video.visual-review',capability:'asset.classify',maxOutputTokens:2048,prompt:JSON.stringify({mimeType:input.mimeType,base64:Buffer.from(input.bytes).toString('base64'),prompt:input.prompt})});

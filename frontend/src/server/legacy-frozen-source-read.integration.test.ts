@@ -30,6 +30,8 @@ import {prepareChatReply} from './prepare-chat-reply';
 
 // 这是明确旧版本的合成 fixture producer，不是历史用户库实测。
 const oldProducerCommit='6e4689b3180f91189110208267708ad72b03ae64';
+// W固定完整110项journal与完整SQL receipt前缀；不是按新last动态接受库存。
+const currentMigrationInventory={entries:110,journalSha256:'09c6b2044aaa493bfe553c2ec57d6b4d87e0c1c11ba902b69162b36af00466f7',ledgerSha256:'f11c2509971111e253c63856e420aaf7a933c28a66da97f49a9a48104803a9dd'} as const;
 let oldProducerRoot:string,oldProducerModule:string,oldPiCoreBinding:{version:string;agentPath:string;sha256:string};
 beforeAll(async()=>{
  const projectRoot=fileURLToPath(new URL('../../../',import.meta.url));
@@ -308,11 +310,16 @@ it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] a
    const migrationLedger=(await upgraded.client.query<{hash:string;created_at:number}>('SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id')).rows;
    expect(migrationLedger.slice(0,104)).toEqual(old.ledger);
    const migrationFolder=fileURLToPath(new URL('../../../backend/drizzle',import.meta.url));
-   const currentJournal=JSON.parse(await readFile(join(migrationFolder,'meta/_journal.json'),'utf8')) as {entries:Array<{tag:string;when:number}>};
+   const currentJournalRaw=await readFile(join(migrationFolder,'meta/_journal.json'),'utf8');
+   expect(createHash('sha256').update(currentJournalRaw).digest('hex')).toBe(currentMigrationInventory.journalSha256);
+   const currentJournal=JSON.parse(currentJournalRaw) as {entries:Array<{tag:string;when:number}>};
    const expectedLedger=await Promise.all(currentJournal.entries.map(async entry=>({hash:createHash('sha256').update(await readFile(join(migrationFolder,entry.tag+'.sql'),'utf8')).digest('hex'),created_at:entry.when})));
+   expect(createHash('sha256').update(JSON.stringify(expectedLedger)).digest('hex')).toBe(currentMigrationInventory.ledgerSha256);
    expect(migrationLedger.map((row:{hash:string;created_at:number})=>({...row,created_at:Number(row.created_at)}))).toEqual(expectedLedger);
    expect(currentJournal.entries.at(104)!.tag).toBe('0130_legacy_source_ownership');
-   expect(currentJournal.entries.at(-1)!.tag).toBe('0133_assistant_execution_engine');
+   expect(currentJournal.entries).toHaveLength(currentMigrationInventory.entries);
+   expect(currentJournal.entries.at(107)!.tag).toBe('0133_assistant_execution_engine');
+   expect(currentJournal.entries.at(109)!.tag).toBe('0136_embedding_identity');
    expect((await upgraded.client.query<{column_name:string}>("SELECT column_name FROM information_schema.columns WHERE table_name='user_preferences' AND column_name='assistant_execution_engine'")).rows).toEqual([{column_name:'assistant_execution_engine'}]);
    expect((await db.execute(sql.raw('SELECT group_id FROM ai_conversations'))).rows).toEqual([{group_id:canonical}]);
    if(family!=='null-frozen')expect((await db.execute(sql.raw('SELECT group_id FROM article_anchors UNION ALL SELECT group_id FROM graphic_post_anchors'))).rows).toEqual([{group_id:canonical},{group_id:canonical}]);

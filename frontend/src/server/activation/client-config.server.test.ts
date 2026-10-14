@@ -439,6 +439,12 @@ describe("T-575 config.pull Creator consumer", () => {
     );
   });
 
+  it('原模型scope不符时，在生成新ticket之前拒绝，零外部请求',async()=>{
+    const fetchImpl=vi.fn<typeof fetch>(async()=>{throw Error('原scope不符不得请求票据');});
+    await expect(requestFreshClientConfigAccess({env:env(),now:()=>NOW,nonce:()=> 'original-scope-nonce',readVerdict:async()=>({state:'ready',verdict}),fetchImpl,expectedScopeId:'not-the-original-scope'})).rejects.toMatchObject({code:'MODEL_ROUTE_IDENTITY_CHANGED'});
+    expect(fetchImpl).not.toHaveBeenCalled();
+  },180_000);
+
   it("T-715 为额度入口申请全新 ticket，且只在 server 内存返回", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
       expect(String(input)).toBe(
@@ -1046,7 +1052,176 @@ describe("T-575 config.pull Creator consumer", () => {
     expect(store.record?.channel).not.toBeNull();
   });
 
-  it("T-733 v3 票据不适用于当前激活时按未配置处理而不是安全阻断", async () => {
+  it.each([200,304])('T1278 目录%s缺单项官方账户仍保存目录，固定existingOnly且不领Key',async(status)=>{
+    const bundle=signedBundle(growthKeys.privateKey,{extensions:[{extensionKey:'creatoros.model-config',protocolVersion:'creatoros-model-config-v1',revision:4,payload:{services:[{id:'omnihi-main',provider:'omnihi',credential:{type:'api_key',source:'activation_managed',allowMultiple:false}}],connections:[],models:{}}}]});
+    if(status===304)store.record=configuredRecord(bundle);
+    const base=successfulFetch(bundle),put=vi.fn(async()=>{}),queries:string[]=[];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      const url=new URL(String(input));
+      if(url.pathname.includes('managed-credentials')){queries.push(url.search);expect(store.record?.bundle).toEqual(bundle);return Response.json({error:{code:'MODEL_CREDENTIAL_NOT_CONFIGURED',message:'not configured'}},{status:404,headers:{'cache-control':'private, no-store',pragma:'no-cache'}});}
+      if(status===304&&url.pathname.includes('bundles'))return new Response(null,{status:304,headers:{etag:`"${bundle.bundleDigest}"`,'cache-control':'private, no-store','x-config-bundle-version':String(bundle.bundleVersion),'x-config-key-id':bundle.keyId,'x-correlation-id':'cor_0123456789abcdef0123456789abcdef'}});
+      return base(input,init);
+    });
+    expect(await refreshClientConfig({env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready',verdict}),store,putManagedCredential:put})).toMatchObject({authority:'channel',outcome:'configured'});
+    expect(queries).toEqual(['?serviceId=omnihi-main&existingOnly=1']);expect(put).not.toHaveBeenCalled();
+    expect(store.record).toMatchObject({state:'channel',bundle,channel:{managedCredentials:{'omnihi-main':{status:'not_configured',reasonCode:'MODEL_CREDENTIAL_NOT_CONFIGURED'}}}});
+    expect(await readChannelModelAuthority({env:env(),store,readVerdict:async()=>({state:'ready',verdict})})).toMatchObject({authority:'channel',managedCredentials:{'omnihi-main':{status:'not_configured'}}});
+  },180_000);
+
+  it.each([200,304])('T1278 existingOnly %s 的真实409 bootstrap pending保签名目录与原操作、不provision，默认fresh仍v3',async(status)=>{
+    const bundle=signedBundle(growthKeys.privateKey,{extensions:[{extensionKey:'creatoros.model-config',protocolVersion:'creatoros-model-config-v1',revision:4,payload:{services:[{id:'omnihi-main',provider:'omnihi',credential:{type:'api_key',source:'activation_managed',allowMultiple:false}}],connections:[],models:{}}}]});
+    if(status===304)store.record=configuredRecord(bundle);
+    const base=successfulFetch(bundle),put=vi.fn(async()=>{}),queries:string[]=[];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      const url=new URL(String(input));
+      if(url.pathname.includes('managed-credentials')){
+        queries.push(url.search);expect(init?.method).toBe('GET');expect(init?.body).toBeUndefined();expect(init?.headers).toMatchObject({Authorization:'Bearer header.payload.signature'});
+        expect(store.record?.bundle).toEqual(bundle);
+        return Response.json({error:{code:'AI_CREDIT_BOOTSTRAP_PENDING',message:'private-original-operation-no-funds-or-new-key'}},{status:409,headers:{'cache-control':'private, no-store',pragma:'no-cache'}});
+      }
+      if(status===304&&url.pathname.includes('bundles'))return new Response(null,{status:304,headers:{etag:`"${bundle.bundleDigest}"`,'cache-control':'private, no-store','x-config-bundle-version':String(bundle.bundleVersion),'x-config-key-id':bundle.keyId,'x-correlation-id':'cor_0123456789abcdef0123456789abcdef'}});
+      return base(input,init);
+    });
+    const deps={env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready' as const,verdict}),store};
+    expect(await refreshClientConfig({...deps,putManagedCredential:put})).toMatchObject({authority:'channel',outcome:'configured'});
+    expect(queries).toEqual(['?serviceId=omnihi-main&existingOnly=1']);expect(put).not.toHaveBeenCalled();
+    expect(store.record).toMatchObject({state:'channel',outcome:'configured',bundle,channel:{managedCredentials:{'omnihi-main':{status:'unverified',reasonCode:'AI_CREDIT_BOOTSTRAP_PENDING'}}}});
+    const authority=await readChannelModelAuthority(deps);expect(authority).toMatchObject({authority:'channel',payload:bundle.extensions[0]!.payload,managedCredentials:{'omnihi-main':{status:'unverified',reasonCode:'AI_CREDIT_BOOTSTRAP_PENDING'}}});
+    if(authority.authority!=='channel')throw Error('原签名目录应保持可读');
+    expect(authority.managedCredentials?.['omnihi-main']).not.toHaveProperty('accountStatus');expect(JSON.stringify(store.record?.channel?.managedCredentials)).not.toContain('private-original-operation');
+    await expect(requestFreshClientConfigAccess(deps)).resolves.toMatchObject({configAccessTicket:'header.payload.signature'});
+    const posts=fetchImpl.mock.calls.filter(([,init])=>init?.method==='POST');expect(posts).toHaveLength(2);
+    for(const [url,init] of posts){expect(String(url)).toBe(`${AM_ORIGIN}/api/license/client-config-tickets`);expect(JSON.parse(String(init?.body)).contractVersion).toBe('config-access-ticket-v3');}
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  },180_000);
+
+  it.each([['AI_CREDIT_BOOTSTRAP_PENDING',401],['AI_CREDIT_BOOTSTRAP_PENDING',403],['AI_CREDIT_BOOTSTRAP_PENDING',503],['UNKNOWN_BOOTSTRAP_STATE',409]] as const)('T1278 pending非原pair %s/%s 不作为已知未就绪',async(code,httpStatus)=>{
+    const bundle=signedBundle(growthKeys.privateKey,{extensions:[{extensionKey:'creatoros.model-config',protocolVersion:'creatoros-model-config-v1',revision:4,payload:{services:[{id:'omnihi-main',provider:'omnihi',credential:{type:'api_key',source:'activation_managed',allowMultiple:false}}],connections:[],models:{}}}]});
+    const base=successfulFetch(bundle),put=vi.fn(async()=>{});
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>String(input).includes('managed-credentials')?Response.json({error:{code,message:'untrusted-private-error'}},{status:httpStatus,headers:{'cache-control':'private, no-store',pragma:'no-cache'}}):base(input,init));
+    const deps={env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready' as const,verdict}),store};
+    if(httpStatus===401)await expect(refreshClientConfig({...deps,putManagedCredential:put})).rejects.toMatchObject({code:'CLIENT_CONFIG_ACCESS_DENIED'});
+    else expect(await refreshClientConfig({...deps,putManagedCredential:put})).toMatchObject({authority:'local',outcome:httpStatus===503?'unreachable':'security_error'});
+    expect(await readChannelModelAuthority(deps)).toMatchObject({authority:'local',payload:null});expect(put).not.toHaveBeenCalled();expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(store.record?.channel?.managedCredentials).toBeUndefined();
+  },180_000);
+
+  it('T1278 普通同机旧码仅签名422后以新nonce申请v2目录，paid fresh仍v3',async()=>{
+    const base=successfulFetch(),requests:Record<string,unknown>[]=[],nonces=['nonce-client-config-0001','nonce-client-config-0002'];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      if(String(input).startsWith(AM_ORIGIN)){
+        const body=JSON.parse(String(init?.body));requests.push(body);
+        if(body.contractVersion==='config-access-ticket-v3')return signedAmResponse(amKeys.privateKey,{success:false,error:{code:'CONFIG_TICKET_REQUEST_INVALID',message:'v3 not eligible'}},422);
+        return signedAmResponse(amKeys.privateKey,{contractVersion:'config-access-ticket-v2',configAccessTicket:'original.v2.ticket',expiresAt:'2026-07-28T12:15:00.000Z',nonce:body.nonce});
+      }
+      return base(input,{...init,headers:{Authorization:'Bearer header.payload.signature'}});
+    });
+    expect(await refreshClientConfig({env:env(),now:()=>NOW,nonce:()=>nonces.shift()!,fetchImpl,store,readVerdict:async()=>({state:'ready',verdict:{...verdict,licenseMode:'TIME'}})})).toMatchObject({authority:'channel',outcome:'configured'});
+    expect(requests.map(x=>[x.contractVersion,x.nonce])).toEqual([['config-access-ticket-v3','nonce-client-config-0001'],['config-access-ticket-v2','nonce-client-config-0002']]);
+    expect(requests[1]).toMatchObject({code:verdict.code,machineId:verdict.machineId,projectKey:verdict.projectKey});
+    requests.length=0;
+    await expect(requestFreshClientConfigAccess({env:env(),now:()=>NOW,nonce:()=> 'nonce-paid-only',fetchImpl,readVerdict:async()=>({state:'ready',verdict:{...verdict,licenseMode:'TIME'}})})).rejects.toMatchObject({code:'CLIENT_CONFIG_NOT_APPLICABLE'});
+    expect(requests.map(x=>x.contractVersion)).toEqual(['config-access-ticket-v3']);
+  },180_000);
+
+  it.each(['TRIAL','DEVICE_TRIAL',undefined])('T1278 licenseMode=%s不推测普通旧码且不降级',async(licenseMode)=>{
+    const fetchImpl=vi.fn<typeof fetch>(async()=>signedAmResponse(amKeys.privateKey,{success:false,error:{code:'CONFIG_TICKET_REQUEST_INVALID',message:'v3 not eligible'}},422));
+    expect(await refreshClientConfig({env:env(),now:()=>NOW,nonce:()=> 'nonce-original-only',fetchImpl,store,readVerdict:async()=>({state:'ready',verdict:{...verdict,licenseMode}})})).toMatchObject({authority:'local',outcome:'not_configured'});
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  },180_000);
+
+
+  it.each(["ai-credit-bootstrap", "ai-credit-link"] as const)("T1278 private fresh %s 普通旧码只在验签精确422后取新nonce v2", async (purpose) => {
+    const requests: Record<string, unknown>[] = []; const nonces = ["fresh-purpose-v3", "fresh-purpose-v2"];
+    const fetchImpl = vi.fn<typeof fetch>(async (_input, init) => {
+      const body = JSON.parse(String(init?.body)); requests.push(body);
+      return body.contractVersion === "config-access-ticket-v3"
+        ? signedAmResponse(amKeys.privateKey, { success: false, error: { code: "CONFIG_TICKET_REQUEST_INVALID", message: "v3 not eligible" } }, 422)
+        : signedAmResponse(amKeys.privateKey, { contractVersion: "config-access-ticket-v2", configAccessTicket: "bootstrap.fresh.v2", expiresAt: "2026-07-28T12:15:00.000Z", nonce: body.nonce });
+    });
+    expect(await requestFreshClientConfigAccess({ purpose, env: env(), now: () => NOW, nonce: () => nonces.shift()!, fetchImpl, readVerdict: async () => ({ state: "ready", verdict: { ...verdict, licenseMode: "TIME" } }) })).toEqual({ growthOrigin: `${GROWTH_ORIGIN}/`, configAccessTicket: "bootstrap.fresh.v2", expiresAt: "2026-07-28T12:15:00.000Z" });
+    expect(requests.map(row => [row.contractVersion, row.nonce])).toEqual([["config-access-ticket-v3", "fresh-purpose-v3"], ["config-access-ticket-v2", "fresh-purpose-v2"]]);
+    expect(requests[1]).toMatchObject({ code: verdict.code, machineId: verdict.machineId, projectKey: verdict.projectKey });
+  }, 180_000);
+
+  it.each(["TRIAL", "DEVICE_TRIAL", undefined])("T1278 bootstrap private purpose 不把 %s 当普通旧码", async (licenseMode) => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => signedAmResponse(amKeys.privateKey, { success: false, error: { code: "CONFIG_TICKET_REQUEST_INVALID", message: "v3 not eligible" } }, 422));
+    await expect(requestFreshClientConfigAccess({ purpose: "ai-credit-bootstrap", env: env(), now: () => NOW, nonce: () => "fresh-trial-nonce", fetchImpl, readVerdict: async () => ({ state: "ready", verdict: { ...verdict, licenseMode } }) })).rejects.toMatchObject({ code: "CLIENT_CONFIG_NOT_APPLICABLE" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  }, 180_000);
+
+  it.each(["wrong-error", "bad-signature", "wrong-scope", "server-error"])("T1278 bootstrap private purpose %s 零v2", async (fault) => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => {
+      if (fault === "server-error") return new Response("unavailable", { status: 503 });
+      if (fault === "bad-signature") return Response.json({ success: false, error: { code: "CONFIG_TICKET_REQUEST_INVALID", message: "untrusted" } }, { status: 422 });
+      return signedAmResponse(amKeys.privateKey, { success: false, error: { code: fault === "wrong-error" ? "CONFIG_ACCESS_DENIED" : "CONFIG_TICKET_REQUEST_INVALID", message: "denied" } }, 422);
+    });
+    await expect(requestFreshClientConfigAccess({ purpose: "ai-credit-bootstrap", env: env(), now: () => NOW, nonce: () => "fresh-negative", fetchImpl, expectedScopeId: fault === "wrong-scope" ? "other-scope" : undefined, readVerdict: async () => ({ state: "ready", verdict: { ...verdict, licenseMode: "TIME" } }) })).rejects.toBeDefined();
+    expect(fetchImpl).toHaveBeenCalledTimes(fault === "wrong-scope" ? 0 : 1);
+  }, 180_000);
+
+
+  it.each([
+    ["真实账户余额0", { linked: true, availableUnits: 0, referenceId: "AICA-T1278ACCOUNT0001" }, "ready"],
+    ["明确无账户", { linked: false, availableUnits: null, referenceId: null }, "not_configured"],
+    ["旧响应无wallet", undefined, "unverified"],
+    ["假reference", { linked: true, availableUnits: 100, referenceId: "OTHER-ACCOUNT" }, "unverified"],
+    ["缺金额", { linked: true, availableUnits: null, referenceId: "AICA-T1278ACCOUNT0001" }, "unverified"],
+    ["额外字段", { linked: true, availableUnits: 100, referenceId: "AICA-T1278ACCOUNT0001", token: "not-public" }, "unverified"],
+  ] as const)("T1278 accountStatus 只由严格已验证wallet投影：%s", async (_name, wallet, accountStatus) => {
+    const bundle = signedBundle(growthKeys.privateKey, { extensions: [{ extensionKey: "creatoros.model-config", protocolVersion: "creatoros-model-config-v1", revision: 4, payload: { services: [{ id: "omnihi-main", provider: "omnihi", credential: { type: "api_key", source: "activation_managed", allowMultiple: false } }], connections: [], models: {} } }] });
+    const base = successfulFetch(bundle); const put = vi.fn(async () => {});
+    const fetchImpl = vi.fn<typeof fetch>(async (url, init) => {
+      if (String(url).includes("managed-credentials")) return Response.json({ contractVersion: "growth-managed-model-credential-v1", serviceId: "omnihi-main", credential: { type: "api_key", token: "private-test-only-key" }, ...(wallet === undefined ? {} : { wallet }) }, { headers: { "cache-control": "private, no-store", pragma: "no-cache" } });
+      return base(url, init);
+    });
+    expect(await refreshClientConfig({ env: env(), now: () => NOW, nonce: () => "nonce-client-config-0001", fetchImpl, readVerdict: async () => ({ state: "ready", verdict }), store, putManagedCredential: put })).toMatchObject({ authority: "channel", outcome: "configured" });
+    expect(put).toHaveBeenCalledTimes(1);
+    const authority = await readChannelModelAuthority({ env: env(), store, readVerdict: async () => ({ state: "ready", verdict }) });
+    expect(authority).toMatchObject({ authority: "channel", managedCredentials: { "omnihi-main": { status: "ready", reasonCode: null, accountStatus } } });
+    expect(store.record?.channel?.managedCredentials?.["omnihi-main"]).toEqual({ status: "ready", reasonCode: null, accountStatus });
+    const persistedStatus = JSON.stringify(store.record?.channel?.managedCredentials);
+    expect(persistedStatus).not.toContain("AICA-"); expect(persistedStatus).not.toContain("availableUnits"); expect(persistedStatus).not.toContain("private-test-only-key");
+  }, 180_000);
+
+  it("T1278 existingOnly404只证明无有效凭据，不能把token/目录或旧缓存猜成账户事实", async () => {
+    const bundle = signedBundle(growthKeys.privateKey, { extensions: [{ extensionKey: "creatoros.model-config", protocolVersion: "creatoros-model-config-v1", revision: 4, payload: { services: [{ id: "omnihi-main", provider: "omnihi", credential: { type: "api_key", source: "activation_managed", allowMultiple: false } }], connections: [], models: {} } }] });
+    const base = successfulFetch(bundle); const put = vi.fn(async () => {});
+    const fetchImpl = vi.fn<typeof fetch>(async (url, init) => String(url).includes("managed-credentials") ? Response.json({ error: { code: "MODEL_CREDENTIAL_NOT_CONFIGURED", message: "no active credential" } }, { status: 404, headers: { "cache-control": "private, no-store", pragma: "no-cache" } }) : base(url, init));
+    await refreshClientConfig({ env: env(), now: () => NOW, nonce: () => "nonce-client-config-0001", fetchImpl, readVerdict: async () => ({ state: "ready", verdict }), store, putManagedCredential: put });
+    const current = await readChannelModelAuthority({ env: env(), store, readVerdict: async () => ({ state: "ready", verdict }) });
+    expect(current).toMatchObject({ authority: "channel", managedCredentials: { "omnihi-main": { status: "not_configured" } } });
+    if (current.authority !== "channel") throw new Error("fixture authority missing");
+    expect(current.managedCredentials?.["omnihi-main"].accountStatus ?? "unverified").toBe("unverified");
+    expect(put).not.toHaveBeenCalled();
+    // 加密旧记录没有此字段仍合法回读，不补造账户ready。
+    const originalCache = store.record!; // 来自上面真实签名 refresh，保原 activeLocator 与 bundle/channel 四元组。
+    store.record = { ...originalCache, channel: { ...originalCache.channel!, managedCredentials: { "omnihi-main": { status: "ready", reasonCode: null } } } };
+    const legacy = await readChannelModelAuthority({ env: env(), store, readVerdict: async () => ({ state: "ready", verdict }) });
+    expect(legacy).toMatchObject({ authority: "channel", managedCredentials: { "omnihi-main": { status: "ready" } } });
+    if (legacy.authority !== "channel") throw new Error("fixture legacy authority missing");
+    expect(legacy.managedCredentials?.["omnihi-main"].accountStatus ?? "unverified").toBe("unverified");
+  }, 180_000);
+
+  it("T1278 实际加密缓存允许新账户状态与旧省略字段，拒绝伪造ready值", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "creatoros-account-state-"));
+    const disk = new EncryptedClientConfigStore(join(directory, "state.enc"), Buffer.alloc(32, 7));
+    const base = configuredRecord(signedBundle(growthKeys.privateKey));
+    try {
+      for (const row of [{ status: "ready" as const, reasonCode: null }, { status: "ready" as const, reasonCode: null, accountStatus: "ready" as const }]) {
+        const record = { ...base, channel: { ...base.channel!, managedCredentials: { "omnihi-main": row } } };
+        await disk.save(record);
+        const loaded = await disk.load();
+        expect(loaded?.channel?.managedCredentials?.["omnihi-main"]).toEqual(row);
+      }
+      const invalid = { ...base, channel: { ...base.channel!, managedCredentials: { "omnihi-main": { status: "ready", reasonCode: null, accountStatus: "guessed-from-token" } } } } as unknown as ClientConfigCacheRecord;
+      await expect(disk.save(invalid)).rejects.toBeInstanceOf(ClientConfigCacheSecurityError);
+      await writeFile(join(directory, "state.enc"), encryptedEnvelope(Buffer.alloc(32, 7), { schemaVersion: "creatoros-channel-model-config-cache-v1", record: invalid }), "utf8");
+      await expect(disk.load()).rejects.toBeInstanceOf(ClientConfigCacheSecurityError);
+    } finally { await rm(directory, { recursive: true, force: true }); }
+  }, 180_000);
+
+  it("T-733 试用不降级v2，v3不适用仍按未配置处理", async () => {
     const current = signedBundle(growthKeys.privateKey);
     store.record = {
       ...configuredRecord(current),
@@ -1074,7 +1249,7 @@ describe("T-575 config.pull Creator consumer", () => {
         now: () => NOW,
         nonce: () => "nonce-client-config-0001",
         fetchImpl,
-        readVerdict: async () => ({ state: "ready", verdict }),
+        readVerdict: async () => ({ state: "ready", verdict: {...verdict,licenseMode:'TRIAL'} }),
         store,
       }),
     ).resolves.toEqual({
@@ -1567,4 +1742,136 @@ describe("T-575 config.pull Creator consumer", () => {
     });
     }
   });
+});
+
+describe("T1278 bootstrap 原 server/route 消费者", () => {
+  const code = `AICR-${"x".repeat(43)}`;
+  const operationRef = "AICLE-T1278TEST0001";
+  const access = () => Promise.resolve({ growthOrigin: "https://growth.example/", configAccessTicket: "private-bootstrap-ticket", expiresAt: "2026-10-14T12:05:00.000Z" });
+  const operation = (status = "pending", overrides = {}) => ({ contractVersion: "growth-ai-credit-bootstrap-v1", operationRef, status, creditUnits: 123, expiresAt: "2026-10-14T12:30:00+00:00", ...overrides });
+  const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { "cache-control": "private, no-store" } });
+
+  it("真实首次POST→GET原operation→resume同operation，closed body/no-store，零后台重发", async () => {
+    const { reserveAiCreditBootstrap, readAiCreditBootstrap, resumeAiCreditBootstrap } = await import("./ai-credit-link.server");
+    let callCount = 0;
+    const fetchImpl = vi.fn<typeof fetch>(async (_url, init) => {
+      callCount++;
+      return reply(operation(init?.method === "GET" ? "provider_unknown" : callCount === 3 ? "applied" : "pending"), init?.method === "GET" ? 200 : 201);
+    });
+    const dependencies = { requestAccess: access, fetchImpl };
+    expect(await reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, dependencies)).toEqual(operation());
+    expect(await readAiCreditBootstrap(operationRef, dependencies)).toEqual(operation("provider_unknown"));
+    expect(await resumeAiCreditBootstrap(operationRef, dependencies)).toEqual(operation("applied"));
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(fetchImpl.mock.calls.map(([url]) => String(url))).toEqual([
+      "https://growth.example/api/client-config/ai-credit-bootstrap-redemptions",
+      `https://growth.example/api/client-config/ai-credit-bootstrap-redemptions/${operationRef}`,
+      `https://growth.example/api/client-config/ai-credit-bootstrap-redemptions/${operationRef}/resume`,
+    ]);
+    const [first, read, resume] = fetchImpl.mock.calls.map(([, init]) => init!);
+    expect(JSON.parse(String(first.body))).toEqual({ serviceId: "omnihi-main", code });
+    expect(first.headers).toMatchObject({ Authorization: "Bearer private-bootstrap-ticket", "Idempotency-Key": "bootstrap-original-key" });
+    expect(read.body).toBeUndefined(); expect(resume.body).toBe("{}");
+    for (const init of [first, read, resume]) { expect(init.cache).toBe("no-store"); expect(init.redirect).toBe("manual"); expect(init.signal).toBeDefined(); }
+  }, 180_000);
+
+  it.each(["other-ref", "secret-field", "unsafe-units", "bad-status", "cache"])("服务端实际读回拒绝 %s 且不回传秘密", async (fault) => {
+    const { readAiCreditBootstrap } = await import("./ai-credit-link.server");
+    const body = operation("pending", fault === "other-ref" ? { operationRef: "AICLE-OTHER0001" } : fault === "secret-field" ? { token: "secret-must-not-cross" } : fault === "unsafe-units" ? { creditUnits: -1 } : fault === "bad-status" ? { status: "ready" } : {});
+    const fetchImpl = vi.fn<typeof fetch>(async () => fault === "cache" ? Response.json(body) : reply(body));
+    await expect(readAiCreditBootstrap(operationRef, { requestAccess: access, fetchImpl })).rejects.toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_INVALID" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  }, 180_000);
+
+  it("provider未知/网络断开只报告原不确定提交，零自动第二POST；已有账户明确沿额度中心", async () => {
+    const { reserveAiCreditBootstrap } = await import("./ai-credit-link.server");
+    const fetchImpl = vi.fn<typeof fetch>(async () => { throw new TypeError("private-code-ticket-must-not-be-logged"); });
+    await expect(reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, { requestAccess: access, fetchImpl })).rejects.toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_UNAVAILABLE", uncertain: true });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const existing = vi.fn<typeof fetch>(async () => reply({ error: { code: "AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", message: "private upstream content" } }, 409));
+    await expect(reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, { requestAccess: access, fetchImpl: existing })).rejects.toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", uncertain: false, message: "已有官方额度账户，请打开额度中心沿原流程充值" });
+    expect(existing).toHaveBeenCalledTimes(1);
+  }, 180_000);
+
+  it("三个实际local route守loopback/session/closed请求，查询恢复仍绑定原ref", async () => {
+    const fresh = await import("./client-config.server");
+    const requestAccess = vi.spyOn(fresh, "requestFreshClientConfigAccess").mockImplementation(access);
+    const context = vi.fn(async () => ({ userId: "fixture-local-user", accountId: null }));
+    vi.doMock("@/lib/request-context.server", () => ({ resolveRequestWorkspaceContext: context }));
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => reply(operation("provider_unknown")));
+    const envBefore = process.env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN;
+    process.env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN = "fixture-local-handshake";
+    try {
+      const reserve = await import("@/app/api/v1/local/ai-credits/bootstrap/route");
+      const read = await import("@/app/api/v1/local/ai-credits/bootstrap/[operationRef]/route");
+      const resume = await import("@/app/api/v1/local/ai-credits/bootstrap/[operationRef]/resume/route");
+      const headers = { "content-type": "application/json", "x-creatoros-handshake": "fixture-local-handshake", "Idempotency-Key": "bootstrap-original-key" };
+      const base = "http://127.0.0.1:3000/api/v1/local/ai-credits/bootstrap";
+      const invalid = [
+        new Request(base, { method: "POST", headers: { ...headers, Origin: "https://attacker.example" }, body: JSON.stringify({ serviceId: "omnihi-main", code }) }),
+        new Request(base, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ serviceId: "omnihi-main", code }) }),
+        new Request(base, { method: "POST", headers, body: JSON.stringify({ serviceId: "omnihi-main", code, amount: 1 }) }),
+        new Request(`${base}?channelRef=other`, { method: "POST", headers, body: JSON.stringify({ serviceId: "omnihi-main", code }) }),
+      ];
+      for (const req of invalid) expect((await reserve.POST(req)).status).toBeGreaterThanOrEqual(400);
+      expect(requestAccess).not.toHaveBeenCalled(); expect(fetchMock).not.toHaveBeenCalled();
+      const reserved = await reserve.POST(new Request(base, { method: "POST", headers, body: JSON.stringify({ serviceId: "omnihi-main", code }) }));
+      expect(reserved.status).toBe(202); expect(await reserved.json()).toEqual(operation("provider_unknown"));
+      expect(reserved.headers.get("cache-control")).toContain("no-store");
+      const params = { params: Promise.resolve({ operationRef }) };
+      expect((await read.GET(new Request(`${base}/${operationRef}`, { headers }), params)).status).toBe(202);
+      expect((await resume.POST(new Request(`${base}/${operationRef}/resume`, { method: "POST", headers, body: "{}" }), params)).status).toBe(202);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(context).toHaveBeenCalledWith(null, expect.any(Request), { rejectInvalidToken: true, groupSelectionMode: "reject" });
+      expect(requestAccess).toHaveBeenCalledWith({ purpose: "ai-credit-bootstrap" });
+      context.mockRejectedValueOnce(new Error("bad session"));
+      expect((await reserve.POST(new Request(base, { method: "POST", headers, body: JSON.stringify({ serviceId: "omnihi-main", code }) }))).status).toBe(401);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    } finally {
+      if (envBefore === undefined) delete process.env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN; else process.env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN = envBefore;
+      requestAccess.mockRestore(); fetchMock.mockRestore(); vi.doUnmock("@/lib/request-context.server");
+    }
+  }, 180_000);
+  it.each([
+    ["AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", 409],
+    ["AI_CREDIT_CODE_UNAVAILABLE", 409],
+    ["AI_CREDIT_INPUT_INVALID", 422],
+    ["AI_CREDIT_BOOTSTRAP_NOT_FOUND", 404],
+  ] as const)("原Growth状态与code准确pair %s/%s 才是确定拒绝", async (errorCode, httpStatus) => {
+    const { reserveAiCreditBootstrap, aiCreditBootstrapLocalFailure } = await import("./ai-credit-link.server");
+    const fetchImpl = vi.fn<typeof fetch>(async () => reply({ error: { code: errorCode, message: "secret-ticket-code-account-must-not-cross" } }, httpStatus));
+    const cause = await reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, { requestAccess: access, fetchImpl }).catch(error => error);
+    expect(cause).toMatchObject({ code: errorCode, uncertain: false, retryable: false });
+    const local = aiCreditBootstrapLocalFailure(cause);expect(local.body).toMatchObject({ code: errorCode, uncertain: false, retryable: false });
+    expect(JSON.stringify(local)).not.toContain("secret-ticket-code-account-must-not-cross");expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(fetchImpl.mock.calls[0]![1]).toMatchObject({ method: "POST", cache: "no-store", redirect: "manual", headers: { "Idempotency-Key": "bootstrap-original-key" } });
+  }, 180_000);
+
+  it.each([
+    ["AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", 503],
+    ["AI_CREDIT_CODE_UNAVAILABLE", 503],
+    ["AI_CREDIT_INPUT_INVALID", 503],
+    ["AI_CREDIT_BOOTSTRAP_NOT_FOUND", 503],
+    ["AI_CREDIT_BOOTSTRAP_ALREADY_CONFIGURED", 422],
+    ["AI_CREDIT_CODE_UNAVAILABLE", 404],
+    ["AI_CREDIT_INPUT_INVALID", 409],
+    ["AI_CREDIT_BOOTSTRAP_NOT_FOUND", 409],
+  ] as const)("reserve非原pair %s/%s 保原幂等不确定且无第二POST", async (errorCode, httpStatus) => {
+    const { reserveAiCreditBootstrap, aiCreditBootstrapLocalFailure } = await import("./ai-credit-link.server");
+    const fetchImpl = vi.fn<typeof fetch>(async () => reply({ error: { code: errorCode, message: "secret-ticket-code-account-must-not-cross" } }, httpStatus));
+    const cause = await reserveAiCreditBootstrap({ serviceId: "omnihi-main", code, idempotencyKey: "bootstrap-original-key" }, { requestAccess: access, fetchImpl }).catch(error => error);
+    expect(cause).toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_UNAVAILABLE", uncertain: true, retryable: true });
+    const local = aiCreditBootstrapLocalFailure(cause);expect(local).toMatchObject({ status: 503, body: { code: "AI_CREDIT_BOOTSTRAP_UNAVAILABLE", uncertain: true, retryable: true } });
+    expect(JSON.stringify(local)).not.toContain("secret-ticket-code-account-must-not-cross");expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(fetchImpl.mock.calls[0]![1]).toMatchObject({ method: "POST", cache: "no-store", redirect: "manual", headers: { "Idempotency-Key": "bootstrap-original-key" } });
+  }, 180_000);
+
+  it.each(["read", "resume"] as const)("%s非原NOT_FOUND pair仅报告原ref查询失败，不换操作或重发reserve", async action => {
+    const { readAiCreditBootstrap, resumeAiCreditBootstrap } = await import("./ai-credit-link.server");
+    const fetchImpl = vi.fn<typeof fetch>(async () => reply({ error: { code: "AI_CREDIT_BOOTSTRAP_NOT_FOUND", message: "private upstream" } }, 503));
+    await expect((action === "read" ? readAiCreditBootstrap : resumeAiCreditBootstrap)(operationRef, { requestAccess: access, fetchImpl })).rejects.toMatchObject({ code: "AI_CREDIT_BOOTSTRAP_UNAVAILABLE", uncertain: false, retryable: true });
+    expect(fetchImpl).toHaveBeenCalledOnce();expect(String(fetchImpl.mock.calls[0]![0])).toBe(`https://growth.example/api/client-config/ai-credit-bootstrap-redemptions/${operationRef}${action === "resume" ? "/resume" : ""}`);
+    const init=fetchImpl.mock.calls[0]![1]!;expect(init).toMatchObject({ method: action === "read" ? "GET" : "POST", cache: "no-store", redirect: "manual" });expect(init.headers).not.toHaveProperty("Idempotency-Key");
+  }, 180_000);
+
 });

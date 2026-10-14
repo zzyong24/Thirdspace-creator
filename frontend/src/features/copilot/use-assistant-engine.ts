@@ -8,6 +8,7 @@ import {
   readAssistantEnginePreference,serverAssistantEnginePreference,loadAssistantEngine,
   assistantEngineStatusEvent,
   readAssistantEngine,
+  readModelRoutingPreference,serverModelRoutingPreference,subscribeModelRouting,loadModelRouting,
   recheckAssistantEngine,
 } from "./assistant-engine";
 
@@ -28,13 +29,16 @@ function subscribeAccount(refresh: () => void) {
 
 /** 偏好是原本地真值；状态仍由真实入口读取，界面迁移不创建新的执行器。 */
 export function useAssistantEngine() {
-  const preference=React.useSyncExternalStore(subscribeAssistantEngine,readAssistantEnginePreference,()=>serverAssistantEnginePreference);
-  const engine=preference.engine;
-  React.useEffect(()=>{void loadAssistantEngine();},[]);
+  const legacyPreference=React.useSyncExternalStore(subscribeAssistantEngine,readAssistantEnginePreference,()=>serverAssistantEnginePreference);
+  const routing=React.useSyncExternalStore(subscribeModelRouting,readModelRoutingPreference,()=>serverModelRoutingPreference);
+  const v2=Boolean(routing.resource?.choices);
+  const engine=v2?(routing.resource!.choices!.text==='codex'?'codex':'pi'):(routing.resource?.legacyExecutionEngine??legacyPreference.engine);
+  const preference=routing.ready?{engine,ready:true,saving:routing.saving,error:routing.error}:{engine,ready:false,saving:routing.saving,error:routing.error};
+  React.useEffect(()=>{void loadModelRouting();},[]);
   const accountId = React.useSyncExternalStore(subscribeAccount, readCurrentAccountId, () => null);
   const [refresh, requestRefresh] = React.useReducer(value => value + 1, 0);
   const [read, setRead] = React.useState<StatusRead | null>(null);
-  const key = JSON.stringify([accountId, engine, refresh]);
+  const key = JSON.stringify([routing.scope,accountId, engine, refresh]);
 
   React.useEffect(() => {
     window.addEventListener(assistantEngineStatusEvent, requestRefresh);
@@ -42,7 +46,7 @@ export function useAssistantEngine() {
   }, []);
 
   React.useEffect(() => {
-    if (engine !== "codex") return;
+    if (v2 || !routing.ready || engine !== "codex") return;
     const controller = new AbortController();
     let current = true;
     void Promise.resolve().then(async () => {
@@ -65,10 +69,10 @@ export function useAssistantEngine() {
       }
     });
     return () => {current = false; controller.abort();};
-  }, [accountId, engine, key]);
+  }, [accountId, engine, key,v2,routing.ready]);
 
   const result = read?.key === key ? read.result : null;
-  const checking = engine === "codex" && (read?.key !== key || read.checking);
+  const checking = v2?routing.reading:engine === "codex" && (read?.key !== key || read.checking);
   const available = preference.ready&&!preference.saving&&(engine === "pi" || (!checking && !!result?.available));
   const status = preference.error?preference.error:!preference.ready?"正在读取引擎设置…":preference.saving?"正在保存引擎…":engine === "pi" ? "使用 CreatorOS 当前模型配置"
     : checking ? "正在检查本地 Codex…"
@@ -77,5 +81,10 @@ export function useAssistantEngine() {
     : result?.errorCode === "CODEX_STATUS_UNAVAILABLE" ? "本地 Codex 状态暂未核实"
     : "本地 Codex 当前不可用";
 
-  return {engine, preference,accountId, available, checking, status, recheck: recheckAssistantEngine};
+  const capability=(mode:string,name:string)=>routing.resource?.capabilities.find(row=>row.mode===mode&&row.capability===name);
+  const text=capability('text','copilot.assist'),vision=capability('vision','copilot.assist');
+  const canUse=(row:typeof text)=>Boolean(routing.ready&&!routing.saving&&(!row||row.status==='ready'||row.status==='unverified'));
+  const textAvailable=v2?Boolean(routing.ready&&!routing.saving&&text?.status==='ready'):available,visionAvailable=v2?Boolean(routing.ready&&!routing.saving&&vision?.status==='ready'):available;
+  const canSubmitText=v2?canUse(text):available,canSubmitVision=v2?canUse(vision):available;
+  return {engine,preference,accountId,available:textAvailable,checking:v2?!routing.ready:checking,status:v2?(text?`文本：${({ready:'可用',not_configured:'未配置',unverified:'未核实',unavailable:'不可用'} as const)[text.status]}`:'文本状态未核实'):status,routing,v2,textAvailable,visionAvailable,canSubmitText,canSubmitVision,imageGeneration:capability('image','image.generate'),imageEditing:capability('image','image.edit'),recheck:v2?()=>void loadModelRouting(true):()=>{void loadModelRouting(true);recheckAssistantEngine();}};
 }

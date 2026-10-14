@@ -1,6 +1,6 @@
 import {z} from "zod";
 import {isDeepStrictEqual} from "node:util";
-import {codexExecutionSpec,frozenExecutionEngine,videoFrozenSchema,videoSkillSchema,structuredGenerationInputSchema} from "@creatoros/contract/execution-worker";
+import {codexExecutionSpec,frozenExecutionEngine,readFrozenModelRoute,videoFrozenSchema,videoSkillSchema,structuredGenerationInputSchema} from "@creatoros/contract/execution-worker";
 import {prepareExecutionModelIdentity} from "../execution/execution-model-identity.service";
 import type {StructuredBusinessAdapter} from "./structured-business-execution.service";
 import type {VideoDecisionsDeps} from "./video-decisions-runner";
@@ -15,8 +15,8 @@ export function createVideoDecisionsBusinessAdapter(deps:Pick<VideoDecisionsDeps
    const retryRuntime=previous.videoDecisionsCheckpoint?{videoDecisionsCheckpoint:previous.videoDecisionsCheckpoint}:{};
    const skills=task.inputData.adjustmentMode==="materials"?["material.match" as const]:videoSkillSchema.options;
    const modelIdentities:Record<string,unknown>={};
-   const engine=frozenExecutionEngine(await deps.getTaskRuntimeData(ctx,task.id));
-   for(const skill of skills){try{modelIdentities[skill]=prepareExecutionModelIdentity(skill,engine==='codex'?codexExecutionSpec():await deps.resolveModelSpec(ctx,skill,{aiTaskId:task.id})).identity;}catch{modelIdentities[skill]={unavailable:true};}}
+   const runtime=await deps.getTaskRuntimeData(ctx,task.id),engine=frozenExecutionEngine(runtime);
+   for(const skill of skills){try{modelIdentities[skill]=prepareExecutionModelIdentity(skill,!readFrozenModelRoute(runtime,'structured',skill)&&engine==='codex'?codexExecutionSpec():await deps.resolveModelSpec(ctx,skill,{aiTaskId:task.id})).identity;}catch{modelIdentities[skill]={unavailable:true};}}
    const frozen=videoFrozenSchema.parse(JSON.parse(JSON.stringify({task:{id:task.id,projectId:task.projectId,retryOfTaskId:task.retryOfTaskId,inputData:task.inputData},inventory,storyboard,retryRuntime,modelIdentities})));
    return {__videoDecisions:JSON.stringify(frozen)};
   },

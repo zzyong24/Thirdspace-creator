@@ -1,4 +1,4 @@
-import {frozenExecutionEngine,codexExecutionSpec} from '@creatoros/contract/execution-worker';
+import {frozenExecutionEngine,codexExecutionSpec,readFrozenModelRoute} from '@creatoros/contract/execution-worker';
 import {createExecutionCodexCallService} from '../execution/execution-codex-call.service';
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
@@ -28,7 +28,7 @@ function parseTopicResult(value:unknown,input:z.infer<typeof structuredGeneratio
 export interface IntelligenceGenerationBridgeDeps {
  entryPath:string|(()=>string);
  tasks:Pick<PersistentTaskService,"heartbeat">;
- resolveModelSpec(ctx:RequestContext,capability:string):Promise<unknown>;
+ resolveModelSpec(ctx:RequestContext,capability:string,owner?:{ref:ExecutionRef;mode:'text'|'structured'}):Promise<unknown>;
  resolveSkillSnapshot(ctx:RequestContext,skillIds:readonly string[]):Promise<unknown>;
  now?:()=>string;
 }
@@ -48,7 +48,8 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const item=z.object({title:z.string().nullable().optional(),authorName:z.string().nullable().optional(),platform:z.string().optional(),canonicalUrl:z.string()});
   const stable=mode==="topic_preview"?z.object({generationMode:z.enum(["rewrite_only","strategy_backed"]).optional(),transformId:z.string(),item,positioning:z.unknown().nullable().optional(),positioningVersionId:z.string().nullable().optional(),personalizationStatus:z.enum(["applied","not_applied"]).optional(),transcript:z.object({hash:z.string(),text:z.string()})}).parse(target):z.object({strategy:z.string(),sources:z.array(z.object({item,transform:z.object({outputSnapshot:z.json()}),transcript:z.object({text:z.string()})}))}).parse(target);
   const sourceDigest=hash(stable),capability=mode==="topic_preview"?"topic.generate":"script.draft";
-  const spec=executionModelSpecSchema.parse(frozenExecutionEngine(task.payload)==="codex"?codexExecutionSpec():await deps.resolveModelSpec(ctx,capability));
+  const modelMode=mode==='topic_preview'&&isRewriteOnlyTarget(target)?'text' as const:'structured' as const;
+  const spec=executionModelSpecSchema.parse(!readFrozenModelRoute(task.payload,modelMode,capability)&&frozenExecutionEngine(task.payload)==='codex'?codexExecutionSpec():await deps.resolveModelSpec(ctx,capability,{ref,mode:modelMode}));
   const {identity}=prepareExecutionModelIdentity(capability,spec);
   let frozen=task.payload && typeof task.payload==="object"?(task.payload as Record<string,unknown>).intelligenceGeneration:undefined;
   if(!frozen){

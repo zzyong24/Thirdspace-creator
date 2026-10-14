@@ -868,7 +868,10 @@ export function AICopilotContent({
   );
   // 新消息取当前设置；sourceEngines 仍冻结旧消息的执行器，transport 不重建。
   liveSession.executionEngine = assistantEngine.engine;
-  const selectedEngineAvailable = assistantEngine.available;
+  const requestedEngineRef=React.useRef<"pi"|"codex"|undefined>(undefined);
+  requestedEngineRef.current=assistantEngine.v2?undefined:assistantEngine.engine;
+  const modelAdmissionRef=React.useRef<(ids:readonly string[])=>boolean>(()=>assistantEngine.available);
+  modelAdmissionRef.current=ids=>assistantEngine.v2?(ids.length>0?(assistantEngine.canSubmitVision||assistantEngine.canSubmitText):assistantEngine.canSubmitText):assistantEngine.available;
   React.useLayoutEffect(() => acquireLiveChatSession(liveSessionKey,liveSession), [liveSessionKey,liveSession]);
   const liveSessionRef = React.useRef(liveSession);
   liveSessionRef.current = liveSession;
@@ -1107,6 +1110,7 @@ export function AICopilotContent({
     uploading: false,
     count: 0,
   });
+  const selectedEngineAvailable=modelAdmissionRef.current(attachmentState.ids);
   const handleAttachmentStateChange = React.useCallback(
     (next: CopilotAttachmentState) => setAttachmentState(next),
     [],
@@ -1123,9 +1127,10 @@ export function AICopilotContent({
           const source=messages.findLast(message=>message.role==="user");
           let engine=source?liveSession.sourceEngines.get(source.id):undefined;
           if(!engine&&trigger!=="regenerate-message"){
-            engine=liveSession.executionEngine;if(source)liveSession.sourceEngines.set(source.id,engine);
+            engine=requestedEngineRef.current;if(source&&engine)liveSession.sourceEngines.set(source.id,engine);
           }
-          return {body:{...body,id,messages,trigger,messageId,...(engine?{executionEngine:engine}:{})}};
+          const {executionEngine:_requested,...withoutEngine}=body??{};
+          return {body:{...(trigger!=="regenerate-message"&&requestedEngineRef.current===undefined?withoutEngine:body),id,messages,trigger,messageId,...(engine?{executionEngine:engine}:{})}};
         },
         // [T-220] 每次请求注入当前选中号 header(与 dispatch 同源 localStorage 真值)。chat route
         //   据此 stamp 工具产的 asset(截图/封面)当前号 —— 此前漏注入 → chat 全程无号 → asset
@@ -1363,7 +1368,7 @@ export function AICopilotContent({
       if(currentSubmissionAttempt.preparationFailure==="workspace_required"){
         return {title:"先选择账号组",message:"本轮尚未发送，原输入和附件已保留。请先选择或创建账号组；空组也可以创作，无需先绑定平台账号。",suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,suggestOpenWorkspace:!hasCreationWorkspace,canRetry:hasCreationWorkspace,autoRecover:false,retryLabel:"继续本轮",retryDisabled:!hasCreationWorkspace};
       }
-      const engineReady=selectedEngineAvailable&&!assistantEngine.checking;
+      const engineReady=modelAdmissionRef.current(currentSubmissionAttempt.attachmentIds)&&!assistantEngine.checking;
       const engineFailure=currentSubmissionAttempt.preparationFailure==="engine_unavailable"||!engineReady;
       return {
         title:engineFailure?(engineReady?"编导引擎已就绪":assistantEngine.checking?"正在检查编导引擎":"编导引擎尚未就绪"):"稿件尚未准备好",
@@ -1485,6 +1490,11 @@ export function AICopilotContent({
     conversationId,
     selectedEngineAvailable,
     assistantEngine.checking,
+    assistantEngine.v2,
+    assistantEngine.textAvailable,
+    assistantEngine.visionAvailable,
+    assistantEngine.canSubmitText,
+    assistantEngine.canSubmitVision,
     error,
     hasDurableTaskReceipt,
     pendingComposerRequest?.functionKey,
@@ -1759,13 +1769,13 @@ export function AICopilotContent({
     if (prefilledRef.current) return;
     if (messages.length > 0 || streaming) return;
     // [T-060①] 没有自定义预填时，空会话可使用 fn 的默认话术。
-    const text = urlPrefill || (functionKey ? copilotImageEnginePrefill(FUNCTION_KEY_PREFILL[functionKey]??"",functionKey,assistantEngine.engine) : "");
+    const text = urlPrefill || (functionKey ? (assistantEngine.v2?(FUNCTION_KEY_PREFILL[functionKey]??""):copilotImageEnginePrefill(FUNCTION_KEY_PREFILL[functionKey]??"",functionKey,assistantEngine.engine)) : "");
     if (!text) return;
     prefilledRef.current = true;
     // 不覆盖用户已敲的字(预填只填空输入框)。
     setPrompt((prev) => (prev.trim().length > 0 ? prev : text));
     lastPrefillRef.current = text;
-  }, [functionKey, messages.length, streaming, urlPrefill, urlPrefillIdentity,assistantEngine.engine]);
+  }, [functionKey, messages.length, streaming, urlPrefill, urlPrefillIdentity,assistantEngine.engine,assistantEngine.v2]);
 
   // [T-108] 外部对话请求(方案 A)—— 稿面 AI 按钮点击后 embed.request.nonce 自增,本 effect
   // 据 nonce 变化处理该请求。functionKey/selection 已在上方按 request 优先重算(置顶专用工具 +
@@ -1782,7 +1792,7 @@ export function AICopilotContent({
     const ownedWorkspace=createCreationWorkspace(readCreationScope());ownedWorkspace.activate();
     try{
       const workspace=readCreationScope();if(!workspace.groupId&&!workspace.accountId){attempt.preparationFailure="workspace_required";setPrompt(text);throw Error("请先选择或创建账号组，原输入已保留。");}
-      if(!selectedEngineAvailable||assistantEngine.checking){attempt.preparationFailure="engine_unavailable";throw Error("当前编导引擎尚不可用，请到设置核对后恢复原请求。");}
+      if(!modelAdmissionRef.current(attempt.attachmentIds)||assistantEngine.checking){attempt.preparationFailure="engine_unavailable";throw Error("本轮用途的模型尚不可用，请到设置核对；原输入与附件已保留。");}
       const operation=ownedWorkspace.capture();operation.assertCurrent();
       const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();
       operation.assertCurrent();
@@ -1793,7 +1803,7 @@ export function AICopilotContent({
       const requestedFn=quickFunctionKeyRef.current??entryFunctionKeyRef.current?.consume()??null;quickFunctionKeyRef.current=null;
       const webReadUrl=requestedFn==="web.read"?quickWebReadUrlRef.current:null;quickWebReadUrlRef.current=null;
       const frozenContext={...chatContextBodyRef.current.chatContext,...targets,...(requestedFn?{functionKey:requestedFn}:{}),...(webReadUrl?{webReadUrl}:{}),...(Object.keys(assetAliasRegistryRef.current.aliases).length?{assetAliases:assetAliasRegistryRef.current.aliases}:{})};
-      const frozenReceipt={chatContext:frozenContext,sourceText:text,attachmentIds:[...attempt.attachmentIds],executionEngine:liveSession.executionEngine,...(liveSession.conversationId?{conversationId:liveSession.conversationId}:{})};
+      const frozenReceipt={chatContext:frozenContext,sourceText:text,attachmentIds:[...attempt.attachmentIds],executionEngine:requestedEngineRef.current,...(liveSession.conversationId?{conversationId:liveSession.conversationId}:{})};
       preparedReceipt.current=frozenReceipt;sessionStorage.setItem(receiptStorageKey,JSON.stringify(frozenReceipt));
       await sendMessage({text},{body:{chatContext:frozenContext,attachmentIds:frozenReceipt.attachmentIds,executionEngine:frozenReceipt.executionEngine,...(frozenReceipt.conversationId?{conversationId:frozenReceipt.conversationId}:{})}});
     }catch(cause){
@@ -1867,7 +1877,7 @@ export function AICopilotContent({
     ) {
       return;
     }
-    if(liveSession.executionEngine==="codex"&&attachmentState.ids.length>0){
+    if(!assistantEngine.v2&&liveSession.executionEngine==="codex"&&attachmentState.ids.length>0){
       setComposerLifecycleError("本地 Codex 当前支持文本请求；附件已保留，请到设置中将编导引擎切换为 CreatorOS 后处理附件。");return;
     }
     setComposerLifecycleError(null);
@@ -1951,7 +1961,7 @@ export function AICopilotContent({
   // (T-055b 铁律),用户按发送才出手。无 prefill/functionKey 的老条目退化为原「填字条」。
   const applyQuickPrompt = React.useCallback(
     (item: { readonly prefill?: string; readonly functionKey?: string }, fallbackText: string) => {
-      const text = copilotImageEnginePrefill(item.prefill ?? fallbackText,item.functionKey,assistantEngine.engine);
+      const text = (assistantEngine.v2?(item.prefill??fallbackText):copilotImageEnginePrefill(item.prefill ?? fallbackText,item.functionKey,assistantEngine.engine));
       if (!text) return;
       if (item.functionKey && item.functionKey !== "script.patch") {
         // 用户点了另一个明确功能，旧段落锚点和失败重试都不应暗中跟过去。
@@ -1968,7 +1978,7 @@ export function AICopilotContent({
       quickFunctionKeyRef.current = item.functionKey ?? null;
       textareaRef.current?.focus();
     },
-    [finishComposerRequest,assistantEngine.engine],
+    [finishComposerRequest,assistantEngine.engine,assistantEngine.v2],
   );
 
   // [T-239e] 会话成本角标 —— 历史底数(读回时从落库行 token 列累计;老消息 null 兼容跳过)。
@@ -3537,9 +3547,9 @@ export function AICopilotContent({
             data-slot="prompt-form"
           >
             {!hasCreationWorkspace && <p role="status" data-slot="copilot-workspace-required" className="text-sm text-muted-foreground">先选择或创建账号组，再发送新请求。空组也可以创作，无需先绑定平台账号。<Link href="/accounts" onClick={preserveWorkspaceReturnDraft} className="ml-2 text-brand underline underline-offset-4">选择或创建账号组</Link></p>}
-            {assistantEngine.engine === "codex" && !assistantEngine.available && (
+            {!selectedEngineAvailable && (
               <p role="status" data-slot="assistant-engine-status" className="text-sm text-muted-foreground">
-                {assistantEngine.status}。<Link href="/settings?highlight=assistant-engine" className="ml-2 text-brand underline underline-offset-4">设置编导引擎</Link>
+                {assistantEngine.v2&&attachmentState.ids.length>0?"附带内容所需模型当前尚不可用，请核对文本与图片理解设置；输入与附件已保留":assistantEngine.status}。<Link href="/settings?highlight=assistant-engine" className="ml-2 text-brand underline underline-offset-4">设置编导引擎</Link>
               </p>
             )}
             {/* @项目引用(T-039b):relative 容器锚定下拉;输入 @ 弹真项目列表,选中插入 chip +

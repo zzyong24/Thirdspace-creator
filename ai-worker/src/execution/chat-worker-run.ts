@@ -35,6 +35,13 @@ export interface ChatWorkerPorts {
 /** 执行回合而不提交业务终态；调用方须把返回消息/授权状态与任务原子保存。 */
 export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSchema>,rawSpec:z.infer<typeof executionModelSpecSchema>,parentSignal:AbortSignal,ports:ChatWorkerPorts){
   const input=chatWorkerInputSchema.parse(rawInput),spec=executionModelSpecSchema.parse(rawSpec);
+  const runTextNode=async(callId:string,node:'hooks'|'script-draft',signal:AbortSignal)=>{
+    if(input.modelRoutingVersion!==2)return runChatTextNodeInWorker(callId,modelFor(spec),signal,ports.call,node);
+    const prepared=await ports.call(node==='hooks'?'prepareChatHooks':'prepareChatScriptDraft',{callId},signal) as {noModel?:boolean};
+    if(prepared.noModel)return agenticToolOutcomeSchema.parse(await ports.call(node==='hooks'?'completeChatHooks':'completeChatScriptDraft',{callId},signal));
+    const selected=executionModelSpecSchema.parse(await ports.call('resolveChatGenerationCredential',{callId},signal));
+    return runChatTextNodeInWorker(callId,modelFor(selected),signal,ports.call,node);
+  };
   const stop=new AbortController(),signal=AbortSignal.any([parentSignal,stop.signal]);
   let failure:GenerationFailure|undefined,lastModelCallId:string|undefined;
   const modelForTool=new Map<string,string>(),toolCallIds=new Set<string>();
@@ -47,7 +54,20 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     failure??=result;stop.abort();return result;
   };
   signal.throwIfAborted();
-  const initial=checkpointSchema.parse(await ports.call("readCheckpoint",{},signal));
+  const checkpointRaw=await ports.call("readCheckpoint",{},signal);
+  let initial=checkpointSchema.parse(checkpointRaw);
+  if(input.modelRoutingVersion===2){
+    const children=z.object({childCalls:z.array(z.object({parentCallId:z.string(),status:z.string()})).default([])}).parse(checkpointRaw).childCalls;
+    const pending=(callId:string)=>children.some(child=>child.parentCallId===callId&&['started','unknown'].includes(child.status));
+    const text=[...initial.resumableToolCallIds.filter(pending).map(callId=>({callId,node:'hooks' as const})),...initial.replayableScriptDraftToolCallIds.filter(pending).map(callId=>({callId,node:'script-draft' as const}))];
+    const structured=initial.replayableGenerationToolCallIds.filter(pending);
+    // 名单由宿主真实原call/Codex绑定给出；只对已有在途子回合执行其专用只读恢复。
+    for(const item of text){const saved=workerStartReceiptSchema.parse(await ports.call(item.node==='hooks'?'restoreChatHooks':'restoreChatScriptDraft',{callId:item.callId},signal));if(saved.callId!==item.callId)throw new GenerationFailure('unknown_result','CHAT_CHILD_RESTORE_RECEIPT_UNKNOWN');}
+    for(const callId of structured){const saved=workerStartReceiptSchema.parse(await ports.call('restoreChatGeneration',{callId},signal));if(saved.callId!==callId)throw new GenerationFailure('unknown_result','CHAT_CHILD_RESTORE_RECEIPT_UNKNOWN');}
+    for(const item of text)await runTextNode(item.callId,item.node,signal);
+    for(const callId of structured)await runChatGenerationInWorker(callId,signal,ports.call);
+    if(text.length||structured.length)initial=checkpointSchema.parse(await ports.call('readCheckpoint',{},signal));
+  }
   // 旧协议任务保留账本与历史，但升级后不再启动已退役的执行器。
   // 未知回执继续要求对账；其余旧任务明确等待用户另建任务，不自动重发动作。
   if(input.executionEngine!=="pi")throw new GenerationFailure((initial.recovery==="requires_reconciliation" || initial.pendingCalls.some(call=>call.status==="started" || call.status==="unknown"))?"unknown_result":"waiting_user","CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED");
@@ -79,7 +99,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   for(const callId of initial.replayableWebReadToolCallIds)agenticToolOutcomeSchema.parse(await ports.call("completeChatWebRead",{callId},signal));
   // 所有同轮父工具先归入当前租约，再允许任一节点申请后续修复调用。
   for(const callId of initial.replayableGenerationToolCallIds)await runChatGenerationInWorker(callId,signal,ports.call);
-  for(const callId of initial.replayableScriptDraftToolCallIds)await runChatTextNodeInWorker(callId,modelFor(spec),signal,ports.call,"script-draft");
+  for(const callId of initial.replayableScriptDraftToolCallIds)await runTextNode(callId,"script-draft",signal);
   let checkpointTail:Promise<void>=Promise.resolve();
   const checkpoint=()=>{
     checkpointTail=checkpointTail.then(async()=>{
@@ -159,8 +179,8 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
           if(definition.execution==="worker.redfox")return runChatRedfoxInWorker(reservedCallId,signal,ports.call);
           if(definition.execution==="worker.research"){if(!research)throw Error("浏览器搜索尚未装配");return runChatResearchInWorker(reservedCallId,signal,ports.call,research);}
           if(definition.execution==="worker.structured-node")return runChatGenerationInWorker(reservedCallId,signal,ports.call);
-          if(definition.execution==="worker.script-draft")return runChatTextNodeInWorker(reservedCallId,modelFor(spec),signal,ports.call,"script-draft");
-          if(definition.execution==="worker.script-hooks")return runChatTextNodeInWorker(reservedCallId,modelFor(spec),signal,(port,data,portSignal)=>ports.call(port,data,portSignal));
+          if(definition.execution==="worker.script-draft")return runTextNode(reservedCallId,"script-draft",signal);
+          if(definition.execution==="worker.script-hooks")return runTextNode(reservedCallId,"hooks",signal);
           const descriptor=workbenchCatalog.find(item=>item.name===definition.name);
           if(descriptor){
             if(!workbenchGateway)throw Error("WORKBENCH_GATEWAY_UNAVAILABLE");

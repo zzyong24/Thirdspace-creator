@@ -33,13 +33,13 @@ export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,
    if(recovered.status==='committed')return {callId,text:JSON.stringify(recovered.receipt)};
   }
   const credential=codexAssetCredentialSchema.parse(await call('resolveAssetCredential',{callId},signal));
-  if(credential.runtimeVersion!==input.runtimeVersion)throw new GenerationFailure('waiting_user','CODEX_IMAGE_IDENTITY_MISMATCH');
+  if(credential.runtimeVersion!==input.runtimeVersion||(input.requestedModel!==undefined&&credential.requestedModel!==input.requestedModel))throw new GenerationFailure('waiting_user','CODEX_IMAGE_IDENTITY_MISMATCH');
   let reference:{bytes:Uint8Array;mimeType:string}|undefined;
   if(readOwnedReference)reference=await readOwnedReference(callId,signal);
   else if(input.reference)reference=z.object({bytes:z.instanceof(Uint8Array),mimeType:z.string()}).parse(await call('readAssetReference',{callId},signal));
   if(reservation.status==='reserved')workerStartReceiptSchema.parse(await call('startAssetCall',{callId},signal));
   try{
-   const result=await generateCodexImage(input,callId,signal,call,reservation.status!=='reserved',reference);
+   const result=await generateCodexImage({...input,...(credential.requestedModel?{requestedModel:credential.requestedModel}:{})},callId,signal,call,reservation.status!=='reserved',reference);
    try{
     const receipt=assetResultReceiptSchema.parse(await call('saveAssetResult',{callId,bytes:result.assetBytes},signal));
     return {callId,text:JSON.stringify(receipt)};

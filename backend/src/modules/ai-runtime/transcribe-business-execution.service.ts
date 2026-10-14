@@ -1,3 +1,6 @@
+import {ErrorCode} from '@creatoros/contract';
+import {readFrozenModelRoute,type ExecutionRef,type ExecutionRoute} from '@creatoros/contract/execution-worker';
+import {localWhisperSpec} from '@creatoros/ai-worker';
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import type {BoundedExecutionBudget} from "@creatoros/contract/execution-worker";
 import {isDeepStrictEqual} from 'node:util';
@@ -7,6 +10,27 @@ import type {RequestContext} from '@creatoros/contract';
 import type {MultimodalSpec} from './multimodal/resolve';
 import {createExecutionAuthorityService,type PreparedModelExecution} from '../execution/execution-authority.service';
 import {awaitPreparation} from '../execution/await-preparation';
+/** 私有宿主身份；不得从 requestId、intentId 或 ALS 推断。 */
+export type TranscribeModelOwner={aiTaskId:string}|{ref:ExecutionRef}|{executionRoute:ExecutionRoute};
+/** SEMANTIC_BOUNDARY_ALLOW: 只落实原用户选择和已有安全回退，不作内容选择。 */
+export function isFrozenAsrRoutingError(error:unknown):boolean {
+ const value=error as {code?:unknown;message?:unknown;name?:unknown;budgetCode?:unknown;details?:{domainCode?:unknown}};
+ if(value?.name==='AbortError'||value?.code==='ASR_RESULT_UNKNOWN')return true;
+ // 归属/认证/期限永远优先，不因附带凭据诊断获得执行权。
+ if([ErrorCode.OwnershipError,ErrorCode.AuthenticationError,ErrorCode.AccountRequiredError].includes(value?.code as ErrorCode)||value?.budgetCode==='EXECUTION_BUDGET_EXHAUSTED')return true;
+ if(['MODEL_ROUTE_NOT_FROZEN','MODEL_ROUTE_IDENTITY_CHANGED','MODEL_ROUTE_LOCAL_FALLBACK_NOT_FROZEN'].some(code=>value?.code===code||value?.details?.domainCode===code||value?.message===code))return true;
+ if(['MODEL_NOT_CONFIGURED','MODEL_CREDENTIAL_UNAVAILABLE','MODEL_CONFIGURATION_UNAVAILABLE'].includes(String(value?.details?.domainCode)))return false;
+ return [ErrorCode.ConflictError,ErrorCode.ValidationError].includes(value?.code as ErrorCode);
+}
+
+export function frozenTranscribeLocalSpec(runtime:unknown):MultimodalSpec {
+ const route=readFrozenModelRoute(runtime,'asr','transcribe.audio');
+ if(!route)return localWhisperSpec();
+ const identity=route.source==='local'&&route.readiness==='configured'?route.identity:
+  route.fallbackPolicy==='existing-local-asr'?route.localFallbackIdentity:undefined;
+ if(!identity)throw new Error('MODEL_ROUTE_LOCAL_FALLBACK_NOT_FROZEN');
+ return {...localWhisperSpec(),model:identity.level};
+}
 type Task=typeof aiTasks.$inferSelect;
 /** 确定性配置投影，只保留适配器实际消费的选项，不保存密钥或未知 settings。 */
 export function transcribeConfiguration(spec:MultimodalSpec):TranscribeConfiguration {
@@ -17,7 +41,7 @@ export function transcribeConfiguration(spec:MultimodalSpec):TranscribeConfigura
 }
 function ids(task:Task){const input=task.inputData as Record<string,unknown>;return Array.isArray(input.awemeIds)?input.awemeIds:typeof input.awemeId==='string'?[input.awemeId]:[];}
 /** 只有没有旧执行事实的任务才转交；配置读取在事务外，提交时重新核对原任务。 */
-export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext):Promise<MultimodalSpec>}){
+export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,owner:TranscribeModelOwner):Promise<MultimodalSpec>}){
  const controller=new AbortController(),authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
  async function legacy(tx:Pick<Db,'select'>,task:Task){
@@ -32,7 +56,7 @@ export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:Boun
    if(task.executionTaskId){const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId));const frozen=transcribeTaskInputSchema.parse((execution?.payload as Record<string,unknown>)?.modelInput);if(!isDeepStrictEqual(frozen.awemeIds,ids(task)))throw new Error('转写原作品输入已改变');abort.throwIfAborted();return authority.bindAiTask(ctx,task.id);}
    if(task.status!=='queued'||task.leaseOwner||task.leaseToken||task.modelCallStartedAt)throw new Error('转写任务已开始，须沿原执行恢复');
    if(await legacy(db,task))return {legacy:true};
-   const spec=await awaitPreparation(()=>deps.resolveSpec(ctx),abort);
+   const spec=await awaitPreparation(()=>deps.resolveSpec(ctx,{aiTaskId:task.id}),abort);
    const modelInput=transcribeTaskInputSchema.parse({kind:'transcribe.douyin',awemeIds:ids(task),language:'zh',configuration:transcribeConfiguration(spec)});
    // 批量转写按已授权作品数预留识别/后处理额度，不共用一次文本生成的6次调用上限。
    // 只在首次绑定时冻结，恢复不扩大原任务预算或期限。

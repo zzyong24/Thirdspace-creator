@@ -29,7 +29,7 @@
  */
 
 import * as React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render as rtlRender, screen, fireEvent } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
@@ -68,6 +68,8 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/contract-client", () => ({
   client: {
     getReportingStatus: vi.fn().mockResolvedValue({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
+    getModelRouting: vi.fn().mockResolvedValue({schemaVersion:1,revision:0,choices:null,legacyExecutionEngine:'pi',effectiveChoices:{},capabilities:[]}),
+    putModelRouting: vi.fn(),
     getPreferences: vi.fn().mockResolvedValue({assistantExecutionEngine:'pi'}),
     patchPreferences: vi.fn().mockResolvedValue({}),
     putModel: vi.fn().mockResolvedValue({}),
@@ -80,6 +82,31 @@ vi.mock("@/lib/contract-client", () => ({
     loginDouyin: vi.fn().mockResolvedValue({ loggedIn: true }),
   },
 }));
+
+
+// 显式测试操作：legacy GET 不造 effectiveChoices；打开原配置必须真实选择来源、再点配置。
+// 这里不点击来源保存，不发 routing PUT，不模拟官方模型调用。
+function openSourceConfiguration(family:string,source='self') {
+ const row=document.querySelector(`[data-model-family="${family}"]`);
+ if(!row)return;
+ const select=row.querySelector('select') as HTMLSelectElement;
+ if(select.value!==source)fireEvent.change(select,{target:{value:source}});
+ const button=row.querySelector('button[aria-label^="配置"]') as HTMLButtonElement;
+ if(button&&button.getAttribute('aria-expanded')!=='true')fireEvent.click(button);
+}
+function modelAuthorityInTree(node:React.ReactNode):import('./settings-page').ModelAuthorityState|undefined {
+ if(!React.isValidElement<Record<string,unknown>>(node))return undefined;
+ if(node.props.modelAuthority)return node.props.modelAuthority as import('./settings-page').ModelAuthorityState;
+ let found:import('./settings-page').ModelAuthorityState|undefined;
+ React.Children.forEach(node.props.children as React.ReactNode,child=>{found??=modelAuthorityInTree(child);});return found;
+}
+function render(...args:Parameters<typeof rtlRender>) {
+ const tree=rtlRender(...args),authority=modelAuthorityInTree(args[0]);
+ const caps:Record<string,string>={text:'default',vision:'asset.classify',image:'image.generate',video:'video.generate',audio:'transcribe.audio',embed:'knowledge.search.embed'};
+ for(const [family,capability] of Object.entries(caps))openSourceConfiguration(family,(document.querySelector(`[data-model-family="${family}"] select`) as HTMLSelectElement)?.value||((authority?.capabilities as Record<string,{authority?:string}>|undefined)?.[capability]?.authority==='channel'?'official':'self'));
+ const textSource=(document.querySelector('[data-model-family="text"] select') as HTMLSelectElement)?.value||(authority?.capabilities?.default?.authority==='channel'?'official':'self');openSourceConfiguration('text',textSource);
+ return tree;
+}
 
 type SettingsPageProps = React.ComponentProps<
   typeof import("./settings-page").SettingsPage
@@ -105,7 +132,7 @@ async function renderSettings(overrides: Partial<SettingsPageProps> = {}) {
 }
 
 describe("SettingsPage", () => {
-  beforeEach(async()=>{const {loadAssistantEngine}=await import('@/features/copilot/assistant-engine');await loadAssistantEngine(true);});
+  beforeEach(async()=>{const {loadAssistantEngine}=await import('@/features/copilot/assistant-engine');const {loadModelRouting}=await import('@/features/copilot/assistant-engine');await loadModelRouting(true);});
   afterEach(() => {
     cleanup();
   });
@@ -327,10 +354,10 @@ describe("SettingsPage", () => {
     const status = document.querySelector(
       '[data-slot="model-authority-status"]',
     );
-    expect(status).not.toBeNull();
-    expect(status).toHaveAttribute("data-authority", "channel");
-    expect(status).toHaveTextContent("渠道已接管 1/4 类模型");
-    expect(status).toHaveTextContent("当前渠道已提供的模型可以直接使用");
+    expect(status).toBeNull();
+    expect(document.querySelector('#model-source-text')).toHaveValue('official');
+    expect(document.querySelector('#model-source-audio')).toHaveValue('self');
+    expect(document.querySelector('[data-slot=\"model-capability-source\"]')).not.toBeNull();
     expect(
       document.querySelector('[data-slot="model-configuration-card"]'),
     ).toBeNull();
@@ -346,24 +373,14 @@ describe("SettingsPage", () => {
       document.querySelector('[data-slot="channel-model-service-credential"]'),
     ).not.toBeNull();
   });
-
-  it("[T-701] 缺渠道身份时明确阻塞且不把手工本地配置当正常渠道解法", async () => {
-    await renderSettings({
-      modelAuthority: {
-        authority: "local",
-        outcome: "activation_scope_missing",
-        action: "授权缺少渠道信息，无法同步受管模型",
-      },
-    });
-
-    const status = document.querySelector(
-      '[data-slot="model-authority-status"]',
-    );
-    expect(status).toHaveTextContent("授权缺少渠道信息，无法同步受管模型");
-    expect(status).toHaveTextContent("重新校验激活权益并重试配置同步");
-    expect(status).not.toHaveTextContent(
-      "保存后会作为当前或备用配置使用",
-    );
+  it("[T1278/T701] 官方缺渠道身份只阻塞官方该行，不伪造就绪或清自配",async()=>{
+    await renderSettings({modelAuthority:{authority:'local',outcome:'activation_scope_missing',action:'授权缺少渠道信息，无法同步受管模型'}});
+    openSourceConfiguration('text','official');
+    const current=document.querySelector('[data-slot="model-source-configuration"]:not([hidden])');
+    expect(current).toHaveTextContent('当前官方配置尚未取得');
+    expect(current).not.toHaveTextContent('模型已就绪');
+    expect(current?.querySelector('[data-slot="model-secret-input"]')).toBeNull();
+    openSourceConfiguration('text','self');expect(document.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();
   });
 
   it("[T-679] 按 Growth 下发顺序展示真实模型名和 model，移除旧选择时提示已回退", async () => {
@@ -395,7 +412,7 @@ describe("SettingsPage", () => {
       },
     });
     const select = document.querySelector(
-      'select[aria-label="文本创作模型使用模型"]',
+      'select[aria-label="文本创作与结构化使用模型"]',
     ) as HTMLSelectElement | null;
     expect(select).not.toBeNull();
     expect(Array.from(select!.options).map((option) => option.textContent)).toEqual([

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
-  codexExecutionSpec,frozenExecutionEngine,workerPortInputSchemas, transcribePostprocessPlanSchema, transcribePostprocessResultSchema,
+  codexExecutionSpec,frozenExecutionEngine,readFrozenModelRoute,workerPortInputSchemas, transcribePostprocessPlanSchema, transcribePostprocessResultSchema,
   transcribePostprocessPreparationSchema, transcribePostprocessReservationSchema,
   type TranscribePostprocessPlan, type TranscribePostprocessResult, type ExecutionRef, type WorkerPort,
 } from "@creatoros/contract/execution-worker";
@@ -105,7 +105,7 @@ export function createExecutionTranscribePostprocessService(db:Db,deps:{
     return checkTranscriptFidelity(entry.plan.transcript,corrected).ok?{applied:true,transcript:corrected}:fallback(entry.plan,"输出未过保真校验，保留原文");
   }
   async function credential(value:State,signal?:AbortSignal){
-    if(frozenExecutionEngine(value.payload)==='codex')return codexExecutionSpec();
+    if(!readFrozenModelRoute(value.payload,'structured',TRANSCRIPT_POSTPROCESS_CAPABILITY)&&frozenExecutionEngine(value.payload)==='codex')return codexExecutionSpec();
     try{return await awaitPreparation(()=>deps.resolveModelSpec({...value.context},TRANSCRIPT_POSTPROCESS_CAPABILITY,{aiTaskId:value.business.id},signal),signal);}
     catch(error){signal?.throwIfAborted();if(error instanceof ConflictError||isTranscriptExecutionControlError(error))throw error;return null;}
   }

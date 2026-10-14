@@ -1,3 +1,4 @@
+import type {ExecutionRoute} from '@creatoros/contract/execution-worker';
 import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {requireAccountId} from "./benchmark.errors";
@@ -20,6 +21,9 @@ import type {TranscribeResourceBinding} from '../execution/transcribe-execution-
 
 export interface BenchmarkTranscriptionDeps extends Omit<ClaimedAsrStageDeps,'bindResource'|'runWorker'> {
  ai:Pick<AiService,'createTask'>;entryPath:string|(()=>string);wake?:()=>void;
+ /** 同一原快照；此端口不得领按次Key或调用模型。 */
+ captureConfiguration(ctx:RequestContext):Promise<{configuration:ReturnType<typeof transcribeConfiguration>;executionRoute:ExecutionRoute}>;
+ createTaskWithRoute(ctx:RequestContext,body:Parameters<AiService['createTask']>[1],route:ExecutionRoute):ReturnType<AiService['createTask']>;
 }
 export class BenchmarkTranscriptionPending extends Error {
  readonly code='BENCHMARK_TRANSCRIPTION_PENDING';
@@ -90,10 +94,10 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
    requireAccountId(ctx.accountId,"真实转写凭据账号");await assertWritableWorkspace(db,ctx);
    shutdown.signal.throwIfAborted();
    const [work]=await db.select().from(benchmarkWorks).where(workWhere(ctx,workId));if(!work)throw new Error('BENCHMARK_WORK_NOT_FOUND');
-   const configuration=transcribeConfiguration(await deps.resolveSpec(ctx));
+   const {configuration,executionRoute}=await deps.captureConfiguration(ctx);
    const input=benchmarkTranscribeTaskInputSchema.parse({kind:'benchmark.transcribe',workId,awemeId:work.awemeId,sourceId:work.sourceId,sourceExternalAccountId:work.sourceExternalAccountId,configuration});
    const attemptId=`benchmark-transcribe:${createHash('sha256').update(canonicalJson(input)).digest('hex')}`;
-   const task=await deps.ai.createTask(ctx,{taskType:'benchmark.transcribe',attemptId,inputData:input});
+   const task=await deps.createTaskWithRoute(ctx,{taskType:'benchmark.transcribe',attemptId,inputData:input},executionRoute);
    const mapped=await prepare(ctx,task.id);return mapped;
   },
   async run(ctx:RequestContext,aiTaskId:string){

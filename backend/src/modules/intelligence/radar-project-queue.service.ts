@@ -105,7 +105,7 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
           let childId = checkpoint.transcriptTaskId ?? detail.transcript.executionTaskId ?? undefined;
           if (!childId) {
             if (!await live()) return;
-            const dispatched = await deps.intelligence.enqueueTranscripts(ctx, {itemIds: [itemId], idempotencyKey: `${claim.task.id}:transcribe`});
+            const dispatched = await deps.intelligence.enqueueTranscripts(ctx, {itemIds: [itemId], idempotencyKey: `${claim.task.id}:transcribe`},{taskId:claim.task.id,workerId:claim.lease.workerId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken});
             childId = dispatched.tasks[0]?.id;
             if (!childId) childId = (await deps.intelligence.getItem(ctx, itemId)).transcript.executionTaskId ?? undefined;
           }

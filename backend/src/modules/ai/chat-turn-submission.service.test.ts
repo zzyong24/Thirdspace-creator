@@ -1,3 +1,5 @@
+import {freezeSelectedModelRoutes} from '../ai-runtime/capability-model-routing';
+import {createSettingsRepository} from '../settings';
 import { createChatHostContextReader } from "./chat-host-context.service";
 import type { ChatHostContext } from "./chat-host-context";
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
@@ -23,7 +25,7 @@ async function fixture(){
 }
 it.each([undefined,"codex"] as const)("装配前解析真实引擎 %s，冻结工具与策略一致且重放不重新装配",async executionEngine=>{
   const f=await fixture(),engine=executionEngine??"pi";
-  const assemble=vi.fn(async(ctx:typeof f.ctx,snapshot:ChatTurnSnapshot,options?:{executionEngine:"pi"|"codex"})=>({
+  const assemble=vi.fn(async(ctx:typeof f.ctx,snapshot:ChatTurnSnapshot,options?:{executionEngine?:"pi"|"codex"})=>({
     ...await f.assemble(ctx,snapshot),system:`目录来自 ${options?.executionEngine??"missing"}`,
     tools:[{name:options?.executionEngine==="codex"?"canvas.read":"context.projects",version:"1",description:"真实已装配工具",parameters:{type:"object"},effect:"none" as const}],
   }));
@@ -297,3 +299,16 @@ it('编导target原子冻结与原digest同租约恢复；后来改选区不改�
  const payload=structuredClone((await f.rows()).executions[0]!.payload) as {hostContext:typeof frozen};payload.hostContext.chatContext.editorTarget.savedBase.versionId='tampered';
  await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,submitted.executionTaskId));await expect(reader.read(ref)).rejects.toThrow('摘要');
 },120000);
+
+it('未显式engine的v2聊天不强填pi，AI与execution同事务保存主模式和完整map，重放不换图',async()=>{
+ const f=await fixture(),choices={text:'codex',vision:'self',image:'self',video:'self',audio:'local',embed:'self'} as const;
+ await createSettingsRepository(db,{now,nextId}).setModelRouting(f.ctx,choices,0);
+ const executionRoute=await freezeSelectedModelRoutes({choices,revision:1,main:{mode:'text',capability:'copilot.assist'},read:async(_entry,source)=>source==='codex'?{status:'ready',identity:{protocolKind:'codex-app-server',runtimeVersion:'0.159.3',requestedModel:'fixture-actual-default'}}:{status:'not_configured',reasonCode:'MODEL_NOT_CONFIGURED'}});
+ const assemble=vi.fn(async(c:typeof f.ctx,s:ChatTurnSnapshot,_options?:{executionEngine?:'pi'|'codex'})=>({...await f.assemble(c,s),executionEngine:'codex' as const,executionRoute,chatModelMode:'text' as const}));
+ const service=createChatTurnSubmissionService(db,{now,nextId,assemble}),submitted=await service.submit(f.ctx,f.request),saved=await f.rows();
+ expect(assemble.mock.calls[0]![2]).toEqual({executionEngine:undefined});
+ expect(saved.tasks[0]!.runtimeData).toEqual({executionRoute,chatModelMode:'text'});expect(saved.executions[0]!.payload).toMatchObject({executionRoute,chatModelMode:'text',modelInput:{executionEngine:'codex'}});
+ expect((saved.executions[0]!.payload as Record<string,unknown>).modelInput).not.toHaveProperty('executionRoute');
+ expect(await service.submit(f.ctx,f.request)).toEqual({...submitted,replayed:true});expect(assemble).toHaveBeenCalledTimes(1);
+ await db.update(aiTasks).set({runtimeData:{}}).where(eq(aiTasks.id,submitted.taskId));await expect(service.submit(f.ctx,f.request)).rejects.toThrow();expect(assemble).toHaveBeenCalledTimes(1);
+},180_000);

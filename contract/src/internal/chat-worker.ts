@@ -8,6 +8,10 @@ export const externalAgentBindingSchema=z.object({protocolKind:z.literal(codexAc
 export const chatWorkerInputSchema = z.object({
   executionEngine:z.enum(["pi","codex","codebuddy"]).optional(),
   externalAgentBinding:externalAgentBindingSchema.optional(),
+  /** 宿主从v2根冻结投影；旧输入不补默认。 */
+  modelRoutingVersion:z.literal(2).optional(),
+  codexNativeImageGeneration:z.literal(false).optional(),
+  requestedModel:z.string().min(1).max(512).optional(),
   recoverMissingFinal:z.boolean().optional(),
   terminalToolFailurePolicyVersion:z.literal(1).optional(),
   contextPolicyVersion:z.literal(2).optional(),

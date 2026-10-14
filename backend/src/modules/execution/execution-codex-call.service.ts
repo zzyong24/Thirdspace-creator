@@ -1,19 +1,30 @@
 import {isDeepStrictEqual} from 'node:util';
+import {frozenChatModelRouteForCall,frozenNonChatModelBindingForCall,assertFrozenAgenticModelOwner} from './execution-model-identity.service';
 import {eq,executionTasks,executionCalls,type Db} from '@creatoros/backend';
 import {executionBudgetSchema,frozenExecutionEngine,externalChatStartSchema,workerPortInputSchemas,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import {createExecutionLeaseService} from './execution-lease.service';
 import {ConflictError} from './execution.errors';
+import {bindAssetExecution} from './asset-execution-binding';
 /** 官方ID只附到已预约的原call；不创建任务或重发回合。 */
 export function createExecutionCodexCallService(db:Db,deps:{now?:()=>string}={}){
  const leases=createExecutionLeaseService(db,deps);
  return {async invoke(ref:ExecutionRef,port:'readCodexCall'|'bindCodexCall'|'recordCodexToolCall',raw:unknown){
   const input=workerPortInputSchemas[port].parse(raw);
-  return leases.withLease(ref,port==='readCodexCall'||port==='bindCodexCall'&&Boolean(('turnId' in input&&input.turnId)||('nativeResult' in input&&input.nativeResult)||('modelFacts' in input&&input.modelFacts)||('observedUsage' in input&&input.observedUsage))?'settlement':'admission',async({tx,task})=>{
+  return leases.withLease(ref,port==='readCodexCall'||port==='bindCodexCall'&&Boolean(('turnId' in input&&input.turnId)||('nativeResult' in input&&input.nativeResult)||('modelFacts' in input&&input.modelFacts)||('observedUsage' in input&&input.observedUsage))?'settlement':'admission',async scope=>{
+   const {tx,task,context}=scope;
    const [call]=await tx.select().from(executionCalls).where(eq(executionCalls.id,input.callId));
    if(!call||call.executionTaskId!==task.id||!['started','unknown','settled'].includes(call.status))throw new ConflictError('Codex原调用尚未启动或归属不符');
    const payload=task.payload as Record<string,unknown>;
    const originalChat=payload.modelInput as {kind?:string;executionEngine?:string}|undefined;
-   if(frozenExecutionEngine(payload)!=='codex'&&!(originalChat?.kind==='chat.run'&&originalChat.executionEngine==='codex'))throw new ConflictError('原任务未冻结Codex执行权');
+   const chatV2=originalChat?.kind==='chat.run'&&(payload.executionRoute as {schemaVersion?:unknown}|undefined)?.schemaVersion===2;
+   const v2=(payload.executionRoute as {schemaVersion?:unknown}|undefined)?.schemaVersion===2;
+   if(v2){
+    const own=chatV2?frozenChatModelRouteForCall(payload,call):frozenNonChatModelBindingForCall(task,call)?.route;
+    if(own?.source!=='codex')throw new ConflictError('原call未冻结Codex执行权');
+    if(originalChat?.kind==='agentic.run')await assertFrozenAgenticModelOwner(scope);
+    if(!chatV2&&['image','video'].includes(own.mode))await bindAssetExecution({tx,task,context},call.id);
+   }
+   else if(frozenExecutionEngine(payload)!=='codex'&&!(originalChat?.kind==='chat.run'&&originalChat.executionEngine==='codex'))throw new ConflictError('原任务未冻结Codex执行权');
    const bindings=(payload.codexCalls??{}) as Record<string,Record<string,unknown>>;
    const previous=bindings[call.id];
    const chatStart=externalChatStartSchema.safeParse(call.providerResult);

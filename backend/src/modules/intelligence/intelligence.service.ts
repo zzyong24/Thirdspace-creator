@@ -4408,7 +4408,7 @@ export function createIntelligenceService(
         ? await service.enqueueTranscripts(ctx, {
             itemIds: [item.id],
             idempotencyKey: `${input.taskId}:transcript`,
-          })
+          },{taskId:input.taskId,...input.lease})
         : { tasks: [], skipped: [] };
       const [[snapshot], [transcript]] = await Promise.all([
         db
@@ -5879,6 +5879,7 @@ export function createIntelligenceService(
     async enqueueTranscripts(
       ctx: RequestContext,
       input: { itemIds: string[]; idempotencyKey: string },
+      modelRouteParent?:{taskId:string;workerId:string;attempt:number;fenceToken?:string},
     ) {
       await assertWritableWorkspace(db,ctx);
       const ids = [...new Set(input.itemIds)];
@@ -5917,6 +5918,7 @@ export function createIntelligenceService(
         }
         const task = await deps.tasks.enqueue(ctx, {
           kind: "transcribe",
+          modelRouteParent,
           executionBudget: createContinuousExecutionBudget(),
           ownerType: "item",
           ownerId: itemId,

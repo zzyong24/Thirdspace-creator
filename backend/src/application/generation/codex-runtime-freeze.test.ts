@@ -1,9 +1,10 @@
 import {afterAll,beforeAll,expect,it,vi} from 'vitest';
-import {createDb,executionTasks,scheduledJobs,type Db} from '@creatoros/backend';
+import {createDb,executionTasks,scheduledJobs,eq,type Db} from '@creatoros/backend';
 import {getOfficialSkillBase,listOfficialSkillBases} from '@creatoros/ai-worker';
 import {createSettingsRepository} from '../../modules/settings';
 import {createMomentsRuntime} from './moments-model-runtime';
 import {createTransactionalTaskRuntimeResolver} from './transactional-task-runtime';
+import {freezeSelectedModelRoutes} from '../../modules/ai-runtime/capability-model-routing';
 import {createVideoDecisionsBusinessAdapter} from '../../modules/ai-runtime/video-decisions-business-adapter';
 import {codexExecutionSpec,createExecutionRoute} from '@creatoros/contract/execution-worker';
 let db:Db,close:()=>Promise<void>;
@@ -41,3 +42,15 @@ it('调度新task在attach/Worker领取前就继承同组真实父路由',async(
  expect((await resolve({...ctx,accountId:'other-runtime-account'},'scheduled.topic.daily',input)).executionRoute).toEqual(createExecutionRoute('pi'));
  expect((await resolve(ctx,'scheduled.topic.daily',{...input,scheduledRun:{version:1,scheduledFor:'2026-10-11T00:01:00.000Z'}})).executionRoute).toEqual(createExecutionRoute('pi'));
 });
+
+async function v2Route(){return freezeSelectedModelRoutes({choices:{text:'codex',vision:'self',image:'self',video:'self',audio:'local',embed:'self'},revision:7,read:async(_entry,source)=>source==='codex'?{status:'ready',identity:{protocolKind:'codex-app-server',runtimeVersion:'0.159.3',requestedModel:'actual-fixture-default'}}:{status:'not_configured',reasonCode:'MODEL_NOT_CONFIGURED'}});}
+it('同tx通用任务调用私有root快照；trusted旧图和真实父图都不重读当前配置',async()=>{
+ const route=await v2Route(),capture=vi.fn(async()=>route);
+ const resolve=createTransactionalTaskRuntimeResolver(db,{...deps,resolveExecutionRoute:capture});
+ const direct=await resolve(ctx,'benchmark.transcribe',{});expect(direct.executionRoute).toEqual(route);expect(capture).toHaveBeenCalledWith(ctx,db);
+ capture.mockClear();
+ expect((await resolve(ctx,'benchmark.transcribe',{},route)).executionRoute).toEqual(route);expect(capture).not.toHaveBeenCalled();
+ const id='t1238-scheduled-parent';await db.update(executionTasks).set({payload:{job:{id:'t1238-scheduled-job'},scheduledFor:'2026-10-11T00:00:00.000Z',executionRoute:route}}).where(eq(executionTasks.id,id));
+ expect((await resolve(ctx,'scheduled.topic.daily',{jobId:'t1238-scheduled-job',scheduledRun:{version:1,scheduledFor:'2026-10-11T00:00:00.000Z'}})).executionRoute).toEqual(route);
+ expect(capture).not.toHaveBeenCalled();
+},180_000);

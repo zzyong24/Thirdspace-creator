@@ -54,6 +54,13 @@ const MULTIMODAL_META = {
       "示例：https://api.example.com/v1（留空使用默认地址）",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
+  imageEdit: {
+    capability: "image.edit" as const,title: "参考图编辑模型",icon: Palette,
+    description: "图片编辑与参考图生成使用自己的配置；实际支持以本用途状态为准。",
+    providerSuggestions: ["openai"] as ReadonlyArray<string>,providerPlaceholder: "openai",
+    providerHelp: "使用已接入的 OpenAI 兼容图片编辑接口。",modelHelp: "填写服务商支持图片编辑的准确模型 ID。",
+    modelPlaceholder: "",baseUrlPlaceholder: "https://api.example.com/v1",disabledHint: "未配置时编辑状态由真实兼容配置核验。",
+  },
   video: {
     capability: "video.generate" as const,
     title: "文生视频模型",
@@ -237,6 +244,7 @@ function matchAsrPreset(provider: string, baseUrl: string): string {
 // (不加 data-highlight,不影响定位)。
 const MULTIMODAL_HIGHLIGHT_KEY: Record<
   | "image"
+  | "imageEdit"
   | "video"
   | "audio"
   | "embed"
@@ -246,6 +254,7 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
   string | undefined
 > = {
   image: "image-model",
+  imageEdit: "image-edit-model",
   video: "video-model",
   audio: "asr-model",
   search: "web-search",
@@ -262,6 +271,7 @@ export function MultimodalModelCard({
 }: {
   kind:
   | "image"
+  | "imageEdit"
   | "video"
   | "audio"
   | "embed"
@@ -293,7 +303,7 @@ export function MultimodalModelCard({
   // [T-325] 仅备用对话卡(fallback,apiFormat 分派的文本 LLM)复用供应商预设 —— 与文本
   // 模型卡同款目录。其它多模态卡按 provider 分派、字段语义不同,不挂预设(state 恒存
   // 但仅 fallback 渲染,遵守 Hooks 规则)。
-  const isFallback = kind === "fallback";
+  const isFallback = kind === "fallback" || kind === "vision";
   const [presetId, setPresetId] = React.useState<string>(() =>
     isFallback
       ? matchPresetByConfig(state.baseUrl, state.apiFormat ?? "anthropic")?.id ??

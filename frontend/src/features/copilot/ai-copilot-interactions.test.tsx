@@ -13,7 +13,7 @@
 import * as React from "react";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {loadAssistantEngine,writeAssistantEngine} from "./assistant-engine";
+import {loadAssistantEngine,loadModelRouting,writeAssistantEngine} from "./assistant-engine";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const listTasks = vi.fn();
@@ -24,6 +24,7 @@ const listConversations = vi.fn();
 // T-039b @项目引用:输入 @ 弹项目列表走这个只读 op。
 const listProjects = vi.fn();
 const getPreferences = vi.fn();
+const getModelRouting = vi.fn();
 const patchPreferences = vi.fn();
 
 // 「继续」 routing uses next/navigation's useRouter; mock it so the island mounts
@@ -62,6 +63,7 @@ vi.mock("@/lib/contract-client", () => ({
     // T-039b @项目引用:项目补全下拉的数据源。
     listProjects: (...args: unknown[]) => listProjects(...args),
     getPreferences: (...args: unknown[]) => getPreferences(...args),
+    getModelRouting: (...args: unknown[]) => getModelRouting(...args),
     patchPreferences: (...args: unknown[]) => patchPreferences(...args),
   },
 }));
@@ -153,6 +155,9 @@ beforeEach(async () => {
   // 引擎偏好以真实后端读/写回执为准；每例从明确Pi服务值开始，不借本地缓存造就绪。
   getPreferences.mockReset();
   getPreferences.mockResolvedValue({assistantExecutionEngine:'pi'});
+  getModelRouting.mockReset();
+  // 原持久偏好投影：choices仍null，不造v2能力或改变legacy请求engine。
+  getModelRouting.mockImplementation(async()=>({schemaVersion:1,revision:0,choices:null,legacyExecutionEngine:(await getPreferences()).assistantExecutionEngine,effectiveChoices:{},capabilities:[]}));
   patchPreferences.mockReset();
   patchPreferences.mockImplementation(async (request: {body: {assistantExecutionEngine: 'pi'|'codex'}}) => {
     const result={assistantExecutionEngine:request.body.assistantExecutionEngine};
@@ -193,6 +198,7 @@ beforeEach(async () => {
   } catch {
     /* noop */
   }
+  await loadModelRouting(true);
   await loadAssistantEngine(true);
 });
 
@@ -230,6 +236,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   it("[T-1055] Codex 不可用时保留输入并指向真实设置卡", async () => {
     window.localStorage.setItem("creatoros:assistant-engine:v1", "codex");
     getPreferences.mockResolvedValue({assistantExecutionEngine:'codex'});
+    await loadModelRouting(true);
     await loadAssistantEngine(true);
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({engines: [{engine: "codex", installed: true, available: false, version: null, loginStatus: "unauthenticated"}]}), {status: 200}));
     const user = userEvent.setup();

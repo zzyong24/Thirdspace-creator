@@ -1,4 +1,4 @@
-import {createExecutionRoute,frozenExecutionEngine,inheritExecutionRoute} from '@creatoros/contract/execution-worker';
+import {createExecutionRoute,frozenExecutionEngine,inheritExecutionRoute,frozenExecutionRoute,type ExecutionRoute} from '@creatoros/contract/execution-worker';
 import {and,eq,sql,executionTasks,scheduledJobs,type Db} from '@creatoros/backend';
 import {workspaceFilter} from '../../workspace-scope';
 import type {RequestContext} from '@creatoros/contract';
@@ -6,6 +6,8 @@ import {createSettingsRepository,type RepoDeps} from '@creatoros/backend/modules
 import {createEffectiveSkillSnapshotResolver,requiredSkillIdsForTask,type OfficialSkillProvider} from '@creatoros/backend/modules/ai-runtime';
 export interface TransactionalTaskRuntimeDeps extends RepoDeps {
  officialSkills:OfficialSkillProvider;
+ /** 私有组合根：只给无可信父路由的新任务捕获同store配置。 */
+ resolveExecutionRoute?(ctx:RequestContext,tx:Db):Promise<ExecutionRoute>;
  /** 复用根原pinModelAuthority/readChannelModelAuthority；若内部读PG必须绑定tx，不能捕获root repository。 */
  readPinnedAuthority(ctx:RequestContext,tx:Db):Promise<{authority:'local'|'channel-managed';digest:string}>;
 }
@@ -14,8 +16,7 @@ export function createTransactionalTaskRuntimeResolver(tx:Db,deps:TransactionalT
  const settings=createSettingsRepository(tx,deps);
  const resolve=createEffectiveSkillSnapshotResolver({officialSkills:deps.officialSkills,groupOverlays:{listBySkillIds:(ctx,ids)=>settings.listAccountSkillOverlays(ctx,ids)},accountOverlays:{listBySkillIds:(ctx,ids)=>settings.listAccountSkillOverlays(ctx,ids)},now:deps.now});
  return async(ctx:RequestContext,taskType:string,inputData:Readonly<Record<string,unknown>>,trustedRoute?:import("@creatoros/contract/execution-worker").ExecutionRoute):Promise<Record<string,unknown>>=>{
-  const preference=await settings.getPreferences(ctx),engine=preference?.assistantExecutionEngine==='codex'?'codex':'pi';
-  let executionRoute=trustedRoute??createExecutionRoute(engine);
+  let executionRoute=trustedRoute?frozenExecutionRoute({executionRoute:trustedRoute}):undefined;
   // 从真实调度身份寻找父任务，不能信任客户端传入引擎/父ID。
   // 在创建业务task时即冻结，避免恢复扫描在后续attach之前领取子任务。
   const scheduled=inputData.scheduledRun as {version?:unknown;scheduledFor?:unknown}|undefined;
@@ -32,9 +33,13 @@ export function createTransactionalTaskRuntimeResolver(tx:Db,deps:TransactionalT
     }
    }
   }
+  if(!executionRoute){
+   if(deps.resolveExecutionRoute)executionRoute=frozenExecutionRoute({executionRoute:await deps.resolveExecutionRoute(ctx,tx)});
+   else{const preference=await settings.getPreferences(ctx);executionRoute=createExecutionRoute(preference?.assistantExecutionEngine==='codex'?'codex':'pi');}
+  }
   if(taskType==='benchmark.transcribe')return {executionRoute}; // ASR不申请文本Skill，但原任务保留文本后处理路由。
   const required=requiredSkillIdsForTask(taskType,inputData),skillSnapshot=await resolve(ctx,required);
-  if(frozenExecutionEngine({executionRoute})==='codex')return {skillSnapshot,executionRoute};
+  if(executionRoute.schemaVersion===2||frozenExecutionEngine({executionRoute})==='codex')return {skillSnapshot,executionRoute};
   const authority=await deps.readPinnedAuthority(ctx,tx);
   return{skillSnapshot,executionRoute,modelAuthority:authority.authority,modelAuthorityDigest:authority.digest};
  };

@@ -1,4 +1,4 @@
-import {executionAssetCredentialSchema} from '@creatoros/contract/execution-worker';
+import {executionAssetCredentialSchema,readFrozenModelRoute} from '@creatoros/contract/execution-worker';
 import {createHash} from "node:crypto";
 import type {RequestContext} from "@creatoros/contract";
 import {assetCredentialSchema,assetRuntimeOptionsSchema} from "@creatoros/contract/execution-worker";
@@ -42,7 +42,14 @@ export function createExecutionAssetPorts(deps:Parameters<typeof createExecution
     const credential=executionAssetCredentialSchema.parse(await deps.resolveCredential(owner.context,{aiTaskId:owner.aiTaskId,executionTaskId:ref.executionTaskId}));
     await leases.withLease(ref,"admission",async scope=>{
      const {input}=await bindAssetExecution(scope,callId);
-     if("engine" in input){if(!("engine" in credential)||credential.kind!==input.mediaKind||credential.runtimeVersion!==input.runtimeVersion)throw new ConflictError("Codex素材身份不符");return;}
+     if("engine" in input){
+       const route=readFrozenModelRoute(scope.task.payload,'image',input.capability);
+       if(!("engine" in credential)||credential.kind!==input.mediaKind||credential.runtimeVersion!==input.runtimeVersion||
+         (route&&(route.readiness!=='configured'||route.source!=='codex'||credential.requestedModel!==route.identity.requestedModel))||
+         (input.requestedModel!==undefined&&credential.requestedModel!==input.requestedModel)||
+         (!route&&credential.requestedModel!==input.requestedModel))throw new ConflictError("Codex素材身份不符");
+       return;
+     }
      if("engine" in credential)throw new ConflictError("API任务不能切换Codex");
      const {token:_token,provider,model,baseUrl,serviceId,kind,...rawOptions}=credential;
      const options=assetRuntimeOptionsSchema.parse(rawOptions),digest=(value:unknown)=>`sha256:${createHash("sha256").update(canonicalJson(value)).digest("hex")}`;
