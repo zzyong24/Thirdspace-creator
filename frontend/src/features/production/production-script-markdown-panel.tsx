@@ -56,8 +56,17 @@ export function ProductionScriptMarkdownPanel({scope,outputId,prepareTarget,prev
  }
  async function recover(check:()=>void){
   if(!candidate?.apply||candidate.apply.operation!=='applyProductionEditor'||!requestId||!onRecoverReceipt)throw Error('原采纳恢复尚未绑定');
-  const receipt=await workspace.client.getProductionEditorReceipt({params:{outputId,requestId},query:undefined,body:undefined});check();
-  if(!receipt)throw Error('原请求尚未查到回执，候选和原请求ID继续保留。');
+  let receipt=await workspace.client.getProductionEditorReceipt({params:{outputId,requestId},query:undefined,body:undefined});check();
+  if(!receipt){
+   const current=await workspace.client.getProductionEditor({params:{outputId},query:undefined,body:undefined});check();
+   // SEMANTIC_BOUNDARY_ALLOW: 只核同工程持久版本与原请求回执的CAS结算事实，不判断剪辑语义或自动重放。
+   if(candidate.target.savedBase.kind!=='production'||current.productionId!==candidate.target.savedBase.productionId||current.revision<=candidate.apply.body.expectedRevision)throw Error('原请求尚未查到回执，候选和原请求ID继续保留。');
+   receipt=await workspace.client.getProductionEditorReceipt({params:{outputId,requestId},query:undefined,body:undefined});check();
+   if(!receipt){
+    persist({base:baseRef.current,draft:draftRef.current});setPendingAdoption(false);
+    setError('工程已有新版本，已核实原采纳未保存。文字稿已保留，可丢弃旧候选后继续编辑。');return;
+   }
+  }
   if(candidate.candidate?.kind!=='native_scene'||receipt.productionId!==(candidate.target.savedBase.kind==='production'?candidate.target.savedBase.productionId:null)||receipt.requestId!==requestId)throw Error('原回执与候选身份不一致');
   const saved=readProductionNativeScene(receipt.plan,candidate.candidate.document.id);
   if(!saved||await editorDigest(saved)!==candidate.candidateDigest)throw Error('原回执内容与候选不一致');check();
