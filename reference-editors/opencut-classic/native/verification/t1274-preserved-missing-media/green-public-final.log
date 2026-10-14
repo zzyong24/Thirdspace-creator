@@ -1,0 +1,42 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview.test.ts:
+(pass) preview-scene public 命令使用候选独立 frozen 实际编码端口，活动工程/撤销/选区/epoch不变 [3.76ms]
+(pass) preview-scene owner拒绝在编码前，保留活动稿件 [0.56ms]
+(pass) preview-scene epoch拒绝在编码前，保留活动稿件 [0.29ms]
+(pass) preview-scene before拒绝在编码前，保留活动稿件 [0.41ms]
+(pass) preview-scene candidate拒绝在编码前，保留活动稿件 [0.45ms]
+(pass) preview-scene scene拒绝在编码前，保留活动稿件 [0.32ms]
+(pass) preview-scene file拒绝在编码前，保留活动稿件 [0.56ms]
+(pass) preview-scene duplicate media拒绝在编码前，保留活动稿件 [0.37ms]
+(pass) preview-scene missing media拒绝在编码前，保留活动稿件 [0.50ms]
+(pass) preview-scene request期间取消，迟到buffer不得返回且URL释放 [1.55ms]
+(pass) preview-scene selection epoch期间取消，迟到buffer不得返回且URL释放 [1.38ms]
+(pass) preview-scene owner lifetime期间取消，迟到buffer不得返回且URL释放 [1.33ms]
+(pass) preview-scene 编码失败不能伪造Blob，临时URL释放且旧seek/read命令仍可达 [0.51ms]
+(pass) 原公共load/context/snapshot/seek/apply-tracks/export仍沿真实controller命令入口成功 [1.25ms]
+(pass) preview-scene保留旧未知只读层、无时间字段扩展和其他scene，不按未知内容猜媒体 [0.66ms]
+(pass) preview-scene public 支持原video及其已分离upload原声音轨，仅改主轨时音轨完整保留 [0.76ms]
+(pass) preview-scene public audio-image继续拒绝不兼容媒体类型 [0.71ms]
+(pass) preview-scene public video-audio继续拒绝不兼容媒体类型 [0.59ms]
+(pass) preview-scene public image-video继续拒绝不兼容媒体类型 [0.50ms]
+(pass) 旧video缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [1.10ms]
+(pass) 旧image缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.60ms]
+(pass) 旧audio缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.57ms]
+(pass) 缺失素材new不能借保留旧元素放宽 [0.72ms]
+(pass) 缺失素材duration不能借保留旧元素放宽 [0.56ms]
+(pass) 缺失素材params不能借保留旧元素放宽 [0.55ms]
+(pass) 缺失素材mediaId不能借保留旧元素放宽 [0.49ms]
+(pass) 缺失素材move-track不能借保留旧元素放宽 [0.45ms]
+(pass) 全部主素材缺失但显式#2244cc背景是原renderer合法画面 [1.84ms]
+(pass) 全部主素材缺失但显式#000000背景是原renderer合法画面 [0.47ms]
+(pass) 全部素材缺失且color无画面时明确拒绝，不把旧全黑片签成有效候选 [0.50ms]
+(pass) 全部素材缺失且blur无画面时明确拒绝，不把旧全黑片签成有效候选 [0.53ms]
+(pass) 全部主素材缺失但原文字图层存在仍可预览 [0.75ms]
+(pass) 缺失主素材后effect-only不冒充可用画面 [0.86ms]
+(pass) 缺失主素材后hidden-text不冒充可用画面 [0.67ms]
+
+ 34 pass
+ 0 fail
+ 124 expect() calls
+Ran 34 tests across 1 file. [49.00ms]

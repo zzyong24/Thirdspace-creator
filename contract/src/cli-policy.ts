@@ -17,6 +17,7 @@ export type EndpointId = (typeof ENDPOINTS)[keyof typeof ENDPOINTS]["id"];
 // 新 operation 没有进入 READ/MUTATION 两张穷尽表时，下方类型门与测试都会失败。
 const READ_OPERATIONS = [
   'ai.workCandidates.source',
+  'outputs.production.editor.script.read','outputs.production.editor.script.propose',
   'ai.assistantActions.receipt',
   "accountGroups.list",
   "groupResourceGrants.list",

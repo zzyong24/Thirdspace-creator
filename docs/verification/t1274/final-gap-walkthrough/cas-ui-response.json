@@ -1,0 +1,13 @@
+{
+  "status": 409,
+  "body": {
+    "error": {
+      "code": "ConflictError",
+      "message": "制作方案已更新，当前版本为 5；输入已保留，请重新读取后应用",
+      "details": {}
+    },
+    "meta": {
+      "requestId": "dispatch"
+    }
+  }
+}

@@ -1,0 +1,1114 @@
+{
+  "base": {
+    "kind": "work.editor.context",
+    "schemaVersion": 1,
+    "target": {
+      "schemaVersion": 1,
+      "projectId": "project-8a2fadb0-8",
+      "outputId": "output-5e3e4e95-61",
+      "documentDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+      "owner": "production",
+      "contentType": "video",
+      "savedBase": {
+        "kind": "production",
+        "productionId": "production-5e3e4e95-68",
+        "revision": 4
+      },
+      "selection": {
+        "kind": "native_scene",
+        "sceneId": "family-scene",
+        "elementRefs": [],
+        "playheadTick": 0,
+        "contextEpoch": 3,
+        "editorGeneration": "1:8e164dc5-352a-41db-8ec0-1d54c27b72ae"
+      }
+    },
+    "base": {
+      "kind": "production",
+      "productionId": "production-5e3e4e95-68",
+      "revision": 4
+    },
+    "baseDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+    "selection": {
+      "kind": "native_scene",
+      "sceneId": "family-scene",
+      "elementRefs": [],
+      "playheadTick": 0,
+      "contextEpoch": 3,
+      "editorGeneration": "1:8e164dc5-352a-41db-8ec0-1d54c27b72ae"
+    },
+    "readScope": {
+      "kind": "native_scene",
+      "sceneId": "family-scene",
+      "elementRefs": [],
+      "playheadTick": 0,
+      "contextEpoch": 3,
+      "editorGeneration": "1:8e164dc5-352a-41db-8ec0-1d54c27b72ae"
+    },
+    "selected": [
+      {
+        "trackId": "family-main",
+        "trackDigest": "sha256:a6862d804431af65dccd616ef6b5d1986e0d171c7ea4b754e7cc55c7b1965eac",
+        "elementDigest": "sha256:1993211cde186b3ab8d4a6d1e2568dbe48809a52b3c8a087135fdb7f78c3c5b7",
+        "element": {
+          "id": "family-a1",
+          "name": "family-a1",
+          "type": "video",
+          "hidden": false,
+          "params": {
+            "muted": false,
+            "volume": -6,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform.rotate": 0,
+            "transform.scaleX": 1,
+            "transform.scaleY": 1,
+            "transform.positionX": 0,
+            "transform.positionY": 0
+          },
+          "effects": [
+            {
+              "id": "family-blur",
+              "type": "blur",
+              "params": {
+                "intensity": 2
+              },
+              "enabled": true
+            }
+          ],
+          "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+          "trimEnd": 300000,
+          "duration": 60000,
+          "startTime": 0,
+          "trimStart": 0,
+          "animations": {
+            "opacity": {
+              "keys": [
+                {
+                  "id": "fade-a",
+                  "time": 0,
+                  "value": 0.8,
+                  "tangentMode": "auto",
+                  "segmentToNext": "linear"
+                },
+                {
+                  "id": "fade-b",
+                  "time": 60000,
+                  "value": 1,
+                  "tangentMode": "auto",
+                  "segmentToNext": "linear"
+                }
+              ]
+            }
+          },
+          "sourceDuration": 360000,
+          "legacyExtension": {
+            "preserved": true,
+            "cropEvidence": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "isSourceAudioEnabled": true
+        }
+      },
+      {
+        "trackId": "family-main",
+        "trackDigest": "sha256:a6862d804431af65dccd616ef6b5d1986e0d171c7ea4b754e7cc55c7b1965eac",
+        "elementDigest": "sha256:8e61c220ac149677ca8c391ed9b771f81edeb629e87a78111241381dd042c80a",
+        "element": {
+          "id": "family-a2",
+          "name": "family-a2",
+          "type": "video",
+          "hidden": false,
+          "params": {
+            "muted": false,
+            "volume": -6,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform.rotate": 0,
+            "transform.scaleX": 1,
+            "transform.scaleY": 1,
+            "transform.positionX": 0,
+            "transform.positionY": 0
+          },
+          "effects": [
+            {
+              "id": "family-blur",
+              "type": "blur",
+              "params": {
+                "intensity": 2
+              },
+              "enabled": true
+            }
+          ],
+          "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+          "trimEnd": 60000,
+          "duration": 60000,
+          "startTime": 60000,
+          "trimStart": 240000,
+          "animations": {
+            "opacity": {
+              "keys": [
+                {
+                  "id": "fade-a",
+                  "time": 0,
+                  "value": 0.8,
+                  "tangentMode": "auto",
+                  "segmentToNext": "linear"
+                },
+                {
+                  "id": "fade-b",
+                  "time": 60000,
+                  "value": 1,
+                  "tangentMode": "auto",
+                  "segmentToNext": "linear"
+                }
+              ]
+            }
+          },
+          "sourceDuration": 360000,
+          "legacyExtension": {
+            "preserved": true,
+            "cropEvidence": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "isSourceAudioEnabled": true
+        }
+      },
+      {
+        "trackId": "family-text",
+        "trackDigest": "sha256:bd06f187bdbe7d1f4d569084c23bc1b2939dd2ad2fd4f4f8da7a1e525bbc3968",
+        "elementDigest": "sha256:457f63085b3ffd26dc310697123acdaa25ac5727406c19fceb8a8b2290740251",
+        "element": {
+          "id": "family-title",
+          "name": "原字幕",
+          "type": "text",
+          "params": {
+            "color": "#ffffff",
+            "content": "公共输入族保留字幕",
+            "fontSize": 20
+          },
+          "trimEnd": 0,
+          "duration": 300000,
+          "startTime": 0,
+          "trimStart": 0,
+          "legacyExtension": {
+            "preserved": true
+          }
+        }
+      },
+      {
+        "trackId": "family-effect",
+        "trackDigest": "sha256:c334ec6b14cf7e2cca503bed57c1c4012adfacde61f994788c2c994c4b7f7af8",
+        "elementDigest": "sha256:e520aa0d17d3aaf1d77c2f3412d005a16d8e718dff5ec0968ad2dcf35a9756d9",
+        "element": {
+          "id": "family-effect-1",
+          "name": "模糊效果",
+          "type": "effect",
+          "params": {
+            "intensity": 1
+          },
+          "trimEnd": 0,
+          "duration": 300000,
+          "startTime": 0,
+          "trimStart": 0,
+          "effectType": "blur",
+          "legacyExtension": {
+            "preserved": true
+          }
+        }
+      },
+      {
+        "trackId": "family-audio",
+        "trackDigest": "sha256:778907288a8509cbbe920870209e6e5c8517b88245a9f530e2c061500d369eec",
+        "elementDigest": "sha256:86b389ace3ad98582a33e71281d140de6b804ed771ac27e8572c909ee34954de",
+        "element": {
+          "id": "family-sound",
+          "name": "B源音频",
+          "type": "audio",
+          "params": {
+            "volume": -12
+          },
+          "mediaId": "family-media-b",
+          "trimEnd": 300000,
+          "duration": 60000,
+          "startTime": 60000,
+          "trimStart": 0,
+          "sourceType": "upload",
+          "sourceDuration": 360000,
+          "legacyExtension": {
+            "preserved": true
+          }
+        }
+      }
+    ],
+    "documentSummary": {
+      "sceneId": "family-scene",
+      "tracksDigest": "sha256:ac06a04056da7206a790cd252b1327379ea502f1c61ac1bac2bfbc12b2224fc8",
+      "tracks": [
+        {
+          "id": "family-main",
+          "type": "video",
+          "name": "主轨A-B-A",
+          "elementCount": 2,
+          "elements": [
+            {
+              "id": "family-a1",
+              "type": "video",
+              "startTime": 0,
+              "duration": 60000
+            },
+            {
+              "id": "family-a2",
+              "type": "video",
+              "startTime": 60000,
+              "duration": 60000
+            }
+          ]
+        },
+        {
+          "id": "family-text",
+          "type": "text",
+          "name": "保留字幕",
+          "elementCount": 1,
+          "elements": [
+            {
+              "id": "family-title",
+              "type": "text",
+              "startTime": 0,
+              "duration": 300000
+            }
+          ]
+        },
+        {
+          "id": "family-effect",
+          "type": "effect",
+          "name": "保留效果层",
+          "elementCount": 1,
+          "elements": [
+            {
+              "id": "family-effect-1",
+              "type": "effect",
+              "startTime": 0,
+              "duration": 300000
+            }
+          ]
+        },
+        {
+          "id": "family-audio",
+          "type": "audio",
+          "name": "保留独立声音",
+          "elementCount": 1,
+          "elements": [
+            {
+              "id": "family-sound",
+              "type": "audio",
+              "startTime": 60000,
+              "duration": 60000
+            }
+          ]
+        }
+      ]
+    },
+    "document": null,
+    "projectEnvelope": {
+      "metadata": {
+        "id": "output-5e3e4e95-61",
+        "name": "T1274最终错误与缺失媒体隔离验收",
+        "duration": 300000,
+        "createdAt": "2026-10-14T05:34:18.493Z",
+        "updatedAt": "2026-10-14T07:19:45.874Z",
+        "familyExtension": {
+          "preserved": true
+        }
+      },
+      "settings": {
+        "fps": {
+          "numerator": 24,
+          "denominator": 1
+        },
+        "background": {
+          "type": "color",
+          "color": "#000000"
+        },
+        "canvasSize": {
+          "width": 640,
+          "height": 360
+        },
+        "canvasSizeMode": "preset",
+        "originalCanvasSize": {
+          "width": 640,
+          "height": 360
+        },
+        "lastCustomCanvasSize": null
+      }
+    },
+    "media": [],
+    "sourceTranscripts": [],
+    "capabilities": {
+      "markdownTimeline": true,
+      "scriptMarkdownView": "script_markdown",
+      "typedPatch": true,
+      "ticksPerSecond": 120000,
+      "nativeDocumentVersion": 31,
+      "nativeSourceRevision": "cf5e79e919144200294fb9fed22a222592a0aeea",
+      "nativeRate": {
+        "min": 0.01,
+        "max": 5
+      },
+      "paramsRegistry": {
+        "video": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode",
+          "volume",
+          "muted"
+        ],
+        "image": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode"
+        ],
+        "text": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode",
+          "content",
+          "fontFamily",
+          "fontSize",
+          "color",
+          "textAlign",
+          "fontWeight",
+          "fontStyle",
+          "textDecoration",
+          "letterSpacing",
+          "lineHeight",
+          "background.enabled",
+          "background.color",
+          "background.cornerRadius",
+          "background.paddingX",
+          "background.paddingY",
+          "background.offsetX",
+          "background.offsetY"
+        ],
+        "audio": [
+          "volume",
+          "muted"
+        ],
+        "sticker": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode"
+        ],
+        "graphic": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode"
+        ],
+        "effect": []
+      },
+      "graphicDefinitions": {
+        "rectangle": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode",
+          "fill",
+          "stroke",
+          "strokeWidth",
+          "strokeAlign",
+          "cornerRadius"
+        ],
+        "ellipse": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode",
+          "fill",
+          "stroke",
+          "strokeWidth",
+          "strokeAlign"
+        ],
+        "polygon": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode",
+          "fill",
+          "stroke",
+          "strokeWidth",
+          "strokeAlign",
+          "sides",
+          "cornerRadius"
+        ],
+        "star": [
+          "transform.positionX",
+          "transform.positionY",
+          "transform.scaleX",
+          "transform.scaleY",
+          "transform.rotate",
+          "opacity",
+          "blendMode",
+          "fill",
+          "stroke",
+          "strokeWidth",
+          "strokeAlign",
+          "points",
+          "depth"
+        ]
+      },
+      "effectsCatalog": [
+        {
+          "type": "blur",
+          "params": [
+            "intensity"
+          ]
+        }
+      ],
+      "fields": [
+        "name",
+        "startTime",
+        "duration",
+        "trimStart",
+        "trimEnd",
+        "sourceDuration",
+        "mediaId",
+        "isSourceAudioEnabled",
+        "hidden",
+        "retime",
+        "params",
+        "animations"
+      ]
+    },
+    "scriptMarkdown": {
+      "formatVersion": 1,
+      "sceneId": "family-scene",
+      "stateStamp": "sha256:361300803ca29b5283206618eda7b5c88ae435572ac5a6409c7c582ff1cee7ab",
+      "libraryStamp": "sha256:ef758be420553e4d3bc52c4b392350c7953be352f59f6b8e76c92a94d52f5c3b",
+      "markdown": "<!-- markdown-state:format:1 -->\n<!-- markdown-state:stamp:sha256:361300803ca29b5283206618eda7b5c88ae435572ac5a6409c7c582ff1cee7ab -->\n<!-- markdown-state:lib-stamp:sha256:ef758be420553e4d3bc52c4b392350c7953be352f59f6b8e76c92a94d52f5c3b -->\n<!-- markdown-state:timeline:family-scene -->\n<!-- markdown-state:body -->\n\n<!-- t=120000 ticks/s；silence仅表示未转录源区间，不是声学静音，缩短须沿既有听审。 -->\n## V1 <!-- markdown-state:track:family-main -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22V1%22%2C%22trackId%22%3A%22family-main%22%2C%22type%22%3A%22video%22%2C%22editableElementIds%22%3A%5B%22family-a1%22%2C%22family-a2%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n### asset-8a2fadb0-27 <!-- markdown-state:source:03f4245e-35b3-47fe-af8b-f8647c99bd70:asset-8a2fadb0-27 -->\n[c1] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-a1 -->\n[c2] 60000t source=240000..300000t rate=1 <!-- markdown-state:item:family-a2 -->\n\n## P1 <!-- markdown-state:track:family-text -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P1%22%2C%22trackId%22%3A%22family-text%22%2C%22type%22%3A%22text%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-title%22%5D%7D -->\n<!-- 保护原元素:family-title；不由Markdown重建 -->\n\n## P2 <!-- markdown-state:track:family-effect -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P2%22%2C%22trackId%22%3A%22family-effect%22%2C%22type%22%3A%22effect%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-effect-1%22%5D%7D -->\n<!-- 保护原元素:family-effect-1；不由Markdown重建 -->\n\n## A1 <!-- markdown-state:track:family-audio -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22A1%22%2C%22trackId%22%3A%22family-audio%22%2C%22type%22%3A%22audio%22%2C%22editableElementIds%22%3A%5B%22family-sound%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n[gap 60000t]\n### asset-94c2affe-277 <!-- markdown-state:source:family-media-b:asset-94c2affe-277 -->\n[c3] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-sound -->\n",
+      "libraryDocs": [
+        {
+          "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+          "assetId": "asset-8a2fadb0-27",
+          "content": "### asset-8a2fadb0-27 <!-- markdown-state:source:03f4245e-35b3-47fe-af8b-f8647c99bd70:asset-8a2fadb0-27 -->\n<!-- 只读源库；sN按媒体+asset+transcript+token复合定位，句级时码不能按字符分割。 -->\n<!-- 无可验证词句时码；仅支持精确整片段或已冻结源范围，禁止估时。 -->\n[clip source=0..360000t rate=1]"
+        },
+        {
+          "mediaId": "family-media-b",
+          "assetId": "asset-94c2affe-277",
+          "content": "### asset-94c2affe-277 <!-- markdown-state:source:family-media-b:asset-94c2affe-277 -->\n<!-- 只读源库；sN按媒体+asset+transcript+token复合定位，句级时码不能按字符分割。 -->\n<!-- 无可验证词句时码；仅支持精确整片段或已冻结源范围，禁止估时。 -->\n[clip source=0..360000t rate=1]"
+        }
+      ],
+      "tracks": [
+        {
+          "alias": "V1",
+          "trackId": "family-main",
+          "type": "video",
+          "editableElementIds": [
+            "family-a1",
+            "family-a2"
+          ],
+          "protectedElementIds": []
+        },
+        {
+          "alias": "P1",
+          "trackId": "family-text",
+          "type": "text",
+          "editableElementIds": [],
+          "protectedElementIds": [
+            "family-title"
+          ]
+        },
+        {
+          "alias": "P2",
+          "trackId": "family-effect",
+          "type": "effect",
+          "editableElementIds": [],
+          "protectedElementIds": [
+            "family-effect-1"
+          ]
+        },
+        {
+          "alias": "A1",
+          "trackId": "family-audio",
+          "type": "audio",
+          "editableElementIds": [
+            "family-sound"
+          ],
+          "protectedElementIds": []
+        }
+      ],
+      "scopeComplete": true
+    },
+    "fieldWindow": null,
+    "complete": true,
+    "failureCode": null,
+    "error": null
+  },
+  "draft": "<!-- markdown-state:format:1 -->\n<!-- markdown-state:stamp:sha256:361300803ca29b5283206618eda7b5c88ae435572ac5a6409c7c582ff1cee7ab -->\n<!-- markdown-state:lib-stamp:sha256:ef758be420553e4d3bc52c4b392350c7953be352f59f6b8e76c92a94d52f5c3b -->\n<!-- markdown-state:timeline:family-scene -->\n<!-- markdown-state:body -->\n\n<!-- t=120000 ticks/s；silence仅表示未转录源区间，不是声学静音，缩短须沿既有听审。 -->\n## V1 <!-- markdown-state:track:family-main -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22V1%22%2C%22trackId%22%3A%22family-main%22%2C%22type%22%3A%22video%22%2C%22editableElementIds%22%3A%5B%22family-a1%22%2C%22family-a2%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n### asset-8a2fadb0-27 <!-- markdown-state:source:03f4245e-35b3-47fe-af8b-f8647c99bd70:asset-8a2fadb0-27 -->\n[c1] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-a1 -->\n[gap 60000t]\n[c2] 60000t source=240000..300000t rate=1 <!-- markdown-state:item:family-a2 -->\n\n## P1 <!-- markdown-state:track:family-text -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P1%22%2C%22trackId%22%3A%22family-text%22%2C%22type%22%3A%22text%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-title%22%5D%7D -->\n<!-- 保护原元素:family-title；不由Markdown重建 -->\n\n## P2 <!-- markdown-state:track:family-effect -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P2%22%2C%22trackId%22%3A%22family-effect%22%2C%22type%22%3A%22effect%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-effect-1%22%5D%7D -->\n<!-- 保护原元素:family-effect-1；不由Markdown重建 -->\n\n## A1 <!-- markdown-state:track:family-audio -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22A1%22%2C%22trackId%22%3A%22family-audio%22%2C%22type%22%3A%22audio%22%2C%22editableElementIds%22%3A%5B%22family-sound%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n[gap 60000t]\n### asset-94c2affe-277 <!-- markdown-state:source:family-media-b:asset-94c2affe-277 -->\n[c3] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-sound -->\n",
+  "candidate": {
+    "kind": "work.editor.candidate",
+    "schemaVersion": 1,
+    "target": {
+      "schemaVersion": 1,
+      "projectId": "project-8a2fadb0-8",
+      "outputId": "output-5e3e4e95-61",
+      "documentDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+      "owner": "production",
+      "contentType": "video",
+      "savedBase": {
+        "kind": "production",
+        "productionId": "production-5e3e4e95-68",
+        "revision": 4
+      },
+      "selection": {
+        "kind": "native_scene",
+        "sceneId": "family-scene",
+        "elementRefs": [],
+        "playheadTick": 0,
+        "contextEpoch": 3,
+        "editorGeneration": "1:8e164dc5-352a-41db-8ec0-1d54c27b72ae"
+      }
+    },
+    "base": {
+      "kind": "production",
+      "productionId": "production-5e3e4e95-68",
+      "revision": 4
+    },
+    "baseDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+    "candidateDigest": "sha256:f15b5144a0a4ce79bddc2a65a5a8cafcc139ff0ff43a2e989e14ec5d464d2240",
+    "summary": "按当前文字修改剪辑",
+    "candidate": {
+      "kind": "native_scene",
+      "document": {
+        "id": "family-scene",
+        "name": "A-B-A与保护层",
+        "isMain": true,
+        "tracks": {
+          "main": {
+            "id": "family-main",
+            "name": "主轨A-B-A",
+            "type": "video",
+            "muted": false,
+            "hidden": false,
+            "elements": [
+              {
+                "id": "family-a1",
+                "name": "family-a1",
+                "startTime": 0,
+                "duration": 60000,
+                "trimStart": 0,
+                "trimEnd": 300000,
+                "sourceDuration": 360000,
+                "params": {
+                  "muted": false,
+                  "volume": -6,
+                  "opacity": 1,
+                  "blendMode": "normal",
+                  "transform.rotate": 0,
+                  "transform.scaleX": 1,
+                  "transform.scaleY": 1,
+                  "transform.positionX": 0,
+                  "transform.positionY": 0
+                },
+                "animations": {
+                  "opacity": {
+                    "keys": [
+                      {
+                        "id": "fade-a",
+                        "time": 0,
+                        "value": 0.8,
+                        "segmentToNext": "linear",
+                        "tangentMode": "auto"
+                      },
+                      {
+                        "id": "fade-b",
+                        "time": 60000,
+                        "value": 1,
+                        "segmentToNext": "linear",
+                        "tangentMode": "auto"
+                      }
+                    ]
+                  }
+                },
+                "hidden": false,
+                "effects": [
+                  {
+                    "id": "family-blur",
+                    "type": "blur",
+                    "params": {
+                      "intensity": 2
+                    },
+                    "enabled": true
+                  }
+                ],
+                "type": "video",
+                "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+                "isSourceAudioEnabled": true,
+                "legacyExtension": {
+                  "preserved": true,
+                  "cropEvidence": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                }
+              },
+              {
+                "id": "family-a2",
+                "name": "family-a2",
+                "startTime": 120000,
+                "duration": 60000,
+                "trimStart": 240000,
+                "trimEnd": 60000,
+                "sourceDuration": 360000,
+                "params": {
+                  "muted": false,
+                  "volume": -6,
+                  "opacity": 1,
+                  "blendMode": "normal",
+                  "transform.rotate": 0,
+                  "transform.scaleX": 1,
+                  "transform.scaleY": 1,
+                  "transform.positionX": 0,
+                  "transform.positionY": 0
+                },
+                "animations": {
+                  "opacity": {
+                    "keys": [
+                      {
+                        "id": "fade-a",
+                        "time": 0,
+                        "value": 0.8,
+                        "segmentToNext": "linear",
+                        "tangentMode": "auto"
+                      },
+                      {
+                        "id": "fade-b",
+                        "time": 60000,
+                        "value": 1,
+                        "segmentToNext": "linear",
+                        "tangentMode": "auto"
+                      }
+                    ]
+                  }
+                },
+                "hidden": false,
+                "effects": [
+                  {
+                    "id": "family-blur",
+                    "type": "blur",
+                    "params": {
+                      "intensity": 2
+                    },
+                    "enabled": true
+                  }
+                ],
+                "type": "video",
+                "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+                "isSourceAudioEnabled": true,
+                "legacyExtension": {
+                  "preserved": true,
+                  "cropEvidence": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                }
+              }
+            ],
+            "trackExtension": {
+              "preserved": true
+            }
+          },
+          "overlay": [
+            {
+              "id": "family-text",
+              "name": "保留字幕",
+              "type": "text",
+              "hidden": false,
+              "elements": [
+                {
+                  "id": "family-title",
+                  "name": "原字幕",
+                  "startTime": 0,
+                  "duration": 300000,
+                  "trimStart": 0,
+                  "trimEnd": 0,
+                  "params": {
+                    "color": "#ffffff",
+                    "content": "公共输入族保留字幕",
+                    "fontSize": 20
+                  },
+                  "type": "text",
+                  "legacyExtension": {
+                    "preserved": true
+                  }
+                }
+              ]
+            },
+            {
+              "id": "family-effect",
+              "name": "保留效果层",
+              "type": "effect",
+              "hidden": false,
+              "elements": [
+                {
+                  "id": "family-effect-1",
+                  "name": "模糊效果",
+                  "startTime": 0,
+                  "duration": 300000,
+                  "trimStart": 0,
+                  "trimEnd": 0,
+                  "params": {
+                    "intensity": 1
+                  },
+                  "type": "effect",
+                  "effectType": "blur",
+                  "legacyExtension": {
+                    "preserved": true
+                  }
+                }
+              ]
+            }
+          ],
+          "audio": [
+            {
+              "id": "family-audio",
+              "name": "保留独立声音",
+              "type": "audio",
+              "muted": false,
+              "elements": [
+                {
+                  "id": "family-sound",
+                  "name": "B源音频",
+                  "startTime": 60000,
+                  "duration": 60000,
+                  "trimStart": 0,
+                  "trimEnd": 300000,
+                  "sourceDuration": 360000,
+                  "params": {
+                    "volume": -12
+                  },
+                  "type": "audio",
+                  "sourceType": "upload",
+                  "mediaId": "family-media-b",
+                  "legacyExtension": {
+                    "preserved": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "bookmarks": [
+          {
+            "time": 120000,
+            "note": "B开始"
+          }
+        ],
+        "createdAt": "2026-10-14T05:34:18.493Z",
+        "updatedAt": "2026-10-14T05:34:20.152Z",
+        "sceneExtension": {
+          "preserved": true
+        }
+      }
+    },
+    "changes": [
+      {
+        "path": "document.tracks.main.elements[1].startTime",
+        "objectId": "family-a2",
+        "label": "document.tracks.main.elements[1].startTime",
+        "before": 60000,
+        "after": 120000
+      }
+    ],
+    "scriptDiagnostics": {
+      "warnings": [],
+      "errors": [],
+      "operations": [
+        {
+          "kind": "update",
+          "trackId": "family-main",
+          "elementId": "family-a2"
+        }
+      ]
+    },
+    "apply": {
+      "operation": "applyProductionEditor",
+      "outputId": "output-5e3e4e95-61",
+      "body": {
+        "expectedRevision": 4,
+        "edits": [
+          {
+            "type": "replaceNativeSceneTracks",
+            "sceneId": "family-scene",
+            "expectedBeforeDigest": "sha256:ac06a04056da7206a790cd252b1327379ea502f1c61ac1bac2bfbc12b2224fc8",
+            "tracks": {
+              "main": {
+                "id": "family-main",
+                "name": "主轨A-B-A",
+                "type": "video",
+                "muted": false,
+                "hidden": false,
+                "elements": [
+                  {
+                    "id": "family-a1",
+                    "name": "family-a1",
+                    "type": "video",
+                    "hidden": false,
+                    "params": {
+                      "muted": false,
+                      "volume": -6,
+                      "opacity": 1,
+                      "blendMode": "normal",
+                      "transform.rotate": 0,
+                      "transform.scaleX": 1,
+                      "transform.scaleY": 1,
+                      "transform.positionX": 0,
+                      "transform.positionY": 0
+                    },
+                    "effects": [
+                      {
+                        "id": "family-blur",
+                        "type": "blur",
+                        "params": {
+                          "intensity": 2
+                        },
+                        "enabled": true
+                      }
+                    ],
+                    "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+                    "trimEnd": 300000,
+                    "duration": 60000,
+                    "startTime": 0,
+                    "trimStart": 0,
+                    "animations": {
+                      "opacity": {
+                        "keys": [
+                          {
+                            "id": "fade-a",
+                            "time": 0,
+                            "value": 0.8,
+                            "tangentMode": "auto",
+                            "segmentToNext": "linear"
+                          },
+                          {
+                            "id": "fade-b",
+                            "time": 60000,
+                            "value": 1,
+                            "tangentMode": "auto",
+                            "segmentToNext": "linear"
+                          }
+                        ]
+                      }
+                    },
+                    "sourceDuration": 360000,
+                    "legacyExtension": {
+                      "preserved": true,
+                      "cropEvidence": [
+                        1,
+                        2,
+                        3,
+                        4
+                      ]
+                    },
+                    "isSourceAudioEnabled": true
+                  },
+                  {
+                    "id": "family-a2",
+                    "name": "family-a2",
+                    "type": "video",
+                    "hidden": false,
+                    "params": {
+                      "muted": false,
+                      "volume": -6,
+                      "opacity": 1,
+                      "blendMode": "normal",
+                      "transform.rotate": 0,
+                      "transform.scaleX": 1,
+                      "transform.scaleY": 1,
+                      "transform.positionX": 0,
+                      "transform.positionY": 0
+                    },
+                    "effects": [
+                      {
+                        "id": "family-blur",
+                        "type": "blur",
+                        "params": {
+                          "intensity": 2
+                        },
+                        "enabled": true
+                      }
+                    ],
+                    "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+                    "trimEnd": 60000,
+                    "duration": 60000,
+                    "startTime": 120000,
+                    "trimStart": 240000,
+                    "animations": {
+                      "opacity": {
+                        "keys": [
+                          {
+                            "id": "fade-a",
+                            "time": 0,
+                            "value": 0.8,
+                            "tangentMode": "auto",
+                            "segmentToNext": "linear"
+                          },
+                          {
+                            "id": "fade-b",
+                            "time": 60000,
+                            "value": 1,
+                            "tangentMode": "auto",
+                            "segmentToNext": "linear"
+                          }
+                        ]
+                      }
+                    },
+                    "sourceDuration": 360000,
+                    "legacyExtension": {
+                      "preserved": true,
+                      "cropEvidence": [
+                        1,
+                        2,
+                        3,
+                        4
+                      ]
+                    },
+                    "isSourceAudioEnabled": true
+                  }
+                ],
+                "trackExtension": {
+                  "preserved": true
+                }
+              },
+              "audio": [
+                {
+                  "id": "family-audio",
+                  "name": "保留独立声音",
+                  "type": "audio",
+                  "muted": false,
+                  "elements": [
+                    {
+                      "id": "family-sound",
+                      "name": "B源音频",
+                      "type": "audio",
+                      "params": {
+                        "volume": -12
+                      },
+                      "mediaId": "family-media-b",
+                      "trimEnd": 300000,
+                      "duration": 60000,
+                      "startTime": 60000,
+                      "trimStart": 0,
+                      "sourceType": "upload",
+                      "sourceDuration": 360000,
+                      "legacyExtension": {
+                        "preserved": true
+                      }
+                    }
+                  ]
+                }
+              ],
+              "overlay": [
+                {
+                  "id": "family-text",
+                  "name": "保留字幕",
+                  "type": "text",
+                  "hidden": false,
+                  "elements": [
+                    {
+                      "id": "family-title",
+                      "name": "原字幕",
+                      "type": "text",
+                      "params": {
+                        "color": "#ffffff",
+                        "content": "公共输入族保留字幕",
+                        "fontSize": 20
+                      },
+                      "trimEnd": 0,
+                      "duration": 300000,
+                      "startTime": 0,
+                      "trimStart": 0,
+                      "legacyExtension": {
+                        "preserved": true
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "family-effect",
+                  "name": "保留效果层",
+                  "type": "effect",
+                  "hidden": false,
+                  "elements": [
+                    {
+                      "id": "family-effect-1",
+                      "name": "模糊效果",
+                      "type": "effect",
+                      "params": {
+                        "intensity": 1
+                      },
+                      "trimEnd": 0,
+                      "duration": 300000,
+                      "startTime": 0,
+                      "trimStart": 0,
+                      "effectType": "blur",
+                      "legacyExtension": {
+                        "preserved": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "imageRequest": null,
+    "failureCode": null,
+    "error": null
+  },
+  "requestId": "79622981-9257-4545-a849-e0230a081b4a",
+  "pendingAdoption": true,
+  "pendingKind": "adopt"
+}

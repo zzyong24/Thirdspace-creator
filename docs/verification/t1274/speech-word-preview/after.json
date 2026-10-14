@@ -1,0 +1,297 @@
+{
+  "outputId": "output-94c2affe-721",
+  "projectId": "project-94c2affe-710",
+  "productionId": "production-94c2affe-736",
+  "revision": 3,
+  "state": "editable",
+  "plan": {
+    "revision": 3,
+    "editorVersion": 3,
+    "nativeSources": [
+      {
+        "source": {
+          "assetId": "asset-94c2affe-729",
+          "hasAudio": true,
+          "sourceId": "source-067a05ee18d600bb68c050361f475d4be499edbb2449a202e9ab72dfaf667727",
+          "timebase": {
+            "den": 16000,
+            "num": 1
+          },
+          "fileDigest": "d412b4a9cbe738fb50738affc8a1ec7088174f429c3760866ab515fe00898535",
+          "assetFileId": "afile-94c2affe-733",
+          "probeDigest": "9e117acc68fc50c8f43cbd23bdd22b65fb6b7631035bb23d69e6113c40a9bbda",
+          "durationTicks": 131200
+        },
+        "mediaId": "90c9f206-a15b-4bd9-8427-f391569cf5a9"
+      }
+    ],
+    "referenceEditor": {
+      "editor": "opencut-classic",
+      "revision": "cf5e79e919144200294fb9fed22a222592a0aeea",
+      "mediaRefs": [
+        {
+          "assetId": "asset-94c2affe-729",
+          "mediaId": "90c9f206-a15b-4bd9-8427-f391569cf5a9",
+          "assetFileId": "afile-94c2affe-733"
+        }
+      ],
+      "nativeDocument": {
+        "scenes": [
+          {
+            "id": "07688549-16c6-45f7-8689-3e71ba3e5d56",
+            "name": "主画面",
+            "isMain": true,
+            "tracks": {
+              "main": {
+                "id": "5abf3852-7477-4278-ae2c-8bc2e950b0a3",
+                "name": "Main Track",
+                "type": "video",
+                "muted": false,
+                "hidden": false,
+                "elements": [
+                  {
+                    "id": "30f46d84-e5ef-4755-ba65-68e187056e9f",
+                    "name": "objkey-94c2affe-728-speech-precise.mov",
+                    "type": "video",
+                    "hidden": false,
+                    "params": {
+                      "muted": false,
+                      "volume": 0,
+                      "opacity": 1,
+                      "blendMode": "normal",
+                      "transform.rotate": 0,
+                      "transform.scaleX": 1,
+                      "transform.scaleY": 1,
+                      "transform.positionX": 0,
+                      "transform.positionY": 0
+                    },
+                    "mediaId": "90c9f206-a15b-4bd9-8427-f391569cf5a9",
+                    "trimEnd": 0,
+                    "duration": 984000,
+                    "startTime": 0,
+                    "trimStart": 0,
+                    "sourceDuration": 984000,
+                    "isSourceAudioEnabled": true
+                  }
+                ]
+              },
+              "audio": [],
+              "overlay": []
+            },
+            "bookmarks": [],
+            "createdAt": "2026-10-14T06:12:17.377Z",
+            "updatedAt": "2026-10-14T06:12:19.271Z"
+          }
+        ],
+        "version": 31,
+        "metadata": {
+          "id": "output-94c2affe-721",
+          "name": "系统语音真实转写验收",
+          "duration": 984000,
+          "createdAt": "2026-10-14T06:12:17.377Z",
+          "updatedAt": "2026-10-14T06:12:19.376Z"
+        },
+        "settings": {
+          "fps": {
+            "numerator": 25,
+            "denominator": 1
+          },
+          "background": {
+            "type": "color",
+            "color": "#000000"
+          },
+          "canvasSize": {
+            "width": 640,
+            "height": 360
+          },
+          "canvasSizeMode": "preset",
+          "originalCanvasSize": {
+            "width": 640,
+            "height": 360
+          },
+          "lastCustomCanvasSize": null
+        },
+        "mediaMetadata": [
+          {
+            "fps": 25,
+            "name": "objkey-94c2affe-728-speech-precise.mov",
+            "size": 269932,
+            "type": "video",
+            "width": 640,
+            "height": 360,
+            "mediaId": "90c9f206-a15b-4bd9-8427-f391569cf5a9",
+            "duration": 8.200000000000001,
+            "hasAudio": true,
+            "lastModified": 1791958338493
+          }
+        ],
+        "currentSceneId": "07688549-16c6-45f7-8689-3e71ba3e5d56"
+      }
+    },
+    "sourceTranscripts": [
+      {
+        "text": "今天我们和对视频剪辑保留清楚完整的内容,再保存这次修改",
+        "tokens": [
+          {
+            "text": "今天",
+            "tokenId": "asr-token-15ac72346b380e6013f686827305f6987ceec42a0d267eb6a2d92fa260a1387a",
+            "endTicks": 5760,
+            "startTicks": 0
+          },
+          {
+            "text": "我们",
+            "tokenId": "asr-token-0a2a9bfc202e6f12aad0c8a2fbf8092195ec8175a5dfa2329c59354ba3d4e89d",
+            "endTicks": 12800,
+            "startTicks": 5760
+          },
+          {
+            "text": "和",
+            "tokenId": "asr-token-2cc00dd368cfe18c4c58c0f0b1db68c45108a52dc29ddbaaed64483a7fec65b2",
+            "endTicks": 18560,
+            "startTicks": 12800
+          },
+          {
+            "text": "对",
+            "tokenId": "asr-token-9d8dc6ee6ff29ac49601a30ea08160460c24bcd5a83f0c2c833eb8cfa32307a0",
+            "endTicks": 21760,
+            "startTicks": 18560
+          },
+          {
+            "text": "视",
+            "tokenId": "asr-token-19c751b883d4c6e8d0f75edfb788fcdcdb8ba5ce0206ea6a13095eef25201ffc",
+            "endTicks": 26560,
+            "startTicks": 21760
+          },
+          {
+            "text": "频",
+            "tokenId": "asr-token-ff1b1eceda08535673cb2e29931e704dce9ecc699e2f1f7316fc4660e260fc35",
+            "endTicks": 30720,
+            "startTicks": 26560
+          },
+          {
+            "text": "剪",
+            "tokenId": "asr-token-7dc61203327da9cdbbadfb047bf72dec1dffff763e8bfc02c67f2d6e56b8307a",
+            "endTicks": 34880,
+            "startTicks": 30720
+          },
+          {
+            "text": "辑",
+            "tokenId": "asr-token-26879e692969dc9838e3fa0450c8bb4bb22caf915edfcd871f7908ecf78e67d8",
+            "endTicks": 38720,
+            "startTicks": 34880
+          },
+          {
+            "text": "保",
+            "tokenId": "asr-token-982f6c668ae5da808dc916ad59dad495481e73fa2862bdb8d45578d5ffac6c72",
+            "endTicks": 63040,
+            "startTicks": 58880
+          },
+          {
+            "text": "留",
+            "tokenId": "asr-token-3282fa62538d92e677053675fe71404191c2d9bbed14c05001c5077f818035a2",
+            "endTicks": 66880,
+            "startTicks": 63040
+          },
+          {
+            "text": "清楚",
+            "tokenId": "asr-token-1f568aee3532c6525a6cc51d04851a04cc9f22ef5f736987aee317d1410ff40e",
+            "endTicks": 72960,
+            "startTicks": 66880
+          },
+          {
+            "text": "完",
+            "tokenId": "asr-token-23621cd17c65dcc7a7b8b3289a1296e9a08b6aa6c41d9392d486968723678498",
+            "endTicks": 80640,
+            "startTicks": 72960
+          },
+          {
+            "text": "整",
+            "tokenId": "asr-token-766fdc37c9b3a5d6eb808028d584b37b2148b7815286cb4abb7c948918f67e60",
+            "endTicks": 83520,
+            "startTicks": 80640
+          },
+          {
+            "text": "的",
+            "tokenId": "asr-token-5f17cedb2330986726b4fb8e7502ab163cd60512439dee06ad7637007ff2039b",
+            "endTicks": 86400,
+            "startTicks": 83520
+          },
+          {
+            "text": "内",
+            "tokenId": "asr-token-06a2266c8991a4aadefbb23fed1fae3ca6b0143eafbec3be91ac18dded6e7afd",
+            "endTicks": 89920,
+            "startTicks": 86400
+          },
+          {
+            "text": "容,",
+            "tokenId": "asr-token-bb6272fe8e499d06912482ee28e67c0f56c2a908df5b6856c426d7336ae8a22a",
+            "endTicks": 100800,
+            "startTicks": 89920
+          },
+          {
+            "text": "再",
+            "tokenId": "asr-token-0ec4856f7d1330b0cdb2f117342896da328c36bf8fbfc82a6e161bd517bf1f31",
+            "endTicks": 104000,
+            "startTicks": 100800
+          },
+          {
+            "text": "保",
+            "tokenId": "asr-token-bab26c25c62a2f8920552a56b24b9b1fd6ebb51c53a32c1d0be1947dfd8874e8",
+            "endTicks": 108160,
+            "startTicks": 104000
+          },
+          {
+            "text": "存",
+            "tokenId": "asr-token-d5a75783512720e0d524dc4863ee841dcde55815aca00ed9cbdd8350c35e853f",
+            "endTicks": 113280,
+            "startTicks": 108160
+          },
+          {
+            "text": "这",
+            "tokenId": "asr-token-0dffe37a14f7c33f65abd455cc0b6216bbbe39bab525a59ec57c10dabb510a71",
+            "endTicks": 116800,
+            "startTicks": 113280
+          },
+          {
+            "text": "次",
+            "tokenId": "asr-token-b5caa7bdb4bb6551c67b03da7e45725f7aa00a662dfee95f95a05073abcbd2cc",
+            "endTicks": 120640,
+            "startTicks": 116800
+          },
+          {
+            "text": "修",
+            "tokenId": "asr-token-f1d713994cab361f2948f6af8e62f94c1f74c59f15a4e652c2971db5a9256efc",
+            "endTicks": 124800,
+            "startTicks": 120640
+          },
+          {
+            "text": "改",
+            "tokenId": "asr-token-478d059c1662931ea0a92695beb7dc6966fc7353cbf5b771df5b5de34bd36689",
+            "endTicks": 128640,
+            "startTicks": 124800
+          }
+        ],
+        "sourceId": "source-067a05ee18d600bb68c050361f475d4be499edbb2449a202e9ab72dfaf667727",
+        "assetFileId": "afile-94c2affe-733",
+        "audioDigest": "b8e509b6123d5005e28fc41dd0ab572dfd86e1a9ab2bc1e35be722416c7e3903",
+        "granularity": "word",
+        "transcriptId": "transcript-asr-media-request-94c2affe-792",
+        "providerEvidence": {
+          "timingReceipt": {
+            "callId": "call_b02c73c0-37d5-46b6-8ba7-84c4dda52997",
+            "mappingDigest": "sha256:7ac5ffb3d7051a01346f57e2ecb9eeed8a86b25407ba6e9588e410facb6157cf",
+            "durableReceiptId": "call_b02c73c0-37d5-46b6-8ba7-84c4dda52997",
+            "extractionDigest": "sha256:c1b563ffb2e59b1178f7150e5e50e862fa8e4aa5d00a5a75bfdad98f3cbf6e64",
+            "rawResponseDigest": "sha256:f046bd9951c1240f03010c588430b771ae6785b5ef913faab8603845fe2ba9a4",
+            "extractionReceiptId": "asset-asr-extraction:97a3283cea5a2615bda7f06ad825e1d6fda0f2c874b7b3ed7a146024271a96ce"
+          },
+          "aggregateDigest": "0b94115fc0743cd6aee40ed33f7d390e074081c96d0e09796b28f4e29d777445",
+          "effectiveAsrPlanDigest": "d8f1717dfbaa06a3685166c417d24b8e08065a2ae74ecb5417024a3a8b30f2c2",
+          "audioSourceMappingDigest": "b46e40afe334a5062c7c03e860c4d99aa8d1928128e361816eb1d24b8874ae77"
+        },
+        "providerReceiptId": "asset-asr-aggregate:5cc9a54c6faa8701bc93756f8152bd015126c3ba53d9bb2e34d20f59c1b8f008"
+      }
+    ]
+  },
+  "unsupportedFields": []
+}

@@ -1,0 +1,26 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/video-render/executor.test.ts (28 tests | 1 failed | 26 skipped) 26ms
+     × T1284 无clips旧V1尊重hasAudio=true，不依赖raw渲染器保声 19ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/video-render/executor.test.ts > createVideoRenderExecutor > T1284 无clips旧V1尊重hasAudio=true，不依赖raw渲染器保声
+AssertionError: expected [ '-y', '-i', …(6) ] to include '-filter_complex'
+ ❯ src/modules/execution/video-render/executor.test.ts:193:23
+    191|     const command=calls.ffmpegArgs.at(-1)!;
+    192|     if(hasAudio){
+    193|       expect(command).toContain('-filter_complex');
+       |                       ^
+    194|       expect(command[command.indexOf('-filter_complex')+1]).toContain(…
+    195|       expect(command).toContain('[main_audio]');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 26 skipped (28)
+   Start at  16:44:06
+   Duration  1.39s (transform 767ms, setup 0ms, import 1.24s, tests 26ms, environment 0ms)
+

@@ -56,7 +56,7 @@ it("Worker 开场版本独立，未启用时原定义不变，其它工具不改
 
 it('T1070四个精确工具native参数效应与实现revision严格冻结',async()=>{
  const {buildChatTools}=await import('./chat-tools');const names=['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'];const prepared=await prepareChatToolDefinitions(buildChatTools(names,{humanizeError:()=>null} as any));
- expect(prepared.definitions.map(d=>[d.name,d.effect])).toEqual([['work.editor.read','none'],['work.editor.propose','proposal'],['work.creation.read','none'],['work.creation.propose','proposal']]);for(const d of prepared.definitions){expect(d.version).toMatch(/^chat-tools-work-director-v1:/);expect(d.execution).toBeUndefined();expect(d.parameters.type).toBe('object');}
+ expect(prepared.definitions.map(d=>[d.name,d.effect])).toEqual([['work.editor.read','none'],['work.editor.propose','proposal'],['work.creation.read','none'],['work.creation.propose','proposal']]);for(const d of prepared.definitions){expect(d.version).toMatch(d.name.startsWith('work.editor.')?/^chat-tools-work-editor-markdown-v1:/:/^chat-tools-work-director-v1:/);expect(d.execution).toBeUndefined();expect(d.parameters.type).toBe('object');}
  expect(prepared.parameters['work.editor.read']!.parameters.safeParse({view:'field_window'}).success).toBe(false);expect(prepared.parameters['work.editor.propose']!.parameters.safeParse({candidate:{outputId:'invented'}}).success).toBe(false);
 });
 
@@ -112,7 +112,7 @@ it("已装配的通用能力与冻结目录一致，未装配的目录项不暴�
 
 it('T1097同定义字节旧任务仍v1，只有显式写作上下文四工具变v2且hash完全不变',async()=>{
  const prototypes=Object.fromEntries(['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'].map(name=>[name,make(name)]));
- const old=await prepareChatToolDefinitions(prototypes),explicitOld=await prepareChatToolDefinitions(prototypes,{workWritingContext:false}),next=await prepareChatToolDefinitions(prototypes,{workWritingContext:true});
+ const old=await prepareChatToolDefinitions(prototypes,{legacyWorkEditorProtocol:true}),explicitOld=await prepareChatToolDefinitions(prototypes,{legacyWorkEditorProtocol:true,workWritingContext:false}),next=await prepareChatToolDefinitions(prototypes,{legacyWorkEditorProtocol:true,workWritingContext:true});
  expect(old.definitions).toEqual(explicitOld.definitions);
  old.definitions.forEach((row,i)=>{expect(row.version).toMatch(/^chat-tools-work-director-v1:/);expect(next.definitions[i]!.version).toBe(row.version.replace('director-v1:','director-v2:'));expect({...next.definitions[i],version:row.version}).toEqual(row);});
 });

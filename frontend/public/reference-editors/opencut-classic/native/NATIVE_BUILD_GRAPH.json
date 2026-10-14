@@ -1,10 +1,10 @@
 {
   "fixture": false,
   "entry": "src/embedded/native-entry.tsx",
-  "moduleCount": 429,
+  "moduleCount": 430,
   "modules": [
     {
-      "module": "../../../../../../../../../../__vite-plugin-wasm-helper",
+      "module": "../../../../../__vite-plugin-wasm-helper",
       "renderedLength": 1154
     },
     {
@@ -321,7 +321,7 @@
     },
     {
       "module": "src/components/editor/editor-header.tsx",
-      "renderedLength": 2736
+      "renderedLength": 3007
     },
     {
       "module": "src/components/editor/panels/assets/assets-panel-store.tsx",
@@ -545,7 +545,7 @@
     },
     {
       "module": "src/core/managers/renderer-manager.ts",
-      "renderedLength": 6435
+      "renderedLength": 6615
     },
     {
       "module": "src/core/managers/save-manager.ts",
@@ -629,7 +629,7 @@
     },
     {
       "module": "src/embedded/editor-layout.tsx",
-      "renderedLength": 4789
+      "renderedLength": 13011
     },
     {
       "module": "src/embedded/frozen-export.ts",
@@ -641,19 +641,15 @@
     },
     {
       "module": "src/embedded/native-controller.ts",
-      "renderedLength": 10875
-    },
-    {
-      "module": "src/embedded/native-document-contract.ts",
-      "renderedLength": 17204
+      "renderedLength": 9460
     },
     {
       "module": "src/embedded/native-entry.tsx",
-      "renderedLength": 5242
+      "renderedLength": 5527
     },
     {
       "module": "src/embedded/native-host.ts",
-      "renderedLength": 4662
+      "renderedLength": 7525
     },
     {
       "module": "src/embedded/native-lifecycle.ts",
@@ -661,11 +657,7 @@
     },
     {
       "module": "src/embedded/native-operations.ts",
-      "renderedLength": 5287
-    },
-    {
-      "module": "src/embedded/native-preview.ts",
-      "renderedLength": 6365
+      "renderedLength": 4505
     },
     {
       "module": "src/embedded/native-version.ts",
@@ -678,6 +670,14 @@
     {
       "module": "src/embedded/next-image.tsx",
       "renderedLength": 274
+    },
+    {
+      "module": "src/embedded/preview-scene.ts",
+      "renderedLength": 8566
+    },
+    {
+      "module": "src/embedded/preview-workspace.tsx",
+      "renderedLength": 2765
     },
     {
       "module": "src/embedded/radix/aria-hidden.ts",
@@ -698,6 +698,10 @@
     {
       "module": "src/embedded/radix/remove-scroll.tsx",
       "renderedLength": 800
+    },
+    {
+      "module": "src/embedded/workspace-panel.tsx",
+      "renderedLength": 3094
     },
     {
       "module": "src/fonts/google-fonts.ts",
@@ -933,7 +937,7 @@
     },
     {
       "module": "src/media/audio.ts",
-      "renderedLength": 12485
+      "renderedLength": 13444
     },
     {
       "module": "src/media/media-utils.ts",
@@ -973,7 +977,7 @@
     },
     {
       "module": "src/params/index.ts",
-      "renderedLength": 3941
+      "renderedLength": 3939
     },
     {
       "module": "src/params/registry.ts",
@@ -993,7 +997,7 @@
     },
     {
       "module": "src/preview/components/index.tsx",
-      "renderedLength": 9407
+      "renderedLength": 9428
     },
     {
       "module": "src/preview/components/mask-handles.tsx",
@@ -1021,7 +1025,7 @@
     },
     {
       "module": "src/preview/components/toolbar.tsx",
-      "renderedLength": 3592
+      "renderedLength": 3735
     },
     {
       "module": "src/preview/components/transform-handles.tsx",
@@ -1153,7 +1157,7 @@
     },
     {
       "module": "src/services/renderer/canvas-renderer.ts",
-      "renderedLength": 1955
+      "renderedLength": 2634
     },
     {
       "module": "src/services/renderer/canvas-utils.ts",
@@ -1161,11 +1165,11 @@
     },
     {
       "module": "src/services/renderer/compositor/frame-descriptor.ts",
-      "renderedLength": 12549
+      "renderedLength": 12276
     },
     {
       "module": "src/services/renderer/compositor/wasm-compositor.ts",
-      "renderedLength": 4986
+      "renderedLength": 4923
     },
     {
       "module": "src/services/renderer/effect-preview.ts",
@@ -1197,7 +1201,7 @@
     },
     {
       "module": "src/services/renderer/nodes/image-node.ts",
-      "renderedLength": 2529
+      "renderedLength": 3236
     },
     {
       "module": "src/services/renderer/nodes/root-node.ts",
@@ -1205,7 +1209,7 @@
     },
     {
       "module": "src/services/renderer/nodes/sticker-node.ts",
-      "renderedLength": 771
+      "renderedLength": 1417
     },
     {
       "module": "src/services/renderer/nodes/text-node.ts",
@@ -1221,7 +1225,7 @@
     },
     {
       "module": "src/services/renderer/resolve.ts",
-      "renderedLength": 8809
+      "renderedLength": 8948
     },
     {
       "module": "src/services/renderer/scene-builder.ts",
@@ -1229,7 +1233,7 @@
     },
     {
       "module": "src/services/renderer/scene-exporter.ts",
-      "renderedLength": 3042
+      "renderedLength": 3993
     },
     {
       "module": "src/services/storage/quota.ts",
@@ -1241,7 +1245,7 @@
     },
     {
       "module": "src/services/video-cache/service.ts",
-      "renderedLength": 8084
+      "renderedLength": 9519
     },
     {
       "module": "src/services/waveform-cache/service.ts",
@@ -1337,7 +1341,7 @@
     },
     {
       "module": "src/timeline/bookmarks/components/bookmarks.tsx",
-      "renderedLength": 13288
+      "renderedLength": 13282
     },
     {
       "module": "src/timeline/bookmarks/hooks/use-bookmark-drag.ts",
@@ -1429,7 +1433,7 @@
     },
     {
       "module": "src/timeline/components/timeline-element.tsx",
-      "renderedLength": 31896
+      "renderedLength": 31894
     },
     {
       "module": "src/timeline/components/timeline-playhead.tsx",
@@ -1689,7 +1693,7 @@
     },
     {
       "module": "src/utils/color.ts",
-      "renderedLength": 4001
+      "renderedLength": 3999
     },
     {
       "module": "src/utils/geometry.ts",
@@ -1709,7 +1713,7 @@
     },
     {
       "module": "src/utils/string.ts",
-      "renderedLength": 173
+      "renderedLength": 171
     },
     {
       "module": "src/utils/ui.ts",

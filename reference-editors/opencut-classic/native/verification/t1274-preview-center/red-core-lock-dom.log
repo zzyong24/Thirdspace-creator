@@ -1,0 +1,19 @@
+GPU renderer unavailable: No WebGPU adapter is available
+18 | const surface=document.getElementById('surface')!,parking=document.createElement('div');document.body.append(parking);
+19 | const transcript=document.createElement('div');transcript.slot='creatoros-transcript';transcript.dataset.creatorosAddon='transcript';transcript.textContent='真实宿主转录占位，仅验证槽位';
+20 | const director=document.createElement('div');director.slot='creatoros-director';director.dataset.creatorosAddon='director';const composer=document.createElement('textarea');composer.value='尚未发送的原输入';director.append(composer);const projection=document.createElement('div');projection.slot='creatoros-preview';projection.dataset.creatorosAddon='preview';surface.append(transcript,director,projection);
+21 | const theme={mode:'light',tokens:{'--creatoros-brand':'#6d4aff'},fontFamily:'system-ui',fontSize:'14px',density:'comfortable'};
+22 | const options={workspaceAddons:true,owner:{groupId:'group-a',accountId:null,projectId:'project-a',outputId:'output-a',sourceVersionId:'base-a'},theme,portalContainer,signal:abort.signal,onChanged(){changed++;},onError(message:string){errors.push(message);},importMedia:async()=>({mediaId:'registered-fixture'})};
+23 | const handle=await mount(container,options);const checks:string[]=[];const wait=()=>new Promise(r=>setTimeout(r,35));const check=(name:string,condition:unknown)=>{assert.ok(condition,name);checks.push(name);};
+                                                                                                                                                                               ^
+AssertionError: 真实候选active锁住全部原生core含时间轴且不卸载
+ generatedMessage: false,
+     actual: false,
+   expected: true,
+   operator: "==",
+       diff: "simple",
+       code: "ERR_ASSERTION"
+
+      at check (/Users/zyongzhu/.codex/worktrees/t1274-native-workspace/Thirdspace-creator/reference-editors/opencut-classic/native/verification/t1274-preview-center/preview-slot-dom-probe.ts:23:171)
+
+Bun v1.4.0 (macOS arm64)

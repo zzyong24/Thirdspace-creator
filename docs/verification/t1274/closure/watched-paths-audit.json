@@ -1,0 +1,57 @@
+{
+  "observedAt": "2026-10-14T10:10:45.884865+00:00",
+  "headAtReadOnlyAudit": "6b1a087b269d4f7902a2eb852a147170fab6d6ac",
+  "notExecutionBinding": true,
+  "scopes": {
+    "T-1274": {
+      "watchedPathCount": 64,
+      "clean": false,
+      "status": [
+        " M backend/src/application/generation/transactional-task-runtime.ts",
+        " M backend/src/modules/ai-runtime/chat-host-tool-adapter.ts",
+        " M backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+        " M backend/src/modules/ai-runtime/chat-tools.ts",
+        " M backend/src/modules/ai-runtime/chat-work-editor-tool-host.test.ts",
+        " M backend/src/modules/ai-runtime/chat-work-editor-tool-host.ts",
+        " M backend/src/modules/execution/video-render/executor.test.ts",
+        " M backend/src/modules/execution/video-render/executor.ts",
+        " M contract/src/cli-policy.ts",
+        " M contract/src/index.ts",
+        " M contract/src/resources/work-editor.ts",
+        " M contract/src/workspace-operation-scope.ts",
+        " M frontend/src/features/copilot/ai-copilot-content.tsx",
+        " M frontend/src/features/draft-workbench/draft-chat-request.tsx",
+        " M frontend/src/features/production/production-script-markdown-panel.test.tsx",
+        " M frontend/src/features/production/production-script-markdown-panel.tsx",
+        " M frontend/src/features/production/production-workbench.tsx",
+        " M frontend/src/server/persistence-client.ts",
+        " M mcp-server/src/cli.ts",
+        " M mcp-server/src/dispatch.ts",
+        " M mcp-server/src/server.ts"
+      ],
+      "plannedClosureRunnerNotYetIncluded": "closure/fresh-readonly.cjs 与 witnesses.json创建后必须纳入合同并提交；当前无执行绑定"
+    },
+    "T-1275": {
+      "watchedPathCount": 16,
+      "clean": false,
+      "status": [
+        " M backend/src/application/generation/transactional-task-runtime.ts",
+        " M frontend/next.config.ts",
+        " M frontend/playwright.config.ts",
+        " M frontend/src/features/production/production-workbench.tsx",
+        " M frontend/src/server/persistence-client.ts"
+      ],
+      "plannedClosureRunnerNotYetIncluded": "closure/fresh-readonly.cjs 与 witnesses.json创建后必须纳入合同并提交；当前无执行绑定"
+    },
+    "T-1276": {
+      "watchedPathCount": 13,
+      "clean": false,
+      "status": [
+        " M backend/src/application/generation/transactional-task-runtime.ts",
+        " M frontend/src/features/production/production-workbench.tsx",
+        " M frontend/src/server/persistence-client.ts"
+      ],
+      "plannedClosureRunnerNotYetIncluded": "closure/fresh-readonly.cjs 与 witnesses.json创建后必须纳入合同并提交；当前无执行绑定"
+    }
+  }
+}

@@ -1,0 +1,367 @@
+shasum: DELIVERY.json: No such file or directory
+DELIVERY.json: FAILED open or read
+shasum: LICENSE.opencut: No such file or directory
+LICENSE.opencut: FAILED open or read
+shasum: NATIVE_BUILD_GRAPH.json: No such file or directory
+NATIVE_BUILD_GRAPH.json: FAILED open or read
+README.md: FAILED
+shasum: SOURCE_CHANGES.json: No such file or directory
+SOURCE_CHANGES.json: FAILED open or read
+shasum: THIRD_PARTY_LICENSES.json: No such file or directory
+THIRD_PARTY_LICENSES.json: FAILED open or read
+shasum: THIRD_PARTY_LICENSES.txt: No such file or directory
+THIRD_PARTY_LICENSES.txt: FAILED open or read
+shasum: VERIFICATION.md: No such file or directory
+VERIFICATION.md: FAILED open or read
+shasum: effects/preview.jpg: No such file or directory
+effects/preview.jpg: FAILED open or read
+shasum: native-from-t1046.patch: No such file or directory
+native-from-t1046.patch: FAILED open or read
+shasum: native-from-t1069.historical.patch: No such file or directory
+native-from-t1069.historical.patch: FAILED open or read
+shasum: native-source.tar.gz: No such file or directory
+native-source.tar.gz: FAILED open or read
+shasum: native.css: No such file or directory
+native.css: FAILED open or read
+shasum: native.js: No such file or directory
+native.js: FAILED open or read
+shasum: rebuild-native.sh: No such file or directory
+rebuild-native.sh: FAILED open or read
+shasum: verification/check-process-globals.ts: No such file or directory
+verification/check-process-globals.ts: FAILED open or read
+shasum: verification/dom-probe.ts: No such file or directory
+verification/dom-probe.ts: FAILED open or read
+shasum: verification/t1274-preview-center/archive-production-build.log: No such file or directory
+verification/t1274-preview-center/archive-production-build.log: FAILED open or read
+shasum: verification/t1274-preview-center/baseline-fixture-build-final.log: No such file or directory
+verification/t1274-preview-center/baseline-fixture-build-final.log: FAILED open or read
+shasum: verification/t1274-preview-center/baseline-fixture-build.log: No such file or directory
+verification/t1274-preview-center/baseline-fixture-build.log: FAILED open or read
+shasum: verification/t1274-preview-center/center-dom-final.log: No such file or directory
+verification/t1274-preview-center/center-dom-final.log: FAILED open or read
+shasum: verification/t1274-preview-center/diff-check-fullPatch.log: No such file or directory
+verification/t1274-preview-center/diff-check-fullPatch.log: FAILED open or read
+shasum: verification/t1274-preview-center/diff-check-nonPatch.log: No such file or directory
+verification/t1274-preview-center/diff-check-nonPatch.log: FAILED open or read
+shasum: verification/t1274-preview-center/fixture-build-batch.log: No such file or directory
+verification/t1274-preview-center/fixture-build-batch.log: FAILED open or read
+shasum: verification/t1274-preview-center/fixture-build-final.log: No such file or directory
+verification/t1274-preview-center/fixture-build-final.log: FAILED open or read
+shasum: verification/t1274-preview-center/fixture-build.log: No such file or directory
+verification/t1274-preview-center/fixture-build.log: FAILED open or read
+shasum: verification/t1274-preview-center/format-core-lock.log: No such file or directory
+verification/t1274-preview-center/format-core-lock.log: FAILED open or read
+shasum: verification/t1274-preview-center/format.log: No such file or directory
+verification/t1274-preview-center/format.log: FAILED open or read
+shasum: verification/t1274-preview-center/green-canvas-pool-resolve.log: No such file or directory
+verification/t1274-preview-center/green-canvas-pool-resolve.log: FAILED open or read
+shasum: verification/t1274-preview-center/green-core-lock-dom.log: No such file or directory
+verification/t1274-preview-center/green-core-lock-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/green-dom-first.log: No such file or directory
+verification/t1274-preview-center/green-dom-first.log: FAILED open or read
+shasum: verification/t1274-preview-center/green-dom-second.log: No such file or directory
+verification/t1274-preview-center/green-dom-second.log: FAILED open or read
+shasum: verification/t1274-preview-center/green-rename-dom.log: No such file or directory
+verification/t1274-preview-center/green-rename-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/green-resource-cache-final.log: No such file or directory
+verification/t1274-preview-center/green-resource-cache-final.log: FAILED open or read
+shasum: verification/t1274-preview-center/green-resource-cache-first.log: No such file or directory
+verification/t1274-preview-center/green-resource-cache-first.log: FAILED open or read
+shasum: verification/t1274-preview-center/header-inventory.log: No such file or directory
+verification/t1274-preview-center/header-inventory.log: FAILED open or read
+shasum: verification/t1274-preview-center/header-inventory.ts: No such file or directory
+verification/t1274-preview-center/header-inventory.ts: FAILED open or read
+shasum: verification/t1274-preview-center/legacy-dom.log: No such file or directory
+verification/t1274-preview-center/legacy-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/old-dom.log: No such file or directory
+verification/t1274-preview-center/old-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/old-native.log: No such file or directory
+verification/t1274-preview-center/old-native.log: FAILED open or read
+shasum: verification/t1274-preview-center/old-resources.log: No such file or directory
+verification/t1274-preview-center/old-resources.log: FAILED open or read
+shasum: verification/t1274-preview-center/old-workspace.log: No such file or directory
+verification/t1274-preview-center/old-workspace.log: FAILED open or read
+shasum: verification/t1274-preview-center/package-source.log: No such file or directory
+verification/t1274-preview-center/package-source.log: FAILED open or read
+shasum: verification/t1274-preview-center/package-source.py: No such file or directory
+verification/t1274-preview-center/package-source.py: FAILED open or read
+shasum: verification/t1274-preview-center/patch-fuzz0.log: No such file or directory
+verification/t1274-preview-center/patch-fuzz0.log: FAILED open or read
+shasum: verification/t1274-preview-center/preview-audio.log: No such file or directory
+verification/t1274-preview-center/preview-audio.log: FAILED open or read
+shasum: verification/t1274-preview-center/preview-canvas.log: No such file or directory
+verification/t1274-preview-center/preview-canvas.log: FAILED open or read
+shasum: verification/t1274-preview-center/preview-image.log: No such file or directory
+verification/t1274-preview-center/preview-image.log: FAILED open or read
+shasum: verification/t1274-preview-center/preview-resources.log: No such file or directory
+verification/t1274-preview-center/preview-resources.log: FAILED open or read
+shasum: verification/t1274-preview-center/preview-slot-dom-probe.ts: No such file or directory
+verification/t1274-preview-center/preview-slot-dom-probe.ts: FAILED open or read
+shasum: verification/t1274-preview-center/preview-slot-dom.log: No such file or directory
+verification/t1274-preview-center/preview-slot-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/process-ast.log: No such file or directory
+verification/t1274-preview-center/process-ast.log: FAILED open or read
+shasum: verification/t1274-preview-center/production-build.log: No such file or directory
+verification/t1274-preview-center/production-build.log: FAILED open or read
+shasum: verification/t1274-preview-center/production-reconstruction.json: No such file or directory
+verification/t1274-preview-center/production-reconstruction.json: FAILED open or read
+shasum: verification/t1274-preview-center/public-preview.log: No such file or directory
+verification/t1274-preview-center/public-preview.log: FAILED open or read
+shasum: verification/t1274-preview-center/reconstruction.log: No such file or directory
+verification/t1274-preview-center/reconstruction.log: FAILED open or read
+shasum: verification/t1274-preview-center/red-canvas-pool-actual-resolve.log: No such file or directory
+verification/t1274-preview-center/red-canvas-pool-actual-resolve.log: FAILED open or read
+shasum: verification/t1274-preview-center/red-canvas-pool-resolve-final.log: No such file or directory
+verification/t1274-preview-center/red-canvas-pool-resolve-final.log: FAILED open or read
+shasum: verification/t1274-preview-center/red-canvas-pool-resolve.log: No such file or directory
+verification/t1274-preview-center/red-canvas-pool-resolve.log: FAILED open or read
+shasum: verification/t1274-preview-center/red-canvas-pool.log: No such file or directory
+verification/t1274-preview-center/red-canvas-pool.log: FAILED open or read
+shasum: verification/t1274-preview-center/red-core-lock-dom.log: No such file or directory
+verification/t1274-preview-center/red-core-lock-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/red-dom.log: No such file or directory
+verification/t1274-preview-center/red-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/red-rename-dom.log: No such file or directory
+verification/t1274-preview-center/red-rename-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/red-resource-cache.log: No such file or directory
+verification/t1274-preview-center/red-resource-cache.log: FAILED open or read
+shasum: verification/t1274-preview-center/regression-final.log: No such file or directory
+verification/t1274-preview-center/regression-final.log: FAILED open or read
+shasum: verification/t1274-preview-center/rename-addon-dom-probe.ts: No such file or directory
+verification/t1274-preview-center/rename-addon-dom-probe.ts: FAILED open or read
+shasum: verification/t1274-preview-center/rename-addon-dom.log: No such file or directory
+verification/t1274-preview-center/rename-addon-dom.log: FAILED open or read
+shasum: verification/t1274-preview-center/source-manifest.json: No such file or directory
+verification/t1274-preview-center/source-manifest.json: FAILED open or read
+shasum: verification/t1274-preview-center/source-reconstruction.json: No such file or directory
+verification/t1274-preview-center/source-reconstruction.json: FAILED open or read
+shasum: verification/t1274-preview-center/type-first.log: No such file or directory
+verification/t1274-preview-center/type-first.log: FAILED open or read
+shasum: verification/t1274-preview-center/typecheck.log: No such file or directory
+verification/t1274-preview-center/typecheck.log: FAILED open or read
+shasum: verification/t1274-preview-center/verification-summary.json: No such file or directory
+verification/t1274-preview-center/verification-summary.json: FAILED open or read
+shasum: verification/t1274-preview-center/verify-reconstruction.py: No such file or directory
+verification/t1274-preview-center/verify-reconstruction.py: FAILED open or read
+shasum: verification/t1274-preview-center/workspace-dom.log: No such file or directory
+verification/t1274-preview-center/workspace-dom.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/archive-production-build.log: No such file or directory
+verification/t1274-preview-separated-audio/archive-production-build.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/diff-check-all.log: No such file or directory
+verification/t1274-preview-separated-audio/diff-check-all.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/diff-check-nonpatch.log: No such file or directory
+verification/t1274-preview-separated-audio/diff-check-nonpatch.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/format.log: No such file or directory
+verification/t1274-preview-separated-audio/format.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/green-audio.log: No such file or directory
+verification/t1274-preview-separated-audio/green-audio.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/green-canvas.log: No such file or directory
+verification/t1274-preview-separated-audio/green-canvas.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/green-image.log: No such file or directory
+verification/t1274-preview-separated-audio/green-image.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/green-public.log: No such file or directory
+verification/t1274-preview-separated-audio/green-public.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/green-resources.log: No such file or directory
+verification/t1274-preview-separated-audio/green-resources.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/old-native.log: No such file or directory
+verification/t1274-preview-separated-audio/old-native.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/old-resources.log: No such file or directory
+verification/t1274-preview-separated-audio/old-resources.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/old-workspace.log: No such file or directory
+verification/t1274-preview-separated-audio/old-workspace.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/patch-fuzz0.log: No such file or directory
+verification/t1274-preview-separated-audio/patch-fuzz0.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/process-ast.log: No such file or directory
+verification/t1274-preview-separated-audio/process-ast.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/production-build.log: No such file or directory
+verification/t1274-preview-separated-audio/production-build.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/production-reconstruction.json: No such file or directory
+verification/t1274-preview-separated-audio/production-reconstruction.json: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/red-public.log: No such file or directory
+verification/t1274-preview-separated-audio/red-public.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/source-reconstruction.json: No such file or directory
+verification/t1274-preview-separated-audio/source-reconstruction.json: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/typecheck.log: No such file or directory
+verification/t1274-preview-separated-audio/typecheck.log: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/verification-summary.json: No such file or directory
+verification/t1274-preview-separated-audio/verification-summary.json: FAILED open or read
+shasum: verification/t1274-preview-separated-audio/worktree-evidence.json: No such file or directory
+verification/t1274-preview-separated-audio/worktree-evidence.json: FAILED open or read
+shasum: verification/t1274-preview/archive-production-build.log: No such file or directory
+verification/t1274-preview/archive-production-build.log: FAILED open or read
+shasum: verification/t1274-preview/diff-check-all.log: No such file or directory
+verification/t1274-preview/diff-check-all.log: FAILED open or read
+shasum: verification/t1274-preview/diff-check-nonpatch.log: No such file or directory
+verification/t1274-preview/diff-check-nonpatch.log: FAILED open or read
+shasum: verification/t1274-preview/fixture-build.log: No such file or directory
+verification/t1274-preview/fixture-build.log: FAILED open or read
+shasum: verification/t1274-preview/format-delivery.log: No such file or directory
+verification/t1274-preview/format-delivery.log: FAILED open or read
+shasum: verification/t1274-preview/format-final.log: No such file or directory
+verification/t1274-preview/format-final.log: FAILED open or read
+shasum: verification/t1274-preview/format-final2.log: No such file or directory
+verification/t1274-preview/format-final2.log: FAILED open or read
+shasum: verification/t1274-preview/format-last.log: No such file or directory
+verification/t1274-preview/format-last.log: FAILED open or read
+shasum: verification/t1274-preview/format-public-final.log: No such file or directory
+verification/t1274-preview/format-public-final.log: FAILED open or read
+shasum: verification/t1274-preview/format-resource-final.log: No such file or directory
+verification/t1274-preview/format-resource-final.log: FAILED open or read
+shasum: verification/t1274-preview/green-audio-delivery.log: No such file or directory
+verification/t1274-preview/green-audio-delivery.log: FAILED open or read
+shasum: verification/t1274-preview/green-audio-release.log: No such file or directory
+verification/t1274-preview/green-audio-release.log: FAILED open or read
+shasum: verification/t1274-preview/green-audio.log: No such file or directory
+verification/t1274-preview/green-audio.log: FAILED open or read
+shasum: verification/t1274-preview/green-canvas-delivery.log: No such file or directory
+verification/t1274-preview/green-canvas-delivery.log: FAILED open or read
+shasum: verification/t1274-preview/green-canvas-release.log: No such file or directory
+verification/t1274-preview/green-canvas-release.log: FAILED open or read
+shasum: verification/t1274-preview/green-canvas.log: No such file or directory
+verification/t1274-preview/green-canvas.log: FAILED open or read
+shasum: verification/t1274-preview/green-first.log: No such file or directory
+verification/t1274-preview/green-first.log: FAILED open or read
+shasum: verification/t1274-preview/green-image-release.log: No such file or directory
+verification/t1274-preview/green-image-release.log: FAILED open or read
+shasum: verification/t1274-preview/green-image.log: No such file or directory
+verification/t1274-preview/green-image.log: FAILED open or read
+shasum: verification/t1274-preview/green-public-delivery.log: No such file or directory
+verification/t1274-preview/green-public-delivery.log: FAILED open or read
+shasum: verification/t1274-preview/green-public-final.log: No such file or directory
+verification/t1274-preview/green-public-final.log: FAILED open or read
+shasum: verification/t1274-preview/green-public-last.log: No such file or directory
+verification/t1274-preview/green-public-last.log: FAILED open or read
+shasum: verification/t1274-preview/green-resources-delivery.log: No such file or directory
+verification/t1274-preview/green-resources-delivery.log: FAILED open or read
+shasum: verification/t1274-preview/green-resources-final.log: No such file or directory
+verification/t1274-preview/green-resources-final.log: FAILED open or read
+shasum: verification/t1274-preview/green-resources-release.log: No such file or directory
+verification/t1274-preview/green-resources-release.log: FAILED open or read
+shasum: verification/t1274-preview/green-resources.log: No such file or directory
+verification/t1274-preview/green-resources.log: FAILED open or read
+shasum: verification/t1274-preview/old-dom-probe.log: No such file or directory
+verification/t1274-preview/old-dom-probe.log: FAILED open or read
+shasum: verification/t1274-preview/old-native-release.log: No such file or directory
+verification/t1274-preview/old-native-release.log: FAILED open or read
+shasum: verification/t1274-preview/old-native.log: No such file or directory
+verification/t1274-preview/old-native.log: FAILED open or read
+shasum: verification/t1274-preview/old-resources-release.log: No such file or directory
+verification/t1274-preview/old-resources-release.log: FAILED open or read
+shasum: verification/t1274-preview/old-resources.log: No such file or directory
+verification/t1274-preview/old-resources.log: FAILED open or read
+shasum: verification/t1274-preview/old-workspace-release.log: No such file or directory
+verification/t1274-preview/old-workspace-release.log: FAILED open or read
+shasum: verification/t1274-preview/old-workspace.log: No such file or directory
+verification/t1274-preview/old-workspace.log: FAILED open or read
+shasum: verification/t1274-preview/patch-fuzz0.log: No such file or directory
+verification/t1274-preview/patch-fuzz0.log: FAILED open or read
+shasum: verification/t1274-preview/process-ast.log: No such file or directory
+verification/t1274-preview/process-ast.log: FAILED open or read
+shasum: verification/t1274-preview/production-build.log: No such file or directory
+verification/t1274-preview/production-build.log: FAILED open or read
+shasum: verification/t1274-preview/production-reconstruction.json: No such file or directory
+verification/t1274-preview/production-reconstruction.json: FAILED open or read
+shasum: verification/t1274-preview/red-audio-final.log: No such file or directory
+verification/t1274-preview/red-audio-final.log: FAILED open or read
+shasum: verification/t1274-preview/red-audio.log: No such file or directory
+verification/t1274-preview/red-audio.log: FAILED open or read
+shasum: verification/t1274-preview/red-canvas.log: No such file or directory
+verification/t1274-preview/red-canvas.log: FAILED open or read
+shasum: verification/t1274-preview/red-image.log: No such file or directory
+verification/t1274-preview/red-image.log: FAILED open or read
+shasum: verification/t1274-preview/red-public-final.log: No such file or directory
+verification/t1274-preview/red-public-final.log: FAILED open or read
+shasum: verification/t1274-preview/red-public.log: No such file or directory
+verification/t1274-preview/red-public.log: FAILED open or read
+shasum: verification/t1274-preview/red-resources-final.log: No such file or directory
+verification/t1274-preview/red-resources-final.log: FAILED open or read
+shasum: verification/t1274-preview/red-resources.log: No such file or directory
+verification/t1274-preview/red-resources.log: FAILED open or read
+shasum: verification/t1274-preview/red.log: No such file or directory
+verification/t1274-preview/red.log: FAILED open or read
+shasum: verification/t1274-preview/source-reconstruction.json: No such file or directory
+verification/t1274-preview/source-reconstruction.json: FAILED open or read
+shasum: verification/t1274-preview/type-complete.log: No such file or directory
+verification/t1274-preview/type-complete.log: FAILED open or read
+shasum: verification/t1274-preview/type-delivery.log: No such file or directory
+verification/t1274-preview/type-delivery.log: FAILED open or read
+shasum: verification/t1274-preview/type-final.log: No such file or directory
+verification/t1274-preview/type-final.log: FAILED open or read
+shasum: verification/t1274-preview/type-first.log: No such file or directory
+verification/t1274-preview/type-first.log: FAILED open or read
+shasum: verification/t1274-preview/type-last.log: No such file or directory
+verification/t1274-preview/type-last.log: FAILED open or read
+shasum: verification/t1274-preview/type-release.log: No such file or directory
+verification/t1274-preview/type-release.log: FAILED open or read
+shasum: verification/t1274-preview/verification-summary.json: No such file or directory
+verification/t1274-preview/verification-summary.json: FAILED open or read
+shasum: verification/t1274-preview/workspace-dom-probe.log: No such file or directory
+verification/t1274-preview/workspace-dom-probe.log: FAILED open or read
+shasum: verification/t1274-preview/worktree-evidence.json: No such file or directory
+verification/t1274-preview/worktree-evidence.json: FAILED open or read
+shasum: verification/t1274/baseline-build-dom-retry.log: No such file or directory
+verification/t1274/baseline-build-dom-retry.log: FAILED open or read
+shasum: verification/t1274/baseline-build-dom.log: No such file or directory
+verification/t1274/baseline-build-dom.log: FAILED open or read
+shasum: verification/t1274/baseline-native.log: No such file or directory
+verification/t1274/baseline-native.log: FAILED open or read
+shasum: verification/t1274/baseline-resources.log: No such file or directory
+verification/t1274/baseline-resources.log: FAILED open or read
+shasum: verification/t1274/build-dom-fixture-final.log: No such file or directory
+verification/t1274/build-dom-fixture-final.log: FAILED open or read
+shasum: verification/t1274/build-dom-fixture.log: No such file or directory
+verification/t1274/build-dom-fixture.log: FAILED open or read
+shasum: verification/t1274/build-production-final.log: No such file or directory
+verification/t1274/build-production-final.log: FAILED open or read
+shasum: verification/t1274/build-production.log: No such file or directory
+verification/t1274/build-production.log: FAILED open or read
+shasum: verification/t1274/delivery-verify.log: No such file or directory
+verification/t1274/delivery-verify.log: FAILED open or read
+shasum: verification/t1274/dom-baseline-setup-failure.log: No such file or directory
+verification/t1274/dom-baseline-setup-failure.log: FAILED open or read
+shasum: verification/t1274/dom-tdd-green.log: No such file or directory
+verification/t1274/dom-tdd-green.log: FAILED open or read
+shasum: verification/t1274/dom-tdd-red.log: No such file or directory
+verification/t1274/dom-tdd-red.log: FAILED open or read
+shasum: verification/t1274/fixture-runtime-install.log: No such file or directory
+verification/t1274/fixture-runtime-install.log: FAILED open or read
+shasum: verification/t1274/git-diff-check-nonpatch.log: No such file or directory
+verification/t1274/git-diff-check-nonpatch.log: FAILED open or read
+shasum: verification/t1274/git-diff-check.log: No such file or directory
+verification/t1274/git-diff-check.log: FAILED open or read
+shasum: verification/t1274/legacy-dom-regression.log: No such file or directory
+verification/t1274/legacy-dom-regression.log: FAILED open or read
+shasum: verification/t1274/native-regression.log: No such file or directory
+verification/t1274/native-regression.log: FAILED open or read
+shasum: verification/t1274/patch-apply-final.log: No such file or directory
+verification/t1274/patch-apply-final.log: FAILED open or read
+shasum: verification/t1274/patch-apply.log: No such file or directory
+verification/t1274/patch-apply.log: FAILED open or read
+shasum: verification/t1274/process-globals.log: No such file or directory
+verification/t1274/process-globals.log: FAILED open or read
+shasum: verification/t1274/production-reconstruction.json: No such file or directory
+verification/t1274/production-reconstruction.json: FAILED open or read
+shasum: verification/t1274/rebuild-from-archive.log: No such file or directory
+verification/t1274/rebuild-from-archive.log: FAILED open or read
+shasum: verification/t1274/resource-regression.log: No such file or directory
+verification/t1274/resource-regression.log: FAILED open or read
+shasum: verification/t1274/source-reconstruction.json: No such file or directory
+verification/t1274/source-reconstruction.json: FAILED open or read
+shasum: verification/t1274/tdd-first-green-failure.log: No such file or directory
+verification/t1274/tdd-first-green-failure.log: FAILED open or read
+shasum: verification/t1274/tdd-green.log: No such file or directory
+verification/t1274/tdd-green.log: FAILED open or read
+shasum: verification/t1274/tdd-red.log: No such file or directory
+verification/t1274/tdd-red.log: FAILED open or read
+shasum: verification/t1274/typecheck-final.log: No such file or directory
+verification/t1274/typecheck-final.log: FAILED open or read
+shasum: verification/t1274/typecheck-first-failure.log: No such file or directory
+verification/t1274/typecheck-first-failure.log: FAILED open or read
+shasum: verification/t1274/typecheck.log: No such file or directory
+verification/t1274/typecheck.log: FAILED open or read
+shasum: verification/t1274/workspace-dom-probe.ts: No such file or directory
+verification/t1274/workspace-dom-probe.ts: FAILED open or read
+shasum: verification/t1274/worktree-evidence.json: No such file or directory
+verification/t1274/worktree-evidence.json: FAILED open or read
+shasum: WARNING: 182 listed files could not be read
+shasum: WARNING: 1 computed checksum did NOT match

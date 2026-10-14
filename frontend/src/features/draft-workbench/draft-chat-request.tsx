@@ -53,6 +53,8 @@ export type EditorAdoption = {
   versionId?: string;
   revision?: number;
   message?: string;
+  /** 可信编辑器已核验本次采纳的精确内容与clean状态；仅放行该generation，自身同步可推进generation。 */
+  syncedGeneration?: number;
 };
 export class EditorCandidateConflictError extends Error {}
 type EditorBoundSave = {canonical:string; save:()=>Promise<any>; pending?:Promise<any>};
@@ -82,7 +84,7 @@ export interface DraftEditorPort {
   prepareForTurn(): Promise<WorkEditorTarget>;
   previewCandidate(
     candidate: WorkEditorCandidate,
-  ): Promise<{ blob: Blob; fileName: string } | null>;
+  ): Promise<{ blob: Blob; fileName: string; warnings?: string[] } | null>;
   adoptCandidate(
     candidate: EditorSaveCandidate,
     requestId: string,
@@ -174,7 +176,7 @@ interface DraftChatRequestContextValue {
   readonly prepareEditorTurn: () => Promise<WorkEditorTarget | undefined>;
   readonly previewEditorCandidate: (
     candidate: WorkEditorCandidate,
-  ) => Promise<{ blob: Blob; fileName: string } | null>;
+  ) => Promise<{ blob: Blob; fileName: string; warnings?: string[] } | null>;
   readonly adoptEditorCandidate: (
     candidate: EditorSaveCandidate,
     requestId: string,
@@ -355,11 +357,13 @@ export function DraftChatRequestProvider({
       if (!state || state.dirty) throw new EditorCandidateConflictError("当前作品有未保存修改，请先保存或核对；原输入已保留。");
       const result=await entry.port.adoptCandidate(candidate, requestId);
       const after=entry.port.readState();
-      if(editorRef.current!==entry||after.generation!==state.generation||after.dirty) {
-        return {...result,status:result.status==="adopted"?"saved-not-synced":result.status,message:"已保留原保存结果，当前编辑器或输入已改变，未覆盖输入。"};
+      const {syncedGeneration,...adoption}=result;
+      const synchronized=result.status==="adopted"&&Number.isSafeInteger(syncedGeneration)&&after.generation===syncedGeneration;
+      if(editorRef.current!==entry||(after.outputId??after.target?.outputId)!==editorCandidateOutputId(candidate)||(after.generation!==state.generation&&!synchronized)||after.dirty) {
+        return {...adoption,status:result.status==="adopted"?"saved-not-synced":result.status,message:"已保留原保存结果，当前编辑器或输入已改变，未覆盖输入。"};
       }
       bumpEditor();
-      return result;
+      return adoption;
     },
     [],
   );

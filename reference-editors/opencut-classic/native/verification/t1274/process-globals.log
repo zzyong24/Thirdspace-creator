@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "sha256": "ccb79c5133316320ce128c1efebc67240154bf57050836180db0ed596e917ca9",
+  "unreplacedNodeEnv": 0,
+  "guardedGlobalProcessReferences": 6,
+  "unguardedGlobalProcessReferences": 0,
+  "propertyOrMethodNames": 8,
+  "scope": "TypeScript AST检查全产物；仅typeof和同条件短路保护的Node可选分支属于安全全局引用，成员/方法名不算全局。"
+}

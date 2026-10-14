@@ -99,3 +99,30 @@ describe("T-617 异步任务模型 authority 快照", () => {
     expect(scope.currentScopeId()).toBeUndefined();
   });
 });
+
+describe('T1280 冻结引擎进入原任务作用域', () => {
+  const local = () => ({authority:'local' as const,outcome:'unreachable' as const,payload:null});
+  const route = (engine: 'pi'|'codex') => ({schemaVersion:1,engine,source:'preference',protocolKind:engine==='codex'?'codex-app-server':'pi',...(engine==='codex'?{runtimeVersion:'0.159.3'}:{})});
+  it('Codex不读取渠道配置且不继承父级渠道payload，执行后恢复原作用域', async () => {
+    const scope=new TaskModelAuthorityScope();let runs=0;
+    const parent=pinModelAuthority({authority:'channel',outcome:'configured',scopeId:'parent',payload:{model:'parent-model'}});
+    await scope.run(parent,async()=>{
+      expect(await scope.runFrozen({executionRoute:route('codex')},async()=>{throw Error('不应读取渠道');},async()=>{runs++;expect(scope.currentPayload()).toBeUndefined();})).toBe(true);
+      expect(scope.currentPayload()).toEqual({model:'parent-model'});
+    });expect(runs).toBe(1);
+  });
+  it('Pi完整匹配才执行；变化或缺authority不执行，缺route仍走旧Pi校验', async()=>{
+    const scope=new TaskModelAuthorityScope();let runs=0,reads=0;
+    const read=async()=>{reads++;return local();},execute=async()=>{runs++;expect(scope.currentPayload()).toBeNull();};
+    expect(await scope.runFrozen({executionRoute:route('pi'),modelAuthority:'local',modelAuthorityDigest:'local'},read,execute)).toBe(true);
+    expect(await scope.runFrozen({executionRoute:route('pi'),modelAuthority:'channel-managed',modelAuthorityDigest:'old'},read,execute)).toBe(false);
+    expect(await scope.runFrozen({},read,execute)).toBe(false);
+    expect(await scope.runFrozen({modelAuthority:'local',modelAuthorityDigest:'local'},read,execute)).toBe(true);
+    expect(runs).toBe(2);expect(reads).toBe(4);
+  });
+  it('显式损坏冻结路由不执行也不读取替代配置',async()=>{
+    const scope=new TaskModelAuthorityScope();let reads=0,runs=0;
+    await expect(scope.runFrozen({executionRoute:{engine:'codex'}},async()=>{reads++;return local();},async()=>{runs++;})).rejects.toThrow();
+    expect(reads).toBe(0);expect(runs).toBe(0);
+  });
+});

@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * `ProjectStageStepper` is the canonical project progress indicator
  * (SPEC §5, §7;[T-076] 数据驱动——阶段项由调用方传入,两阶段化后为
@@ -72,6 +74,13 @@ export function ProjectStageStepper({
   projectId,
   className,
 }: ProjectStageStepperProps) {
+  const strip=React.useRef<HTMLOListElement>(null);
+  React.useLayoutEffect(()=>{
+    const node=strip.current;if(variant!=="segmented"||!node)return;
+    // 只调整自身滚动，不滚动页面；用户仍可横向浏览其它阶段，真实链接与离开守卫不变。
+    const reveal=()=>{const selected=node.querySelector<HTMLElement>('[data-current="true"]');if(selected&&node.clientWidth>0)node.scrollLeft=Math.max(0,selected.offsetLeft-(node.clientWidth-selected.offsetWidth)/2);};
+    reveal();if(typeof ResizeObserver==='undefined')return;const observer=new ResizeObserver(reveal);observer.observe(node);return()=>observer.disconnect();
+  },[variant,currentStage,stages]);
   if (variant === "segmented") {
     const workspaces = stages.some(stage => Boolean(stage.href));
     // Resolve the current stage index: prefer the explicit `currentStage`,
@@ -82,12 +91,13 @@ export function ProjectStageStepper({
         : stages.findIndex((stage) => stage.status === "in_progress");
     return (
       <ol
+        ref={strip}
         role="list"
         aria-label={workspaces ? "项目工作面" : "项目阶段"}
         data-slot="header-stage-stepper"
         data-current={currentStage}
         className={cn(
-          "min-w-0 flex-1 items-stretch overflow-x-auto",
+          "relative min-w-0 flex-1 items-stretch overflow-x-auto",
           workspaces ? "flex" : "hidden md:flex",
           className,
         )}

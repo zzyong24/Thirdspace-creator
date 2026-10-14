@@ -1,0 +1,50 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-resources.test.ts:
+ 7 | mock.module('@/services/video-cache/service',()=>({VideoCache:class{clearAll(){cleared++;}async drain(){drained++;}}}));
+ 8 | mock.module('@/services/renderer/canvas-renderer',()=>({CanvasRenderer:class{fps:any;canvas={width:10,height:10};constructor(options:any){this.fps=options.fps;}getOutputCanvas(){return{};}async render(){}}}));
+ 9 | mock.module('mediabunny',()=>({QUALITY_LOW:1,QUALITY_MEDIUM:2,QUALITY_HIGH:3,QUALITY_VERY_HIGH:4,Mp4OutputFormat:class{},WebMOutputFormat:class{},BufferTarget:class{buffer=new Uint8Array([1]).buffer;},Output:class{target:any;constructor(options:any){this.target=options.target;}addVideoTrack(){}addAudioTrack(){}async start(){}async finalize(){}async cancel(){cancelled++;}},CanvasSource:class{async add(){if(fail)throw Error('encode failed');}close(){closedVideo++;}},AudioBufferSource:class{async add(){}close(){closedAudio++;}}}));
+10 | const {SceneExporter}=await import('@/services/renderer/scene-exporter');
+11 | function fixture(){cancelled=closedVideo=closedAudio=cleared=drained=0;fail=false;return new SceneExporter({width:10,height:10,fps:{numerator:30,denominator:1},format:'mp4',quality:'high'});}
+12 | test('SceneExporter取消关闭未finalize输出、视频源并释放独立decode cache',async()=>{const e=fixture();e.cancel();expect(await e.export({rootNode:{duration:120000} as any})).toBeNull();expect(cancelled).toBe(1);expect(closedVideo).toBe(1);expect(cleared).toBeGreaterThanOrEqual(1);expect(drained).toBe(1);});
+                                                                                                                                                                                                                          ^
+error: expect(received).toBe(expected)
+
+Expected: 1
+Received: 0
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-baseline/apps/web/src/embedded/__tests__/native-preview-resources.test.ts:12:214)
+(fail) SceneExporter取消关闭未finalize输出、视频源并释放独立decode cache [39.80ms]
+ 8 | mock.module('@/services/renderer/canvas-renderer',()=>({CanvasRenderer:class{fps:any;canvas={width:10,height:10};constructor(options:any){this.fps=options.fps;}getOutputCanvas(){return{};}async render(){}}}));
+ 9 | mock.module('mediabunny',()=>({QUALITY_LOW:1,QUALITY_MEDIUM:2,QUALITY_HIGH:3,QUALITY_VERY_HIGH:4,Mp4OutputFormat:class{},WebMOutputFormat:class{},BufferTarget:class{buffer=new Uint8Array([1]).buffer;},Output:class{target:any;constructor(options:any){this.target=options.target;}addVideoTrack(){}addAudioTrack(){}async start(){}async finalize(){}async cancel(){cancelled++;}},CanvasSource:class{async add(){if(fail)throw Error('encode failed');}close(){closedVideo++;}},AudioBufferSource:class{async add(){}close(){closedAudio++;}}}));
+10 | const {SceneExporter}=await import('@/services/renderer/scene-exporter');
+11 | function fixture(){cancelled=closedVideo=closedAudio=cleared=drained=0;fail=false;return new SceneExporter({width:10,height:10,fps:{numerator:30,denominator:1},format:'mp4',quality:'high'});}
+12 | test('SceneExporter取消关闭未finalize输出、视频源并释放独立decode cache',async()=>{const e=fixture();e.cancel();expect(await e.export({rootNode:{duration:120000} as any})).toBeNull();expect(cancelled).toBe(1);expect(closedVideo).toBe(1);expect(cleared).toBeGreaterThanOrEqual(1);expect(drained).toBe(1);});
+13 | test('SceneExporter编码错误仍关闭源/取消输出/排空decode cache',async()=>{const e=fixture();fail=true;await expect(e.export({rootNode:{duration:120000} as any})).rejects.toThrow('encode failed');expect(cancelled).toBe(1);expect(closedVideo).toBe(1);expect(cleared).toBeGreaterThanOrEqual(1);expect(drained).toBe(1);});
+                                                                                                                                                                                                           ^
+error: expect(received).toBe(expected)
+
+Expected: 1
+Received: 0
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-baseline/apps/web/src/embedded/__tests__/native-preview-resources.test.ts:13:199)
+(fail) SceneExporter编码错误仍关闭源/取消输出/排空decode cache [3.00ms]
+ 9 | mock.module('mediabunny',()=>({QUALITY_LOW:1,QUALITY_MEDIUM:2,QUALITY_HIGH:3,QUALITY_VERY_HIGH:4,Mp4OutputFormat:class{},WebMOutputFormat:class{},BufferTarget:class{buffer=new Uint8Array([1]).buffer;},Output:class{target:any;constructor(options:any){this.target=options.target;}addVideoTrack(){}addAudioTrack(){}async start(){}async finalize(){}async cancel(){cancelled++;}},CanvasSource:class{async add(){if(fail)throw Error('encode failed');}close(){closedVideo++;}},AudioBufferSource:class{async add(){}close(){closedAudio++;}}}));
+10 | const {SceneExporter}=await import('@/services/renderer/scene-exporter');
+11 | function fixture(){cancelled=closedVideo=closedAudio=cleared=drained=0;fail=false;return new SceneExporter({width:10,height:10,fps:{numerator:30,denominator:1},format:'mp4',quality:'high'});}
+12 | test('SceneExporter取消关闭未finalize输出、视频源并释放独立decode cache',async()=>{const e=fixture();e.cancel();expect(await e.export({rootNode:{duration:120000} as any})).toBeNull();expect(cancelled).toBe(1);expect(closedVideo).toBe(1);expect(cleared).toBeGreaterThanOrEqual(1);expect(drained).toBe(1);});
+13 | test('SceneExporter编码错误仍关闭源/取消输出/排空decode cache',async()=>{const e=fixture();fail=true;await expect(e.export({rootNode:{duration:120000} as any})).rejects.toThrow('encode failed');expect(cancelled).toBe(1);expect(closedVideo).toBe(1);expect(cleared).toBeGreaterThanOrEqual(1);expect(drained).toBe(1);});
+14 | test('SceneExporter成功保留真实buffer但释放独立decode cache，不cancel已finalize输出',async()=>{const e=fixture();expect((await e.export({rootNode:{duration:120000} as any}))?.byteLength).toBe(1);expect(cancelled).toBe(0);expect(closedVideo).toBe(1);expect(cleared).toBeGreaterThanOrEqual(1);expect(drained).toBe(1);});
+                                                                                                                                                                                                                                                              ^
+error: expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 1
+Received: 0
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-baseline/apps/web/src/embedded/__tests__/native-preview-resources.test.ts:14:250)
+(fail) SceneExporter成功保留真实buffer但释放独立decode cache，不cancel已finalize输出 [3.07ms]
+
+ 0 pass
+ 3 fail
+ 9 expect() calls
+Ran 3 tests across 1 file. [503.00ms]

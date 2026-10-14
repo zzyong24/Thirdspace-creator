@@ -1,0 +1,7 @@
+page.evaluate: ne: 定位目标已改变，当前工程保留。
+    at TJA (http://127.0.0.1:61675/native.js:82062:172)
+    at h (http://127.0.0.1:61675/native.js:82330:30)
+    at http://127.0.0.1:61675/native.js:82363:25
+    at /private/tmp/t1274-native-resize-hit-proof/geometry.cjs:12:209 {
+  name: 'Error'
+}

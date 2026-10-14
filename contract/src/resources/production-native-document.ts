@@ -47,6 +47,10 @@ export const productionNativeOverlayTrack=z.union([productionNativeVideoTrack,pr
 export const productionNativeTrack=z.union([productionNativeOverlayTrack,productionNativeAudioTrack]);
 export const productionNativeTracks=z.looseObject({main:productionNativeVideoTrack,overlay:z.array(productionNativeOverlayTrack),audio:z.array(productionNativeAudioTrack)});
 export const productionNativeScene=z.looseObject({id,name:z.string(),isMain:z.boolean(),tracks:productionNativeTracks,bookmarks:z.array(z.looseObject({time:nativeTick,note:z.string().optional(),color:z.string().optional(),duration:nativeTick.optional()})),createdAt:z.string(),updatedAt:z.string()});
+/** 输出投影原样承载旧扩展。新增/改写仍必须通过严格输入schema及before-aware validator。 */
+const preservedTrack=z.looseObject({id,type:z.string(),elements:z.array(z.record(z.string(),z.json()))});
+const preservedScene=z.looseObject({...productionNativeScene.shape,tracks:z.looseObject({main:preservedTrack,overlay:z.array(preservedTrack),audio:z.array(preservedTrack)})});
+export const productionNativeSceneOutput=productionNativeScene.or(preservedScene) as z.ZodType<z.infer<typeof productionNativeScene>>;
 export type NativeSerializedTimelineElement=z.infer<typeof productionNativeElement>;
 export type NativeSerializedTimelineTrack=z.infer<typeof productionNativeTrack>;
 export type NativeSerializedTimelineTracks=z.infer<typeof productionNativeTracks>;
@@ -73,9 +77,10 @@ export function validateNativeSceneTracksCandidate(before:NativeSerializedTimeli
    if(elementIds.has(element.id))throw new Error('元素ID重复');elementIds.add(element.id);
    const old=oldElements.get(element.id);
    if(!old)productionNativeElement.parse(element);else if(old.type!==element.type)throw new Error('既有元素类型不能改变');
+   if(old&&same(old,element)&&prior?.elements.some(e=>e.id===element.id))continue;
    const allowed=track.type==='video'?['video','image']:track.type==='graphic'?['sticker','graphic']:[track.type];
    if(!allowed.includes(element.type))throw new Error('元素与轨道类型不符');
-   if(old&&same(old,element))continue;
+
    // 未改丰富字段保持原值；仅对变动known字段使用原v31schema，不重验原扩展。
    const variants={video,image,text,audio:element.sourceType==='library'?libraryAudio:uploadAudio,sticker,graphic,effect};
    const shape=variants[element.type].shape as Record<string,z.ZodType>;

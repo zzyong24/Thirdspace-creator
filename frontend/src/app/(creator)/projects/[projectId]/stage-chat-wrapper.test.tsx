@@ -12,7 +12,7 @@ vi.mock("@/features/draft-workbench/draft-chat-rail", () => ({
   DraftChatRail: ({ projectId }: { projectId: string }) => (
     <div data-testid="director">
       project:{projectId}
-      <button>对话动作</button>
+      <button>对话动作</button><input aria-label="未发送的编导输入" defaultValue=""/>
     </div>
   ),
 }));
@@ -209,7 +209,8 @@ it.each([true, false])("显式 active 初值 %s 的常驻剪辑器切页后保�
     expect(handle?.readDraft()).toBe("切页前的未保存工程");
     expect(mounted).toHaveBeenCalledTimes(1);
     expect(unmounted).not.toHaveBeenCalled();
-    expect(screen.queryByTestId("director") !== null).toBe(active);
+    expect(screen.getByTestId("director")).toBeInTheDocument();
+    expect(screen.getByTestId("director").closest("aside")?.hidden).toBe(!active);
   }
   view.unmount();
   expect(unmounted).toHaveBeenCalledTimes(1);
@@ -233,4 +234,13 @@ it("未传 active 的无栏稿面保持原透传结构和同 key 状态", () => 
   expect(mounted).toHaveBeenCalledTimes(1);
   expect(unmounted).not.toHaveBeenCalled();
   expect(screen.queryByTestId("director")).not.toBeInTheDocument();
+});
+
+it('常驻视频切页只隐藏唯一编导，未发送输入和DOM实例保留',()=>{
+ route.path='/projects/p/production';const view=render(<StageChatWrapper active projectId="p" projectTitle="项目"><p>当前视频</p></StageChatWrapper>);
+ const input=screen.getByLabelText('未发送的编导输入');fireEvent.change(input,{target:{value:'还没有发送的剪辑要求'}});
+ view.rerender(<StageChatWrapper active={false} projectId="p" projectTitle="项目"><p>当前视频</p></StageChatWrapper>);
+ expect(screen.getByLabelText('未发送的编导输入')).toBe(input);
+ view.rerender(<StageChatWrapper active projectId="p" projectTitle="项目"><p>当前视频</p></StageChatWrapper>);
+ expect(screen.getByLabelText('未发送的编导输入')).toHaveValue('还没有发送的剪辑要求');expect(screen.getAllByTestId('director')).toHaveLength(1);
 });

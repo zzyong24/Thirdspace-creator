@@ -1,3 +1,4 @@
+import {productionScriptReadBody,productionScriptProposeBody,workEditorContext,workEditorCandidate} from '../resources/work-editor';
 import {productionRoughCutCreateBody,productionRoughCutCreated,productionRoughCutRequest,productionRoughCutAdoptBody} from '../resources/production-rough-cut';
 import {productionConversionPrepareBody,productionConversionAdoptBody,productionConversionRequest} from '../resources/production-conversion';
 import {productionTranscriptCreateBody,productionTranscriptAdoptBody,productionTranscriptRequest} from '../resources/production-transcripts';
@@ -21,6 +22,8 @@ const exportParams = z.object({ exportId: id });
 
 // SPEC §13 "制作 / Production" group.
 export const productionOperations = {
+  readProductionEditorScript:defineEndpoint({id:'outputs.production.editor.script.read',method:'POST',path:'/outputs/:outputId/production/editor/script/read',params:outputParams,body:productionScriptReadBody,response:workEditorContext,fr:['FR-1274-01']}),
+  proposeProductionEditorScript:defineEndpoint({id:'outputs.production.editor.script.propose',method:'POST',path:'/outputs/:outputId/production/editor/script/propose',params:outputParams,body:productionScriptProposeBody,response:workEditorCandidate,fr:['FR-1274-01']}),
  prepareProductionEditorConversion:defineEndpoint({id:"outputs.production.editor.convert.prepare",method:"POST",path:"/outputs/:outputId/production/editor/convert",params:outputParams,body:productionConversionPrepareBody,response:productionConversionRequest,fr:["FR-850-1"]}),
  getProductionEditorConversion:defineEndpoint({id:"outputs.production.editor.convert.get",method:"GET",path:"/outputs/:outputId/production/editor/convert/:requestId",params:outputParams.extend({requestId:productionEditorRequestId}),response:productionConversionRequest,fr:["FR-850-1"]}),
  adoptProductionEditorConversion:defineEndpoint({id:"outputs.production.editor.convert.adopt",method:"POST",path:"/outputs/:outputId/production/editor/convert/adopt",params:outputParams,body:productionConversionAdoptBody,response:productionEditorVersion,fr:["FR-850-1"]}),

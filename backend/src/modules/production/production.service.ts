@@ -1,3 +1,7 @@
+import {nativeChangedMediaIds} from './production-script-markdown';
+import {readProductionNativeScene,type NativeSerializedTimelineTracks} from '@creatoros/contract';
+import {createWorkEditorCandidateService} from '../ai-runtime/work-editor-candidate';
+import {productionScriptReadBody,productionScriptProposeBody,type WorkEditorContext,type WorkEditorCandidate} from '@creatoros/contract';
 import {applyNativeEditorEdits,nativeProbeMediaCatalog} from "./production-native-editor";
 import {assertWritableWorkspace} from "../../workspace-scope";
 import {isProductionOverlayReference} from "./production-overlay-capture";
@@ -17,6 +21,7 @@ import {
 import {mapMainTrack} from "./production-main-track";
 import {applyV2EditorEdits} from "./production-v2-edits";
 import {compileV2RenderablePlan} from "./production-v2-compile";
+import {compileV1RenderProps} from "./production-v1-compile";
 import {buildProductionPreview,type ResolveEditorMedia} from "./production-preview";
 import { createProductionEditorRepository, editingPlan, editorRevision, type ProductionVersionSavedEvent } from "./production-editor.repository";
 import { prepareEditorPlan, applyEditorEdits, itemDigest, unsupportedEditorFields, validateEditorChanges, type EditorPlan } from "./production-editor-plan";
@@ -140,6 +145,8 @@ export interface ServiceDeps {
 }
 
 export interface ProductionService {
+ readEditorScript(ctx:RequestContext,outputId:string,body:unknown):Promise<WorkEditorContext>;
+ proposeEditorScript(ctx:RequestContext,outputId:string,body:unknown):Promise<WorkEditorCandidate>;
  createRoughCut(ctx:RequestContext,outputId:string,body:unknown):ReturnType<ReturnType<typeof createProductionRoughCutReservations>['create']>;
  getRoughCut(ctx:RequestContext,outputId:string,requestId:string):ReturnType<ReturnType<typeof createProductionRoughCutReservations>['get']>;
  adoptRoughCut(ctx:RequestContext,outputId:string,body:unknown):ReturnType<ReturnType<typeof createProductionRoughCutReservations>['adopt']>;
@@ -304,8 +311,18 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
     });
   }
 
+  async function readEditorDocument(ctx:RequestContext,outputId:string,forUpdate=false):Promise<ProductionEditorDocument>{
+    const {owned,row,plan}=await editorFor(ctx).read(outputId,forUpdate);
+    return {outputId,projectId:owned.projectId,productionId:row?.id??null,revision:editorRevision(plan),state:plan?([1,2,3].includes(Number(plan.editorVersion))?'editable':'legacy'):'empty',plan,unsupportedFields:plan?.editorVersion===2||plan?.editorVersion===3?[]:unsupportedEditorFields(plan)};
+  }
+  const scriptCandidates=()=>createWorkEditorCandidateService({readProduction:readEditorDocument,readMedia:async(ctx,input)=>{
+    if(!deps.readNativeEditorMedia)throw new UnsupportedOperationError('production.editor.native-media-read');
+    return deps.readNativeEditorMedia(ctx,input);
+  }});
   const sources=createProductionSources({...deps,ports:deps.sourcePorts});
   return {
+    async readEditorScript(ctx,id,raw){const body=productionScriptReadBody.parse(raw);if(body.target.outputId!==id)throw new ConflictError('文字剪辑目标与当前作品不符');return scriptCandidates().read(ctx,body.target,{view:'script_markdown'});},
+    async proposeEditorScript(ctx,id,raw){const body=productionScriptProposeBody.parse(raw);if(body.target.outputId!==id)throw new ConflictError('文字剪辑目标与当前作品不符');return scriptCandidates().propose(ctx,body.target,body.input);},
     assertAssetAsrReservation:(ctx,proof,tx)=>{if(!deps.transcripts)throw new UnsupportedOperationError("production.transcripts");return deps.transcripts().assertAssetAsrReservation(ctx,proof,tx);},
     prepareEditorConversion:(ctx,id,body)=>conversion().prepare(ctx,id,body),
     getEditorConversion:(ctx,id,requestId)=>conversion().get(ctx,id,requestId),
@@ -327,11 +344,7 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
     createRoughCut(ctx,id,body){if(!deps.roughCut)throw new UnsupportedOperationError('production.rough-cut');return deps.roughCut().create(ctx,id,body);},
     getRoughCut(ctx,id,key){if(!deps.roughCut)throw new UnsupportedOperationError('production.rough-cut');return deps.roughCut().get(ctx,id,key);},
     adoptRoughCut(ctx,id,body){if(!deps.roughCut)throw new UnsupportedOperationError('production.rough-cut');return deps.roughCut().adopt(ctx,id,body);},
-    async getEditor(ctx,outputId,forUpdate=false) {
-      const {owned,row,plan}=await editorFor(ctx).read(outputId,forUpdate);
-      return {outputId,projectId:owned.projectId,productionId:row?.id??null,revision:editorRevision(plan),
-        state:plan?([1,2,3].includes(Number(plan.editorVersion))?"editable":"legacy"):"empty",plan,unsupportedFields:plan?.editorVersion===2||plan?.editorVersion===3?[]:unsupportedEditorFields(plan)};
-    },
+    getEditor:readEditorDocument,
     async saveEditor(ctx,outputId,input) {
       const body=productionEditorSaveBody.parse(input);
       return editorFor(ctx).commit(outputId,{...body,requestDigest:itemDigest({op:"save",body})},async(current,projectId,transaction)=>{
@@ -354,7 +367,13 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
       return editorFor(ctx).commit(outputId,{...body,source:"assistant",getMediaLineage:()=>mediaLineage,requestDigest:itemDigest({op:"apply",body})},async(current,projectId,transaction)=>{
         if(current?.editorVersion===3){
           const prior=productionReferencePlan.parse(current),media=nativeProbeMediaCatalog(prior);
-          for(const ref of prior.referenceEditor.mediaRefs){
+          const required=new Set<string>();
+          for(const edit of body.edits){
+            if(edit.type!=='replaceNativeSceneTracks')throw new ConflictError('当前原生工程仅支持明确scene轨道候选');
+            const scene=readProductionNativeScene(prior,edit.sceneId);if(!scene)throw new ConflictError('场景不存在');
+            try{for(const mediaId of nativeChangedMediaIds(scene.tracks as unknown as NativeSerializedTimelineTracks,edit.tracks as unknown as NativeSerializedTimelineTracks))required.add(mediaId);}catch{throw new ConflictError('场景轨道结构无效');}
+          }
+          for(const ref of prior.referenceEditor.mediaRefs.filter(ref=>required.has(ref.mediaId))){
             if(!deps.readNativeEditorMedia){if(media.some(m=>m.mediaId===ref.mediaId))continue;throw new UnsupportedOperationError('production.editor.native-media-read');}
             const exact=await deps.readNativeEditorMedia(ctx,{projectId,assetId:ref.assetId,assetFileId:ref.assetFileId},transaction);
             const probe=media.find(m=>m.mediaId===ref.mediaId);
@@ -409,7 +428,7 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
         if(!deps.assertEditorAsset)throw new UnsupportedOperationError("production.editor.asset-validation");
         for(const assetId of mediaRefs(prepared))await deps.assertEditorAsset(ctx,{projectId,assetId},transaction);
         return executionTaskSpec.parse({taskType:"video.render",goal:`生成视频：${prepared.renderProps.meta.title}`,
-          inputs:[...mediaRefs(prepared)].map(assetId=>({assetId,mountAs:assetId})),params:{props:prepared.renderProps},
+          inputs:[...mediaRefs(prepared)].map(assetId=>({assetId,mountAs:assetId})),params:{props:compileV1RenderProps(prepared.renderProps)},
           constraints:{timeoutSec:null,network:"deny",maxOutputMB:512}});
       });
       if(frozen.request.taskId)return frozen.request;

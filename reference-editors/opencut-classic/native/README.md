@@ -1,3 +1,104 @@
+# T-1282 场景效果 WASM 字段协议兼容
+
+仅在 WasmCompositor.render 为 sceneEffect 创建临时 effect_pass_groups 字段，内部继续使用 effectPassGroups；layer 与无 scene 帧保持原对象。效果组/参数/顺序不变，不改工程或 WASM 0.2.10 二进制。
+
+真实桥 RED 五种 scene 报原错→GREEN 七渲染与五像素关系；同参数输出逐像素一致，混排顺序控制能改变像素，输入深冻结保持不变。原 86 测试 / 380 断言、类型/AST、715 源标准 patch F0、归档独立重建七产物与双目录逐字节一致。实际公共三候选 preview→MP4 及 thumbnail 由 ROOT 继续，不在此代签。证据 verification/t1282-scene-effect-protocol 与 docs/verification/t1282/native-protocol；以下历史原样保留。
+
+# T-1274 响应式时间轴交互状态恢复
+
+ROOT完整宿主出现390→1366后剪刀可见但父panel命中。独立只读验证两种路径按钮矩形完全相同，问题是隐藏时间轴曾写入inert=true，重新显示未同步；原失败图/日志保留。仅EditorLayout在layout/view提交后复用syncNativeInteractivity(currentHost,isExportLocked())，不直接清inert，不加z-index/强制点击，不改变Core。
+
+独立生产native真实Chromium先RED：hidden=false/inert=true/命中DIV；修后GREEN：命中BUTTON、普通hover显示Split element、实际click分割1→2。390直接选择时间轴也能交互。disabled、候选投影、真实公共export运行时跨布局均继续锁住Core；解除候选/disabled及取消export后恢复正常命中，原canvas实例保持。实际export本轮仅验证锁和AbortError取消，不签MP4完成。完整CreatorOS根宿主由ROOT与user_walkthrough继续复验。
+
+86测试380断言、类型/AST、旧38DOM/22工作区DOM/58响应式DOM通过。715源标准patch F0复原、归档重建七产物与双目录逐字节一致；仅实现EditorLayout及归档README/重建元数据改变。错误seek测试入参的中间失败保留。证据verification/t1274-resize-hit；以下历史原样保留。
+
+# T-1274 窄预览播放工具栏完整可达
+
+最终390宿主工作面约278px，旧工具栏Fit右缘286.34px超出播放器270px，真实Chromium当场RED保留。按预览容器本身380px阈值切成两行：完整时间码一行，播放/Fit/全屏一行；宽容器仍沿原居中播放排列。添加播放/暂停/全屏可访问名称与原icon尺寸，未修改Core、预览计算、时间码或缩放算法。CSS来自build-native.mjs源码，未只补生产bundle。
+
+真实生产native Chromium小宿主GREEN：278px工作面Fit右缘213px、全屏262px均在边界内；260/278/390/1000/1280及CSS zoom2完整。实际执行缩放菜单100%→Fit、键盘打开菜单、播放/暂停、时间码改为1秒、进入/退出全屏；原画布实例保持、无pageerror。黑图为控件验证生成图片，不冒充实际视频预览。旧8场景几何（含横/竖/方画幅）全过；已看278与宽屏实际截图，不新增视觉评分。
+
+完整86测试380断言、类型/AST、旧38DOM/22工作区DOM/58响应式DOM通过。715源码标准patch F0复原，归档重建七输出与双生产目录逐字节一致。本轮复用原依赖树、无新安装；正式CreatorOS宿主回归由ROOT继续，未代签MP4/模型/安装。中间build生成覆盖CSS、空工程播放和textbox定位夹具失败均保留。证据verification/t1274-toolbar-fit；以下历史原样保留。
+
+# T-1274 缺失原素材的候选预览降级
+
+旧renderer的video/image缺file/url、upload audio缺媒体都跳过原引用；纯色背景和文字独立绘制。先以未修改production公开load→export运行六族64×64/24fps/12帧真实MP4：可用主图+缺叠加、main全缺+纯色、main全缺+文字、缺upload音轨保持合法画面；main全缺且透明/blur无其它层只得全黑，原文件与解码证据保留。
+
+preview-scene仅在同轨同ID且原元素完整JSON相等时允许缺失，正式tracks绝不删除；新增/修改缺失、错类型、owner/epoch/digest/file guards原样保留。返回可选warnings结构为code=preserved_missing_media、trackId、elementId、mediaId、message。有降级时复用原buildScene的可见性/媒体/背景构图，只有effect或无节点时明确“没有可预览的画面”，不把全黑误报有效候选；显式黑色背景仍是合法画面。
+
+公共controller当场24PASS/8FAIL→34PASS/124断言；完整86测试380断言、类型、AST通过。新公开preview四可输出族真实MP4的全部12帧RGB与stream均与旧export逐字节/字段相同，原tracks保持；透明/blur无画面两族实际拒绝并有原因。715源F0/归档再构建七输出与双目录一致。原局部mock三份环境错误保留，不算产品红测。
+
+本轮未改Core、renderer、cache或响应式源码，未重跑旧58DOM/8几何，不补签完整CreatorOS后端采纳、外部模型或App。ROOT承接warnings显示和最终宿主复验。证据verification/t1274-preserved-missing-media；以下历史原样保留。
+
+# T-1274 单面板画面与播放控件紧邻
+
+2026-10-14第三轮必需修正：ROOT实际390图画面垂直居中，播放控件出屏。仅single画面改为按工程真实canvasSize宽高比计算展示高度，画面最高占可视高度42%（换算CSS zoom），保留原72px播放栏/留白。其它single面板继续占满；compact/wide不变；未修改实际工程画幅、Core或渲染。
+
+真实Chromium生产native小型宿主：旧main516.45px RED→实际390×844下main273.38px、canvas358×201.38，控件紧邻；zoom2 main522px、canvas672×378；9:16与1:1真实比例保留且main426.47px。8场景全过，compact267.72px、wide292.22px与上轮一致，原canvas/草稿实例保持。已看390、zoom2和竖屏截图；黑画布为空工程，不冒充真实媒体预览。完整CreatorOS宿主由ROOT继续复验。
+
+原71测试341断言、58DOM、类型/AST及715源F0复原、七份归档重建与双目录逐字节一致再次通过。证据verification/t1274-responsive-fit，旧失败/历史说明保留如下。
+
+# T-1274 响应式实际几何闭包
+
+2026-10-14后续：ROOT真实1280/200%图发现预览只剩约74px、时间轴下方空白。真实Chromium加载生产native小型shadow宿主复现main72px RED，原因是style.flex空简写清掉Resizable内部flexGrow/flexBasis。改用独立长属性覆盖并沿原值恢复；窄布局不回写宽屏分栏比例。断点改用ResizeObserver.contentRect与首帧clientWidth的CSS像素，避免zoom2将逻辑600误判为1200宽屏。
+
+同真实Chromium GREEN：1000主区267.72px/canvas347.94×195.72；390主区516.45px/canvas358×201.38；时间轴单面板516.45px；切回1000尺寸恢复；zoom2逻辑600正确single/canvas1136×639；恢复1280三栏canvas391.5×220.22。画布和textarea原实例保持，无pageerror；已查看compact与zoom截图。此为生产native的真实几何验证，空工程黑画布不是媒体预览证明，未代签完整CreatorOS UI或MP4。
+
+原71测试341断言、58DOM、类型、AST再次通过；715源码F0复原和归档重新build七份与双目录逐字节一致。只有editor-layout.tsx与README/重建元数据改变，private exact cache和controller原字节保持。真实RED与六几何截图/JSON/脚本见verification/t1274-responsive-geometry，ROOT继续整合宿主复验。以下旧记录保留。
+
+# T-1274 响应式工作区与素材槽位
+
+2026-10-14：按编辑器实际容器宽度布局：小于700px单面板，四个按钮依次为素材/转录、画面、时间轴、编导/属性；700–1099px画面和时间轴保持，按需展示一侧340px面板；1100px及以上沿原可调三栏。单面板时间轴保原控件和水平滚动，不缩成不可读竖列。所有Core、Resizable、portal和宿主草稿保持同一实例。
+
+素材面板顶部新增creatoros-materials槽位，data-creatoros-addon沿原键盘归属。候选active出现记录原面板并转画面，移除后恢复原面板；宿主下一动画帧恢复原触发按钮焦点。未改正式工程owner、数据合同、控制器或private exact cache源码。
+
+类型、原71测试341断言、完整AST、正式构建和58项DOM夹具通过；715源码标准patch以F0复原、归档再构建七份产物与双目录逐字节一致。冻结安装989包且锁文件未改。夹具ResizeObserver环境失败原日志保留。未执行本子候选真实宿主视觉/GPU/MP4/安装；由ROOT继续真实UI和独立任务走查，不把DOM夹具签为像素或完整验收。
+
+证据见verification/t1274-responsive/verification-summary.json。下面的旧证据原样保留。
+
+本轮T-1274中心投影、原工程改名与private exact export源帧已归档。执行rebuild-native.sh verify包含新canvas多节点回归；DOM为显式fixture，最终真实GPU/MP4/UI采纳待ROOT。完整证据见VERIFICATION.md与verification/t1274-preview-center。
+
+# T-1274 已分离原声预览兼容窄修
+
+原OpenCut音频分离使用video的真实mediaId创建upload音轨，原backend合同允许audio元素引用video媒体。本轮仅修preview-scene的机械媒体类型校验，audio允许audio/video，video/image保持strict。未改变候选scope、renderer ABI、播放、保存、采纳或AAC时长。
+
+真实公共controller RED：18通过/1失败（原video加已分离原声音轨）；窄修后19通过，3项不兼容媒体族继续拒绝。完整原回归66测试323断言、类型、正式build、AST通过；713份source标准patch实际F0还原与归档字节一致，归档再productionbuild七份与双目录一致。证据在verification/t1274-preview-separated-audio，旧失败和主会话原E2E时长失败均不覆盖。
+
+本轮未重复DOM，先前38+22项证据原样保留；未签本子候选真实GPU/MP4/E2E PASS，未放宽主会话时长断言。标准patch上下文空白/原CRLF的diff-check告警保留，非patch检查PASS。以下为历史候选交付说明。
+
+# T-1274 候选隔离预览交付
+
+补齐生产`preview-scene`公共命令，使用原`renderer.exportProject` frozen ABI。校验完整owner、当前epoch、完整tracks前值与scene候选摘要、真实File与精确媒体版本；克隆当前工程，仅候选目标scene轨道替换。预览不暂停活动播放，不保存/切场景/写command，不改dirty、撤销、selection或contextEpoch。回执前再次核对，取消继承原signal/寿命，不重发或续期。
+
+```mermaid
+flowchart LR
+ A[当前工程与真实媒体] --> B[owner / epoch / before摘要]
+ B --> C[独立候选scene / 完整candidate摘要]
+ C --> D[真实renderer / 独立画布与解码缓存]
+ D --> E[真实MediaBunny编码 / 取消释放]
+ E --> F[再次核对 / 可播放候选Blob]
+```
+
+真实CanvasRenderer在同一同步段执行WASM renderFrame与帧拷贝，各实例输出尺寸沿原项目；编码不读活动预览输出。SceneExporter取消/失败释放源、未finalize输出、独立解码缓存和画布；临时音频context、慢图和贴纸随原取消释放，活动缓存保持原作用域。旧export frozen ABI与原公共命令保留。
+
+实RED与全部失败保留`verification/t1274-preview`；当前62测试及机械端口夹具通过，旧DOM38项与workspace22项通过。713份source归档与相对真实上游source.tar.gz的标准patch实际F0还原字节一致；从归档再次正式构建所得七份与两处生产目录一致。完整源码审查目录`/tmp/creatoros-t1274-preview-isolated`仍保留。
+
+**以上不证明真实GPU像素、实际MP4/AAC、宿主候选交互或安装包通过。**真实公共媒体与E2E由主会话继续验证；DOM fixture产物没有发布。当前SHA和实证以DELIVERY.json、SHA256SUMS及verification/t1274-preview为准。全量git diff --check保留标准patch上下文空白/原CRLF告警（exit2）；非patch检查PASS。补丁真实F0复原和源字节一致，未为消告警重写历史源。以下为历史交付说明，原失败不覆盖。
+
+# T-1274 原生统一剪辑工作区候选
+
+此候选沿已确认的CreatorOS品牌，保留OpenCut素材、属性、预览和时间轴实例。`workspaceAddons: true` 时，左侧素材/转录、右侧编导/属性使用页签与named slot；默认素材/编导。有真实原片时由宿主调用open-addon打开转录；重复标题仅在此模式隐藏。
+
+`request('open-addon', {panel: 'assets'|'transcript'|'director'|'properties'})` 返回 `{panel}`；页签不改正式JSON、dirty或contextEpoch。宿主light DOM元素必须有 `slot="creatoros-transcript"` 或 `slot="creatoros-director"`，并有 `data-creatoros-addon`。宿主保持唯一portal target，销毁原生前同步回迁聊天DOM。
+
+`disabled` 只锁原生core与原生弹层；宿主slot、页签、诊断保持可用。`visible: false` 暂停播放并使整面inert。addon键盘/粘贴不属于原生命令。未传workspaceAddons保留旧布局与禁用语义。
+
+七份正式构建文件直接放在本目录，与frontend/public/reference-editors/opencut-classic/native逐字节一致。完整源码707文件；native-from-t1046.patch是对真实上游source.tar.gz的完整标准补丁，实际patch -p1 -F0所得源与归档逐字节一致；旧T1069补丁另存native-from-t1069.historical.patch。
+
+已验证新增4例RED→GREEN、原19例命令/寿命和16例资源回归、类型及生产AST；真实React/slot DOM夹具22项与旧DOM38项；归档重建七份生产输出字节一致。原失败保留verification/t1274。**未验证真实浏览器视觉、GPU像素、AAC/MP4、宿主聊天集成或安装包。**
+
+下文为历史交付说明，当前数据以DELIVERY.json的T1274字段和verification/t1274为准。
+
 # T-1062 当前原生候选
 
 当前source与输出以本次candidate及校验清单为准，真实原命令记录见 VERIFY.md/VERIFICATION.md。宿主18、浏览器视觉、试听与安装尚未执行。

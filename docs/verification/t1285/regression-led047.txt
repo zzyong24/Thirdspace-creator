@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:26397) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26391) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26399) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26400) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26393) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26395) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26392) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26394) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26396) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26398) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+
+ Test Files  10 passed (10)
+      Tests  213 passed (213)
+   Start at  18:10:52
+   Duration  8.87s (transform 11.14s, setup 1.92s, import 16.89s, tests 7.89s, environment 7.84s)
+

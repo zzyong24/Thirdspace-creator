@@ -1,0 +1,162 @@
+{
+  "kind": "work.editor.candidate",
+  "schemaVersion": 1,
+  "target": {
+    "schemaVersion": 1,
+    "projectId": "project-94c2affe-710",
+    "outputId": "output-94c2affe-721",
+    "documentDigest": "sha256:64a4b08639734f68861b34705bd3188eb48089a6d84b8be9a954d328aeec4319",
+    "owner": "production",
+    "contentType": "video",
+    "savedBase": {
+      "kind": "production",
+      "productionId": "production-94c2affe-736",
+      "revision": 3
+    },
+    "selection": {
+      "kind": "native_scene",
+      "sceneId": "07688549-16c6-45f7-8689-3e71ba3e5d56",
+      "elementRefs": [],
+      "playheadTick": 0,
+      "contextEpoch": 3,
+      "editorGeneration": "1:066048f1-5a16-4039-813a-3a69072814d6"
+    }
+  },
+  "base": {
+    "kind": "production",
+    "productionId": "production-94c2affe-736",
+    "revision": 3
+  },
+  "baseDigest": "sha256:64a4b08639734f68861b34705bd3188eb48089a6d84b8be9a954d328aeec4319",
+  "candidateDigest": "sha256:477b0220faf0135ddfcc8bdd61af8d458a92822e7226b4fbcb03909186cfe6f6",
+  "summary": "按当前文字修改剪辑",
+  "candidate": {
+    "kind": "native_scene",
+    "document": {
+      "id": "07688549-16c6-45f7-8689-3e71ba3e5d56",
+      "name": "主画面",
+      "isMain": true,
+      "tracks": {
+        "main": {
+          "id": "5abf3852-7477-4278-ae2c-8bc2e950b0a3",
+          "name": "Main Track",
+          "type": "video",
+          "muted": false,
+          "hidden": false,
+          "elements": [
+            {
+              "id": "30f46d84-e5ef-4755-ba65-68e187056e9f",
+              "name": "objkey-94c2affe-728-speech-precise.mov",
+              "type": "video",
+              "hidden": false,
+              "params": {
+                "muted": false,
+                "volume": 0,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform.rotate": 0,
+                "transform.scaleX": 1,
+                "transform.scaleY": 1,
+                "transform.positionX": 0,
+                "transform.positionY": 0
+              },
+              "mediaId": "90c9f206-a15b-4bd9-8427-f391569cf5a9",
+              "trimEnd": 0,
+              "duration": 940800,
+              "startTime": 0,
+              "trimStart": 43200,
+              "sourceDuration": 984000,
+              "isSourceAudioEnabled": true
+            }
+          ]
+        },
+        "audio": [],
+        "overlay": []
+      },
+      "bookmarks": [],
+      "createdAt": "2026-10-14T06:12:17.377Z",
+      "updatedAt": "2026-10-14T06:12:19.271Z"
+    }
+  },
+  "changes": [
+    {
+      "path": "document.tracks.main.elements[0].duration",
+      "objectId": "30f46d84-e5ef-4755-ba65-68e187056e9f",
+      "label": "document.tracks.main.elements[0].duration",
+      "before": 984000,
+      "after": 940800
+    },
+    {
+      "path": "document.tracks.main.elements[0].trimStart",
+      "objectId": "30f46d84-e5ef-4755-ba65-68e187056e9f",
+      "label": "document.tracks.main.elements[0].trimStart",
+      "before": 0,
+      "after": 43200
+    }
+  ],
+  "scriptDiagnostics": {
+    "warnings": [],
+    "errors": [],
+    "operations": [
+      {
+        "kind": "update",
+        "trackId": "5abf3852-7477-4278-ae2c-8bc2e950b0a3",
+        "elementId": "30f46d84-e5ef-4755-ba65-68e187056e9f"
+      }
+    ]
+  },
+  "apply": {
+    "operation": "applyProductionEditor",
+    "outputId": "output-94c2affe-721",
+    "body": {
+      "expectedRevision": 3,
+      "edits": [
+        {
+          "type": "replaceNativeSceneTracks",
+          "sceneId": "07688549-16c6-45f7-8689-3e71ba3e5d56",
+          "expectedBeforeDigest": "sha256:f14657aed310aff0a4220b741cf132996e97721ebccb53b2d27ce1588209b160",
+          "tracks": {
+            "main": {
+              "id": "5abf3852-7477-4278-ae2c-8bc2e950b0a3",
+              "name": "Main Track",
+              "type": "video",
+              "muted": false,
+              "hidden": false,
+              "elements": [
+                {
+                  "id": "30f46d84-e5ef-4755-ba65-68e187056e9f",
+                  "name": "objkey-94c2affe-728-speech-precise.mov",
+                  "type": "video",
+                  "hidden": false,
+                  "params": {
+                    "muted": false,
+                    "volume": 0,
+                    "opacity": 1,
+                    "blendMode": "normal",
+                    "transform.rotate": 0,
+                    "transform.scaleX": 1,
+                    "transform.scaleY": 1,
+                    "transform.positionX": 0,
+                    "transform.positionY": 0
+                  },
+                  "mediaId": "90c9f206-a15b-4bd9-8427-f391569cf5a9",
+                  "trimEnd": 0,
+                  "duration": 940800,
+                  "startTime": 0,
+                  "trimStart": 43200,
+                  "sourceDuration": 984000,
+                  "isSourceAudioEnabled": true
+                }
+              ]
+            },
+            "audio": [],
+            "overlay": []
+          }
+        }
+      ]
+    }
+  },
+  "imageRequest": null,
+  "failureCode": null,
+  "error": null
+}

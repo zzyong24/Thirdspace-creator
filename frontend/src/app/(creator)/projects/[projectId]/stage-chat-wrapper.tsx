@@ -18,6 +18,7 @@
  */
 
 import * as React from "react";
+import {VideoStageChatDock} from "@/features/draft-workbench/stage-chat-dock";
 import {ProjectVideoSessionContext} from "@/features/reference-editors/project-video-session-registry";
 import { usePathname } from "next/navigation";
 
@@ -45,7 +46,7 @@ function clampRail(n: number): number {
   return Math.max(MIN_RAIL, Math.min(MAX_RAIL, Math.round(n)));
 }
 
-export function StageChatWrapper({
+function StandardStageChatWrapper({
   projectId,
   projectTitle,
   children,active,
@@ -293,4 +294,9 @@ export function StageChatWrapper({
       )) : null}
     </div>
   );
+}
+
+/** 常驻视频只停靠一个编导实例；其它阶段沿用已有宽度/弹层行为。 */
+export function StageChatWrapper(props:Parameters<typeof StandardStageChatWrapper>[0]){
+ return props.active!==undefined?<VideoStageChatDock {...props}/>:<StandardStageChatWrapper {...props}/>;
 }

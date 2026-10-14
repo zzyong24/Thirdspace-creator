@@ -1,0 +1,20 @@
+ExpectError: host-278 Fit right
+
+expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 270
+Received:    286.34375
+    at captureRawStack (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:3130:17)
+    at callMatcherAsStep (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12873:57)
+    at Object.toBeLessThanOrEqual (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12863:23)
+    at measure (/private/tmp/t1274-native-toolbar-proof/geometry.cjs:9:1036)
+    at async /private/tmp/t1274-native-toolbar-proof/geometry.cjs:10:1 {
+  matcherResult: {
+    message: 'expect(received).toBeLessThanOrEqual(expected)\n' +
+      '\n' +
+      'Expected: <= 270\n' +
+      'Received:    286.34375',
+    pass: false,
+    name: 'toBeLessThanOrEqual'
+  }
+}

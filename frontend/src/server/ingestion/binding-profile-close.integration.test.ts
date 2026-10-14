@@ -24,6 +24,7 @@ it('真实临时Chromium停止→宿主租约释放→登录目录搬移→重�
   });
   const deps = { listProfileProcesses: async () => [], removeFile: async () => {} };
   let physicalClosed = false;
+  const stoppedPhases: boolean[] = [];
   try {
     await mkdir(stage, { recursive: true });
     const lease = await lifecycle.acquire(stage);
@@ -33,11 +34,13 @@ it('真实临时Chromium停止→宿主租约释放→登录目录搬移→重�
       context.close = async options => { await close(options); physicalClosed = true; };
       return context;
     }, { shutdownScope: scope, onStopped: async () => {
-      expect(physicalClosed).toBe(true);
+      // 记录真实释放时机，不能在事件回调抛断言后被guard吞掉、稍后重试掩盖早放行。
+      stoppedPhases.push(physicalClosed);
       await lease.onStopped();
     } }, deps);
     await context.addCookies([{ name: 'sessionid', value: 't1259-fixture-only', domain: '.example.invalid', path: '/', expires: Math.floor(Date.now() / 1000) + 3600 }]);
     await context.close();
+    expect(stoppedPhases).toEqual([true]);
     await lifecycle.withProfiles([stage, target], () => adoptDouyinStagingDir(stage, target));
     const next = await lifecycle.acquire(target);
     const reopened = await guardedLaunch(target, () => chromium.launchPersistentContext(target, { headless: true, timeout: 180_000 }), {

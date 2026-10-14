@@ -1,0 +1,65 @@
+{
+  "symbol": "guardedLaunch",
+  "callers": [
+    {
+      "name": "openDouyinProfileContext",
+      "kind": "function",
+      "filePath": "ai-worker/src/runtime/browser/douyin-profile-context.ts",
+      "startLine": 6
+    },
+    {
+      "name": "realOpenContext",
+      "kind": "function",
+      "filePath": "ai-worker/src/runtime/browser/web-capture.ts",
+      "startLine": 123
+    },
+    {
+      "name": "realOpenReaderContext",
+      "kind": "function",
+      "filePath": "ai-worker/src/runtime/browser/web-reader.ts",
+      "startLine": 116
+    },
+    {
+      "name": "realOpenWebContext",
+      "kind": "function",
+      "filePath": "ai-worker/src/runtime/browser/web-session.ts",
+      "startLine": 206
+    },
+    {
+      "name": "open",
+      "kind": "function",
+      "filePath": "ai-worker/src/runtime/platform/kuaishou-browser-source.ts",
+      "startLine": 27
+    },
+    {
+      "name": "open",
+      "kind": "function",
+      "filePath": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "startLine": 134
+    },
+    {
+      "name": "openProfile",
+      "kind": "function",
+      "filePath": "ai-worker/src/runtime/platform/xhs-browser-source.ts",
+      "startLine": 42
+    },
+    {
+      "name": "buildPersistence",
+      "kind": "function",
+      "filePath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/server/persistence-client.ts",
+      "startLine": 1059
+    },
+    {
+      "name": "openDouhotPage",
+      "kind": "function",
+      "filePath": "frontend/src/server/ingestion/douhot-cdp.ts",
+      "startLine": 183
+    },
+    {
+      "name": "buildPersistence",
+      "kind": "function",
+      "filePath": "frontend/src/server/persistence-client.ts",
+      "startLine": 1140
+    }
+  ]
+}

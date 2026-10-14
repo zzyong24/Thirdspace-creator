@@ -1,0 +1,38 @@
+{
+  "zoomMetrics": {
+    "innerWidth": 683,
+    "innerHeight": 406,
+    "outerWidth": 1366,
+    "outerHeight": 900,
+    "devicePixelRatio": 2,
+    "visualScale": 1,
+    "cssZoom": "1",
+    "htmlWidth": 683
+  },
+  "zoomPlay": {
+    "currentTime": 0.027548,
+    "paused": false,
+    "video": {
+      "x": 109,
+      "y": 119.078125,
+      "width": 529,
+      "height": 182.515625,
+      "top": 119.078125,
+      "right": 638,
+      "bottom": 301.59375,
+      "left": 109
+    },
+    "slot": {
+      "x": 97,
+      "y": 71.078125,
+      "width": 553,
+      "height": 242.515625,
+      "top": 71.078125,
+      "right": 650,
+      "bottom": 313.59375,
+      "left": 97
+    }
+  },
+  "returnFocus": true,
+  "formalRevision": 4
+}

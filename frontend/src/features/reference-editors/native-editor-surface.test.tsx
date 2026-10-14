@@ -72,3 +72,19 @@ it('宿主取消真实透传请求signal，而非只丢弃解码结果',async()=
  const controller=new AbortController(),promise=ref.current!.request('read-original-audio-range',{}, {signal:controller.signal});const rejected=expect(promise).rejects.toThrow('已停止');
  await act(async()=>{await Promise.resolve();controller.abort();});await rejected;expect((nativeSignal as AbortSignal|null)?.aborted).toBe(true);
 });
+
+it('视频addons在light DOM投影，director释放先于原生dispose，主题不重挂',async()=>{
+ const released=vi.fn(),mounts=vi.fn(()=>released);
+ const view=render(<NativeEditorSurface {...props} editor="opencut-classic" workspaceAddons={{transcript:<p>真实转录区域</p>,onDirectorMount:mounts}}/>);
+ const host=await waitFor(()=>{const node=view.container.querySelector('[aria-label="视频剪辑工作台"]');expect(node?.shadowRoot?.querySelector('link')).toBeTruthy();return node!;});
+ await act(async()=>fireEvent.load(host.shadowRoot!.querySelector('link')!));await waitFor(()=>expect(h.mount).toHaveBeenCalled());
+ expect(options.workspaceAddons).toBe(true);expect(host.querySelector('[slot="creatoros-transcript"]')).toHaveTextContent('真实转录区域');expect(mounts).toHaveBeenCalledOnce();
+ h.dispose.mockImplementation(async()=>{expect(released).toHaveBeenCalledOnce();});view.unmount();await waitFor(()=>expect(h.dispose).toHaveBeenCalled());
+});
+
+it('候选中心槽位隐藏释放、重显再绑定；保持原生实例并在dispose前撤销投影',async()=>{
+ const release=vi.fn(),mount=vi.fn((_mount:HTMLElement)=>release),addons={transcript:<p>转录</p>,onPreviewMount:mount};
+ const view=render(<NativeEditorSurface {...props} editor="opencut-classic" workspaceAddons={addons}/>);const host=await waitFor(()=>{const node=view.container.querySelector('[aria-label="视频剪辑工作台"]')!;expect(node?.shadowRoot?.querySelector('link')).toBeTruthy();return node;});await act(async()=>fireEvent.load(host.shadowRoot!.querySelector('link')!));await waitFor(()=>expect(props.onReady).toHaveBeenCalled());
+ expect(mount).toHaveBeenCalledOnce();expect(mount.mock.calls[0][0]).toBe(host.querySelector('[slot="creatoros-preview"]'));
+ view.rerender(<NativeEditorSurface {...props} editor="opencut-classic" workspaceAddons={addons} visible={false}/>);expect(release).toHaveBeenCalledOnce();view.rerender(<NativeEditorSurface {...props} editor="opencut-classic" workspaceAddons={addons}/>);expect(mount).toHaveBeenCalledTimes(2);expect(h.mount).toHaveBeenCalledOnce();h.dispose.mockImplementation(async()=>expect(release).toHaveBeenCalledTimes(2));view.unmount();await waitFor(()=>expect(h.dispose).toHaveBeenCalledOnce());
+});

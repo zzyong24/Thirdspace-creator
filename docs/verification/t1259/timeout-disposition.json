@@ -1,0 +1,10 @@
+{
+  "globalStaticFailures": 22,
+  "failuresInTaskWriteSet": 0,
+  "existingTasks": [
+    "T-1250",
+    "T-1204"
+  ],
+  "policyExecuted": true,
+  "actualResult": "FAIL; 22条均在本任务写集外，保原输出"
+}

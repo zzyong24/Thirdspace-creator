@@ -1,0 +1,76 @@
+{
+  "status": "PUBLIC_PREVIEW_PRESERVED_MISSING_REAL_MP4",
+  "results": [
+    {
+      "kind": "available-image-missing-overlay",
+      "bytes": 935,
+      "tracksPreserved": true,
+      "mime": "video/mp4",
+      "warnings": [
+        {
+          "code": "preserved_missing_media",
+          "trackId": "optional",
+          "elementId": "missing",
+          "mediaId": "missing-image",
+          "message": "原有素材“旧缺失图层”暂不可用，预览已跳过该元素，工程仍保留原引用。"
+        }
+      ]
+    },
+    {
+      "kind": "missing-main-color",
+      "bytes": 930,
+      "tracksPreserved": true,
+      "mime": "video/mp4",
+      "warnings": [
+        {
+          "code": "preserved_missing_media",
+          "trackId": "48f89c0c-9ee4-464d-a055-d81137e55b4c",
+          "elementId": "missing",
+          "mediaId": "missing-image",
+          "message": "原有素材“旧缺失图层”暂不可用，预览已跳过该元素，工程仍保留原引用。"
+        }
+      ]
+    },
+    {
+      "kind": "missing-main-text",
+      "bytes": 1388,
+      "tracksPreserved": true,
+      "mime": "video/mp4",
+      "warnings": [
+        {
+          "code": "preserved_missing_media",
+          "trackId": "48f89c0c-9ee4-464d-a055-d81137e55b4c",
+          "elementId": "missing",
+          "mediaId": "missing-image",
+          "message": "原有素材“旧缺失图层”暂不可用，预览已跳过该元素，工程仍保留原引用。"
+        }
+      ]
+    },
+    {
+      "kind": "missing-upload-audio",
+      "bytes": 935,
+      "tracksPreserved": true,
+      "mime": "video/mp4",
+      "warnings": [
+        {
+          "code": "preserved_missing_media",
+          "trackId": "missing-audio-track",
+          "elementId": "missing-audio",
+          "mediaId": "missing-audio",
+          "message": "原有素材“旧缺失音频”暂不可用，预览已跳过该元素，工程仍保留原引用。"
+        }
+      ]
+    },
+    {
+      "kind": "missing-main-transparent",
+      "expectedNoVisual": true,
+      "error": "缺失素材后当前场景没有可预览的画面，请补齐素材或保留可用图层与背景。"
+    },
+    {
+      "kind": "missing-main-blur",
+      "expectedNoVisual": true,
+      "error": "缺失素材后当前场景没有可预览的画面，请补齐素材或保留可用图层与背景。"
+    }
+  ],
+  "errors": []
+}

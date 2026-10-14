@@ -1,0 +1,9 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-canvas.test.ts:
+(pass) 活动预览和候选编码输出画布实例不同，后续render不覆盖前一实例完成帧 [0.76ms]
+
+ 1 pass
+ 0 fail
+ 5 expect() calls
+Ran 1 test across 1 file. [14.00ms]

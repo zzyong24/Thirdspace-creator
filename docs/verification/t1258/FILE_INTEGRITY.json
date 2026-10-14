@@ -1,0 +1,30 @@
+[
+  {
+    "file": "sidecar-2026-10-12.log(1).enc",
+    "bytes": 2328,
+    "sha256": "e8444265952a2ace6594655f33083a08be097cadfaa1e8e40f82cb6482914c69",
+    "frames": 18,
+    "truncated": false
+  },
+  {
+    "file": "sidecar-2026-10-12-1.log(1).enc",
+    "bytes": 9034,
+    "sha256": "677c97391ffd673d1112f38e5937e1308106565b2089ba8af70d1d4638bfe1a4",
+    "frames": 57,
+    "truncated": false
+  },
+  {
+    "file": "sidecar-2026-10-12-2.log(1).enc",
+    "bytes": 8685,
+    "sha256": "9f42b168f62f24ab35defa3e3e69d98309413cd260cdb85d2adf7125059b650c",
+    "frames": 51,
+    "truncated": false
+  },
+  {
+    "file": "sidecar-2026-10-12-3.log(1).enc",
+    "bytes": 4789,
+    "sha256": "e043f0fa11552b7a47ff1aba8fe2770f39fdac7ee713e569d9ad4fd9de4333a5",
+    "frames": 31,
+    "truncated": false
+  }
+]

@@ -1,0 +1,72 @@
+{
+  "evidence": [
+    {
+      "name": "host-278",
+      "width": 278,
+      "zoom": 1,
+      "panel": {
+        "left": 8,
+        "right": 270,
+        "top": 123.546875,
+        "bottom": 333.921875,
+        "width": 262,
+        "height": 210.375
+      },
+      "toolbar": {
+        "left": 8,
+        "right": 270,
+        "top": 269.921875,
+        "bottom": 333.921875,
+        "width": 262,
+        "height": 64
+      },
+      "controls": [
+        {
+          "label": "00:00:00:00",
+          "left": 24,
+          "right": 108.296875,
+          "top": 298.71875,
+          "bottom": 313.109375,
+          "width": 84.296875,
+          "height": 14.390625
+        },
+        {
+          "label": "",
+          "left": 203.53125,
+          "right": 231.53125,
+          "top": 289.921875,
+          "bottom": 321.921875,
+          "width": 28,
+          "height": 32
+        },
+        {
+          "label": "Fit",
+          "left": 231.53125,
+          "right": 286.34375,
+          "top": 291.921875,
+          "bottom": 319.921875,
+          "width": 54.8125,
+          "height": 28
+        },
+        {
+          "label": "",
+          "left": 307.34375,
+          "right": 323.34375,
+          "top": 289.921875,
+          "bottom": 321.921875,
+          "width": 16,
+          "height": 32
+        }
+      ],
+      "time": {
+        "left": 28,
+        "right": 203.53125,
+        "top": 298.71875,
+        "bottom": 313.109375,
+        "width": 175.53125,
+        "height": 14.390625
+      }
+    }
+  ],
+  "errors": []
+}

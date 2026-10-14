@@ -3,6 +3,9 @@ import { ENDPOINTS } from "../src/endpoints";
 
 // The authoritative SPEC §13 surface — every "METHOD /path" line, verbatim.
 const SPEC_13: ReadonlyArray<[string, string]> = [
+  // T-1274已批准的原稿读取与候选提案接口，保持完整穷尽校验。
+  ["POST", "/outputs/:outputId/production/editor/script/read"],
+  ["POST", "/outputs/:outputId/production/editor/script/propose"],
   ["GET", "/settings/model-routing"],
   ["PUT", "/settings/model-routing"],
   // T-1074正式服务契约：候选由用户采纳，来源/账号归属仍由backend验证。

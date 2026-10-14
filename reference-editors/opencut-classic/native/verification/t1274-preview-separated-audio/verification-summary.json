@@ -1,0 +1,79 @@
+{
+  "scope": "只校验既有分离原声合法媒体族：upload audio允许audio或video，其余video/image严格匹配；未改AAC/时长或产品语义",
+  "sourceDirectory": "/tmp/creatoros-t1274-preview-isolated",
+  "red": {
+    "publicTests": 19,
+    "passed": 18,
+    "failed": 1,
+    "log": "red-public.log",
+    "sha256": "82bbc8d74d6a0f3b469f5ae7340df2d8ef502d10b126e14064ab94a4a544bacc",
+    "failure": "合法已分离video原声的媒体类型校验拒绝"
+  },
+  "green": {
+    "green-public.log": {
+      "pass": 19,
+      "fail": 0,
+      "assertions": 85,
+      "sha256": "154f7163be0eb6f34522d20f40fc02c446680dbe6f5860ded0cc7f2f29e98380"
+    },
+    "old-native.log": {
+      "pass": 19,
+      "fail": 0,
+      "assertions": 116,
+      "sha256": "c3b50e1d2c942bb5fd01faf32b4e05eb5dc377643de9b49e0032c2a1982c035a"
+    },
+    "old-workspace.log": {
+      "pass": 4,
+      "fail": 0,
+      "assertions": 24,
+      "sha256": "27752538addd6c1911dfd8619199a67dd2829d123438ceab3706b14ae34386d0"
+    },
+    "old-resources.log": {
+      "pass": 16,
+      "fail": 0,
+      "assertions": 68,
+      "sha256": "ebf7e8b4f894da5c8c9d17c37a7500d73e6a1b9590f0399ec74f64583ecaefe9"
+    },
+    "green-resources.log": {
+      "pass": 3,
+      "fail": 0,
+      "assertions": 15,
+      "sha256": "1a2c554fc0a78cba01a70733760d30c455efb2f3ec3421fa790e60f599f12295"
+    },
+    "green-audio.log": {
+      "pass": 3,
+      "fail": 0,
+      "assertions": 6,
+      "sha256": "557601e70490ac03a50c597c04a5b4a375813157508473ff02fbf9ebc59e1127"
+    },
+    "green-canvas.log": {
+      "pass": 1,
+      "fail": 0,
+      "assertions": 5,
+      "sha256": "284eb2b1156da37979155eb34fd9fee6506745c8f3379fd91ed4da3a5f2b74c0"
+    },
+    "green-image.log": {
+      "pass": 1,
+      "fail": 0,
+      "assertions": 4,
+      "sha256": "2a7b3e16c73561a5b05d91d5dfeb8e523f1a978ae74dff40f05835f349abbb2e"
+    }
+  },
+  "totalGreenTests": 66,
+  "totalGreenAssertions": 323,
+  "sourceFiles": 713,
+  "standardPatchFuzz": 0,
+  "sourceAndPatchAllBytesMatch": true,
+  "allSevenArchiveRebuildAndPublishedBytesMatch": true,
+  "typecheckExitCode": 0,
+  "astExitCode": 0,
+  "domFixture": "未重复本轮DOM，先前verification/t1274-preview的38+22项证据原样保留",
+  "gpuOrRealMp4": "本子候选未执行；主会话旧E2E时长断言失败保留，不替其签PASS",
+  "diffCheck": {
+    "nonPatchExitCode": 0,
+    "fullPatchExitCode": 2,
+    "reason": "标准patch上下文前缀空格及原CRLF；F0复原字节保真，不归一化历史源"
+  },
+  "allFailuresPreserved": true,
+  "fixturePublished": false
+}

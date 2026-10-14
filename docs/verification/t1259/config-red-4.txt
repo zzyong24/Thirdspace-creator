@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:44590) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/server/activation/client-config.server.test.ts (24 tests | 1 failed | 22 skipped) 50ms
+     × Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果 37ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果
+AssertionError: promise rejected "Error: 隔离模拟fsync拒绝 { …(2) }" instead of resolving
+ ❯ src/server/activation/client-config.server.test.ts:334:52
+    332|     diskFault.fileSyncCalls = 0;
+    333|     try {
+    334|       await expect(refresh(successfulFetch(bundle))).resolves.toMatchO…
+       |                                                    ^
+    335|       expect(await encrypted.load()).toMatchObject({ state: "channel",…
+    336|       const unchangedBase = successfulFetch(bundle);
+
+Caused by: Error: 隔离模拟fsync拒绝
+ ❯ FileHandle.<anonymous> src/server/activation/client-config.server.test.ts:34:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'EPERM', syscall: 'fsync' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 22 skipped (24)
+   Start at  23:55:08
+   Duration  2.54s (transform 878ms, setup 191ms, import 1.46s, tests 50ms, environment 660ms)
+

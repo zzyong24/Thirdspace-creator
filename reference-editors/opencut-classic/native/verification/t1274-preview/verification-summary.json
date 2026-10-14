@@ -1,0 +1,108 @@
+{
+  "scope": "真实controller/renderer机械边界；端口与DOM夹具不证明GPU/MP4/真实解码/宿主/E2E",
+  "sourceDirectory": "/tmp/creatoros-t1274-preview-isolated",
+  "sourceArchiveFiles": 713,
+  "standardPatchFuzz": 0,
+  "newPublicRedCases": 13,
+  "newPublicGreenCases": 15,
+  "extraGreenRegressionCases": "原公共load/context/snapshot/seek/apply/export及旧未知层保留，不补拍历史RED",
+  "red": {
+    "red-public-final.log": {
+      "pass": 0,
+      "fail": 13,
+      "sha256": "488116ee89eae86d42202d836c034551be267b5c4d67d74bfbec661034bf1ebd"
+    },
+    "red-resources-final.log": {
+      "pass": 0,
+      "fail": 3,
+      "sha256": "6fb26b3fa957cea083d9929ec3f83bcd08a4eeaf4effdd4b46d2007263708509"
+    },
+    "red-audio-final.log": {
+      "pass": 1,
+      "fail": 2,
+      "sha256": "c2b25c5d0e46a71a6fbbc40eb6b5e73201876fcc440251a8ee8bbf0a46215884"
+    },
+    "red-canvas.log": {
+      "pass": 0,
+      "fail": 1,
+      "sha256": "f3361cc2ef017814a042cd5f7ac7d37bd9edca9a48af89dfb33e47e0bdc665c3"
+    },
+    "red-image.log": {
+      "pass": 0,
+      "fail": 1,
+      "sha256": "e0fa4d2d009d19c68d99d127bf47942cbc7cde387d5a777a172efa52b2ba9218"
+    }
+  },
+  "green": {
+    "old-native-release.log": {
+      "pass": 19,
+      "fail": 0,
+      "assertions": 116,
+      "sha256": "12c3cdbf82637918d6c912b2eae6f84ee4f4195e2d28812d8f084e2e277daccc"
+    },
+    "old-workspace-release.log": {
+      "pass": 4,
+      "fail": 0,
+      "assertions": 24,
+      "sha256": "a26bf87b4ff11ef3faf0490ca1fdeedbef9939f7b92832d337fe69a114e02586"
+    },
+    "old-resources-release.log": {
+      "pass": 16,
+      "fail": 0,
+      "assertions": 68,
+      "sha256": "29a246bf5db7837f26b94a48c74f6e4ca165f3723d271d08c473b50241822dcb"
+    },
+    "green-public-last.log": {
+      "pass": 15,
+      "fail": 0,
+      "assertions": 69,
+      "sha256": "7c1924c2f179f2fa6567e4264e945bed61b492630a1a6912a55ed7ccc17e4771"
+    },
+    "green-resources-release.log": {
+      "pass": 3,
+      "fail": 0,
+      "assertions": 15,
+      "sha256": "9958af4d37bced974ffb16be23264f36a97d095e9a60291076937a09c504949c"
+    },
+    "green-audio-release.log": {
+      "pass": 3,
+      "fail": 0,
+      "assertions": 6,
+      "sha256": "65a5eb88677fdf37c263b2b46593cace60cb0a9186f03bcc61a4c0f243180971"
+    },
+    "green-canvas-release.log": {
+      "pass": 1,
+      "fail": 0,
+      "assertions": 5,
+      "sha256": "3f1240f3c0f4b7aeaca6634af1917f60da212cdd4abe087ca3791f0daf839d56"
+    },
+    "green-image-release.log": {
+      "pass": 1,
+      "fail": 0,
+      "assertions": 4,
+      "sha256": "7d7bda755a5e1aaf3e28dc91b91818ab5e2bb5bd50b5d9ee77fa339c96cc2a35"
+    }
+  },
+  "totalGreenTests": 62,
+  "totalGreenAssertions": 307,
+  "domFixtureChecks": {
+    "original": 38,
+    "workspace": 22
+  },
+  "typecheckLog": "type-last.log",
+  "productionBuildLog": "production-build.log",
+  "archiveBuildLog": "archive-production-build.log",
+  "astLog": "process-ast.log",
+  "allFailuresPreserved": true,
+  "fixturePublished": false,
+  "gpuOrRealMediaPass": false,
+  "diffCheck": {
+    "nonPatchExitCode": 0,
+    "fullPatchExitCode": 2,
+    "reason": "标准补丁上下文的空白前缀及真实上游CRLF/行尾空格；保留真实源字节与F0复原，不归一化历史源码。",
+    "logs": [
+      "diff-check-all.log",
+      "diff-check-nonpatch.log"
+    ]
+  }
+}

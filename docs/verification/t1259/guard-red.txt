@@ -1,0 +1,61 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/browser/chromium-guard-close-order.test.ts (3 tests | 3 failed) 8ms
+   × 主动关闭同步发出close事件时，完整关闭前保留宿主占用 5ms
+   × 主动关闭异步发出close事件时，完整关闭前保留宿主占用 1ms
+   × close事件早到但主动关闭失败，原档案仍占用且允许再次关闭 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/browser/chromium-guard-close-order.test.ts > 主动关闭同步发出close事件时，完整关闭前保留宿主占用
+ FAIL  src/runtime/browser/chromium-guard-close-order.test.ts > 主动关闭异步发出close事件时，完整关闭前保留宿主占用
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array []
+
+
+Number of calls: 1
+
+ ❯ src/runtime/browser/chromium-guard-close-order.test.ts:32:29
+     30|     await new Promise(resolve => setImmediate(resolve));
+     31|     try {
+     32|       expect(onStopped).not.toHaveBeenCalled();
+       |                             ^
+     33|       expect(liveContextCount(profile)).toBe(1);
+     34|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-close-order.test.ts > close事件早到但主动关闭失败，原档案仍占用且允许再次关闭
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array []
+
+
+Number of calls: 1
+
+ ❯ src/runtime/browser/chromium-guard-close-order.test.ts:60:27
+     58|   await failure;
+     59|   try {
+     60|     expect(onStopped).not.toHaveBeenCalled();
+       |                           ^
+     61|     expect(liveContextCount(profile)).toBe(1);
+     62|   } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  23:52:59
+   Duration  218ms (transform 37ms, setup 0ms, import 49ms, tests 8ms, environment 0ms)
+

@@ -1,0 +1,278 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:24295) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/production/production-script-markdown-panel.test.tsx (12 tests | 1 failed) 1690ms
+   × T1285 缓存失败不解除原等待 1039ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/production/production-script-markdown-panel.test.tsx > T1285 缓存失败不解除原等待
+TestingLibraryElementError: Unable to find role="button" and name "核对原采纳结果"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-label[39m=[32m"按文字剪辑"[39m
+      [33mclass[39m=[32m"min-w-0 space-y-3 border-b border-border pb-4"[39m
+    [36m>[39m
+      [36m<h3[39m
+        [33mclass[39m=[32m"text-sm font-medium"[39m
+      [36m>[39m
+        [0m按文字剪辑[0m
+      [36m</h3>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-text-muted"[39m
+      [36m>[39m
+        [0m改删留和顺序，先预览再采纳；原始转录与其他图层保持原样。[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+          [33mdata-slot[39m=[32m"button"[39m
+          [33mdisabled[39m=[32m""[39m
+        [36m>[39m
+          [0m读取当前时间轴[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+          [33mdata-slot[39m=[32m"button"[39m
+        [36m>[39m
+          [0m备份文字稿并还原[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"按转录调整剪辑"[39m
+        [33mclass[39m=[32m"min-w-0 space-y-3"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-2"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"text-sm font-medium"[39m
+          [36m>[39m
+            [0m转录与片段[0m
+          [36m</h3>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-control border border-border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m删除所选词句[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+        [36m>[39m
+          [0m暂无可操作的转录片段，请先读取当前时间轴。[0m
+        [36m</p>[39m
+      [36m</section>[39m
+      [36m<details[39m
+        [33mopen[39m=[32m""[39m
+      [36m>[39m
+        [36m<summary[39m
+          [33mclass[39m=[32m"cursor-pointer text-sm"[39m
+        [36m>[39m
+          [0m高级：编辑时间轴文字[0m
+        [36m</summary>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid min-w-0 gap-1 text-sm"[39m
+        [36m>[39m
+          [0m时间轴文字[0m
+          [36m<textarea[39m
+            [33maria-label[39m=[32m"时间轴文字"[39m
+            [33mclass[39m=[32m"min-h-[240px] w-full min-w-0 resize-y rounded-control border border-border bg-surface p-3 font-mono text-sm leading-6"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m保留这份修改[0m
+          [36m</textarea>[39m
+        [36m</label>[39m
+        [36m<details>[39m
+          [36m<summary[39m
+            [33mclass[39m=[32m"cursor-pointer text-sm"[39m
+          [36m>[39m
+            [0m只读原片文字库[0m
+          [36m</summary>[39m
+        [36m</details>[39m
+      [36m</details>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+        [33mdata-slot[39m=[32m"button"[39m
+        [33mdisabled[39m=[32m""[39m
+      [36m>[39m
+        [0m生成剪辑候选[0m
+      [36m</button>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"文字剪辑候选"[39m
+        [33mclass[39m=[32m"min-w-0 space-y-2"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-sm font-medium"[39m
+        [36m>[39m
+          [0m剪辑候选已预览，待采纳[0m
+        [36m</p>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-sm text-text-muted"[39m
+        [36m>[39m
+          [0m局部恢复[0m
+        [36m</p>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-sm"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [0m第 [0m
+          [0m9[0m
+          [0m 行：[0m
+          [0m原段保留[0m
+        [36m</p>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-sm"[39m
+        [36m>[39m
+          [0m0[0m
+          [0m 项调整[0m
+        [36m</p>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"group/button inline-flex shrink-0...
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"按文字剪辑"[39m
+        [33mclass[39m=[32m"min-w-0 space-y-3 border-b border-border pb-4"[39m
+      [36m>[39m
+        [36m<h3[39m
+          [33mclass[39m=[32m"text-sm font-medium"[39m
+        [36m>[39m
+          [0m按文字剪辑[0m
+        [36m</h3>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-sm text-text-muted"[39m
+        [36m>[39m
+          [0m改删留和顺序，先预览再采纳；原始转录与其他图层保持原样。[0m
+        [36m</p>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+            [33mdata-slot[39m=[32m"button"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m读取当前时间轴[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+            [33mdata-slot[39m=[32m"button"[39m
+          [36m>[39m
+            [0m备份文字稿并还原[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"按转录调整剪辑"[39m
+          [33mclass[39m=[32m"min-w-0 space-y-3"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-2"[39m
+          [36m>[39m
+            [36m<h3[39m
+              [33mclass[39m=[32m"text-sm font-medium"[39m
+            [36m>[39m
+              [0m转录与片段[0m
+            [36m</h3>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-control border border-border px-3 py-2 text-sm disabled:opacity-40"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m删除所选词句[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0m暂无可操作的转录片段，请先读取当前时间轴。[0m
+          [36m</p>[39m
+        [36m</section>[39m
+        [36m<details[39m
+          [33mopen[39m=[32m""[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33mclass[39m=[32m"cursor-pointer text-sm"[39m
+          [36m>[39m
+            [0m高级：编辑时间轴文字[0m
+          [36m</summary>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"grid min-w-0 gap-1 text-sm"[39m
+          [36m>[39m
+            [0m时间轴文字[0m
+            [36m<textarea[39m
+              [33maria-label[39m=[32m"时间轴文字"[39m
+              [33mclass[39m=[32m"min-h-[240px] w-full min-w-0 resize-y rounded-control border border-border bg-surface p-3 font-mono text-sm leading-6"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [0m保留这份修改[0m
+            [36m</textarea>[39m
+          [36m</label>[39m
+          [36m<details>[39m
+            [36m<summary[39m
+              [33mclass[39m=[32m"cursor-pointer text-sm"[39m
+            [36m>[39m
+              [0m只读原片文字库[0m
+            [36m</summary>[39m
+          [36m</details>[39m
+        [36m</details>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+          [33mdata-slot[39m=[32m"button"[39m
+          [33mdisabled[39m=[32m""[39m
+        [36m>[39m
+          [0m生成剪辑候选[0m
+        [36m</button>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"文字剪辑候选"[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm font-medium"[39m
+          [36m>[39m
+            [0m剪辑候选已预览，待采纳[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm text-text-muted"[39m
+          [36m>[39m
+            [0m局部恢复[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m第 [0m
+            [0m9[0m
+            [0m 行：[0m
+            [0m原段保留[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm"[39m
+       ...
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/production/production-script-markdown-panel.test.tsx:40:133
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  18:07:23
+   Duration  3.26s (transform 448ms, setup 159ms, import 778ms, tests 1.69s, environment 504ms)
+

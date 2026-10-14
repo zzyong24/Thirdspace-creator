@@ -1,0 +1,37 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-preview-audio.test.ts:
+11 | mock.module('@/timeline/audio-separation',()=>({doesElementHaveEnabledAudio:()=>false}));
+12 | mock.module('@/timeline/element-utils',()=>({canElementHaveAudio:()=>false,hasMediaId:()=>false}));
+13 | mock.module('@/media/media-utils',()=>({mediaSupportsAudio:()=>false}));
+14 | const {createTimelineAudioBuffer}=await import('@/media/audio');
+15 | const tracks={main:{type:'video',elements:[]},overlay:[],audio:[]} as any;
+16 | test('空音轨导出关闭自行创建的临时AudioContext，真实空保持null',async()=>{closed=0;expect(await createTimelineAudioBuffer({tracks,mediaAssets:[],duration:120000})).toBeNull();expect(closed).toBe(1);});
+                                                                                                                                                                               ^
+error: expect(received).toBe(expected)
+
+Expected: 1
+Received: 0
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-baseline/apps/web/src/embedded/__tests__/native-preview-audio.test.ts:16:171)
+(fail) 空音轨导出关闭自行创建的临时AudioContext，真实空保持null [16.17ms]
+(pass) 调用方的AudioContext不由导出关闭 [0.68ms]
+13 | mock.module('@/media/media-utils',()=>({mediaSupportsAudio:()=>false}));
+14 | const {createTimelineAudioBuffer}=await import('@/media/audio');
+15 | const tracks={main:{type:'video',elements:[]},overlay:[],audio:[]} as any;
+16 | test('空音轨导出关闭自行创建的临时AudioContext，真实空保持null',async()=>{closed=0;expect(await createTimelineAudioBuffer({tracks,mediaAssets:[],duration:120000})).toBeNull();expect(closed).toBe(1);});
+17 | test('调用方的AudioContext不由导出关闭',async()=>{closed=0;expect(await createTimelineAudioBuffer({tracks,mediaAssets:[],duration:120000,audioContext:new Context() as any})).toBeNull();expect(closed).toBe(0);});
+18 | test('原取消回调已取消时不分配context，不进入音频准备',async()=>{closed=0;await expect(createTimelineAudioBuffer({tracks,mediaAssets:[],duration:120000,onCancel:()=>true} as any)).rejects.toMatchObject({name:'AbortError'});expect(closed).toBe(0);});
+                                                                                                                                                                             ^
+error: expect(received).rejects.toMatchObject(expected)
+
+Expected promise that rejects
+Received promise that resolved: Promise { <resolved> }
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-baseline/apps/web/src/embedded/__tests__/native-preview-audio.test.ts:18:169)
+(fail) 原取消回调已取消时不分配context，不进入音频准备 [4.57ms]
+
+ 1 pass
+ 2 fail
+ 4 expect() calls
+Ran 3 tests across 1 file. [313.00ms]

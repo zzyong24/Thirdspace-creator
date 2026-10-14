@@ -1,0 +1,14 @@
+GPU renderer unavailable: No WebGPU adapter is available
+70538 | }) {
+70539 |   d.useEffect(() => {
+70540 |     const I = g.current;
+70541 |     if (!I) return;
+70542 |     const C = new ResizeObserver((B) => {
+70543 |       for (const Q of B)
+                         ^
+TypeError: undefined is not an object (evaluating 'Q of B')
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-isolated/apps/web/native-dom-fixture-dist/native.js:70543:18)
+      at <anonymous> (/private/tmp/t1274-native-responsive-proof/responsive-dom-probe.ts:72:92)
+      at /private/tmp/t1274-native-responsive-proof/responsive-dom-probe.ts:77:8
+
+Bun v1.4.0 (macOS arm64)

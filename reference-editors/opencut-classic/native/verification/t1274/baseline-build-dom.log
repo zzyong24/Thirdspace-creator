@@ -1,0 +1,3 @@
+error: Cannot find package 'postcss' from '/private/tmp/creatoros-t1274-native-isolated-baseline/apps/web/scripts/build-native.mjs'
+
+Bun v1.4.0 (macOS arm64)

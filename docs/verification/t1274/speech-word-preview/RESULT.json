@@ -1,0 +1,34 @@
+{
+  "status": "PASS_REAL_WORD_CANDIDATE_UI_PREVIEW_DECODE_NO_FORMAL_WRITE",
+  "outputId": "output-94c2affe-721",
+  "revision": 3,
+  "formalDtoUnchanged": true,
+  "blockedWriteCount": 0,
+  "sceneEqualPriorPublicCandidate": true,
+  "candidate": {
+    "trimStart": 43200,
+    "trimEnd": 0,
+    "duration": 940800,
+    "sourceDuration": 984000,
+    "startTime": 0
+  },
+  "mp4Bytes": 144356,
+  "mp4SHA256": "d205898b2766232476a6c4a21d9b111817f54da0e496af5e392261a1e366f794",
+  "video": {
+    "width": 640,
+    "height": 360,
+    "r_frame_rate": "25/1",
+    "duration": "7.840000",
+    "nb_frames": "196"
+  },
+  "audioDuration": "7.918005",
+  "fullDecodeExit": 0,
+  "actualPlayingCurrentTime": 0.458196,
+  "browserClosed": true,
+  "asrCalled": false,
+  "modelCalled": false,
+  "roughRetried": false,
+  "humanListeningReview": false,
+  "audioSampleBoundaryPass": false,
+  "audioSampleBoundaryNote": "47.875ms前导时移及7.918005s容器音频长度真实保留；未裁音，沿T1277核对。"
+}

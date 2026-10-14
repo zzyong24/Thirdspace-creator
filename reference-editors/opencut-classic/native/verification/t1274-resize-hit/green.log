@@ -1,0 +1,89 @@
+{
+  "status": "PASS",
+  "evidence": [
+    {
+      "name": "390-to-1366",
+      "inert": false,
+      "hidden": false,
+      "mode": "compact",
+      "view": "timeline",
+      "hit": "BUTTON",
+      "hitClass": "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap text-sm font-medium focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-transparent opacity-100 hover:opacity-75 size-7 rounded-sm"
+    },
+    {
+      "name": "actual-split-after-resize",
+      "count": 2
+    },
+    {
+      "name": "single-timeline-unlocked",
+      "inert": false,
+      "hidden": false,
+      "mode": "single",
+      "view": "timeline",
+      "hit": "BUTTON",
+      "hitClass": "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap text-sm font-medium focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-transparent opacity-100 hover:opacity-75 size-7 rounded-sm"
+    },
+    {
+      "name": "disabled-after-wide",
+      "inert": true,
+      "hidden": false,
+      "mode": "wide",
+      "view": "timeline",
+      "hit": "DIV",
+      "hitClass": "flex data-[panel-group-direction=vertical]:flex-col size-full gap-[0.18rem] native-workspace-vertical"
+    },
+    {
+      "name": "disabled-released",
+      "inert": false,
+      "hidden": false,
+      "mode": "wide",
+      "view": "timeline",
+      "hit": "BUTTON",
+      "hitClass": "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap text-sm font-medium focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-transparent opacity-100 hover:opacity-75 size-7 rounded-sm"
+    },
+    {
+      "name": "candidate-after-wide",
+      "inert": true,
+      "hidden": false,
+      "mode": "wide",
+      "view": "preview",
+      "hit": "DIV",
+      "hitClass": "flex data-[panel-group-direction=vertical]:flex-col size-full gap-[0.18rem] native-workspace-vertical"
+    },
+    {
+      "name": "candidate-released",
+      "inert": false,
+      "hidden": false,
+      "mode": "wide",
+      "view": "timeline",
+      "hit": "BUTTON",
+      "hitClass": "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap text-sm font-medium focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-transparent opacity-100 hover:opacity-75 size-7 rounded-sm"
+    },
+    {
+      "name": "export-after-wide",
+      "inert": true,
+      "hidden": false,
+      "mode": "wide",
+      "view": "timeline",
+      "hit": "DIV",
+      "hitClass": "flex data-[panel-group-direction=vertical]:flex-col size-full gap-[0.18rem] native-workspace-vertical"
+    },
+    {
+      "name": "AbortError",
+      "status": "cancelled-or-failed",
+      "message": "导出已停止。"
+    },
+    {
+      "name": "export-released",
+      "inert": false,
+      "hidden": false,
+      "mode": "wide",
+      "view": "timeline",
+      "hit": "BUTTON",
+      "hitClass": "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap text-sm font-medium focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-transparent opacity-100 hover:opacity-75 size-7 rounded-sm"
+    }
+  ],
+  "errors": [],
+  "realChromium": true,
+  "fullCreatorOSHost": false
+}

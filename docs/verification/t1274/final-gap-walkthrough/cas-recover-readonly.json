@@ -1,0 +1,22 @@
+{
+  "restoredOriginalChromeSession": true,
+  "manualStorageInjection": false,
+  "requestId": "79622981-9257-4545-a849-e0230a081b4a",
+  "events": [
+    {
+      "id": "outputs.production.editor.receipt.get",
+      "input": {
+        "params": {
+          "outputId": "output-5e3e4e95-61",
+          "requestId": "79622981-9257-4545-a849-e0230a081b4a"
+        }
+      }
+    }
+  ],
+  "discardEnabled": false,
+  "recoverMessage": [
+    "原请求尚未查到回执，候选和原请求ID继续保留。"
+  ],
+  "currentRevision": 5,
+  "receipt": null
+}

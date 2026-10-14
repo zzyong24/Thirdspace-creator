@@ -1,0 +1,18 @@
+{
+  "exitCode": 1,
+  "errorCount": 26,
+  "exactLegacyCount": 25,
+  "legacyEvidence": "docs/verification/t1238/reconcile-final.txt",
+  "existingOwners": [
+    "T-1204",
+    "T-1171",
+    "T-1250",
+    "T-1246"
+  ],
+  "newlyDifferentErrors": [
+    "✗ [ERROR] review receipt: T-1255: review receipt 已过期：constitution hash 已变化"
+  ],
+  "newTask": "T-1260",
+  "currentTaskGate": "PASS限定源码/本机147例和真实临时浏览器，非全局或用户Windows安装版",
+  "browserGateDiagnosis": "LED018两Vitest文件155PASS；原Cargo段resource sidecar.tar.gz缺失，未触及的构建资源问题；初轮Cargo误传Vitest参数不算真实Cargo红"
+}

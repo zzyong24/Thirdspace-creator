@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+const source=process.argv[2];if(!source)throw Error('请提供交付原生源码目录。');
+const ts=await import(process.env.CREATOROS_TEST_TYPESCRIPT_MODULE??resolve(source,'node_modules/typescript/lib/typescript.js'));
+const parse=(path:string)=>ts.createSourceFile(path,readFileSync(resolve(source,path),'utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+const entry=parse('apps/web/src/embedded/native-entry.tsx'),header=parse('apps/web/src/components/editor/editor-header.tsx');
+let rendered=false,aria=false,renameOwner=false,compactCore=false,dropdownExported=false;
+const visit=(node:any,fn:(node:any)=>void)=>{fn(node);ts.forEachChild(node,(child:any)=>visit(child,fn));};
+visit(entry,node=>{if(ts.isJsxSelfClosingElement(node)&&node.tagName.getText(entry)==='EditorHeader')rendered=node.attributes.properties.some((attr:any)=>attr.name?.text==='compact'&&attr.initializer?.expression?.getText(entry)==='workspaceAddons');});
+const editable=header.statements.find((node:any)=>ts.isFunctionDeclaration(node)&&node.name?.text==='EditableProjectName');assert.ok(editable,'原EditableProjectName入口保留');
+visit(editable,node=>{if(ts.isJsxAttribute(node)&&node.name.text==='aria-label'&&node.initializer?.text==='剪辑工程名称')aria=true;if(ts.isCallExpression(node)&&node.expression.getText(header)==='editor.project.renameProject')renameOwner=node.arguments[0].properties.some((property:any)=>property.name?.text==='id'&&property.initializer?.getText(header)==='activeProject.metadata.id');});
+visit(header,node=>{if(ts.isJsxAttribute(node)&&node.name.text==='data-native-core-panel')compactCore=true;if(ts.isFunctionDeclaration(node)&&node.name?.text==='ProjectDropdown')dropdownExported=(node.modifiers??[]).some((modifier:any)=>modifier.kind===ts.SyntaxKind.ExportKeyword);});
+assert.ok(rendered&&aria&&renameOwner&&compactCore&&!dropdownExported,'工程名称compact入口/原renameProject owner/aria/core锁库存');
+console.log(JSON.stringify({status:'PASS-源码AST库存',workspaceHeaderRendered:rendered,originalEditableProjectName:true,inputAriaLabel:aria,renameUsesOriginalProjectOwner:renameOwner,compactHeaderCoreLock:compactCore,deadProjectDropdownExported:dropdownExported,sourceDirectory:source,visualOrBackendSaveProof:false},null,2));

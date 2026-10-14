@@ -1,0 +1,38 @@
+{
+  "video": {
+    "x": 273,
+    "y": 304.796875,
+    "width": 1044,
+    "height": 540,
+    "top": 304.796875,
+    "right": 1317,
+    "bottom": 844.796875,
+    "left": 273
+  },
+  "section": {
+    "x": 261,
+    "y": 256.796875,
+    "width": 1068,
+    "height": 301.71875,
+    "top": 256.796875,
+    "right": 1329,
+    "bottom": 558.515625,
+    "left": 261
+  },
+  "slot": {
+    "x": 261,
+    "y": 256.796875,
+    "width": 1068,
+    "height": 301.71875,
+    "top": 256.796875,
+    "right": 1329,
+    "bottom": 558.515625,
+    "left": 261
+  },
+  "scrollHeight": 600,
+  "clientHeight": 302,
+  "scrollTop": 0,
+  "videoWidth": 640,
+  "videoHeight": 360,
+  "controls": true
+}

@@ -1,0 +1,65 @@
+{
+  "scope": "缺失原元素在同轨同ID完整JSON相等时保留引用、原renderer跳过并警告；新增/改动缺失仍拒绝；无原构图画面明确说明",
+  "sourceFiles": 715,
+  "changedSourceMembers": [
+    "./NATIVE_REBUILD_CONSISTENCY.json",
+    "./README.creatoros.md",
+    "./apps/web/src/embedded/__tests__/native-preview.test.ts",
+    "./apps/web/src/embedded/preview-scene.ts"
+  ],
+  "red": {
+    "tests": 32,
+    "pass": 24,
+    "fail": 8,
+    "log": "red-public.log"
+  },
+  "tests": {
+    "pass": 86,
+    "fail": 0,
+    "assertions": 380,
+    "log": "regression.log"
+  },
+  "publicController": {
+    "pass": 34,
+    "fail": 0,
+    "assertions": 124,
+    "log": "green-public-final.log"
+  },
+  "realChromiumMp4": {
+    "oldPublicLoadExportFamilies": 6,
+    "newPublicPreviewOutputFamilies": 4,
+    "newNoVisualRejectedFamilies": 2,
+    "eachFile": "64×64 H264 24fps，0.5秒，12帧",
+    "fourFullRgbAndStreamComparisonsEqual": true,
+    "tracksPreserved": true,
+    "noActiveDraftMutation": true,
+    "pageErrors": 0,
+    "evidence": [
+      "old-export.json",
+      "old-export-decode.json",
+      "candidate-export.json",
+      "candidate-vs-old-decode.json"
+    ]
+  },
+  "warningShape": {
+    "code": "preserved_missing_media",
+    "trackId": "string",
+    "elementId": "string",
+    "mediaId": "string",
+    "message": "人话原因"
+  },
+  "domOrGeometry": "本轮不改UI，未重跑；旧58DOM/8实际几何证据按原轮次保留，不签成本轮执行",
+  "typecheckExitCode": 0,
+  "processAST": "PASS",
+  "productionBuildExitCode": 0,
+  "sourcePatchFuzz": 0,
+  "archiveSourceAndBothPublishedSevenOutputsBytesMatch": true,
+  "fixturePublished": false,
+  "fullCreatorOSHost": "root负责warnings显示/后端采纳和最终宿主复验，本子候选未跑",
+  "rendererCoreCacheAndLayoutBytesUnchanged": true,
+  "environmentFailuresPreserved": [
+    "green-public-first.log（旧mock缺mediaTimeFromSeconds）",
+    "green-public-second.log（旧mock缺ImageNode）",
+    "green-public-third.log（Node fixture缺location）"
+  ]
+}

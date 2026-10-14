@@ -1,0 +1,9 @@
+命令：pnpm --dir frontend exec vitest run src/features/reference-editors/video-reference-workbench.test.tsx src/features/production/production-script-markdown-panel.test.tsx
+2026-10-14 16:25:14
+Test Files  2 passed (2)
+Tests       31 passed (31)
+Duration    3.34s
+原输出另有 Node --localstorage-file 无效路径 warning；无测试失败。
+
+git diff --check -- frontend/src/features/production/production-script-markdown-panel.tsx
+exit 0，无输出。

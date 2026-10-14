@@ -1,0 +1,22 @@
+locator.fill: Timeout 120000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('textbox').first()[22m
+[2m    - locator resolved to <input readonly type="text" value="原生实际几何验收" aria-label="剪辑工程名称" class="max-w-full min-w-0 text-[0.9rem] h-8 px-2 py-1 rounded-sm bg-transparent outline-none cursor-pointer hover:bg-accent hover:text-accent-foreground"/>[22m
+[2m    - fill("00:00:01:00")[22m
+[2m  - attempting fill action[22m
+[2m    2 × waiting for element to be visible, enabled and editable[22m
+[2m      - element is not editable[22m
+[2m    - retrying fill action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and editable[22m
+[2m      - element is not editable[22m
+[2m    - retrying fill action[22m
+[2m      - waiting 100ms[22m
+[2m    239 × waiting for element to be visible, enabled and editable[22m
+[2m        - element is not editable[22m
+[2m      - retrying fill action[22m
+[2m        - waiting 500ms[22m
+
+    at /private/tmp/t1274-native-toolbar-proof/geometry.cjs:16:139 {
+  name: 'TimeoutError'
+}

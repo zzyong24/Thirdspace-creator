@@ -1,0 +1,19 @@
+ExpectError: expect(received).toBe(expected) // Object.is equality
+
+Expected: false
+Received: true
+    at captureRawStack (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:3130:17)
+    at callMatcherAsStep (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12873:57)
+    at Object.toBe (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12863:23)
+    at /private/tmp/t1274-native-resize-hit-proof/geometry.cjs:11:372 {
+  matcherResult: {
+    actual: true,
+    expected: false,
+    message: 'expect(received).toBe(expected) // Object.is equality\n' +
+      '\n' +
+      'Expected: false\n' +
+      'Received: true',
+    name: 'toBe',
+    pass: false
+  }
+}

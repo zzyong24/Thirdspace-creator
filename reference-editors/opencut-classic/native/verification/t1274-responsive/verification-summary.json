@@ -1,0 +1,37 @@
+{
+  "scope": "T1274容器响应式：<700单面板，700–1099按需单侧栏+预览，>=1100原三栏；materials槽位；候选显示和返回面板；原Core/portal/草稿保持",
+  "sourceFiles": 715,
+  "changedSourceMembers": [
+    "./NATIVE_REBUILD_CONSISTENCY.json",
+    "./README.creatoros.md",
+    "./apps/web/scripts/build-native.mjs",
+    "./apps/web/src/embedded/editor-layout.tsx",
+    "./apps/web/src/embedded/native-host.ts",
+    "./apps/web/src/embedded/native.css",
+    "./apps/web/src/embedded/preview-workspace.tsx",
+    "./apps/web/src/embedded/workspace-panel.tsx"
+  ],
+  "tests": {
+    "pass": 71,
+    "fail": 0,
+    "assertions": 341,
+    "log": "regression.log"
+  },
+  "domFixture": {
+    "checks": 58,
+    "pass": true,
+    "log": "responsive-dom.log"
+  },
+  "typecheckExitCode": 0,
+  "productionBuildExitCode": 0,
+  "sourcePatchFuzz": 0,
+  "archiveSourceAndBothPublishedSevenOutputsBytesMatch": true,
+  "processAST": "PASS",
+  "freshDependencyInstall": "bun install --frozen-lockfile --ignore-scripts：989包，Bun1.4.0；锁文件未改",
+  "fixturePublished": false,
+  "realHostUI": "本子候选未执行；主会话后续真实UI/E2E",
+  "realGpuOrMp4": "本子候选未执行；private exact cache与controller逐字节保持",
+  "visualReview": "本子候选仅看root旧390/1280基线定位；未签新视觉分",
+  "preservedFailure": "responsive-dom-fixture-failure.log：ResizeObserver夹具误触发其它observer无entries，修夹具后58PASS；不是产品红测",
+  "limitations": "DOM夹具不证明真实尺寸/像素/浏览器焦点或安装；独立视觉与任务走查由ROOT进行。"
+}
