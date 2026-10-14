@@ -1,0 +1,9 @@
+# 全工作树合并与打包前现场结果
+
+CreatorOS全部15个原工作树HEAD均已普通合并并可达main c9a8b6aa503a89356ce6aba34e79444166a54f57；Growth关联代码可达其自身main bbf225eb2aa73a9c8ae0f9b925289f3ec79f2bdf，未推送或部署。
+
+四包类型检查均退出0，Copilot最后一条严格HTTP字段断言经独立第三轮be715ef3b46d后应用，原文件61 PASS且frontend类型退出0。此前七文件301 PASS/1 FAIL原记录保留，其余六文件未改；不把汇总称为新一轮全量通过。完整contract79文件519 PASS、真实owned PG原三迁移文件76 PASS（31+28+17，retry0，无skip，node/PG均0且完全清理）、正式源码额外PGlite15/PG18公共升级及并发负族通过。native实际715源码/7产物一致，86测试380断言通过。timeout静态及实际公共消费者验证退出0。
+
+所有版本四文件为1.2.0；凭据高置信预检命中仅已核同一脱敏器测试假值与正则，真实身份/私钥/本地.env未加入。旧全backend中止exit130、旧全frontend失败、Growth旧全量失败及T1291额外native验证器库存欠债保留。global reconcile正在运行，不声称全绿。
+
+仅生成本地开发包交用户人工验收，不部署Growth、不自动安装替换当前App、不重置激活；原生App自动化用户暂不授权、真实外部模型/资金/全功能验收未完成。打包固定入口带现有CREATOROS_LOCAL_SKIP_INSTALL=1，只跳过自动安装，完整生成包。

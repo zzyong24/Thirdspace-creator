@@ -1,0 +1,27 @@
+[
+  {
+    "path": "backend/drizzle/meta/_journal.json",
+    "beforeMarkersSha256": "38892a15a4f05f8d46759f448b0d960e1957482a01c15d7da472c22542aab6fc",
+    "chosenStage2Sha256": "09c6b2044aaa493bfe553c2ec57d6b4d87e0c1c11ba902b69162b36af00466f7"
+  },
+  {
+    "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+    "beforeMarkersSha256": "bf2f99d5f9b01970c30717e589211a49e36073999f1baa8a82c4d474a3f6317a",
+    "chosenStage2Sha256": "078e3935c296e5fd52ef9f1ac63a6f78887a19a3a4f67aad7462997cbca337ce"
+  },
+  {
+    "path": "backend/src/legacy-source-migration.test.ts",
+    "beforeMarkersSha256": "459b4e18dff18d6e2e1bbc276c3ebe1c9cc1178b0bf4ffecd368b9c045734111",
+    "chosenStage2Sha256": "0ddf24dde409074fc2e8b7a671ddcef908281a056d72a9c0988a39afe84f05d2"
+  },
+  {
+    "path": "backend/src/migration-convergence.ts",
+    "beforeMarkersSha256": "651d41a69392627cdba82bf80c86c5326c1ad8b721808b8679d9fe32619a373b",
+    "chosenStage2Sha256": "6bfd7aa751176faad325c92ddbd46ba1a0ff010bd3604987246f86c98ab9e1f5"
+  },
+  {
+    "path": "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+    "beforeMarkersSha256": "96da96416f304379dbf5966e021a3f4dc7ceeb870ffeaf9cb0ec04b934f87fb0",
+    "chosenStage2Sha256": "aebf537900bd6015f5897bcb76d9ffd654b5a82c67e73d5055c8ba48bf15a18f"
+  }
+]

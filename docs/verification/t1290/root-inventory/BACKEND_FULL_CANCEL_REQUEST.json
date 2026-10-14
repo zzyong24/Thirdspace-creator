@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-14T22:12:53.942672+08:00",
+  "pid": 82059,
+  "process": "501 Wed Oct 14 21:23:42 2026     node ./node_modules/.bin/../../../node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/vitest.mjs run --retry=0 --maxWorkers=1 --testTimeout=180000 --hookTimeout=180000",
+  "cwd": "p82059\nfcwd\nn/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/backend\n",
+  "reason": "用户本轮要求全部worktree并main并打本地包本人验收；本轮全量尚未完成且已真实失败，不代签PASS。先停止旧source全量观察，保存原日志，转整合与打包基础/启动迁移检查。",
+  "signal": "SIGINT"
+}

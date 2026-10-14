@@ -1,0 +1,12 @@
+{
+  "REPORT.md": "ac16d851a3065f1178c5ed57345018517dada0834ef823107ea3a2f18c91b69c",
+  "BINDING.json": "12837f1dd92c1a3c1f2768e2fd9e26ae02daaf38f22d97a3d76b781f60e7da96",
+  "01-fixed111-tests.candidate.diff": "996963567b583107b1d03b270758d54b63d22bdd8a30717df6cbac0d6838265c",
+  "canonical-journal111.json": "d72d1f1b459d5d35695ac6671d49bf8959551d09ebe647972163f82a4dea69eb",
+  "ordered-receipts111.json": "a33b8d8c0af2eeb6c3dde25eebb91e308934aaa7abb125f2724b44eced9ae4bc",
+  "sql-inventory111.json": "6a2fc0056365e82a93e23db3c44cce1218200ca85fb462abf6b330692f62481a",
+  "public-final-r.mts": "f92a3869df4687bd95dc0dd3804067f6d4547d65ecd51e412430dd7f30cb90d4",
+  "freeze-final-r-binding.py": "2bc8acd6d28aa9e8eb793bd76df6033cb4baa25a81de8181e4f2f0143f5f5069",
+  "run-final-r-pglite.NOT-RUN.py": "c526cae86516d29c2925abee64ac4e3fbaa223d9da98b18512d018be93393b03",
+  "run-final-r-owned-pg.NOT-RUN.py": "39b00fbf5f086276be00f0b9bb0f615ef2e649f44eb0a9565be120a35aa1e868"
+}

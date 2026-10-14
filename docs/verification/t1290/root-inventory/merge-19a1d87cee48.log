@@ -1,0 +1,21 @@
+Auto-merging frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json
+CONFLICT (content): Merge conflict in frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json
+Auto-merging reference-editors/opencut-classic/native/DELIVERY.json
+CONFLICT (content): Merge conflict in reference-editors/opencut-classic/native/DELIVERY.json
+Auto-merging reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json
+CONFLICT (add/add): Merge conflict in reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json
+Auto-merging reference-editors/opencut-classic/native/README.md
+CONFLICT (content): Merge conflict in reference-editors/opencut-classic/native/README.md
+Auto-merging reference-editors/opencut-classic/native/SHA256SUMS
+CONFLICT (content): Merge conflict in reference-editors/opencut-classic/native/SHA256SUMS
+Auto-merging reference-editors/opencut-classic/native/SOURCE_CHANGES.json
+CONFLICT (content): Merge conflict in reference-editors/opencut-classic/native/SOURCE_CHANGES.json
+Auto-merging reference-editors/opencut-classic/native/VERIFICATION.md
+CONFLICT (content): Merge conflict in reference-editors/opencut-classic/native/VERIFICATION.md
+Auto-merging reference-editors/opencut-classic/native/native-from-t1046.patch
+CONFLICT (content): Merge conflict in reference-editors/opencut-classic/native/native-from-t1046.patch
+warning: Cannot merge binary files: reference-editors/opencut-classic/native/native-source.tar.gz (HEAD vs. 19a1d87cee486b157fa596b73395dd9bf68bbf2e)
+Auto-merging reference-editors/opencut-classic/native/native-source.tar.gz
+CONFLICT (content): Merge conflict in reference-editors/opencut-classic/native/native-source.tar.gz
+Automatic merge failed; fix conflicts and then commit the result.
+[codex/unified-editing-integration e742e35f7] merge: 纳入已核对工作树 19a1d87cee48 的完整历史

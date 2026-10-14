@@ -1,0 +1,1 @@
+{"status": "TESTS_FINISHED", "nodeExit": 0, "postgresExit": 0, "cleanup": {"pidFileRemoved": true, "unixSocketRemoved": true, "socketLockRemoved": true, "originalPidAbsent": true, "tcpListenerAbsent": true, "registeredDatabasesRemaining": 0}}

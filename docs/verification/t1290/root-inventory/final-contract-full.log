@@ -1,0 +1,131 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/contract[39m
+
+ [32m✓[39m tests/endpoint-bootstrap.test.mjs [2m([22m[2m42 tests[22m[2m)[22m[33m 15837[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes index.ts before the public registry [33m 527[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes endpoints.ts before the public registry [33m 380[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/account-groups.ts before the public registry [33m 394[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/ai.ts before the public registry [33m 392[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/analytics.ts before the public registry [33m 373[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/articles.ts before the public registry [33m 393[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/artifacts.ts before the public registry [33m 355[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/assets.ts before the public registry [33m 380[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/auth.ts before the public registry [33m 367[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/benchmark.ts before the public registry [33m 384[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/calibration.ts before the public registry [33m 412[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/candidate.ts before the public registry [33m 515[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/content-calendar.ts before the public registry [33m 383[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/creative-canvas.ts before the public registry [33m 391[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/creative-results.ts before the public registry [33m 401[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/execution.ts before the public registry [33m 375[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/favorites-folder.ts before the public registry [33m 382[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/graphic-posts.ts before the public registry [33m 386[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/ingestion.ts before the public registry [33m 343[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/intelligence.ts before the public registry [33m 387[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/knowledge.ts before the public registry [33m 395[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/learnings.ts before the public registry [33m 400[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/material-links.ts before the public registry [33m 354[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/notifications.ts before the public registry [33m 367[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/pages.ts before the public registry [33m 359[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/platform-accounts.ts before the public registry [33m 353[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/platform-collection.ts before the public registry [33m 396[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/positioning.ts before the public registry [33m 373[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/production.ts before the public registry [33m 367[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/projects.ts before the public registry [33m 340[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/publishing.ts before the public registry [33m 357[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/review-gate.ts before the public registry [33m 349[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/reviews.ts before the public registry [33m 364[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/scheduling.ts before the public registry [33m 352[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/search.ts before the public registry [33m 345[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/settings.ts before the public registry [33m 351[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/taxonomy.ts before the public registry [33m 348[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/topic-attribution.ts before the public registry [33m 343[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/trend-source.ts before the public registry [33m 339[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/visual-templates.ts before the public registry [33m 341[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/work-compositions.ts before the public registry [33m 350[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes operations/work-sources.ts before the public registry [33m 367[2mms[22m[39m
+ [32m✓[39m tests/output-conversions.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 553[2mms[22m[39m
+   [33m[2m✓[22m[39m 公共转换操作使用完整请求与严格回执，恢复按原请求号 [33m 540[2mms[22m[39m
+ [32m✓[39m tests/workbench-screenshot-media.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/cli-policy.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/platform-native-reports.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/registry.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/model-routing.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/video-render.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/execution-browser.test.ts [2m([22m[2m29 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/scheduled-traffic-snapshot.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/production-native-document.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/modules/analytics.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/chat-worker.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/platform-capabilities.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/agent-workbench.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/modules/pages.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/intelligence-contract.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/work-compositions.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/modules/projects.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/modules/scheduling.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/production-main-track.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/execution-stream.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/ai-public-message.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/noterelay-layout.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/production-native-rough.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/modules/production.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/output-version-provenance.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/graphic-series.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/project-script-source.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/execution-topic-read.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/work-editor.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/modules/articles.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/execution-chat-hooks.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/workbench-public.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/work-source-select.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/execution-browser-host.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/modules/content-calendar.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/transcribe-postprocess.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/modules/ai.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/modules/knowledge.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/modules/execution.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/workbench-error-guidance.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/modules/settings.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/production-rough-cut.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/reference-editor.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/modules/ingestion.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/modules/learnings.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/modules/product-feedback-local.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/execution-command-receipt-protocol.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/timeout-policy.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/modules/publishing.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/visual-template.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/modules/artifacts.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/envelope.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/client.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/chat-worker-entry.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/primitives.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/modules/assets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/modules/search.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/production-script-markdown.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/group-intelligence-scope.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/modules/reviews.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/modules/channel-runtime-local.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/workspace-operation-scope.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/execution-daily-topic.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/codex-assistant-tool-catalog.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/account-binding.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/production-native-script-protection.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/execution-worker-plan-history.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/platform-account-capabilities.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/reporting-contract.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/creative-adoption-input.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/graphic-card-text.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/codex-execution-route.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/artifacts.compatibility.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/modules/notifications.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/current-wechat-integration.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/traceability.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/group-onboarding.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m79 passed[39m[22m[90m (79)[39m
+[2m      Tests [22m [1m[32m519 passed[39m[22m[90m (519)[39m
+[2m   Start at [22m 23:07:10
+[2m   Duration [22m 38.37s[2m (transform 923ms, setup 0ms, import 10.31s, tests 16.93s, environment 5ms)[22m
+

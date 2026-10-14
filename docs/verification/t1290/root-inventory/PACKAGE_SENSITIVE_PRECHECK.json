@@ -1,0 +1,40 @@
+{
+  "changedPaths": 22024,
+  "flags": [
+    {
+      "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/source/workbench/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "kind": "private-key-marker"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/source/workbench/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "kind": "credential-shaped-literal"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/source/workbench/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "kind": "private-key-marker"
+    },
+    {
+      "path": "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/source/workbench/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "kind": "credential-shaped-literal"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "kind": "private-key-marker"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "kind": "credential-shaped-literal"
+    }
+  ],
+  "limits": "仅高置信凭据形状及私密文件名；不打印值。测试夹具必须单独核，非完整安全审计。",
+  "classification": {
+    "allFlags": "同一nomi-redact.rs源及两份验证副本：正则定义和#[cfg(test)]脱敏假凭据/截断MIIabc...PEM夹具；未发现真实凭据文件",
+    "sourceSha256": {
+      "docs/verification/t1250/native-runs/e71d5704466b0f07a493a837/source/workbench/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs": "47b4fc408f4f1013c0ee25a795165833ad5c55ab21088be471136b7440999eab",
+      "docs/verification/t1250/native-runs/f447c542219d6eba13e19ca3/source/workbench/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs": "47b4fc408f4f1013c0ee25a795165833ad5c55ab21088be471136b7440999eab",
+      "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs": "47b4fc408f4f1013c0ee25a795165833ad5c55ab21088be471136b7440999eab"
+    },
+    "precheck": "PASS",
+    "limits": "高置信模式预检，不代替完整安全审计"
+  }
+}

@@ -45,3 +45,7 @@ flowchart LR
 ## 用户全worktree合并后的固定111库存复核
 
 用户已确认MC1278迁移桥及全部worktree并main；旧W110/原三测试81PASS和初轮51972证据原样保留。正式合并canonical保W110所有旧SQL/journal/真实回执前缀并新增0137 idx110、when1791043200010，Main旧109升级真实112、W旧110升级111、新库111。frontend原legacy测试只精确绑定111完整journal及全部SQL/ordered receipts SHA，原旧104前缀/Worker/归属/坏hash断言不减；不得动态last或冒Main112。具体固定库存与最小候选见docs/verification/t1290/canonical111-fixtures/{sql-inventory111.json,ordered-receipts111.json,01-fixed111-tests.candidate.diff}；backend三测试属T1278/1290准确已审路径，此叶只原frontendlegacy文件库存复核，需独立recheck后串行接入与实际原三测试/类型。
+
+## 新唯一打开helper的原Copilot wire断言兼容
+
+T1290最终七文件回归真实301PASS/1FAIL：原T715充值按钮已发真实connect POST，但旧fetchMock精确只允许method/headers，和MC1278-OPEN已批准新增的cache=no-store、redirect=manual及原AbortSignal三个请求选项失配。仅在本叶已准入原Copilot交互文件补这三项精确断言（signal采用实际AbortSignal类型），保POST/空headers/无body、用户URL、真实native打开以及“充值入口而非模型配置/无意义重试”和所有其它用例；不改产品或使用宽松objectContaining吞未知字段。候选及当场FAIL准确binding见docs/verification/t1290/copilot-connect-wire-candidate/。独立第三轮复核后串行应用，只重跑受影响原文件与类型；新111数据库/其它302结果保原现场，不用旧81PASS代当前。

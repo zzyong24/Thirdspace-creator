@@ -1465,7 +1465,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
         "/api/v1/local/ai-credits/connect",
-        { method: "POST", headers: {} },
+        { method: "POST", headers: {}, cache: "no-store", redirect: "manual", signal: expect.any(AbortSignal) },
       ),
     );
     await waitFor(() =>

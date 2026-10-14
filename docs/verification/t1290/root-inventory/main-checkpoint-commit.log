@@ -1,0 +1,341 @@
+[main 0b0913635] chore(integration): 保存 main 现有代码与合并任务检查点
+ 955 files changed, 63942 insertions(+), 5161 deletions(-)
+ create mode 100644 ai-worker/src/execution/asset-codex-worker-run.test.ts
+ create mode 100644 ai-worker/src/execution/chat-generation-worker.test.ts
+ create mode 100644 ai-worker/src/execution/codex-agentic-worker-run.test.ts
+ create mode 100644 ai-worker/src/execution/codex-agentic-worker-run.ts
+ create mode 100644 ai-worker/src/execution/codex-call-context.ts
+ create mode 100644 ai-worker/src/execution/codex-external-chat-native-run.test.ts
+ create mode 100644 ai-worker/src/execution/codex-image-generation.ts
+ create mode 100644 ai-worker/src/execution/durable-codex-provider.test.ts
+ create mode 100644 ai-worker/src/execution/external-chat-native-images.ts
+ create mode 100644 ai-worker/src/execution/external-chat-recovery.test.ts
+ create mode 100644 ai-worker/src/execution/external-chat-recovery.ts
+ create mode 100644 ai-worker/src/execution/external-chat-tools.test.ts
+ create mode 100644 ai-worker/src/execution/external-chat-tools.ts
+ create mode 100644 ai-worker/src/execution/knowledge-distill-worker.ts
+ create mode 100644 ai-worker/src/execution/knowledge-worker-generation.test.ts
+ create mode 100644 ai-worker/src/execution/video-visual-review-worker-entry.ts
+ create mode 100644 ai-worker/src/execution/video-visual-review-worker-run.ts
+ create mode 100644 ai-worker/src/runtime/codex-provider-json-output.public.test.ts
+ create mode 100644 ai-worker/src/runtime/codex-provider.ts
+ create mode 100644 backend/drizzle/0133_assistant_execution_engine.sql
+ create mode 100644 backend/drizzle/0134_client_observability.sql
+ create mode 100644 backend/src/application/generation/codex-runtime-freeze.test.ts
+ create mode 100644 backend/src/application/generation/work-candidate-adoption.integration.test.ts
+ create mode 100644 backend/src/application/generation/work-candidate-adoption.ts
+ create mode 100644 backend/src/application/generation/work-candidate-projection.test.ts
+ create mode 100644 backend/src/application/generation/work-candidate-projection.ts
+ create mode 100644 backend/src/application/generation/work-writing-context.test.ts
+ create mode 100644 backend/src/application/generation/work-writing-context.ts
+ create mode 100644 backend/src/integration/intelligence-source-workspace.test.ts
+ create mode 100644 backend/src/modules/ai-runtime/knowledge-generation-business-adapters.test.ts
+ create mode 100644 backend/src/modules/ai-runtime/knowledge-generation-business-adapters.ts
+ create mode 100644 backend/src/modules/ai-runtime/knowledge-generation.integration.test.ts
+ create mode 100644 backend/src/modules/ai-runtime/knowledge-generation.service.ts
+ create mode 100644 backend/src/modules/ai-runtime/knowledge-generation.types.ts
+ create mode 100644 backend/src/modules/ai-runtime/knowledge-worker-routing.test.ts
+ create mode 100644 backend/src/modules/ai-runtime/local-codex-status-handoff.public.test.ts
+ create mode 100644 backend/src/modules/ai/execution-codex-agentic-candidate.test.ts
+ create mode 100644 backend/src/modules/ai/external-chat-call-tree.ts
+ create mode 100644 backend/src/modules/ai/work-candidate-source.service.test.ts
+ create mode 100644 backend/src/modules/ai/work-candidate-source.service.ts
+ create mode 100644 backend/src/modules/assets/asset-processing-workspace.test.ts
+ create mode 100644 backend/src/modules/assets/media-root.test.ts
+ create mode 100644 backend/src/modules/execution/codex-read-recovery.fixture.ts
+ create mode 100644 backend/src/modules/execution/codex-read-recovery.integration.test.ts
+ create mode 100644 backend/src/modules/execution/codex-read-recovery.test.ts
+ create mode 100644 backend/src/modules/execution/codex-read-recovery.ts
+ create mode 100644 backend/src/modules/execution/execution-chat-route.service.ts
+ create mode 100644 backend/src/modules/execution/execution-codex-call.service.test.ts
+ create mode 100644 backend/src/modules/execution/execution-codex-call.service.ts
+ create mode 100644 backend/src/modules/execution/execution-codex-chat-tool.test.ts
+ create mode 100644 backend/src/modules/execution/execution-codex-research-evidence.test.ts
+ create mode 100644 backend/src/modules/execution/execution-generation-ports.service.test.ts
+ create mode 100644 backend/src/modules/execution/execution-video-codex-route.test.ts
+ create mode 100644 backend/src/modules/execution/execution-video-visual-review.integration.test.ts
+ create mode 100644 backend/src/modules/execution/execution-video-visual-review.service.ts
+ create mode 100644 backend/src/modules/execution/video-visual-codex.fixture.ts
+ create mode 100644 backend/src/modules/intelligence/intelligence-confirm-topic-public.integration.test.ts
+ create mode 100644 backend/src/modules/intelligence/intelligence-rewrite-official.integration.test.ts
+ create mode 100644 backend/src/modules/intelligence/intelligence-workspace-scope.ts
+ create mode 100644 backend/src/modules/observability/collector.test.ts
+ create mode 100644 backend/src/modules/observability/collector.ts
+ create mode 100644 backend/src/modules/observability/index.ts
+ create mode 100644 backend/src/modules/observability/real-dispatcher-observation.test.ts
+ create mode 100644 backend/src/modules/observability/real-outcome-observation.test.ts
+ create mode 100644 backend/src/modules/observability/task-ledger.test.ts
+ create mode 100644 backend/src/modules/observability/task-ledger.ts
+ create mode 100644 backend/src/modules/settings/codex-engine-preferences.test.ts
+ create mode 100644 backend/src/modules/settings/encrypted-log-reporting.test.ts
+ create mode 100644 backend/src/modules/settings/encrypted-log-reporting.ts
+ create mode 100644 backend/src/schema/observability.ts
+ create mode 100644 backend/src/test-fixtures/owned-postgres.test.ts
+ create mode 100644 backend/src/test-fixtures/owned-postgres.ts
+ create mode 100644 contract/src/observability-registry.json
+ create mode 100644 contract/src/observability.test.ts
+ create mode 100644 contract/src/observability.ts
+ create mode 100644 contract/src/resources/work-candidate-adoption.ts
+ create mode 100644 contract/src/resources/work-writing-context.ts
+ create mode 100644 contract/src/work-candidate-adoption.test.ts
+ create mode 100644 contract/tests/codex-assistant-tool-catalog.test.ts
+ create mode 100644 contract/tests/codex-execution-route.test.ts
+ create mode 100644 contract/tests/production-native-script-protection.test.ts
+ create mode 100644 docs/features/t1097-article-director-options-diagnosis.review.md
+ create mode 100644 docs/features/t1225-assets-gallery-real-fixtures.md
+ create mode 100644 docs/features/t1226-playwright-media-root-isolation.md
+ create mode 100644 docs/features/t1227-local-engine-full-capability-verification.md
+ create mode 100644 docs/features/t1228-chat-child-partial-verification.md
+ create mode 100644 docs/features/t1229-radar-topic-output-recovery-diagnosis.md
+ create mode 100644 docs/features/t1230-assets-empty-workspace-copy.md
+ create mode 100644 docs/features/t1231-radar-promoted-project-scope.md
+ create mode 100644 docs/features/t1232-settings-dialog-public-verification.md
+ create mode 100644 docs/features/t1233-radar-body-fixture-protocol.md
+ create mode 100644 docs/features/t1234-group-skill-customize-availability.md
+ create mode 100644 docs/features/t1235-density-reload-persistence.md
+ create mode 100644 docs/features/t1236-model-probe-visible-result.md
+ create mode 100644 docs/features/t1237-settings-narrow-layout.md
+ create mode 100644 docs/features/t1238-codex-unified-text-image-engine.md
+ create mode 100644 docs/features/t1238-codex-unified-text-image-engine.review.md
+ create mode 100644 docs/features/t1239-review-learning-public-acceptance.md
+ create mode 100644 docs/features/t1240-asset-picker-public-recheck.md
+ create mode 100644 docs/features/t1241-review-dev-compiler-panic.md
+ create mode 100644 docs/features/t1242-review-pure-group-cookie-assertion.md
+ create mode 100644 docs/features/t1243-draft-video-preview-recheck.md
+ create mode 100644 docs/features/t1244-automation-run-now-login-wait.md
+ create mode 100644 docs/features/t1245-automations-narrow-layout.md
+ create mode 100644 docs/features/t1246-integrated-dev-package-acceptance.md
+ create mode 100644 docs/features/t1246-integrated-dev-package-acceptance.review.md
+ create mode 100644 docs/features/t1247-timeout-git-inventory-buffer.md
+ create mode 100644 docs/features/t1247-timeout-git-inventory-buffer.review.md
+ create mode 100644 docs/features/t1248-frozen-system-action-compatibility.md
+ create mode 100644 docs/features/t1248-frozen-system-action-compatibility.review.md
+ create mode 100644 docs/features/t1249-durable-chat-current-receipts.md
+ create mode 100644 docs/features/t1249-durable-chat-current-receipts.review.md
+ create mode 100644 docs/features/t1250-positive-timeout-consumer-closure.md
+ create mode 100644 docs/features/t1250-positive-timeout-consumer-closure.review.md
+ create mode 100644 docs/features/t1251-chat-generation-failure-and-fixture-closure.md
+ create mode 100644 docs/features/t1251-chat-generation-failure-and-fixture-closure.review.md
+ create mode 100644 docs/features/t1252-cli-http-consumer-budget-closure.md
+ create mode 100644 docs/features/t1252-cli-http-consumer-budget-closure.review.md
+ create mode 100644 docs/features/t1253-worker-fixture-receipt-and-unknown-closure.md
+ create mode 100644 docs/features/t1253-worker-fixture-receipt-and-unknown-closure.review.md
+ create mode 100644 docs/features/t1254-doocs-request-budget-and-source-closure.md
+ create mode 100644 docs/features/t1254-doocs-request-budget-and-source-closure.review.md
+ create mode 100644 docs/features/t1255-activity-change-approval.md
+ create mode 100644 docs/features/t1255-observability-research.md
+ create mode 100644 docs/features/t1255-reporting-full-delivery.md
+ create mode 100644 docs/features/t1255-reporting-full-delivery.review.md
+ create mode 100644 docs/features/t1256-doocs-static-unused-bindings-build-closure.md
+ create mode 100644 docs/features/t1256-doocs-static-unused-bindings-build-closure.review.md
+ create mode 100644 docs/features/t1261-runtime-acceptance-defect-closure.md
+ create mode 100644 docs/features/t1261-runtime-acceptance-defect-closure.review.md
+ create mode 100644 docs/features/t1263-protocol-fixture-owned-temp-root.md
+ create mode 100644 docs/features/t1263-protocol-fixture-owned-temp-root.review.md
+ create mode 100644 docs/features/t1264-protocol-ledger-next-closure-order.md
+ create mode 100644 docs/features/t1264-protocol-ledger-next-closure-order.review.md
+ create mode 100644 docs/features/t1265-codex-structured-output-schema-compatibility.md
+ create mode 100644 docs/features/t1265-codex-structured-output-schema-compatibility.review.md
+ create mode 100644 docs/features/t1266-asr-menu-preference-layout-race.md
+ create mode 100644 docs/features/t1266-asr-menu-preference-layout-race.review.md
+ create mode 100644 docs/features/t1267-pi-public-fixture-capability-and-http-audit.md
+ create mode 100644 docs/features/t1267-pi-public-fixture-capability-and-http-audit.review.md
+ create mode 100644 docs/features/t1268-integrated-contract-inventory-and-manual-save-test.md
+ create mode 100644 docs/features/t1268-integrated-contract-inventory-and-manual-save-test.review.md
+ create mode 100644 docs/features/t1269-managed-video-failure-diagnostic.md
+ create mode 100644 docs/features/t1269-managed-video-failure-diagnostic.review.md
+ create mode 100644 docs/features/t1270-current-observability-migration-test-inventory.md
+ create mode 100644 docs/features/t1270-current-observability-migration-test-inventory.review.md
+ create mode 100644 docs/features/t1271-codex-ephemeral-sessions.md
+ create mode 100644 docs/features/t1271-codex-ephemeral-sessions.review.md
+ create mode 100644 docs/features/t1272-current-observability-frontend-test-fixtures.md
+ create mode 100644 docs/features/t1272-current-observability-frontend-test-fixtures.review.md
+ create mode 100644 docs/features/t1273-release-anti-reverse-hardening.md
+ create mode 100644 docs/features/t1273-release-anti-reverse-hardening.review.md
+ create mode 100644 docs/features/t1274-chatcut-editing-redesign.md
+ create mode 100644 docs/features/t1274-chatcut-editing-redesign.review.md
+ create mode 100644 docs/features/t1274-chatcut-editing-redesign/IMPLEMENTATION_REVIEW.md
+ create mode 100644 docs/features/t1274-chatcut-editing-redesign/SERVICE_CONTRACT.md
+ create mode 100644 docs/features/t1274-chatcut-editing-redesign/SOURCE_REVIEW.md
+ create mode 100644 docs/features/t1274-chatcut-editing-redesign/layout.html
+ create mode 100644 docs/features/t1275-editing-verification-runtime-timeouts.md
+ create mode 100644 docs/features/t1277-native-aac-valid-samples.md
+ create mode 100644 docs/features/t1278-unified-license-capability-routing.T-1278.review.md
+ create mode 100644 docs/features/t1278-unified-license-capability-routing.md
+ create mode 100644 docs/features/t1278-unified-license-capability-routing.review.md
+ create mode 100644 docs/features/t1279-model-routing-migration-lineage.T-1279.review.md
+ create mode 100644 docs/features/t1279-model-routing-migration-lineage.md
+ create mode 100644 docs/features/t1282-native-scene-effect-wasm-protocol.md
+ create mode 100644 docs/features/t1282-native-scene-effect-wasm-protocol.review.md
+ create mode 100644 docs/features/t1283-codex-account-routing-preflight.md
+ create mode 100644 docs/features/t1284-legacy-v1-render-source-audio.review.md
+ create mode 100644 docs/features/t1285-script-cas-conflict-readonly-recovery.review.md
+ create mode 100644 docs/features/t1286-model-routing-frontend-fixtures.T-1286.review.md
+ create mode 100644 docs/features/t1286-model-routing-frontend-fixtures.md
+ create mode 100644 docs/features/t1287-growth-full-regression-fixtures.md
+ create mode 100644 docs/features/t1288-integrated-editing-contract-inventory.T-1288.review.md
+ create mode 100644 docs/features/t1288-integrated-editing-contract-inventory.md
+ create mode 100644 docs/features/t1289-native-build-graph-virtual-module.md
+ create mode 100644 docs/features/t1290-merge-all-worktrees-local-package-cleanup.T-1290.review.md
+ create mode 100644 docs/features/t1290-merge-all-worktrees-local-package-cleanup.md
+ create mode 100644 docs/research/evidence/t915/browser-pi-full-normal-trace-1791874055052.ndjson
+ create mode 100644 docs/research/evidence/t915/browser-pi-full-unknown-trace-1791874063943.ndjson
+ create mode 100644 docs/research/t1275-editing-runtime-startup.md
+ create mode 100644 docs/verification/t1290/independent-review/SOURCE_BINDING.json
+ create mode 100644 docs/verification/t1290/independent-review/round-1.json
+ create mode 100644 docs/verification/t1290/root-inventory/MAIN_STATUS.json
+ create mode 100644 docs/verification/t1290/root-inventory/MAIN_UNTRACKED_CODE_CANDIDATE.json
+ create mode 100644 docs/verification/t1290/root-inventory/MAIN_UNTRACKED_CODE_SHA.json
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{CssEditor-B_etG6Rp.js => CssEditor-rDOOcLd1.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{FormulaEditorDialog-luI7Wkxl.js => FormulaEditorDialog-DUTywkQa.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{RightSlider-Cl7WEyAt.js => RightSlider-BEywkWYm.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{SlashCommandMenu-B7Jpldbh.js => SlashCommandMenu-CPpQMmMv.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{TableEditDialog-BXHl_kMQ.js => TableEditDialog-0WQyHr22.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{TemplateDialog-wZLC_pTV.js => TemplateDialog-B64hzoVj.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{config-DbfjmaEn.js => config-CS1KboEo.js} (53%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{marketplace-Bd_SEvWI.js => marketplace-Bubu1InB.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{oauth-CN0-Wcs0.js => oauth-B-yEgkSe.js} (94%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{providers-5OiUFt8V.js => providers-Bmgr2ar7.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{render-C0-GwsvR.js => render-BKss5lW7.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{slashCommands-Bz80_cwg.js => slashCommands-Bp20Gpjz.js} (98%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{useEditorRefresh-CP-K_yWo.js => useEditorRefresh-w4Z-KUpo.js} (94%)
+ rename frontend/public/reference-editors/doocs-md/native/chunks/{useLocalizedStyleOptions-BawQ5Q6I.js => useLocalizedStyleOptions-ClCBoDF9.js} (96%)
+ rename frontend/public/reference-editors/doocs-md/static/css/{md-index-9PNpNGUa.css => md-index-BloSDdq8.css} (99%)
+ create mode 100644 frontend/public/reference-editors/doocs-md/static/js/creatoros-inline-17e80d5ff67725b8e382b47f6dc9cb1945b42d696e1d260c0c68f3faad690143.js
+ create mode 100644 frontend/public/reference-editors/doocs-md/static/js/creatoros-inline-83d4ff036d06d21555186db75f554999980ee72a9653a6adf46ff747830b513e.js
+ create mode 100644 frontend/public/reference-editors/doocs-md/static/js/creatoros-inline-8d1adf9446d74929ad59ecb8e1c10e24eeccb18689a4712d3ae6837e6b65c920.js
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-AccountDialog-C-l5A6vK.js => md-AccountDialog-BShGTSED.js} (95%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-CssEditor-DfNpoxs6.js => md-CssEditor-Uxnqxt0m.js} (98%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-CustomComponentDialog-BO3RH86h.js => md-CustomComponentDialog-CAAfHrue.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-EditorStateDialog-Be9_RozG.js => md-EditorStateDialog-Dwecx1yJ.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-EmojiManagerPanel-BJdrURW-.js => md-EmojiManagerPanel-FVBRez8G.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-FormulaEditorDialog-C1zEtBm-.js => md-FormulaEditorDialog-BjP8WUy_.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-ImportMarkdownDialog-CB74oqBL.js => md-ImportMarkdownDialog-CM7_3dsC.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-LocalImageUploadDialog-D8m8Y5IS.js => md-LocalImageUploadDialog-D5100ikB.js} (97%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-MarketplaceDialog-TEm2HKiq.js => md-MarketplaceDialog-NF3jLaOG.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-PdfExportDialog-C-hBAbgh.js => md-PdfExportDialog-CguVq_vs.js} (97%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-PreferencesDialog-9ZpYLtCg.js => md-PreferencesDialog-Cbto2qFZ.js} (98%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-RightSlider-DEpTD7Ru.js => md-RightSlider-fbhZdm1E.js} (98%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-ShareDialog-CNJopoPm.js => md-ShareDialog-DDERPDI0.js} (98%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-SlashCommandMenu-eximbpzJ.js => md-SlashCommandMenu-Cue0FhPF.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-SyncDialog-BXqfIH1Q.js => md-SyncDialog-DCHHMNez.js} (92%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-TableEditDialog-CPsXDRjK.js => md-TableEditDialog-CM56dGUF.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-TemplateDialog-BjUIeOur.js => md-TemplateDialog-DtMUyz1f.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-UploadImgDialog-BsDUHnIi.js => md-UploadImgDialog-CO41N3bd.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-auth-Lj20kOUp.js => md-auth-BXbgldX_.js} (96%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-client-BtSlI_Gv.js => md-client-BB2xPD1D.js} (76%)
+ create mode 100644 frontend/public/reference-editors/doocs-md/static/js/md-config-BL0p1-u5.js
+ delete mode 100644 frontend/public/reference-editors/doocs-md/static/js/md-config-BhBc-hVt.js
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-emojiPack-BLaxswny.js => md-emojiPack-AxY1c5Fn.js} (94%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-export-BG6p5-Wz.js => md-export-D0-VySQO.js} (90%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-folder-source-panel-DYwdTMDU.js => md-folder-source-panel-B304ID7X.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-index-D9fKRfoA.js => md-index-CpBfvD8M.js} (92%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-markdown-CFPNYZKu.js => md-markdown-DOEEgCa0.js} (93%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-marketplace-CSX1gdNq.js => md-marketplace-DkjF6lU2.js} (98%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-oauth-BCzwh0d_.js => md-oauth-DuO7yV8Y.js} (89%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-post-slider-aZldM3cv.js => md-post-slider-BiY6y-Z9.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-providers-Dc8_KifI.js => md-providers-Dg1U5yAr.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-slashCommands-y0FDEGp1.js => md-slashCommands-BGmxJIbL.js} (97%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-sync-DJtROAMh.js => md-sync-pbgNQam0.js} (98%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-ui-Dai5M5YQ.js => md-ui-Blb0P3M9.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-useEditorRefresh-Cv1siQDW.js => md-useEditorRefresh-zoTJhDnV.js} (90%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-useImageUploader-B72X2veA.js => md-useImageUploader-C5h1ZRIv.js} (88%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-useLocalizedBuiltinComponents-BYymQo69.js => md-useLocalizedBuiltinComponents-D5hGf28N.js} (99%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-useLocalizedStyleOptions-D-3eBhAl.js => md-useLocalizedStyleOptions-DWbsbzfW.js} (95%)
+ rename frontend/public/reference-editors/doocs-md/static/js/{md-useSyncStatusMeta-Cw9gwpgj.js => md-useSyncStatusMeta-dvEItN-h.js} (95%)
+ create mode 100644 frontend/public/reference-editors/sources/doocs-md/request-budget-static-patches.diff
+ create mode 100644 frontend/public/reference-editors/sources/doocs-md/request-budget-static-source.tar.gz
+ create mode 100644 frontend/scripts/build-doocs-request-budget.mjs
+ create mode 100644 frontend/scripts/desktop/desktop-csp.d.mts
+ create mode 100644 frontend/scripts/desktop/desktop-csp.mjs
+ create mode 100644 frontend/scripts/desktop/local-dmg-layout-env.mjs
+ create mode 100644 frontend/scripts/desktop/local-dmg-layout-env.test.mjs
+ create mode 100644 frontend/scripts/desktop/release-clean-boundary.node.test.mjs
+ create mode 100644 frontend/scripts/desktop/release-hardening.node.test.mjs
+ create mode 100644 frontend/scripts/desktop/runtime-smoke.mjs
+ create mode 100644 frontend/scripts/desktop/sign-sidecar.mjs
+ create mode 100644 frontend/scripts/desktop/sign-sidecar.node.test.mjs
+ create mode 100644 frontend/scripts/verify-doocs-static.mjs
+ create mode 100644 frontend/src-tauri/secure_strings_build.rs
+ create mode 100644 frontend/src-tauri/src/release_integrity.rs
+ create mode 100644 frontend/src-tauri/src/secure_strings.rs
+ create mode 100644 frontend/src-tauri/tests/release_integrity.rs
+ create mode 100644 frontend/src/app/api/knowledge/knowledge-worker-routes.test.ts
+ create mode 100644 frontend/src/app/api/v1/local/observability/route.test.ts
+ create mode 100644 frontend/src/app/api/v1/local/observability/route.ts
+ create mode 100644 frontend/src/components/shell/settings-return-context.test.tsx
+ create mode 100644 frontend/src/components/shell/settings-return-context.tsx
+ create mode 100644 frontend/src/features/copilot/assistant-engine-server.test.ts
+ create mode 100644 frontend/src/features/production/use-video-decision-task.public.test.tsx
+ create mode 100644 frontend/src/features/settings/encrypted-log-reporting-card.test.tsx
+ create mode 100644 frontend/src/features/settings/encrypted-log-reporting-card.tsx
+ create mode 100644 frontend/src/features/settings/settings-dialog-return.test.tsx
+ create mode 100644 frontend/src/features/settings/settings-model-region.codex.test.tsx
+ create mode 100644 frontend/src/lib/codex-capability-explanation.ts
+ create mode 100644 frontend/src/lib/observability-client.test.ts
+ create mode 100644 frontend/src/lib/observability-client.ts
+ create mode 100644 frontend/src/server/chat-model-message-snapshot.test.ts
+ create mode 100644 frontend/src/server/chat-model-message-snapshot.ts
+ create mode 100644 frontend/src/server/codex-frozen-preflight.integration.test.ts
+ create mode 100644 frontend/src/server/feedback/encrypted-log-upload.server.test.ts
+ create mode 100644 frontend/src/server/feedback/encrypted-log-upload.server.ts
+ create mode 100644 frontend/src/server/observability-host.server.test.ts
+ create mode 100644 frontend/src/server/observability-host.server.ts
+ create mode 100644 frontend/tests/e2e/automations-run-now-public.spec.ts
+ create mode 100644 frontend/tests/e2e/encrypted-log-reporting.spec.ts
+ create mode 100644 frontend/tests/e2e/group-skill-customization.spec.ts
+ create mode 100644 frontend/tests/e2e/media-root-isolation.spec.ts
+ create mode 100644 frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts
+ create mode 100644 frontend/tests/e2e/settings-responsive-layout.spec.ts
+ create mode 100644 frontend/tests/e2e/t1097-assisted-work-candidate-adoption.spec.ts
+ create mode 100644 frontend/tests/e2e/t1274-aac-baseline.spec.ts
+ create mode 100644 frontend/tests/e2e/t1274-speech-workspace.spec.ts
+ create mode 100644 orchestrator/context/T-1225.md
+ create mode 100644 orchestrator/context/T-1226.md
+ create mode 100644 orchestrator/context/T-1229.md
+ create mode 100644 orchestrator/context/T-1231.md
+ create mode 100644 orchestrator/context/T-1232.md
+ create mode 100644 orchestrator/context/T-1233.md
+ create mode 100644 orchestrator/context/T-1234.md
+ create mode 100644 orchestrator/context/T-1235.md
+ create mode 100644 orchestrator/context/T-1236.md
+ create mode 100644 orchestrator/context/T-1237.md
+ create mode 100644 orchestrator/context/T-1238.md
+ create mode 100644 orchestrator/context/T-1239.md
+ create mode 100644 orchestrator/context/T-1240.md
+ create mode 100644 orchestrator/context/T-1241.md
+ create mode 100644 orchestrator/context/T-1242.md
+ create mode 100644 orchestrator/context/T-1243.md
+ create mode 100644 orchestrator/context/T-1244.md
+ create mode 100644 orchestrator/context/T-1245.md
+ create mode 100644 orchestrator/context/T-1246.md
+ create mode 100644 orchestrator/context/T-1247.md
+ create mode 100644 orchestrator/context/T-1248.md
+ create mode 100644 orchestrator/context/T-1249.md
+ create mode 100644 orchestrator/context/T-1250.md
+ create mode 100644 orchestrator/context/T-1251.md
+ create mode 100644 orchestrator/context/T-1252.md
+ create mode 100644 orchestrator/context/T-1253.md
+ create mode 100644 orchestrator/context/T-1254.md
+ create mode 100644 orchestrator/context/T-1261.md
+ create mode 100644 orchestrator/context/T-1263.md
+ create mode 100644 orchestrator/context/T-1264.md
+ create mode 100644 orchestrator/context/T-1265.md
+ create mode 100644 orchestrator/context/T-1266.md
+ create mode 100644 orchestrator/context/T-1267.md
+ create mode 100644 orchestrator/context/T-1268.md
+ create mode 100644 orchestrator/context/T-1269.md
+ create mode 100644 orchestrator/context/T-1270.md
+ create mode 100644 orchestrator/context/T-1271.md
+ create mode 100644 orchestrator/context/T-1272.md
+ create mode 100644 orchestrator/context/T-1274.md
+ create mode 100644 orchestrator/context/T-1276.md
+ create mode 100644 orchestrator/context/T-1278.md
+ create mode 100644 orchestrator/context/T-1279.md
+ create mode 100644 orchestrator/context/T-1280.md
+ create mode 100644 orchestrator/context/T-1281.md
+ create mode 100644 orchestrator/context/T-1282.md
+ create mode 100644 orchestrator/context/T-1284.md
+ create mode 100644 orchestrator/context/T-1286.md
+ create mode 100644 orchestrator/context/T-1288.md
+ create mode 100644 orchestrator/context/T-1290.md

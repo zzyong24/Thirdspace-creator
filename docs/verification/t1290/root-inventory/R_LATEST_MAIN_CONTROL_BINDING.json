@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-14T23:00:10.115335+08:00",
+  "sourceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "targetRoot": "/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator",
+  "files": {
+    "BACKLOG.md": "b329114753e877723bd967181e7a4747880ff355da6fe58edd202757b00035e9",
+    "PROJECT.md": "31410793f6bbc8c45f2e49f9d2e482dc63e16e417b671f9dc5ead97af23f4f8c",
+    "orchestrator/DECISION_LOG.md": "274db9929e8c43253d56a9e31937d0ff51f6ae21781ac8147d7a0ab0add5857f",
+    "orchestrator/process/modules.config.json": "534eca077a30a3a8377367dc5e4f53420f1af731a8037e5d94a60e5d9d7edea8",
+    "orchestrator/progress.json": "e018c0834f2d38f0a28de1c66091ba56d80019067d5e74839281023555a8f1ce",
+    "orchestrator/events.ndjson": "60849d54e9f4c90e942911bb28775f26b50ea7f71cf5bffc761368dd15b891d8",
+    "orchestrator/review-events.ndjson": "1dd3526cdfd26e309c7ed90e1142bd41dedde4e98a5a5d0977b97e9050c6bd97",
+    "orchestrator/ARTIFACT_MANIFEST.yaml": "0af6f3f0907d1076db46abf695229b68f62313b8230975ee40f5ecb56712bd26",
+    "docs/features/t1278-unified-license-capability-routing.md": "faf70538f0fcf297f69e6452fad8a99ecd1c387108ec766d29c53e41e1a06f21",
+    "docs/features/t1278-unified-license-capability-routing.T-1278.review.md": "9a0cd00a1b2b6491471e531c4444f9b2315593607651d77cff5256d9f7afcec7",
+    "docs/features/t1278-unified-license-capability-routing.review.md": "cb3370b118f1549185dac098029cbd2b3f4c1f5ef7fe94c5e51133a88679bd87",
+    "orchestrator/context/T-1278.md": "825da8e6cd8c6879c990e19c52612cac2d44b18e29d09853ada1ef3293cfa3fa",
+    "docs/features/t1286-model-routing-frontend-fixtures.T-1286.review.md": "6645a775d2807dc1c1901ca595d342c2535e2f8746be0165c328e4ddb363ccec",
+    "docs/features/t1286-model-routing-frontend-fixtures.md": "f73998737ed0b93ac983e378768de51f3ba2169fe9519c7c21f271fafa8bf897",
+    "orchestrator/context/T-1286.md": "ec42c48a7e58e6347f850474a995e2602c7f64224e8e062f3d8d021cf6aaab1c",
+    "docs/features/t1288-integrated-editing-contract-inventory.T-1288.review.md": "4f17d8c2c7c302ecaab76446f992748404fcf3ecdc951a9d1febe21f02724623",
+    "docs/features/t1288-integrated-editing-contract-inventory.md": "8aeeaffc194fe1069499aeb42cb18397a152fb01c7397ca2898021c0e5c1d867",
+    "orchestrator/context/T-1288.md": "6993f7fa5b6ccd40e43e2c65edb8eab615595ee3926eae003399686b54f5a22f",
+    "docs/features/t1289-native-build-graph-virtual-module.md": "935e77df595186e7449fa5d876528491c89a41359cf16416da2dafe4c5847094",
+    "docs/features/t1289-native-build-graph-virtual-module.T-1289.review.md": "22c6f26a5a793a7d8cc0308c8e80a6b834f01087e42c8d9492872ff11bc4e5a8",
+    "orchestrator/context/T-1289.md": "7d8d56af288645e0738bb15f9dec50c74201a6c0b8cc23da1120644a215c32aa",
+    "docs/features/t1290-merge-all-worktrees-local-package-cleanup.T-1290.review.md": "fd694c2d5b5af88428d399ddf12565437d922c08d31cb565076a079ba74ae340",
+    "docs/features/t1290-merge-all-worktrees-local-package-cleanup.md": "69041d8e912378b0748d3320025b3f168d13d81d15607e4896f8c1d8096e74c2",
+    "orchestrator/context/T-1290.md": "e495a28eb472c29e27384d806421798bddc6525622083c030169e17f0ebc7400",
+    "docs/features/t1291-legacy-native-verifier-source-inventory.md": "0cda8bf94872b7d0bf9d6cc82b3acadaf2c17b21c28dfda86ad7acf0a4a9ab88"
+  },
+  "reason": "Main任务队列/审计为唯一真相，原其它Git事件保真实祖先，不合成链"
+}

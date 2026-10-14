@@ -1,0 +1,147 @@
+[1m[43m DEPRECATED [49m[22m [33m"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir/vitest"[39m
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Users/zyongzhu/Workbase/Thirdspace-creator/backend[39m
+
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m正常104升级仅修复可证明三来源NULL，所有内容/父归属/历史回执保真且双启不重放[33m 10838[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源transfer不凭同名账号或不完整父链取得新归属[33m 5626[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源return-with-history不凭同名账号或不完整父链取得新归属[33m 5970[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源wrong-artifact-type不凭同名账号或不完整父链取得新归属[33m 6044[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源wrong-artifact-project不凭同名账号或不完整父链取得新归属[33m 5945[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源wrong-artifact-output不凭同名账号或不完整父链取得新归属[33m 5955[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源foreign-artifact-user不凭同名账号或不完整父链取得新归属[33m 6452[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源foreign-artifact-account不凭同名账号或不完整父链取得新归属[33m 6237[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源conflicting-output-group不凭同名账号或不完整父链取得新归属[33m 6090[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源null-output-group不凭同名账号或不完整父链取得新归属[33m 5656[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源null-project-group不凭同名账号或不完整父链取得新归属[33m 5744[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源archived-account不凭同名账号或不完整父链取得新归属[33m 5829[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m旧来源archived-group不凭同名账号或不完整父链取得新归属[33m 6011[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m0130SQL身份及当前111尾精确追加，旧104 journal及历史迁移固定不漂移[32m 2[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG原article owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放[33m 4900[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG原graphic owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放[33m 4483[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG旧来源ROW EXCLUSIVE阻新DDL时，异常回滚释放组锁，新提交来源被最终重采[33m 4189[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG显式归组持真实组/父/来源行锁时，0130退让后沿最新父归属保真[33m 8442[2mms[22m[39m
+[90mstdout[2m | src/legacy-source-migration.test.ts[2m > [22m[2m真实PG错误DDL-first锁序与原article服务形成实际40P01（诊断反例）
+[22m[39m[T1089-actual-wrong-order] {
+  family: [32m'article'[39m,
+  actualDdlTable: [32m'article_anchors'[39m,
+  lock: [ { wait_event_type: [32m'Lock'[39m, blockers: [36m[Array][39m } ],
+  migrationError: [32m'40P01'[39m,
+  originalError: [90mundefined[39m
+}
+
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG错误DDL-first锁序与原article服务形成实际40P01（诊断反例）[33m 2646[2mms[22m[39m
+[90mstdout[2m | src/legacy-source-migration.test.ts[2m > [22m[2m真实PG错误DDL-first锁序与原graphic服务形成实际40P01（诊断反例）
+[22m[39m[T1089-actual-wrong-order] {
+  family: [32m'graphic'[39m,
+  actualDdlTable: [32m'graphic_post_anchors'[39m,
+  lock: [ { wait_event_type: [32m'Lock'[39m, blockers: [36m[Array][39m } ],
+  migrationError: [32m'40P01'[39m,
+  originalError: [90mundefined[39m
+}
+
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG错误DDL-first锁序与原graphic服务形成实际40P01（诊断反例）[33m 2628[2mms[22m[39m
+[90mstdout[2m | src/legacy-source-migration.test.ts[2m > [22m[2m真实PG错误DDL-first锁序与原group-migration服务形成实际40P01（诊断反例）
+[22m[39m[T1089-actual-wrong-order] {
+  family: [32m'group-migration'[39m,
+  actualDdlTable: [32m'article_anchors'[39m,
+  lock: [ { wait_event_type: [32m'Lock'[39m, blockers: [36m[Array][39m } ],
+  migrationError: [32m'40P01'[39m,
+  originalError: [90mundefined[39m
+}
+
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG错误DDL-first锁序与原group-migration服务形成实际40P01（诊断反例）[33m 6839[2mms[22m[39m
+(node:36465) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG原membership freeze后转组完成，0130重采真实历史并保持旧NULL来源[33m 4903[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG0130成功轮持锁时，原项目INSERT被阻止；回滚诊断后正常迁移含真实新父[33m 4389[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG来源行锁冲突整轮释放；原事务提交后正常迁移重新盖章[33m 4422[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG整轮退让中取消，旧数据与104账本保持；再次正常升级可完成[33m 6461[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG两原归组服务反向参数a-first，与0130竞争仍正确串行[33m 10310[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m真实PG两原归组服务反向参数b-first，与0130竞争仍正确串行[33m 10012[2mms[22m[39m
+[90mstderr[2m | src/legacy-source-migration.test.ts[2m > [22m[2m0130身份missing-0128严格拒绝，原业务与迁移账本不修改
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 0130来源归属修复缺真实0128/0129前置回执)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m0130身份missing-0128严格拒绝，原业务与迁移账本不修改[33m 6109[2mms[22m[39m
+[90mstderr[2m | src/legacy-source-migration.test.ts[2m > [22m[2m0130身份missing-0129严格拒绝，原业务与迁移账本不修改
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 0130来源归属修复缺真实0128/0129前置回执)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m0130身份missing-0129严格拒绝，原业务与迁移账本不修改[33m 5872[2mms[22m[39m
+[90mstderr[2m | src/legacy-source-migration.test.ts[2m > [22m[2m0130身份wrong-0130-hash严格拒绝，原业务与迁移账本不修改
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+[90mstderr[2m | src/legacy-source-migration.test.ts[2m > [22m[2m0130身份future-when严格拒绝，原业务与迁移账本不修改
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m0130身份wrong-0130-hash严格拒绝，原业务与迁移账本不修改[33m 5771[2mms[22m[39m
+ [32m✓[39m src/legacy-source-migration.test.ts[2m > [22m0130身份future-when严格拒绝，原业务与迁移账本不修改[33m 5801[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22mFK引用的独立唯一索引与partial predicate保留，约束自有唯一索引排除[33m 585[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m完整fresh原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持[33m 9042[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m完整root原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持[33m 11512[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m完整diagnostic原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持[33m 11213[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m完整canvas原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持[33m 10241[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m真实隔离PostgreSQL fresh双启/完整恢复/冻结历史/相同catalog[33m 4866[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m真实隔离PostgreSQL root双启/完整恢复/冻结历史/相同catalog[33m 20320[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m真实隔离PostgreSQL diagnostic双启/完整恢复/冻结历史/相同catalog[33m 25255[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m真实隔离PostgreSQL canvas双启/完整恢复/冻结历史/相同catalog[33m 19638[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m新account=NULL组回执按group唯一，历史account非NULL撞键完整保留[33m 2554[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m已执行历史all subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆[33m 10542[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m已执行历史keyring subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆[33m 10222[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m已执行历史workbench subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆[33m 9417[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m已执行历史external subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆[33m 10329[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m全新库保持现行凭证结构，不因兼容旧安装而带入未执行的legacy字段[33m 2535[2mms[22m[39m
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝unknown且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m补充兼容仍拒绝unknown且零旧数据/回执改写[33m 2131[2mms[22m[39m
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝future且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m补充兼容仍拒绝future且零旧数据/回执改写[33m 2140[2mms[22m[39m
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝common-hole且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 共同历史不是完整前缀)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m补充兼容仍拒绝common-hole且零旧数据/回执改写[33m 2142[2mms[22m[39m
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝supplemental-hole且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 已知补充历史不是完整前缀)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m补充兼容仍拒绝supplemental-hole且零旧数据/回执改写[33m 2139[2mms[22m[39m
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝schema-drift且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 未知columns model_configurations.unexplained_legacy_flag)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m补充兼容仍拒绝schema-drift且零旧数据/回执改写[33m 2348[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22m补充冻结SQL或journal损坏时拒绝，不接受仅身份白名单[33m 545[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22mT1279 新0135必须有真实回执且偏好列完整，旧设置与任务不迁写[33m 2789[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22mT1279 已记账0135但偏好列损坏不得宣称已准备[33m 2754[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22mT1110迁移后必须有真实0131回执，旧完整前缀不得冒充新runtime已准备[33m 2557[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22mT1238迁移后必须有真实0133回执与列，旧完整前缀不得宣称偏好已准备[33m 2570[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22mT1278 0136向量身份nullable，必须有真实回执且旧向量不改写[33m 2572[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22mT1278 已记账0136却缺embedding_identity列拒绝，不伪造重建[33m 2755[2mms[22m[39m
+ [32m✓[39m src/migration-convergence.test.ts[2m > [22mT1278 canonical111完整固定journal与ordered SQL receipts，原110 prefix及bridge身份不漂移[32m 5[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209旧106库先复现真实runNow409，正常开库补版本后四类私有任务可入队，保原ID排期历史及幂等[33m 11890[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209旧作业正常开库后真实定时driver经持久任务/AI/执行准入，重复tick不再创建[33m 5811[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209归档group补元数据但保留原权限规则[33m 5785[2mms[22m[39m
+[90mstdout[2m | src/legacy-scheduled-job-migration.test.ts[2m > [22m[2mT1209归档account补元数据但保留原权限规则
+[22m[39m[scheduler] job old-self.metrics 跳过:账号 legacy-account status=archived(非 active,已隐藏/归档)→ 定时采集跳过
+
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209归档account补元数据但保留原权限规则[33m 5643[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明wrong-user不补版本，也不重签旧任务[33m 5626[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明wrong-group不补版本，也不重签旧任务[33m 5838[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明moved-back不补版本，也不重签旧任务[33m 5491[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明history-with-v1不补版本，也不重签旧任务[33m 5691[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明foreign-history-with-v1不补版本，也不重签旧任务[33m 5467[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明wrong-version不补版本，也不重签旧任务[33m 5453[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明wrong-group-version不补版本，也不重签旧任务[33m 5607[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明missing-account不补版本，也不重签旧任务[33m 5489[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明pure-group不补版本，也不重签旧任务[33m 5648[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209缺完整初始证明no-member不补版本，也不重签旧任务[33m 5469[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209旧105库补尾，新作业和legacy共享作业沿原公共运行合同，旧执行冻结值不动[33m 6302[2mms[22m[39m
+(node:88787) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209真实PG转组先持锁，正常迁移退让后重读；未来私有作业v2、旧历史不改[33m 4594[2mms[22m[39m
+ [32m✓[39m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209真实PG迁移先持锁，转组真实等待；提交后原服务转组v2且重开幂等[33m 4262[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m76 passed[39m[22m[90m (76)[39m
+[2m   Start at [22m 23:19:04
+[2m   Duration [22m 472.37s[2m (transform 2.84s, setup 0ms, import 5.58s, tests 466.36s, environment 0ms)[22m
+

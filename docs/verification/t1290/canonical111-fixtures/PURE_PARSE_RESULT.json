@@ -1,0 +1,26 @@
+{
+  "kind": "TS AST parse only;NOT typecheck/test/public DB run",
+  "rows": [
+    {
+      "path": "backend/src/legacy-source-migration.test.ts",
+      "parseDiagnostics": []
+    },
+    {
+      "path": "backend/src/legacy-scheduled-job-migration.test.ts",
+      "parseDiagnostics": []
+    },
+    {
+      "path": "backend/src/migration-convergence.test.ts",
+      "parseDiagnostics": []
+    },
+    {
+      "path": "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+      "parseDiagnostics": []
+    },
+    {
+      "path": "public-final-r.mts",
+      "parseDiagnostics": []
+    }
+  ],
+  "productionWrites": 0
+}

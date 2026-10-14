@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-14T22:42:43.111012+08:00",
+  "merge12Files": 12,
+  "native9Files": 9,
+  "nativeReview": "92eba9d78497",
+  "remainingUnmerged": [
+    "backend/drizzle/meta/_journal.json",
+    "backend/src/legacy-scheduled-job-migration.test.ts",
+    "backend/src/legacy-source-migration.test.ts",
+    "backend/src/migration-convergence.ts",
+    "frontend/src/server/legacy-frozen-source-read.integration.test.ts"
+  ]
+}

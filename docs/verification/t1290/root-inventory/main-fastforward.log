@@ -1,0 +1,21 @@
+error: Your local changes to the following files would be overwritten by merge:
+	BACKLOG.md
+	docs/features/t1278-unified-license-capability-routing.T-1278.review.md
+	docs/features/t1286-model-routing-frontend-fixtures.T-1286.review.md
+	docs/features/t1286-model-routing-frontend-fixtures.md
+	docs/features/t1288-integrated-editing-contract-inventory.T-1288.review.md
+	docs/features/t1288-integrated-editing-contract-inventory.md
+	docs/features/t1289-native-build-graph-virtual-module.md
+	orchestrator/context/T-1278.md
+	orchestrator/events.ndjson
+	orchestrator/process/modules.config.json
+	orchestrator/progress.json
+	orchestrator/review-events.ndjson
+Please commit your changes or stash them before you merge.
+error: The following untracked working tree files would be overwritten by merge:
+	docs/features/t1289-native-build-graph-virtual-module.T-1289.review.md
+	docs/features/t1291-legacy-native-verifier-source-inventory.md
+	orchestrator/context/T-1289.md
+Please move or remove them before you merge.
+Aborting
+Updating 0b0913635..e742e35f7

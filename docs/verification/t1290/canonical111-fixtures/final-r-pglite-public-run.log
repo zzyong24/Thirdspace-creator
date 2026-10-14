@@ -1,0 +1,27 @@
+{"case":"fresh","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"main109","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"w110","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"w110-compatible-partial-table","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标columns不兼容)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-bad-column","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标columns不兼容"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标columns不兼容)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-missing-column","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标columns不兼容"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标constraints不兼容)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-bad-constraint","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标constraints不兼容"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_events_pending)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-index-wrong-table","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_events_pending"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_events_pending)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-index-wrong-definition","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_events_pending"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_installation)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-view-collision","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_installation"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_installation)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-type-collision","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_installation"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 缺少已记账表 observability_installation)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w111-recorded-bridge-missing-table","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 缺少已记账表 observability_installation"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-unknown-hash","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-wrong-when","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留"}
+[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 0136向量身份缺真实0135前置回执)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+{"case":"w110-broken-prefix","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 0136向量身份缺真实0135前置回执"}
+{"driver":"pglite","baselineRed":false,"cases":15,"failed":0,"output":"/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1290/canonical111-fixtures/final-r-pglite-public-result.json"}

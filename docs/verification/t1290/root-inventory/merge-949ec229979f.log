@@ -1,0 +1,8 @@
+Auto-merging backend/src/modules/production/chatcut-script-core/README.md
+CONFLICT (add/add): Merge conflict in backend/src/modules/production/chatcut-script-core/README.md
+Auto-merging backend/src/modules/production/production-script-markdown.test.ts
+CONFLICT (add/add): Merge conflict in backend/src/modules/production/production-script-markdown.test.ts
+Auto-merging backend/src/modules/production/production-script-markdown.ts
+CONFLICT (add/add): Merge conflict in backend/src/modules/production/production-script-markdown.ts
+Automatic merge failed; fix conflicts and then commit the result.
+[codex/unified-editing-integration c082bde5e] merge: 纳入已核对工作树 949ec229979f 的完整历史

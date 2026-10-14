@@ -14,7 +14,7 @@
 |T-1289|修复原生构建清单随解包目录深度变化|🔨|PASS[REV:92eba9d78497]|待验|[归档重建真实差异](docs/features/t1289-native-build-graph-virtual-module.md)|715源/F0一致，六runtime产物一致，第七清单虚拟module路径随目录深度变化；原FAIL保留，只核机械ID与归档元数据，不只补生成JSON。|
 |T-1288|校准合并剪辑后的两个契约测试库存|🔨|PASS[REV:cf5a6070b2b5]|待验|[当场43项库存失败](docs/features/t1288-integrated-editing-contract-inventory.md)|R全契约43FAIL/475PASS保留；只核两个原测试427→429与已审script read/propose两路径，不改产品或放松穷尽。|
 |T-1287|闭合Growth全量回归的旧夹具与隔离缺项|📋|待审|待验|[真实全量失败与边界](docs/features/t1287-growth-full-regression-fixtures.md)|原Python9FAIL/1189PASS、Node10FAIL/270PASS与对账10ERROR保留；0076启动head已窄修28PASS，余5测试/3hooks和Node实际清单先独审，不改经营安全来洗绿。|
-|T-1286|校准模型来源接线后的旧前端集成夹具|🔨|PASS[REV:e988ff219888]|待验|[当场30项测试接线失败](docs/features/t1286-model-routing-frontend-fixtures.md)|全frontend31FAIL保留；仅三原测试30项，忠实legacy GET与固定110库存；旧write真实同步缺陷交T1278，不改产品或吞范围外radar1。|
+|T-1286|校准模型来源接线后的旧前端集成夹具|🔨|PASS[REV:be715ef3b46d]|待验|[当场30项测试接线失败](docs/features/t1286-model-routing-frontend-fixtures.md)|全frontend31FAIL保留；仅三原测试30项，忠实legacy GET与固定110库存；旧write真实同步缺陷交T1278，不改产品或吞范围外radar1。|
 |T-1285|恢复文字剪辑CAS冲突后的只读解锁|✅|PASS[REV:5217d3efeb58]|—|[真实冲突与窄修](docs/features/t1285-script-cas-conflict-readonly-recovery.md)|5c8ea3cf8已修；原profile/request只读receipt→get6→receipt解锁，实际丢弃后可编辑，零写且完整DTO不变；13/213、类型/timeout/边界与最新完整build通过；全局仍T1204原29ERROR且无新增。|
 |T-1284|恢复旧V1字幕模板渲染丢失的原片音轨|✅|PASS[REV:6b0006cc4eee]|—|[真实成片无声与最小兼容](docs/features/t1284-legacy-v1-render-source-audio.md)|71e95241d已修：原output322新公共task恢复AAC2秒，PCM相关0.999997876、48帧画面逐字节不变；29测试/类型/最新完整build通过，原FAIL保留，全局仍T1204原29ERROR且无新增。|
 |T-1282|修复原生场景效果WASM字段协议导致预览失败|✅|PASS[REV:5dd1b7cf8c46]|—|[真实WASM拒绝与窄适配](docs/features/t1282-native-scene-effect-wasm-protocol.md)|93c91c09e真实ABI修复及三族公共native预览解码通过，deleteB采纳/幂等保护原丰富字段；86/380、715源F0/七产物和最新build通过，原FAIL保留。|

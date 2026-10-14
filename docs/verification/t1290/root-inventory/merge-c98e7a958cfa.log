@@ -1,0 +1,7 @@
+Auto-merging frontend/scripts/desktop/package.mjs
+CONFLICT (content): Merge conflict in frontend/scripts/desktop/package.mjs
+Auto-merging frontend/src-tauri/src/lib.rs
+CONFLICT (content): Merge conflict in frontend/src-tauri/src/lib.rs
+Auto-merging pnpm-lock.yaml
+Automatic merge failed; fix conflicts and then commit the result.
+[codex/unified-editing-integration 08bd3ba16] merge: 纳入已核对工作树 c98e7a958cfa 的完整历史

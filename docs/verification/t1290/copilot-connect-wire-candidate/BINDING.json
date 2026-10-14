@@ -1,0 +1,7 @@
+{
+  "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+  "beforeSha256": "a6d241a25df375423122b9e21d706f1f11399c74ba6ba1afe317f3a5d8c9efa1",
+  "candidateSha256": "abbe2c64c4602def84dfdf2f960262bba8169461b02a738f11ba196ab6051bc0",
+  "actualRed": "final-frontend-closure.log 1FAIL301PASS，新helper真实fetch增加原批准no-store/manual/signal，旧断言仅POST/headers exact失配",
+  "scope": "只补已批准HTTP option三项精确断言，原method/headers/无body/URL/native打开/充值而非配置/无重试/所有其它回归不改"
+}

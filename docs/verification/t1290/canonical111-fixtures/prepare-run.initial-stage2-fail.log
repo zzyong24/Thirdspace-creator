@@ -1,0 +1,14 @@
+fatal: path 'backend/src/migration-convergence.test.ts' is in the index, but not at stage 2
+hint: Did you mean ':0:backend/src/migration-convergence.test.ts'?
+Traceback (most recent call last):
+  File "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1290/canonical111-fixtures/prepare-candidate.py", line 6, in <module>
+    x=subprocess.check_output(['git','-C',str(r),'show',':2:'+rel],env=env);p=base/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(x);bases[rel]=sha(x)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 473, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', '-C', '/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator', 'show', ':2:backend/src/migration-convergence.test.ts']' returned non-zero exit status 128.

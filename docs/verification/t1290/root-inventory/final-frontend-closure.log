@@ -1,0 +1,1000 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend[39m
+
+(node:34414) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m src/features/settings/settings-interactive-region.test.tsx [2m([22m[2m114 tests[22m[2m)[22m[33m 20303[2mms[22m[39m
+     [33m[2m✓[22m[39m 同值保存回显后保留真实'ok'，不改结果分类 [33m 478[2mms[22m[39m
+     [33m[2m✓[22m[39m 未知请求异常保真实失败原因且不自动重发 [33m 304[2mms[22m[39m
+     [33m[2m✓[22m[39m group-only切组拒绝旧true结果（account都null） [33m 386[2mms[22m[39m
+     [33m[2m✓[22m[39m group-only切组拒绝旧false结果（account都null） [33m 370[2mms[22m[39m
+     [33m[2m✓[22m[39m 真正卸载后旧结果不落在重新打开的Dialog [33m 425[2mms[22m[39m
+     [33m[2m✓[22m[39m [T-645] 用户自行填写的模型访问密钥按 service 保存且不展示技术服务名 [33m 391[2mms[22m[39m
+     [33m[2m✓[22m[39m [T-715] 受管模型只显示 AI 额度入口，安全打开 fragment 且不暴露服务技术信息 [33m 334[2mms[22m[39m
+     [33m[2m✓[22m[39m [T1278/T679] official ASR缺项不要求手填官方Key，self/local仍可显式选择 [33m 376[2mms[22m[39m
+     [33m[2m✓[22m[39m [T-715] 即使本地接口异常返回管理端地址，也不会打开任何非用户额度页面 [33m 405[2mms[22m[39m
+     [33m[2m✓[22m[39m [T-715] 已绑定后允许固定打开 Growth 用户端 launch [33m 307[2mms[22m[39m
+     [33m[2m✓[22m[39m ASR 与文本模型同属重点配置区，并明确云端建议、本地可用 [33m 321[2mms[22m[39m
+     [33m[2m✓[22m[39m helper有限预算覆盖原串行连接，outer仅剩1500ms时继承耗尽，不重置成两分钟 [33m 1503[2mms[22m[39m
+[90mstderr[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m已登记账号只选account创建项目/全局会话和两种稿件，原RETURNING与严格group owner均可读取
+[22m[39m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+[90mstderr[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readTaskContext
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] resolveModelCredential
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] reserveGenerationCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] startCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] settleGenerationCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] saveCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] checkChatToolApproval
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] reserveAgenticTool
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] startAgenticTool
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] executeAgenticTool
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[chat-tool] name=system.read ok durationMs=16
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] settleAgenticTool
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] saveCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] reserveGenerationCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] startCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] appendStreamEvents
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] settleGenerationCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] saveCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readWorkbenchPlan
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] commitChatResult
+
+[90mstderr[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[seed] win-video-tutor 已按 module 挂 22 条 tag
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-worker-result] completed
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-recovery] {"family":"null-frozen","originalTaskId":"ai-task-9571eb90-c12a-4c94-80d8-cc93c4fa9b01","executionTaskId":"execution-task-89c985c7-b759-4733-ab42-83619c3aa0e0","attempt":1,"frozenGroup":null,"modelRequests":2,"handlerExecutions":1,"settledCalls":3,"completionResults":1,"replayed":true}
+
+[90mstderr[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-conversation 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+[90mstderr[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-conversation 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-conversation 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[seed] win-video-tutor 已按 module 挂 22 条 tag
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-conversation 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[chat-tool] name=system.read ok durationMs=31
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-conversation 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-recovery] {"family":"canonical-null-conversation","originalTaskId":"ai-task-bee74ca5-bd21-4d72-b7d9-bce5f6e359fe","executionTaskId":"execution-task-45e214c0-b529-4095-ad3b-449e1e51e824","attempt":1,"frozenGroup":"grp_legacy_acct-2dd137f4-4","modelRequests":2,"handlerExecutions":1,"settledCalls":3,"completionResults":1,"replayed":true}
+
+[90mstderr[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readTaskContext
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] resolveModelCredential
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] reserveGenerationCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] startCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] settleGenerationCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] saveCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] checkChatToolApproval
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] reserveAgenticTool
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] startAgenticTool
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] executeAgenticTool
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[chat-tool] name=system.read ok durationMs=14
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] settleAgenticTool
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] saveCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] reserveGenerationCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] startCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] appendStreamEvents
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] settleGenerationCall
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] saveCheckpoint
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] readWorkbenchPlan
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-port] commitChatResult
+
+[90mstderr[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[seed] win-video-tutor 已按 module 挂 22 条 tag
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-old-worker-result] completed
+
+[90mstdout[2m | src/server/legacy-frozen-source-read.integration.test.ts[2m > [22m[2m104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放
+[22m[39m[T1089-recovery] {"family":"canonical-null-anchors","originalTaskId":"ai-task-0ce006d3-bfb9-42d5-b5f7-ecd68984ffeb","executionTaskId":"execution-task-f16344da-99cc-4d16-a678-587c2a52d920","attempt":1,"frozenGroup":"grp_legacy_acct-ad80eb93-4","modelRequests":2,"handlerExecutions":1,"settledCalls":3,"completionResults":1,"replayed":true}
+
+ [32m✓[39m src/server/legacy-frozen-source-read.integration.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 56127[2mms[22m[39m
+   [33m[2m✓[22m[39m 已登记账号只选account创建项目/全局会话和两种稿件，原RETURNING与严格group owner均可读取 [33m 5929[2mms[22m[39m
+   [33m[2m✓[22m[39m 104→0130 null-frozen 原冻结/完整子进程Worker/已结算回执/原completion与同source重放 [33m 20660[2mms[22m[39m
+   [33m[2m✓[22m[39m 104→0130 canonical-null-conversation 原冻结/完整子进程Worker/已结算回执/原completion与同source重放 [33m 12349[2mms[22m[39m
+   [33m[2m✓[22m[39m 104→0130 canonical-null-anchors 原冻结/完整子进程Worker/已结算回执/原completion与同source重放 [33m 13993[2mms[22m[39m
+(node:34784) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m实际metadata waiting_user关联原回执，纯text+error离开后仍保护
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m实际metadata unknown_result关联原回执，纯text+error离开后仍保护
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m实际metadata paused关联原回执，纯text+error离开后仍保护
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m实际metadata failed终态不把错误会话长期保护
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2mmetadata等待状态但missing控制回执不冒充可靠任务关联
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2mmetadata等待状态但mismatch控制回执不冒充可靠任务关联
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务
+[22m[39m[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:7053:50
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/ai@7.0.8_zod@4.4.3/node_modules/[4mai[24m/dist/index.js:6509:15)
+[90m    at invokePromiseCallback (node:internal/webstreams/util:172:10)[39m
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m迟到旧stop不停止新的turn流，也不覆盖其观察归属
+[22m[39mEncountered two children with the same key, `original-assistant`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+
+[90mstderr[2m | src/server/ai-runtime/live-chat-session.consumer.test.tsx[2m > [22m[2m迟到旧stop不停止新的turn流，也不覆盖其观察归属
+[22m[39mEncountered two children with the same key, `original-assistant`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+
+ [32m✓[39m src/server/ai-runtime/live-chat-session.consumer.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 8214[2mms[22m[39m
+   [33m[2m✓[22m[39m 同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务 [33m 7241[2mms[22m[39m
+(node:34799) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+[90mstdout[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车)
+[22m[39m[T-716][script.patch] composer request started {
+  nonce: [33m1[39m,
+  functionKey: [32m'review.script'[39m,
+  selectionKind: [32m'content_output'[39m,
+  sectionIndex: [1mnull[22m,
+  messageCountBefore: [33m0[39m
+}
+
+[90mstdout[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束
+[22m[39m[T-716][script.patch] composer request started {
+  nonce: [33m1[39m,
+  functionKey: [90mundefined[39m,
+  selectionKind: [32m'project'[39m,
+  sectionIndex: [1mnull[22m,
+  messageCountBefore: [33m0[39m
+}
+
+[90mstdout[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-716] 局部改稿失败保留段落锚点，成功后仍可围绕同一段连续修订
+[22m[39m[T-716][script.patch] composer request started {
+  nonce: [33m1[39m,
+  functionKey: [32m'script.patch'[39m,
+  selectionKind: [32m'script_section'[39m,
+  sectionIndex: [33m1[39m,
+  messageCountBefore: [33m0[39m
+}
+
+[90mstdout[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-732] provider 失败后普通新消息不复用局部命令
+[22m[39m[T-716][script.patch] composer request started {
+  nonce: [33m1[39m,
+  functionKey: [32m'script.patch'[39m,
+  selectionKind: [32m'script_section'[39m,
+  sectionIndex: [33m1[39m,
+  messageCountBefore: [33m0[39m
+}
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-732] provider 失败后普通新消息不复用局部命令
+[22m[39m[describeUserError] Error: provider stream interrupted
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:955:17
+[90m    at runNextTicks (node:internal/process/task_queues:65:5)[39m
+[90m    at listOnTimeout (node:internal/timers:567:9)[39m
+[90m    at processTimers (node:internal/timers:541:7)[39m
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:20
+
+[90mstdout[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段
+[22m[39m[T-716][script.patch] composer request started {
+  nonce: [33m1[39m,
+  functionKey: [32m'script.patch'[39m,
+  selectionKind: [32m'script_section'[39m,
+  sectionIndex: [33m1[39m,
+  messageCountBefore: [33m0[39m
+}
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段
+[22m[39m[T-716][script.patch] assistant finished without candidate { nonce: [33m1[39m, newMessageCount: [33m2[39m, assistantMessageCount: [33m1[39m }
+
+[90mstdout[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断
+[22m[39m[T-716][script.patch] composer request started {
+  nonce: [33m1[39m,
+  functionKey: [32m'script.patch'[39m,
+  selectionKind: [32m'script_section'[39m,
+  sectionIndex: [33m1[39m,
+  messageCountBefore: [33m0[39m
+}
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断
+[22m[39m[T-732][script.patch] terminal selection cleared { nonce: [33m1[39m }
+
+[90mstdout[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断
+[22m[39m[T-716][script.patch] composer request started {
+  nonce: [33m2[39m,
+  functionKey: [32m'script.patch'[39m,
+  selectionKind: [32m'script_section'[39m,
+  sectionIndex: [33m1[39m,
+  messageCountBefore: [33m1[39m
+}
+
+[90mstdout[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢)
+[22m[39m[T-716][script.patch] composer request started {
+  nonce: [33m1[39m,
+  functionKey: [32m'review.script'[39m,
+  selectionKind: [32m'content_output'[39m,
+  sectionIndex: [1mnull[22m,
+  messageCountBefore: [33m0[39m
+}
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户
+[22m[39m[describeUserError] Error: boom
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:1298:17
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2955:64
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈
+[22m[39m[describeUserError] Error: temporary upstream failure
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:1327:17
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2955:64
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈
+[22m[39m[describeUserError] Error: temporary upstream failure
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:1327:17
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2955:64
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈
+[22m[39m[describeUserError] Error: temporary upstream failure
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:1327:17
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2955:64
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败
+[22m[39m[describeUserError] Error: 聊天事件连接中断，已完成内容仍保存在原任务中。
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:1359:17
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2955:64
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败
+[22m[39m[describeUserError] Error: 聊天事件连接中断，已完成内容仍保存在原任务中。
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:1359:17
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2955:64
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-1023] 组件卸载后清理恢复计时器，不在后台继续发请求
+[22m[39m[describeUserError] Error: temporary upstream failure
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:1378:17
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2955:64
+
+[90mstderr[2m | src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22m[2mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[2m[T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档
+[22m[39m[copilot] load conversation failed: Error: 404 conversation not found
+    at [90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/frontend/[39msrc/features/copilot/ai-copilot-interactions.test.tsx:1517:40
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/node_modules/[4m.pnpm[24m/@vitest+runner@4.1.8/node_modules/[4m@vitest/runner[24m/dist/chunk-artifact.js:2955:64
+
+ [31m❯[39m src/features/copilot/ai-copilot-interactions.test.tsx [2m([22m[2m61 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 4212[2mms[22m[39m
+     [32m✓[39m [T-1055] 编导输入区不显示引擎选择和重查控件[32m 259[2mms[22m[39m
+     [32m✓[39m [T-1055] CreatorOS 默认引擎不触发本地 Codex 检测[32m 16[2mms[22m[39m
+     [32m✓[39m [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport[32m 70[2mms[22m[39m
+     [32m✓[39m [T-1055] Codex 不可用时保留输入并指向真实设置卡[32m 81[2mms[22m[39m
+     [32m✓[39m 文章配图深链在已有会话仍预填，并提交可信文章与段落锚点[32m 21[2mms[22m[39m
+     [32m✓[39m [T-473] 深链/嵌入 functionKey 只消费一次，新命令到来才重新武装[32m 0[2mms[22m[39m
+     [32m✓[39m renders a CopilotHeader (page-specs §16 component tree)[32m 10[2mms[22m[39m
+     [32m✓[39m submit is disabled when empty, enabled after typing[32m 32[2mms[22m[39m
+     [32m✓[39m submitting calls sendMessage({text}) and clears the composer[32m 100[2mms[22m[39m
+     [32m✓[39m [T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送[32m 73[2mms[22m[39m
+     [32m✓[39m [T-233] Shift+Enter 也发送(宽容两种修饰键)[32m 48[2mms[22m[39m
+     [32m✓[39m shows a stop button (not submit) while streaming[32m 9[2mms[22m[39m
+     [32m✓[39m renders assistant text parts + a topic.generate candidate card, and 采纳 calls candidates.create[32m 30[2mms[22m[39m
+     [32m✓[39m 同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用[32m 32[2mms[22m[39m
+     [32m✓[39m [T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定[32m 36[2mms[22m[39m
+     [32m✓[39m slice 2:渲染 calibration.diagnose 工具结果为维度评分卡(只读展示)[32m 12[2mms[22m[39m
+     [32m✓[39m slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create[32m 21[2mms[22m[39m
+     [32m✓[39m [T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送[32m 12[2mms[22m[39m
+     [32m✓[39m [T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车)[32m 21[2mms[22m[39m
+     [32m✓[39m [T-623] embed.request without autoSend prefills the existing rail and waits for the user[32m 10[2mms[22m[39m
+     [32m✓[39m [T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束[32m 11[2mms[22m[39m
+     [32m✓[39m [T-716] 新稿面命令原子替换话术与段落锚点，不保留旧话术却暗换上下文[32m 42[2mms[22m[39m
+     [32m✓[39m [T-716] 已挂载的对话 transport 每轮都读最新段落锚点，不发送首帧旧上下文[32m 6[2mms[22m[39m
+     [33m[2m✓[22m[39m [T-716] 局部改稿失败保留段落锚点，成功后仍可围绕同一段连续修订 [33m 1211[2mms[22m[39m
+     [32m✓[39m [T-732] provider 失败后普通新消息不复用局部命令[32m 145[2mms[22m[39m
+     [32m✓[39m [T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段[32m 165[2mms[22m[39m
+     [32m✓[39m [T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断[32m 92[2mms[22m[39m
+     [32m✓[39m [T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢)[32m 4[2mms[22m[39m
+     [32m✓[39m clicking a suggested-action chip fills the composer with its label[32m 14[2mms[22m[39m
+     [32m✓[39m [T-231⑨] 带 prefill 的 chip → 预填完整话术(非 label),且**不自动发送**(T-055b)[32m 12[2mms[22m[39m
+     [32m✓[39m [T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户[32m 8[2mms[22m[39m
+     [32m✓[39m [T-1022] 模型断流沿原任务自动恢复[32m 5[2mms[22m[39m
+     [32m✓[39m [T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈[32m 16[2mms[22m[39m
+     [32m✓[39m [TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败[32m 7[2mms[22m[39m
+     [32m✓[39m [T-1023] 组件卸载后清理恢复计时器，不在后台继续发请求[32m 4[2mms[22m[39m
+     [32m✓[39m [T-957] 原任务结果未知时不显示重新提交按钮：CHAT_RESULT_UNCONFIRMED[32m 4[2mms[22m[39m
+     [32m✓[39m [T-957] 原任务结果未知时不显示重新提交按钮：本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。[32m 4[2mms[22m[39m
+     [32m✓[39m [T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试[32m 5[2mms[22m[39m
+     [32m✓[39m [T-913] 定位未完成 → 直达定位中心，不误导去模型设置[32m 4[2mms[22m[39m
+[31m     [31m×[31m [T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试[39m[33m 1025[2mms[22m[39m
+     [32m✓[39m [T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)[32m 14[2mms[22m[39m
+     [32m✓[39m [T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档[32m 17[2mms[22m[39m
+     [32m✓[39m [T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治)[32m 14[2mms[22m[39m
+     [32m✓[39m [T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖)[32m 26[2mms[22m[39m
+     [32m✓[39m [T-096 矩阵#9] 历史记录:点开 → listConversations 只列当前 scope;点某条 → 读回该会话消息[32m 45[2mms[22m[39m
+     [32m✓[39m 新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)[32m 27[2mms[22m[39m
+       [32m✓[39m 输入 @ → 懒加载真项目列表(client.listProjects)并弹出补全下拉[32m 52[2mms[22m[39m
+       [32m✓[39m @ 后接查询串 → 按标题过滤候选[32m 41[2mms[22m[39m
+       [32m✓[39m 选中某项目 → @query 不进消息正文 + 显式项目引用标签保留完整 ID/标题[32m 52[2mms[22m[39m
+       [32m✓[39m [T-055b gate-F2] URL 选中态 → 头部常驻 @项目 chip;点 × 摘除后不再注入[32m 24[2mms[22m[39m
+       [32m✓[39m [T-055b gate-F2] 无任何上下文 → 显式「未关联项目」空 chip,不静默[32m 8[2mms[22m[39m
+       [32m✓[39m 移除项目引用 chip → chip 消失(撤销注入)[32m 54[2mms[22m[39m
+       [32m✓[39m 库里没有项目 → 下拉显示诚实空态(引导先建项目,不摆假行)[32m 31[2mms[22m[39m
+       [32m✓[39m [T-976] 聊天未知结果不变成后台核对通知，其他创作任务仍可通知[32m 25[2mms[22m[39m
+       [32m✓[39m 首帧已是终态的历史任务不推通知(只播种)[32m 12[2mms[22m[39m
+       [32m✓[39m 在途任务跑完 → 推 succeeded 通知卡,点 × 可关闭[32m 35[2mms[22m[39m
+       [32m✓[39m 失败任务 → 通知诚实带原因[32m 22[2mms[22m[39m
+   [32m✓[39m 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈[32m 8[2mms[22m[39m
+   [32m✓[39m 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈[32m 8[2mms[22m[39m
+   [32m✓[39m 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈[32m 7[2mms[22m[39m
+   [32m✓[39m 慢任务读取超过轮询间隔时不叠加请求，返回结果仍能停止轮询[32m 11[2mms[22m[39m
+(node:34855) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m src/features/copilot/use-assistant-engine.test.tsx [2m([22m[2m18 tests[22m[2m)[22m[33m 2713[2mms[22m[39m
+(node:34856) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mWindows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mWindows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果
+[22m[39m[client-config] refresh=not-modified correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mWindows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_INVALID","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT-706 正式包未显式注入授权 origin 时复用官方授权服务默认值
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT-701/T-679 已签名 status 带 channelRef 后拉 bundle 与 activation_managed 子 Key
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT-679 不会为未登记的 activation_managed service 请求或保存子 Key
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mActivity/Growth exact response headers 漂移时 fail-closed
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_INVALID","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mActivity/Growth exact response headers 漂移时 fail-closed
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_INVALID","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m低版本与同版本不同 digest 隔离，历史密文保留但不激活
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_VERSION_DOWNGRADE","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m低版本与同版本不同 digest 隔离，历史密文保留但不激活
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_VERSION_COLLISION","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m304 仍核对签名 LKG 的版本、digest、keyId 与在线 correlation
+[22m[39m[client-config] refresh=not-modified correlation=cor_abcdef0123456789abcdef0123456789
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m304 遇到缓存 payload 与签名 bundle 不一致时隔离并使用本地
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_INVALID","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m明确无 extension 时保留历史渠道密文但切到本地
+[22m[39m[client-config] refresh=not-configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m网络/authority 不可用立即停用历史渠道密文并使用本地
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 目录200缺单项官方账户仍保存目录，固定existingOnly且不领Key
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 目录304缺单项官方账户仍保存目录，固定existingOnly且不领Key
+[22m[39m[client-config] refresh=not-modified correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 existingOnly 200 的真实409 bootstrap pending保签名目录与原操作、不provision，默认fresh仍v3
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 existingOnly 304 的真实409 bootstrap pending保签名目录与原操作、不provision，默认fresh仍v3
+[22m[39m[client-config] refresh=not-modified correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 pending非原pair AI_CREDIT_BOOTSTRAP_PENDING/401 不作为已知未就绪
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_ACCESS_DENIED","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 pending非原pair AI_CREDIT_BOOTSTRAP_PENDING/403 不作为已知未就绪
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_REMOTE_REJECTED","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 pending非原pair AI_CREDIT_BOOTSTRAP_PENDING/503 不作为已知未就绪
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 pending非原pair UNKNOWN_BOOTSTRAP_STATE/409 不作为已知未就绪
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_REMOTE_REJECTED","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 普通同机旧码仅签名422后以新nonce申请v2目录，paid fresh仍v3
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 licenseMode=TRIAL不推测普通旧码且不降级
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NOT_APPLICABLE","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 licenseMode=DEVICE_TRIAL不推测普通旧码且不降级
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NOT_APPLICABLE","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 licenseMode=undefined不推测普通旧码且不降级
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NOT_APPLICABLE","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 accountStatus 只由严格已验证wallet投影：真实账户余额0
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 accountStatus 只由严格已验证wallet投影：明确无账户
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 accountStatus 只由严格已验证wallet投影：旧响应无wallet
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 accountStatus 只由严格已验证wallet投影：假reference
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 accountStatus 只由严格已验证wallet投影：缺金额
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 accountStatus 只由严格已验证wallet投影：额外字段
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT1278 existingOnly404只证明无有效凭据，不能把token/目录或旧缓存猜成账户事实
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mT-733 试用不降级v2，v3不适用仍按未配置处理
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NOT_APPLICABLE","retryable":false}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2mActivity/Growth 明确撤权、过期或重放拒绝时禁止 LKG，且保存阻断态
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_ACCESS_REVOKED","retryable":false}
+
+[90mstderr[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m原生主密钥降级时拒绝创建普通文件缓存，且零出网
+[22m[39m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m真实文件 store 使用 AES-256-GCM 原子 LKG，密文不含产品配置明文
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m真实文件 store 使用 AES-256-GCM 原子 LKG，密文不含产品配置明文
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] refresh=not-modified correlation=cor_abcdef0123456789abcdef0123456789
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_UNAVAILABLE","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_INVALID","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_AUTHORITY_INVALID","retryable":true}
+
+[90mstdout[2m | src/server/activation/client-config.server.test.ts[2m > [22m[2mT-575 config.pull Creator consumer[2m > [22m[2m独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[22m[39m[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_INVALID","retryable":false}
+
+ [32m✓[39m src/server/activation/client-config.server.test.ts [2m([22m[2m76 tests[22m[2m)[22m[32m 220[2mms[22m[39m
+(node:34857) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m src/server/activation/ai-credit-link.server.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/features/copilot/ai-copilot-interactions.test.tsx[2m > [22mAI Copilot composer behavior (useChat-driven, T-004)[2m > [22m[T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试
+[31m[1mAssertionError[22m[39m: expected "Mock" to be called with arguments: [ …(2) ][90m
+
+Received:
+
+[1m  1st Mock call:
+
+[22m[2m  [[22m
+[2m    "/api/v1/local/ai-credits/connect",[22m
+[2m    {[22m
+[31m+     "cache": "no-store",[90m
+[2m      "headers": {},[22m
+[2m      "method": "POST",[22m
+[31m+     "redirect": "manual",[90m
+[31m+     "signal": AbortSignal {[90m
+[31m+       Symbol(kEvents): Map {},[90m
+[31m+       Symbol(events.maxEventTargetListeners): 0,[90m
+[31m+       Symbol(events.maxEventTargetListenersWarned): false,[90m
+[31m+       Symbol(kHandlers): Map {},[90m
+[31m+       Symbol(kAborted): false,[90m
+[31m+       Symbol(kReason): undefined,[90m
+[31m+       Symbol(kComposite): false,[90m
+[31m+     },[90m
+[2m    },[22m
+[2m  ][22m
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-subtle"[39m
+            [33mdata-slot[39m=[32m"context-chip-empty"[39m
+          [36m>[39m
+            [0m未关联项目 · 输入 @ 引用一个项目[0m
+          [36m</span>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"rounded-md border px-2.5 py-1 text-xs text-foreground hover:bg-surface-muted"[39m
+            [33mhref[39m=[32m"/canvases"[39m
+          [36m>[39m
+            [0m在画布中打开[0m
+          [36m</a>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex min-h-0 flex-1 flex-col gap-2"[39m
+          [33mdata-region[39m=[32m"prompt"[39m
+          [33mda...
+[36m [2m❯[22m src/features/copilot/ai-copilot-interactions.test.tsx:[2m1466:25[22m[39m
+    [90m1464|[39m
+    [90m1465|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m
+    [90m1466|[39m       [34mexpect[39m(fetchMock)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   |[39m                         [31m^[39m
+    [90m1467|[39m         [32m"/api/v1/local/ai-credits/connect"[39m[33m,[39m
+    [90m1468|[39m         { method[33m:[39m [32m"POST"[39m[33m,[39m headers[33m:[39m {} }[33m,[39m
+[90m [2m❯[22m runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:[2m47:12[22m[39m
+[90m [2m❯[22m checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:[2m124:77[22m[39m
+[90m [2m❯[22m Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:[2m118:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m301 passed[39m[22m[90m (302)[39m
+[2m   Start at [22m 23:07:10
+[2m   Duration [22m 107.87s[2m (transform 11.27s, setup 701ms, import 11.98s, tests 91.80s, environment 2.41s)[22m
+

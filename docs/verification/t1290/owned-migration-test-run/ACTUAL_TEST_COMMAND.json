@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "/opt/homebrew/bin/node",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/node_modules/vitest/vitest.mjs",
+    "run",
+    "src/legacy-source-migration.test.ts",
+    "src/legacy-scheduled-job-migration.test.ts",
+    "src/migration-convergence.test.ts",
+    "--config",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1290/owned-migration-test-run/vitest.owned.config.mjs",
+    "--retry=0",
+    "--maxWorkers=1",
+    "--testTimeout=180000",
+    "--hookTimeout=180000",
+    "--reporter=verbose"
+  ],
+  "cwd": "/Users/zyongzhu/Workbase/Thirdspace-creator/backend",
+  "retry": 0,
+  "maxWorkers": 1,
+  "bodyTimeout": 180000,
+  "hookTimeout": 180000,
+  "ownedCache": true
+}

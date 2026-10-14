@@ -1,0 +1,19 @@
+{"case":"fresh","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"main109","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"w110","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"w110-compatible-partial-table","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"w110-bad-column","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标columns不兼容"}
+{"case":"w110-missing-column","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标columns不兼容"}
+{"case":"w110-bad-constraint","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标constraints不兼容"}
+{"case":"w110-index-wrong-table","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_events_pending"}
+{"case":"w110-index-wrong-definition","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_events_pending"}
+{"case":"w110-view-collision","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_installation"}
+{"case":"w110-type-collision","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 0137未来目标关系不兼容 observability_installation"}
+{"case":"w111-recorded-bridge-missing-table","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 缺少已记账表 observability_installation"}
+{"case":"w110-unknown-hash","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留"}
+{"case":"w110-wrong-when","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留"}
+{"case":"w110-broken-prefix","status":"PROTOTYPE_NEGATIVE_VERIFIED","ledgerUnchanged":true,"actualError":"CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 0136向量身份缺真实0135前置回执"}
+{"case":"fresh-concurrent","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"main109-concurrent","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"case":"w110-concurrent","status":"PROTOTYPE_SUCCESS_VERIFIED","actualError":null}
+{"driver":"postgres","baselineRed":false,"cases":18,"failed":0,"output":"/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1290/canonical111-fixtures/postgres-public-result.json"}

@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-14T22:31:00.645622+08:00",
+  "head": "f74fdf8c069d097be8f3bd4f38ff7c992dc85f7e",
+  "mergeHead": "0b0913635c2910fdf488ee3b47dc95acd5d619b0",
+  "provenSourceFiles": 49,
+  "mainControlAndDocs": 31,
+  "remainingUnmerged": [
+    "ai-worker/src/runtime/codex-provider-json-output.public.test.ts",
+    "backend/drizzle/meta/_journal.json",
+    "backend/src/legacy-scheduled-job-migration.test.ts",
+    "backend/src/legacy-source-migration.test.ts",
+    "backend/src/migration-convergence.ts",
+    "backend/src/modules/execution/execution-video-visual-review.service.ts",
+    "backend/src/modules/execution/persistent-task.service.ts",
+    "contract/src/cli-policy.ts",
+    "contract/src/index.ts",
+    "contract/src/operations/settings.ts",
+    "contract/tests/endpoint-bootstrap.test.mjs",
+    "contract/tests/registry.test.ts",
+    "frontend/scripts/desktop/package.mjs",
+    "frontend/src/features/settings/settings-interactive-region.test.tsx",
+    "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+    "frontend/src/server/persistence-client.ts",
+    "frontend/tests/e2e/t1062-group-native-rough.spec.ts"
+  ]
+}

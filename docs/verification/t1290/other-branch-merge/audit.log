@@ -1,0 +1,13 @@
+{"name": "codex-ephemeral-sessions", "head": "196321a012299660e7ffcbe012ccc0cd2fd9c18a", "ancestorRHead": false, "sourceDeltaCount": 5, "counts": {"unproven-unique-source-review": 3, "exact-current-R": 2}}
+{"name": "codex-text-image", "head": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd", "ancestorRHead": false, "sourceDeltaCount": 213, "counts": {"exact-current-R": 137, "exact-Main0b-later-working-delta": 42, "exact-ancestor-blob-later-source": 26, "exact-RHEAD-later-working-delta": 2, "unproven-unique-source-review": 4, "exact-W03d-later-working-delta": 2}}
+{"name": "daily-client-observability", "head": "90f3a6f48f62961b0a6af3605b17f199c7589d1d", "ancestorRHead": false, "sourceDeltaCount": 288, "counts": {"exact-current-R": 204, "exact-Main0b-later-working-delta": 53, "exact-ancestor-blob-later-source": 23, "exact-W03d-later-working-delta": 2, "unproven-unique-source-review": 6}}
+{"name": "integrated-dev-acceptance", "head": "64ca6add4375820b346bc3b6ccc8cafa913daba5", "ancestorRHead": true, "sourceDeltaCount": 0, "counts": {}}
+{"name": "integrated-frontend-unit", "head": "533224f334c43cdb81a344424e420cad93784dd1", "ancestorRHead": true, "sourceDeltaCount": 0, "counts": {}}
+{"name": "integrated-unit-acceptance", "head": "533224f334c43cdb81a344424e420cad93784dd1", "ancestorRHead": true, "sourceDeltaCount": 0, "counts": {}}
+{"name": "t1062-client-integration", "head": "a091de271aed5185678da82d51baae0eb7025248", "ancestorRHead": true, "sourceDeltaCount": 0, "counts": {}}
+{"name": "t1255-client-writer", "head": "f54f184d395a049b247e81f263f42945ad15078f", "ancestorRHead": false, "sourceDeltaCount": 285, "counts": {"exact-current-R": 188, "exact-Main0b-later-working-delta": 51, "exact-ancestor-blob-later-source": 24, "exact-RHEAD-later-working-delta": 1, "unproven-unique-source-review": 19, "exact-W03d-later-working-delta": 2}}
+{"name": "t1273-release-hardening", "head": "c98e7a958cfa5395d8718310128513671fc51562", "ancestorRHead": false, "sourceDeltaCount": 31, "counts": {"exact-current-R": 28, "unproven-unique-source-review": 3}}
+{"name": "t1274-markdown", "head": "949ec229979ff1d89f359739df618e5ebacaf2d0", "ancestorRHead": false, "sourceDeltaCount": 14, "counts": {"exact-ancestor-blob-later-source": 3, "exact-current-R": 11}}
+{"name": "t1274-native-workspace", "head": "19a1d87cee486b157fa596b73395dd9bf68bbf2e", "ancestorRHead": false, "sourceDeltaCount": 401, "counts": {"exact-RHEAD-later-working-delta": 9, "exact-current-R": 392}}
+{"name": "wechat-stats-evidence", "head": "a3bc947d4bcb70be5c14f11ff56639a54b184b31", "ancestorRHead": true, "sourceDeltaCount": 0, "counts": {}}
+NEEDS_REVIEW 35

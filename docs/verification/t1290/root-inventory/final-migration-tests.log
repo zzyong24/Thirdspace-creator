@@ -1,0 +1,271 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.8 [39m[90m/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/backend[39m
+
+[90mstderr[2m | src/legacy-source-migration.test.ts[2m > [22m[2m0130身份missing-0128严格拒绝，原业务与迁移账本不修改
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 0130来源归属修复缺真实0128/0129前置回执)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+[90mstderr[2m | src/legacy-source-migration.test.ts[2m > [22m[2m0130身份missing-0129严格拒绝，原业务与迁移账本不修改
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 0130来源归属修复缺真实0128/0129前置回执)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+[90mstderr[2m | src/legacy-source-migration.test.ts[2m > [22m[2m0130身份wrong-0130-hash严格拒绝，原业务与迁移账本不修改
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+[90mstderr[2m | src/legacy-source-migration.test.ts[2m > [22m[2m0130身份future-when严格拒绝，原业务与迁移账本不修改
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [31m❯[39m src/legacy-source-migration.test.ts [2m([22m[2m31 tests[22m[2m | [22m[31m13 failed[39m[2m)[22m[33m 110673[2mms[22m[39m
+   [33m[2m✓[22m[39m 正常104升级仅修复可证明三来源NULL，所有内容/父归属/历史回执保真且双启不重放 [33m 11839[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源transfer不凭同名账号或不完整父链取得新归属 [33m 6208[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源return-with-history不凭同名账号或不完整父链取得新归属 [33m 6537[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源wrong-artifact-type不凭同名账号或不完整父链取得新归属 [33m 6864[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源wrong-artifact-project不凭同名账号或不完整父链取得新归属 [33m 6595[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源wrong-artifact-output不凭同名账号或不完整父链取得新归属 [33m 6523[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源foreign-artifact-user不凭同名账号或不完整父链取得新归属 [33m 6063[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源foreign-artifact-account不凭同名账号或不完整父链取得新归属 [33m 6074[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源conflicting-output-group不凭同名账号或不完整父链取得新归属 [33m 6081[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源null-output-group不凭同名账号或不完整父链取得新归属 [33m 5994[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源null-project-group不凭同名账号或不完整父链取得新归属 [33m 5989[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源archived-account不凭同名账号或不完整父链取得新归属 [33m 5804[2mms[22m[39m
+   [33m[2m✓[22m[39m 旧来源archived-group不凭同名账号或不完整父链取得新归属 [33m 6010[2mms[22m[39m
+   [32m✓[39m 0130SQL身份及当前111尾精确追加，旧104 journal及历史迁移固定不漂移[32m 2[2mms[22m[39m
+[31m   [31m×[31m 真实PG原article owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放[39m[32m 3[2mms[22m[39m
+[31m   [31m×[31m 真实PG原graphic owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG旧来源ROW EXCLUSIVE阻新DDL时，异常回滚释放组锁，新提交来源被最终重采[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG显式归组持真实组/父/来源行锁时，0130退让后沿最新父归属保真[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG错误DDL-first锁序与原article服务形成实际40P01（诊断反例）[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG错误DDL-first锁序与原graphic服务形成实际40P01（诊断反例）[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG错误DDL-first锁序与原group-migration服务形成实际40P01（诊断反例）[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG原membership freeze后转组完成，0130重采真实历史并保持旧NULL来源[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG0130成功轮持锁时，原项目INSERT被阻止；回滚诊断后正常迁移含真实新父[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG来源行锁冲突整轮释放；原事务提交后正常迁移重新盖章[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG整轮退让中取消，旧数据与104账本保持；再次正常升级可完成[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG两原归组服务反向参数a-first，与0130竞争仍正确串行[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实PG两原归组服务反向参数b-first，与0130竞争仍正确串行[39m[32m 0[2mms[22m[39m
+   [33m[2m✓[22m[39m 0130身份missing-0128严格拒绝，原业务与迁移账本不修改 [33m 5719[2mms[22m[39m
+   [33m[2m✓[22m[39m 0130身份missing-0129严格拒绝，原业务与迁移账本不修改 [33m 6316[2mms[22m[39m
+   [33m[2m✓[22m[39m 0130身份wrong-0130-hash严格拒绝，原业务与迁移账本不修改 [33m 6058[2mms[22m[39m
+   [33m[2m✓[22m[39m 0130身份future-when严格拒绝，原业务与迁移账本不修改 [33m 5992[2mms[22m[39m
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝unknown且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝future且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 未知hash/时间或未来迁移，原库保留)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝common-hole且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 共同历史不是完整前缀)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝supplemental-hole且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: 已知补充历史不是完整前缀)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+[90mstderr[2m | src/migration-convergence.test.ts[2m > [22m[2m补充兼容仍拒绝schema-drift且零旧数据/回执改写
+[22m[39m[db] PGlite 迁移阶段失败(Error: CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: 未知columns model_configurations.unexplained_legacy_flag)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ [31m❯[39m src/migration-convergence.test.ts [2m([22m[2m28 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[33m 121916[2mms[22m[39m
+   [33m[2m✓[22m[39m FK引用的独立唯一索引与partial predicate保留，约束自有唯一索引排除 [33m 548[2mms[22m[39m
+   [33m[2m✓[22m[39m 完整fresh原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持 [33m 9332[2mms[22m[39m
+   [33m[2m✓[22m[39m 完整root原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持 [33m 12015[2mms[22m[39m
+   [33m[2m✓[22m[39m 完整diagnostic原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持 [33m 11700[2mms[22m[39m
+   [33m[2m✓[22m[39m 完整canvas原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持 [33m 10645[2mms[22m[39m
+[31m   [31m×[31m 真实隔离PostgreSQL fresh双启/完整恢复/冻结历史/相同catalog[39m[32m 4[2mms[22m[39m
+[31m   [31m×[31m 真实隔离PostgreSQL root双启/完整恢复/冻结历史/相同catalog[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实隔离PostgreSQL diagnostic双启/完整恢复/冻结历史/相同catalog[39m[32m 0[2mms[22m[39m
+[31m   [31m×[31m 真实隔离PostgreSQL canvas双启/完整恢复/冻结历史/相同catalog[39m[32m 0[2mms[22m[39m
+   [33m[2m✓[22m[39m 新account=NULL组回执按group唯一，历史account非NULL撞键完整保留 [33m 2613[2mms[22m[39m
+   [33m[2m✓[22m[39m 已执行历史all subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆 [33m 10925[2mms[22m[39m
+   [33m[2m✓[22m[39m 已执行历史keyring subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆 [33m 10859[2mms[22m[39m
+   [33m[2m✓[22m[39m 已执行历史workbench subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆 [33m 10411[2mms[22m[39m
+   [33m[2m✓[22m[39m 已执行历史external subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆 [33m 11056[2mms[22m[39m
+   [33m[2m✓[22m[39m 全新库保持现行凭证结构，不因兼容旧安装而带入未执行的legacy字段 [33m 3039[2mms[22m[39m
+   [33m[2m✓[22m[39m 补充兼容仍拒绝unknown且零旧数据/回执改写 [33m 2443[2mms[22m[39m
+   [33m[2m✓[22m[39m 补充兼容仍拒绝future且零旧数据/回执改写 [33m 2378[2mms[22m[39m
+   [33m[2m✓[22m[39m 补充兼容仍拒绝common-hole且零旧数据/回执改写 [33m 2357[2mms[22m[39m
+   [33m[2m✓[22m[39m 补充兼容仍拒绝supplemental-hole且零旧数据/回执改写 [33m 2299[2mms[22m[39m
+   [33m[2m✓[22m[39m 补充兼容仍拒绝schema-drift且零旧数据/回执改写 [33m 2589[2mms[22m[39m
+   [33m[2m✓[22m[39m 补充冻结SQL或journal损坏时拒绝，不接受仅身份白名单 [33m 588[2mms[22m[39m
+   [33m[2m✓[22m[39m T1279 新0135必须有真实回执且偏好列完整，旧设置与任务不迁写 [33m 2692[2mms[22m[39m
+   [33m[2m✓[22m[39m T1279 已记账0135但偏好列损坏不得宣称已准备 [33m 2770[2mms[22m[39m
+   [33m[2m✓[22m[39m T1110迁移后必须有真实0131回执，旧完整前缀不得冒充新runtime已准备 [33m 2609[2mms[22m[39m
+   [33m[2m✓[22m[39m T1238迁移后必须有真实0133回执与列，旧完整前缀不得宣称偏好已准备 [33m 2722[2mms[22m[39m
+   [33m[2m✓[22m[39m T1278 0136向量身份nullable，必须有真实回执且旧向量不改写 [33m 2589[2mms[22m[39m
+   [33m[2m✓[22m[39m T1278 已记账0136却缺embedding_identity列拒绝，不伪造重建 [33m 2726[2mms[22m[39m
+   [32m✓[39m T1278 canonical111完整固定journal与ordered SQL receipts，原110 prefix及bridge身份不漂移[32m 5[2mms[22m[39m
+[90mstdout[2m | src/legacy-scheduled-job-migration.test.ts[2m > [22m[2mT1209归档account补元数据但保留原权限规则
+[22m[39m[scheduler] job old-self.metrics 跳过:账号 legacy-account status=archived(非 active,已隐藏/归档)→ 定时采集跳过
+
+ [31m❯[39m src/legacy-scheduled-job-migration.test.ts [2m([22m[2m17 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 94653[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209旧106库先复现真实runNow409，正常开库补版本后四类私有任务可入队，保原ID排期历史及幂等 [33m 11657[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209旧作业正常开库后真实定时driver经持久任务/AI/执行准入，重复tick不再创建 [33m 5963[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209归档group补元数据但保留原权限规则 [33m 6003[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209归档account补元数据但保留原权限规则 [33m 6075[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明wrong-user不补版本，也不重签旧任务 [33m 5892[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明wrong-group不补版本，也不重签旧任务 [33m 6009[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明moved-back不补版本，也不重签旧任务 [33m 5875[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明history-with-v1不补版本，也不重签旧任务 [33m 5774[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明foreign-history-with-v1不补版本，也不重签旧任务 [33m 5760[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明wrong-version不补版本，也不重签旧任务 [33m 5880[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明wrong-group-version不补版本，也不重签旧任务 [33m 5741[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明missing-account不补版本，也不重签旧任务 [33m 5779[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明pure-group不补版本，也不重签旧任务 [33m 5779[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209缺完整初始证明no-member不补版本，也不重签旧任务 [33m 5796[2mms[22m[39m
+   [33m[2m✓[22m[39m T1209旧105库补尾，新作业和legacy共享作业沿原公共运行合同，旧执行冻结值不动 [33m 6664[2mms[22m[39m
+[31m   [31m×[31m T1209真实PG转组先持锁，正常迁移退让后重读；未来私有作业v2、旧历史不改[39m[32m 3[2mms[22m[39m
+[31m   [31m×[31m T1209真实PG迁移先持锁，转组真实等待；提交后原服务转组v2且重开幂等[39m[32m 0[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 19 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209真实PG转组先持锁，正常迁移退让后重读；未来私有作业v2、旧历史不改
+[31m[1mError[22m: 真实并发验收必须显式指定隔离PG[39m
+[36m [2m❯[22m pgFixture src/legacy-scheduled-job-migration.test.ts:[2m147:66[22m[39m
+
+[90m [2m❯[22m src/legacy-scheduled-job-migration.test.ts:[2m157:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-scheduled-job-migration.test.ts[2m > [22mT1209真实PG迁移先持锁，转组真实等待；提交后原服务转组v2且重开幂等
+[31m[1mError[22m: 真实并发验收必须显式指定隔离PG[39m
+[36m [2m❯[22m pgFixture src/legacy-scheduled-job-migration.test.ts:[2m147:66[22m[39m
+
+[90m [2m❯[22m src/legacy-scheduled-job-migration.test.ts:[2m167:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG原article owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG原graphic owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m164:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG旧来源ROW EXCLUSIVE阻新DDL时，异常回滚释放组锁，新提交来源被最终重采
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m181:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG显式归组持真实组/父/来源行锁时，0130退让后沿最新父归属保真
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m196:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG错误DDL-first锁序与原article服务形成实际40P01（诊断反例）
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG错误DDL-first锁序与原graphic服务形成实际40P01（诊断反例）
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG错误DDL-first锁序与原group-migration服务形成实际40P01（诊断反例）
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m220:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG原membership freeze后转组完成，0130重采真实历史并保持旧NULL来源
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m243:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG0130成功轮持锁时，原项目INSERT被阻止；回滚诊断后正常迁移含真实新父
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m259:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG来源行锁冲突整轮释放；原事务提交后正常迁移重新盖章
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m274:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG整轮退让中取消，旧数据与104账本保持；再次正常升级可完成
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m285:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG两原归组服务反向参数a-first，与0130竞争仍正确串行
+[41m[1m FAIL [22m[49m src/legacy-source-migration.test.ts[2m > [22m真实PG两原归组服务反向参数b-first，与0130竞争仍正确串行
+[31m[1mError[22m: T1089必须显式配置独立PG，不得skip后宣称并发通过[39m
+[36m [2m❯[22m pgFixture src/legacy-source-migration.test.ts:[2m125:29[22m[39m
+    [90m123|[39m [35masync[39m [35mfunction[39m [34mpgFixture[39m(){
+    [90m124|[39m  [35mconst[39m connectionString[33m=[39mprocess[33m.[39menv[33m.[39m[33mCREATOROS_TEST_POSTGRES_URL[39m[33m;[39m
+    [90m125|[39m  [35mif[39m([33m![39mconnectionString)[35mthrow[39m [33mError[39m([32m'T1089必须显式配置独立PG，不得skip后宣称并发通过'[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m126|[39m  const parsed=new URL(connectionString);assertOwnedPostgresUrl(parsed.…
+    [90m127|[39m  const name='t1089_'+randomUUID().replaceAll('-',''),admin=new Pool({c…
+[90m [2m❯[22m src/legacy-source-migration.test.ts:[2m303:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/migration-convergence.test.ts[2m > [22m真实隔离PostgreSQL fresh双启/完整恢复/冻结历史/相同catalog
+[41m[1m FAIL [22m[49m src/migration-convergence.test.ts[2m > [22m真实隔离PostgreSQL root双启/完整恢复/冻结历史/相同catalog
+[41m[1m FAIL [22m[49m src/migration-convergence.test.ts[2m > [22m真实隔离PostgreSQL diagnostic双启/完整恢复/冻结历史/相同catalog
+[41m[1m FAIL [22m[49m src/migration-convergence.test.ts[2m > [22m真实隔离PostgreSQL canvas双启/完整恢复/冻结历史/相同catalog
+[31m[1mError[22m: T1246_ENV_NOT_OWNED_PG: 缺少本轮 marker/nonce[39m
+[36m [2m❯[22m fail src/test-fixtures/owned-postgres.ts:[2m9:42[22m[39m
+
+[90m [2m❯[22m readOwnedPostgresMarker src/test-fixtures/owned-postgres.ts:[2m20:52[22m[39m
+[90m [2m❯[22m assertOwnedPostgresUrl src/test-fixtures/owned-postgres.ts:[2m41:40[22m[39m
+[90m [2m❯[22m src/migration-convergence.test.ts:[2m97:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/19]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m19 failed[39m[22m[2m | [22m[1m[32m57 passed[39m[22m[90m (76)[39m
+[2m   Start at [22m 23:07:10
+[2m   Duration [22m 333.74s[2m (transform 3.31s, setup 0ms, import 6.08s, tests 327.24s, environment 0ms)[22m
+

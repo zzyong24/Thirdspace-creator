@@ -1,0 +1,213 @@
+Auto-merging BACKLOG.md
+CONFLICT (content): Merge conflict in BACKLOG.md
+Auto-merging PROJECT.md
+CONFLICT (content): Merge conflict in PROJECT.md
+Auto-merging ai-worker/src/execution/asset-worker-run.ts
+CONFLICT (content): Merge conflict in ai-worker/src/execution/asset-worker-run.ts
+Auto-merging ai-worker/src/execution/chat-worker-run.ts
+CONFLICT (content): Merge conflict in ai-worker/src/execution/chat-worker-run.ts
+Auto-merging ai-worker/src/execution/codex-image-generation.ts
+CONFLICT (add/add): Merge conflict in ai-worker/src/execution/codex-image-generation.ts
+Auto-merging ai-worker/src/execution/codex-status-entry.ts
+CONFLICT (content): Merge conflict in ai-worker/src/execution/codex-status-entry.ts
+Auto-merging ai-worker/src/execution/external-chat-tools.ts
+CONFLICT (add/add): Merge conflict in ai-worker/src/execution/external-chat-tools.ts
+Auto-merging ai-worker/src/execution/external-chat-worker-run.ts
+CONFLICT (content): Merge conflict in ai-worker/src/execution/external-chat-worker-run.ts
+Auto-merging ai-worker/src/execution/worker-entry.ts
+Auto-merging ai-worker/src/execution/worker-runtime.ts
+Auto-merging ai-worker/src/runtime/codex-provider-json-output.public.test.ts
+CONFLICT (add/add): Merge conflict in ai-worker/src/runtime/codex-provider-json-output.public.test.ts
+Auto-merging backend/drizzle/meta/_journal.json
+CONFLICT (content): Merge conflict in backend/drizzle/meta/_journal.json
+Auto-merging backend/src/application/generation/codex-runtime-freeze.test.ts
+CONFLICT (add/add): Merge conflict in backend/src/application/generation/codex-runtime-freeze.test.ts
+Auto-merging backend/src/application/generation/transactional-task-runtime.ts
+CONFLICT (content): Merge conflict in backend/src/application/generation/transactional-task-runtime.ts
+Auto-merging backend/src/legacy-scheduled-job-migration.test.ts
+CONFLICT (content): Merge conflict in backend/src/legacy-scheduled-job-migration.test.ts
+Auto-merging backend/src/legacy-source-migration.test.ts
+CONFLICT (content): Merge conflict in backend/src/legacy-source-migration.test.ts
+Auto-merging backend/src/migration-convergence.test.ts
+CONFLICT (content): Merge conflict in backend/src/migration-convergence.test.ts
+Auto-merging backend/src/migration-convergence.ts
+CONFLICT (content): Merge conflict in backend/src/migration-convergence.ts
+Auto-merging backend/src/modules/ai-runtime/index.ts
+Auto-merging backend/src/modules/ai-runtime/video-decisions-business-adapter.ts
+CONFLICT (content): Merge conflict in backend/src/modules/ai-runtime/video-decisions-business-adapter.ts
+Auto-merging backend/src/modules/ai/ai-task-commit.ts
+CONFLICT (content): Merge conflict in backend/src/modules/ai/ai-task-commit.ts
+Auto-merging backend/src/modules/ai/ai.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/ai/ai.service.ts
+Auto-merging backend/src/modules/ai/chat-turn-submission.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/ai/chat-turn-submission.service.ts
+Auto-merging backend/src/modules/execution/chat-generation-recovery.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/chat-generation-recovery.ts
+Auto-merging backend/src/modules/execution/codex-read-recovery.ts
+CONFLICT (add/add): Merge conflict in backend/src/modules/execution/codex-read-recovery.ts
+Auto-merging backend/src/modules/execution/execution-asset-ports.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-asset-ports.service.ts
+Auto-merging backend/src/modules/execution/execution-asset-result.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-asset-result.service.ts
+Auto-merging backend/src/modules/execution/execution-authority.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-authority.service.ts
+Auto-merging backend/src/modules/execution/execution-chat-generation.service.ts
+Auto-merging backend/src/modules/execution/execution-chat-model-identity.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-chat-model-identity.service.ts
+Auto-merging backend/src/modules/execution/execution-codex-call.service.ts
+CONFLICT (add/add): Merge conflict in backend/src/modules/execution/execution-codex-call.service.ts
+Auto-merging backend/src/modules/execution/execution-flywheel-generation.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-flywheel-generation.service.ts
+Auto-merging backend/src/modules/execution/execution-model-identity.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-model-identity.service.ts
+Auto-merging backend/src/modules/execution/execution-scheduled-child.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-scheduled-child.service.ts
+Auto-merging backend/src/modules/execution/execution-transcribe-postprocess.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-transcribe-postprocess.service.ts
+Auto-merging backend/src/modules/execution/execution-video-visual-review.service.ts
+CONFLICT (add/add): Merge conflict in backend/src/modules/execution/execution-video-visual-review.service.ts
+Auto-merging backend/src/modules/execution/execution-video.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/execution-video.service.ts
+Auto-merging backend/src/modules/execution/index.ts
+Auto-merging backend/src/modules/execution/model-call-recovery.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/model-call-recovery.ts
+Auto-merging backend/src/modules/execution/model-worker-dispatcher.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/model-worker-dispatcher.ts
+Auto-merging backend/src/modules/execution/persistent-task.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/persistent-task.service.ts
+Auto-merging backend/src/modules/intelligence/intelligence-generation-bridge.ts
+CONFLICT (content): Merge conflict in backend/src/modules/intelligence/intelligence-generation-bridge.ts
+Auto-merging backend/src/modules/intelligence/intelligence.service.ts
+Auto-merging backend/src/modules/settings/index.ts
+Auto-merging backend/src/modules/settings/settings.repository.ts
+Auto-merging backend/src/modules/settings/settings.service.test.ts
+CONFLICT (content): Merge conflict in backend/src/modules/settings/settings.service.test.ts
+Auto-merging backend/src/modules/settings/settings.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/settings/settings.service.ts
+Auto-merging backend/src/modules/settings/settings.transport.ts
+Auto-merging backend/src/schema/settings.ts
+CONFLICT (content): Merge conflict in backend/src/schema/settings.ts
+Auto-merging contract/src/cli-policy.ts
+CONFLICT (content): Merge conflict in contract/src/cli-policy.ts
+Auto-merging contract/src/index.ts
+CONFLICT (content): Merge conflict in contract/src/index.ts
+Auto-merging contract/src/internal/asset-generation.ts
+CONFLICT (content): Merge conflict in contract/src/internal/asset-generation.ts
+Auto-merging contract/src/internal/execution-engine.ts
+CONFLICT (content): Merge conflict in contract/src/internal/execution-engine.ts
+Auto-merging contract/src/internal/local-codex-status.ts
+CONFLICT (content): Merge conflict in contract/src/internal/local-codex-status.ts
+Auto-merging contract/src/operations/settings.ts
+CONFLICT (content): Merge conflict in contract/src/operations/settings.ts
+Auto-merging contract/src/resources/settings.ts
+Auto-merging contract/src/resources/work-editor.ts
+Auto-merging contract/src/workspace-operation-scope.ts
+Auto-merging contract/tests/endpoint-bootstrap.test.mjs
+CONFLICT (content): Merge conflict in contract/tests/endpoint-bootstrap.test.mjs
+Auto-merging contract/tests/registry.test.ts
+CONFLICT (content): Merge conflict in contract/tests/registry.test.ts
+Auto-merging docs/features/t1097-article-director-options-diagnosis.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1097-article-director-options-diagnosis.review.md
+Auto-merging docs/features/t1204-current-reconcile-failures.md
+CONFLICT (content): Merge conflict in docs/features/t1204-current-reconcile-failures.md
+Auto-merging docs/features/t1246-integrated-dev-package-acceptance.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1246-integrated-dev-package-acceptance.review.md
+Auto-merging docs/features/t1247-timeout-git-inventory-buffer.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1247-timeout-git-inventory-buffer.review.md
+Auto-merging docs/features/t1248-frozen-system-action-compatibility.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1248-frozen-system-action-compatibility.review.md
+Auto-merging docs/features/t1249-durable-chat-current-receipts.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1249-durable-chat-current-receipts.review.md
+Auto-merging docs/features/t1250-positive-timeout-consumer-closure.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1250-positive-timeout-consumer-closure.review.md
+Auto-merging docs/features/t1251-chat-generation-failure-and-fixture-closure.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1251-chat-generation-failure-and-fixture-closure.review.md
+Auto-merging docs/features/t1252-cli-http-consumer-budget-closure.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1252-cli-http-consumer-budget-closure.review.md
+Auto-merging docs/features/t1253-worker-fixture-receipt-and-unknown-closure.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1253-worker-fixture-receipt-and-unknown-closure.review.md
+Auto-merging docs/features/t1254-doocs-request-budget-and-source-closure.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1254-doocs-request-budget-and-source-closure.review.md
+Auto-merging docs/features/t1256-doocs-static-unused-bindings-build-closure.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1256-doocs-static-unused-bindings-build-closure.review.md
+Auto-merging docs/features/t1261-runtime-acceptance-defect-closure.review.md
+CONFLICT (add/add): Merge conflict in docs/features/t1261-runtime-acceptance-defect-closure.review.md
+Auto-merging frontend/scripts/desktop/package.mjs
+CONFLICT (content): Merge conflict in frontend/scripts/desktop/package.mjs
+Auto-merging frontend/src/features/copilot/ai-copilot-content.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/copilot/ai-copilot-content.tsx
+Auto-merging frontend/src/features/copilot/ai-copilot-interactions.test.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/copilot/ai-copilot-interactions.test.tsx
+Auto-merging frontend/src/features/copilot/assistant-engine-selector.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/copilot/assistant-engine-selector.tsx
+Auto-merging frontend/src/features/copilot/assistant-engine.ts
+CONFLICT (content): Merge conflict in frontend/src/features/copilot/assistant-engine.ts
+Auto-merging frontend/src/features/copilot/chat-work-editor-card.tsx
+Auto-merging frontend/src/features/copilot/use-assistant-engine.test.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/copilot/use-assistant-engine.test.tsx
+Auto-merging frontend/src/features/copilot/use-assistant-engine.ts
+CONFLICT (content): Merge conflict in frontend/src/features/copilot/use-assistant-engine.ts
+Auto-merging frontend/src/features/settings/assistant-engine-card.test.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/settings/assistant-engine-card.test.tsx
+Auto-merging frontend/src/features/settings/assistant-engine-card.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/settings/assistant-engine-card.tsx
+Auto-merging frontend/src/features/settings/multimodal-model-configuration.tsx
+Auto-merging frontend/src/features/settings/settings-interactive-region.test.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/settings/settings-interactive-region.test.tsx
+Auto-merging frontend/src/features/settings/settings-interactive-region.tsx
+Auto-merging frontend/src/features/settings/settings-model-region.codex.test.tsx
+CONFLICT (add/add): Merge conflict in frontend/src/features/settings/settings-model-region.codex.test.tsx
+Auto-merging frontend/src/features/settings/settings-model-region.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/settings/settings-model-region.tsx
+Auto-merging frontend/src/features/settings/settings-page.test.tsx
+CONFLICT (content): Merge conflict in frontend/src/features/settings/settings-page.test.tsx
+Auto-merging frontend/src/features/settings/settings-page.tsx
+Auto-merging frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx
+CONFLICT (content): Merge conflict in frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx
+Auto-merging frontend/src/server/legacy-frozen-source-read.integration.test.ts
+CONFLICT (content): Merge conflict in frontend/src/server/legacy-frozen-source-read.integration.test.ts
+Auto-merging frontend/src/server/persistence-client.ts
+CONFLICT (content): Merge conflict in frontend/src/server/persistence-client.ts
+Auto-merging frontend/src/server/prepare-chat-reply.ts
+CONFLICT (content): Merge conflict in frontend/src/server/prepare-chat-reply.ts
+Auto-merging frontend/tests/e2e/automations-run-now-public.spec.ts
+CONFLICT (add/add): Merge conflict in frontend/tests/e2e/automations-run-now-public.spec.ts
+Auto-merging frontend/tests/e2e/group-skill-customization.spec.ts
+CONFLICT (add/add): Merge conflict in frontend/tests/e2e/group-skill-customization.spec.ts
+Auto-merging frontend/tests/e2e/t1062-group-native-rough.spec.ts
+CONFLICT (content): Merge conflict in frontend/tests/e2e/t1062-group-native-rough.spec.ts
+Auto-merging orchestrator/.lessons-stats.json
+CONFLICT (content): Merge conflict in orchestrator/.lessons-stats.json
+Auto-merging orchestrator/ARTIFACT_MANIFEST.yaml
+Auto-merging orchestrator/DECISION_LOG.md
+CONFLICT (content): Merge conflict in orchestrator/DECISION_LOG.md
+Auto-merging orchestrator/context/T-1246.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1246.md
+Auto-merging orchestrator/context/T-1247.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1247.md
+Auto-merging orchestrator/context/T-1248.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1248.md
+Auto-merging orchestrator/context/T-1249.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1249.md
+Auto-merging orchestrator/context/T-1250.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1250.md
+Auto-merging orchestrator/context/T-1251.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1251.md
+Auto-merging orchestrator/context/T-1252.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1252.md
+Auto-merging orchestrator/context/T-1253.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1253.md
+Auto-merging orchestrator/context/T-1254.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1254.md
+Auto-merging orchestrator/context/T-1261.md
+CONFLICT (add/add): Merge conflict in orchestrator/context/T-1261.md
+Auto-merging orchestrator/events.ndjson
+CONFLICT (content): Merge conflict in orchestrator/events.ndjson
+Auto-merging orchestrator/process/modules.config.json
+CONFLICT (content): Merge conflict in orchestrator/process/modules.config.json
+Auto-merging orchestrator/progress.json
+CONFLICT (content): Merge conflict in orchestrator/progress.json
+Auto-merging orchestrator/review-events.ndjson
+CONFLICT (content): Merge conflict in orchestrator/review-events.ndjson
+Auto-merging pnpm-lock.yaml
+Automatic merge failed; fix conflicts and then commit the result.

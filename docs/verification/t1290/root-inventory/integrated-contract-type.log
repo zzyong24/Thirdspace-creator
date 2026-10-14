@@ -1,0 +1,11 @@
+
+> @creatoros/contract@0.4.0 typecheck /Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/contract
+> tsc --noEmit
+
+src/resources/work-editor.ts(1,9): error TS2300: Duplicate identifier 'writingContext'.
+src/resources/work-editor.ts(1,24): error TS2300: Duplicate identifier 'resolvedWritingContext'.
+src/resources/work-editor.ts(3,9): error TS2300: Duplicate identifier 'writingContext'.
+src/resources/work-editor.ts(3,24): error TS2300: Duplicate identifier 'resolvedWritingContext'.
+/Users/zyongzhu/.codex/worktrees/unified-editing-integration/Thirdspace-creator/contract:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/contract@0.4.0 typecheck: `tsc --noEmit`
+Exit status 2

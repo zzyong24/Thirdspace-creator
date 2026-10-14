@@ -1,0 +1,7 @@
+Auto-merging ai-worker/src/execution/codex-acp-policy.test.ts
+CONFLICT (content): Merge conflict in ai-worker/src/execution/codex-acp-policy.test.ts
+Auto-merging ai-worker/src/execution/codex-app-server.ts
+Auto-merging ai-worker/src/execution/codex-native-turn.test.ts
+CONFLICT (content): Merge conflict in ai-worker/src/execution/codex-native-turn.test.ts
+Automatic merge failed; fix conflicts and then commit the result.
+[codex/unified-editing-integration f66be69d4] merge: 纳入已核对工作树 196321a01229 的完整历史

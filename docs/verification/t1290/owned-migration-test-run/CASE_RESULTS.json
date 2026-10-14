@@ -1,0 +1,469 @@
+{
+  "total": 76,
+  "passed": 76,
+  "failed": 0,
+  "files": {
+    "src/legacy-source-migration.test.ts": 31,
+    "src/migration-convergence.test.ts": 28,
+    "src/legacy-scheduled-job-migration.test.ts": 17
+  },
+  "pgNamedCases": 19,
+  "cases": [
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "正常104升级仅修复可证明三来源NULL，所有内容/父归属/历史回执保真且双启不重放",
+      "milliseconds": 10838
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源transfer不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 5626
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源return-with-history不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 5970
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源wrong-artifact-type不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 6044
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源wrong-artifact-project不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 5945
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源wrong-artifact-output不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 5955
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源foreign-artifact-user不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 6452
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源foreign-artifact-account不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 6237
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源conflicting-output-group不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 6090
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源null-output-group不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 5656
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源null-project-group不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 5744
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源archived-account不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 5829
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "旧来源archived-group不凭同名账号或不完整父链取得新归属",
+      "milliseconds": 6011
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "0130SQL身份及当前111尾精确追加，旧104 journal及历史迁移固定不漂移",
+      "milliseconds": 2
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG原article owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放",
+      "milliseconds": 4900
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG原graphic owner持项目UPDATE后，新迁移整轮退让并保留原创建/重放",
+      "milliseconds": 4483
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG旧来源ROW EXCLUSIVE阻新DDL时，异常回滚释放组锁，新提交来源被最终重采",
+      "milliseconds": 4189
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG显式归组持真实组/父/来源行锁时，0130退让后沿最新父归属保真",
+      "milliseconds": 8442
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG错误DDL-first锁序与原article服务形成实际40P01（诊断反例）",
+      "milliseconds": 2646
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG错误DDL-first锁序与原graphic服务形成实际40P01（诊断反例）",
+      "milliseconds": 2628
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG错误DDL-first锁序与原group-migration服务形成实际40P01（诊断反例）",
+      "milliseconds": 6839
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG原membership freeze后转组完成，0130重采真实历史并保持旧NULL来源",
+      "milliseconds": 4903
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG0130成功轮持锁时，原项目INSERT被阻止；回滚诊断后正常迁移含真实新父",
+      "milliseconds": 4389
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG来源行锁冲突整轮释放；原事务提交后正常迁移重新盖章",
+      "milliseconds": 4422
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG整轮退让中取消，旧数据与104账本保持；再次正常升级可完成",
+      "milliseconds": 6461
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG两原归组服务反向参数a-first，与0130竞争仍正确串行",
+      "milliseconds": 10310
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "真实PG两原归组服务反向参数b-first，与0130竞争仍正确串行",
+      "milliseconds": 10012
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "0130身份missing-0128严格拒绝，原业务与迁移账本不修改",
+      "milliseconds": 6109
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "0130身份missing-0129严格拒绝，原业务与迁移账本不修改",
+      "milliseconds": 5872
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "0130身份wrong-0130-hash严格拒绝，原业务与迁移账本不修改",
+      "milliseconds": 5771
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-source-migration.test.ts",
+      "case": "0130身份future-when严格拒绝，原业务与迁移账本不修改",
+      "milliseconds": 5801
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "FK引用的独立唯一索引与partial predicate保留，约束自有唯一索引排除",
+      "milliseconds": 585
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "完整fresh原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持",
+      "milliseconds": 9042
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "完整root原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持",
+      "milliseconds": 11512
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "完整diagnostic原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持",
+      "milliseconds": 11213
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "完整canvas原账本 public createDb 双启，旧ID/digest/storage/history/全量catalog保持",
+      "milliseconds": 10241
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "真实隔离PostgreSQL fresh双启/完整恢复/冻结历史/相同catalog",
+      "milliseconds": 4866
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "真实隔离PostgreSQL root双启/完整恢复/冻结历史/相同catalog",
+      "milliseconds": 20320
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "真实隔离PostgreSQL diagnostic双启/完整恢复/冻结历史/相同catalog",
+      "milliseconds": 25255
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "真实隔离PostgreSQL canvas双启/完整恢复/冻结历史/相同catalog",
+      "milliseconds": 19638
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "新account=NULL组回执按group唯一，历史account非NULL撞键完整保留",
+      "milliseconds": 2554
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "已执行历史all subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆",
+      "milliseconds": 10542
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "已执行历史keyring subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆",
+      "milliseconds": 10222
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "已执行历史workbench subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆",
+      "milliseconds": 9417
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "已执行历史external subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆",
+      "milliseconds": 10329
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "全新库保持现行凭证结构，不因兼容旧安装而带入未执行的legacy字段",
+      "milliseconds": 2535
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "补充兼容仍拒绝unknown且零旧数据/回执改写",
+      "milliseconds": 2131
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "补充兼容仍拒绝future且零旧数据/回执改写",
+      "milliseconds": 2140
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "补充兼容仍拒绝common-hole且零旧数据/回执改写",
+      "milliseconds": 2142
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "补充兼容仍拒绝supplemental-hole且零旧数据/回执改写",
+      "milliseconds": 2139
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "补充兼容仍拒绝schema-drift且零旧数据/回执改写",
+      "milliseconds": 2348
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "补充冻结SQL或journal损坏时拒绝，不接受仅身份白名单",
+      "milliseconds": 545
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "T1279 新0135必须有真实回执且偏好列完整，旧设置与任务不迁写",
+      "milliseconds": 2789
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "T1279 已记账0135但偏好列损坏不得宣称已准备",
+      "milliseconds": 2754
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "T1110迁移后必须有真实0131回执，旧完整前缀不得冒充新runtime已准备",
+      "milliseconds": 2557
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "T1238迁移后必须有真实0133回执与列，旧完整前缀不得宣称偏好已准备",
+      "milliseconds": 2570
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "T1278 0136向量身份nullable，必须有真实回执且旧向量不改写",
+      "milliseconds": 2572
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "T1278 已记账0136却缺embedding_identity列拒绝，不伪造重建",
+      "milliseconds": 2755
+    },
+    {
+      "status": "PASS",
+      "file": "src/migration-convergence.test.ts",
+      "case": "T1278 canonical111完整固定journal与ordered SQL receipts，原110 prefix及bridge身份不漂移",
+      "milliseconds": 5
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209旧106库先复现真实runNow409，正常开库补版本后四类私有任务可入队，保原ID排期历史及幂等",
+      "milliseconds": 11890
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209旧作业正常开库后真实定时driver经持久任务/AI/执行准入，重复tick不再创建",
+      "milliseconds": 5811
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209归档group补元数据但保留原权限规则",
+      "milliseconds": 5785
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209归档account补元数据但保留原权限规则",
+      "milliseconds": 5643
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明wrong-user不补版本，也不重签旧任务",
+      "milliseconds": 5626
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明wrong-group不补版本，也不重签旧任务",
+      "milliseconds": 5838
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明moved-back不补版本，也不重签旧任务",
+      "milliseconds": 5491
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明history-with-v1不补版本，也不重签旧任务",
+      "milliseconds": 5691
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明foreign-history-with-v1不补版本，也不重签旧任务",
+      "milliseconds": 5467
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明wrong-version不补版本，也不重签旧任务",
+      "milliseconds": 5453
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明wrong-group-version不补版本，也不重签旧任务",
+      "milliseconds": 5607
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明missing-account不补版本，也不重签旧任务",
+      "milliseconds": 5489
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明pure-group不补版本，也不重签旧任务",
+      "milliseconds": 5648
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209缺完整初始证明no-member不补版本，也不重签旧任务",
+      "milliseconds": 5469
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209旧105库补尾，新作业和legacy共享作业沿原公共运行合同，旧执行冻结值不动",
+      "milliseconds": 6302
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209真实PG转组先持锁，正常迁移退让后重读；未来私有作业v2、旧历史不改",
+      "milliseconds": 4594
+    },
+    {
+      "status": "PASS",
+      "file": "src/legacy-scheduled-job-migration.test.ts",
+      "case": "T1209真实PG迁移先持锁，转组真实等待；提交后原服务转组v2且重开幂等",
+      "milliseconds": 4262
+    }
+  ]
+}

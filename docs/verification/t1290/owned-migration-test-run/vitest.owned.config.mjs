@@ -1,0 +1,2 @@
+import original from "/Users/zyongzhu/Workbase/Thirdspace-creator/backend/vitest.config.ts";
+export default {...original,root:"/Users/zyongzhu/Workbase/Thirdspace-creator/backend",cacheDir:"/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1290/owned-migration-test-run/vite-cache",test:{...original.test,cache:{dir:"/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1290/owned-migration-test-run/vitest-cache"},retry:0,maxWorkers:1,fileParallelism:false,testTimeout:180000,hookTimeout:180000}};

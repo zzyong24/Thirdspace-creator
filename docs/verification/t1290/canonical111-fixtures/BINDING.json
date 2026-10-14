@@ -1,0 +1,27 @@
+{
+  "status": "PREPARED_NOT_RUN",
+  "rHead": "f74fdf8c069d097be8f3bd4f38ff7c992dc85f7e",
+  "rMergeHead": "0b0913635c2910fdf488ee3b47dc95acd5d619b0",
+  "rStage2Base": {
+    "backend/src/legacy-source-migration.test.ts": "0ddf24dde409074fc2e8b7a671ddcef908281a056d72a9c0988a39afe84f05d2",
+    "backend/src/legacy-scheduled-job-migration.test.ts": "078e3935c296e5fd52ef9f1ac63a6f78887a19a3a4f67aad7462997cbca337ce",
+    "backend/src/migration-convergence.test.ts": "dd06d97e92e3fec354c1c915fb2603e27c7cf61610299304208a4ade2f57b7cc",
+    "frontend/src/server/legacy-frozen-source-read.integration.test.ts": "aebf537900bd6015f5897bcb76d9ffd654b5a82c67e73d5055c8ba48bf15a18f"
+  },
+  "wHead": "03d60d39c899c08f15c6cebee3d2516079c45a74",
+  "canonicalEntries": 111,
+  "journalSha256": "d72d1f1b459d5d35695ac6671d49bf8959551d09ebe647972163f82a4dea69eb",
+  "orderedReceiptsCompactJsonSha256": "78c9c4af5305a709cd9fdab6367cd9e3a0b0dd6dacd51b97470e20b6b2d585af",
+  "orderedReceiptsFileSha256": "a33b8d8c0af2eeb6c3dde25eebb91e308934aaa7abb125f2724b44eced9ae4bc",
+  "bridgeSqlSha256": "d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494",
+  "candidateFiles": {
+    "backend/src/legacy-source-migration.test.ts": "aa7cc782acdd0b8cdeaa05c94633a767f9ac9232041435c39083f4c3e0d3abe0",
+    "backend/src/legacy-scheduled-job-migration.test.ts": "fcb04e20e731463a49aefb1084682281922242d9cae715b99187a07ec5e095f6",
+    "backend/src/migration-convergence.test.ts": "1f7635f0047dcc7a8c8fd6cd6a1de8d7f21c7718dd3c7d4bdecce5690ea8e95d",
+    "frontend/src/server/legacy-frozen-source-read.integration.test.ts": "971c19280a2a0913fd053ef9274402a2ad92c71701bca5b9190f904fe84cf348"
+  },
+  "patchSha256": "996963567b583107b1d03b270758d54b63d22bdd8a30717df6cbac0d6838265c",
+  "frontendInventoryRecheck": "T1286独立recheck待Root；不按本准备签PASS",
+  "tests": "NOT-RUN;R source still being serially merged",
+  "productionWrites": 0
+}

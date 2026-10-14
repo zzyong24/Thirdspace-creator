@@ -1,0 +1,46 @@
+Auto-merging backend/drizzle/meta/_journal.json
+CONFLICT (content): Merge conflict in backend/drizzle/meta/_journal.json
+Auto-merging backend/src/migration-convergence.ts
+CONFLICT (content): Merge conflict in backend/src/migration-convergence.ts
+Auto-merging backend/src/modules/execution/persistent-task.service.ts
+CONFLICT (content): Merge conflict in backend/src/modules/execution/persistent-task.service.ts
+Auto-merging backend/src/modules/observability/collector.test.ts
+CONFLICT (add/add): Merge conflict in backend/src/modules/observability/collector.test.ts
+Auto-merging backend/src/modules/observability/collector.ts
+CONFLICT (add/add): Merge conflict in backend/src/modules/observability/collector.ts
+Auto-merging backend/src/modules/settings/index.ts
+Auto-merging backend/src/modules/settings/settings.transport.ts
+Auto-merging contract/src/cli-policy.ts
+CONFLICT (content): Merge conflict in contract/src/cli-policy.ts
+Auto-merging contract/src/index.ts
+CONFLICT (content): Merge conflict in contract/src/index.ts
+Auto-merging contract/src/observability.ts
+CONFLICT (add/add): Merge conflict in contract/src/observability.ts
+Auto-merging contract/src/operations/settings.ts
+CONFLICT (content): Merge conflict in contract/src/operations/settings.ts
+Auto-merging contract/src/workspace-operation-scope.ts
+Auto-merging frontend/src-tauri/src/lib.rs
+CONFLICT (content): Merge conflict in frontend/src-tauri/src/lib.rs
+Auto-merging frontend/src/app/api/v1/local/observability/route.test.ts
+CONFLICT (add/add): Merge conflict in frontend/src/app/api/v1/local/observability/route.test.ts
+Auto-merging frontend/src/app/api/v1/local/observability/route.ts
+CONFLICT (add/add): Merge conflict in frontend/src/app/api/v1/local/observability/route.ts
+Auto-merging frontend/src/features/settings/encrypted-log-reporting-card.tsx
+CONFLICT (add/add): Merge conflict in frontend/src/features/settings/encrypted-log-reporting-card.tsx
+Auto-merging frontend/src/features/settings/settings-interactive-region.tsx
+Auto-merging frontend/src/lib/observability-client.test.ts
+CONFLICT (add/add): Merge conflict in frontend/src/lib/observability-client.test.ts
+Auto-merging frontend/src/lib/observability-client.ts
+CONFLICT (add/add): Merge conflict in frontend/src/lib/observability-client.ts
+Auto-merging frontend/src/server/feedback/encrypted-log-upload.server.test.ts
+CONFLICT (add/add): Merge conflict in frontend/src/server/feedback/encrypted-log-upload.server.test.ts
+Auto-merging frontend/src/server/feedback/encrypted-log-upload.server.ts
+CONFLICT (add/add): Merge conflict in frontend/src/server/feedback/encrypted-log-upload.server.ts
+Auto-merging frontend/src/server/observability-host.server.test.ts
+CONFLICT (add/add): Merge conflict in frontend/src/server/observability-host.server.test.ts
+Auto-merging frontend/src/server/observability-host.server.ts
+CONFLICT (add/add): Merge conflict in frontend/src/server/observability-host.server.ts
+Auto-merging frontend/src/server/persistence-client.ts
+CONFLICT (content): Merge conflict in frontend/src/server/persistence-client.ts
+Automatic merge failed; fix conflicts and then commit the result.
+[codex/unified-editing-integration a0a555bd7] merge: 纳入已核对工作树 f54f184d395a 的完整历史

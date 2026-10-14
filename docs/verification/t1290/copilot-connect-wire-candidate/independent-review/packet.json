@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T1286第三轮recheck，原第二轮e988ff219888 findings空；当前SPEC e3168028b3fc4c86d6d6a1cf23d38a679d345f0c4b0e7fb77522dba58bd06a6c全文保留原111段，仅补原已准入Copilot的一条wire断言。独立读取七文件真实301P1F/exit1，唯一T715真实POST+空headers已带MC1278-OPEN批准的no-store/manual/原AbortSignal；对照正式合同及原已审07候选，不以当前code批准新字段。完整candidate逐字等原文件唯一行替换，SHAabbe2c64...；只添加cache:no-store、redirect:manual与expect.any(AbortSignal)，仍完整exact对象，无objectContaining，原method/headers/无body/URL/native打开/充值非配置/无重试/安全与其它所有测试字节保持。不改产品、不扩大三测试写集、不动原111/432回执。原FAIL及未发生的事前review/TDD保持；候选尚未应用，受影响原测试文件/前端类型由Root现场复跑，不把旧301P代新302PASS。仅evidence写，不控面、不网络/模型/钱/App，未发现本补充范围待修finding。",
+  "findings": []
+}

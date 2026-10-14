@@ -1,0 +1,74 @@
+[
+  {
+    "path": "BACKLOG.md",
+    "mainWorkingSha256": "b329114753e877723bd967181e7a4747880ff355da6fe58edd202757b00035e9",
+    "integrationSha256": "b329114753e877723bd967181e7a4747880ff355da6fe58edd202757b00035e9",
+    "identical": true
+  },
+  {
+    "path": "docs/features/t1278-unified-license-capability-routing.T-1278.review.md",
+    "mainWorkingSha256": "9a0cd00a1b2b6491471e531c4444f9b2315593607651d77cff5256d9f7afcec7",
+    "integrationSha256": "9a0cd00a1b2b6491471e531c4444f9b2315593607651d77cff5256d9f7afcec7",
+    "identical": true
+  },
+  {
+    "path": "docs/features/t1286-model-routing-frontend-fixtures.T-1286.review.md",
+    "mainWorkingSha256": "6645a775d2807dc1c1901ca595d342c2535e2f8746be0165c328e4ddb363ccec",
+    "integrationSha256": "6645a775d2807dc1c1901ca595d342c2535e2f8746be0165c328e4ddb363ccec",
+    "identical": true
+  },
+  {
+    "path": "docs/features/t1286-model-routing-frontend-fixtures.md",
+    "mainWorkingSha256": "f73998737ed0b93ac983e378768de51f3ba2169fe9519c7c21f271fafa8bf897",
+    "integrationSha256": "f73998737ed0b93ac983e378768de51f3ba2169fe9519c7c21f271fafa8bf897",
+    "identical": true
+  },
+  {
+    "path": "docs/features/t1288-integrated-editing-contract-inventory.T-1288.review.md",
+    "mainWorkingSha256": "4f17d8c2c7c302ecaab76446f992748404fcf3ecdc951a9d1febe21f02724623",
+    "integrationSha256": "4f17d8c2c7c302ecaab76446f992748404fcf3ecdc951a9d1febe21f02724623",
+    "identical": true
+  },
+  {
+    "path": "docs/features/t1288-integrated-editing-contract-inventory.md",
+    "mainWorkingSha256": "8aeeaffc194fe1069499aeb42cb18397a152fb01c7397ca2898021c0e5c1d867",
+    "integrationSha256": "8aeeaffc194fe1069499aeb42cb18397a152fb01c7397ca2898021c0e5c1d867",
+    "identical": true
+  },
+  {
+    "path": "docs/features/t1289-native-build-graph-virtual-module.md",
+    "mainWorkingSha256": "935e77df595186e7449fa5d876528491c89a41359cf16416da2dafe4c5847094",
+    "integrationSha256": "935e77df595186e7449fa5d876528491c89a41359cf16416da2dafe4c5847094",
+    "identical": true
+  },
+  {
+    "path": "orchestrator/context/T-1278.md",
+    "mainWorkingSha256": "825da8e6cd8c6879c990e19c52612cac2d44b18e29d09853ada1ef3293cfa3fa",
+    "integrationSha256": "825da8e6cd8c6879c990e19c52612cac2d44b18e29d09853ada1ef3293cfa3fa",
+    "identical": true
+  },
+  {
+    "path": "orchestrator/events.ndjson",
+    "mainWorkingSha256": "60849d54e9f4c90e942911bb28775f26b50ea7f71cf5bffc761368dd15b891d8",
+    "integrationSha256": "60849d54e9f4c90e942911bb28775f26b50ea7f71cf5bffc761368dd15b891d8",
+    "identical": true
+  },
+  {
+    "path": "orchestrator/process/modules.config.json",
+    "mainWorkingSha256": "534eca077a30a3a8377367dc5e4f53420f1af731a8037e5d94a60e5d9d7edea8",
+    "integrationSha256": "534eca077a30a3a8377367dc5e4f53420f1af731a8037e5d94a60e5d9d7edea8",
+    "identical": true
+  },
+  {
+    "path": "orchestrator/progress.json",
+    "mainWorkingSha256": "e018c0834f2d38f0a28de1c66091ba56d80019067d5e74839281023555a8f1ce",
+    "integrationSha256": "e018c0834f2d38f0a28de1c66091ba56d80019067d5e74839281023555a8f1ce",
+    "identical": true
+  },
+  {
+    "path": "orchestrator/review-events.ndjson",
+    "mainWorkingSha256": "1dd3526cdfd26e309c7ed90e1142bd41dedde4e98a5a5d0977b97e9050c6bd97",
+    "integrationSha256": "1dd3526cdfd26e309c7ed90e1142bd41dedde4e98a5a5d0977b97e9050c6bd97",
+    "identical": true
+  }
+]

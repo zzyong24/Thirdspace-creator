@@ -1,0 +1,21 @@
+{
+  "identity": {
+    "rHead": "f74fdf8c069d097be8f3bd4f38ff7c992dc85f7e",
+    "rMergeHead": "0b0913635c2910fdf488ee3b47dc95acd5d619b0",
+    "unmergedCount": 0,
+    "productionWrites": 0,
+    "gitWrites": 0,
+    "tests": "NOT-RUN"
+  },
+  "sha256": {
+    "REPORT.md": "cc4fe7418c8b44d3ed0308c241bb71ba374bec05473c3c17214ac31e782dd988",
+    "SOURCE_AUDIT.json": "5922a84a9ae381216c932678321bab86d91e3c3e2b54dd65ccae73c903a5ab75",
+    "MERGE_PROBES.json": "f3bade0b65368845692f0e15ae7181daf7e4c5a74aeb7e5562d15c4e5beb2484",
+    "NEEDS_REVIEW.json": "b258e5178323b382963e1c7367122f98808d9ba1dc432cefc758f3d424380b54",
+    "RESOLUTION_GUIDANCE.json": "2a854eac409788be8c44881f8f116829eb8be809b2125ec4837448b2692525be",
+    "audit-readonly.py": "0a5dd00a74a57fd73f6594e691bd7f73ae38d28ae75f0982f664847785e18ff4",
+    "probe-readonly.py": "cd0fcc9276c6f0d965fda7f0963d9b7d9e7a734901a9645e254d6c6276e9d10a",
+    "audit.log": "03b7fe7ce2bac35792b91fe5f79dfceeeeaa2135fa71174b731c4d19c58ed907",
+    "probe.log": "1b7abe817ef7524fdbab2db4db2caf40f1fc10a5873888fad52e401a2c2490f1"
+  }
+}

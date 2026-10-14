@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-14T22:37:28.858923+08:00",
+  "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/.git/info/exclude",
+  "previousSha256": "d2ca388c53b195bb5495ffa18137944074fe0d7fc10fcadf05c5fad58401697f",
+  "newSha256": "9219517fb21204c6a8fd5c77dfdf9bd9ece669530a54dedced4bb9239a33a87a",
+  "localOnlyExcludedPaths": [
+    "/docs/verification/",
+    "/orchestrator/probes/"
+  ],
+  "reason": "仅本地原始验收产物/派生源码副本/数据库/缓存不作为待合入生产代码；需要的独立评审/结论/日志摘要将逐个force-add提交。未改产品.gitignore、未删除证据或源代码。所有正式source/test/build目录不排除。",
+  "deleted": 0
+}
