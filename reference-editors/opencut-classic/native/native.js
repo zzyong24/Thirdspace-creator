@@ -80062,13 +80062,13 @@ function sJA({
 function DJA({
   onToggleFullscreen: g
 }) {
-  return /* @__PURE__ */ w.jsxs("div", { className: "grid grid-cols-[1fr_auto_1fr] items-center pb-3 pt-5 px-5", children: [
+  return /* @__PURE__ */ w.jsxs("div", { role: "group", "aria-label": "画面播放控制", className: "native-preview-toolbar grid grid-cols-[1fr_auto_1fr] items-center pb-3 pt-5 px-5", children: [
     /* @__PURE__ */ w.jsx(cJA, {}),
     /* @__PURE__ */ w.jsx(wJA, {}),
     /* @__PURE__ */ w.jsxs("div", { className: "justify-self-end flex items-center gap-2.5", children: [
       /* @__PURE__ */ w.jsx(nJA, {}),
       /* @__PURE__ */ w.jsx(Hc, { orientation: "vertical", className: "h-4" }),
-      /* @__PURE__ */ w.jsx(Ig, { variant: "text", onClick: g, children: /* @__PURE__ */ w.jsx(wA, { icon: baA }) })
+      /* @__PURE__ */ w.jsx(Ig, { variant: "text", size: "icon", "aria-label": "切换全屏", onClick: g, children: /* @__PURE__ */ w.jsx(wA, { icon: baA }) })
     ] })
   ] });
 }
@@ -80130,6 +80130,7 @@ function wJA() {
     Ig,
     {
       variant: "text",
+      "aria-label": g ? "暂停" : "播放",
       size: "icon",
       onClick: () => qC("toggle-play"),
       children: /* @__PURE__ */ w.jsx(wA, { icon: g ? _aA : AsA })
@@ -80164,7 +80165,7 @@ function Ef({
     "div",
     {
       ref: e,
-      className: "panel bg-background relative flex size-full min-h-0 min-w-0 flex-col rounded-sm border",
+      className: "native-preview-panel panel bg-background relative flex size-full min-h-0 min-w-0 flex-col rounded-sm border",
       children: [
         /* @__PURE__ */ w.jsx(
           hJA,

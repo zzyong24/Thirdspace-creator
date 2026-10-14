@@ -66,6 +66,7 @@
     "apps/web/src/media/upload-toast.ts",
     "apps/web/src/media/use-paste-media.ts",
     "apps/web/src/preview/components/index.tsx",
+    "apps/web/src/preview/components/toolbar.tsx",
     "apps/web/src/preview/preview-store.ts",
     "apps/web/src/selection/hooks/use-box-select.ts",
     "apps/web/src/selection/selectable-item.tsx",
@@ -168,6 +169,14 @@
   "t1274PreservedMissingMediaChangedFiles": [
     "apps/web/src/embedded/preview-scene.ts",
     "apps/web/src/embedded/__tests__/native-preview.test.ts",
+    "README.creatoros.md",
+    "NATIVE_REBUILD_CONSISTENCY.json"
+  ],
+  "t1274ToolbarFitChangedFiles": [
+    "apps/web/scripts/build-native.mjs",
+    "apps/web/src/embedded/native.css",
+    "apps/web/src/preview/components/index.tsx",
+    "apps/web/src/preview/components/toolbar.tsx",
     "README.creatoros.md",
     "NATIVE_REBUILD_CONSISTENCY.json"
   ]
