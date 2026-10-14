@@ -1,0 +1,50 @@
+{
+  "scope": "第三轮仅single画面按真实画幅与可视高度限高；不改Core/render；桌面高度保持",
+  "sourceFiles": 715,
+  "changedSourceMembers": [
+    "./NATIVE_REBUILD_CONSISTENCY.json",
+    "./README.creatoros.md",
+    "./apps/web/src/embedded/editor-layout.tsx"
+  ],
+  "tests": {
+    "pass": 71,
+    "fail": 0,
+    "assertions": 341,
+    "log": "regression.log"
+  },
+  "domFixture": {
+    "checks": 58,
+    "pass": true,
+    "log": "responsive-dom.log"
+  },
+  "realChromiumGeometry": {
+    "productionNative": true,
+    "redSingleMainHeight": 516.453125,
+    "greenSingleMainHeight": 273.375,
+    "greenSingleCanvas": "358 × 201.375",
+    "cases": [
+      "1000 compact unchanged",
+      "390×844 actual viewport single",
+      "390 timeline full height",
+      "1000 restore unchanged",
+      "CSS zoom2 logical600 main522",
+      "1280 wide unchanged",
+      "390×844 portrait 9:16",
+      "390×844 square 1:1"
+    ],
+    "all8Pass": true,
+    "canvasAndDraftIdentityPreserved": true,
+    "pageErrors": 0,
+    "log": "green-geometry.log"
+  },
+  "typecheckExitCode": 0,
+  "processAST": "PASS",
+  "productionBuildExitCode": 0,
+  "sourcePatchFuzz": 0,
+  "archiveSourceAndBothPublishedSevenOutputsBytesMatch": true,
+  "fixturePublished": false,
+  "fullCreatorOSHost": "本子候选未跑，由ROOT整合宿主复验",
+  "realMediaExport": "本子候选未跑；不代签ROOT旧真实媒体证据",
+  "independentVisualScore": "未评分；已看390/zoom2/portrait真实Chromium截图",
+  "privateExactCacheControllerAndRendererBytesUnchanged": true
+}
