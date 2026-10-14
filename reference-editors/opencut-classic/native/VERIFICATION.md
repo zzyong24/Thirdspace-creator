@@ -1,3 +1,11 @@
+# T-1274 单面板画面与播放控件紧邻
+
+2026-10-14第三轮必需修正：ROOT实际390图画面垂直居中，播放控件出屏。仅single画面改为按工程真实canvasSize宽高比计算展示高度，画面最高占可视高度42%（换算CSS zoom），保留原72px播放栏/留白。其它single面板继续占满；compact/wide不变；未修改实际工程画幅、Core或渲染。
+
+真实Chromium生产native小型宿主：旧main516.45px RED→实际390×844下main273.38px、canvas358×201.38，控件紧邻；zoom2 main522px、canvas672×378；9:16与1:1真实比例保留且main426.47px。8场景全过，compact267.72px、wide292.22px与上轮一致，原canvas/草稿实例保持。已看390、zoom2和竖屏截图；黑画布为空工程，不冒充真实媒体预览。完整CreatorOS宿主由ROOT继续复验。
+
+原71测试341断言、58DOM、类型/AST及715源F0复原、七份归档重建与双目录逐字节一致再次通过。证据verification/t1274-responsive-fit，旧失败/历史说明保留如下。
+
 # T-1274 响应式实际几何闭包
 
 2026-10-14后续：ROOT真实1280/200%图发现预览只剩约74px、时间轴下方空白。真实Chromium加载生产native小型shadow宿主复现main72px RED，原因是style.flex空简写清掉Resizable内部flexGrow/flexBasis。改用独立长属性覆盖并沿原值恢复；窄布局不回写宽屏分栏比例。断点改用ResizeObserver.contentRect与首帧clientWidth的CSS像素，避免zoom2将逻辑600误判为1200宽屏。

@@ -1,0 +1,152 @@
+{
+  "evidence": [
+    {
+      "name": "compact",
+      "mode": "compact",
+      "view": "preview",
+      "workspace": {
+        "width": 1000,
+        "height": 603.203125,
+        "top": 36.796875,
+        "bottom": 640,
+        "display": "flex",
+        "flexGrow": "0",
+        "flexBasis": "auto",
+        "logicalWidth": 1000
+      },
+      "vertical": {
+        "width": 1000,
+        "height": 554.203125,
+        "top": 85.796875,
+        "bottom": 640,
+        "display": "flex",
+        "flexGrow": "1",
+        "flexBasis": "0%",
+        "logicalWidth": 1000
+      },
+      "main": {
+        "width": 1000,
+        "height": 267.71875,
+        "top": 85.796875,
+        "bottom": 353.515625,
+        "display": "block",
+        "flexGrow": "50",
+        "flexBasis": "0px",
+        "logicalWidth": 1000
+      },
+      "preview": {
+        "width": 976,
+        "height": 267.71875,
+        "top": 85.796875,
+        "bottom": 353.515625,
+        "display": "block",
+        "flexGrow": "1",
+        "flexBasis": "0px",
+        "logicalWidth": 976
+      },
+      "canvas": {
+        "width": 347.9375,
+        "height": 195.71875,
+        "top": 93.796875,
+        "bottom": 289.515625,
+        "display": "block",
+        "flexGrow": "0",
+        "flexBasis": "auto",
+        "logicalWidth": 348
+      },
+      "timeline": {
+        "width": 1000,
+        "height": 279.734375,
+        "top": 360.265625,
+        "bottom": 640,
+        "display": "block",
+        "flexGrow": "50",
+        "flexBasis": "0px",
+        "logicalWidth": 1000
+      }
+    },
+    {
+      "name": "single",
+      "mode": "single",
+      "view": "preview",
+      "workspace": {
+        "width": 390,
+        "height": 603.203125,
+        "top": 36.796875,
+        "bottom": 640,
+        "display": "flex",
+        "flexGrow": "0",
+        "flexBasis": "auto",
+        "logicalWidth": 390
+      },
+      "vertical": {
+        "width": 390,
+        "height": 516.453125,
+        "top": 123.546875,
+        "bottom": 640,
+        "display": "flex",
+        "flexGrow": "1",
+        "flexBasis": "0%",
+        "logicalWidth": 390
+      },
+      "main": {
+        "width": 390,
+        "height": 516.453125,
+        "top": 123.546875,
+        "bottom": 640,
+        "display": "block",
+        "flexGrow": "1",
+        "flexBasis": "0px",
+        "logicalWidth": 390
+      },
+      "preview": {
+        "width": 374,
+        "height": 516.453125,
+        "top": 123.546875,
+        "bottom": 640,
+        "display": "block",
+        "flexGrow": "1",
+        "flexBasis": "0px",
+        "logicalWidth": 374
+      },
+      "canvas": {
+        "width": 358,
+        "height": 201.375,
+        "top": 253.078125,
+        "bottom": 454.453125,
+        "display": "block",
+        "flexGrow": "0",
+        "flexBasis": "auto",
+        "logicalWidth": 358
+      },
+      "timeline": {
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "bottom": 0,
+        "display": "none",
+        "flexGrow": "1",
+        "flexBasis": "0px",
+        "logicalWidth": 0
+      }
+    }
+  ],
+  "errors": []
+}
+ExpectError: expect(received).toBeLessThan(expected)
+
+Expected: < 300
+Received:   516.453125
+    at captureRawStack (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:3130:17)
+    at callMatcherAsStep (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12873:57)
+    at Object.toBeLessThan (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12863:23)
+    at /private/tmp/t1274-native-fit-proof/geometry.cjs:13:445 {
+  matcherResult: {
+    message: 'expect(received).toBeLessThan(expected)\n' +
+      '\n' +
+      'Expected: < 300\n' +
+      'Received:   516.453125',
+    pass: false,
+    name: 'toBeLessThan'
+  }
+}
