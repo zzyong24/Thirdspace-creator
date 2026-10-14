@@ -41,3 +41,7 @@ flowchart LR
  C --> D[真实产品失败交主任务修复]
  D --> E[全量回归与精确合入]
 ```
+
+## 用户全worktree合并后的固定111库存复核
+
+用户已确认MC1278迁移桥及全部worktree并main；旧W110/原三测试81PASS和初轮51972证据原样保留。正式合并canonical保W110所有旧SQL/journal/真实回执前缀并新增0137 idx110、when1791043200010，Main旧109升级真实112、W旧110升级111、新库111。frontend原legacy测试只精确绑定111完整journal及全部SQL/ordered receipts SHA，原旧104前缀/Worker/归属/坏hash断言不减；不得动态last或冒Main112。具体固定库存与最小候选见docs/verification/t1290/canonical111-fixtures/{sql-inventory111.json,ordered-receipts111.json,01-fixed111-tests.candidate.diff}；backend三测试属T1278/1290准确已审路径，此叶只原frontendlegacy文件库存复核，需独立recheck后串行接入与实际原三测试/类型。

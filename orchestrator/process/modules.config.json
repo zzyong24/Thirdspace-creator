@@ -364,7 +364,10 @@
         "backend/src/modules/execution/execution-asr-ports.service.test.ts",
         "backend/src/modules/production/production-asset-asr.integration.test.ts",
         "backend/src/modules/intelligence/intelligence.service.test.ts",
-        "backend/src/modules/intelligence/radar-project-queue.service.test.ts"
+        "backend/src/modules/intelligence/radar-project-queue.service.test.ts",
+        "frontend/src/lib/open-ai-credit-center.ts",
+        "backend/drizzle/0134_client_observability.sql",
+        "backend/drizzle/0137_observability_routing_convergence.sql"
       ],
       "isolated_from": [
         "T1246冻结64ca源码、开发包和历史测试事实保持",
@@ -13042,6 +13045,52 @@
           "git diff --check",
           "pnpm -C frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs --retry=0",
           "pnpm -C frontend desktop:package-local"
+        ]
+      }
+    },
+    "T-1289": {
+      "task_id": "T-1289",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1289-native-build-graph-virtual-module.md",
+        "docs/verification/t1289/**",
+        "reference-editors/opencut-classic/native/**"
+      ],
+      "write_set": [
+        "reference-editors/opencut-classic/native/native-source.tar.gz",
+        "reference-editors/opencut-classic/native/native-from-t1046.patch",
+        "reference-editors/opencut-classic/native/SOURCE_CHANGES.json",
+        "reference-editors/opencut-classic/native/README.md",
+        "reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+        "reference-editors/opencut-classic/native/DELIVERY.json",
+        "reference-editors/opencut-classic/native/SHA256SUMS",
+        "reference-editors/opencut-classic/native/VERIFICATION.md",
+        "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+        "docs/features/t1289-native-build-graph-virtual-module.md",
+        "docs/features/t1289-native-build-graph-virtual-module.T-1289.review.md",
+        "docs/verification/t1289/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1289.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/ARTIFACT_MANIFEST.yaml"
+      ],
+      "isolated_from": [
+        "机械build graph identity/必要元数据，六runtime不变，715source/F0保持",
+        "不改旧validator或虚构模块；旧额外门FAIL另T1291",
+        "Root串行，模型/用户库/资金/Activity0"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "python3 docs/verification/t1290/root-inventory/verify-native-candidate-installed.py"
         ]
       }
     }

@@ -46,7 +46,10 @@
         "orchestrator/progress.json",
         "orchestrator/context/T-1278.md",
         "orchestrator/events.ndjson",
-        "orchestrator/review-events.ndjson"
+        "orchestrator/review-events.ndjson",
+        "frontend/src/lib/open-ai-credit-center.ts",
+        "backend/drizzle/0134_client_observability.sql",
+        "backend/drizzle/0137_observability_routing_convergence.sql"
       ],
       "exclusive_resources": [],
       "step_depends_on": {},
@@ -10085,6 +10088,57 @@
         ]
       },
       "id": "T-1290",
+      "blocked_reason": null
+    },
+    {
+      "task_id": "T-1289",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1289-native-build-graph-virtual-module.md",
+        "docs/verification/t1289/**",
+        "reference-editors/opencut-classic/native/**"
+      ],
+      "write_set": [
+        "reference-editors/opencut-classic/native/native-source.tar.gz",
+        "reference-editors/opencut-classic/native/native-from-t1046.patch",
+        "reference-editors/opencut-classic/native/SOURCE_CHANGES.json",
+        "reference-editors/opencut-classic/native/README.md",
+        "reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+        "reference-editors/opencut-classic/native/DELIVERY.json",
+        "reference-editors/opencut-classic/native/SHA256SUMS",
+        "reference-editors/opencut-classic/native/VERIFICATION.md",
+        "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+        "docs/features/t1289-native-build-graph-virtual-module.md",
+        "docs/features/t1289-native-build-graph-virtual-module.T-1289.review.md",
+        "docs/verification/t1289/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1289.md",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/ARTIFACT_MANIFEST.yaml"
+      ],
+      "isolated_from": [
+        "机械build graph identity/必要元数据，六runtime不变，715source/F0保持",
+        "不改旧validator或虚构模块；旧额外门FAIL另T1291",
+        "Root串行，模型/用户库/资金/Activity0"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "python3 docs/verification/t1290/root-inventory/verify-native-candidate-installed.py"
+        ]
+      },
+      "id": "T-1289",
       "blocked_reason": null
     }
   ],

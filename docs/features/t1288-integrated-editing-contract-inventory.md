@@ -16,3 +16,7 @@ flowchart LR
  B --> C[保穷尽和所有入口检查]
  C --> D[原全契约重新实跑]
 ```
+
+## 全worktree合并后的固定432库存复核
+
+原429集与78files/518PASS完整证据保留。合Main受保护0b091检查点时，Main另有原T1255/T1268已审三个日志接口 GET/PUT /settings/log-reporting、POST /local/observability，确切ID分别settings.logReporting.get/set、observability.exceptions.capture。最终必须保R429集合和Main这三项的全部已批准功能，完整并集432；原两测试准确改固定432并合原静态三行，不改生产/删除入口/放松穷尽。读原SPEC/service契约及两侧blob独立recheck后Root接入，完整全契约与类型重新现场跑；不能用旧429PASS签432。精确候选和已合code见docs/verification/t1290/merge-resolution-candidate/12_INCREMENT_BINDING.json及merged-increment-files/contract/tests两文件。

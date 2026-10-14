@@ -14,3 +14,5 @@ flowchart LR
  B --> C[物理模块仍按真实源归属]
  C --> D[两深度七产物一致再整包]
 ```
+
+准确必要元数据补齐（独审前明确，非新增运行行为）：归档内 README.creatoros.md 与 NATIVE_REBUILD_CONSISTENCY.json，以及外部 reference-editors/opencut-classic/native/DELIVERY.json、SHA256SUMS、VERIFICATION.md。它们由当前消费者实际引用的源码/archive/patch/graph摘要决定，不能保持旧摘要冒本次重建；完整payload九文件与原六runtime字节不变绑定见 docs/verification/t1289/candidate/SCOPE_CANDIDATE.json 和 FINAL_BINDING.json。

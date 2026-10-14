@@ -9,11 +9,12 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1291|核对旧原生编辑器验证器与当前715源码库存|📋|待审|待验|[原额外验证真实失败](docs/features/t1291-legacy-native-verifier-source-inventory.md)|旧manifest及710模块/合同复制哨兵与715漂移，隔离组合仍FAIL；不补假模块/洗validator，不在固定本地包调用链，保独立欠债。|
 |T-1290|合并全部项目worktree到main、本地打包与交付后清理|🔨|PASS[REV:142008f9fcc4]|待验|[用户本轮明确交付范围](docs/features/t1290-merge-all-worktrees-local-package-cleanup.md)|盘点并保护全部代码，普通合main并冻结打本地包供用户验收；完成后才清旧worktree和可再生产物，保数据/最新包/真实未验。|
-|T-1289|修复原生构建清单随解包目录深度变化|📋|待审|待验|[归档重建真实差异](docs/features/t1289-native-build-graph-virtual-module.md)|715源/F0一致，六runtime产物一致，第七清单虚拟module路径随目录深度变化；原FAIL保留，只核机械ID与归档元数据，不只补生成JSON。|
-|T-1288|校准合并剪辑后的两个契约测试库存|🔨|PASS[REV:2c3f0e451738]|待验|[当场43项库存失败](docs/features/t1288-integrated-editing-contract-inventory.md)|R全契约43FAIL/475PASS保留；只核两个原测试427→429与已审script read/propose两路径，不改产品或放松穷尽。|
+|T-1289|修复原生构建清单随解包目录深度变化|🔨|PASS[REV:92eba9d78497]|待验|[归档重建真实差异](docs/features/t1289-native-build-graph-virtual-module.md)|715源/F0一致，六runtime产物一致，第七清单虚拟module路径随目录深度变化；原FAIL保留，只核机械ID与归档元数据，不只补生成JSON。|
+|T-1288|校准合并剪辑后的两个契约测试库存|🔨|PASS[REV:cf5a6070b2b5]|待验|[当场43项库存失败](docs/features/t1288-integrated-editing-contract-inventory.md)|R全契约43FAIL/475PASS保留；只核两个原测试427→429与已审script read/propose两路径，不改产品或放松穷尽。|
 |T-1287|闭合Growth全量回归的旧夹具与隔离缺项|📋|待审|待验|[真实全量失败与边界](docs/features/t1287-growth-full-regression-fixtures.md)|原Python9FAIL/1189PASS、Node10FAIL/270PASS与对账10ERROR保留；0076启动head已窄修28PASS，余5测试/3hooks和Node实际清单先独审，不改经营安全来洗绿。|
-|T-1286|校准模型来源接线后的旧前端集成夹具|🔨|PASS[REV:51972fd54d96]|待验|[当场30项测试接线失败](docs/features/t1286-model-routing-frontend-fixtures.md)|全frontend31FAIL保留；仅三原测试30项，忠实legacy GET与固定110库存；旧write真实同步缺陷交T1278，不改产品或吞范围外radar1。|
+|T-1286|校准模型来源接线后的旧前端集成夹具|🔨|PASS[REV:e988ff219888]|待验|[当场30项测试接线失败](docs/features/t1286-model-routing-frontend-fixtures.md)|全frontend31FAIL保留；仅三原测试30项，忠实legacy GET与固定110库存；旧write真实同步缺陷交T1278，不改产品或吞范围外radar1。|
 |T-1285|恢复文字剪辑CAS冲突后的只读解锁|✅|PASS[REV:5217d3efeb58]|—|[真实冲突与窄修](docs/features/t1285-script-cas-conflict-readonly-recovery.md)|5c8ea3cf8已修；原profile/request只读receipt→get6→receipt解锁，实际丢弃后可编辑，零写且完整DTO不变；13/213、类型/timeout/边界与最新完整build通过；全局仍T1204原29ERROR且无新增。|
 |T-1284|恢复旧V1字幕模板渲染丢失的原片音轨|✅|PASS[REV:6b0006cc4eee]|—|[真实成片无声与最小兼容](docs/features/t1284-legacy-v1-render-source-audio.md)|71e95241d已修：原output322新公共task恢复AAC2秒，PCM相关0.999997876、48帧画面逐字节不变；29测试/类型/最新完整build通过，原FAIL保留，全局仍T1204原29ERROR且无新增。|
 |T-1282|修复原生场景效果WASM字段协议导致预览失败|✅|PASS[REV:5dd1b7cf8c46]|—|[真实WASM拒绝与窄适配](docs/features/t1282-native-scene-effect-wasm-protocol.md)|93c91c09e真实ABI修复及三族公共native预览解码通过，deleteB采纳/幂等保护原丰富字段；86/380、715源F0/七产物和最新build通过，原FAIL保留。|
@@ -21,7 +22,7 @@
 |T-1280|修复冻结Codex旧工程渲染被渠道模型护栏误取消|✅|PASS[REV:5404d174a545]|—|[公共取消与窄范围](docs/features/t1280-legacy-render-frozen-engine-authority.md)|b8d9a26b9精确集成冻结authority及最小contract依赖；6回归/类型、真实V1/V2公共MP4与RGB/PCM对照通过，原取消保留；最新build通过；全局仍T1204原29ERROR且无新增。|
 |T-1283|核对Codex账号工作区路由预检拒绝并恢复粗剪|📋|待审|—|[真实预检与失败边界](docs/features/t1283-codex-account-routing-preflight.md)|新安全完整预检5RPC成功且两个host退出0；新独立作品真模型粗剪/试听门/采纳刷新PASS，仅删停顿0.96秒。原unknown保留，拒绝根因未复现，不改配置或自动重发。|
 |T-1279|接入模型来源新迁移的真实数据库谱系护栏|🔨|PASS[REV:3056f3673e0a]|待验|[当场初始化失败与窄范围](docs/features/t1279-model-routing-migration-lineage.md)|原6FAIL保留；0135固定谱系窄修独评3056通过，W e81f80cf7完整PG/PGlite三组73PASS、退出清理闭合；主任务全功能与全局收尾未完成。|
-|T-1278|统一激活授权并允许官方、自配和本地Codex按能力组合|🔨|PASS[REV:583a4741402d]|待验|[用户需求与验收](docs/features/t1278-unified-license-capability-routing.md)|cycle2独评583a通过；W03d60d39/Gbbf225eb已提交，Creator145/91/76、Growth122/销售23通过；设置浏览器15项retry0留图；全frontend原31与新4FAIL保留，新4串行14绿；R四包类型通过、合并回归在验；收尾两项用户已确认，cycle3新审在途；整包/App未验。|
+|T-1278|统一激活授权并允许官方、自配和本地Codex按能力组合|🔨|PASS[REV:c23accf0a926]|待验|[用户需求与验收](docs/features/t1278-unified-license-capability-routing.md)|cycle2独评583a通过；W03d60d39/Gbbf225eb已提交，Creator145/91/76、Growth122/销售23通过；设置浏览器15项retry0留图；全frontend原31与新4FAIL保留，新4串行14绿；R四包类型通过、合并回归在验；收尾两项用户已确认，cycle3新审在途；整包/App未验。|
 |T-1276|修复原片准备事务内根设置连接自等待|⏸️|PASS[REV:f677c9cdf3ed]|待验|[当场超时与窄范围](docs/features/t1276-production-source-transaction-runtime.md)|cbe8ec195同tx修复、原请求probe/采纳及完整媒体旅程、真实偏好冻结已验；最新build/类型/timeout通过，全局仍原29ERROR；严格回执关联3个共享dirty路径，已登记阻断。|
 |T-1275|排查剪辑验收隔离服务冷编译与数据库初始化超时|⏸️|—|待验|[实际阻断与范围](docs/features/t1275-editing-verification-runtime-timeouts.md)|原两轮超时保留；隔离服务/真实公共媒体旅程已恢复，最新build/类型/timeout通过，全局仍原29ERROR；严格frontend回执关联5个共享dirty路径，已登记阻断，不代签纯HEAD。|
 |T-1274|参考ChatCut可复用模块重设计CreatorOS剪辑工作区与自然语言剪辑链路|⏸️|PASS[REV:55a3f14a70a5]|待验|[SPEC](docs/features/t1274-chatcut-editing-redesign.md)|真实模型删除/重排复制、ASR词删、粗剪试听采纳、CLI/MCP/MP4、200%/dirty及T1285原CAS恢复均有证据；最新build通过，严格收尾仍有19个共享dirty路径，未代签纯HEAD或安装App。|
