@@ -1,0 +1,47 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-acp-worker-run.test.ts (16 tests | 1 failed) 363ms
+   × ACP已unknown原真实thread/turn只读恢复，不发prompt或建立新会话 24ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-acp-worker-run.test.ts > ACP已unknown原真实thread/turn只读恢复，不发prompt或建立新会话
+AssertionError: expected "vi.fn()" to be called with arguments: [ Anything, 'thread-actual', …(1) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   Anything,
++   {
++     "close": [Function Mock],
++   },
+    "thread-actual",
+    "native-turn-actual",
++   AbortSignal {
++     Symbol(kEvents): Map {},
++     Symbol(events.maxEventTargetListeners): 0,
++     Symbol(events.maxEventTargetListenersWarned): false,
++     Symbol(kHandlers): Map {},
++     Symbol(kAborted): false,
++     Symbol(kReason): undefined,
++     Symbol(kComposite): false,
++   },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/execution/codex-acp-worker-run.test.ts:261:69
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 75 passed (76)
+   Start at  16:15:18
+   Duration  13.55s (transform 9.99s, setup 0ms, import 14.48s, tests 1.84s, environment 0ms)
+

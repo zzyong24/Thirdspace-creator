@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS，仅CONTRACT初评。独立审查者 /root/ephemeral_spec_review，模型inherited；本人未编写SPEC或功能源码，未启动Codex exec、模型turn或个人会话。已实际读取当前SPEC SHAbbc3c8fa837ed26d8d098dbf3bbfc0e0648369e025556f4165a7774acda3fd48，稳定宪章 docs/产品定位.md SHA86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800及物理架构 SHAeb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df；读核及全部实际source pins见 docs/verification/t1271/spec-review/read-evidence.json SHA1b14cb72157474846336b6303b735e0229c1ba8d540f799c1c7de2587c30c627。新原生路径共享codexThreadParameters，覆盖结构化/文本/Agent/图片与旧聊天；ACP只在CreatorOS有效policy条件块增加ephemeral，两个受控profile均覆盖，通用vendor默认与TitleGenerator保持。已settled账本复用分支不启动模型；started/unknown使用原thread/turn只读核对，原会话缺失保unknown，零新thread/turn/提示词/工具重放。旧durable read/resume继续原消费者；不删个人历史、不复制登录、不改生产CODEX_HOME、数据归属/权限/deadline/usage/结算和产物边界不扩大。T1261/T1265现有dirty源已逐文件绑定，实施必须只做两处参数窄增量而不覆盖其他任务。用户不需个人Codex历史的明确指令已记录，不再另问实施偏好。无模型真实0.159.3协议探针及公共链RED/GREEN仍为待执行；即使无模型探针list不出现/无rollout/跨进程不可读通过，也只能证明本次无prompt临时创建，不冒充真实prompt后个人桌面UI或已安装效果。用户已明确选择不保Codex侧历史，未收到/未结算输出不可跨进程恢复的已公开限制通过unknown而不是自动重发落实。无全局PASS或模型/安装验收断言；正式reviewctl record由ROOT进行。",
+  "findings": []
+}
