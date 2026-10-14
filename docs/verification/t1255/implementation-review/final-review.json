@@ -1,0 +1,241 @@
+{
+  "review_kind": "implementation_final",
+  "task": "T-1255",
+  "status": "PASS",
+  "summary": "独立全范围实现审查已将四项实际major闭合；当前冻结Creator工作树未发现未解决blocker/major。完整任务与生产验收仍待必要Gate，不代签。",
+  "findings": [],
+  "historical_findings": [
+    {
+      "id": "C-F01",
+      "severity": "major",
+      "title": "原生异常补读忽略scopeModules",
+      "status": "resolved",
+      "red": "scope-red.log",
+      "green": "scope-green.log",
+      "resolution": "固定host/backend映射、有效v2授权与当前config.scopeModules同校验；3独立PGlite例GREEN。 同dropPendingLog：本地删除/状态留存，禁collector模块不新增指标；新增v2检查。",
+      "resolution_evidence": [
+        "scope-green.log",
+        "backend-final-r3.log",
+        "/tmp/t1255-client-root-full-feature-backend.log"
+      ]
+    },
+    {
+      "id": "C-F02",
+      "severity": "major",
+      "title": "真实客户端已知离线无被动载体",
+      "status": "resolved",
+      "red": "/tmp/t1255-client-root-passive-network-red.log",
+      "resolution": "navigator.onLine及online/offline事件经同受控local closed boolean传Host；不做OS/Growth探测；待冻结后相关producer/route专项复跑。",
+      "resolution_evidence": [
+        "frontend-final-r2.log",
+        "real-host-wire.log",
+        "/tmp/t1255-client-root-passive-public-green-r2.log"
+      ]
+    },
+    {
+      "id": "C-F03",
+      "severity": "major",
+      "title": "提前429结束后真实body泵仍发送",
+      "status": "resolved",
+      "red": "early-429-probe.log",
+      "green": "early-429-green.log",
+      "resolution": "私有transfer AbortController、所有finish路径abort并destroy；同真实HTTP例后续byte为0。",
+      "resolution_evidence": [
+        "early-429-green.log",
+        "real-host-wire.log",
+        "frontend-final-r2.log"
+      ]
+    },
+    {
+      "id": "C-F04",
+      "severity": "major",
+      "title": "正式独立task factories未获得中央observer，直接outcome提交未投递",
+      "status": "resolved",
+      "red": "actual-dispatcher-red.log",
+      "anchors": [
+        "backend/src/modules/execution/model-worker-dispatcher.ts:98",
+        "backend/src/modules/execution/model-worker-dispatcher.ts:481",
+        "backend/src/modules/execution/model-worker-dispatcher.ts:428",
+        "backend/src/modules/execution/execution-video-visual-review.service.ts:81"
+      ],
+      "details": "实际dispatcher领取并完成成功task，而clocks=0。只mock WorkerSupervisor进程边界，真实PGlite/AI authority/claim/ledger。必要修复同时覆盖同Db各factory、直接worker outcome commit后结算以及visual-review child外层tx commit后领取；不从attempt总数推断失败次数。",
+      "resolution": "按同Db typed WeakMap注册覆盖独立factory；同attempt claim/settle串行但业务不等待；原WorkerOutcome commit后投固定事实；visual child外层commit后投领取，catch commit后投终态；command/ackControl/recover提交后投真实更新行。退出首行取消网络，原本地清理窗口drain后dispose。",
+      "resolution_evidence": [
+        "actual-dispatcher-green.log",
+        "actual-outcome-green.log",
+        "registry-transaction.log",
+        "actual-visual-transaction.log",
+        "real-model-retry.log"
+      ]
+    }
+  ],
+  "source_head": "9e9acd99e1e5f66a97bea187a21be704dcd3de8b",
+  "source_manifest_sha256": "7220fd52aadcd4196b4ddff9c4a385672ca1572e6439fb7559b88bbe7bf1553f",
+  "source_manifest_path": "/tmp/t1255-client-independent-final/source-manifest.json",
+  "spec_sha256": "6bcf82dd42d1a98391d0e1e3576d06a6b97d91a2900c224bf2b0b03ebd283cf7",
+  "constitution_sha256": "dc1df9e9e90e2c74557d9ed7486fa964b7de9f037be0822c4dbba2216bb686fc",
+  "scope": "Creator完整可逆实现与隔离专项；包含root微调，不能只使用9e9acd99e原提交。",
+  "evidence": [
+    {
+      "kind": "independent_current_backend_contract",
+      "result": "24 PASS / 4 files",
+      "path": "/tmp/t1255-client-independent-final/backend-final-r3.log",
+      "details": "实际内存PGlite collector/原持久task ledger/settings真实contract client+data/meta transport、5 closed-schema contract例；包含native+collector scope修。"
+    },
+    {
+      "kind": "independent_frontend",
+      "result": "23 PASS / 5 files",
+      "path": "/tmp/t1255-client-independent-final/frontend-final-r2.log",
+      "details": "host/真实core HTTP/本地route/页面producer/设置组件23P；最后保存文案已另静态核到，并由root最终同组件1P及fresh browser2P覆盖。"
+    },
+    {
+      "kind": "independent_real_host_http",
+      "result": "5 PASS",
+      "path": "/tmp/t1255-client-independent-final/real-host-wire.log",
+      "details": "真实collector+PGlite+host+loopback core HTTP，离线/忙碌不claim不联网；撤回/stop/业务pause真实取消POST；500后次日同原body/SHA补回执，日内零重试。"
+    },
+    {
+      "kind": "independent_early_429",
+      "result": "RED→GREEN: 1 PASS",
+      "path": "/tmp/t1255-client-independent-final/early-429-green.log",
+      "red_path": "/tmp/t1255-client-independent-final/early-429-probe.log",
+      "details": "提前429后原泵仍发送16KiB已实测；修后后续0字节，finally取消仅自有fixture。"
+    },
+    {
+      "kind": "independent_native_scope",
+      "result": "RED 3 FAIL→GREEN 3 PASS",
+      "path": "/tmp/t1255-client-independent-final/scope-green.log",
+      "red_path": "/tmp/t1255-client-independent-final/scope-red.log"
+    },
+    {
+      "kind": "independent_actual_dispatcher",
+      "result": "RED clocks0→GREEN 1 PASS",
+      "path": "/tmp/t1255-client-independent-final/actual-dispatcher-green.log",
+      "red_path": "/tmp/t1255-client-independent-final/actual-dispatcher-red.log",
+      "details": "真正createModelWorkerDispatcher.drainOnce、AI authority、原claim及PG，只有Worker进程边界模拟，不替换任务/SQL/账本。"
+    },
+    {
+      "kind": "independent_actual_outcome",
+      "result": "RED NULL finished_at/result→GREEN 1 PASS",
+      "path": "/tmp/t1255-client-independent-final/actual-outcome-green.log",
+      "red_path": "/tmp/t1255-client-independent-final/actual-outcome-red.log",
+      "details": "实际WorkerOutcome.recordFailure提交失败，固定原时刻结算，不靠当前attempt推断。"
+    },
+    {
+      "kind": "independent_real_transaction",
+      "result": "2 PASS",
+      "path": "/tmp/t1255-client-independent-final/registry-transaction.log",
+      "details": "原PGlite outer tx回滚无提前clock；提交后以原claim时刻显式投递；同Db多个独立factory两retry加一次成功。"
+    },
+    {
+      "kind": "independent_actual_visual_child",
+      "result": "2 PASS",
+      "path": "/tmp/t1255-client-independent-final/actual-visual-transaction.log",
+      "details": "实际createExecutionVideoVisualReviewService原outer child事务，注入真实rollback、commit后进程失败；回滚task与clock均0，commit后clock1和真实catch失败结算。仅Worker边界模拟，没有执行真实模型。"
+    },
+    {
+      "kind": "independent_real_call_retry",
+      "result": "1 PASS",
+      "path": "/tmp/t1255-client-independent-final/real-model-retry.log",
+      "details": "WorkerCallPorts实际reserve/start/reject两次，WorkerOutcome实际retry_wait commit，第三原call settled及任务finish。attemptFailed2、Success1、正式task结局1；不写原表状态冒充统计、不猜attempt-1。未验证真实模型或正式业务产物。"
+    },
+    {
+      "kind": "independent_actual_rust_fatal",
+      "result": "PASS，原panic退出101",
+      "path": "/tmp/t1255-client-independent-final/rust-fatal-result.json",
+      "source_proof": "/tmp/t1255-client-independent-final/rust-source-copy.json",
+      "details": "当前logging.rs原字节副本，offline Cargo binary真实panic；402B原CRLOG密文，4字段closed metadata，sessionId匹配header；原协议/内嵌公钥未改、无私钥使用。非App启动或安装证明。"
+    },
+    {
+      "kind": "root_broader_backend",
+      "result": "35 PASS / 7 files",
+      "path": "/tmp/t1255-client-root-full-feature-backend.log"
+    },
+    {
+      "kind": "root_actual_visual_regression",
+      "result": "6 PASS",
+      "path": "/tmp/t1255-client-root-visual-review-regression.log"
+    },
+    {
+      "kind": "actual_settings_visual",
+      "result": "PASS: reviewer实际看两张390截图；保存/刷新/撤回归属已发生Playwright日志",
+      "paths": [
+        "/tmp/t1255-client-evidence/diagnostics-sharing-390.png",
+        "/tmp/t1255-client-evidence/diagnostics-sharing-390-controls.png",
+        "/tmp/t1255-client-evidence/browser-settings-controls-390.log"
+      ],
+      "details": "原设置Dialog方向保留，分类/用途独立控件、状态/下一日水位和保存刷新可读。静图不代签操作；此为开发浏览器，非安装端或生产。"
+    },
+    {
+      "kind": "root_final_types_and_consent_case",
+      "result": "backend/contract/frontend类型检查PASS，consent1 PASS，portable outcome1 PASS",
+      "paths": [
+        "/tmp/t1255-client-root-final-backend-types-r3.log",
+        "/tmp/t1255-client-root-final-contract-types.log",
+        "/tmp/t1255-client-root-final-frontend-types.log",
+        "/tmp/t1255-client-root-final-consent-ui.log",
+        "/tmp/t1255-client-root-final-outcome-test.log"
+      ],
+      "details": "root提供真实exit0；原backend types TS2571、TS2532两轮RED不删，仅修test query泛型及存在性判断，不变运行逻辑。"
+    },
+    {
+      "kind": "root_final_fresh_browser",
+      "result": "2 PASS /34.8s，reviewer实际看final390并读日志/联网证据",
+      "paths": [
+        "/tmp/t1255-integration-browser/browser.log",
+        "/tmp/t1255-integration-browser/connectivity-evidence.json",
+        "/tmp/t1255-integration-browser/source-unchanged.json",
+        "/tmp/t1255-integration-browser/diagnostics-sharing-390-controls.png"
+      ],
+      "details": "真实Page/local strict false/true200、extra fields422、Growth0；保存刷新撤回。36生产源前后SHA相同，只有父owned test类型在途修改已记录。新授权未到24h且background drivers关闭，不能单独代签due host.tick；对应由独立real-host-wire覆盖。"
+    }
+  ],
+  "static_checks": {
+    "daily_round": "原子持久lastAttemptAt；24h下限、失败/重启/多实例不重置。config唯一原轮载体，未授权零Growth请求，remote pause保留次日control。",
+    "fairness": "原10MiB总量、单在途及限速；last_data_kind使完整10MiB日志与指标跨日轮交替；冻结原SHA、丢回执/增长不改旧待发前缀。",
+    "observation": "request/task分离；真实原持久终态、每attempt独立时钟与unknown后确认口径；计数不采样，内容仅原脱敏密文，metadata不含正文/stack。",
+    "ipc": "页面可信本地guard+当前身份+32KiB closed；Worker仅原宿主IPC白名单；Rust/Node fatal保原退出，授权时间过滤及元数据去重恢复。",
+    "registry": "Creator与Growth共享JSON SHA256=6d412d3453ac9126fc7b7f1733e2512912fd97256205ae1bd8a7dc1d78760256。",
+    "migration": "新增0134 SHA256=d9ffc8a011672cc985015d3f6cafcb693be8b77f33b5f04d6906d25939f80494；canonical journal只追加，原历史SQL/冻结lineage不变，实际createDb读取与convergence匹配。",
+    "minor_copy": "保存回执未知文案已改“保存结果暂时无法确认，请刷新状态后再操作。”，不改流程；root最终同组件1P、fresh browser2P，reviewer实际看最终图。"
+  },
+  "gate_inventory": {
+    "feature_implementation": "PASS",
+    "boundary": "PASS: no new violation; remaining5baseline（root log）",
+    "orphan": "PASS: 0 ERROR /100 WARN（root log）",
+    "timeout_global": "历史ENOBUFS真实FAIL保留，专项政策测试通过；不能代签全量timeout扫描。",
+    "full_next_production_build": "root compile阶段23.3s PASS；完整build仍TS阶段在途，未签PASS",
+    "full_reconcile": "本次reviewer未执行/代签，root负责真实当前结果",
+    "spec_controlplane_binding": "当前本树SPEC增量只读PASS；主树PROJECT重绑及reviewctl receipt由root，未代签",
+    "macos_windows_installed_client": "PENDING",
+    "deployed_growth_formal_c01bada2_decrypt": "PENDING",
+    "production_owner_UAT": "PENDING",
+    "current_types": "PASS: backend r3 /contract/frontend；原类型两次RED保留"
+  },
+  "limitations": [
+    "结论锁定manifest工作树；最终root typed/通信收尾及文案需随候选一起提交打包，HEAD本身不包含这些修复。",
+    "开发浏览器、一次性PG/PGlite与Rust源码binary不是macOS/Windows安装端、真实模型/业务产物或生产UAT。",
+    "完整Next build/全局Gate、主树PROJECT绑定和正式密钥部署仍按实际回执保留，不能用实现PASS完成整个T-1255。"
+  ],
+  "safety": {
+    "source_or_controlplane_written": false,
+    "real_user_database_or_config_used": false,
+    "private_keys_accessed": false,
+    "activity_touched": false,
+    "own_outputs": "/tmp/t1255-client-independent-final",
+    "databases": "仅内存PGlite，fixture/进程均自有，HTTP仅loopback",
+    "fixture_errors_preserved": [
+      "actual-dispatcher-fixture-mock-red.log",
+      "actual-dispatcher-fixture-status-red.log",
+      "registry-fixture-import-red.log",
+      "actual-visual-fixture-proxy-red.log"
+    ],
+    "feature_red_preserved": true
+  },
+  "source_manifest_history": [
+    {
+      "previousAggregateSha256": "0b0a96f8dd0757177e4b8861758ff1499caffb98d7e2646353a1091eecc1ab06",
+      "reason": "纳入root portable两测试及末次query类型/存在性窄修；生产源已冻结"
+    }
+  ]
+}

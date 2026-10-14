@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "独立只读复核当前合同，原三项major由同每日轮次配置/暂停恢复、独立耗时wire及公共接收护栏修订消除；唯一owner身份与生产解密完成门保持明确，未见残留blocker/major，仅覆盖SPEC。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "T1255-REV-001",
+        "quote": "配置仅随每日响应更新，不独立联网轮询"
+      },
+      "acceptance_anchor": {
+        "id": "T1255-AC-REV-001",
+        "quote": "关闭后须通过下一次用户主动开启/已明确控制周期的授权内下一轮接收配置才能恢复"
+      },
+      "where": "docs/features/t1255-reporting-full-delivery.md:37",
+      "failure_mode": "日志回执无config；远端停止全部出站后未定义合法每日恢复载体，可能永久停发或额外联网。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC第37行；独立/root/reporting_review当场只读报告",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:37:8839aa7d3b403c95",
+      "suggestion": "统一配置closed载体及本机关停/远端暂停的状态机，保原每日预算。",
+      "resolution_evidence": "SPEC e730d511454644d3176982d3bc2756f029f1efaa9bf34fa0475e4b44f7673922；同一每日原轮次先GET配置，lastAttemptAt持久24小时；local关闭零联网，remote暂停仅停数据，logs或metrics单用途共用配置。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "T1255-REV-002",
+        "quote": "durationBuckets"
+      },
+      "acceptance_anchor": {
+        "id": "T1255-AC-REV-002",
+        "quote": "最多100个operation维度"
+      },
+      "where": "docs/features/t1255-reporting-full-delivery.md:35",
+      "failure_mode": "指标wire只有一组duration，不能分别承载排队与执行耗时。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC第35行；独立/root/reporting_review当场只读报告",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:35:96fd1dbb6114d85f",
+      "suggestion": "精确独立queue与execution桶/count/sum，绑定原正式时钟。",
+      "resolution_evidence": "SPEC e730d511454644d3176982d3bc2756f029f1efaa9bf34fa0475e4b44f7673922；queueDuration/executionDuration两套独立13桶/count/sum，原持久createdAt/首次startedAt及attempt结算时钟，缺时间null。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "T1255-REV-003",
+        "quote": "最多100个operation维度"
+      },
+      "acceptance_anchor": {
+        "id": "T1255-AC-REV-003",
+        "quote": "总256KiB"
+      },
+      "where": "docs/features/t1255-reporting-full-delivery.md:35",
+      "failure_mode": "指标新匿名入口未明确共用原body前IP/global原子护栏与字节额度。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC第35行；独立/root/reporting_review当场只读报告",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:35:96fd1dbb6114d85f",
+      "suggestion": "明确两个入口共同有界限量及幂等原子消费者，不加Activity。",
+      "resolution_evidence": "SPEC e730d511454644d3176982d3bc2756f029f1efaa9bf34fa0475e4b44f7673922；log/metrics/config入口共用body前IP12/min global120/min原子限量，新指标完整字节共同消费安装100MiB/global1GiB日额度，duplicate仍扣request。",
+      "parent_id": ""
+    }
+  ]
+}
