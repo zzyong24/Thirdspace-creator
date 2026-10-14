@@ -1,0 +1,116 @@
+{
+  "red1366": {
+    "video": {
+      "x": 273,
+      "y": 304.796875,
+      "width": 1044,
+      "height": 540,
+      "top": 304.796875,
+      "right": 1317,
+      "bottom": 844.796875,
+      "left": 273
+    },
+    "section": {
+      "x": 261,
+      "y": 256.796875,
+      "width": 1068,
+      "height": 301.71875,
+      "top": 256.796875,
+      "right": 1329,
+      "bottom": 558.515625,
+      "left": 261
+    },
+    "slot": {
+      "x": 261,
+      "y": 256.796875,
+      "width": 1068,
+      "height": 301.71875,
+      "top": 256.796875,
+      "right": 1329,
+      "bottom": 558.515625,
+      "left": 261
+    },
+    "scrollHeight": 600,
+    "clientHeight": 302,
+    "scrollTop": 0,
+    "videoWidth": 640,
+    "videoHeight": 360,
+    "controls": true
+  },
+  "scrolled1366": {
+    "video": {
+      "x": 273,
+      "y": 6.796875,
+      "width": 1044,
+      "height": 540,
+      "top": 6.796875,
+      "right": 1317,
+      "bottom": 546.796875,
+      "left": 273
+    },
+    "section": {
+      "x": 261,
+      "y": 256.796875,
+      "width": 1068,
+      "height": 301.71875,
+      "top": 256.796875,
+      "right": 1329,
+      "bottom": 558.515625,
+      "left": 261
+    },
+    "slot": {
+      "x": 261,
+      "y": 256.796875,
+      "width": 1068,
+      "height": 301.71875,
+      "top": 256.796875,
+      "right": 1329,
+      "bottom": 558.515625,
+      "left": 261
+    },
+    "scrollHeight": 600,
+    "clientHeight": 302,
+    "scrollTop": 298,
+    "videoWidth": 640,
+    "videoHeight": 360,
+    "controls": true
+  },
+  "red390": {
+    "video": {
+      "x": 109,
+      "y": 374.546875,
+      "width": 236,
+      "height": 132.75,
+      "top": 374.546875,
+      "right": 345,
+      "bottom": 507.296875,
+      "left": 109
+    },
+    "section": {
+      "x": 97,
+      "y": 326.546875,
+      "width": 260,
+      "height": 192.75,
+      "top": 326.546875,
+      "right": 357,
+      "bottom": 519.296875,
+      "left": 97
+    },
+    "slot": {
+      "x": 97,
+      "y": 326.546875,
+      "width": 260,
+      "height": 209.25,
+      "top": 326.546875,
+      "right": 357,
+      "bottom": 535.796875,
+      "left": 97
+    },
+    "scrollHeight": 193,
+    "clientHeight": 193,
+    "scrollTop": 0,
+    "videoWidth": 640,
+    "videoHeight": 360,
+    "controls": true
+  }
+}

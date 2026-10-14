@@ -1,0 +1,426 @@
+{
+  "binding": {
+    "url": "http://127.0.0.1:3919",
+    "groupId": "grp-8a2fadb0-6",
+    "projectId": "project-8a2fadb0-8",
+    "outputId": "output-94c2affe-201"
+  },
+  "status": "PASS_REAL_SLOT_FIT_PLAY_RETURN_NO_FORMAL_WRITE",
+  "cases": [
+    {
+      "size": {
+        "width": 1366,
+        "height": 900
+      },
+      "geometry": {
+        "video": {
+          "x": 273,
+          "y": 304.796875,
+          "width": 1044,
+          "height": 241.71875,
+          "top": 304.796875,
+          "right": 1317,
+          "bottom": 546.515625,
+          "left": 273
+        },
+        "section": {
+          "x": 261,
+          "y": 256.796875,
+          "width": 1068,
+          "height": 301.71875,
+          "top": 256.796875,
+          "right": 1329,
+          "bottom": 558.515625,
+          "left": 261
+        },
+        "slot": {
+          "x": 261,
+          "y": 256.796875,
+          "width": 1068,
+          "height": 301.71875,
+          "top": 256.796875,
+          "right": 1329,
+          "bottom": 558.515625,
+          "left": 261
+        },
+        "scrollHeight": 302,
+        "clientHeight": 302,
+        "controls": true,
+        "objectFit": "contain",
+        "videoWidth": 640,
+        "videoHeight": 360
+      },
+      "playedTime": 0.11476,
+      "keyboardReturn": true,
+      "openerFocus": true,
+      "formalUnchanged": true
+    },
+    {
+      "size": {
+        "width": 1024,
+        "height": 800
+      },
+      "geometry": {
+        "video": {
+          "x": 113,
+          "y": 304.796875,
+          "width": 862,
+          "height": 191.71875,
+          "top": 304.796875,
+          "right": 975,
+          "bottom": 496.515625,
+          "left": 113
+        },
+        "section": {
+          "x": 101,
+          "y": 256.796875,
+          "width": 886,
+          "height": 251.71875,
+          "top": 256.796875,
+          "right": 987,
+          "bottom": 508.515625,
+          "left": 101
+        },
+        "slot": {
+          "x": 101,
+          "y": 256.796875,
+          "width": 886,
+          "height": 251.71875,
+          "top": 256.796875,
+          "right": 987,
+          "bottom": 508.515625,
+          "left": 101
+        },
+        "scrollHeight": 252,
+        "clientHeight": 252,
+        "controls": true,
+        "objectFit": "contain",
+        "videoWidth": 640,
+        "videoHeight": 360
+      },
+      "playedTime": 0.11416,
+      "keyboardReturn": true,
+      "openerFocus": true,
+      "formalUnchanged": true
+    },
+    {
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "geometry": {
+        "video": {
+          "x": 109,
+          "y": 374.546875,
+          "width": 236,
+          "height": 149.25,
+          "top": 374.546875,
+          "right": 345,
+          "bottom": 523.796875,
+          "left": 109
+        },
+        "section": {
+          "x": 97,
+          "y": 326.546875,
+          "width": 260,
+          "height": 209.25,
+          "top": 326.546875,
+          "right": 357,
+          "bottom": 535.796875,
+          "left": 97
+        },
+        "slot": {
+          "x": 97,
+          "y": 326.546875,
+          "width": 260,
+          "height": 209.25,
+          "top": 326.546875,
+          "right": 357,
+          "bottom": 535.796875,
+          "left": 97
+        },
+        "scrollHeight": 209,
+        "clientHeight": 209,
+        "controls": true,
+        "objectFit": "contain",
+        "videoWidth": 640,
+        "videoHeight": 360
+      },
+      "playedTime": 0.212363,
+      "keyboardReturn": true,
+      "openerFocus": true,
+      "formalUnchanged": true
+    }
+  ],
+  "dispatch": [
+    {
+      "id": "accountGroups.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 100
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.get",
+      "input": {}
+    },
+    {
+      "id": "ai.conversations.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 1,
+          "scope": "project:project-8a2fadb0-8"
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "ai.tasks.list",
+      "input": {
+        "query": {
+          "page": 1,
+          "pageSize": 24
+        }
+      }
+    },
+    {
+      "id": "materialLinks.list",
+      "input": {
+        "query": {
+          "projectId": "project-8a2fadb0-8",
+          "page": 1,
+          "pageSize": 100
+        }
+      }
+    },
+    {
+      "id": "outputs.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        }
+      }
+    },
+    {
+      "id": "materialLinks.list",
+      "input": {
+        "query": {
+          "projectId": "project-8a2fadb0-8",
+          "page": 1,
+          "pageSize": 100
+        }
+      }
+    },
+    {
+      "id": "outputs.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        }
+      }
+    },
+    {
+      "id": "ai.conversations.messages.list",
+      "input": {
+        "params": {
+          "conversationId": "ai-conv-94c2affe-128"
+        }
+      }
+    },
+    {
+      "id": "assets.get",
+      "input": {
+        "params": {
+          "assetId": "asset-94c2affe-277"
+        }
+      }
+    },
+    {
+      "id": "assets.get",
+      "input": {
+        "params": {
+          "assetId": "asset-8a2fadb0-27"
+        }
+      }
+    },
+    {
+      "id": "assets.get",
+      "input": {
+        "params": {
+          "assetId": "asset-8a2fadb0-122"
+        }
+      }
+    },
+    {
+      "id": "assets.get",
+      "input": {
+        "params": {
+          "assetId": "asset-8a2fadb0-27"
+        }
+      }
+    },
+    {
+      "id": "assets.fileDownloadUrl",
+      "input": {
+        "params": {
+          "assetId": "asset-8a2fadb0-27",
+          "assetFileId": "afile-8a2fadb0-31"
+        }
+      }
+    },
+    {
+      "id": "assets.fileDownloadUrl",
+      "input": {
+        "params": {
+          "assetId": "asset-94c2affe-277",
+          "assetFileId": "afile-94c2affe-281"
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.script.read",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        },
+        "body": {
+          "target": {
+            "schemaVersion": 1,
+            "projectId": "project-8a2fadb0-8",
+            "outputId": "output-94c2affe-201",
+            "owner": "production",
+            "contentType": "video",
+            "savedBase": {
+              "kind": "production",
+              "productionId": "production-94c2affe-363",
+              "revision": 6
+            },
+            "documentDigest": "sha256:3da18186634634f38c947dc3e8eedd80ab5312038bd09b921f69b8199c7d69e8",
+            "selection": {
+              "kind": "native_scene",
+              "sceneId": "family-scene",
+              "elementRefs": [],
+              "playheadTick": 0,
+              "contextEpoch": 3,
+              "editorGeneration": "1:3e0985b0-078f-434f-9b91-5ba82f42faf4"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.script.propose",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        },
+        "body": {
+          "target": {
+            "schemaVersion": 1,
+            "projectId": "project-8a2fadb0-8",
+            "outputId": "output-94c2affe-201",
+            "documentDigest": "sha256:3da18186634634f38c947dc3e8eedd80ab5312038bd09b921f69b8199c7d69e8",
+            "owner": "production",
+            "contentType": "video",
+            "savedBase": {
+              "kind": "production",
+              "productionId": "production-94c2affe-363",
+              "revision": 6
+            },
+            "selection": {
+              "kind": "native_scene",
+              "sceneId": "family-scene",
+              "elementRefs": [],
+              "playheadTick": 0,
+              "contextEpoch": 3,
+              "editorGeneration": "1:3e0985b0-078f-434f-9b91-5ba82f42faf4"
+            }
+          },
+          "input": {
+            "base": {
+              "kind": "production",
+              "productionId": "production-94c2affe-363",
+              "revision": 6
+            },
+            "baseDigest": "sha256:3da18186634634f38c947dc3e8eedd80ab5312038bd09b921f69b8199c7d69e8",
+            "summary": "按当前文字修改剪辑",
+            "candidate": {
+              "kind": "markdown_timeline",
+              "owner": "production",
+              "sceneId": "family-scene",
+              "markdown": "<!-- markdown-state:format:1 -->\n<!-- markdown-state:stamp:sha256:24bbfd149ef436a1d91c97777d843eda69572a163cd996be1e83093c0338f9b3 -->\n<!-- markdown-state:lib-stamp:sha256:d4520ca8ecbcea727d900bd72e1471441b9051ddd92577d6921d2d5224a2fcf4 -->\n<!-- markdown-state:timeline:family-scene -->\n<!-- markdown-state:body -->\n\n<!-- t=120000 ticks/s；silence仅表示未转录源区间，不是声学静音，缩短须沿既有听审。 -->\n## V1 <!-- markdown-state:track:family-main -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22V1%22%2C%22trackId%22%3A%22family-main%22%2C%22type%22%3A%22video%22%2C%22editableElementIds%22%3A%5B%22family-a1%22%2C%22family-a2%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n### asset-8a2fadb0-27 <!-- markdown-state:source:03f4245e-35b3-47fe-af8b-f8647c99bd70:asset-8a2fadb0-27 -->\n[c1] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-a1 -->\n[c2] 60000t source=240000..300000t rate=1 <!-- markdown-state:item:family-a2 -->\n\n## P1 <!-- markdown-state:track:family-text -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P1%22%2C%22trackId%22%3A%22family-text%22%2C%22type%22%3A%22text%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-title%22%5D%7D -->\n<!-- 保护原元素:family-title；不由Markdown重建 -->\n\n## P2 <!-- markdown-state:track:family-effect -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P2%22%2C%22trackId%22%3A%22family-effect%22%2C%22type%22%3A%22effect%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-effect-1%22%5D%7D -->\n<!-- 保护原元素:family-effect-1；不由Markdown重建 -->\n\n## A1 <!-- markdown-state:track:family-audio -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22A1%22%2C%22trackId%22%3A%22family-audio%22%2C%22type%22%3A%22audio%22%2C%22editableElementIds%22%3A%5B%22family-sound%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n[gap 60000t]\n### asset-94c2affe-277 <!-- markdown-state:source:family-media-b:asset-94c2affe-277 -->\n[c3] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-sound -->\n",
+              "declaredTrackIds": [
+                "family-main",
+                "family-text",
+                "family-effect",
+                "family-audio"
+              ],
+              "stateStamp": "sha256:24bbfd149ef436a1d91c97777d843eda69572a163cd996be1e83093c0338f9b3",
+              "libraryStamp": "sha256:d4520ca8ecbcea727d900bd72e1471441b9051ddd92577d6921d2d5224a2fcf4"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        }
+      }
+    },
+    {
+      "id": "outputs.production.editor.get",
+      "input": {
+        "params": {
+          "outputId": "output-94c2affe-201"
+        }
+      }
+    }
+  ],
+  "errors": []
+}
