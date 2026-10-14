@@ -77,3 +77,6 @@
 - 21:28:58 `production-script-markdown.test.ts` **24/24 PASS**，包括前述当场行为RED的全部原断言。
 - 聚焦新路径 `tsc --noEmit --target ES2022 --module esnext --moduleResolution bundler --strict --noUncheckedIndexedAccess --skipLibCheck --esModuleInterop --types node production-script-markdown.ts production-script-markdown.test.ts` **exit=0**。途中明确图片body的重复trim字段诊断已窄修，未放宽编译选项或测试断言。
 - 全backend全局exit=2保留，不声明全仓类型通过；不包含真实媒体、保存/采纳或UI验收。
+
+
+T1274公共接入复核增量：安全保原时同时保留ranges错误的行号/hint（keptErrors不反杀可独立的候选）；nativeChangedMediaIds仅按完整JSON前后值列实际新增/变化媒体，旧保原/删除不下载非目标可选文件。公共read/propose复用冻结来源/真实ID，变更仍读原service port，采纳复用CAS；这些窄适配不承担语义选词或素材选择。原unknown type输出投影与before-aware同轨保护见contract，新增/改写schema不放宽。末轮公共PGlite初始化超时，不能冒充集成通过。

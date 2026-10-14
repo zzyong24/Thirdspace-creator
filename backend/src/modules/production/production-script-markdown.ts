@@ -148,6 +148,7 @@ export function planNativeScriptMarkdown(plan: ProductionReferencePlan, sceneId:
     if (!track.scope) track.errors.push(issue(track.line, '缺少完整可编辑集合声明', '重新读取完整轨道，不把截断输入视作删除'));
     if (track.errors.length) { result.errors.push(...track.errors); result.warnings.push(`保留原轨道${track.info.descriptor.alias}`); continue; }
     const planned = buildTrackPlan(track, result.warnings);
+    result.errors.push(...planned.keptErrors);
     if (planned.errors.length) { result.errors.push(...planned.errors); result.warnings.push(`保留原轨道${track.info.descriptor.alias}`); continue; }
     // Stage 3/4：19身份延续diff；保护集合不参加原项删除。
     try {
@@ -233,8 +234,8 @@ function parseRows(md: string, s: Snapshot): { tracks: TrackRows[]; errors: Nati
   for (const info of s.tracks) if (!tracks.some(t => t.info.track.id === info.track.id)) errors.push(issue(1, `声明轨道${info.descriptor.alias}正文缺失`, '完整导出并保留轨道header与scope；空轨也须声明'));
   return { tracks, errors };
 }
-function buildTrackPlan(track: TrackRows, warnings: string[]): { items: NativePlanned[]; errors: NativeScriptMarkdownError[] } {
-  const items: NativePlanned[] = [], errors: NativeScriptMarkdownError[] = []; let cursor = 0;
+function buildTrackPlan(track: TrackRows, warnings: string[]): { items: NativePlanned[]; errors: NativeScriptMarkdownError[]; keptErrors:NativeScriptMarkdownError[] } {
+  const items: NativePlanned[] = [], errors: NativeScriptMarkdownError[] = [],keptErrors:NativeScriptMarkdownError[]=[]; let cursor = 0;
   for (const event of track.events) {
     if (event.kind === 'gap') { cursor += event.duration; if (!integer(cursor)) errors.push(issue(event.line, '时间范围溢出')); continue; }
     const group = event.group; if (group.dropped && !group.errors.length) continue;
@@ -242,7 +243,7 @@ function buildTrackPlan(track: TrackRows, warnings: string[]): { items: NativePl
     if (ranges.errors.length) {
       // 已定位且该片段原位置不受上游ripple影响，才安全保原；否则该轨依赖不能隔离。
       if (group.clip && group.clip.element.startTime === cursor) {
-        warnings.push(`第${group.line}行保留原片段${group.clip.element.id}：${ranges.errors.map(e => e.message).join('；')}`);
+        keptErrors.push(...ranges.errors);warnings.push(`第${group.line}行保留原片段${group.clip.element.id}：${ranges.errors.map(e => e.message).join('；')}`);
         items.push(plannedClip(group.clip, group.clip.start, group.clip.end, cursor, group.line, true)); cursor += group.clip.element.duration; continue;
       }
       errors.push(...ranges.errors); continue;
@@ -256,7 +257,7 @@ function buildTrackPlan(track: TrackRows, warnings: string[]): { items: NativePl
       cursor += duration;
     }
   }
-  return { items, errors };
+  return { items, errors,keptErrors };
 }
 function plannedClip(clip: ClipInfo, start: number, end: number, cursor: number, line: number, preservedExactly = false): NativePlanned {
   return { preservedItemId: clip.element.id, assetId: clip.source.mediaId, mediaId: clip.source.mediaId, itemType: clip.element.type, sourceStartTick: start, sourceEndTick: end, fromTick: cursor, durationTick: intervalDuration(start, end, clip.rate), rate: clip.rate, template: clip.element, line, preservedExactly };
@@ -325,4 +326,13 @@ function applyTrackDiff(s: Snapshot, info: TrackInfo, planned: NativePlanned[]) 
     if (elements.some(other => other.id !== element.id && protectedIds.has(other.id) && other.startTime < element.startTime + element.duration && element.startTime < other.startTime + other.duration)) throw new Error('修改与保护元素时间重叠，不能隔离依赖');
   }
   return { elements, operations };
+}
+
+/** SEMANTIC_BOUNDARY_ALLOW: 仅比较原/后JSON元素，列出实际新增或变更媒体；保原/删除不要求下载旧可选文件。 */
+export function nativeChangedMediaIds(before:NativeSerializedTimelineTracks,after:NativeSerializedTimelineTracks):Set<string>{
+ const old=new Map([before.main,...before.overlay,...before.audio].flatMap(track=>track.elements.map(element=>[element.id,element] as const))),ids=new Set<string>();
+ for(const track of [after.main,...after.overlay,...after.audio])for(const element of track.elements){
+  if(typeof element.mediaId==='string'&&canonical(old.get(element.id))!==canonical(element))ids.add(element.mediaId);
+ }
+ return ids;
 }

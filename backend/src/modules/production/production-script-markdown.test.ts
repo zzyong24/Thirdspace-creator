@@ -101,7 +101,7 @@ describe('T1274 Native Markdown projection / candidate', () => {
     const plan = fixture(); const transcript = plan.sourceTranscripts![0]! as any; transcript.tokens.push({ tokenId: 'local-3', text: '甲', startTicks: 2500, endTicks: 3000 });
     const read = readNativeScriptMarkdown(plan, 'scene'), first = block(read.markdown, 'a1'), sound = block(read.markdown, 'sound');
     const md = read.markdown.replace(first, first.replace('[s1] 甲', '[s999] 甲')).replace(sound, '');
-    const result = proposal(plan, md); expect(result.errors).toEqual([]); expect(result.warnings.join('\n')).toContain('保留原片段');
+    const result = proposal(plan, md); expect(result.errors.length).toBeGreaterThan(0); expect(result.warnings.join('\n')).toContain('保留原片段');
     expect(result.scene.tracks.main.elements).toEqual(scene(plan).tracks.main.elements); expect(result.scene.tracks.audio[0]!.elements).toEqual([]);
   });
   it('不能隔离未知语法/轨道身份时保整轨并errors；其他轨修改继续', () => {
@@ -111,7 +111,7 @@ describe('T1274 Native Markdown projection / candidate', () => {
   });
   it('停顿缺行/擅自缩短保持听审边界，保原且不自动删静音', () => {
     const plan = fixture(), read = readNativeScriptMarkdown(plan, 'scene', ['main']);
-    const result = proposal(plan, read.markdown.replace('[silence=60000t]', '[silence=0t]'), ['main']); expect(result.errors).toEqual([]); expect(result.warnings.join('\n')).toContain('听审'); expect(result.scene).toEqual(scene(plan));
+    const result = proposal(plan, read.markdown.replace('[silence=60000t]', '[silence=0t]'), ['main']); expect(result.errors.length).toBeGreaterThan(0); expect(result.warnings.join('\n')).toContain('听审'); expect(result.scene).toEqual(scene(plan));
   });
   it('无词级输入仅完整clip可编辑，segment粒度只精确句级，不能任意字符映射', () => {
     const plan = fixture(); plan.sourceTranscripts = plan.sourceTranscripts!.map(t => ({ transcriptId: t.transcriptId, sourceId: t.sourceId, assetFileId: t.assetFileId, audioDigest: t.audioDigest, providerReceiptId: t.providerReceiptId, providerEvidence: {}, granularity: 'text', text: '缺词级时码' }));

@@ -20,10 +20,11 @@ export function createChatWorkEditorToolHost(reader: Pick<ReturnType<typeof crea
         const definitions = frozen.modelInput.tools.filter(tool => Object.hasOwn(effects, tool.name));
         if (!definitions.length)
             return {};
+        const legacyWorkEditorProtocol=definitions.some(tool=>/^chat-tools-work-director-v[12]:/.test(tool.version));
         const context = frozen.hostContext.chatContext, target = workEditorTarget.parse(context.editorTarget);
         if (context.surface !== 'project' || context.projectId !== target.projectId)
             throw new Error('编导工具未绑定当前明确保存的作品');
-        const tools = buildChatTools(definitions.map(tool => tool.name), { humanizeError: () => null, editorTarget: target, readWorkEditor: async (input: WorkEditorReadInput) => { try {
+        const tools = buildChatTools(definitions.map(tool => tool.name), { humanizeError: () => null, legacyWorkEditorProtocol,editorTarget: target, readWorkEditor: async (input: WorkEditorReadInput) => { try {
                 return await service.read(frozen.context, target, input);
             }
             catch (error) {
@@ -38,10 +39,13 @@ export function createChatWorkEditorToolHost(reader: Pick<ReturnType<typeof crea
                     throw error;
                 return { kind: 'work.editor.candidate', schemaVersion: 1, target, base: target.savedBase, baseDigest: target.documentDigest, candidateDigest: null, summary: input.summary, candidate: null, changes: [], apply: null, imageRequest: null, failureCode: 'conflict', error: error.message };
             } } } as unknown as ChatToolDeps);
-        if (canonicalJson((await prepareChatToolDefinitions(tools)).definitions) !== canonicalJson(definitions))
+        if (canonicalJson((await prepareChatToolDefinitions(tools,{legacyWorkEditorProtocol,workWritingContext:legacyWorkEditorProtocol?definitions.every(tool=>tool.version.startsWith('chat-tools-work-director-v2:')):false})).definitions) !== canonicalJson(definitions))
             throw new Error('编导工具定义与任务快照不符');
         signal?.throwIfAborted();
         return tools;
     }
-    return async (ctx, _input, execution, signal) => { const prototypes = await resolve(ctx, execution, signal); return Object.keys(prototypes).length ? createChatHostToolAdapter(prototypes, resolve, effects) : {}; };
+    return async (ctx, _input, execution, signal) => { const prototypes = await resolve(ctx, execution, signal);if(!Object.keys(prototypes).length)return {};
+      const frozen=await reader.read({...execution}),definitions=frozen.modelInput.tools.filter(tool=>Object.hasOwn(effects,tool.name));
+      const legacyWorkEditorProtocol=definitions.some(tool=>/^chat-tools-work-director-v[12]:/.test(tool.version));
+      return createChatHostToolAdapter(prototypes,resolve,effects,{definitionOptions:{legacyWorkEditorProtocol,workWritingContext:legacyWorkEditorProtocol?definitions.every(tool=>tool.version.startsWith('chat-tools-work-director-v2:')):false}}); };
 }

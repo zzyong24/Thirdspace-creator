@@ -1,4 +1,4 @@
-import {workEditorReadInput,workEditorProposeInput,workCreationReadInput,workCreationProposalInput,type WorkEditorTarget,type WorkEditorContext,type WorkEditorCandidate,type WorkEditorReadInput,type WorkEditorProposeInput,type WorkCreationTarget,type WorkCreationReadResult,type WorkCreationProposalResult,type WorkCreationProposalInput} from "@creatoros/contract";
+import {workEditorReadInput,workEditorReadInputV1,workEditorProposeInputV1,workEditorProposeInput,workCreationReadInput,workCreationProposalInput,type WorkEditorTarget,type WorkEditorContext,type WorkEditorCandidate,type WorkEditorReadInput,type WorkEditorProposeInput,type WorkCreationTarget,type WorkCreationReadResult,type WorkCreationProposalResult,type WorkCreationProposalInput} from "@creatoros/contract";
 import {buildRedfoxTool} from "./chat-redfox-tool";
 import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
 import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
@@ -69,6 +69,7 @@ export interface ChatToolDeps {
     createCanvas:(input:import('zod').z.infer<typeof canvasCreateProposalInputSchema>)=>Promise<{kind:string}>;
     generateCanvas?:(input:import('zod').z.infer<typeof canvasGenerateProposalInputSchema>)=>Promise<{kind:string}>;
   };
+  legacyWorkEditorProtocol?:boolean;
   editorTarget?:WorkEditorTarget;
   readWorkEditor?:(input:WorkEditorReadInput)=>Promise<WorkEditorContext>;
   proposeWorkEditor?:(input:WorkEditorProposeInput)=>Promise<WorkEditorCandidate>;
@@ -4081,13 +4082,13 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 对话回合)—— dispatch 既有 asset.generate task,立即返回 taskId;前端 ChatGenerateCard
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
     "work.editor.read":defineChatTool("work.editor.read",{
-      description:"读取当前明确保存作品的真实版本、选区、字段窗口或完整文档。先读局部及前值digest，长结果按原toolCallId续读；scope仅在冻结output内，index只含机械身份索引。",
-      inputSchema:workEditorReadInput,
+      description:"读取当前明确保存作品的真实版本、选区、字段窗口或完整文档。先读局部及前值digest，长结果按原toolCallId续读；scope仅在冻结output内，index只含机械身份索引。"+(deps.legacyWorkEditorProtocol?'':' 视频剪辑使用view=script_markdown读取scriptMarkdown时间轴与只读libraryDocs；完整源身份、stateStamp/libraryStamp和declaredTrackIds均复制回执，不猜时间码。'),
+      inputSchema:deps.legacyWorkEditorProtocol?workEditorReadInputV1:workEditorReadInput,
       execute:async(input)=>{if(!deps.editorTarget||!deps.readWorkEditor)throw new ChatToolUserError('当前对话缺少已保存编辑目标');return deps.readWorkEditor(input);},
     },deps.humanizeError),
     "work.editor.propose":defineChatTool("work.editor.propose",{
-      description:"参数严格为{base,baseDigest,summary,candidate,imageRequest?}，base与baseDigest逐字复制work.editor.read回执，不自行构造版本或digest。candidate优先{kind:'typed_patch',owner,edits}；production还必填sceneId。每项编辑用type字段，不能用op/update_element/set_element_fields/beforeDigest/fields。视频局部修改严格为{type:'patchNativeElement',trackId,elementId,expectedElementDigest,patch:{本次明确修改的字段}}，expectedElementDigest复制selected对应elementDigest；可改name/startTime/duration/trimStart/trimEnd/sourceDuration/mediaId/isSourceAudioEnabled/hidden/retime/params/animations，时间均为120000 ticks/秒。retime为{rate,maintainPitch?}；params的名称从capabilities.paramsRegistry按元素类型复制；graphic另按definitionId查capabilities.graphicDefinitions，effect按effectType查capabilities.effectsCatalog，保留未改参数，不猜duration或真实媒体ID。替换用replaceNativeElement加element；删除用removeNativeElement；两者仍带trackId/elementId/expectedElementDigest。新增元素用insertNativeElement加trackId/expectedTrackDigest/element；移动用moveNativeElement加fromTrackId/toTrackId/elementId/expectedElementDigest/expectedFromTrackDigest/expectedToTrackDigest/startTime。文章局部修改为{type:'patchArticleSection',sectionId,expectedSectionDigest,patch:{heading?,headingLevel?,body?}}，标题摘要用patchArticleMetadata+expectedDocumentDigest+patch。图卡为{type:'patchGraphicCard',cardId,expectedCardDigest,patch:{title?,body?,visualBrief?}}，作品标题正文用patchGraphicMetadata+expectedDocumentDigest+patch。所有前值digest复制真实读取回执，文本精确范围另用replaceArticleTextRange/replaceGraphicTextRange，坐标为UTF16；不要把操作名或ID换成自创同义词。宿主机械保留未改正文、图片、来源、布局与其它场景，候选仅在工具成功回执后就绪；不保存正式作品，用户预览采纳后由原owner提交。",
-      inputSchema:workEditorProposeInput,
+      description:"参数严格为{base,baseDigest,summary,candidate,imageRequest?}，base与baseDigest逐字复制work.editor.read回执，不自行构造版本或digest。candidate优先{kind:'typed_patch',owner,edits}；production还必填sceneId。每项编辑用type字段，不能用op/update_element/set_element_fields/beforeDigest/fields。视频局部修改严格为{type:'patchNativeElement',trackId,elementId,expectedElementDigest,patch:{本次明确修改的字段}}，expectedElementDigest复制selected对应elementDigest；可改name/startTime/duration/trimStart/trimEnd/sourceDuration/mediaId/isSourceAudioEnabled/hidden/retime/params/animations，时间均为120000 ticks/秒。retime为{rate,maintainPitch?}；params的名称从capabilities.paramsRegistry按元素类型复制；graphic另按definitionId查capabilities.graphicDefinitions，effect按effectType查capabilities.effectsCatalog，保留未改参数，不猜duration或真实媒体ID。替换用replaceNativeElement加element；删除用removeNativeElement；两者仍带trackId/elementId/expectedElementDigest。新增元素用insertNativeElement加trackId/expectedTrackDigest/element；移动用moveNativeElement加fromTrackId/toTrackId/elementId/expectedElementDigest/expectedFromTrackDigest/expectedToTrackDigest/startTime。文章局部修改为{type:'patchArticleSection',sectionId,expectedSectionDigest,patch:{heading?,headingLevel?,body?}}，标题摘要用patchArticleMetadata+expectedDocumentDigest+patch。图卡为{type:'patchGraphicCard',cardId,expectedCardDigest,patch:{title?,body?,visualBrief?}}，作品标题正文用patchGraphicMetadata+expectedDocumentDigest+patch。所有前值digest复制真实读取回执，文本精确范围另用replaceArticleTextRange/replaceGraphicTextRange，坐标为UTF16；不要把操作名或ID换成自创同义词。宿主机械保留未改正文、图片、来源、布局与其它场景，候选仅在工具成功回执后就绪；不保存正式作品，用户预览采纳后由原owner提交。"+(deps.legacyWorkEditorProtocol?'':' 视频文字剪辑优先candidate={kind:\'markdown_timeline\',owner:\'production\',sceneId,markdown,declaredTrackIds,stateStamp,libraryStamp}。先script_markdown读取；保留顶部与scope/源标记，只编辑本次明确词句/片段顺序或删除行。原生时间单位120000ticks；不改只读源库，不按字数估时。重复句不能猜ID，检查scriptDiagnostics中的局部保留/纠错/行号，用户实际预览后采纳。'),
+      inputSchema:deps.legacyWorkEditorProtocol?workEditorProposeInputV1:workEditorProposeInput,
       execute:async(input)=>{if(!deps.editorTarget||!deps.proposeWorkEditor)throw new ChatToolUserError('当前对话缺少已保存编辑目标');return deps.proposeWorkEditor(input);},
     },deps.humanizeError),
     "work.creation.read":defineChatTool("work.creation.read",{

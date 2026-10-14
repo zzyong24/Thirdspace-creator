@@ -24,6 +24,7 @@ import type {
 // PERSISTED_OPS from PRODUCTION_OP_IDS (adding the module = registering it).
 
 export const PRODUCTION_OP_IDS = [
+ 'outputs.production.editor.script.read','outputs.production.editor.script.propose',
  'outputs.production.editor.rough-cut.create','outputs.production.editor.rough-cut.get','outputs.production.editor.rough-cut.adopt',
  "outputs.production.editor.convert.prepare","outputs.production.editor.convert.get","outputs.production.editor.convert.adopt",
  "outputs.production.editor.sources.retry",
@@ -124,6 +125,8 @@ export function createProductionTransport(
       };
 
       switch (endpoint.id) {
+        case 'outputs.production.editor.script.read':return {data:await service.readEditorScript(ctx,p.outputId??'',body),meta:{requestId}};
+        case 'outputs.production.editor.script.propose':return {data:await service.proposeEditorScript(ctx,p.outputId??'',body),meta:{requestId}};
         case 'outputs.production.editor.rough-cut.create':return{data:await service.createRoughCut(ctx,p.outputId??'',ENDPOINTS.createProductionRoughCut.body.parse(body)),meta:{requestId}};
         case 'outputs.production.editor.rough-cut.get':return{data:await service.getRoughCut(ctx,p.outputId??'',p.requestId??''),meta:{requestId}};
         case 'outputs.production.editor.rough-cut.adopt':return{data:await service.adoptRoughCut(ctx,p.outputId??'',ENDPOINTS.adoptProductionRoughCut.body.parse(body)),meta:{requestId}};

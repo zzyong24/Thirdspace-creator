@@ -146,3 +146,15 @@ it("脚本严格端口未注册和旧token不得发送联合创作；方法稳�
   expect(api.prepareScriptForCreation).toBe(fn);
   fresh();
 });
+
+it.each(["synced", "later-change", "dirty"])("原生采纳自身推进generation后，精确同步回执只放行当前clean稿：%s", async mode => {
+  render(<DraftChatRequestProvider><Consumer /></DraftChatRequestProvider>);
+  let generation=1, dirty=false;
+  act(()=>{api.registerEditor({
+    readState:()=>({target:null,outputId:"o",generation,dirty}),
+    prepareForTurn:async()=>{throw Error("不再生成");},previewCandidate:async()=>null,
+    adoptCandidate:async()=>{generation++;const syncedGeneration=generation;if(mode==="later-change")generation++;if(mode==="dirty")dirty=true;return {status:"adopted",revision:2,syncedGeneration};},
+  });});
+  let result:any;await act(async()=>{result=await api.adoptEditorCandidate({kind:"work.editor.candidate",target:{outputId:"o"}} as any,"same-native-adopt");});
+  expect(result).toMatchObject({status:mode==="synced"?"adopted":"saved-not-synced",revision:2});
+});

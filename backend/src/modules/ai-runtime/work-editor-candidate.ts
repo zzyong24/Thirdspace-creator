@@ -1,10 +1,11 @@
+import {readNativeScriptMarkdown,planNativeScriptMarkdown,nativeChangedMediaIds} from '../production/production-script-markdown';
 import { createHash } from 'node:crypto';
 import { workEditorTarget, workEditorReadInput, workEditorProposeInput, articleDocument, graphicPostDocument, productionReferencePlan, readProductionNativeScene, sourceNativeTick, validateNativeSceneTracksCandidate, productionNativeParamRegistryKeys, PRODUCTION_NATIVE_GRAPHIC_DEFINITIONS, NATIVE_SOURCE_REVISION, NATIVE_DOCUMENT_VERSION, NATIVE_TICKS_PER_SECOND, type RequestContext, type WorkEditorTarget, type WorkEditorReadInput, type WorkEditorProposeInput, type WorkEditorContext, type WorkEditorCandidate, type ArticleResource, type GraphicPostResource, type ProductionEditorDocument, type NativeSerializedScene, type NativeSerializedTimelineTracks as NativeSerializedSceneTracks, type NativeSerializedTimelineTrack, type NativeSerializedTimelineElement, type ProductionNativeMedia } from '@creatoros/contract';
 import { canonicalJson } from '../ai/canonical-json';
 import { ConflictError } from '../execution/execution.errors';
 export interface WorkEditorPorts {
-    readArticle(ctx: RequestContext, outputId: string): Promise<ArticleResource>;
-    readGraphicPost(ctx: RequestContext, outputId: string): Promise<GraphicPostResource>;
+    readArticle?(ctx: RequestContext, outputId: string): Promise<ArticleResource>;
+    readGraphicPost?(ctx: RequestContext, outputId: string): Promise<GraphicPostResource>;
     readProduction(ctx: RequestContext, outputId: string): Promise<ProductionEditorDocument>;
     readMedia(ctx: RequestContext, input: {
         projectId: string;
@@ -64,12 +65,13 @@ type Loaded = {
 };
 /** 语义由本轮Skill/模型负责；此服务只读真实owner并机械落实明确typed输入，不写正式作品。 */
 export function createWorkEditorCandidateService(ports: WorkEditorPorts) {
-    async function load(ctx: RequestContext, raw: WorkEditorTarget): Promise<Loaded> {
+    async function load(ctx: RequestContext, raw: WorkEditorTarget,scriptOnly=false): Promise<Loaded> {
         const target = workEditorTarget.parse(structuredClone(raw));
         let document: any, plan: any = null, scene: NativeSerializedScene | null = null;
         let media: Loaded['media'] = [];
         if (target.owner === 'wechat_article' || target.owner === 'graphic_post') {
-            const owner = target.owner === 'wechat_article' ? await ports.readArticle(ctx, target.outputId) : await ports.readGraphicPost(ctx, target.outputId);
+            if(target.owner==='wechat_article'&&!ports.readArticle||target.owner==='graphic_post'&&!ports.readGraphicPost)fail('此服务未提供对应作品读取端口');
+            const owner = target.owner === 'wechat_article' ? await ports.readArticle!(ctx, target.outputId) : await ports.readGraphicPost!(ctx, target.outputId);
             if (owner.projectId !== target.projectId || owner.outputId !== target.outputId || owner.artifactId !== target.savedBase.artifactId || owner.currentVersionId !== target.savedBase.versionId)
                 fail('作品保存版本已变化，请先保存并重新读取');
             document = structuredClone(owner.current);
@@ -123,14 +125,16 @@ export function createWorkEditorCandidateService(ports: WorkEditorPorts) {
                 if (!transcript || target.selection.transcript.tokenIds.some(id => !transcript.tokens.some((t: any) => t.tokenId === id)))
                     fail('原生转写选区已变化');
             }
-            media = await Promise.all(plan.referenceEditor.mediaRefs.map(async (ref: any) => { const exact = await ports.readMedia(ctx, { projectId: target.projectId, ...ref }); const probe = plan.nativeSources?.find((b: any) => b.mediaId === ref.mediaId && b.source.assetId === ref.assetId && b.source.assetFileId === ref.assetFileId); return { ...ref, ...exact, ...(probe ? { durationTick: sourceNativeTick(probe.source.durationTicks, probe.source) } : {}) }; }));
+            media = scriptOnly?[]:await Promise.all(plan.referenceEditor.mediaRefs.map(async (ref: any) => { const exact = await ports.readMedia(ctx, { projectId: target.projectId, ...ref }); const probe = plan.nativeSources?.find((b: any) => b.mediaId === ref.mediaId && b.source.assetId === ref.assetId && b.source.assetFileId === ref.assetFileId); return { ...ref, ...exact, ...(probe ? { durationTick: sourceNativeTick(probe.source.durationTicks, probe.source) } : {}) }; }));
         }
         return { target, document, plan, scene, media };
     }
     function complete(loaded: Loaded, document = loaded.document) { return { kind: loaded.target.owner === 'wechat_article' ? 'article' : loaded.target.owner === 'graphic_post' ? 'graphic_post' : 'native_scene', document }; }
     async function read(ctx: RequestContext, target: WorkEditorTarget, raw: WorkEditorReadInput = {}): Promise<WorkEditorContext> {
-        const input = workEditorReadInput.parse(raw), l = await load(ctx, target), t = l.target, d = l.document;
+        const input = workEditorReadInput.parse(raw), l = await load(ctx, target,input.view==='script_markdown'), t = l.target, d = l.document;
         let selected: any[] = [], summary: any = {}, scope: any = input.scope ?? t.selection;
+        if(input.view==='script_markdown'&&t.owner!=='production')fail('时间轴文字视图仅用于当前视频');
+        const scriptMarkdown=input.view==='script_markdown'?readNativeScriptMarkdown(l.plan,t.owner==='production'?t.selection.sceneId:'',input.scope?.kind==='native_elements'&&input.scope.elementRefs.length?[...new Set(input.scope.elementRefs.map(e=>e.trackId))]:undefined):undefined;
         if (t.owner === 'wechat_article') {
             if (input.scope && input.scope.kind !== 'article_sections')
                 fail('读取选区类型不符');
@@ -184,15 +188,21 @@ export function createWorkEditorCandidateService(ports: WorkEditorPorts) {
             scope = { kind: 'field_window', ...w };
             selected = [];
         }
-        return json({ kind: 'work.editor.context', schemaVersion: 1, target: t, base: t.savedBase, baseDigest: t.documentDigest, selection: t.selection, readScope: scope, selected, documentSummary: summary, document: input.view === 'document' ? complete(l) : null, projectEnvelope: l.plan ? { metadata: l.plan.referenceEditor.nativeDocument.metadata ?? null, settings: l.plan.referenceEditor.nativeDocument.settings ?? null } : null, media: l.media, sourceTranscripts: l.plan?.sourceTranscripts ?? [], capabilities: { typedPatch: true, ticksPerSecond: NATIVE_TICKS_PER_SECOND, nativeDocumentVersion: NATIVE_DOCUMENT_VERSION, nativeSourceRevision: NATIVE_SOURCE_REVISION, nativeRate: { min: .01, max: 5 }, paramsRegistry: Object.fromEntries(['video', 'image', 'text', 'audio', 'sticker', 'graphic', 'effect'].map(type => [type, productionNativeParamRegistryKeys(type)])), graphicDefinitions: Object.fromEntries(PRODUCTION_NATIVE_GRAPHIC_DEFINITIONS.map(id => [id, productionNativeParamRegistryKeys('graphic', id)])), effectsCatalog: [{ type: 'blur', params: productionNativeParamRegistryKeys('effect', undefined, 'blur') }], fields: t.owner === 'wechat_article' ? ['title', 'summary', 'tags', 'heading', 'headingLevel', 'body'] : t.owner === 'graphic_post' ? ['title', 'body', 'summary', 'tags', 'visualBrief'] : ['name', 'startTime', 'duration', 'trimStart', 'trimEnd', 'sourceDuration', 'mediaId', 'isSourceAudioEnabled', 'hidden', 'retime', 'params', 'animations'] }, fieldWindow, complete: true, failureCode: null, error: null });
+        return json({ kind: 'work.editor.context', schemaVersion: 1, target: t, base: t.savedBase, baseDigest: t.documentDigest, selection: t.selection, readScope: scope, selected, documentSummary: summary, document: input.view === 'document' ? complete(l) : null, projectEnvelope: l.plan ? { metadata: l.plan.referenceEditor.nativeDocument.metadata ?? null, settings: l.plan.referenceEditor.nativeDocument.settings ?? null } : null, media: l.media, sourceTranscripts: l.plan?.sourceTranscripts ?? [], ...(scriptMarkdown?{scriptMarkdown}:{}), capabilities: { markdownTimeline:t.owner==='production',scriptMarkdownView:'script_markdown', typedPatch: true, ticksPerSecond: NATIVE_TICKS_PER_SECOND, nativeDocumentVersion: NATIVE_DOCUMENT_VERSION, nativeSourceRevision: NATIVE_SOURCE_REVISION, nativeRate: { min: .01, max: 5 }, paramsRegistry: Object.fromEntries(['video', 'image', 'text', 'audio', 'sticker', 'graphic', 'effect'].map(type => [type, productionNativeParamRegistryKeys(type)])), graphicDefinitions: Object.fromEntries(PRODUCTION_NATIVE_GRAPHIC_DEFINITIONS.map(id => [id, productionNativeParamRegistryKeys('graphic', id)])), effectsCatalog: [{ type: 'blur', params: productionNativeParamRegistryKeys('effect', undefined, 'blur') }], fields: t.owner === 'wechat_article' ? ['title', 'summary', 'tags', 'heading', 'headingLevel', 'body'] : t.owner === 'graphic_post' ? ['title', 'body', 'summary', 'tags', 'visualBrief'] : ['name', 'startTime', 'duration', 'trimStart', 'trimEnd', 'sourceDuration', 'mediaId', 'isSourceAudioEnabled', 'hidden', 'retime', 'params', 'animations'] }, fieldWindow, complete: true, failureCode: null, error: null });
     }
     async function propose(ctx: RequestContext, target: WorkEditorTarget, raw: WorkEditorProposeInput): Promise<WorkEditorCandidate> {
-        const input = workEditorProposeInput.parse(raw), l = await load(ctx, target), t = l.target, original = l.document, next = structuredClone(original);
+        const input = workEditorProposeInput.parse(raw), l = await load(ctx, target,input.candidate.kind==='markdown_timeline'), t = l.target, original = l.document, next = structuredClone(original);
         check(input.base, t.savedBase, '候选保存版本不符');
         if (input.baseDigest !== t.documentDigest || input.candidate.owner !== t.owner)
             fail('候选归属或基点不符');
         const candidate = input.candidate;
-        if (candidate.kind === 'typed_snapshot') {
+        let scriptDiagnostics:ReturnType<typeof planNativeScriptMarkdown>|undefined;
+        if(candidate.kind==='markdown_timeline'){
+            if(t.owner!=='production'||candidate.sceneId!==t.selection.sceneId)fail('Markdown候选不是当前冻结场景');
+            scriptDiagnostics=planNativeScriptMarkdown(l.plan,candidate.sceneId,candidate);
+            next.tracks=structuredClone(scriptDiagnostics.scene.tracks);
+        }
+        else if (candidate.kind === 'typed_snapshot') {
             if (t.owner === 'production') {
                 const d = candidate.document as NativeSerializedScene;
                 check({ ...d, tracks: null }, { ...original, tracks: null }, '不能改写原生scene受保护字段');
@@ -314,8 +324,16 @@ export function createWorkEditorCandidateService(ports: WorkEditorPorts) {
             articleDocument.parse(next);
         else if (t.owner === 'graphic_post')
             graphicPostDocument.parse(next);
-        else
+        else if(!eq(original.tracks,next.tracks)){
+            if(scriptDiagnostics){
+                const required=nativeChangedMediaIds(original.tracks,next.tracks);
+                l.media=await Promise.all(l.plan.referenceEditor.mediaRefs.filter((ref:any)=>required.has(ref.mediaId)).map(async(ref:any)=>{
+                    const exact=await ports.readMedia(ctx,{projectId:t.projectId,...ref}),binding=l.plan.nativeSources?.find((item:any)=>item.mediaId===ref.mediaId);
+                    return {...ref,...exact,...(binding?{durationTick:sourceNativeTick(binding.source.durationTicks,binding.source)}:{})};
+                }));
+            }
             validateNativeSceneTracksCandidate(original.tracks, next.tracks, l.media);
+        }
         if (input.imageRequest && (t.owner !== 'graphic_post' || !(next.cardBriefs ?? []).some((c: any) => c.cardId === input.imageRequest!.cardId)))
             fail('换页图请求缺少真实card');
         const changes: Array<any> = [];
@@ -332,7 +350,7 @@ export function createWorkEditorCandidateService(ports: WorkEditorPorts) {
             changes.push({ path, objectId, label: path, before: before ?? null, after: after ?? null }); };
         diff(original, next, 'document', t.outputId);
         const apply = t.owner === 'wechat_article' || t.owner === 'graphic_post' ? { operation: t.owner === 'wechat_article' ? 'createArticleVersion' : 'createGraphicPostVersion', outputId: t.outputId, body: { expectedCurrentVersionId: t.savedBase.versionId, document: next } } : { operation: 'applyProductionEditor', outputId: t.outputId, body: { expectedRevision: t.savedBase.revision, edits: [{ type: 'replaceNativeSceneTracks', sceneId: next.id, expectedBeforeDigest: workEditorContentDigest(original.tracks), tracks: next.tracks }] } };
-        return json({ kind: 'work.editor.candidate', schemaVersion: 1, target: t, base: t.savedBase, baseDigest: t.documentDigest, candidateDigest: workEditorContentDigest(next), summary: input.summary, candidate: complete(l, next), changes, apply, imageRequest: input.imageRequest ?? null, failureCode: null, error: null });
+        return json({ kind: 'work.editor.candidate', schemaVersion: 1, target: t, base: t.savedBase, baseDigest: t.documentDigest, candidateDigest: workEditorContentDigest(next), summary: input.summary, candidate: complete(l, next), changes, ...(scriptDiagnostics?{scriptDiagnostics:{warnings:scriptDiagnostics.warnings,errors:scriptDiagnostics.errors,operations:scriptDiagnostics.operations}}:{}), apply:scriptDiagnostics&&!changes.length?null:apply, imageRequest: input.imageRequest ?? null, failureCode:scriptDiagnostics?.errors.length&&!changes.length?'script_input':null,error:scriptDiagnostics?.errors.length&&!changes.length?scriptDiagnostics.errors.map(issue=>`第 ${issue.line} 行：${issue.message}`).join('；'):null });
     }
     return { readTarget: async (ctx: RequestContext, target: WorkEditorTarget) => (await load(ctx, target)).target, read, propose };
 }

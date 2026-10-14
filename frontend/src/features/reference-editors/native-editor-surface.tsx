@@ -10,6 +10,7 @@ type Props = {
   owner: NativeEditorOwner;
   disabled?: boolean;
   visible?:boolean;
+  workspaceAddons?:{transcript:React.ReactNode;materials?:React.ReactNode;onDirectorMount?:(mount:HTMLElement)=>void|(()=>void);onPreviewMount?:(mount:HTMLElement)=>void|(()=>void)};
   onReady(): void;
   onChanged(value?: unknown): void;
   onImport(file: File, options?:{signal?:AbortSignal}): Promise<{mediaId: string}>;
@@ -22,6 +23,8 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
   const active = React.useRef<NativeEditorHandle | null>(null);
   const pending = React.useRef(new Map<string, {reject(error: Error): void; cleanup(): void}>());
   const callbacks = React.useRef(props);
+  const director=React.useRef<HTMLDivElement>(null),previewMount=React.useRef<HTMLDivElement>(null),releaseAddon=React.useRef<(()=>void)|null>(null);
+  const releaseAddons=()=>{const release=releaseAddon.current;releaseAddon.current=null;release?.();};
   const theme = useNativeEditorTheme();
   const latestTheme = React.useRef(theme);
   const [state, setState] = React.useState<'opening' | 'ready' | 'failed'>('opening');
@@ -54,11 +57,13 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
       });
     },
     update: options => active.current?.update(options),
-    dispose: async () => {const handle = active.current; active.current = null; for (const request of pending.current.values()) request.reject(new Error('已离开当前作品')); await handle?.dispose();},
+    dispose: async () => {releaseAddons();const handle = active.current; active.current = null; for (const request of pending.current.values()) request.reject(new Error('已离开当前作品')); await handle?.dispose();},
   }), []);
   const {groupId=null,accountId,projectId,outputId,sourceVersionId}=props.owner;
   const effectiveAccountId=groupId?null:accountId;
   const editor = props.editor;
+  const workspaceAddons=editor==='opencut-classic'&&Boolean(props.workspaceAddons);
+  React.useLayoutEffect(()=>{if(state!=='ready'||!workspaceAddons||props.visible===false||!director.current)return;const addons=callbacks.current.workspaceAddons;const releases=[addons?.onDirectorMount?.(director.current),previewMount.current?addons?.onPreviewMount?.(previewMount.current):undefined];let released=false;releaseAddon.current=()=>{if(released)return;released=true;for(const release of releases)release?.();};return releaseAddons;},[state,workspaceAddons,groupId,effectiveAccountId,projectId,outputId,sourceVersionId,props.visible,props.workspaceAddons?.onDirectorMount,props.workspaceAddons?.onPreviewMount]);
   const themeReady = theme !== null;
   React.useEffect(() => {
     if (!host.current || !latestTheme.current) return;
@@ -97,7 +102,7 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
         const [module] = await Promise.all([loadNativeEditor(editor), cssReady]);
         controller.signal.throwIfAborted();
         mounted = await module.mount(container, {
-          owner: {groupId,accountId:effectiveAccountId,projectId,outputId,sourceVersionId}, theme: latestTheme.current!, portalContainer: portals, signal: controller.signal,
+          owner: {groupId,accountId:effectiveAccountId,projectId,outputId,sourceVersionId},workspaceAddons, theme: latestTheme.current!, portalContainer: portals, signal: controller.signal,
           onChanged: value => {if (isCurrent()) callbacks.current.onChanged(value);},
           onError: message => {if (isCurrent()) callbacks.current.onError(message);},
           onImportActivity: pending => {if(isCurrent())callbacks.current.onImportActivity?.(pending);},
@@ -112,6 +117,7 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
       }
     })();
     return () => {
+      releaseAddons();
       controller.abort();
       controller.signal.removeEventListener('abort', abortCss);
       if (active.current === mounted) active.current = null;
@@ -122,12 +128,12 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
       for (const node of [container, portals, css, baseStyle]) node.remove();
     };
   // Theme 变化由 update 处理，不能重建时间轴或丢失图层。
-  }, [editor,groupId,effectiveAccountId,projectId,outputId,sourceVersionId,themeReady]);
+  }, [editor,groupId,effectiveAccountId,projectId,outputId,sourceVersionId,themeReady,workspaceAddons]);
   React.useEffect(() => {
     if (theme && host.current) {applyNativeEditorTheme(host.current, theme); active.current?.update({theme, disabled: props.disabled,visible:props.visible});}
   }, [theme, props.disabled,props.visible]);
   return <div className="relative h-full min-h-0 min-w-0" aria-busy={state === 'opening'}>
     {state !== 'ready' && <p role="status" className="absolute inset-x-0 top-0 z-10 bg-surface p-4 text-sm text-muted-foreground">{state === 'failed' ? '编辑器未完成加载，当前稿件已保留。' : '正在打开编辑器…'}</p>}
-    <div ref={host} className="relative h-full min-h-0 w-full" aria-label={props.editor === 'opencut-classic' ? '视频剪辑工作台' : props.editor === 'kuaitu' ? '图片设计工作台' : '公众号排版编辑器'} />
+    <div ref={host} className="relative h-full min-h-0 w-full" aria-label={props.editor === 'opencut-classic' ? '视频剪辑工作台' : props.editor === 'kuaitu' ? '图片设计工作台' : '公众号排版编辑器'} >{workspaceAddons?<><div slot="creatoros-materials" data-creatoros-addon="materials" className="min-w-0 p-3">{props.workspaceAddons?.materials}</div><div slot="creatoros-transcript" data-creatoros-addon="transcript" className="h-full min-h-0 min-w-0">{props.workspaceAddons?.transcript}</div><div ref={previewMount} slot="creatoros-preview" data-creatoros-addon="preview" className="h-full min-h-0 min-w-0 pointer-events-none"/><div ref={director} slot="creatoros-director" data-creatoros-addon="director" className="h-full min-h-0 min-w-0"/></>:null}</div>
   </div>;
 });

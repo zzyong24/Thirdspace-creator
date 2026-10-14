@@ -430,6 +430,8 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "outputs.production.editor.rough-cut.create": "project-derived",
   "outputs.production.editor.rough-cut.get": "project-derived",
   "outputs.production.editor.rough-cut.adopt": "project-derived",
+  "outputs.production.editor.script.read": "project-derived",
+  "outputs.production.editor.script.propose": "project-derived",
   "outputs.production.editor.get": "project-derived",
   "outputs.production.editor.save": "project-derived",
   "outputs.production.editor.apply": "project-derived",

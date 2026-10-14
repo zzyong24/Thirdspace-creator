@@ -26,3 +26,18 @@ it('原短host严格核三维owner/冻结effect版本并只产原owner候选', a
     frozen = { ...frozen, modelInput: { tools: [{ ...defs[0], version: 'forged' }] } };
     await expect(host(ctx, {} as any, ref, signal)).rejects.toThrow('定义');
 });
+
+it.each([false,true])('T1274旧冻结协议按原版本恢复，现有writing context=%s不改schema/effect/hash',async hasWriting=>{
+ const document={schemaVersion:1 as const,title:'旧任务',summary:'',sections:[],factItems:[],visualBriefs:[],imageUses:[]};
+ const target:WorkEditorTarget={schemaVersion:1,projectId:'p',outputId:'o',owner:'wechat_article',contentType:'article',savedBase:{kind:'artifact',artifactId:'artifact',versionId:'v'},documentDigest:workEditorContentDigest(document),selection:{kind:'article',sectionIds:[]}};
+ for(const version of [1,2]){
+  const tools=buildChatTools(['work.editor.read','work.editor.propose'],{humanizeError:()=>null,legacyWorkEditorProtocol:true} as any);
+  const definitions=(await prepareChatToolDefinitions(tools,{legacyWorkEditorProtocol:true,workWritingContext:version===2})).definitions;
+  const frozen:any={context:ctx,hostContext:{chatContext:{surface:'project',projectId:'p',editorTarget:target},...(hasWriting?{resolvedWritingContext:{frozen:'原任务来源'}}:{})},modelInput:{tools:definitions}};
+  const host=createChatWorkEditorToolHost({read:async()=>frozen} as any,{readArticle:async()=>({projectId:'p',outputId:'o',artifactId:'artifact',currentVersionId:'v',current:document,versions:[]}),readProduction:async()=>{throw Error('不读');},readMedia:async()=>{throw Error('不读');}});
+  const actual=await host(ctx,{} as any,ref,new AbortController().signal);expect(Object.keys(actual)).toEqual(['work.editor.read','work.editor.propose']);for(const definition of definitions)expect(actual[definition.name]?.version).toBe(definition.version);
+  const readTool=actual['work.editor.read'];if(!readTool?.execute)throw Error('旧read执行器缺失');const read=await readTool.execute(ctx,{view:'document'},{execution:ref,aiTaskId:'ai',callId:'legacy',toolCallId:'legacy',signal:new AbortController().signal});expect(read.status).toBe('ok');
+  frozen.modelInput.tools=[definitions[0],{...definitions[1],version:definitions[1]!.version.replace(`director-v${version}`,`director-v${version===1?2:1}`)}];
+  await expect(host(ctx,{} as any,ref,new AbortController().signal)).rejects.toThrow(/定义/);
+ }
+});

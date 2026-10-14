@@ -18,8 +18,8 @@ const outcome = (status: "error" | "blocked", code: "invalid_input" | "transient
  * resolve必须读取该任务已冻结的可信上下文和当前领域权限；不能接受模型自报ctx。
  * 本适配器不领取任务或自行重试，须装入 createExecutionChatToolPorts 使用其执行权/账本。
  */
-export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: ResolveChatHostTools, allowedEffects: Readonly<Record<string,"none"|"proposal">>, options:{toolFailureReceiptVersion?:1}={}): Promise<Record<string, ChatBackendTool>> {
-  const prepared = await prepareChatToolDefinitions(prototypes);
+export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: ResolveChatHostTools, allowedEffects: Readonly<Record<string,"none"|"proposal">>, options:{toolFailureReceiptVersion?:1;definitionOptions?:Parameters<typeof prepareChatToolDefinitions>[1]}={}): Promise<Record<string, ChatBackendTool>> {
+  const prepared = await prepareChatToolDefinitions(prototypes,options.definitionOptions);
   for (const definition of prepared.definitions) if (!Object.hasOwn(allowedEffects,definition.name) || definition.effect !== allowedEffects[definition.name]) throw new Error(`工具不是已审计的宿主短操作：${definition.name}`);
   return Object.fromEntries(prepared.definitions.map(definition => {
     const parameters = prepared.parameters[definition.name]!.parameters;
@@ -34,7 +34,7 @@ export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: Re
       signal?.throwIfAborted();
       const tool = Object.hasOwn(available, definition.name) ? available[definition.name] : undefined;
       if (!tool) throw new Error("工具已不在当前任务允许范围");
-      const resolved = await prepareChatToolDefinitions({ [definition.name]: tool });
+      const resolved = await prepareChatToolDefinitions({ [definition.name]: tool },options.definitionOptions);
       if (resolved.definitions[0]!.version !== definition.version) throw new Error("工具定义已改变，不能沿用旧参数执行");
       return tool;
     }
@@ -63,7 +63,7 @@ export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: Re
           // 卡片协议由既有工具登记表决定，例如 video.edit.render 返回 video.edit。
           if (record.kind !== CHAT_TOOL_ERROR_ENVELOPES[definition.name]?.kind) throw new Error("宿主工具结果类型与定义不符");
           const failed = typeof record.error === "string" && record.error.length > 0;
-          return agenticToolOutcomeSchema.parse({ status: failed ? "error" : "ok", summary: failed ? "读取未完成，请查看工具结果" : definition.effect === "proposal" ? "已生成候选，等待用户采纳" : "已读取当前工具结果", evidence: [], data, error: failed ? {code:"no_evidence",retryable:false,recovery:"检查工具结果后继续"} : null, continuation: null, sideEffect: failed ? "none" : definition.effect });
+          return agenticToolOutcomeSchema.parse({ status: failed ? "error" : "ok", summary: failed ? "读取未完成，请查看工具结果" : definition.effect === "proposal" ? (definition.name==="work.editor.propose"&&record.apply===null?"候选未产生改动，当前工程已保留":"已生成候选，等待用户采纳") : "已读取当前工具结果", evidence: [], data, error: failed ? {code:"no_evidence",retryable:false,recovery:"检查工具结果后继续"} : null, continuation: null, sideEffect: failed ? "none" : definition.effect });
         } catch (error) {
           if (scope.signal.aborted) return failure("error", "cancelled", false, "读取已停止");
           // 仅当前任务冻结的新格式公开已审核输入错误；未知异常和旧任务继续原回执。
