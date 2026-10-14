@@ -673,7 +673,7 @@
     },
     {
       "module": "src/embedded/preview-scene.ts",
-      "renderedLength": 7609
+      "renderedLength": 8566
     },
     {
       "module": "src/embedded/preview-workspace.tsx",

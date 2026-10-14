@@ -1,0 +1,42 @@
+{
+  "status": "OLD_PUBLIC_LOAD_EXPORT_REAL_MP4",
+  "results": [
+    {
+      "kind": "available-image-missing-overlay",
+      "bytes": 935,
+      "tracksPreserved": true,
+      "mime": "video/mp4"
+    },
+    {
+      "kind": "missing-main-color",
+      "bytes": 930,
+      "tracksPreserved": true,
+      "mime": "video/mp4"
+    },
+    {
+      "kind": "missing-main-text",
+      "bytes": 1388,
+      "tracksPreserved": true,
+      "mime": "video/mp4"
+    },
+    {
+      "kind": "missing-upload-audio",
+      "bytes": 935,
+      "tracksPreserved": true,
+      "mime": "video/mp4"
+    },
+    {
+      "kind": "missing-main-transparent",
+      "bytes": 903,
+      "tracksPreserved": true,
+      "mime": "video/mp4"
+    },
+    {
+      "kind": "missing-main-blur",
+      "bytes": 903,
+      "tracksPreserved": true,
+      "mime": "video/mp4"
+    }
+  ],
+  "errors": []
+}

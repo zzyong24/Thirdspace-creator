@@ -1,0 +1,128 @@
+[
+  {
+    "file": "old-available-image-missing-overlay.mp4",
+    "streams": [
+      {
+        "codec": "h264",
+        "type": "video",
+        "width": 64,
+        "height": 64,
+        "frames": "12",
+        "duration": "0.500000"
+      }
+    ],
+    "rgbSha256": "207b5a8c9ce233eca203c96962dc8e07663ef5ee9fba2b264c43ef6d038d8b90",
+    "rgbBytes": 147456,
+    "firstPixel": [
+      201,
+      66,
+      29
+    ],
+    "nonBlackPixels": 49152
+  },
+  {
+    "file": "old-missing-main-blur.mp4",
+    "streams": [
+      {
+        "codec": "h264",
+        "type": "video",
+        "width": 64,
+        "height": 64,
+        "frames": "12",
+        "duration": "0.500000"
+      }
+    ],
+    "rgbSha256": "8123c216413f82bbaa0339c27a43d9822c2a043e20662b27c97874429b996e9a",
+    "rgbBytes": 147456,
+    "firstPixel": [
+      0,
+      0,
+      0
+    ],
+    "nonBlackPixels": 0
+  },
+  {
+    "file": "old-missing-main-color.mp4",
+    "streams": [
+      {
+        "codec": "h264",
+        "type": "video",
+        "width": 64,
+        "height": 64,
+        "frames": "12",
+        "duration": "0.500000"
+      }
+    ],
+    "rgbSha256": "3361cc4b66527b9f6de02f1f8f8ac491a2275f3cbd80e9fa0e3f6f7fb13f1244",
+    "rgbBytes": 147456,
+    "firstPixel": [
+      33,
+      70,
+      206
+    ],
+    "nonBlackPixels": 49152
+  },
+  {
+    "file": "old-missing-main-text.mp4",
+    "streams": [
+      {
+        "codec": "h264",
+        "type": "video",
+        "width": 64,
+        "height": 64,
+        "frames": "12",
+        "duration": "0.500000"
+      }
+    ],
+    "rgbSha256": "82d9b7d1564975e1bbe8e612c723ea023491f8f8376b0813b21fb8d482713bfa",
+    "rgbBytes": 147456,
+    "firstPixel": [
+      0,
+      0,
+      0
+    ],
+    "nonBlackPixels": 8451
+  },
+  {
+    "file": "old-missing-main-transparent.mp4",
+    "streams": [
+      {
+        "codec": "h264",
+        "type": "video",
+        "width": 64,
+        "height": 64,
+        "frames": "12",
+        "duration": "0.500000"
+      }
+    ],
+    "rgbSha256": "8123c216413f82bbaa0339c27a43d9822c2a043e20662b27c97874429b996e9a",
+    "rgbBytes": 147456,
+    "firstPixel": [
+      0,
+      0,
+      0
+    ],
+    "nonBlackPixels": 0
+  },
+  {
+    "file": "old-missing-upload-audio.mp4",
+    "streams": [
+      {
+        "codec": "h264",
+        "type": "video",
+        "width": 64,
+        "height": 64,
+        "frames": "12",
+        "duration": "0.500000"
+      }
+    ],
+    "rgbSha256": "207b5a8c9ce233eca203c96962dc8e07663ef5ee9fba2b264c43ef6d038d8b90",
+    "rgbBytes": 147456,
+    "firstPixel": [
+      201,
+      66,
+      29
+    ],
+    "nonBlackPixels": 49152
+  }
+]

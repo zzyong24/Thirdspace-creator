@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/NATIVE_REBUILD_CONSISTENCY.json
-@@ -0,0 +1,93 @@
+@@ -0,0 +1,106 @@
 +{
 +  "historical": {
 +    "status": "PASS",
@@ -16,17 +16,17 @@
 +    }
 +  },
 +  "t1274Preview": {
-+    "status": "SINGLE_PREVIEW_FIT_REAL_CHROMIUM_VERIFIED_FULL_HOST_PENDING_ROOT",
++    "status": "PRESERVED_MISSING_MEDIA_REAL_MP4_VERIFIED_FULL_HOST_PENDING_ROOT",
 +    "files": {
-+      "native.js": "31c98a3ffb60048f3276d888de3b89258add8f2012c9aa656bb22de6b830d6b8",
++      "native.js": "99762027f59375adfcd5b7f287d5af16aaf7985d8539d33d277f8adb3f01208d",
 +      "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
-+      "NATIVE_BUILD_GRAPH.json": "20bcd02319aa001c3cc675b42f83e84f070c4bafc306cba866b5c1cc9a06db9e",
++      "NATIVE_BUILD_GRAPH.json": "8909f114309b66ae36fbb702f558283c922c2765906680e25da5e220b05b80dd",
 +      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
 +      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
 +      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
 +      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
 +    },
-+    "source": "单面板按真实画幅/可视高度限高，不改工程或渲染；8真实几何场景与归档再重建七份字节。"
++    "source": "保留缺失原素材警告与原构图安全输出；真实公开MP4和归档七输出一致。"
 +  },
 +  "historicalT1274PreviewBeforeSeparatedAudio": {
 +    "status": "SOURCE_BUILD_VERIFIED_GPU_MEDIA_NOT_VERIFIED",
@@ -92,38 +92,54 @@
 +      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
 +    },
 +    "source": "响应式flex长属性与CSS像素断点；真实几何红绿；归档再重建核七份字节。"
++  },
++  "historicalT1274PreviewBeforeDegrade": {
++    "status": "SINGLE_PREVIEW_FIT_REAL_CHROMIUM_VERIFIED_FULL_HOST_PENDING_ROOT",
++    "files": {
++      "native.js": "31c98a3ffb60048f3276d888de3b89258add8f2012c9aa656bb22de6b830d6b8",
++      "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
++      "NATIVE_BUILD_GRAPH.json": "20bcd02319aa001c3cc675b42f83e84f070c4bafc306cba866b5c1cc9a06db9e",
++      "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
++      "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
++      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
++      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
++    },
++    "source": "单面板按真实画幅/可视高度限高，不改工程或渲染；8真实几何场景与归档再重建七份字节。"
 +  }
 +}
 --- a/README.creatoros.md
 +++ b/README.creatoros.md
-@@ -1,64 +1,73 @@
+@@ -1,64 +1,75 @@
 -# 官方 OpenCut 完整编辑工作台的 CreatorOS 集成包
-+T-1274 单面板画面紧凑布局：按实际工程画幅与可视高度限高，播放工具栏紧随画面；其它单面板与桌面分栏保持。真实Chromium390/zoom2/横竖方画幅8场景通过，类型/71测试/58DOM通过。完整CreatorOS宿主由ROOT负责。
++T-1274 缺失原素材安全预览：同轨同ID完整原元素缺失时保轨并警告，沿旧renderer跳过；新增/修改缺失和错类型/归属/文件仍拒绝；原构图无可绘制节点明确说明。旧公开export六族与新preview四可输出族真实MP4逐帧一致；34公共case与全部86测试通过，正式采纳由ROOT复验。
  
 -原仓库：https://github.com/OpenCut-app/opencut-classic
 -固定提交：`cf5e79e919144200294fb9fed22a222592a0aeea`（已归档上游）。完整素材区、预览、属性区、时间轴及其命令/撤销/渲染仍来自原实现。
-+T-1274 响应式几何闭包：取消flex简写对分栏尺寸的清空，断点按CSS内容宽度处理zoom。真实Chromium生产native小型宿主72px主区RED→268px GREEN、390/zoom2/恢复宽屏几何和原实例通过；类型/71测试/58DOM通过。完整CreatorOS宿主与媒体验收由ROOT负责。
++T-1274 单面板画面紧凑布局：按实际工程画幅与可视高度限高，播放工具栏紧随画面；其它单面板与桌面分栏保持。真实Chromium390/zoom2/横竖方画幅8场景通过，类型/71测试/58DOM通过。完整CreatorOS宿主由ROOT负责。
  
 -## 集成接口
-+T-1274 响应式工作区：容器小于700px单面板，700至1099px预览与按需侧栏，宽屏原三栏；保持Core/portal/草稿实例。新增materials slot，候选开始自动画面、结束恢复原面板。类型/71测试与58项DOM夹具已验；真实宿主UI由ROOT验证，本子候选未签视觉/GPU/MP4。
++T-1274 响应式几何闭包：取消flex简写对分栏尺寸的清空，断点按CSS内容宽度处理zoom。真实Chromium生产native小型宿主72px主区RED→268px GREEN、390/zoom2/恢复宽屏几何和原实例通过；类型/71测试/58DOM通过。完整CreatorOS宿主与媒体验收由ROOT负责。
  
 -父页面与 iframe 必须同源；`iframe.src = '<静态目录>/index.html#/?session=<随机会话>'`。帧只接受 `event.source === parent`、精确同源、相同 session 的消息。
-+T-1274 中心候选预览闭包：第三named slot保持原预览实例，候选可见时锁原core/快捷键；compact header恢复原renameProject工程名。仅private export cache等待prefetch按实际PTS晋升，禁canvas池保同素材多层源帧；interactive沿原池。类型/71测试与DOM夹具已验；真实GPU、宿主E2E和最终48帧MP4由ROOT验，未签PASS。
++T-1274 响应式工作区：容器小于700px单面板，700至1099px预览与按需侧栏，宽屏原三栏；保持Core/portal/草稿实例。新增materials slot，候选开始自动画面、结束恢复原面板。类型/71测试与58项DOM夹具已验；真实宿主UI由ROOT验证，本子候选未签视觉/GPU/MP4。
  
 -消息外形：`{type:'creatoros.reference-editor',version:1,session,requestId,operation,payload}`。操作：
 -- `load`：`{document:nativeProject|null,title,outputId,media:[{mediaId,file:File,name,type:'video'|'image'|'audio',...原生元信息}]}`；原生文档为版本31，文档 metadata.id 必须等于 outputId。不转换旧 CreatorOS 工程。
 -- `snapshot`：回 `result`，payload 为 `{operation:'snapshot',document,mediaMetadata}`，不含 File/Blob/对象URL或临时缩略图。文档保持原生工程结构；父稿面负责显示、保存及原 Production CAS。
 -- `insert-media`：`{mediaId,file:File}`；真实已保存素材加入左侧素材区，由用户点击素材卡片的加号或拖入时间轴（双击仅选中），不自动做编排。
 -- `export`：可选 `{format:'mp4'|'webm'}`；原 MediaBunny/WebCodecs 导出后回 `{operation:'export',document,mediaMetadata,blob:Blob,fileName}`，document 与 mediaMetadata 来自本次渲染实际使用的同一冻结快照；导出时编辑输入被锁定，尚未完成的素材导入不可回写，结束或失败后恢复编辑。父稿面用同次回包的稿件做 CAS，再接既有作品成果服务并下载。
-+T-1274 分离原声兼容增量：上传音轨沿既有backend与audio-separation规则允许引用audio或video媒体，video/image引用仍严格匹配；新增公共controller真实RED→GREEN及三个不兼容类型回归。当前公共19例、完整66例；历史证据不覆盖。
++T-1274 中心候选预览闭包：第三named slot保持原预览实例，候选可见时锁原core/快捷键；compact header恢复原renameProject工程名。仅private export cache等待prefetch按实际PTS晋升，禁canvas池保同素材多层源帧；interactive沿原池。类型/71测试与DOM夹具已验；真实GPU、宿主E2E和最终48帧MP4由ROOT验，未签PASS。
  
 -帧发送 `ready`、`changed`；请求结果为 `result`，失败为 `error`，payload 内包含原 operation 和 message。原上传、粘贴文件先发送 `import-media` 的 `{file:File}`，父稿面必须完成真实上传和作品归属后同 requestId 回 `result` 的 `{operation:'import-media',mediaId}`，或者 error。原编辑素材只能使用回执中的真实ID；文件只保留于当前帧内存。
-+# T-1274 候选隔离预览增量
++T-1274 分离原声兼容增量：上传音轨沿既有backend与audio-separation规则允许引用audio或video媒体，video/image引用仍严格匹配；新增公共controller真实RED→GREEN及三个不兼容类型回归。当前公共19例、完整66例；历史证据不覆盖。
  
 -帧无 IndexedDB/OPFS 项目权或资产权，原自动保存只更新内存；载入建立原生结构基线，只有实际工程/素材元信息变化才通知 changed，忽略自动保存的 metadata.updatedAt/scene.updatedAt 和临时运行字段；离开、版本冲突或失败后恢复属于父稿面。不会从 iframe 直接访问 CreatorOS 数据库、任务或模型。
-+`preview-scene` 接收既有宿主owner、targetSceneId、baseContextEpoch、beforeDigest、完整scene candidateDigest、tracks及携assetId/assetFileId的真实File集合。克隆当前工程，仅目标scene轨道替换，调用原renderer.exportProject frozen接口，返回真实编码buffer形成的MP4 Blob。不flush/save、不暂停活动播放、不修改活动工程/撤销/selection/dirty/contextEpoch。导出范围和120000ticks/s保持原接口。
++# T-1274 候选隔离预览增量
  
 -## 可复建步骤
++`preview-scene` 接收既有宿主owner、targetSceneId、baseContextEpoch、beforeDigest、完整scene candidateDigest、tracks及携assetId/assetFileId的真实File集合。克隆当前工程，仅目标scene轨道替换，调用原renderer.exportProject frozen接口，返回真实编码buffer形成的MP4 Blob。不flush/save、不暂停活动播放、不修改活动工程/撤销/selection/dirty/contextEpoch。导出范围和120000ticks/s保持原接口。
+ 
+-使用 Bun1.4.0（首次安装实测）/Node25.9.0，可用默认公开 npm registry。source archive 排除 node_modules、环境文件、服务器/认证页面、analytics及测试harness。原始完整 source 链接与提交保留。
 +```mermaid
 +flowchart LR
 + A[当前工程与真实原片] --> B[owner/epoch/双摘要核对]
@@ -132,8 +148,7 @@
 + D --> E[原MediaBunny真实编码]
 + E --> F[再次核对 / 候选Blob]
 +```
- 
--使用 Bun1.4.0（首次安装实测）/Node25.9.0，可用默认公开 npm registry。source archive 排除 node_modules、环境文件、服务器/认证页面、analytics及测试harness。原始完整 source 链接与提交保留。
++
 +CanvasRenderer每实例持有原项目尺寸输出画布；共享WASM renderFrame与拷贝同步完成，不await后再读共享compositor。编码器释放临时源/缓存/画布/图片/音频context，取消继承原signal与context寿命，不续期。资源与公共控制器回归含真实RED；端口夹具只证明机械边界，真实GPU/MP4/宿主/E2E仍由主会话验收。
 +
 +以下历史说明保留。
@@ -3543,7 +3558,7 @@
 +});
 --- /dev/null
 +++ b/apps/web/src/embedded/__tests__/native-preview.test.ts
-@@ -0,0 +1,622 @@
+@@ -0,0 +1,844 @@
 +import { test, expect, mock } from "bun:test";
 +import {
 +  installNativeHost,
@@ -3561,17 +3576,31 @@
 +  revoked: string[] = [],
 +  render: ((args: any) => Promise<any>) | undefined;
 +const noop = () => {};
++Object.assign(globalThis, { location: { href: "http://localhost/" } });
 +mock.module("@/wasm", () => ({
 +  TICKS_PER_SECOND: 120000,
 +  ZERO_MEDIA_TIME: 0,
 +  mediaTime: (v: any) => v.ticks ?? v.time ?? 0,
++  mediaTimeFromSeconds: ({ seconds }: any) => Math.round(seconds * 120000),
++  mediaTimeToSeconds: ({ time }: any) => time / 120000,
++  ...Object.fromEntries(
++    [
++      "addMediaTime",
++      "subMediaTime",
++      "maxMediaTime",
++      "minMediaTime",
++      "clampMediaTime",
++      "roundFrameTime",
++      "roundFrameTicks",
++      "snapSeekMediaTime",
++      "lastFrameMediaTime",
++      "parseMediaTimecode",
++    ].map((name) => [name, (value: any) => value.time ?? value.ticks ?? 0]),
++  ),
++  roundMediaTime: ({ time }: any) => Math.round(time),
 +}));
 +mock.module("@/core", () => ({
 +  EditorCore: { getInstance: () => editor, reset: noop },
-+}));
-+mock.module("@/services/renderer/nodes/image-node", () => ({
-+  clearImageSources: noop,
-+  clearImageSourcesForUrls: noop,
 +}));
 +mock.module("@/services/video-cache/service", () => ({
 +  videoCache: { drain: async () => {}, clearVideo: noop },
@@ -4162,6 +4191,214 @@
 +      ).rejects.toMatchObject({ code: "ConflictError" });
 +      expect(renderCalls).toHaveLength(0);
 +      expect(JSON.stringify(stored)).toBe(before);
++    } finally {
++      await f.close();
++    }
++  });
++
++async function preserveMissingFixture(
++  f: Awaited<ReturnType<typeof fixture>>,
++  kind: "video" | "image" | "audio",
++  onlyMissing = false,
++  background: any = { type: "color", color: "#2244cc" },
++) {
++  const item: any = {
++    id: "missing-original",
++    name: "原有缺失素材",
++    type: kind,
++    mediaId: "missing-original-media",
++    startTime: 0,
++    duration: 60000,
++    trimStart: 0,
++    trimEnd: 0,
++    params: { opaque: "preserve" },
++    ...(kind === "audio" ? { sourceType: "upload", volume: 0 } : {}),
++  };
++  const before = stored.scenes[0].tracks;
++  if (onlyMissing) {
++    before.main.elements = [item];
++    before.overlay = [];
++    before.audio = [];
++    f.payload.media = [];
++    stored.settings.background = background;
++  } else if (kind === "audio")
++    before.audio.push({
++      id: "missing-track",
++      type: "audio",
++      name: "原音轨",
++      muted: false,
++      elements: [item],
++    });
++  else
++    before.overlay.push({
++      id: "missing-track",
++      type: "video",
++      name: "原叠加轨",
++      hidden: false,
++      elements: [item],
++    });
++  f.payload.tracks = structuredClone(before);
++  f.payload.beforeDigest = await nativeDigest(before);
++  f.payload.candidateDigest = await nativeDigest({
++    ...stored.scenes[0],
++    tracks: f.payload.tracks,
++  });
++  return item;
++}
++for (const kind of ["video", "image", "audio"] as const)
++  test(`旧${kind}缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks`, async () => {
++    const f = await fixture();
++    try {
++      const item = await preserveMissingFixture(f, kind),
++        before = JSON.stringify(stored),
++        epoch = currentNativeContextEpoch();
++      const result: any = await f.controller.request(
++        "preview-scene",
++        f.payload,
++      );
++      expect(result.warnings).toEqual([
++        {
++          code: "preserved_missing_media",
++          trackId: "missing-track",
++          elementId: item.id,
++          mediaId: item.mediaId,
++          message:
++            "原有素材“原有缺失素材”暂不可用，预览已跳过该元素，工程仍保留原引用。",
++        },
++      ]);
++      expect(renderCalls).toHaveLength(1);
++      expect(renderCalls[0].frozen.tracks).toEqual(f.payload.tracks);
++      expect(JSON.stringify(stored)).toBe(before);
++      expect(currentNativeContextEpoch()).toBe(epoch);
++    } finally {
++      await f.close();
++    }
++  });
++for (const change of [
++  "new",
++  "duration",
++  "params",
++  "mediaId",
++  "move-track",
++] as const)
++  test(`缺失素材${change}不能借保留旧元素放宽`, async () => {
++    const f = await fixture();
++    try {
++      await preserveMissingFixture(f, "image");
++      const track = f.payload.tracks.overlay.at(-1)!,
++        item: any = track.elements[0];
++      if (change === "new") item.id = "new-element";
++      if (change === "duration") item.duration++;
++      if (change === "params") item.params.extra = true;
++      if (change === "mediaId") item.mediaId = "another-missing";
++      if (change === "move-track") track.id = "other-track";
++      f.payload.candidateDigest = await nativeDigest({
++        ...stored.scenes[0],
++        tracks: f.payload.tracks,
++      });
++      await expect(
++        f.controller.request("preview-scene", f.payload),
++      ).rejects.toMatchObject({ code: "ConflictError" });
++      expect(renderCalls).toHaveLength(0);
++    } finally {
++      await f.close();
++    }
++  });
++for (const background of [
++  { type: "color", color: "#2244cc" },
++  { type: "color", color: "#000000" },
++])
++  test(`全部主素材缺失但显式${background.color}背景是原renderer合法画面`, async () => {
++    const f = await fixture();
++    try {
++      await preserveMissingFixture(f, "video", true, background);
++      const result: any = await f.controller.request(
++        "preview-scene",
++        f.payload,
++      );
++      expect(result.warnings).toHaveLength(1);
++      expect(renderCalls[0].frozen.tracks).toEqual(f.payload.tracks);
++    } finally {
++      await f.close();
++    }
++  });
++for (const background of [
++  { type: "color", color: "transparent" },
++  { type: "blur", blurIntensity: 10 },
++])
++  test(`全部素材缺失且${background.type}无画面时明确拒绝，不把旧全黑片签成有效候选`, async () => {
++    const f = await fixture();
++    try {
++      await preserveMissingFixture(f, "video", true, background);
++      await expect(
++        f.controller.request("preview-scene", f.payload),
++      ).rejects.toThrow("没有可预览的画面");
++      expect(renderCalls).toHaveLength(0);
++    } finally {
++      await f.close();
++    }
++  });
++test("全部主素材缺失但原文字图层存在仍可预览", async () => {
++  const f = await fixture();
++  try {
++    const text = structuredClone(stored.scenes[0].tracks.overlay[0]);
++    await preserveMissingFixture(f, "video", true, {
++      type: "color",
++      color: "transparent",
++    });
++    stored.scenes[0].tracks.overlay = [text];
++    f.payload.tracks = structuredClone(stored.scenes[0].tracks);
++    f.payload.beforeDigest = await nativeDigest(f.payload.tracks);
++    f.payload.candidateDigest = await nativeDigest({
++      ...stored.scenes[0],
++      tracks: f.payload.tracks,
++    });
++    const result: any = await f.controller.request("preview-scene", f.payload);
++    expect(result.warnings).toHaveLength(1);
++    expect(renderCalls).toHaveLength(1);
++  } finally {
++    await f.close();
++  }
++});
++for (const kind of ["effect-only", "hidden-text"] as const)
++  test(`缺失主素材后${kind}不冒充可用画面`, async () => {
++    const f = await fixture();
++    try {
++      await preserveMissingFixture(f, "video", true, {
++        type: "color",
++        color: "transparent",
++      });
++      stored.scenes[0].tracks.overlay = [
++        {
++          id: "remaining",
++          type: kind === "effect-only" ? "effect" : "text",
++          name: "原图层",
++          hidden: kind === "hidden-text",
++          elements: [
++            {
++              id: "remaining-element",
++              type: kind === "effect-only" ? "effect" : "text",
++              name: "原元素",
++              effectType: "blur",
++              startTime: 0,
++              duration: 60000,
++              trimStart: 0,
++              trimEnd: 0,
++              params: {},
++            },
++          ],
++        },
++      ];
++      f.payload.tracks = structuredClone(stored.scenes[0].tracks);
++      f.payload.beforeDigest = await nativeDigest(f.payload.tracks);
++      f.payload.candidateDigest = await nativeDigest({
++        ...stored.scenes[0],
++        tracks: f.payload.tracks,
++      });
++      await expect(
++        f.controller.request("preview-scene", f.payload),
++      ).rejects.toThrow("没有可预览的画面");
++      expect(renderCalls).toHaveLength(0);
 +    } finally {
 +      await f.close();
 +    }
@@ -5398,7 +5635,7 @@
 +@container(max-width:260px){.reference-media-secondary{display:none;}}
 --- /dev/null
 +++ b/apps/web/src/embedded/preview-scene.ts
-@@ -0,0 +1,321 @@
+@@ -0,0 +1,362 @@
 +import type { EditorCore } from "@/core";
 +import type { TProject } from "@/project/types";
 +import type { SceneTracks } from "@/timeline/types";
@@ -5419,6 +5656,15 @@
 +  nativeDigest,
 +} from "./native-operations";
 +import { CURRENT_PROJECT_VERSION } from "./native-version";
++import { buildScene } from "@/services/renderer/scene-builder";
++import { EffectLayerNode } from "@/services/renderer/nodes/effect-layer-node";
++export type PreviewSceneWarning = {
++  code: "preserved_missing_media";
++  trackId: string;
++  elementId: string;
++  mediaId: string;
++  message: string;
++};
 +type PreviewMedia = {
 +  mediaId: string;
 +  assetId: string;
@@ -5465,6 +5711,7 @@
 +    ids = new Set<string>(),
 +    elementIds = new Set<string>();
 +  let duration = 0;
++  const warnings: PreviewSceneWarning[] = [];
 +  for (const track of [after.main, ...after.overlay, ...after.audio]) {
 +    if (
 +      !track ||
@@ -5534,13 +5781,27 @@
 +        (item.type === "audio" && item.sourceType === "upload")
 +      ) {
 +        const asset = media.get(item.mediaId);
-+        if (
-+          !asset ||
-+          (item.type === "audio"
++        if (!asset) {
++          // 只保留同轨同ID且全部字段相同的原缺失引用；新增/改动不能降级。
++          if (
++            !old ||
++            canonicalNative(nativeJson(old)) !== canonicalNative(item)
++          )
++            conflict("候选引用的真实素材文件缺失或类型不匹配。");
++          warnings.push({
++            code: "preserved_missing_media",
++            trackId: track.id,
++            elementId: item.id,
++            mediaId: item.mediaId,
++            message: `原有素材“${typeof item.name === "string" && item.name ? item.name : "未命名素材"}”暂不可用，预览已跳过该元素，工程仍保留原引用。`,
++          });
++        } else if (
++          item.type === "audio"
 +            ? asset.type !== "audio" && asset.type !== "video"
-+            : asset.type !== item.type)
-+        )
++            : asset.type !== item.type
++        ) {
 +          conflict("候选引用的真实素材文件缺失或类型不匹配。");
++        }
 +      }
 +      if (
 +        "retime" in item &&
@@ -5553,7 +5814,7 @@
 +      duration = Math.max(duration, item.startTime + item.duration);
 +    }
 +  }
-+  return mediaTime({ ticks: duration });
++  return { duration: mediaTime({ ticks: duration }), warnings };
 +}
 +export async function previewNativeScene(
 +  editor: EditorCore,
@@ -5653,7 +5914,7 @@
 +    files.set(item.mediaId, item);
 +  }
 +  const tracks = structuredClone(payload.tracks),
-+    duration = validateTracks(tracks, original.tracks, files);
++    { duration, warnings } = validateTracks(tracks, original.tracks, files);
 +  if (TICKS_PER_SECOND !== 120000) conflict("原生时间基准不匹配。");
 +  const project = nativeJson(live) as TProject;
 +  project.metadata.createdAt = new Date(project.metadata.createdAt);
@@ -5692,6 +5953,22 @@
 +        url,
 +      };
 +    });
++    // SEMANTIC_BOUNDARY_ALLOW: 复用原renderer的可见轨/隐藏元素/媒体/背景构图，
++    // 只核机械可绘制节点；不做创作选择或删除轨道。
++    // 仅本轮有缺失降级时核对仍有实际绘制节点，effect-only不构成画面。
++    if (warnings.length > 0) {
++      const scene = buildScene({
++        tracks,
++        mediaAssets,
++        canvasSize: project.settings.canvasSize,
++        background: project.settings.background,
++        duration,
++      });
++      if (!scene.children.some((node) => !(node instanceof EffectLayerNode)))
++        conflict(
++          "缺失素材后当前场景没有可预览的画面，请补齐素材或保留可用图层与背景。",
++        );
++    }
 +    const result = await editor.renderer.exportProject({
 +      options: {
 +        format: "mp4",
@@ -5714,6 +5991,7 @@
 +      candidateDigest: payload.candidateDigest,
 +      contextEpoch: epoch,
 +      documentVersion: CURRENT_PROJECT_VERSION,
++      ...(warnings.length > 0 ? { warnings } : {}),
 +    };
 +  } finally {
 +    clearImageSourcesForUrls(urls);

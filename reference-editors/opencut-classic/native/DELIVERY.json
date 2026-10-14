@@ -1,6 +1,6 @@
 {
   "task": "T-1274",
-  "deliveryStatus": "NATIVE_SINGLE_PREVIEW_FIT_REAL_CHROMIUM_VERIFIED_FULL_HOST_PENDING_ROOT",
+  "deliveryStatus": "NATIVE_PRESERVED_MISSING_MEDIA_REAL_MP4_VERIFIED_FULL_HOST_PENDING_ROOT",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
@@ -10,14 +10,14 @@
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6639261,
+    "esmBytes": 6640146,
     "cssBytes": 131177,
     "licensedDependencies": 59,
     "renderedModules": 430,
     "nativeHashes": {
-      "native.js": "31c98a3ffb60048f3276d888de3b89258add8f2012c9aa656bb22de6b830d6b8",
+      "native.js": "99762027f59375adfcd5b7f287d5af16aaf7985d8539d33d277f8adb3f01208d",
       "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
-      "NATIVE_BUILD_GRAPH.json": "20bcd02319aa001c3cc675b42f83e84f070c4bafc306cba866b5c1cc9a06db9e",
+      "NATIVE_BUILD_GRAPH.json": "8909f114309b66ae36fbb702f558283c922c2765906680e25da5e220b05b80dd",
       "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
       "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
@@ -31,39 +31,38 @@
   "source": {
     "files": 715,
     "changedFiles": 82,
-    "archiveBytes": 769764,
-    "patchBytes": 438817,
+    "archiveBytes": 772169,
+    "patchBytes": 449489,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "fce6081b182f69f017e0505ebe2ea26282daffb3a151730bc330b94b11a0836a",
-      "native-from-t1046.patch": "37c7c0398ffd01afc7a8a2d022ba71e1a6b456bb48325ea28ee72bb2e640cf41",
+      "native-source.tar.gz": "751fe1e56a378bac1c524b03e8dc68faccda406d7b02385c4671f991ef5e4e35",
+      "native-from-t1046.patch": "5b0566dd02253ce78a75426ee6127db47836cd04ab3eb0f3e246dc399425802f",
       "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "verification/t1274-responsive-fit/source-reconstruction.json",
-    "productionReconstructionEvidence": "verification/t1274-responsive-fit/production-reconstruction.json",
-    "archiveSha256": "fce6081b182f69f017e0505ebe2ea26282daffb3a151730bc330b94b11a0836a",
-    "patchSha256": "37c7c0398ffd01afc7a8a2d022ba71e1a6b456bb48325ea28ee72bb2e640cf41"
+    "reconstructionEvidence": "verification/t1274-preserved-missing-media/source-reconstruction.json",
+    "productionReconstructionEvidence": "verification/t1274-preserved-missing-media/production-reconstruction.json",
+    "archiveSha256": "751fe1e56a378bac1c524b03e8dc68faccda406d7b02385c4671f991ef5e4e35",
+    "patchSha256": "5b0566dd02253ce78a75426ee6127db47836cd04ab3eb0f3e246dc399425802f"
   },
   "verification": {
-    "totalTests": 71,
-    "totalAssertions": 341,
+    "totalTests": 86,
+    "totalAssertions": 380,
     "testFailures": 0,
     "typecheckExitCode": 0,
     "fixtureOnly": false,
     "browserAutomation": "真实Chromium生产native小型宿主几何，不是完整CreatorOS E2E",
     "realGpu": "not_run",
-    "realMp4": "not_run",
-    "domFixture": {
-      "responsiveAndCenter": 58
-    },
+    "realMp4": "六旧export/四新preview真实MP4，4组全部12帧RGB和stream相同；2组无画面明确拒绝",
+    "domFixture": {},
     "historicalDomFixtureChecks": 60,
     "allFailuresPreserved": true,
     "unreplacedNodeEnv": 0,
     "unguardedGlobalProcessReferences": 0,
-    "evidenceDirectory": "verification/t1274-responsive-fit",
-    "realGeometryCases": 8
+    "evidenceDirectory": "verification/t1274-preserved-missing-media",
+    "realGeometryCases": 0,
+    "domNotRerun": true
   },
   "limitations": [
     "原Canvas/Fabric夹具与JSDOM环境不等于真实浏览器像素或安装。",
@@ -1824,5 +1823,135 @@
     "realMediaExport": "本子候选未跑；不代签ROOT旧真实媒体证据",
     "independentVisualScore": "未评分；已看390/zoom2/portrait真实Chromium截图",
     "privateExactCacheControllerAndRendererBytesUnchanged": true
+  },
+  "historicalT1274BeforeDegradeTop": {
+    "deliveryStatus": "NATIVE_SINGLE_PREVIEW_FIT_REAL_CHROMIUM_VERIFIED_FULL_HOST_PENDING_ROOT",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6639261,
+      "cssBytes": 131177,
+      "licensedDependencies": 59,
+      "renderedModules": 430,
+      "nativeHashes": {
+        "native.js": "31c98a3ffb60048f3276d888de3b89258add8f2012c9aa656bb22de6b830d6b8",
+        "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
+        "NATIVE_BUILD_GRAPH.json": "20bcd02319aa001c3cc675b42f83e84f070c4bafc306cba866b5c1cc9a06db9e",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "本次复用上一轮真实冻结安装，锁文件未变",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 715,
+      "changedFiles": 82,
+      "archiveBytes": 769764,
+      "patchBytes": 438817,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "fce6081b182f69f017e0505ebe2ea26282daffb3a151730bc330b94b11a0836a",
+        "native-from-t1046.patch": "37c7c0398ffd01afc7a8a2d022ba71e1a6b456bb48325ea28ee72bb2e640cf41",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "verification/t1274-responsive-fit/source-reconstruction.json",
+      "productionReconstructionEvidence": "verification/t1274-responsive-fit/production-reconstruction.json",
+      "archiveSha256": "fce6081b182f69f017e0505ebe2ea26282daffb3a151730bc330b94b11a0836a",
+      "patchSha256": "37c7c0398ffd01afc7a8a2d022ba71e1a6b456bb48325ea28ee72bb2e640cf41"
+    },
+    "verification": {
+      "totalTests": 71,
+      "totalAssertions": 341,
+      "testFailures": 0,
+      "typecheckExitCode": 0,
+      "fixtureOnly": false,
+      "browserAutomation": "真实Chromium生产native小型宿主几何，不是完整CreatorOS E2E",
+      "realGpu": "not_run",
+      "realMp4": "not_run",
+      "domFixture": {
+        "responsiveAndCenter": 58
+      },
+      "historicalDomFixtureChecks": 60,
+      "allFailuresPreserved": true,
+      "unreplacedNodeEnv": 0,
+      "unguardedGlobalProcessReferences": 0,
+      "evidenceDirectory": "verification/t1274-responsive-fit",
+      "realGeometryCases": 8
+    }
+  },
+  "t1274PreservedMissingMediaVerification": {
+    "scope": "缺失原元素在同轨同ID完整JSON相等时保留引用、原renderer跳过并警告；新增/改动缺失仍拒绝；无原构图画面明确说明",
+    "sourceFiles": 715,
+    "changedSourceMembers": [
+      "./NATIVE_REBUILD_CONSISTENCY.json",
+      "./README.creatoros.md",
+      "./apps/web/src/embedded/__tests__/native-preview.test.ts",
+      "./apps/web/src/embedded/preview-scene.ts"
+    ],
+    "red": {
+      "tests": 32,
+      "pass": 24,
+      "fail": 8,
+      "log": "red-public.log"
+    },
+    "tests": {
+      "pass": 86,
+      "fail": 0,
+      "assertions": 380,
+      "log": "regression.log"
+    },
+    "publicController": {
+      "pass": 34,
+      "fail": 0,
+      "assertions": 124,
+      "log": "green-public-final.log"
+    },
+    "realChromiumMp4": {
+      "oldPublicLoadExportFamilies": 6,
+      "newPublicPreviewOutputFamilies": 4,
+      "newNoVisualRejectedFamilies": 2,
+      "eachFile": "64×64 H264 24fps，0.5秒，12帧",
+      "fourFullRgbAndStreamComparisonsEqual": true,
+      "tracksPreserved": true,
+      "noActiveDraftMutation": true,
+      "pageErrors": 0,
+      "evidence": [
+        "old-export.json",
+        "old-export-decode.json",
+        "candidate-export.json",
+        "candidate-vs-old-decode.json"
+      ]
+    },
+    "warningShape": {
+      "code": "preserved_missing_media",
+      "trackId": "string",
+      "elementId": "string",
+      "mediaId": "string",
+      "message": "人话原因"
+    },
+    "domOrGeometry": "本轮不改UI，未重跑；旧58DOM/8实际几何证据按原轮次保留，不签成本轮执行",
+    "typecheckExitCode": 0,
+    "processAST": "PASS",
+    "productionBuildExitCode": 0,
+    "sourcePatchFuzz": 0,
+    "archiveSourceAndBothPublishedSevenOutputsBytesMatch": true,
+    "fixturePublished": false,
+    "fullCreatorOSHost": "root负责warnings显示/后端采纳和最终宿主复验，本子候选未跑",
+    "rendererCoreCacheAndLayoutBytesUnchanged": true,
+    "environmentFailuresPreserved": [
+      "green-public-first.log（旧mock缺mediaTimeFromSeconds）",
+      "green-public-second.log（旧mock缺ImageNode）",
+      "green-public-third.log（Node fixture缺location）"
+    ]
   }
 }
