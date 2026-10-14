@@ -1,0 +1,47 @@
+{
+  "status": "PASS_NATIVE_TOOLBAR_REAL_CHROMIUM_FULL_HOST_PENDING_ROOT",
+  "red": {
+    "fitRight": 286.34375,
+    "panelRight": 270,
+    "log": "red.log"
+  },
+  "green": {
+    "fitRight": 213,
+    "fullscreenRight": 262,
+    "panelRight": 270,
+    "containerWidths": [
+      260,
+      278,
+      390,
+      1000,
+      1280
+    ],
+    "cssZoom2": true,
+    "interactions": [
+      "Fit到100%再Fit",
+      "键盘打开缩放菜单",
+      "播放与暂停",
+      "编辑时间码到1秒",
+      "进入及退出全屏"
+    ],
+    "sameCanvas": true,
+    "pageErrors": 0
+  },
+  "legacyGeometryCases": 8,
+  "tests": 86,
+  "assertions": 380,
+  "legacyDom": 38,
+  "workspaceDom": 22,
+  "responsiveDom": 58,
+  "sourceFiles": 715,
+  "patchFuzz": 0,
+  "sevenOutputsMatch": true,
+  "fullCreatorOSHost": false,
+  "mediaExportThisRound": false,
+  "visualScore": "未重评分；功能裁切修复",
+  "fixtureFailuresPreserved": [
+    "green-first-generator-overwrite.log",
+    "green-second-empty-project.log",
+    "green-third-unscoped-textbox.log"
+  ]
+}

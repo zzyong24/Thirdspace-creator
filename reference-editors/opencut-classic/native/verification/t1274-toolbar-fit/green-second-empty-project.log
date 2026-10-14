@@ -1,0 +1,56 @@
+ExpectError: expect(locator).toBeVisible() failed
+
+Locator: getByRole('button', { name: '暂停', exact: true })
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "to.be.visible" with timeout 5000ms
+  - waiting for getByRole('button', { name: '暂停', exact: true })
+
+    at captureRawStack (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:3130:17)
+    at callMatcherAsStep (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12873:57)
+    at Object.toBeVisible (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12863:23)
+    at /private/tmp/t1274-native-toolbar-proof/geometry.cjs:13:125 {
+  matcherResult: {
+    message: 'expect(locator).toBeVisible() failed\n' +
+      '\n' +
+      "Locator: getByRole('button', { name: '暂停', exact: true })\n" +
+      'Expected: visible\n' +
+      'Timeout: 5000ms\n' +
+      'Error: element(s) not found\n' +
+      '\n' +
+      'Call log:\n' +
+      '  - Expect "to.be.visible" with timeout 5000ms\n' +
+      "  - waiting for getByRole('button', { name: '暂停', exact: true })\n",
+    pass: false,
+    actual: undefined,
+    name: 'toBeVisible',
+    expected: 'visible',
+    log: [
+      '  - Expect "to.be.visible" with timeout 5000ms',
+      "  - waiting for getByRole('button', { name: '暂停', exact: true })"
+    ],
+    timeout: 5000,
+    ariaSnapshot: '- region "Notifications alt+T"\n' +
+      '- banner:\n' +
+      '  - text: 工程\n' +
+      '  - textbox "剪辑工程名称": 原生实际几何验收\n' +
+      '  - navigation\n' +
+      '- navigation "剪辑工作区面板":\n' +
+      '  - button "素材/转录"\n' +
+      '  - button "画面" [pressed]\n' +
+      '  - button "时间轴"\n' +
+      '  - button "编导/属性"\n' +
+      '- application "Preview canvas"\n' +
+      '- group "画面播放控制":\n' +
+      '  - button "00:00:00:00"\n' +
+      '  - text: / 00:00:00:00\n' +
+      '  - button "播放":\n' +
+      '    - img\n' +
+      '  - combobox: Fit\n' +
+      '  - button "切换全屏":\n' +
+      '    - img'
+  }
+}

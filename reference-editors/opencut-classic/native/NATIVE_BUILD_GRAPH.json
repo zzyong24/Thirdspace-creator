@@ -997,7 +997,7 @@
     },
     {
       "module": "src/preview/components/index.tsx",
-      "renderedLength": 9407
+      "renderedLength": 9428
     },
     {
       "module": "src/preview/components/mask-handles.tsx",
@@ -1025,7 +1025,7 @@
     },
     {
       "module": "src/preview/components/toolbar.tsx",
-      "renderedLength": 3592
+      "renderedLength": 3735
     },
     {
       "module": "src/preview/components/transform-handles.tsx",

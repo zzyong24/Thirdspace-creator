@@ -1,6 +1,6 @@
 {
   "task": "T-1274",
-  "deliveryStatus": "NATIVE_PRESERVED_MISSING_MEDIA_REAL_MP4_VERIFIED_FULL_HOST_PENDING_ROOT",
+  "deliveryStatus": "PASS_NATIVE_TOOLBAR_REAL_CHROMIUM_FULL_HOST_PENDING_ROOT",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
@@ -10,14 +10,14 @@
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6640146,
-    "cssBytes": 131177,
+    "esmBytes": 6640330,
+    "cssBytes": 131527,
     "licensedDependencies": 59,
     "renderedModules": 430,
     "nativeHashes": {
-      "native.js": "99762027f59375adfcd5b7f287d5af16aaf7985d8539d33d277f8adb3f01208d",
-      "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
-      "NATIVE_BUILD_GRAPH.json": "8909f114309b66ae36fbb702f558283c922c2765906680e25da5e220b05b80dd",
+      "native.js": "721f27b7c158aef2993f4eeb34f6d65a77d0072e7febfe510c5dc57fb676c9e5",
+      "native.css": "070add8a681da90be5b41225354d2527fb720dff7fd21de2782638d8898f815c",
+      "NATIVE_BUILD_GRAPH.json": "a5987db18104e51be007a8d36fbb3645c3de857f25392220e549dad2ae254779",
       "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
       "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
@@ -30,21 +30,21 @@
   },
   "source": {
     "files": 715,
-    "changedFiles": 82,
-    "archiveBytes": 772169,
-    "patchBytes": 449489,
+    "changedFiles": 83,
+    "archiveBytes": 772995,
+    "patchBytes": 453012,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "751fe1e56a378bac1c524b03e8dc68faccda406d7b02385c4671f991ef5e4e35",
-      "native-from-t1046.patch": "5b0566dd02253ce78a75426ee6127db47836cd04ab3eb0f3e246dc399425802f",
+      "native-source.tar.gz": "e7f01f2ada3c2352961e19809a2bd698a42501893b77c9545227187cf4ca7052",
+      "native-from-t1046.patch": "cb4b84c87e2c0cedbaf09f9333e080ffb4ed3c93db2caa4cef66f11e4da13123",
       "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "verification/t1274-preserved-missing-media/source-reconstruction.json",
-    "productionReconstructionEvidence": "verification/t1274-preserved-missing-media/production-reconstruction.json",
-    "archiveSha256": "751fe1e56a378bac1c524b03e8dc68faccda406d7b02385c4671f991ef5e4e35",
-    "patchSha256": "5b0566dd02253ce78a75426ee6127db47836cd04ab3eb0f3e246dc399425802f"
+    "reconstructionEvidence": "verification/t1274-toolbar-fit/source-reconstruction.json",
+    "productionReconstructionEvidence": "verification/t1274-toolbar-fit/production-reconstruction.json",
+    "archiveSha256": "e7f01f2ada3c2352961e19809a2bd698a42501893b77c9545227187cf4ca7052",
+    "patchSha256": "cb4b84c87e2c0cedbaf09f9333e080ffb4ed3c93db2caa4cef66f11e4da13123"
   },
   "verification": {
     "totalTests": 86,
@@ -1952,6 +1952,126 @@
       "green-public-first.log（旧mock缺mediaTimeFromSeconds）",
       "green-public-second.log（旧mock缺ImageNode）",
       "green-public-third.log（Node fixture缺location）"
+    ]
+  },
+  "historicalT1274BeforeToolbarFitTop": {
+    "deliveryStatus": "NATIVE_PRESERVED_MISSING_MEDIA_REAL_MP4_VERIFIED_FULL_HOST_PENDING_ROOT",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6640146,
+      "cssBytes": 131177,
+      "licensedDependencies": 59,
+      "renderedModules": 430,
+      "nativeHashes": {
+        "native.js": "99762027f59375adfcd5b7f287d5af16aaf7985d8539d33d277f8adb3f01208d",
+        "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
+        "NATIVE_BUILD_GRAPH.json": "8909f114309b66ae36fbb702f558283c922c2765906680e25da5e220b05b80dd",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "本次复用上一轮真实冻结安装，锁文件未变",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 715,
+      "changedFiles": 82,
+      "archiveBytes": 772169,
+      "patchBytes": 449489,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "e7f01f2ada3c2352961e19809a2bd698a42501893b77c9545227187cf4ca7052",
+        "native-from-t1046.patch": "cb4b84c87e2c0cedbaf09f9333e080ffb4ed3c93db2caa4cef66f11e4da13123",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "verification/t1274-preserved-missing-media/source-reconstruction.json",
+      "productionReconstructionEvidence": "verification/t1274-preserved-missing-media/production-reconstruction.json",
+      "archiveSha256": "751fe1e56a378bac1c524b03e8dc68faccda406d7b02385c4671f991ef5e4e35",
+      "patchSha256": "5b0566dd02253ce78a75426ee6127db47836cd04ab3eb0f3e246dc399425802f"
+    },
+    "verification": {
+      "totalTests": 86,
+      "totalAssertions": 380,
+      "testFailures": 0,
+      "typecheckExitCode": 0,
+      "fixtureOnly": false,
+      "browserAutomation": "真实Chromium生产native小型宿主几何，不是完整CreatorOS E2E",
+      "realGpu": "not_run",
+      "realMp4": "六旧export/四新preview真实MP4，4组全部12帧RGB和stream相同；2组无画面明确拒绝",
+      "domFixture": {},
+      "historicalDomFixtureChecks": 60,
+      "allFailuresPreserved": true,
+      "unreplacedNodeEnv": 0,
+      "unguardedGlobalProcessReferences": 0,
+      "evidenceDirectory": "verification/t1274-preserved-missing-media",
+      "realGeometryCases": 0,
+      "domNotRerun": true
+    },
+    "limitations": [
+      "原Canvas/Fabric夹具与JSDOM环境不等于真实浏览器像素或安装。",
+      "未执行真实AAC原声试听、手工听审、ASR/Skill/外部模型或现用App。",
+      "未执行宿主最终18组合，不声明前端整合/安装PASS。",
+      "init-only31只恢复原core初始化，不声明全部独立使用Servers/旧插件无host功能已验证。",
+      "NoteRelay原source.zip/WEB_ADAPTER/WEB_PATCHES与三个交付metadata按ROOT明确保留；实际新web源由单独成员provider绑定，不声称旧zip包含新适配。",
+      "full canonical历史patch原bytes前缀保留，T1062增量相对已批准T1053 source；未新拍过去的上游全patch验收。"
+    ],
+    "scope": "唯一native writer；隔离源码与本worktree原生归档/patch/双目录精确资产；未修改root业务TSX。"
+  },
+  "t1274ToolbarFitVerification": {
+    "status": "PASS_NATIVE_TOOLBAR_REAL_CHROMIUM_FULL_HOST_PENDING_ROOT",
+    "red": {
+      "fitRight": 286.34375,
+      "panelRight": 270,
+      "log": "red.log"
+    },
+    "green": {
+      "fitRight": 213,
+      "fullscreenRight": 262,
+      "panelRight": 270,
+      "containerWidths": [
+        260,
+        278,
+        390,
+        1000,
+        1280
+      ],
+      "cssZoom2": true,
+      "interactions": [
+        "Fit到100%再Fit",
+        "键盘打开缩放菜单",
+        "播放与暂停",
+        "编辑时间码到1秒",
+        "进入及退出全屏"
+      ],
+      "sameCanvas": true,
+      "pageErrors": 0
+    },
+    "legacyGeometryCases": 8,
+    "tests": 86,
+    "assertions": 380,
+    "legacyDom": 38,
+    "workspaceDom": 22,
+    "responsiveDom": 58,
+    "sourceFiles": 715,
+    "patchFuzz": 0,
+    "sevenOutputsMatch": true,
+    "fullCreatorOSHost": false,
+    "mediaExportThisRound": false,
+    "visualScore": "未重评分；功能裁切修复",
+    "fixtureFailuresPreserved": [
+      "green-first-generator-overwrite.log",
+      "green-second-empty-project.log",
+      "green-third-unscoped-textbox.log"
     ]
   }
 }
