@@ -1,0 +1,116 @@
+{
+  "schema": "t1274-final-gap-walkthrough/v1",
+  "date": "2026-10-14",
+  "status": "REPRESENTATIVE_FAMILIES_VERIFIED_CAS_RECOVERY_FAIL_RETAINED",
+  "workspace": "shared",
+  "headAtEvidenceSummary": "b8d9a26b90da40d4c362820524e8f97002f7ed39",
+  "outputId": "output-5e3e4e95-61",
+  "groupId": "grp-8a2fadb0-6",
+  "projectId": "project-8a2fadb0-8",
+  "scope": "独立真实UI代表族，不签全产品或全部组合PASS",
+  "results": {
+    "batchErrors": {
+      "status": "PASS",
+      "diagnosticCount": 8,
+      "inputRetained": true,
+      "formalDTOUnchanged": true,
+      "evidence": [
+        "batch-errors.png",
+        "batch-errors-aria.txt",
+        "batch-candidate.json"
+      ]
+    },
+    "optionalMissingMedia": {
+      "status": "PASS_CONTROLLED_BROWSER_404",
+      "backendMissing": false,
+      "adoptRevision": [
+        3,
+        4
+      ],
+      "protectedLayersPreserved": true,
+      "evidence": [
+        "fault-requests.json",
+        "missing-media-candidate.json",
+        "after-apply.json",
+        "missing-media-preview.mp4",
+        "missing-media-warning-return.png"
+      ]
+    },
+    "nativeChromeZoom200": {
+      "status": "PASS_REPRESENTATIVE_NORMAL_CANDIDATE_RETURN",
+      "method": "Chrome设置网页缩放200%；未用CSS/CDP视觉缩放",
+      "metrics": {
+        "innerWidth": 683,
+        "innerHeight": 406,
+        "outerWidth": 1366,
+        "outerHeight": 900,
+        "devicePixelRatio": 2,
+        "visualScale": 1,
+        "cssZoom": "1",
+        "htmlWidth": 683
+      },
+      "evidence": [
+        "chrome-zoom200-setting-full-surface.png",
+        "zoom200-normal-full-surface.png",
+        "zoom200-candidate-scrolled-full-surface.png",
+        "zoom200-return-full-surface.png"
+      ]
+    },
+    "cas": {
+      "status": "OBSERVED_REAL_CAS409_INPUT_RETAINED_PENDING_LOCK_REMAINS",
+      "beforeRevision": 4,
+      "concurrentSaveRevision": 5,
+      "finalRevision": 5,
+      "requestId": "79622981-9257-4545-a849-e0230a081b4a",
+      "uiApplyCount": 1,
+      "receipt": null,
+      "inputRetained": true,
+      "candidateRetained": true,
+      "discardEnabled": false,
+      "finalPlanEqualsConcurrentSave": true,
+      "responseStatus": 409,
+      "guardMs": 120000,
+      "released": true
+    },
+    "casRecovery": {
+      "status": "FAIL_PENDING_LOCK_AFTER_NULL_RECEIPT_AND_CURRENT_NEWER",
+      "followup": "T1285",
+      "evidence": [
+        "cas-recover-readonly.json",
+        "cas-after-readonly-recovery.png"
+      ]
+    },
+    "newDirtyDuringPrepare": {
+      "status": "PASS_REAL_NATIVE_DIRTY_DURING_PREPARE_BLOCKS_CHAT_SEND",
+      "outputId": "output-5e3e4e95-61",
+      "beforeRevision": 5,
+      "afterRevision": 6,
+      "firstNativeEdit": "T1274发送准备第一次手工修改",
+      "secondNativeEdit": "T1274发送准备第二次手工修改",
+      "storedName": "T1274发送准备第一次手工修改",
+      "localName": "T1274发送准备第二次手工修改",
+      "promptRetained": true,
+      "chatPostAttempts": [],
+      "guardUsed": false,
+      "realSaveRequestCount": 1,
+      "heldActualOperation": "outputs.production.editor.get",
+      "heldAfterSave": true,
+      "holdGuardMs": 120000,
+      "released": true,
+      "uiMessage": "稿件尚未准备好\n本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。\n继续本轮",
+      "operation": "普通双击原生工程名→改名/Enter；点击编导发送；真实save完成后在prepare的get响应窗口再次双击改名/Enter；放行原真实响应",
+      "limitations": "原生元数据手工dirty代表族，不是时间轴片段或模型执行中dirty；模型请求没有发出，非拦截后冒PASS。"
+    }
+  },
+  "source201FullDTOUnchanged": true,
+  "modelOrASRInvoked": false,
+  "allBrowsersClosed": true,
+  "originalCasProfileRetained": true,
+  "limitations": [
+    "媒体404为浏览器网络故障注入，不是后端缺失",
+    "dirty为原生工程名称元数据手工修改，不是片段编辑或模型执行中dirty",
+    "200%只覆盖Chrome独立临时profile代表路径，原Playwright裁切图不作为完整画面证据",
+    "CAS恢复FAIL须同原请求修后复验；本记录不替换原失败"
+  ],
+  "report": "REPORT.md"
+}

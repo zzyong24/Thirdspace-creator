@@ -1,0 +1,1303 @@
+[
+  {
+    "id": "accountGroups.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 100
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "settings.preferences.get",
+    "input": {}
+  },
+  {
+    "id": "ai.conversations.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 1,
+        "scope": "project:project-8a2fadb0-8"
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "materialLinks.list",
+    "input": {
+      "query": {
+        "projectId": "project-8a2fadb0-8",
+        "page": 1,
+        "pageSize": 100
+      }
+    }
+  },
+  {
+    "id": "outputs.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "materialLinks.list",
+    "input": {
+      "query": {
+        "projectId": "project-8a2fadb0-8",
+        "page": 1,
+        "pageSize": 100
+      }
+    }
+  },
+  {
+    "id": "outputs.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "ai.conversations.messages.list",
+    "input": {
+      "params": {
+        "conversationId": "ai-conv-94c2affe-128"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-27"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-65bafd60-118"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-65bafd60-217"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-65bafd60-118"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-94c2affe-277"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-27"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-122"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-27"
+      }
+    }
+  },
+  {
+    "id": "assets.fileDownloadUrl",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-27",
+        "assetFileId": "afile-8a2fadb0-31"
+      }
+    }
+  },
+  {
+    "id": "assets.fileDownloadUrl",
+    "input": {
+      "params": {
+        "assetId": "asset-94c2affe-277",
+        "assetFileId": "afile-94c2affe-281"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.script.read",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      },
+      "body": {
+        "target": {
+          "schemaVersion": 1,
+          "projectId": "project-8a2fadb0-8",
+          "outputId": "output-5e3e4e95-61",
+          "owner": "production",
+          "contentType": "video",
+          "savedBase": {
+            "kind": "production",
+            "productionId": "production-5e3e4e95-68",
+            "revision": 4
+          },
+          "documentDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+          "selection": {
+            "kind": "native_scene",
+            "sceneId": "family-scene",
+            "elementRefs": [],
+            "playheadTick": 0,
+            "contextEpoch": 3,
+            "editorGeneration": "1:8e164dc5-352a-41db-8ec0-1d54c27b72ae"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.script.propose",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      },
+      "body": {
+        "target": {
+          "schemaVersion": 1,
+          "projectId": "project-8a2fadb0-8",
+          "outputId": "output-5e3e4e95-61",
+          "documentDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+          "owner": "production",
+          "contentType": "video",
+          "savedBase": {
+            "kind": "production",
+            "productionId": "production-5e3e4e95-68",
+            "revision": 4
+          },
+          "selection": {
+            "kind": "native_scene",
+            "sceneId": "family-scene",
+            "elementRefs": [],
+            "playheadTick": 0,
+            "contextEpoch": 3,
+            "editorGeneration": "1:8e164dc5-352a-41db-8ec0-1d54c27b72ae"
+          }
+        },
+        "input": {
+          "base": {
+            "kind": "production",
+            "productionId": "production-5e3e4e95-68",
+            "revision": 4
+          },
+          "baseDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+          "summary": "按当前文字修改剪辑",
+          "candidate": {
+            "kind": "markdown_timeline",
+            "owner": "production",
+            "sceneId": "family-scene",
+            "markdown": "<!-- markdown-state:format:1 -->\n<!-- markdown-state:stamp:sha256:361300803ca29b5283206618eda7b5c88ae435572ac5a6409c7c582ff1cee7ab -->\n<!-- markdown-state:lib-stamp:sha256:ef758be420553e4d3bc52c4b392350c7953be352f59f6b8e76c92a94d52f5c3b -->\n<!-- markdown-state:timeline:family-scene -->\n<!-- markdown-state:body -->\n\n<!-- t=120000 ticks/s；silence仅表示未转录源区间，不是声学静音，缩短须沿既有听审。 -->\n## V999 <!-- markdown-state:track:family-main -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22V1%22%2C%22trackId%22%3A%22family-main%22%2C%22type%22%3A%22video%22%2C%22editableElementIds%22%3A%5B%22family-a1%22%2C%22family-a2%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n### asset-8a2fadb0-27 <!-- markdown-state:source:03f4245e-35b3-47fe-af8b-f8647c99bd70:asset-8a2fadb0-27 -->\n[c1] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-a1 -->\n[c2] 60000t source=240000..300000t rate=1 <!-- markdown-state:item:family-a2 -->\n\n## P1 <!-- markdown-state:track:family-text -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P1%22%2C%22trackId%22%3A%22family-text%22%2C%22type%22%3A%22text%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-title%22%5D%7D -->\n<!-- 保护原元素:family-title；不由Markdown重建 -->\n\n## P2 <!-- markdown-state:track:family-effect -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P2%22%2C%22trackId%22%3A%22family-effect%22%2C%22type%22%3A%22effect%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-effect-1%22%5D%7D -->\n<!-- 保护原元素:family-effect-1；不由Markdown重建 -->\n\n## A1 <!-- markdown-state:track:family-audio -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22A1%22%2C%22trackId%22%3A%22family-audio%22%2C%22type%22%3A%22audio%22%2C%22editableElementIds%22%3A%5B%22family-sound%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n[gap 60000t]\n### asset-94c2affe-277 <!-- markdown-state:source:family-media-b:asset-94c2affe-277 -->\n[c3] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-sound -->\n\n## V998 <!-- markdown-state:track:missing -->\n非法无归属行\n",
+            "declaredTrackIds": [
+              "family-main",
+              "family-text",
+              "family-effect",
+              "family-audio"
+            ],
+            "stateStamp": "sha256:361300803ca29b5283206618eda7b5c88ae435572ac5a6409c7c582ff1cee7ab",
+            "libraryStamp": "sha256:ef758be420553e4d3bc52c4b392350c7953be352f59f6b8e76c92a94d52f5c3b"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.script.propose",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      },
+      "body": {
+        "target": {
+          "schemaVersion": 1,
+          "projectId": "project-8a2fadb0-8",
+          "outputId": "output-5e3e4e95-61",
+          "documentDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+          "owner": "production",
+          "contentType": "video",
+          "savedBase": {
+            "kind": "production",
+            "productionId": "production-5e3e4e95-68",
+            "revision": 4
+          },
+          "selection": {
+            "kind": "native_scene",
+            "sceneId": "family-scene",
+            "elementRefs": [],
+            "playheadTick": 0,
+            "contextEpoch": 3,
+            "editorGeneration": "1:8e164dc5-352a-41db-8ec0-1d54c27b72ae"
+          }
+        },
+        "input": {
+          "base": {
+            "kind": "production",
+            "productionId": "production-5e3e4e95-68",
+            "revision": 4
+          },
+          "baseDigest": "sha256:859432226223f423371d0d8948470f52dccad6f154fb96dfab5e21af1c4a21b9",
+          "summary": "按当前文字修改剪辑",
+          "candidate": {
+            "kind": "markdown_timeline",
+            "owner": "production",
+            "sceneId": "family-scene",
+            "markdown": "<!-- markdown-state:format:1 -->\n<!-- markdown-state:stamp:sha256:361300803ca29b5283206618eda7b5c88ae435572ac5a6409c7c582ff1cee7ab -->\n<!-- markdown-state:lib-stamp:sha256:ef758be420553e4d3bc52c4b392350c7953be352f59f6b8e76c92a94d52f5c3b -->\n<!-- markdown-state:timeline:family-scene -->\n<!-- markdown-state:body -->\n\n<!-- t=120000 ticks/s；silence仅表示未转录源区间，不是声学静音，缩短须沿既有听审。 -->\n## V1 <!-- markdown-state:track:family-main -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22V1%22%2C%22trackId%22%3A%22family-main%22%2C%22type%22%3A%22video%22%2C%22editableElementIds%22%3A%5B%22family-a1%22%2C%22family-a2%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n### asset-8a2fadb0-27 <!-- markdown-state:source:03f4245e-35b3-47fe-af8b-f8647c99bd70:asset-8a2fadb0-27 -->\n[c1] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-a1 -->\n[gap 60000t]\n[c2] 60000t source=240000..300000t rate=1 <!-- markdown-state:item:family-a2 -->\n\n## P1 <!-- markdown-state:track:family-text -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P1%22%2C%22trackId%22%3A%22family-text%22%2C%22type%22%3A%22text%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-title%22%5D%7D -->\n<!-- 保护原元素:family-title；不由Markdown重建 -->\n\n## P2 <!-- markdown-state:track:family-effect -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22P2%22%2C%22trackId%22%3A%22family-effect%22%2C%22type%22%3A%22effect%22%2C%22editableElementIds%22%3A%5B%5D%2C%22protectedElementIds%22%3A%5B%22family-effect-1%22%5D%7D -->\n<!-- 保护原元素:family-effect-1；不由Markdown重建 -->\n\n## A1 <!-- markdown-state:track:family-audio -->\n<!-- markdown-state:scope:%7B%22alias%22%3A%22A1%22%2C%22trackId%22%3A%22family-audio%22%2C%22type%22%3A%22audio%22%2C%22editableElementIds%22%3A%5B%22family-sound%22%5D%2C%22protectedElementIds%22%3A%5B%5D%7D -->\n[gap 60000t]\n### asset-94c2affe-277 <!-- markdown-state:source:family-media-b:asset-94c2affe-277 -->\n[c3] 60000t source=0..60000t rate=1 <!-- markdown-state:item:family-sound -->\n",
+            "declaredTrackIds": [
+              "family-main",
+              "family-text",
+              "family-effect",
+              "family-audio"
+            ],
+            "stateStamp": "sha256:361300803ca29b5283206618eda7b5c88ae435572ac5a6409c7c582ff1cee7ab",
+            "libraryStamp": "sha256:ef758be420553e4d3bc52c4b392350c7953be352f59f6b8e76c92a94d52f5c3b"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.receipt.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61",
+        "requestId": "79622981-9257-4545-a849-e0230a081b4a"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.apply",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      },
+      "body": {
+        "expectedRevision": 4,
+        "edits": [
+          {
+            "type": "replaceNativeSceneTracks",
+            "sceneId": "family-scene",
+            "expectedBeforeDigest": "sha256:ac06a04056da7206a790cd252b1327379ea502f1c61ac1bac2bfbc12b2224fc8",
+            "tracks": {
+              "main": {
+                "id": "family-main",
+                "name": "主轨A-B-A",
+                "type": "video",
+                "muted": false,
+                "hidden": false,
+                "elements": [
+                  {
+                    "id": "family-a1",
+                    "name": "family-a1",
+                    "type": "video",
+                    "hidden": false,
+                    "params": {
+                      "muted": false,
+                      "volume": -6,
+                      "opacity": 1,
+                      "blendMode": "normal",
+                      "transform.rotate": 0,
+                      "transform.scaleX": 1,
+                      "transform.scaleY": 1,
+                      "transform.positionX": 0,
+                      "transform.positionY": 0
+                    },
+                    "effects": [
+                      {
+                        "id": "family-blur",
+                        "type": "blur",
+                        "params": {
+                          "intensity": 2
+                        },
+                        "enabled": true
+                      }
+                    ],
+                    "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+                    "trimEnd": 300000,
+                    "duration": 60000,
+                    "startTime": 0,
+                    "trimStart": 0,
+                    "animations": {
+                      "opacity": {
+                        "keys": [
+                          {
+                            "id": "fade-a",
+                            "time": 0,
+                            "value": 0.8,
+                            "tangentMode": "auto",
+                            "segmentToNext": "linear"
+                          },
+                          {
+                            "id": "fade-b",
+                            "time": 60000,
+                            "value": 1,
+                            "tangentMode": "auto",
+                            "segmentToNext": "linear"
+                          }
+                        ]
+                      }
+                    },
+                    "sourceDuration": 360000,
+                    "legacyExtension": {
+                      "preserved": true,
+                      "cropEvidence": [
+                        1,
+                        2,
+                        3,
+                        4
+                      ]
+                    },
+                    "isSourceAudioEnabled": true
+                  },
+                  {
+                    "id": "family-a2",
+                    "name": "family-a2",
+                    "type": "video",
+                    "hidden": false,
+                    "params": {
+                      "muted": false,
+                      "volume": -6,
+                      "opacity": 1,
+                      "blendMode": "normal",
+                      "transform.rotate": 0,
+                      "transform.scaleX": 1,
+                      "transform.scaleY": 1,
+                      "transform.positionX": 0,
+                      "transform.positionY": 0
+                    },
+                    "effects": [
+                      {
+                        "id": "family-blur",
+                        "type": "blur",
+                        "params": {
+                          "intensity": 2
+                        },
+                        "enabled": true
+                      }
+                    ],
+                    "mediaId": "03f4245e-35b3-47fe-af8b-f8647c99bd70",
+                    "trimEnd": 60000,
+                    "duration": 60000,
+                    "startTime": 120000,
+                    "trimStart": 240000,
+                    "animations": {
+                      "opacity": {
+                        "keys": [
+                          {
+                            "id": "fade-a",
+                            "time": 0,
+                            "value": 0.8,
+                            "tangentMode": "auto",
+                            "segmentToNext": "linear"
+                          },
+                          {
+                            "id": "fade-b",
+                            "time": 60000,
+                            "value": 1,
+                            "tangentMode": "auto",
+                            "segmentToNext": "linear"
+                          }
+                        ]
+                      }
+                    },
+                    "sourceDuration": 360000,
+                    "legacyExtension": {
+                      "preserved": true,
+                      "cropEvidence": [
+                        1,
+                        2,
+                        3,
+                        4
+                      ]
+                    },
+                    "isSourceAudioEnabled": true
+                  }
+                ],
+                "trackExtension": {
+                  "preserved": true
+                }
+              },
+              "audio": [
+                {
+                  "id": "family-audio",
+                  "name": "保留独立声音",
+                  "type": "audio",
+                  "muted": false,
+                  "elements": [
+                    {
+                      "id": "family-sound",
+                      "name": "B源音频",
+                      "type": "audio",
+                      "params": {
+                        "volume": -12
+                      },
+                      "mediaId": "family-media-b",
+                      "trimEnd": 300000,
+                      "duration": 60000,
+                      "startTime": 60000,
+                      "trimStart": 0,
+                      "sourceType": "upload",
+                      "sourceDuration": 360000,
+                      "legacyExtension": {
+                        "preserved": true
+                      }
+                    }
+                  ]
+                }
+              ],
+              "overlay": [
+                {
+                  "id": "family-text",
+                  "name": "保留字幕",
+                  "type": "text",
+                  "hidden": false,
+                  "elements": [
+                    {
+                      "id": "family-title",
+                      "name": "原字幕",
+                      "type": "text",
+                      "params": {
+                        "color": "#ffffff",
+                        "content": "公共输入族保留字幕",
+                        "fontSize": 20
+                      },
+                      "trimEnd": 0,
+                      "duration": 300000,
+                      "startTime": 0,
+                      "trimStart": 0,
+                      "legacyExtension": {
+                        "preserved": true
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "family-effect",
+                  "name": "保留效果层",
+                  "type": "effect",
+                  "hidden": false,
+                  "elements": [
+                    {
+                      "id": "family-effect-1",
+                      "name": "模糊效果",
+                      "type": "effect",
+                      "params": {
+                        "intensity": 1
+                      },
+                      "trimEnd": 0,
+                      "duration": 300000,
+                      "startTime": 0,
+                      "trimStart": 0,
+                      "effectType": "blur",
+                      "legacyExtension": {
+                        "preserved": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "requestId": "79622981-9257-4545-a849-e0230a081b4a"
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "status": "OBSERVED_REAL_CAS409_INPUT_RETAINED_PENDING_LOCK_REMAINS",
+  "beforeRevision": 4,
+  "concurrentSaveRevision": 5,
+  "finalRevision": 5,
+  "requestId": "79622981-9257-4545-a849-e0230a081b4a",
+  "uiApplyCount": 1,
+  "receipt": null,
+  "inputRetained": true,
+  "candidateRetained": true,
+  "discardEnabled": false,
+  "finalPlanEqualsConcurrentSave": true,
+  "responseStatus": 409,
+  "guardMs": 120000,
+  "released": true
+}

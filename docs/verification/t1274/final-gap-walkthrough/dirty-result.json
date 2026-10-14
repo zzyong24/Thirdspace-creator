@@ -1,0 +1,21 @@
+{
+  "status": "PASS_REAL_NATIVE_DIRTY_DURING_PREPARE_BLOCKS_CHAT_SEND",
+  "outputId": "output-5e3e4e95-61",
+  "beforeRevision": 5,
+  "afterRevision": 6,
+  "firstNativeEdit": "T1274发送准备第一次手工修改",
+  "secondNativeEdit": "T1274发送准备第二次手工修改",
+  "storedName": "T1274发送准备第一次手工修改",
+  "localName": "T1274发送准备第二次手工修改",
+  "promptRetained": true,
+  "chatPostAttempts": [],
+  "guardUsed": false,
+  "realSaveRequestCount": 1,
+  "heldActualOperation": "outputs.production.editor.get",
+  "heldAfterSave": true,
+  "holdGuardMs": 120000,
+  "released": true,
+  "uiMessage": "稿件尚未准备好\n本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。\n继续本轮",
+  "operation": "普通双击原生工程名→改名/Enter；点击编导发送；真实save完成后在prepare的get响应窗口再次双击改名/Enter；放行原真实响应",
+  "limitations": "原生元数据手工dirty代表族，不是时间轴片段或模型执行中dirty；模型请求没有发出，非拦截后冒PASS。"
+}
