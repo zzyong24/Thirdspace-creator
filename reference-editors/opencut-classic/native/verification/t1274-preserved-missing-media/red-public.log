@@ -1,0 +1,160 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-preview.test.ts:
+(pass) preview-scene public 命令使用候选独立 frozen 实际编码端口，活动工程/撤销/选区/epoch不变 [22.78ms]
+(pass) preview-scene owner拒绝在编码前，保留活动稿件 [0.93ms]
+(pass) preview-scene epoch拒绝在编码前，保留活动稿件 [0.32ms]
+(pass) preview-scene before拒绝在编码前，保留活动稿件 [0.38ms]
+(pass) preview-scene candidate拒绝在编码前，保留活动稿件 [0.45ms]
+(pass) preview-scene scene拒绝在编码前，保留活动稿件 [0.40ms]
+(pass) preview-scene file拒绝在编码前，保留活动稿件 [0.60ms]
+(pass) preview-scene duplicate media拒绝在编码前，保留活动稿件 [0.48ms]
+(pass) preview-scene missing media拒绝在编码前，保留活动稿件 [1.01ms]
+(pass) preview-scene request期间取消，迟到buffer不得返回且URL释放 [3.49ms]
+(pass) preview-scene selection epoch期间取消，迟到buffer不得返回且URL释放 [1.47ms]
+(pass) preview-scene owner lifetime期间取消，迟到buffer不得返回且URL释放 [1.38ms]
+(pass) preview-scene 编码失败不能伪造Blob，临时URL释放且旧seek/read命令仍可达 [0.74ms]
+(pass) 原公共load/context/snapshot/seek/apply-tracks/export仍沿真实controller命令入口成功 [1.37ms]
+(pass) preview-scene保留旧未知只读层、无时间字段扩展和其他scene，不按未知内容猜媒体 [0.69ms]
+(pass) preview-scene public 支持原video及其已分离upload原声音轨，仅改主轨时音轨完整保留 [1.05ms]
+(pass) preview-scene public audio-image继续拒绝不兼容媒体类型 [0.72ms]
+(pass) preview-scene public video-audio继续拒绝不兼容媒体类型 [0.41ms]
+(pass) preview-scene public image-video继续拒绝不兼容媒体类型 [0.36ms]
+41 |   candidateDigest: string;
+42 |   tracks: SceneTracks;
+43 |   media: PreviewMedia[];
+44 | };
+45 | const conflict: (message: string) => never = (message) => {
+46 |   throw new NativeOperationError(message);
+             ^
+error: 候选引用的真实素材文件缺失或类型不匹配。
+ status: 409,
+   code: "ConflictError"
+
+      at conflict (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:46:9)
+      at validateTracks (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:142:11)
+      at previewNativeScene (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:255:16)
+(fail) 旧video缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [2.45ms]
+41 |   candidateDigest: string;
+42 |   tracks: SceneTracks;
+43 |   media: PreviewMedia[];
+44 | };
+45 | const conflict: (message: string) => never = (message) => {
+46 |   throw new NativeOperationError(message);
+             ^
+error: 候选引用的真实素材文件缺失或类型不匹配。
+ status: 409,
+   code: "ConflictError"
+
+      at conflict (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:46:9)
+      at validateTracks (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:142:11)
+      at previewNativeScene (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:255:16)
+(fail) 旧image缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.51ms]
+41 |   candidateDigest: string;
+42 |   tracks: SceneTracks;
+43 |   media: PreviewMedia[];
+44 | };
+45 | const conflict: (message: string) => never = (message) => {
+46 |   throw new NativeOperationError(message);
+             ^
+error: 候选引用的真实素材文件缺失或类型不匹配。
+ status: 409,
+   code: "ConflictError"
+
+      at conflict (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:46:9)
+      at validateTracks (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:142:11)
+      at previewNativeScene (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:255:16)
+(fail) 旧audio缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.61ms]
+(pass) 缺失素材new不能借保留旧元素放宽 [0.64ms]
+(pass) 缺失素材duration不能借保留旧元素放宽 [0.75ms]
+(pass) 缺失素材params不能借保留旧元素放宽 [0.51ms]
+(pass) 缺失素材mediaId不能借保留旧元素放宽 [0.46ms]
+(pass) 缺失素材move-track不能借保留旧元素放宽 [0.41ms]
+41 |   candidateDigest: string;
+42 |   tracks: SceneTracks;
+43 |   media: PreviewMedia[];
+44 | };
+45 | const conflict: (message: string) => never = (message) => {
+46 |   throw new NativeOperationError(message);
+             ^
+error: 候选引用的真实素材文件缺失或类型不匹配。
+ status: 409,
+   code: "ConflictError"
+
+      at conflict (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:46:9)
+      at validateTracks (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:142:11)
+      at previewNativeScene (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:255:16)
+(fail) 全部主素材缺失但显式#2244cc背景是原renderer合法画面 [0.65ms]
+41 |   candidateDigest: string;
+42 |   tracks: SceneTracks;
+43 |   media: PreviewMedia[];
+44 | };
+45 | const conflict: (message: string) => never = (message) => {
+46 |   throw new NativeOperationError(message);
+             ^
+error: 候选引用的真实素材文件缺失或类型不匹配。
+ status: 409,
+   code: "ConflictError"
+
+      at conflict (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:46:9)
+      at validateTracks (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:142:11)
+      at previewNativeScene (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:255:16)
+(fail) 全部主素材缺失但显式#000000背景是原renderer合法画面 [0.59ms]
+632 | for(const kind of ['video','image','audio'] as const)test(`旧${kind}缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks`,async()=>{
+633 |  const f=await fixture();try{const item=await preserveMissingFixture(f,kind),before=JSON.stringify(stored),epoch=currentNativeContextEpoch();const result:any=await f.controller.request('preview-scene',f.payload);expect(result.warnings).toEqual([{code:'preserved_missing_media',trackId:'missing-track',elementId:item.id,mediaId:item.mediaId,message:'原有素材“原有缺失素材”暂不可用，预览已跳过该元素，工程仍保留原引用。'}]);expect(renderCalls).toHaveLength(1);expect(renderCalls[0].frozen.tracks).toEqual(f.payload.tracks);expect(JSON.stringify(stored)).toBe(before);expect(currentNativeContextEpoch()).toBe(epoch);}finally{await f.close();}
+634 | });
+635 | for(const change of ['new','duration','params','mediaId','move-track'] as const)test(`缺失素材${change}不能借保留旧元素放宽`,async()=>{const f=await fixture();try{await preserveMissingFixture(f,'image');const track=f.payload.tracks.overlay.at(-1)!,item:any=track.elements[0];if(change==='new')item.id='new-element';if(change==='duration')item.duration++;if(change==='params')item.params.extra=true;if(change==='mediaId')item.mediaId='another-missing';if(change==='move-track')track.id='other-track';f.payload.candidateDigest=await nativeDigest({...stored.scenes[0],tracks:f.payload.tracks});await expect(f.controller.request('preview-scene',f.payload)).rejects.toMatchObject({code:'ConflictError'});expect(renderCalls).toHaveLength(0);}finally{await f.close();}});
+636 | for(const background of [{type:'color',color:'#2244cc'},{type:'color',color:'#000000'}])test(`全部主素材缺失但显式${background.color}背景是原renderer合法画面`,async()=>{const f=await fixture();try{await preserveMissingFixture(f,'video',true,background);const result:any=await f.controller.request('preview-scene',f.payload);expect(result.warnings).toHaveLength(1);expect(renderCalls[0].frozen.tracks).toEqual(f.payload.tracks);}finally{await f.close();}});
+637 | for(const background of [{type:'color',color:'transparent'},{type:'blur',blurIntensity:10}])test(`全部素材缺失且${background.type}无画面时明确拒绝，不把旧全黑片签成有效候选`,async()=>{const f=await fixture();try{await preserveMissingFixture(f,'video',true,background);await expect(f.controller.request('preview-scene',f.payload)).rejects.toThrow('没有可预览的画面');expect(renderCalls).toHaveLength(0);}finally{await f.close();}});
+                                                                                                                                                                                                                                                                                                                            ^
+error: expect(received).toThrow(expected)
+
+Expected substring: "没有可预览的画面"
+Received message: "候选引用的真实素材文件缺失或类型不匹配。"
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/__tests__/native-preview.test.ts:637:311)
+(fail) 全部素材缺失且color无画面时明确拒绝，不把旧全黑片签成有效候选 [1.91ms]
+632 | for(const kind of ['video','image','audio'] as const)test(`旧${kind}缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks`,async()=>{
+633 |  const f=await fixture();try{const item=await preserveMissingFixture(f,kind),before=JSON.stringify(stored),epoch=currentNativeContextEpoch();const result:any=await f.controller.request('preview-scene',f.payload);expect(result.warnings).toEqual([{code:'preserved_missing_media',trackId:'missing-track',elementId:item.id,mediaId:item.mediaId,message:'原有素材“原有缺失素材”暂不可用，预览已跳过该元素，工程仍保留原引用。'}]);expect(renderCalls).toHaveLength(1);expect(renderCalls[0].frozen.tracks).toEqual(f.payload.tracks);expect(JSON.stringify(stored)).toBe(before);expect(currentNativeContextEpoch()).toBe(epoch);}finally{await f.close();}
+634 | });
+635 | for(const change of ['new','duration','params','mediaId','move-track'] as const)test(`缺失素材${change}不能借保留旧元素放宽`,async()=>{const f=await fixture();try{await preserveMissingFixture(f,'image');const track=f.payload.tracks.overlay.at(-1)!,item:any=track.elements[0];if(change==='new')item.id='new-element';if(change==='duration')item.duration++;if(change==='params')item.params.extra=true;if(change==='mediaId')item.mediaId='another-missing';if(change==='move-track')track.id='other-track';f.payload.candidateDigest=await nativeDigest({...stored.scenes[0],tracks:f.payload.tracks});await expect(f.controller.request('preview-scene',f.payload)).rejects.toMatchObject({code:'ConflictError'});expect(renderCalls).toHaveLength(0);}finally{await f.close();}});
+636 | for(const background of [{type:'color',color:'#2244cc'},{type:'color',color:'#000000'}])test(`全部主素材缺失但显式${background.color}背景是原renderer合法画面`,async()=>{const f=await fixture();try{await preserveMissingFixture(f,'video',true,background);const result:any=await f.controller.request('preview-scene',f.payload);expect(result.warnings).toHaveLength(1);expect(renderCalls[0].frozen.tracks).toEqual(f.payload.tracks);}finally{await f.close();}});
+637 | for(const background of [{type:'color',color:'transparent'},{type:'blur',blurIntensity:10}])test(`全部素材缺失且${background.type}无画面时明确拒绝，不把旧全黑片签成有效候选`,async()=>{const f=await fixture();try{await preserveMissingFixture(f,'video',true,background);await expect(f.controller.request('preview-scene',f.payload)).rejects.toThrow('没有可预览的画面');expect(renderCalls).toHaveLength(0);}finally{await f.close();}});
+                                                                                                                                                                                                                                                                                                                            ^
+error: expect(received).toThrow(expected)
+
+Expected substring: "没有可预览的画面"
+Received message: "候选引用的真实素材文件缺失或类型不匹配。"
+
+      at <anonymous> (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/__tests__/native-preview.test.ts:637:311)
+(fail) 全部素材缺失且blur无画面时明确拒绝，不把旧全黑片签成有效候选 [0.51ms]
+41 |   candidateDigest: string;
+42 |   tracks: SceneTracks;
+43 |   media: PreviewMedia[];
+44 | };
+45 | const conflict: (message: string) => never = (message) => {
+46 |   throw new NativeOperationError(message);
+             ^
+error: 候选引用的真实素材文件缺失或类型不匹配。
+ status: 409,
+   code: "ConflictError"
+
+      at conflict (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:46:9)
+      at validateTracks (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:142:11)
+      at previewNativeScene (/private/tmp/creatoros-t1274-preview-isolated/apps/web/src/embedded/preview-scene.ts:255:16)
+(fail) 全部主素材缺失但原文字图层存在仍可预览 [0.76ms]
+
+8 tests failed:
+(fail) 旧video缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [2.45ms]
+(fail) 旧image缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.51ms]
+(fail) 旧audio缺失但完整原元素保留，候选只警告并沿原renderer跳过、不改tracks [0.61ms]
+(fail) 全部主素材缺失但显式#2244cc背景是原renderer合法画面 [0.65ms]
+(fail) 全部主素材缺失但显式#000000背景是原renderer合法画面 [0.59ms]
+(fail) 全部素材缺失且color无画面时明确拒绝，不把旧全黑片签成有效候选 [1.91ms]
+(fail) 全部素材缺失且blur无画面时明确拒绝，不把旧全黑片签成有效候选 [0.51ms]
+(fail) 全部主素材缺失但原文字图层存在仍可预览 [0.76ms]
+
+ 24 pass
+ 8 fail
+ 97 expect() calls
+Ran 32 tests across 1 file. [94.00ms]

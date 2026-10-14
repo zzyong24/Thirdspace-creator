@@ -1,3 +1,13 @@
+# T-1274 缺失原素材的候选预览降级
+
+旧renderer的video/image缺file/url、upload audio缺媒体都跳过原引用；纯色背景和文字独立绘制。先以未修改production公开load→export运行六族64×64/24fps/12帧真实MP4：可用主图+缺叠加、main全缺+纯色、main全缺+文字、缺upload音轨保持合法画面；main全缺且透明/blur无其它层只得全黑，原文件与解码证据保留。
+
+preview-scene仅在同轨同ID且原元素完整JSON相等时允许缺失，正式tracks绝不删除；新增/修改缺失、错类型、owner/epoch/digest/file guards原样保留。返回可选warnings结构为code=preserved_missing_media、trackId、elementId、mediaId、message。有降级时复用原buildScene的可见性/媒体/背景构图，只有effect或无节点时明确“没有可预览的画面”，不把全黑误报有效候选；显式黑色背景仍是合法画面。
+
+公共controller当场24PASS/8FAIL→34PASS/124断言；完整86测试380断言、类型、AST通过。新公开preview四可输出族真实MP4的全部12帧RGB与stream均与旧export逐字节/字段相同，原tracks保持；透明/blur无画面两族实际拒绝并有原因。715源F0/归档再构建七输出与双目录一致。原局部mock三份环境错误保留，不算产品红测。
+
+本轮未改Core、renderer、cache或响应式源码，未重跑旧58DOM/8几何，不补签完整CreatorOS后端采纳、外部模型或App。ROOT承接warnings显示和最终宿主复验。证据verification/t1274-preserved-missing-media；以下历史原样保留。
+
 # T-1274 单面板画面与播放控件紧邻
 
 2026-10-14第三轮必需修正：ROOT实际390图画面垂直居中，播放控件出屏。仅single画面改为按工程真实canvasSize宽高比计算展示高度，画面最高占可视高度42%（换算CSS zoom），保留原72px播放栏/留白。其它single面板继续占满；compact/wide不变；未修改实际工程画幅、Core或渲染。
