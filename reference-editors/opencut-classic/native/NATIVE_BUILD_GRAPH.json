@@ -629,7 +629,7 @@
     },
     {
       "module": "src/embedded/editor-layout.tsx",
-      "renderedLength": 12766
+      "renderedLength": 13011
     },
     {
       "module": "src/embedded/frozen-export.ts",

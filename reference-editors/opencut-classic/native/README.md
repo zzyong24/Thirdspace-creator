@@ -1,3 +1,11 @@
+# T-1274 响应式时间轴交互状态恢复
+
+ROOT完整宿主出现390→1366后剪刀可见但父panel命中。独立只读验证两种路径按钮矩形完全相同，问题是隐藏时间轴曾写入inert=true，重新显示未同步；原失败图/日志保留。仅EditorLayout在layout/view提交后复用syncNativeInteractivity(currentHost,isExportLocked())，不直接清inert，不加z-index/强制点击，不改变Core。
+
+独立生产native真实Chromium先RED：hidden=false/inert=true/命中DIV；修后GREEN：命中BUTTON、普通hover显示Split element、实际click分割1→2。390直接选择时间轴也能交互。disabled、候选投影、真实公共export运行时跨布局均继续锁住Core；解除候选/disabled及取消export后恢复正常命中，原canvas实例保持。实际export本轮仅验证锁和AbortError取消，不签MP4完成。完整CreatorOS根宿主由ROOT与user_walkthrough继续复验。
+
+86测试380断言、类型/AST、旧38DOM/22工作区DOM/58响应式DOM通过。715源标准patch F0复原、归档重建七产物与双目录逐字节一致；仅实现EditorLayout及归档README/重建元数据改变。错误seek测试入参的中间失败保留。证据verification/t1274-resize-hit；以下历史原样保留。
+
 # T-1274 窄预览播放工具栏完整可达
 
 最终390宿主工作面约278px，旧工具栏Fit右缘286.34px超出播放器270px，真实Chromium当场RED保留。按预览容器本身380px阈值切成两行：完整时间码一行，播放/Fit/全屏一行；宽容器仍沿原居中播放排列。添加播放/暂停/全屏可访问名称与原icon尺寸，未修改Core、预览计算、时间码或缩放算法。CSS来自build-native.mjs源码，未只补生产bundle。

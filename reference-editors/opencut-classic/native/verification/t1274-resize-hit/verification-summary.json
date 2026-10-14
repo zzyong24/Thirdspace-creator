@@ -1,0 +1,44 @@
+{
+  "status": "PASS_NATIVE_RESIZE_INTERACTIVITY_FULL_HOST_PENDING_ROOT",
+  "red": {
+    "hidden": false,
+    "inert": true,
+    "hit": "DIV.native-workspace-vertical",
+    "log": "red.log"
+  },
+  "green": {
+    "hidden": false,
+    "inert": false,
+    "hit": "BUTTON",
+    "ordinaryHoverTooltip": "Split element",
+    "actualClickSplitElements": [
+      1,
+      2
+    ],
+    "singleTimelineReachable": true,
+    "disabledAcrossResize": true,
+    "candidateAcrossResize": true,
+    "realPublicExportAcrossResize": true,
+    "actualExportCancelled": "AbortError: 导出已停止。",
+    "allLocksReleased": true,
+    "sameCanvas": true,
+    "pageErrors": 0
+  },
+  "tests": 86,
+  "assertions": 380,
+  "legacyDom": 38,
+  "workspaceDom": 22,
+  "responsiveDom": 58,
+  "sourceFiles": 715,
+  "patchFuzz": 0,
+  "sevenOutputsMatch": true,
+  "fullCreatorOSHost": false,
+  "mediaFileExportThisRound": false,
+  "visualScore": "未重评分；实际功能修复",
+  "fixtureFailuresPreserved": [
+    "green-first-invalid-seek-fixture.log"
+  ],
+  "modifiedImplementation": [
+    "apps/web/src/embedded/editor-layout.tsx"
+  ]
+}

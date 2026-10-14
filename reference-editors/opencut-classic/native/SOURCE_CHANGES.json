@@ -179,5 +179,10 @@
     "apps/web/src/preview/components/toolbar.tsx",
     "README.creatoros.md",
     "NATIVE_REBUILD_CONSISTENCY.json"
+  ],
+  "t1274ResizeHitChangedFiles": [
+    "apps/web/src/embedded/editor-layout.tsx",
+    "README.creatoros.md",
+    "NATIVE_REBUILD_CONSISTENCY.json"
   ]
 }
