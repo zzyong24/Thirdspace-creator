@@ -1,0 +1,273 @@
+[
+  {
+    "id": "accountGroups.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 100
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "settings.preferences.get",
+    "input": {}
+  },
+  {
+    "id": "ai.conversations.messages.list",
+    "input": {
+      "params": {
+        "conversationId": "ai-conv-94c2affe-128"
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "materialLinks.list",
+    "input": {
+      "query": {
+        "projectId": "project-8a2fadb0-8",
+        "page": 1,
+        "pageSize": 100
+      }
+    }
+  },
+  {
+    "id": "outputs.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "materialLinks.list",
+    "input": {
+      "query": {
+        "projectId": "project-8a2fadb0-8",
+        "page": 1,
+        "pageSize": 100
+      }
+    }
+  },
+  {
+    "id": "outputs.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-27"
+      }
+    }
+  },
+  {
+    "id": "assets.fileDownloadUrl",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-27",
+        "assetFileId": "afile-8a2fadb0-31"
+      }
+    }
+  },
+  {
+    "id": "assets.fileDownloadUrl",
+    "input": {
+      "params": {
+        "assetId": "asset-94c2affe-277",
+        "assetFileId": "afile-94c2affe-281"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-65bafd60-118"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-65bafd60-217"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-65bafd60-118"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-94c2affe-277"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-27"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-122"
+      }
+    }
+  },
+  {
+    "id": "assets.get",
+    "input": {
+      "params": {
+        "assetId": "asset-8a2fadb0-27"
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.receipt.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61",
+        "requestId": "79622981-9257-4545-a849-e0230a081b4a"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61"
+      }
+    }
+  },
+  {
+    "id": "outputs.production.editor.receipt.get",
+    "input": {
+      "params": {
+        "outputId": "output-5e3e4e95-61",
+        "requestId": "79622981-9257-4545-a849-e0230a081b4a"
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  },
+  {
+    "id": "ai.tasks.list",
+    "input": {
+      "query": {
+        "page": 1,
+        "pageSize": 24
+      }
+    }
+  }
+]

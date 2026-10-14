@@ -1,0 +1,49 @@
+{
+  "schema": "t1285-public-cas-recovery/v1",
+  "status": "PASS_ORIGINAL_REQUEST_READONLY_RECOVERY",
+  "date": "2026-10-14",
+  "head": "5c8ea3cf88ac2740047c637061f4c7cdd04cf3ca",
+  "workspace": "shared",
+  "reviewer": "独立操作验收代理，与实施代理分离，同模型继承",
+  "outputId": "output-5e3e4e95-61",
+  "productionId": "production-5e3e4e95-68",
+  "originalRequestId": "79622981-9257-4545-a849-e0230a081b4a",
+  "baseRevision": 4,
+  "currentRevision": 6,
+  "naturalProfileSessionRestoration": true,
+  "storageStateInjected": false,
+  "ordinaryRefreshUsed": true,
+  "receiptReads": [
+    {
+      "status": 200,
+      "data": null,
+      "requestId": "79622981-9257-4545-a849-e0230a081b4a"
+    },
+    {
+      "status": 200,
+      "data": null,
+      "requestId": "79622981-9257-4545-a849-e0230a081b4a"
+    }
+  ],
+  "sequence": [
+    "receipt.get",
+    "editor.get",
+    "receipt.get"
+  ],
+  "waitingReleased": true,
+  "candidateVisibleUntilDiscard": true,
+  "textExactRetainedAfterRecoveryAndDiscard": true,
+  "discardEnabledAndClicked": true,
+  "ordinaryTextEditThenRestoreSucceeded": true,
+  "formalFullDTOUnchanged": true,
+  "source201FullDTOUnchanged": true,
+  "writeApplyProposeRequests": [],
+  "browserClosed": true,
+  "oldFailurePreserved": "../../t1274/final-gap-walkthrough/cas-recover-readonly.json",
+  "limitations": [
+    "仅原真实CAS已前进版本的恢复代表路径，不覆盖所有回执/权限/网络族",
+    "恢复后的sessionStorage仅base/draft；候选在当前UI保留到手工丢弃，本轮未验证恢复后再次刷新仍保候选",
+    "第一次restore核对后等待断言耗尽node120秒外层并清理浏览器；未保留该次dispatch，不推断其加载版本或回执次数；随后原profile自然恢复、普通刷新后才获得完整GREEN序列",
+    "初始公开读取漏params得到Not found，纠正后完整基线读取成功；无写操作"
+  ]
+}
