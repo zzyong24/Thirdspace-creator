@@ -1,0 +1,47 @@
+{
+  "scope": "只修响应式flex简写清空原分栏尺寸与zoom断点；窄态不改宽屏持久分栏比例",
+  "sourceFiles": 715,
+  "changedSourceMembers": [
+    "./NATIVE_REBUILD_CONSISTENCY.json",
+    "./README.creatoros.md",
+    "./apps/web/src/embedded/editor-layout.tsx"
+  ],
+  "tests": {
+    "pass": 71,
+    "fail": 0,
+    "assertions": 341,
+    "log": "regression.log"
+  },
+  "domFixture": {
+    "checks": 58,
+    "pass": true,
+    "log": "responsive-dom.log"
+  },
+  "realChromiumGeometry": {
+    "productionNative": true,
+    "redMainHeight": 72,
+    "greenMainHeight": 267.71875,
+    "greenCanvas": "347.9375 × 195.71875",
+    "cases": [
+      "1000 compact",
+      "390 single preview",
+      "390 timeline",
+      "1000 restore",
+      "CSS zoom2 logical600 visual1200 single",
+      "1280 wide restore"
+    ],
+    "canvasAndDraftIdentityPreserved": true,
+    "pageErrors": 0,
+    "log": "green-geometry.log"
+  },
+  "typecheckExitCode": 0,
+  "processAST": "PASS",
+  "productionBuildExitCode": 0,
+  "sourcePatchFuzz": 0,
+  "archiveSourceAndBothPublishedSevenOutputsBytesMatch": true,
+  "fixturePublished": false,
+  "fullCreatorOSHost": "本子候选未跑；ROOT真实宿主复验",
+  "realMediaExport": "本子候选未跑；此前root1PASS由原证据负责，未替代本次整合",
+  "independentVisualScore": "未评分；已看root失败图与本次Chromium compact/zoom截图",
+  "privateExactCacheAndControllerBytesUnchanged": true
+}

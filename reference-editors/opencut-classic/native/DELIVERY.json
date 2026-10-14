@@ -1,6 +1,6 @@
 {
   "task": "T-1274",
-  "deliveryStatus": "NATIVE_RESPONSIVE_MATERIALS_SLOT_SOURCE_DOM_VERIFIED_REAL_HOST_UI_PENDING_ROOT",
+  "deliveryStatus": "NATIVE_RESPONSIVE_REAL_CHROMIUM_GEOMETRY_VERIFIED_FULL_HOST_PENDING_ROOT",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
   "build": {
@@ -10,20 +10,20 @@
     "vite": "6.4.3",
     "typescript": "6.0.3",
     "outputs": 7,
-    "esmBytes": 6638160,
+    "esmBytes": 6638486,
     "cssBytes": 131177,
     "licensedDependencies": 59,
     "renderedModules": 430,
     "nativeHashes": {
-      "native.js": "b30e2b7d7a22aca45aa70a4eae84e01a465a8d6b6e6a5982ef4666efacd6fff7",
+      "native.js": "7d851a4bee7cba9e78f8be1543f961f447e7e87c30f5b0c58423e414115f845b",
       "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
-      "NATIVE_BUILD_GRAPH.json": "3b654452b81fd4b8bddead7722990cd2df9971ecfb1c04e3f69c216ceb0f7281",
+      "NATIVE_BUILD_GRAPH.json": "479ba61b6fee954a4580c926ea38f9bed24ee1562bb9354a31ccfd5bf5364e60",
       "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
       "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
       "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
       "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
     },
-    "freshDependencyInstall": "bun install --frozen-lockfile --ignore-scripts：989包，Bun1.4.0；锁文件未改",
+    "freshDependencyInstall": "本次复用上一轮真实冻结安装，锁文件未变",
     "fixturePublished": false,
     "archiveRebuildBytesMatch": true,
     "crossOsBitReproducibility": "not-claimed"
@@ -31,28 +31,28 @@
   "source": {
     "files": 715,
     "changedFiles": 82,
-    "archiveBytes": 768397,
-    "patchBytes": 434141,
+    "archiveBytes": 768946,
+    "patchBytes": 436132,
     "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
     "hashes": {
-      "native-source.tar.gz": "a1cd0a3cc45f857e4a9fbee7386145c47af8eb90e34abf0659f00ab41dc0ca17",
-      "native-from-t1046.patch": "aa97af4c9a6f079d4032240b119957ae00e3a5256a4af39972f56cc6b9218e8e",
+      "native-source.tar.gz": "55aadbb0d3c33fa6dee0ac295bad0f69ba71232cacc1902d7df13cbded6ede89",
+      "native-from-t1046.patch": "e561d4dff372b6ecead29010bc5e637ae24429618c1ec3ce18de381415d7e50f",
       "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
     },
     "patchMatchesArchive": true,
     "patchFuzz": 0,
-    "reconstructionEvidence": "verification/t1274-responsive/source-reconstruction.json",
-    "productionReconstructionEvidence": "verification/t1274-responsive/production-reconstruction.json",
-    "archiveSha256": "a1cd0a3cc45f857e4a9fbee7386145c47af8eb90e34abf0659f00ab41dc0ca17",
-    "patchSha256": "aa97af4c9a6f079d4032240b119957ae00e3a5256a4af39972f56cc6b9218e8e"
+    "reconstructionEvidence": "verification/t1274-responsive-geometry/source-reconstruction.json",
+    "productionReconstructionEvidence": "verification/t1274-responsive-geometry/production-reconstruction.json",
+    "archiveSha256": "55aadbb0d3c33fa6dee0ac295bad0f69ba71232cacc1902d7df13cbded6ede89",
+    "patchSha256": "e561d4dff372b6ecead29010bc5e637ae24429618c1ec3ce18de381415d7e50f"
   },
   "verification": {
     "totalTests": 71,
     "totalAssertions": 341,
     "testFailures": 0,
     "typecheckExitCode": 0,
-    "fixtureOnly": true,
-    "browserAutomation": "not_run",
+    "fixtureOnly": false,
+    "browserAutomation": "真实Chromium生产native小型宿主几何，不是完整CreatorOS E2E",
     "realGpu": "not_run",
     "realMp4": "not_run",
     "domFixture": {
@@ -62,7 +62,8 @@
     "allFailuresPreserved": true,
     "unreplacedNodeEnv": 0,
     "unguardedGlobalProcessReferences": 0,
-    "evidenceDirectory": "verification/t1274-responsive"
+    "evidenceDirectory": "verification/t1274-responsive-geometry",
+    "realGeometryCases": 6
   },
   "limitations": [
     "原Canvas/Fabric夹具与JSDOM环境不等于真实浏览器像素或安装。",
@@ -1597,5 +1598,116 @@
     "visualReview": "本子候选仅看root旧390/1280基线定位；未签新视觉分",
     "preservedFailure": "responsive-dom-fixture-failure.log：ResizeObserver夹具误触发其它observer无entries，修夹具后58PASS；不是产品红测",
     "limitations": "DOM夹具不证明真实尺寸/像素/浏览器焦点或安装；独立视觉与任务走查由ROOT进行。"
+  },
+  "historicalT1274BeforeGeometryTop": {
+    "deliveryStatus": "NATIVE_RESPONSIVE_MATERIALS_SLOT_SOURCE_DOM_VERIFIED_REAL_HOST_UI_PENDING_ROOT",
+    "build": {
+      "command": "bun apps/web/scripts/build-native.mjs",
+      "entry": "apps/web/src/embedded/native-entry.tsx",
+      "bun": "1.4.0",
+      "vite": "6.4.3",
+      "typescript": "6.0.3",
+      "outputs": 7,
+      "esmBytes": 6638160,
+      "cssBytes": 131177,
+      "licensedDependencies": 59,
+      "renderedModules": 430,
+      "nativeHashes": {
+        "native.js": "b30e2b7d7a22aca45aa70a4eae84e01a465a8d6b6e6a5982ef4666efacd6fff7",
+        "native.css": "662858c3b73068dc5793e45e1022586a5285cbf8e754bb3dec60070adc1b70dc",
+        "NATIVE_BUILD_GRAPH.json": "3b654452b81fd4b8bddead7722990cd2df9971ecfb1c04e3f69c216ceb0f7281",
+        "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+        "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+        "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+        "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      "freshDependencyInstall": "bun install --frozen-lockfile --ignore-scripts：989包，Bun1.4.0；锁文件未改",
+      "fixturePublished": false,
+      "archiveRebuildBytesMatch": true,
+      "crossOsBitReproducibility": "not-claimed"
+    },
+    "source": {
+      "files": 715,
+      "changedFiles": 82,
+      "archiveBytes": 768397,
+      "patchBytes": 434141,
+      "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "hashes": {
+        "native-source.tar.gz": "a1cd0a3cc45f857e4a9fbee7386145c47af8eb90e34abf0659f00ab41dc0ca17",
+        "native-from-t1046.patch": "aa97af4c9a6f079d4032240b119957ae00e3a5256a4af39972f56cc6b9218e8e",
+        "native-from-t1069.historical.patch": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195"
+      },
+      "patchMatchesArchive": true,
+      "patchFuzz": 0,
+      "reconstructionEvidence": "verification/t1274-responsive/source-reconstruction.json",
+      "productionReconstructionEvidence": "verification/t1274-responsive/production-reconstruction.json",
+      "archiveSha256": "a1cd0a3cc45f857e4a9fbee7386145c47af8eb90e34abf0659f00ab41dc0ca17",
+      "patchSha256": "aa97af4c9a6f079d4032240b119957ae00e3a5256a4af39972f56cc6b9218e8e"
+    },
+    "verification": {
+      "totalTests": 71,
+      "totalAssertions": 341,
+      "testFailures": 0,
+      "typecheckExitCode": 0,
+      "fixtureOnly": true,
+      "browserAutomation": "not_run",
+      "realGpu": "not_run",
+      "realMp4": "not_run",
+      "domFixture": {
+        "responsiveAndCenter": 58
+      },
+      "historicalDomFixtureChecks": 60,
+      "allFailuresPreserved": true,
+      "unreplacedNodeEnv": 0,
+      "unguardedGlobalProcessReferences": 0,
+      "evidenceDirectory": "verification/t1274-responsive"
+    }
+  },
+  "t1274ResponsiveGeometryVerification": {
+    "scope": "只修响应式flex简写清空原分栏尺寸与zoom断点；窄态不改宽屏持久分栏比例",
+    "sourceFiles": 715,
+    "changedSourceMembers": [
+      "./NATIVE_REBUILD_CONSISTENCY.json",
+      "./README.creatoros.md",
+      "./apps/web/src/embedded/editor-layout.tsx"
+    ],
+    "tests": {
+      "pass": 71,
+      "fail": 0,
+      "assertions": 341,
+      "log": "regression.log"
+    },
+    "domFixture": {
+      "checks": 58,
+      "pass": true,
+      "log": "responsive-dom.log"
+    },
+    "realChromiumGeometry": {
+      "productionNative": true,
+      "redMainHeight": 72,
+      "greenMainHeight": 267.71875,
+      "greenCanvas": "347.9375 × 195.71875",
+      "cases": [
+        "1000 compact",
+        "390 single preview",
+        "390 timeline",
+        "1000 restore",
+        "CSS zoom2 logical600 visual1200 single",
+        "1280 wide restore"
+      ],
+      "canvasAndDraftIdentityPreserved": true,
+      "pageErrors": 0,
+      "log": "green-geometry.log"
+    },
+    "typecheckExitCode": 0,
+    "processAST": "PASS",
+    "productionBuildExitCode": 0,
+    "sourcePatchFuzz": 0,
+    "archiveSourceAndBothPublishedSevenOutputsBytesMatch": true,
+    "fixturePublished": false,
+    "fullCreatorOSHost": "本子候选未跑；ROOT真实宿主复验",
+    "realMediaExport": "本子候选未跑；此前root1PASS由原证据负责，未替代本次整合",
+    "independentVisualScore": "未评分；已看root失败图与本次Chromium compact/zoom截图",
+    "privateExactCacheAndControllerBytesUnchanged": true
   }
 }

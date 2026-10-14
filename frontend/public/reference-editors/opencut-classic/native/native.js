@@ -81326,12 +81326,14 @@ function bJA({
   );
   d.useLayoutEffect(() => {
     if (!g || !A.current) return;
-    const S = A.current, K = () => {
-      const p = S.getBoundingClientRect().width;
+    const S = A.current, K = (p) => {
       p > 0 && C(p < 700 ? "single" : p < 1100 ? "compact" : "wide");
     };
-    K();
-    const f = new ResizeObserver(K);
+    K(S.clientWidth);
+    const f = new ResizeObserver((p) => {
+      const W = p.find((v) => v.target === S);
+      K(W?.contentRect.width ?? S.clientWidth);
+    });
     return f.observe(S), () => f.disconnect();
   }, [g]);
   const Q = g && I === "single", E = g && I === "compact", e = !g || I === "wide" || B === "left", t = !g || I === "wide" || B === "right", a = !Q || B === "preview", D = !Q || B !== "timeline", c = !Q || B === "timeline", r = [
@@ -81400,13 +81402,13 @@ function bJA({
             direction: "vertical",
             className: "size-full gap-[0.18rem] native-workspace-vertical",
             onLayout: (S) => {
-              G({
+              Q || (G({
                 panel: "mainContent",
                 size: S[0] ?? h.mainContent
               }), G({
                 panel: "timeline",
                 size: S[1] ?? h.timeline
-              });
+              }));
             },
             children: [
               /* @__PURE__ */ w.jsx(
@@ -81420,7 +81422,7 @@ function bJA({
                   inert: !D,
                   style: {
                     display: D ? void 0 : "none",
-                    flex: Q ? "1 1 0" : void 0
+                    ...Q ? { flexGrow: 1, flexShrink: 1, flexBasis: 0 } : {}
                   },
                   children: /* @__PURE__ */ w.jsxs(
                     _K,
@@ -81428,10 +81430,10 @@ function bJA({
                       direction: "horizontal",
                       className: "size-full gap-[0.19rem] px-3 native-workspace-horizontal",
                       onLayout: (S) => {
-                        G({ panel: "tools", size: S[0] ?? h.tools }), G({ panel: "preview", size: S[1] ?? h.preview }), G({
+                        g && I !== "wide" || (G({ panel: "tools", size: S[0] ?? h.tools }), G({ panel: "preview", size: S[1] ?? h.preview }), G({
                           panel: "properties",
                           size: S[2] ?? h.properties
-                        });
+                        }));
                       },
                       children: [
                         /* @__PURE__ */ w.jsx(
@@ -81445,7 +81447,7 @@ function bJA({
                             inert: !e,
                             style: {
                               display: e ? void 0 : "none",
-                              flex: Q ? "1 1 0" : E ? "0 0 340px" : void 0
+                              ...Q ? { flexGrow: 1, flexShrink: 1, flexBasis: 0 } : E ? { flexGrow: 0, flexShrink: 0, flexBasis: 340 } : {}
                             },
                             children: g ? /* @__PURE__ */ w.jsx(of, { side: "left", children: /* @__PURE__ */ w.jsx(nH, {}) }) : /* @__PURE__ */ w.jsx(nH, {})
                           }
@@ -81472,7 +81474,7 @@ function bJA({
                             inert: !a,
                             style: {
                               display: a ? void 0 : "none",
-                              flex: Q || E ? "1 1 0" : void 0
+                              ...Q || E ? { flexGrow: 1, flexShrink: 1, flexBasis: 0 } : {}
                             },
                             children: g ? /* @__PURE__ */ w.jsx(pJA, { children: /* @__PURE__ */ w.jsx(
                               Ef,
@@ -81513,7 +81515,7 @@ function bJA({
                             inert: !t,
                             style: {
                               display: t ? void 0 : "none",
-                              flex: Q ? "1 1 0" : E ? "0 0 340px" : void 0
+                              ...Q ? { flexGrow: 1, flexShrink: 1, flexBasis: 0 } : E ? { flexGrow: 0, flexShrink: 0, flexBasis: 340 } : {}
                             },
                             children: g ? /* @__PURE__ */ w.jsx(of, { side: "right", children: /* @__PURE__ */ w.jsx(yH, {}) }) : /* @__PURE__ */ w.jsx(yH, {})
                           }
@@ -81543,8 +81545,8 @@ function bJA({
                   hidden: !c,
                   style: {
                     display: c ? void 0 : "none",
-                    flex: Q ? "1 1 0" : void 0,
-                    overflow: Q ? "auto" : void 0
+                    ...Q ? { flexGrow: 1, flexShrink: 1, flexBasis: 0 } : {},
+                    ...Q ? { overflow: "auto" } : {}
                   },
                   children: /* @__PURE__ */ w.jsx(tYA, {})
                 }

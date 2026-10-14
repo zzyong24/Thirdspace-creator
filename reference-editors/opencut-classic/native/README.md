@@ -1,3 +1,11 @@
+# T-1274 响应式实际几何闭包
+
+2026-10-14后续：ROOT真实1280/200%图发现预览只剩约74px、时间轴下方空白。真实Chromium加载生产native小型shadow宿主复现main72px RED，原因是style.flex空简写清掉Resizable内部flexGrow/flexBasis。改用独立长属性覆盖并沿原值恢复；窄布局不回写宽屏分栏比例。断点改用ResizeObserver.contentRect与首帧clientWidth的CSS像素，避免zoom2将逻辑600误判为1200宽屏。
+
+同真实Chromium GREEN：1000主区267.72px/canvas347.94×195.72；390主区516.45px/canvas358×201.38；时间轴单面板516.45px；切回1000尺寸恢复；zoom2逻辑600正确single/canvas1136×639；恢复1280三栏canvas391.5×220.22。画布和textarea原实例保持，无pageerror；已查看compact与zoom截图。此为生产native的真实几何验证，空工程黑画布不是媒体预览证明，未代签完整CreatorOS UI或MP4。
+
+原71测试341断言、58DOM、类型、AST再次通过；715源码F0复原和归档重新build七份与双目录逐字节一致。只有editor-layout.tsx与README/重建元数据改变，private exact cache和controller原字节保持。真实RED与六几何截图/JSON/脚本见verification/t1274-responsive-geometry，ROOT继续整合宿主复验。以下旧记录保留。
+
 # T-1274 响应式工作区与素材槽位
 
 2026-10-14：按编辑器实际容器宽度布局：小于700px单面板，四个按钮依次为素材/转录、画面、时间轴、编导/属性；700–1099px画面和时间轴保持，按需展示一侧340px面板；1100px及以上沿原可调三栏。单面板时间轴保原控件和水平滚动，不缩成不可读竖列。所有Core、Resizable、portal和宿主草稿保持同一实例。

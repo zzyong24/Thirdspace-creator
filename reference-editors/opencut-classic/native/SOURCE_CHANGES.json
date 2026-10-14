@@ -154,5 +154,10 @@
     "apps/web/src/embedded/native.css",
     "README.creatoros.md",
     "NATIVE_REBUILD_CONSISTENCY.json"
+  ],
+  "t1274ResponsiveGeometryChangedFiles": [
+    "apps/web/src/embedded/editor-layout.tsx",
+    "README.creatoros.md",
+    "NATIVE_REBUILD_CONSISTENCY.json"
   ]
 }
