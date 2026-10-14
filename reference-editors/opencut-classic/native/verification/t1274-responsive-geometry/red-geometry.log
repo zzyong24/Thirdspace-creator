@@ -1,0 +1,87 @@
+{
+  "evidence": [
+    {
+      "name": "compact",
+      "mode": "compact",
+      "view": "preview",
+      "workspace": {
+        "width": 1000,
+        "height": 603.203125,
+        "top": 36.796875,
+        "bottom": 640,
+        "display": "flex",
+        "flexGrow": "0",
+        "flexBasis": "auto",
+        "logicalWidth": 1000
+      },
+      "vertical": {
+        "width": 1000,
+        "height": 554.203125,
+        "top": 85.796875,
+        "bottom": 640,
+        "display": "flex",
+        "flexGrow": "1",
+        "flexBasis": "0%",
+        "logicalWidth": 1000
+      },
+      "main": {
+        "width": 1000,
+        "height": 72,
+        "top": 85.796875,
+        "bottom": 157.796875,
+        "display": "block",
+        "flexGrow": "0",
+        "flexBasis": "auto",
+        "logicalWidth": 1000
+      },
+      "preview": {
+        "width": 976,
+        "height": 72,
+        "top": 85.796875,
+        "bottom": 157.796875,
+        "display": "block",
+        "flexGrow": "1",
+        "flexBasis": "0px",
+        "logicalWidth": 976
+      },
+      "canvas": {
+        "width": 1920,
+        "height": 1080,
+        "top": -446.203125,
+        "bottom": 633.796875,
+        "display": "block",
+        "flexGrow": "0",
+        "flexBasis": "auto",
+        "logicalWidth": 1920
+      },
+      "timeline": {
+        "width": 1000,
+        "height": 162,
+        "top": 164.546875,
+        "bottom": 326.546875,
+        "display": "block",
+        "flexGrow": "0",
+        "flexBasis": "auto",
+        "logicalWidth": 1000
+      }
+    }
+  ],
+  "errors": []
+}
+ExpectError: expect(received).toBeGreaterThan(expected)
+
+Expected: > 200
+Received:   72
+    at captureRawStack (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:3130:17)
+    at callMatcherAsStep (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12873:57)
+    at Object.toBeGreaterThan (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12863:23)
+    at /private/tmp/t1274-native-geometry-proof/geometry.cjs:11:109 {
+  matcherResult: {
+    message: 'expect(received).toBeGreaterThan(expected)\n' +
+      '\n' +
+      'Expected: > 200\n' +
+      'Received:   72',
+    pass: false,
+    name: 'toBeGreaterThan'
+  }
+}
