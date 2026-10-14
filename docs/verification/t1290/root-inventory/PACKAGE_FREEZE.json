@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-14T15:32:05.291Z",
+  "sourceHead": "30cd8f68e6d7c539b3bd01d4e90d5f695526f86b",
+  "branch": "main",
+  "cleanStatus": true,
+  "diffCheck": 0,
+  "version": "1.2.0",
+  "entry": "pnpm -C frontend desktop:package-local",
+  "existingEnvironmentOverrides": {
+    "CREATOROS_LOCAL_SKIP_INSTALL": "1"
+  },
+  "limits": "不自动安装；本地ad-hoc，不公证、不发布。原始日志有自然空白保持，源码工作差异check0。"
+}

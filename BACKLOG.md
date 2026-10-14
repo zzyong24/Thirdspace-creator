@@ -9,8 +9,9 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1292|核对合并后的全局对账失败并逐项归因|📋|待审|待验|[原32项现场失败](docs/features/t1292-post-integration-global-reconcile-findings.md)|原对账32ERROR保留；T1286在途旧receipt已新审，不补签全绿；历史review漂移及10项消费者门先准确归因，人工验收包已生成，不冒全功能通过。|
 |T-1291|核对旧原生编辑器验证器与当前715源码库存|📋|待审|待验|[原额外验证真实失败](docs/features/t1291-legacy-native-verifier-source-inventory.md)|旧manifest及710模块/合同复制哨兵与715漂移，隔离组合仍FAIL；不补假模块/洗validator，不在固定本地包调用链，保独立欠债。|
-|T-1290|合并全部项目worktree到main、本地打包与交付后清理|🔨|PASS[REV:142008f9fcc4]|待验|[用户本轮明确交付范围](docs/features/t1290-merge-all-worktrees-local-package-cleanup.md)|盘点并保护全部代码，普通合main并冻结打本地包供用户验收；完成后才清旧worktree和可再生产物，保数据/最新包/真实未验。|
+|T-1290|合并全部项目worktree到main、本地打包与交付后清理|✅|PASS[REV:ab3b917f4c41]|—|[用户本轮明确交付范围](docs/features/t1290-merge-all-worktrees-local-package-cleanup.md)|盘点并保护全部代码，普通合main并冻结打本地包供用户验收；完成后才清旧worktree和可再生产物，保数据/最新包/真实未验。|
 |T-1289|修复原生构建清单随解包目录深度变化|🔨|PASS[REV:92eba9d78497]|待验|[归档重建真实差异](docs/features/t1289-native-build-graph-virtual-module.md)|715源/F0一致，六runtime产物一致，第七清单虚拟module路径随目录深度变化；原FAIL保留，只核机械ID与归档元数据，不只补生成JSON。|
 |T-1288|校准合并剪辑后的两个契约测试库存|🔨|PASS[REV:cf5a6070b2b5]|待验|[当场43项库存失败](docs/features/t1288-integrated-editing-contract-inventory.md)|R全契约43FAIL/475PASS保留；只核两个原测试427→429与已审script read/propose两路径，不改产品或放松穷尽。|
 |T-1287|闭合Growth全量回归的旧夹具与隔离缺项|📋|待审|待验|[真实全量失败与边界](docs/features/t1287-growth-full-regression-fixtures.md)|原Python9FAIL/1189PASS、Node10FAIL/270PASS与对账10ERROR保留；0076启动head已窄修28PASS，余5测试/3hooks和Node实际清单先独审，不改经营安全来洗绿。|

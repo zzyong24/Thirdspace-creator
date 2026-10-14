@@ -2,9 +2,9 @@
 
 - Task: T-1290
 - Verdict: PASS
-- Round: 1/3 (initial)
+- Round: 2/3 (recheck)
 - Spec receipt: 69041d8e9123
-- Review receipt: 142008f9fcc4
+- Review receipt: ab3b917f4c41
 
 ## 当前有效问题
 
@@ -17,23 +17,23 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1290",
   "cycle": 1,
-  "round": 1,
+  "round": 2,
   "max_rounds": 3,
-  "review_kind": "initial",
+  "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "用户明确授权全部本项目worktree代码合main、本人本地安装包验收及交付后清理；SPEC准确限定Creator全部与Growth关联改动分别进入各自main，Root串行整合、先保护全部dirty代码并排除秘密/用户数据、不用旧分支整树覆盖最新。新增已确认闭包经独审及公共回归、安全启动/数据缺陷先解决，再冻结打包；旧范围外失败与实际未验如实单列。交付后才清理，先证明源可恢复且无在用进程，不push/线上发布。未发现阻断项；正式裁决由reviewctl，本文不签包或Gate。",
+  "summary": "T1290第二轮精确归属recheck：原SPEC69041d8e9123与宪法86bc...保持、初审142008f9fcc4 findings空。原用户明确全worktree并main/本地包交本人验收/完成后清理；本叶纯整合保护与物料交付，无frontend-journey-contract，不承担自动UI/App旅程签署。原taskctl待验会把文字evidence当UI报告路径；仅T1290验收单元格待验→—是准确不适用分类，不改门卫/产品/测试/范围，不代表UI或App PASS。已读45基础PASS/package-local0/只读mount签名源码绑定实际回执，独立实际DMG SHA等b6d276...、原非主HEAD全部Main祖先与fallback refs可达；未重跑打包或签App。原T1288失败不改状态、managed queued不冒archive成功、32ERROR保T1292待归因、不称全旧债或全绿；T1278/1207/1246及真实功能/模型/资金/Windows/App未验仍保。Root正式completion evidence须诚实限物料交付，不写全部验收完成。无当前拟议分类待修finding；仅此evidence目录写，控面0。",
   "spec_path": "docs/features/t1290-merge-all-worktrees-local-package-cleanup.md",
   "spec_sha256": "69041d8e912378b0748d3320025b3f168d13d81d15607e4896f8c1d8096e74c2",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1290-merge-all-worktrees-local-package-cleanup.T-1290.review.md",
-  "review_mode": "homogeneous",
-  "model": "inherited-current-model",
+  "review_mode": "independent",
+  "model": "inherited",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "19c0770a9823f9afd3b47aa53966b484a808d31b53768d034c87fcf9017c83db",
+  "latest_event_hash": "316bdb766f97b20869ed9bcb32a693e59bd1781d044b170933551f889077da67",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "142008f9fcc4"
+  "receipt": "ab3b917f4c41"
 }
 ```

@@ -1,0 +1,2 @@
+✗ 任务 T-1288 UI 旅程验收失败:
+Main30cd8f68e；固定432完整contract79文件519PASS、contract类型0；审核cf5a6070b2b5；原失败和全局reconcile32ERROR保留，范围外逐项归因T1292，非整项目全绿。 不存在

@@ -1,0 +1,20 @@
+✗ T-1255: review receipt 已过期：constitution hash 已变化
+T-1072-owned-devices: review receipt 缺少任务 T-1072-owned-devices 的 hash-chained event
+T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f
+T-915: BACKLOG review receipt 692283b8bace 与 snapshot ad76cf555129 不一致
+T-859: BACKLOG review receipt 9895a91a63a8 与 snapshot 5818394813ca 不一致
+T-858: BACKLOG review receipt 2521be715a0a 与 snapshot c76009a5586c 不一致
+T-824: BACKLOG review receipt 18361dc8c3c3 与 snapshot f0e215103ddf 不一致
+T-819: BACKLOG review receipt 0425ab7b87b8 与 snapshot a8879edf798f 不一致
+T-816: BACKLOG review receipt fb03de3a57d7 与 snapshot 7896d566ccf8 不一致
+T-768: BACKLOG review receipt 3eb18966ea59 与 snapshot 64f8010b2045 不一致
+T-726: BACKLOG review receipt 2809820bf64a 与 snapshot 39e3f41ca866 不一致
+T-707: BACKLOG review receipt 06867c4bf60c 与 snapshot 87de34262527 不一致
+T-703: BACKLOG review receipt c1a3920aea71 与 snapshot 0662dafac8fa 不一致
+T-691: BACKLOG review receipt 9444ca5b32a9 与 snapshot 2f2a131519e7 不一致
+T-694: BACKLOG review receipt 2c7be136aea0 与 snapshot 171b7c9ad2f2 不一致
+T-656: BACKLOG review receipt 5f6970ac76f2 与 snapshot bd8a6ac135f0 不一致
+T-652: 审核列为「待审」；存在未销账问题，不得开工
+T-645: BACKLOG review receipt 5dfe24b42eb7 与 snapshot 7ff0c3cb1906 不一致
+T-642: BACKLOG review receipt 7728c9ed44bd 与 snapshot 9002b8dbeb4d 不一致
+T-635: BACKLOG review receipt b8add273a494 与 snapshot 84661017fde5 不一致

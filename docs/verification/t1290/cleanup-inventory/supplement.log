@@ -1,0 +1,15 @@
+codex-ephemeral-sessions protected 0 ownedDirs 0 dbMedia 0
+codex-text-image protected 0 ownedDirs 0 dbMedia 0
+daily-client-observability protected 0 ownedDirs 0 dbMedia 0
+integrated-dev-acceptance protected 0 ownedDirs 0 dbMedia 1
+integrated-frontend-unit protected 0 ownedDirs 0 dbMedia 0
+integrated-unit-acceptance protected 0 ownedDirs 0 dbMedia 0
+t1062-client-integration protected 0 ownedDirs 0 dbMedia 1
+t1255-client-writer protected 0 ownedDirs 0 dbMedia 0
+t1273-release-hardening protected 0 ownedDirs 0 dbMedia 0
+t1274-markdown protected 0 ownedDirs 0 dbMedia 0
+t1274-native-workspace protected 0 ownedDirs 0 dbMedia 0
+unified-capability-models protected 1 ownedDirs 0 dbMedia 0
+unified-editing-integration protected 0 ownedDirs 0 dbMedia 0
+wechat-stats-evidence protected 0 ownedDirs 0 dbMedia 0
+retained 6 allCopyMatch True

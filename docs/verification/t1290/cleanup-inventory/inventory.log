@@ -1,0 +1,15 @@
+{"name": "codex-ephemeral-sessions", "head": "196321a012", "logicalGiB": 2.698, "ignoredEntries": 17, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "codex-text-image", "head": "5dfd1c706f", "logicalGiB": 2.756, "ignoredEntries": 13, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "integrated-dev-acceptance", "head": "64ca6add43", "logicalGiB": 15.903, "ignoredEntries": 626, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "daily-client-observability", "head": "90f3a6f48f", "logicalGiB": 12.201, "ignoredEntries": 54, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "integrated-frontend-unit", "head": "533224f334", "logicalGiB": 2.795, "ignoredEntries": 11, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "integrated-unit-acceptance", "head": "533224f334", "logicalGiB": 3.589, "ignoredEntries": 12, "dirty": 4, "refs": 0, "sizeErrors": 0}
+{"name": "t1274-markdown", "head": "949ec22997", "logicalGiB": 0.738, "ignoredEntries": 0, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "t1274-native-workspace", "head": "19a1d87cee", "logicalGiB": 0.748, "ignoredEntries": 0, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "t1062-client-integration", "head": "a091de271a", "logicalGiB": 5.846, "ignoredEntries": 188, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "t1255-client-writer", "head": "f54f184d39", "logicalGiB": 11.941, "ignoredEntries": 22, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "unified-capability-models", "head": "03d60d39c8", "logicalGiB": 5.739, "ignoredEntries": 9, "dirty": 1, "refs": 0, "sizeErrors": 0}
+{"name": "t1273-release-hardening", "head": "c98e7a958c", "logicalGiB": 8.854, "ignoredEntries": 15, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "wechat-stats-evidence", "head": "a3bc947d4b", "logicalGiB": 3.664, "ignoredEntries": 13, "dirty": 0, "refs": 0, "sizeErrors": 0}
+{"name": "unified-editing-integration", "head": "c9a8b6aa50", "logicalGiB": 4.748, "ignoredEntries": 8, "dirty": 0, "refs": 0, "sizeErrors": 0}
+DONE 14 refs 0 retainedFiles 10

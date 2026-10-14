@@ -1,0 +1,20 @@
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/next-env.d.ts
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/node_modules
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/src-tauri/gen
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/src-tauri/target
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/mcp-server/node_modules
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/.DS_Store
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/.codegraph
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/dist
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/ai-worker/node_modules
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/backend/node_modules
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/contract/node_modules
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/.DS_Store
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/.DS_Store
+/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/docs/verification/t1246/.DS_Store
+Traceback (most recent call last):
+  File "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1290/cleanup-inventory/clean-attached-cache.py", line 9, in <module>
+    refs=subprocess.run(['lsof','-nP','-Fpn'],capture_output=True,text=True);assert refs.returncode==0;assert not any(y.startswith('n'+str(root)) for y in refs.stdout.splitlines())
+                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

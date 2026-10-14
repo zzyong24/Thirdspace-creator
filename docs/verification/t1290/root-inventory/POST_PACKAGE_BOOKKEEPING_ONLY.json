@@ -1,0 +1,13 @@
+{
+  "packageSource": "30cd8f68e6d7c539b3bd01d4e90d5f695526f86b",
+  "currentChanges": [
+    "BACKLOG.md",
+    "PROJECT.md",
+    "docs/features/t1290-merge-all-worktrees-local-package-cleanup.T-1290.review.md",
+    "docs/verification/t1290/root-inventory/reconcile-before-package.log",
+    "orchestrator/.lessons-stats.json",
+    "orchestrator/events.ndjson",
+    "orchestrator/review-events.ndjson"
+  ],
+  "productionChanges": []
+}

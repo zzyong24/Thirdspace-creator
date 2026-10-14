@@ -1,0 +1,50 @@
+[
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator",
+    "originalHead": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+    "snapshotCommit": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+    "recoveryRef": "refs/heads/codex/t1290-preserved-codex-text-image",
+    "dirtyAtSnapshot": "",
+    "ignoredPreservation": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktree-preservation/t1290/codex-text-image",
+    "toolArchive": "已多次请求queued，未确认完成；独立Git快照+已验备份后执行用户明确清理授权",
+    "removeExit": 0,
+    "stderr": "",
+    "directoryRemoved": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator",
+    "originalHead": "64ca6add4375820b346bc3b6ccc8cafa913daba5",
+    "snapshotCommit": "64ca6add4375820b346bc3b6ccc8cafa913daba5",
+    "recoveryRef": "refs/heads/codex/t1290-preserved-integrated-dev-acceptance",
+    "dirtyAtSnapshot": "",
+    "ignoredPreservation": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktree-preservation/t1290/integrated-dev-acceptance",
+    "toolArchive": "已多次请求queued，未确认完成；独立Git快照+已验备份后执行用户明确清理授权",
+    "removeExit": 0,
+    "stderr": "",
+    "directoryRemoved": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-frontend-unit/Thirdspace-creator",
+    "originalHead": "533224f334c43cdb81a344424e420cad93784dd1",
+    "snapshotCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+    "recoveryRef": "refs/heads/codex/t1290-preserved-integrated-frontend-unit",
+    "dirtyAtSnapshot": "",
+    "ignoredPreservation": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktree-preservation/t1290/integrated-frontend-unit",
+    "toolArchive": "已多次请求queued，未确认完成；独立Git快照+已验备份后执行用户明确清理授权",
+    "removeExit": 0,
+    "stderr": "",
+    "directoryRemoved": true
+  },
+  {
+    "root": "/Users/zyongzhu/.codex/worktrees/integrated-unit-acceptance/Thirdspace-creator",
+    "originalHead": "533224f334c43cdb81a344424e420cad93784dd1",
+    "snapshotCommit": "22eb77eb98ec61a0144c8ab7fd873f7659648697",
+    "recoveryRef": "refs/heads/codex/t1290-preserved-integrated-unit-acceptance",
+    "dirtyAtSnapshot": " M docs/research/evidence/t850/rough-actual-render-steps.json\n M docs/research/evidence/t850/rough-render-diagnostics.json\n?? docs/research/evidence/t915/browser-pi-full-normal-trace-1791734726713.ndjson\n?? docs/research/evidence/t915/browser-pi-full-unknown-trace-1791734735824.ndjson\n",
+    "ignoredPreservation": "/Users/zyongzhu/Workbase/Thirdspace-creator/.worktree-preservation/t1290/integrated-unit-acceptance",
+    "toolArchive": "已多次请求queued，未确认完成；独立Git快照+已验备份后执行用户明确清理授权",
+    "removeExit": 0,
+    "stderr": "",
+    "directoryRemoved": true
+  }
+]

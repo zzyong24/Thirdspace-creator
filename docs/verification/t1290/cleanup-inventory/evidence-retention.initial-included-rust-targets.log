@@ -1,0 +1,14 @@
+codex-ephemeral-sessions groups 1 files 10 needsBackupGroups 0
+codex-text-image groups 0 files 0 needsBackupGroups 0
+daily-client-observability groups 2 files 39 needsBackupGroups 1
+integrated-dev-acceptance groups 11 files 20696 needsBackupGroups 10
+integrated-frontend-unit groups 0 files 0 needsBackupGroups 0
+integrated-unit-acceptance groups 0 files 0 needsBackupGroups 0
+t1062-client-integration groups 26 files 170 needsBackupGroups 25
+t1255-client-writer groups 5 files 6 needsBackupGroups 3
+t1273-release-hardening groups 0 files 0 needsBackupGroups 0
+t1274-markdown groups 0 files 0 needsBackupGroups 0
+t1274-native-workspace groups 0 files 0 needsBackupGroups 0
+unified-capability-models groups 0 files 0 needsBackupGroups 0
+unified-editing-integration groups 0 files 0 needsBackupGroups 0
+wechat-stats-evidence groups 1 files 2 needsBackupGroups 1

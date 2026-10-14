@@ -1,0 +1,14 @@
+{
+  "mountPoint": "/private/tmp/t1290-dmg-verify-hk43gxsk",
+  "readonly": true,
+  "nativeLaunch": "not-run: 用户自行验收；原生自动化暂不授权",
+  "attachExit": 0,
+  "appIdentifier": "cloud.aitongban.creatoros",
+  "version": "1.2.0",
+  "codesignVerifyExit": 0,
+  "binarySha256": "6af9f9b0310cbc925f8bb1e8fbb4f27eb651139ffeb09fa7fc4ed1e8a11f82f9",
+  "binaryMatchesReleaseAttestation": true,
+  "sourceMatchesFreeze": true,
+  "status": "PASS",
+  "detachExit": 0
+}

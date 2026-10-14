@@ -1,0 +1,162 @@
+{
+  "at": "2026-10-14T16:01:06.602333+00:00",
+  "task": "T-1290",
+  "reviewKind": "recheck",
+  "specUnchangedSinceInitial": true,
+  "previousReview": {
+    "schema": "spec-review-state/v2",
+    "task_id": "T-1290",
+    "cycle": 1,
+    "round": 1,
+    "max_rounds": 3,
+    "review_kind": "initial",
+    "verdict": "PASS",
+    "summary": "用户明确授权全部本项目worktree代码合main、本人本地安装包验收及交付后清理；SPEC准确限定Creator全部与Growth关联改动分别进入各自main，Root串行整合、先保护全部dirty代码并排除秘密/用户数据、不用旧分支整树覆盖最新。新增已确认闭包经独审及公共回归、安全启动/数据缺陷先解决，再冻结打包；旧范围外失败与实际未验如实单列。交付后才清理，先证明源可恢复且无在用进程，不push/线上发布。未发现阻断项；正式裁决由reviewctl，本文不签包或Gate。",
+    "spec_path": "docs/features/t1290-merge-all-worktrees-local-package-cleanup.md",
+    "spec_sha256": "69041d8e912378b0748d3320025b3f168d13d81d15607e4896f8c1d8096e74c2",
+    "constitution_path": "docs/产品定位.md",
+    "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "review_path": "docs/features/t1290-merge-all-worktrees-local-package-cleanup.T-1290.review.md",
+    "review_mode": "homogeneous",
+    "model": "inherited-current-model",
+    "policy": "convergent-review/v2",
+    "cycle_authorization": null,
+    "latest_event_hash": "19c0770a9823f9afd3b47aa53966b484a808d31b53768d034c87fcf9017c83db",
+    "open_findings": [],
+    "resolved_findings": [],
+    "receipt": "142008f9fcc4"
+  },
+  "inputs": {
+    "docs/features/t1290-merge-all-worktrees-local-package-cleanup.md": "69041d8e912378b0748d3320025b3f168d13d81d15607e4896f8c1d8096e74c2",
+    "docs/features/t1290-merge-all-worktrees-local-package-cleanup.T-1290.review.md": "fd694c2d5b5af88428d399ddf12565437d922c08d31cb565076a079ba74ae340",
+    "docs/产品定位.md": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "BACKLOG.md": "521122da2bfaae829240ba814e2c674aecdb183d8f0377b90df20862965a58f9",
+    "orchestrator/process/taskctl.mjs": "f5d9660c87023b1320ba3703bd3b7ef6df9044356b271f6751d0343ea366e65d",
+    "orchestrator/process/reviewctl.mjs": "dde682e0ad114048daa5cfd8686a1450ccf902a8ab56a48411e88399a51ccc15",
+    "docs/verification/t1290/root-inventory/PACKAGE_FREEZE.json": "f3505dfc2ec4535601fc5943efced7d16f181475bf453cb1dedba5ba4adf9b8b",
+    "docs/verification/t1290/root-inventory/PACKAGE_ARTIFACT.json": "6bc4472c8d5fde6f008095bc6bc6001953b795af53f112439a9256f9331e54af",
+    "docs/verification/t1290/root-inventory/DMG_MOUNTED_VERIFICATION.json": "dfcbef6ceca34c30fc024ec4f35bd36173b1e853b5c623219ce03ab91bdcbfd7",
+    "docs/verification/t1290/root-inventory/package-final-basics.log": "1d3029ca8ce07a39930f64f22498836ae2ebfb853bd1b050b70085339f9ea83e",
+    "docs/verification/t1290/root-inventory/package-final-basics.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "docs/verification/t1290/root-inventory/package-local.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "docs/verification/t1290/root-inventory/task1288-complete.log": "da6d13680058dd1115563e18f281909afa2f7ac0157debc2a8f982977038d81a",
+    "docs/verification/t1290/root-inventory/task1288-complete.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "docs/verification/t1290/cleanup-inventory/PRESERVATION_RESULT.json": "e355e1861c899b9f612792b33814cdca363747f612a11a606fdfb02ab7f23107",
+    "docs/verification/t1290/cleanup-inventory/MANAGED_FALLBACK_RESULT.json": "facc3bc8e5fda3e7bdbe4d2484eea70d7d3bf5d8c0a7b27b105abdbd5b3aeba7",
+    "docs/features/t1292-post-integration-global-reconcile-findings.md": "d722578c2d36afd046658db4da8c3c56db7e95a36cd82eacc0fd8c74d0d4f68b"
+  },
+  "onlyProposedBacklogChange": {
+    "before": "|T-1290|合并全部项目worktree到main、本地打包与交付后清理|🔨|PASS[REV:142008f9fcc4]|待验|[用户本轮明确交付范围](docs/features/t1290-merge-all-worktrees-local-package-cleanup.md)|盘点并保护全部代码，普通合main并冻结打本地包供用户验收；完成后才清旧worktree和可再生产物，保数据/最新包/真实未验。|",
+    "after": "|T-1290|合并全部项目worktree到main、本地打包与交付后清理|🔨|PASS[REV:142008f9fcc4]|—|[用户本轮明确交付范围](docs/features/t1290-merge-all-worktrees-local-package-cleanup.md)|盘点并保护全部代码，普通合main并冻结打本地包供用户验收；完成后才清旧worktree和可再生产物，保数据/最新包/真实未验。|",
+    "meaning": "本物料整合任务不适用frontend UI旅程，不是用户或App验收PASS"
+  },
+  "sourceCommit": "30cd8f68e6d7c539b3bd01d4e90d5f695526f86b",
+  "independentArtifactRead": {
+    "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "bytes": 850565272,
+    "sha256": "b6d276adc5f8f91ea9be6e20197af1018c994d17b3ac13fcb5175d87c75f4f24",
+    "matchesReport": true
+  },
+  "originalNonMainHeads": [
+    {
+      "originalHead": "196321a012299660e7ffcbe012ccc0cd2fd9c18a",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "90f3a6f48f62961b0a6af3605b17f199c7589d1d",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "64ca6add4375820b346bc3b6ccc8cafa913daba5",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "533224f334c43cdb81a344424e420cad93784dd1",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "533224f334c43cdb81a344424e420cad93784dd1",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "a091de271aed5185678da82d51baae0eb7025248",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "f54f184d395a049b247e81f263f42945ad15078f",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "c98e7a958cfa5395d8718310128513671fc51562",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "949ec229979ff1d89f359739df618e5ebacaf2d0",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "19a1d87cee486b157fa596b73395dd9bf68bbf2e",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "03d60d39c899c08f15c6cebee3d2516079c45a74",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "c9a8b6aa503a89356ce6aba34e79444166a54f57",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    },
+    {
+      "originalHead": "a3bc947d4bcb70be5c14f11ff56639a54b184b31",
+      "isAncestor": true,
+      "oldDirectoryAbsent": true
+    }
+  ],
+  "retainedRecoveryRefs": [
+    {
+      "ref": "refs/heads/codex/t1290-preserved-codex-text-image",
+      "snapshotCommit": "5dfd1c706fe8deb661f96c3ebc9fb8b8b30c91fd",
+      "directoryRemoved": true
+    },
+    {
+      "ref": "refs/heads/codex/t1290-preserved-integrated-dev-acceptance",
+      "snapshotCommit": "64ca6add4375820b346bc3b6ccc8cafa913daba5",
+      "directoryRemoved": true
+    },
+    {
+      "ref": "refs/heads/codex/t1290-preserved-integrated-frontend-unit",
+      "snapshotCommit": "533224f334c43cdb81a344424e420cad93784dd1",
+      "directoryRemoved": true
+    },
+    {
+      "ref": "refs/heads/codex/t1290-preserved-integrated-unit-acceptance",
+      "snapshotCommit": "22eb77eb98ec61a0144c8ab7fd873f7659648697",
+      "directoryRemoved": true
+    }
+  ],
+  "liveWorktrees": "worktree /Users/zyongzhu/Workbase/Thirdspace-creator\nHEAD 30cd8f68e6d7c539b3bd01d4e90d5f695526f86b\nbranch refs/heads/main\n\n",
+  "nativeAppAcceptance": "NOT-RUN;用户本人验收不等于PASS",
+  "globalReconcile": "原32ERROR保留T1292，未代归为全范围外或全绿",
+  "productionWrites": 0,
+  "controlWrites": 0,
+  "network": 0,
+  "models": 0,
+  "funds": 0
+}
