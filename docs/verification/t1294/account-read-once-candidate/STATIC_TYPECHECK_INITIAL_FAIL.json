@@ -1,0 +1,425 @@
+{
+  "kind": "read-only in-memory affected-file typecheck",
+  "executedCandidate": false,
+  "emitted": false,
+  "diagnostics": [
+    {
+      "code": 2688,
+      "message": "Cannot find type definition file for 'node'.\n  The file is in the program because:\n    Entry point of type library 'node' specified in compilerOptions"
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 4,
+      "code": 2503,
+      "message": "Cannot find namespace 'NodeJS'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 4,
+      "code": 2304,
+      "message": "Cannot find name 'AbortSignal'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 14,
+      "code": 2307,
+      "message": "Cannot find module 'node:module' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 20,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 20,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 25,
+      "code": 2307,
+      "message": "Cannot find module 'node:fs/promises' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 26,
+      "code": 2307,
+      "message": "Cannot find module 'node:child_process' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 34,
+      "code": 2348,
+      "message": "Value of type 'Mock<Procedure | Constructable>' is not callable. Did you mean to include 'new'?"
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 35,
+      "code": 2348,
+      "message": "Value of type 'Mock<Procedure | Constructable>' is not callable. Did you mean to include 'new'?"
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 64,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 77,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 77,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 85,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 98,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 106,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 115,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 130,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 134,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 134,
+      "code": 2304,
+      "message": "Cannot find name 'DOMException'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 138,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 142,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 146,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 158,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 162,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 166,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-account-precheck.test.ts",
+      "line": 170,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 1,
+      "code": 2307,
+      "message": "Cannot find module 'node:child_process' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 2,
+      "code": 2307,
+      "message": "Cannot find module 'node:timers/promises' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 3,
+      "code": 2307,
+      "message": "Cannot find module 'node:readline' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 21,
+      "code": 2304,
+      "message": "Cannot find name 'setTimeout'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 32,
+      "code": 2503,
+      "message": "Cannot find namespace 'NodeJS'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 32,
+      "code": 2304,
+      "message": "Cannot find name 'AbortSignal'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 33,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 36,
+      "code": 7006,
+      "message": "Parameter 'line' implicitly has an 'any' type."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 37,
+      "code": 2591,
+      "message": "Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 44,
+      "code": 2304,
+      "message": "Cannot find name 'clearTimeout'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 73,
+      "code": 2304,
+      "message": "Cannot find name 'setTimeout'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 75,
+      "code": 2304,
+      "message": "Cannot find name 'clearTimeout'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 81,
+      "code": 2304,
+      "message": "Cannot find name 'clearTimeout'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 87,
+      "code": 2304,
+      "message": "Cannot find name 'clearTimeout'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 93,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 95,
+      "code": 7006,
+      "message": "Parameter 'code' implicitly has an 'any' type."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 98,
+      "code": 2304,
+      "message": "Cannot find name 'AbortController'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 100,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 102,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 1,
+      "code": 2307,
+      "message": "Cannot find module 'node:fs/promises' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 2,
+      "code": 2307,
+      "message": "Cannot find module 'node:fs' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 3,
+      "code": 2307,
+      "message": "Cannot find module 'node:module' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 4,
+      "code": 2307,
+      "message": "Cannot find module 'node:path' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 5,
+      "code": 2307,
+      "message": "Cannot find module 'node:child_process' or its corresponding type declarations."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 41,
+      "code": 2503,
+      "message": "Cannot find namespace 'NodeJS'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 41,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 41,
+      "code": 2503,
+      "message": "Cannot find namespace 'NodeJS'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 42,
+      "code": 2503,
+      "message": "Cannot find namespace 'NodeJS'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 47,
+      "code": 2304,
+      "message": "Cannot find name '__filename'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 47,
+      "code": 2304,
+      "message": "Cannot find name '__filename'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 47,
+      "code": 2339,
+      "message": "Property 'url' does not exist on type 'ImportMeta'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 51,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 51,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 54,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 54,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 55,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 56,
+      "code": 2591,
+      "message": "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 57,
+      "code": 7006,
+      "message": "Parameter 'error' implicitly has an 'any' type."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 57,
+      "code": 7006,
+      "message": "Parameter 'stdout' implicitly has an 'any' type."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 63,
+      "code": 2304,
+      "message": "Cannot find name 'AbortSignal'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 63,
+      "code": 2503,
+      "message": "Cannot find namespace 'NodeJS'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 70,
+      "code": 2304,
+      "message": "Cannot find name 'AbortSignal'."
+    },
+    {
+      "file": "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/codex-app-server.ts",
+      "line": 70,
+      "code": 2503,
+      "message": "Cannot find namespace 'NodeJS'."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "badge": "Next development 1 Issue visible in preserved screenshots",
+  "badgeOpened": false,
+  "consoleCandidate": [
+    {
+      "line": 321,
+      "text": " GET /accounts?copilot=open 200 in 228ms (next.js: 2ms, proxy.ts: 1926µs, application-code: 224ms)"
+    },
+    {
+      "line": 324,
+      "text": "[browser] [describeUserError] Error: 请先进入此账号组，再查看共享资源。"
+    },
+    {
+      "line": 325,
+      "text": "    at ResourceGrantsPanel.useCallback[check] (src/features/platform-account/resource-grants-panel.tsx:22:128)"
+    },
+    {
+      "line": 326,
+      "text": "    at ResourceGrantsPanel.useCallback[load] (src/features/platform-account/resource-grants-panel.tsx:34:5)"
+    },
+    {
+      "line": 333,
+      "text": "  25 | ... (src/lib/ai-error-humanize.ts:301:13)"
+    }
+  ],
+  "ingestion428": "AccountRequiredError for account-null observed independently; not asserted badge cause",
+  "sourceOfTruth": "existing next.log only; no app/browser/task reopened",
+  "conclusion": "具体browser console error存在；badge精确条目未读取，不能唯一归因或声称无console issue",
+  "nextLogSha256": "7ce75807a6472862a9b2594ddd2caeb214e69749692cb8f884c62c6e16851c71"
+}

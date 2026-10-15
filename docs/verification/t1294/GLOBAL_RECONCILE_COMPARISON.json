@@ -1,0 +1,13 @@
+{
+  "originalErrorCount": 32,
+  "currentErrorCount": 29,
+  "newKeys": [],
+  "noLongerFailingKeysThisRun": [
+    "LED-014",
+    "LED-047",
+    "T-1286"
+  ],
+  "original": "docs/verification/t1290/root-inventory/reconcile-before-package.log",
+  "current": "docs/verification/t1294/reconcile-before-freeze.log",
+  "note": "只比较门的身份；不把当前未再失败推成历史欠债全部已解决，原32不重写。"
+}

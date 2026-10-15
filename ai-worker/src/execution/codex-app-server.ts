@@ -77,7 +77,16 @@ export async function createControlledCodexSession(cwd:string,signal:AbortSignal
   try {
     const summary=assertConfiguration(await rpc.request('config/read',{includeLayers:false,cwd}),imageGeneration);
     if(summary.mcpServers.some(server=>!names.includes(server.name)))throw new CodexHostError('CODEX_CONFIG_CHANGED');
-    const account=record(await rpc.request('account/read',{refreshToken:false}));
+    const accountParams={refreshToken:false};
+    let accountResponse:unknown;
+    try {accountResponse=await rpc.request('account/read',accountParams);}
+    catch(error){
+      // SEMANTIC_BOUNDARY_ALLOW: 固定非付费协议错误只决定一次原RPC重读，不做内容选择。
+      if(!(error instanceof CodexHostError)||error.code!=='CODEX_RPC_REJECTED'||error.rpcMethod!=='account/read'||error.rpcCode!==-32603)throw error;
+      signal.throwIfAborted();
+      accountResponse=await rpc.request('account/read',accountParams);
+    }
+    const account=record(accountResponse);
     if(imageGeneration){
       const capabilities=record(await rpc.request('modelProvider/capabilities/read',{}));
       const identity=record(account.account);

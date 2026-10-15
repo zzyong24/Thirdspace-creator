@@ -1,0 +1,11 @@
+{
+  "kind": "read-only in-memory affected-file typecheck",
+  "strict": true,
+  "noUncheckedIndexedAccess": true,
+  "explicitTypeRoots": [
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/node_modules/@types"
+  ],
+  "executedCandidate": false,
+  "emitted": false,
+  "diagnostics": []
+}

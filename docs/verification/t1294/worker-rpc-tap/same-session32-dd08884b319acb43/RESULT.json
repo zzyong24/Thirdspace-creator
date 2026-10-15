@@ -1,0 +1,1681 @@
+{
+  "scope": "32 independent controlled-only zero-turn diagnostic trials; initial failures preserved",
+  "maxTrials": 32,
+  "additionalReadsPerTrialAtMost": 1,
+  "trials": [
+    {
+      "trial": 1,
+      "startedAt": "2026-10-15T04:52:36.905Z",
+      "deadlineAt": 1792040916905,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4290,
+          "closed": true
+        },
+        {
+          "pid": 4292,
+          "closed": true
+        },
+        {
+          "pid": 4293,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/ebf47beb1af2944fd82387d1fd7fb700f907c9dc0528475e0c915f799735b263",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:52:39.237Z"
+    },
+    {
+      "trial": 2,
+      "startedAt": "2026-10-15T04:52:39.237Z",
+      "deadlineAt": 1792040919237,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4299,
+          "closed": true
+        },
+        {
+          "pid": 4300,
+          "closed": true
+        },
+        {
+          "pid": 4301,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/b7e8158d0cf60320e17a89c5596ea260c0d11af486eef0ac24ca34dcbaf00f17",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:52:41.142Z"
+    },
+    {
+      "trial": 3,
+      "startedAt": "2026-10-15T04:52:41.142Z",
+      "deadlineAt": 1792040921142,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": {
+            "code": "CODEX_RPC_REJECTED",
+            "method": "account/read",
+            "rpcCode": -32603
+          }
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [
+        {
+          "stage": "account-first",
+          "outcome": "error",
+          "code": "CODEX_RPC_REJECTED",
+          "method": "account/read",
+          "rpcCode": -32603,
+          "at": "2026-10-15T04:52:56.241Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "begin",
+          "sameRpc": true,
+          "at": "2026-10-15T04:52:56.241Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "rpc-ok",
+          "sameRpc": true,
+          "at": "2026-10-15T04:52:57.750Z"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 4302,
+          "closed": true
+        },
+        {
+          "pid": 4303,
+          "closed": true
+        },
+        {
+          "pid": 4304,
+          "closed": true
+        }
+      ],
+      "originalOutcome": {
+        "code": "CODEX_RPC_REJECTED",
+        "method": "account/read",
+        "rpcCode": -32603
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/9820d85a267383e3a173972f5a193653f4b69deef84eeb5da5a185415858e010",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": true,
+      "endedAt": "2026-10-15T04:52:57.754Z"
+    },
+    {
+      "trial": 4,
+      "startedAt": "2026-10-15T04:52:57.754Z",
+      "deadlineAt": 1792040937754,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4353,
+          "closed": true
+        },
+        {
+          "pid": 4354,
+          "closed": true
+        },
+        {
+          "pid": 4355,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/fcc0bb07fc02b9be97793f481524805eac9d602d65376d2bec0e68233b31b1db",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:52:59.590Z"
+    },
+    {
+      "trial": 5,
+      "startedAt": "2026-10-15T04:52:59.590Z",
+      "deadlineAt": 1792040939590,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4357,
+          "closed": true
+        },
+        {
+          "pid": 4358,
+          "closed": true
+        },
+        {
+          "pid": 4359,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/dde8bd8e2dbac23d46d556cd5c30a17b27574431e2eca4f19787887084dc02ad",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:53:06.672Z"
+    },
+    {
+      "trial": 6,
+      "startedAt": "2026-10-15T04:53:06.673Z",
+      "deadlineAt": 1792040946673,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4383,
+          "closed": true
+        },
+        {
+          "pid": 4384,
+          "closed": true
+        },
+        {
+          "pid": 4386,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/a067392fbe2d265015df11ebf313784e871560337145c03b589f421392ed8751",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:53:13.575Z"
+    },
+    {
+      "trial": 7,
+      "startedAt": "2026-10-15T04:53:13.576Z",
+      "deadlineAt": 1792040953576,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4414,
+          "closed": true
+        },
+        {
+          "pid": 4415,
+          "closed": true
+        },
+        {
+          "pid": 4416,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/bba1d5c67828e89c15f95b2e38488f1a9dc0dd4990e124289e571e2feab93505",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:53:23.845Z"
+    },
+    {
+      "trial": 8,
+      "startedAt": "2026-10-15T04:53:23.846Z",
+      "deadlineAt": 1792040963846,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4466,
+          "closed": true
+        },
+        {
+          "pid": 4467,
+          "closed": true
+        },
+        {
+          "pid": 4468,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/df6b301146c946ac3a753ba921c74ecf2f1038543130533cd9ce7a16c643c4af",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:53:31.054Z"
+    },
+    {
+      "trial": 9,
+      "startedAt": "2026-10-15T04:53:31.054Z",
+      "deadlineAt": 1792040971054,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4485,
+          "closed": true
+        },
+        {
+          "pid": 4486,
+          "closed": true
+        },
+        {
+          "pid": 4488,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/c42c90713b52cb5dec6274404472a0bad496d5306561729361c254148df2f41d",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:53:37.870Z"
+    },
+    {
+      "trial": 10,
+      "startedAt": "2026-10-15T04:53:37.870Z",
+      "deadlineAt": 1792040977870,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": {
+            "code": "CODEX_RPC_REJECTED",
+            "method": "account/read",
+            "rpcCode": -32603
+          }
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [
+        {
+          "stage": "account-first",
+          "outcome": "error",
+          "code": "CODEX_RPC_REJECTED",
+          "method": "account/read",
+          "rpcCode": -32603,
+          "at": "2026-10-15T04:53:52.963Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "begin",
+          "sameRpc": true,
+          "at": "2026-10-15T04:53:52.963Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "rpc-ok",
+          "sameRpc": true,
+          "at": "2026-10-15T04:53:55.041Z"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 4552,
+          "closed": true
+        },
+        {
+          "pid": 4553,
+          "closed": true
+        },
+        {
+          "pid": 4554,
+          "closed": true
+        }
+      ],
+      "originalOutcome": {
+        "code": "CODEX_RPC_REJECTED",
+        "method": "account/read",
+        "rpcCode": -32603
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/38ce91793faeaae7df635a024b131c9bb1f1e794734f35b2cbf34b959123a96b",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": true,
+      "endedAt": "2026-10-15T04:53:55.044Z"
+    },
+    {
+      "trial": 11,
+      "startedAt": "2026-10-15T04:53:55.045Z",
+      "deadlineAt": 1792040995045,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4722,
+          "closed": true
+        },
+        {
+          "pid": 4723,
+          "closed": true
+        },
+        {
+          "pid": 4724,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/1f51a0058fc860179d603fa3e104e48ad36fcecc758d27b16db38d7b6c173ec8",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:01.886Z"
+    },
+    {
+      "trial": 12,
+      "startedAt": "2026-10-15T04:54:01.886Z",
+      "deadlineAt": 1792041001886,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4752,
+          "closed": true
+        },
+        {
+          "pid": 4753,
+          "closed": true
+        },
+        {
+          "pid": 4754,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/eb414f8cc5ffe7807cabe687dcb31a7b1a22bce143535116d4627b696463c525",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:03.603Z"
+    },
+    {
+      "trial": 13,
+      "startedAt": "2026-10-15T04:54:03.603Z",
+      "deadlineAt": 1792041003603,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4756,
+          "closed": true
+        },
+        {
+          "pid": 4757,
+          "closed": true
+        },
+        {
+          "pid": 4758,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/855f80769a5d4e758d7065a6994d271e54b88aac574becb4156c499ba79e6e09",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:06.000Z"
+    },
+    {
+      "trial": 14,
+      "startedAt": "2026-10-15T04:54:06.000Z",
+      "deadlineAt": 1792041006000,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4762,
+          "closed": true
+        },
+        {
+          "pid": 4763,
+          "closed": true
+        },
+        {
+          "pid": 4764,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/f6ce7eca563ec7dbecd69956b7a51f54ee5dca34a236eb46292b69a27356e729",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:08.012Z"
+    },
+    {
+      "trial": 15,
+      "startedAt": "2026-10-15T04:54:08.012Z",
+      "deadlineAt": 1792041008012,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4766,
+          "closed": true
+        },
+        {
+          "pid": 4767,
+          "closed": true
+        },
+        {
+          "pid": 4768,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/b681021d776c831f2c8a091f9ea12103f396a900718cd9c8ead27cb6fd8f9df1",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:09.650Z"
+    },
+    {
+      "trial": 16,
+      "startedAt": "2026-10-15T04:54:09.650Z",
+      "deadlineAt": 1792041009650,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4770,
+          "closed": true
+        },
+        {
+          "pid": 4771,
+          "closed": true
+        },
+        {
+          "pid": 4772,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/04e9a26a35038f7e136ae0b5ed9c53d2646fde6ba19970ce64ed1bc4f26283b5",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:11.565Z"
+    },
+    {
+      "trial": 17,
+      "startedAt": "2026-10-15T04:54:11.565Z",
+      "deadlineAt": 1792041011565,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4778,
+          "closed": true
+        },
+        {
+          "pid": 4779,
+          "closed": true
+        },
+        {
+          "pid": 4780,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/efef09b7bda0734a261b6eb561f89dc32ec20665c05c4167dd6d62f795d4a76c",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:13.589Z"
+    },
+    {
+      "trial": 18,
+      "startedAt": "2026-10-15T04:54:13.589Z",
+      "deadlineAt": 1792041013589,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4781,
+          "closed": true
+        },
+        {
+          "pid": 4782,
+          "closed": true
+        },
+        {
+          "pid": 4783,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/0f6cec75115a7eb9db472d7b4cecbbea27bd82b73cf1f1549f2f4815df50a23c",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:15.634Z"
+    },
+    {
+      "trial": 19,
+      "startedAt": "2026-10-15T04:54:15.634Z",
+      "deadlineAt": 1792041015634,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": {
+            "code": "CODEX_RPC_REJECTED",
+            "method": "account/read",
+            "rpcCode": -32603
+          }
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [
+        {
+          "stage": "account-first",
+          "outcome": "error",
+          "code": "CODEX_RPC_REJECTED",
+          "method": "account/read",
+          "rpcCode": -32603,
+          "at": "2026-10-15T04:54:30.733Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "begin",
+          "sameRpc": true,
+          "at": "2026-10-15T04:54:30.733Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "rpc-ok",
+          "sameRpc": true,
+          "at": "2026-10-15T04:54:32.968Z"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 4787,
+          "closed": true
+        },
+        {
+          "pid": 4788,
+          "closed": true
+        },
+        {
+          "pid": 4789,
+          "closed": true
+        }
+      ],
+      "originalOutcome": {
+        "code": "CODEX_RPC_REJECTED",
+        "method": "account/read",
+        "rpcCode": -32603
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/4ce8ca14e89d93c7ffe46a1d1cc7da71bbcce3372ad33d50ef5557e9ac89ec1c",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": true,
+      "endedAt": "2026-10-15T04:54:32.971Z"
+    },
+    {
+      "trial": 20,
+      "startedAt": "2026-10-15T04:54:32.971Z",
+      "deadlineAt": 1792041032971,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4837,
+          "closed": true
+        },
+        {
+          "pid": 4838,
+          "closed": true
+        },
+        {
+          "pid": 4839,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/5187589f2d39fd77e0d346c47d99e85a16faa040dbae156bca454f5f5184f2e4",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:37.616Z"
+    },
+    {
+      "trial": 21,
+      "startedAt": "2026-10-15T04:54:37.617Z",
+      "deadlineAt": 1792041037617,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4844,
+          "closed": true
+        },
+        {
+          "pid": 4845,
+          "closed": true
+        },
+        {
+          "pid": 4846,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/e575f47f9ff051675e8e93b4a54ce92474ef2708307a9d34887505112f7b9d83",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:54:44.502Z"
+    },
+    {
+      "trial": 22,
+      "startedAt": "2026-10-15T04:54:44.502Z",
+      "deadlineAt": 1792041044502,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": {
+            "code": "CODEX_RPC_REJECTED",
+            "method": "account/read",
+            "rpcCode": -32603
+          }
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [
+        {
+          "stage": "account-first",
+          "outcome": "error",
+          "code": "CODEX_RPC_REJECTED",
+          "method": "account/read",
+          "rpcCode": -32603,
+          "at": "2026-10-15T04:54:59.597Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "begin",
+          "sameRpc": true,
+          "at": "2026-10-15T04:54:59.597Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "rpc-ok",
+          "sameRpc": true,
+          "at": "2026-10-15T04:55:02.460Z"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 4890,
+          "closed": true
+        },
+        {
+          "pid": 4891,
+          "closed": true
+        },
+        {
+          "pid": 4892,
+          "closed": true
+        }
+      ],
+      "originalOutcome": {
+        "code": "CODEX_RPC_REJECTED",
+        "method": "account/read",
+        "rpcCode": -32603
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/0903cfb99831a4945b52944de652adfe2b0d2a8b7bb8c25781547735560d7753",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": true,
+      "endedAt": "2026-10-15T04:55:02.463Z"
+    },
+    {
+      "trial": 23,
+      "startedAt": "2026-10-15T04:55:02.463Z",
+      "deadlineAt": 1792041062463,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4969,
+          "closed": true
+        },
+        {
+          "pid": 4970,
+          "closed": true
+        },
+        {
+          "pid": 4971,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/6547976331a3c7295a784b80a36b33ad8bb68e8aa961ccb33dfde84972317e74",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:09.007Z"
+    },
+    {
+      "trial": 24,
+      "startedAt": "2026-10-15T04:55:09.008Z",
+      "deadlineAt": 1792041069008,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 4997,
+          "closed": true
+        },
+        {
+          "pid": 4998,
+          "closed": true
+        },
+        {
+          "pid": 4999,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/01a3afa6452987234fa918031bacb99977ee291bb3fd4e27b37f88478cb85f0a",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:11.691Z"
+    },
+    {
+      "trial": 25,
+      "startedAt": "2026-10-15T04:55:11.691Z",
+      "deadlineAt": 1792041071691,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 5001,
+          "closed": true
+        },
+        {
+          "pid": 5002,
+          "closed": true
+        },
+        {
+          "pid": 5003,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/87b1bd3e7b970520b984ac2afd6b0918361300233819bb8f1d446b6591319766",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:18.428Z"
+    },
+    {
+      "trial": 26,
+      "startedAt": "2026-10-15T04:55:18.428Z",
+      "deadlineAt": 1792041078428,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 5017,
+          "closed": true
+        },
+        {
+          "pid": 5018,
+          "closed": true
+        },
+        {
+          "pid": 5019,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/6466f65600de262f943b2e42f0f9e9bbbb3de960bfad4c1580711b9b48f85b56",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:25.698Z"
+    },
+    {
+      "trial": 27,
+      "startedAt": "2026-10-15T04:55:25.699Z",
+      "deadlineAt": 1792041085699,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 5085,
+          "closed": true
+        },
+        {
+          "pid": 5086,
+          "closed": true
+        },
+        {
+          "pid": 5087,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/0e6a08e2c2d899483bb3c171eac3ad921f00b53bbc267cf55750586daf21d1b0",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:29.872Z"
+    },
+    {
+      "trial": 28,
+      "startedAt": "2026-10-15T04:55:29.873Z",
+      "deadlineAt": 1792041089873,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 5100,
+          "closed": true
+        },
+        {
+          "pid": 5101,
+          "closed": true
+        },
+        {
+          "pid": 5102,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/3dabb9b888ac52d1f5915b4cdca7b2ee6255da7147adcea122be146078685ca6",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:31.624Z"
+    },
+    {
+      "trial": 29,
+      "startedAt": "2026-10-15T04:55:31.624Z",
+      "deadlineAt": 1792041091624,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 5110,
+          "closed": true
+        },
+        {
+          "pid": 5111,
+          "closed": true
+        },
+        {
+          "pid": 5112,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/c5f3a63ede997b41fb1e9b203836cc0518846cc699514f28003d31794f8f2145",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:33.244Z"
+    },
+    {
+      "trial": 30,
+      "startedAt": "2026-10-15T04:55:33.244Z",
+      "deadlineAt": 1792041093244,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 5158,
+          "closed": true
+        },
+        {
+          "pid": 5159,
+          "closed": true
+        },
+        {
+          "pid": 5160,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/c3e9a20a1963d529edde587c353d2c6d3aa0cd23ee08efda7a6e1146759a9346",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:35.369Z"
+    },
+    {
+      "trial": 31,
+      "startedAt": "2026-10-15T04:55:35.369Z",
+      "deadlineAt": 1792041095369,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": {
+            "code": "CODEX_RPC_REJECTED",
+            "method": "account/read",
+            "rpcCode": -32603
+          }
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [
+        {
+          "stage": "account-first",
+          "outcome": "error",
+          "code": "CODEX_RPC_REJECTED",
+          "method": "account/read",
+          "rpcCode": -32603,
+          "at": "2026-10-15T04:55:50.494Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "begin",
+          "sameRpc": true,
+          "at": "2026-10-15T04:55:50.494Z"
+        },
+        {
+          "stage": "account-observe-once",
+          "outcome": "rpc-ok",
+          "sameRpc": true,
+          "at": "2026-10-15T04:55:57.514Z"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 5166,
+          "closed": true
+        },
+        {
+          "pid": 5167,
+          "closed": true
+        },
+        {
+          "pid": 5168,
+          "closed": true
+        }
+      ],
+      "originalOutcome": {
+        "code": "CODEX_RPC_REJECTED",
+        "method": "account/read",
+        "rpcCode": -32603
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/d473a55697dfe2310cbc1a391a7b58b71d310cd0a2d1abe987e154c3a88452e5",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": true,
+      "endedAt": "2026-10-15T04:55:57.517Z"
+    },
+    {
+      "trial": 32,
+      "startedAt": "2026-10-15T04:55:57.518Z",
+      "deadlineAt": 1792041117518,
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "outcome": "OK"
+        }
+      ],
+      "observations": [],
+      "pids": [
+        {
+          "pid": 5439,
+          "closed": true
+        },
+        {
+          "pid": 5440,
+          "closed": true
+        },
+        {
+          "pid": 5441,
+          "closed": true
+        }
+      ],
+      "originalOutcome": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim/creatoros-native-codex-workspaces/bfd3b086123dd270123ca39d05181ce900db1edbd6d6e477e036ef67e9389c7f",
+      "allObservedChildrenClosed": true,
+      "extraReadAttempted": false,
+      "endedAt": "2026-10-15T04:55:59.323Z"
+    }
+  ],
+  "forbiddenRequests": 0,
+  "threadStartRequests": 0,
+  "turnStartRequests": 0,
+  "models": 0,
+  "funds": 0
+}

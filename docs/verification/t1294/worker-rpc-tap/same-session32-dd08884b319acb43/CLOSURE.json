@@ -1,0 +1,400 @@
+{
+  "observedAt": "2026-10-15T04:56:36.541530+00:00",
+  "pids": [
+    {
+      "pid": 4281,
+      "state": "absent"
+    },
+    {
+      "pid": 4290,
+      "state": "absent"
+    },
+    {
+      "pid": 4292,
+      "state": "absent"
+    },
+    {
+      "pid": 4293,
+      "state": "absent"
+    },
+    {
+      "pid": 4299,
+      "state": "absent"
+    },
+    {
+      "pid": 4300,
+      "state": "absent"
+    },
+    {
+      "pid": 4301,
+      "state": "absent"
+    },
+    {
+      "pid": 4302,
+      "state": "absent"
+    },
+    {
+      "pid": 4303,
+      "state": "absent"
+    },
+    {
+      "pid": 4304,
+      "state": "absent"
+    },
+    {
+      "pid": 4353,
+      "state": "absent"
+    },
+    {
+      "pid": 4354,
+      "state": "absent"
+    },
+    {
+      "pid": 4355,
+      "state": "absent"
+    },
+    {
+      "pid": 4357,
+      "state": "absent"
+    },
+    {
+      "pid": 4358,
+      "state": "absent"
+    },
+    {
+      "pid": 4359,
+      "state": "absent"
+    },
+    {
+      "pid": 4383,
+      "state": "absent"
+    },
+    {
+      "pid": 4384,
+      "state": "absent"
+    },
+    {
+      "pid": 4386,
+      "state": "absent"
+    },
+    {
+      "pid": 4414,
+      "state": "absent"
+    },
+    {
+      "pid": 4415,
+      "state": "absent"
+    },
+    {
+      "pid": 4416,
+      "state": "absent"
+    },
+    {
+      "pid": 4466,
+      "state": "absent"
+    },
+    {
+      "pid": 4467,
+      "state": "absent"
+    },
+    {
+      "pid": 4468,
+      "state": "absent"
+    },
+    {
+      "pid": 4485,
+      "state": "absent"
+    },
+    {
+      "pid": 4486,
+      "state": "absent"
+    },
+    {
+      "pid": 4488,
+      "state": "absent"
+    },
+    {
+      "pid": 4552,
+      "state": "absent"
+    },
+    {
+      "pid": 4553,
+      "state": "absent"
+    },
+    {
+      "pid": 4554,
+      "state": "absent"
+    },
+    {
+      "pid": 4722,
+      "state": "absent"
+    },
+    {
+      "pid": 4723,
+      "state": "absent"
+    },
+    {
+      "pid": 4724,
+      "state": "absent"
+    },
+    {
+      "pid": 4752,
+      "state": "absent"
+    },
+    {
+      "pid": 4753,
+      "state": "absent"
+    },
+    {
+      "pid": 4754,
+      "state": "absent"
+    },
+    {
+      "pid": 4756,
+      "state": "absent"
+    },
+    {
+      "pid": 4757,
+      "state": "absent"
+    },
+    {
+      "pid": 4758,
+      "state": "absent"
+    },
+    {
+      "pid": 4762,
+      "state": "absent"
+    },
+    {
+      "pid": 4763,
+      "state": "absent"
+    },
+    {
+      "pid": 4764,
+      "state": "absent"
+    },
+    {
+      "pid": 4766,
+      "state": "absent"
+    },
+    {
+      "pid": 4767,
+      "state": "absent"
+    },
+    {
+      "pid": 4768,
+      "state": "absent"
+    },
+    {
+      "pid": 4770,
+      "state": "absent"
+    },
+    {
+      "pid": 4771,
+      "state": "absent"
+    },
+    {
+      "pid": 4772,
+      "state": "absent"
+    },
+    {
+      "pid": 4778,
+      "state": "absent"
+    },
+    {
+      "pid": 4779,
+      "state": "absent"
+    },
+    {
+      "pid": 4780,
+      "state": "absent"
+    },
+    {
+      "pid": 4781,
+      "state": "absent"
+    },
+    {
+      "pid": 4782,
+      "state": "absent"
+    },
+    {
+      "pid": 4783,
+      "state": "absent"
+    },
+    {
+      "pid": 4787,
+      "state": "absent"
+    },
+    {
+      "pid": 4788,
+      "state": "absent"
+    },
+    {
+      "pid": 4789,
+      "state": "absent"
+    },
+    {
+      "pid": 4837,
+      "state": "absent"
+    },
+    {
+      "pid": 4838,
+      "state": "absent"
+    },
+    {
+      "pid": 4839,
+      "state": "absent"
+    },
+    {
+      "pid": 4844,
+      "state": "absent"
+    },
+    {
+      "pid": 4845,
+      "state": "absent"
+    },
+    {
+      "pid": 4846,
+      "state": "absent"
+    },
+    {
+      "pid": 4890,
+      "state": "absent"
+    },
+    {
+      "pid": 4891,
+      "state": "absent"
+    },
+    {
+      "pid": 4892,
+      "state": "absent"
+    },
+    {
+      "pid": 4969,
+      "state": "absent"
+    },
+    {
+      "pid": 4970,
+      "state": "absent"
+    },
+    {
+      "pid": 4971,
+      "state": "absent"
+    },
+    {
+      "pid": 4997,
+      "state": "absent"
+    },
+    {
+      "pid": 4998,
+      "state": "absent"
+    },
+    {
+      "pid": 4999,
+      "state": "absent"
+    },
+    {
+      "pid": 5001,
+      "state": "absent"
+    },
+    {
+      "pid": 5002,
+      "state": "absent"
+    },
+    {
+      "pid": 5003,
+      "state": "absent"
+    },
+    {
+      "pid": 5017,
+      "state": "absent"
+    },
+    {
+      "pid": 5018,
+      "state": "absent"
+    },
+    {
+      "pid": 5019,
+      "state": "absent"
+    },
+    {
+      "pid": 5085,
+      "state": "absent"
+    },
+    {
+      "pid": 5086,
+      "state": "absent"
+    },
+    {
+      "pid": 5087,
+      "state": "absent"
+    },
+    {
+      "pid": 5100,
+      "state": "absent"
+    },
+    {
+      "pid": 5101,
+      "state": "absent"
+    },
+    {
+      "pid": 5102,
+      "state": "absent"
+    },
+    {
+      "pid": 5110,
+      "state": "absent"
+    },
+    {
+      "pid": 5111,
+      "state": "absent"
+    },
+    {
+      "pid": 5112,
+      "state": "absent"
+    },
+    {
+      "pid": 5158,
+      "state": "absent"
+    },
+    {
+      "pid": 5159,
+      "state": "absent"
+    },
+    {
+      "pid": 5160,
+      "state": "absent"
+    },
+    {
+      "pid": 5166,
+      "state": "absent"
+    },
+    {
+      "pid": 5167,
+      "state": "absent"
+    },
+    {
+      "pid": 5168,
+      "state": "absent"
+    },
+    {
+      "pid": 5439,
+      "state": "absent"
+    },
+    {
+      "pid": 5440,
+      "state": "absent"
+    },
+    {
+      "pid": 5441,
+      "state": "absent"
+    }
+  ],
+  "allAbsent": true,
+  "ownedPgid": 4281,
+  "remainingInOwnedPgid": [],
+  "tempOpenHandles": 0,
+  "ownedTemporaryRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim",
+  "sourceDrift": true,
+  "dataPreserved": true
+}

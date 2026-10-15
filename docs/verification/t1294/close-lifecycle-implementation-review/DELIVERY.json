@@ -1,0 +1,32 @@
+{
+  "files": [
+    {
+      "path": "REPORT.md",
+      "sha256": "65111138d85d4d8f681b6b4fa8e758200283187674a5331004d643a225be08b9"
+    },
+    {
+      "path": "REVIEW.json",
+      "sha256": "571769155e964ab7f25ac1b4b140ffa7bef4e0ef6b1a858e041895992c4f6d96"
+    },
+    {
+      "path": "OWNED_NODE_RESULT.json",
+      "sha256": "25d370400a5291be6f5ba9d2a7264a5b42c9166fdcdae25c84ca330cd976f69b"
+    },
+    {
+      "path": "verify-owned-close.mts",
+      "sha256": "8c692df3ca9d38c724283e5cd4fe3aac6d0a55a77ee85296fcc8dec683793f09"
+    },
+    {
+      "path": "INITIAL_FIXTURE_NOTRUN.json",
+      "sha256": "f0c1957dfde32e4ac531b6bca600bff2e29327dc44f9202a1b22e3d240a7f4e0"
+    },
+    {
+      "path": "SECOND_FIXTURE_CONTROL_ERROR.json",
+      "sha256": "e289cfe02c8422d90336eadf1b7a88a0bba5bbcc3e483ba6f4f6a3409cbc57c7"
+    },
+    {
+      "path": "FAILED_FIXTURE_CLEANUP.json",
+      "sha256": "5ef594e0426a624b081022e2480bc99a494bbb3d53ea38dbcf8299ecb5f27a4e"
+    }
+  ]
+}

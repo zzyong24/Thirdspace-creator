@@ -1,0 +1,545 @@
+{
+  "task": "T-1295",
+  "status": "PASS",
+  "at": "2026-10-15T04:39:12.929645+00:00",
+  "head": "6f75509fc715045035559d622c3fc9ffd932e16f",
+  "command": "node docs/verification/t1295/run-strict-csp.cjs . docs/verification/t1295/browser/v3-native-ui-candidate/owned-normal-binding.json",
+  "nodeExit": 0,
+  "batch": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1295/browser/runs/strict-csp-b36a4d60c398dd07",
+  "formalSpecSHA256": "b9076cfa97b08dcdbeabf1ffa9b414c76589a136df9a05b4d7be305bde0d7919",
+  "formalRunnerSHA256": "a535db6e9fbe5802a06bb753640c0d6bbddaadfc461803f54f7d8a61240db412",
+  "formalConfigSHA256": "dce5be42ed6527f896ec24227abc7099a5c879acacb16a850fdd27cdb11079c8",
+  "sourceBeforeEqualsAfter": true,
+  "newNextStarted": false,
+  "publicBusinessCalls": 0,
+  "models": 0,
+  "funds": 0,
+  "userAppStopped": false,
+  "cases": [
+    {
+      "project": {
+        "name": "desktop",
+        "width": 1536,
+        "height": 1024
+      },
+      "evidenceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1295/browser/runs/strict-csp-b36a4d60c398dd07/desktop",
+      "exit": {
+        "code": 0,
+        "signal": null,
+        "pid": 99974,
+        "at": "2026-10-15T04:38:03.825Z"
+      },
+      "status": "PASS",
+      "probe": {
+        "wasm": {
+          "ok": true,
+          "answer": 42
+        },
+        "eval": {
+          "blocked": true,
+          "name": "EvalError"
+        },
+        "Function": {
+          "blocked": true,
+          "name": "EvalError"
+        },
+        "violations": [
+          {
+            "directive": "script-src",
+            "blockedURI": "eval"
+          },
+          {
+            "directive": "script-src",
+            "blockedURI": "eval"
+          }
+        ],
+        "native": null
+      },
+      "nativeLoad": {
+        "ok": true,
+        "loaded": {
+          "operation": "load",
+          "editor": "opencut-classic",
+          "documentVersion": 31
+        },
+        "context": {
+          "outputId": "owned-t1295-output",
+          "sceneId": "t1295-scene",
+          "ticksPerSecond": 120000
+        },
+        "seek": {
+          "operation": "seek",
+          "sceneId": "t1295-scene",
+          "tick": 60000
+        },
+        "errors": []
+      },
+      "nativeErrors": {
+        "pageErrors": []
+      },
+      "artifact": {
+        "bytes": 203930,
+        "sha256": "00447f9cabb82aac6f0fb5cd7f92cf7708c5894861a18f769457058dcb3b9ba4",
+        "audioRms": 0.12229783098715877,
+        "decoded": true
+      },
+      "picture": {
+        "nonDarkFraction": 0.9999956597222223,
+        "rgbSHA256": "17957dfde96d4a1cc78c456bceb58ea553e105e230d4f595020dfc47b2d318fe"
+      },
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 640,
+          "height": 360,
+          "r_frame_rate": "24/1",
+          "nb_frames": "48",
+          "sample_rate": null,
+          "duration": "2.000000"
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "nb_frames": "90",
+          "sample_rate": "44100",
+          "duration": "2.089796"
+        }
+      ],
+      "screenshots": {
+        "csp-probe.png": {
+          "sha256": "baf43bc284a9fa5ee69302814e5f8f658009a9a87a0a1942c1873b0857556ce8",
+          "width": 1536,
+          "height": 1024,
+          "fullPage": true
+        },
+        "native-preview.png": {
+          "sha256": "de19bf6e0dd678920b6abdc5cd188fe0c4c59211e6ffee78d1868327e467bced",
+          "width": 1536,
+          "height": 1024,
+          "fullPage": true
+        },
+        "native-export-frame.png": {
+          "sha256": "7412394fccbc66b2b60a384a5adcee997c93ae9d8fb0da5a2b4421f8b57d2ddc",
+          "width": 640,
+          "height": 360,
+          "fullPage": false
+        }
+      },
+      "visualInspection": {
+        "performed": true,
+        "preview": "真实彩色 testsrc 与媒体项及 clip 时间轴；compact 为滚动全页截图",
+        "exportFrame": "实际解码彩色 testsrc 帧；未见黑片"
+      },
+      "closure": {
+        "driverPid": 99974,
+        "driverAlive": false,
+        "browserProcesses": [
+          {
+            "pid": 112,
+            "alive": false,
+            "type": "browser"
+          },
+          {
+            "pid": 149,
+            "alive": false,
+            "type": "renderer"
+          },
+          {
+            "pid": 150,
+            "alive": false,
+            "type": "renderer"
+          },
+          {
+            "pid": 148,
+            "alive": false,
+            "type": "renderer"
+          },
+          {
+            "pid": 140,
+            "alive": false,
+            "type": "GPU"
+          },
+          {
+            "pid": 141,
+            "alive": false,
+            "type": "network.mojom.NetworkService"
+          },
+          {
+            "pid": 144,
+            "alive": false,
+            "type": "storage.mojom.StorageService"
+          },
+          {
+            "pid": 154,
+            "alive": false,
+            "type": "audio.mojom.AudioService"
+          }
+        ],
+        "temporaryRemoved": true,
+        "workerPid": 99975,
+        "workerAlive": false,
+        "serverOrigin": "http://127.0.0.1:63606",
+        "listenerClosed": true,
+        "temporaryRoot": "/private/tmp/t1295-csp-FoAoke",
+        "removedBytes": 561082
+      },
+      "httpRequests": [
+        {
+          "method": "GET",
+          "path": "/"
+        },
+        {
+          "method": "GET",
+          "path": "/reference-editors/opencut-classic/native/native.css"
+        },
+        {
+          "method": "GET",
+          "path": "/probe.js"
+        },
+        {
+          "method": "GET",
+          "path": "/reference-editors/opencut-classic/native/native.js"
+        },
+        {
+          "method": "GET",
+          "path": "/reference-editors/opencut-classic/native/effects/preview.jpg"
+        },
+        {
+          "method": "GET",
+          "path": "/clip.mp4"
+        },
+        {
+          "method": "GET",
+          "path": "/clip.mp4"
+        }
+      ],
+      "gpu": {
+        "devices": [
+          {
+            "vendorId": 4203,
+            "deviceId": 0,
+            "vendorString": "Google Inc. (Apple)",
+            "deviceString": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2 Pro, Version 26.2 (Build 25C56))",
+            "driverVendor": "Apple",
+            "driverVersion": "26.2"
+          }
+        ],
+        "featureStatus": {
+          "2d_canvas": "enabled",
+          "direct_rendering_display_compositor": "disabled_off_ok",
+          "gpu_compositing": "enabled",
+          "multiple_raster_threads": "enabled_on",
+          "opengl": "enabled_on",
+          "rasterization": "enabled",
+          "raw_draw": "disabled_off_ok",
+          "skia_graphite": "enabled_on",
+          "trees_in_viz": "disabled_off",
+          "video_decode": "enabled",
+          "video_encode": "enabled",
+          "webgl": "enabled",
+          "webgpu": "enabled",
+          "webnn": "disabled_off"
+        },
+        "glRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2 Pro, Version 26.2 (Build 25C56))"
+      }
+    },
+    {
+      "project": {
+        "name": "compact",
+        "width": 640,
+        "height": 450
+      },
+      "evidenceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1295/browser/runs/strict-csp-b36a4d60c398dd07/compact",
+      "exit": {
+        "code": 0,
+        "signal": null,
+        "pid": 220,
+        "at": "2026-10-15T04:38:06.638Z"
+      },
+      "status": "PASS",
+      "probe": {
+        "wasm": {
+          "ok": true,
+          "answer": 42
+        },
+        "eval": {
+          "blocked": true,
+          "name": "EvalError"
+        },
+        "Function": {
+          "blocked": true,
+          "name": "EvalError"
+        },
+        "violations": [
+          {
+            "directive": "script-src",
+            "blockedURI": "eval"
+          },
+          {
+            "directive": "script-src",
+            "blockedURI": "eval"
+          }
+        ],
+        "native": null
+      },
+      "nativeLoad": {
+        "ok": true,
+        "loaded": {
+          "operation": "load",
+          "editor": "opencut-classic",
+          "documentVersion": 31
+        },
+        "context": {
+          "outputId": "owned-t1295-output",
+          "sceneId": "t1295-scene",
+          "ticksPerSecond": 120000
+        },
+        "seek": {
+          "operation": "seek",
+          "sceneId": "t1295-scene",
+          "tick": 60000
+        },
+        "errors": []
+      },
+      "nativeErrors": {
+        "pageErrors": []
+      },
+      "artifact": {
+        "bytes": 203930,
+        "sha256": "f5e164daaeca0c10dae3c1988bceb17e32970dbcbded5c456dd325619836a5f2",
+        "audioRms": 0.12229783098715877,
+        "decoded": true
+      },
+      "picture": {
+        "nonDarkFraction": 0.9999956597222223,
+        "rgbSHA256": "17957dfde96d4a1cc78c456bceb58ea553e105e230d4f595020dfc47b2d318fe"
+      },
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 640,
+          "height": 360,
+          "r_frame_rate": "24/1",
+          "nb_frames": "48",
+          "sample_rate": null,
+          "duration": "2.000000"
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "nb_frames": "90",
+          "sample_rate": "44100",
+          "duration": "2.089796"
+        }
+      ],
+      "screenshots": {
+        "csp-probe.png": {
+          "sha256": "34f83e75eb357616cd746f862430e59ba88565a300551468b5f52199131bc7ba",
+          "width": 640,
+          "height": 890,
+          "fullPage": true
+        },
+        "native-preview.png": {
+          "sha256": "855329e1b3a52850337bde0ba907cdde4051bf2f2156e8a565751fc772b655b8",
+          "width": 640,
+          "height": 890,
+          "fullPage": true
+        },
+        "native-export-frame.png": {
+          "sha256": "7412394fccbc66b2b60a384a5adcee997c93ae9d8fb0da5a2b4421f8b57d2ddc",
+          "width": 640,
+          "height": 360,
+          "fullPage": false
+        }
+      },
+      "visualInspection": {
+        "performed": true,
+        "preview": "真实彩色 testsrc 与媒体项及 clip 时间轴；compact 为滚动全页截图",
+        "exportFrame": "实际解码彩色 testsrc 帧；未见黑片"
+      },
+      "closure": {
+        "driverPid": 220,
+        "driverAlive": false,
+        "browserProcesses": [
+          {
+            "pid": 239,
+            "alive": false,
+            "type": "browser"
+          },
+          {
+            "pid": 248,
+            "alive": false,
+            "type": "renderer"
+          },
+          {
+            "pid": 253,
+            "alive": false,
+            "type": "renderer"
+          },
+          {
+            "pid": 247,
+            "alive": false,
+            "type": "renderer"
+          },
+          {
+            "pid": 243,
+            "alive": false,
+            "type": "GPU"
+          },
+          {
+            "pid": 244,
+            "alive": false,
+            "type": "network.mojom.NetworkService"
+          },
+          {
+            "pid": 245,
+            "alive": false,
+            "type": "storage.mojom.StorageService"
+          },
+          {
+            "pid": 268,
+            "alive": false,
+            "type": "audio.mojom.AudioService"
+          }
+        ],
+        "temporaryRemoved": true,
+        "workerPid": 221,
+        "workerAlive": false,
+        "serverOrigin": "http://127.0.0.1:63648",
+        "listenerClosed": true,
+        "temporaryRoot": "/private/tmp/t1295-csp-3wp7cJ",
+        "removedBytes": 561082
+      },
+      "httpRequests": [
+        {
+          "method": "GET",
+          "path": "/"
+        },
+        {
+          "method": "GET",
+          "path": "/reference-editors/opencut-classic/native/native.css"
+        },
+        {
+          "method": "GET",
+          "path": "/probe.js"
+        },
+        {
+          "method": "GET",
+          "path": "/reference-editors/opencut-classic/native/native.js"
+        },
+        {
+          "method": "GET",
+          "path": "/reference-editors/opencut-classic/native/effects/preview.jpg"
+        },
+        {
+          "method": "GET",
+          "path": "/clip.mp4"
+        },
+        {
+          "method": "GET",
+          "path": "/clip.mp4"
+        }
+      ],
+      "gpu": {
+        "devices": [
+          {
+            "vendorId": 4203,
+            "deviceId": 0,
+            "vendorString": "Google Inc. (Apple)",
+            "deviceString": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2 Pro, Version 26.2 (Build 25C56))",
+            "driverVendor": "Apple",
+            "driverVersion": "26.2"
+          }
+        ],
+        "featureStatus": {
+          "2d_canvas": "enabled",
+          "direct_rendering_display_compositor": "disabled_off_ok",
+          "gpu_compositing": "enabled",
+          "multiple_raster_threads": "enabled_on",
+          "opengl": "enabled_on",
+          "rasterization": "enabled",
+          "raw_draw": "disabled_off_ok",
+          "skia_graphite": "enabled_on",
+          "trees_in_viz": "disabled_off",
+          "video_decode": "enabled",
+          "video_encode": "enabled",
+          "webgl": "enabled",
+          "webgpu": "enabled",
+          "webnn": "disabled_off"
+        },
+        "glRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2 Pro, Version 26.2 (Build 25C56))"
+      }
+    }
+  ],
+  "evidenceSHA256": {
+    "compact/artifacts/.last-run.json": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+    "compact/binding.json": "ba3601f51d728f205f0dafc2519041803f2e6fb02c19abc8aef5c4469043acc0",
+    "compact/browser-gpu.json": "d6e5614d57665b442c4b2308fbecbcfe2592c5ca9009a235a03e3619a730dc85",
+    "compact/browser-media-environment.json": "971ec713ca29d04ce1e122b93aa379fa129f2ba337cce3f5bd46ae21abc5c960",
+    "compact/browser-processes.json": "d968da9b4bf73d2f3e62f1629eb3fa6d35a3056dc0004d0758ae7213827f9e24",
+    "compact/closed.json": "4754e6ff60151c804a2d3d623bc6585d38dcd7ade9c0aef40d210230f9b89c16",
+    "compact/config-used.cjs": "dce5be42ed6527f896ec24227abc7099a5c879acacb16a850fdd27cdb11079c8",
+    "compact/csp-probe.png": "34f83e75eb357616cd746f862430e59ba88565a300551468b5f52199131bc7ba",
+    "compact/exit.json": "dbc56643447add5b7459653054f0a4b1a6becc6c845542dc217b57d0cdc79757",
+    "compact/formal-used.spec.ts": "b9076cfa97b08dcdbeabf1ffa9b414c76589a136df9a05b4d7be305bde0d7919",
+    "compact/invocation.json": "5d8b6e11e90b9e0703c1a162806f6421597f9833d14b0d70d3ca225a9298f243",
+    "compact/native-errors.json": "016e2e76bf4bd2c002bbb70642d59acc206594f218a45a32c91af5e968f13bbb",
+    "compact/native-export-artifact.json": "761b0d21194026d9d778dc44349efd735b5fd4fa8305159ebfc862bf86aceccb",
+    "compact/native-export-ffprobe.json": "c365009916a2902ed54ae6e50fb3eec605b919dba580f4b92223a29954f2ce80",
+    "compact/native-export-frame.png": "7412394fccbc66b2b60a384a5adcee997c93ae9d8fb0da5a2b4421f8b57d2ddc",
+    "compact/native-export-picture.json": "6f1402cea63b19986b129ff1fb45f9bc0edf04947ca03aa2a800e00d725ade88",
+    "compact/native-export.json": "1e80c930e8195c66682073b982b08c5f716eb749dd34c8f40617739a0b108487",
+    "compact/native-export.mp4": "f5e164daaeca0c10dae3c1988bceb17e32970dbcbded5c456dd325619836a5f2",
+    "compact/native-load.json": "6b81b10ac4a7b52c5b1e00562955866c7954b4391764be818c895c25e5f2bf15",
+    "compact/native-preview.png": "855329e1b3a52850337bde0ba907cdde4051bf2f2156e8a565751fc772b655b8",
+    "compact/owner.json": "3e20513905c295525de74028c4933acb6fda3c044ee309faf1f2f581e4ffc9f0",
+    "compact/page-probe.json": "4a269a0bcd2fb907e8962be893f102c21431b57bacfc21563d480576f24eae1e",
+    "compact/playwright.json": "0c072d1bc059099731f8a2eadf8aa206a2a0d40f69955e81a6cf9ef137e47be6",
+    "compact/resource-closure.json": "ed8fd978567bf3681b8e9df8ea455012746007153d5d89d093a026493336be5b",
+    "compact/run.log": "c1a91f9abca89908c5322a81aebf8b89c21c2a57a5c10de1f51435ff9ccd6557",
+    "compact/server.json": "b8d9dbd0523f1cf626ff7bf7b4e052e73090b116dd63befd293524fd6708107b",
+    "compact/source.mp4": "6f7966aefbdee367fb7bd63fc7512a005f190d28c853a838c434ddf5fc2f5f7a",
+    "desktop/artifacts/.last-run.json": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+    "desktop/binding.json": "24b70d00af9089708d4a920c270c771ad3a50321f16583a7392a15474c24686d",
+    "desktop/browser-gpu.json": "d6e5614d57665b442c4b2308fbecbcfe2592c5ca9009a235a03e3619a730dc85",
+    "desktop/browser-media-environment.json": "971ec713ca29d04ce1e122b93aa379fa129f2ba337cce3f5bd46ae21abc5c960",
+    "desktop/browser-processes.json": "3c98cd8727265f22434186344a5e599fe5c8a207ff68a564ebf82c369fda9b0c",
+    "desktop/closed.json": "501f09c6305b8689a1018237dd4ac555b662e84dfb8c3692fd29455ca6a18e90",
+    "desktop/config-used.cjs": "dce5be42ed6527f896ec24227abc7099a5c879acacb16a850fdd27cdb11079c8",
+    "desktop/csp-probe.png": "baf43bc284a9fa5ee69302814e5f8f658009a9a87a0a1942c1873b0857556ce8",
+    "desktop/exit.json": "590e49b3142def82a64545b204beff2da4e395e61c7036d36ba7623d4be9c3bf",
+    "desktop/formal-used.spec.ts": "b9076cfa97b08dcdbeabf1ffa9b414c76589a136df9a05b4d7be305bde0d7919",
+    "desktop/invocation.json": "15461733d2b100f4bfa1512cc119472bd021d21e09cda052fb2c6a245616f898",
+    "desktop/native-errors.json": "016e2e76bf4bd2c002bbb70642d59acc206594f218a45a32c91af5e968f13bbb",
+    "desktop/native-export-artifact.json": "fe99f8e2460f749a56b7d7f1aac6b76311581583ccc8fc26aa58a98d313cf473",
+    "desktop/native-export-ffprobe.json": "1154e1413edfb47b43a2a0178e87fd37cf37e4da4ca876a4c819973f398d5b9a",
+    "desktop/native-export-frame.png": "7412394fccbc66b2b60a384a5adcee997c93ae9d8fb0da5a2b4421f8b57d2ddc",
+    "desktop/native-export-picture.json": "6f1402cea63b19986b129ff1fb45f9bc0edf04947ca03aa2a800e00d725ade88",
+    "desktop/native-export.json": "1e80c930e8195c66682073b982b08c5f716eb749dd34c8f40617739a0b108487",
+    "desktop/native-export.mp4": "00447f9cabb82aac6f0fb5cd7f92cf7708c5894861a18f769457058dcb3b9ba4",
+    "desktop/native-load.json": "6b81b10ac4a7b52c5b1e00562955866c7954b4391764be818c895c25e5f2bf15",
+    "desktop/native-preview.png": "de19bf6e0dd678920b6abdc5cd188fe0c4c59211e6ffee78d1868327e467bced",
+    "desktop/owner.json": "f1e49127ae87df334b907a99d22d020aff711971ed81660f332e7a27e9082c63",
+    "desktop/page-probe.json": "4a269a0bcd2fb907e8962be893f102c21431b57bacfc21563d480576f24eae1e",
+    "desktop/playwright.json": "871d6470541c0c058d1291b60ba8ba779f62fd5374d81bbd5c0233b947cc26ae",
+    "desktop/resource-closure.json": "4a2a0f04939d9453f7ada87263bc3befc071c40d5e0b3be749bcbf69639350f6",
+    "desktop/run.log": "fb983d43f59c4e12ca715d8f1ec807f104dc078d12e2cddfd774aa267dcd5d4c",
+    "desktop/server.json": "5faef777c32f3274559135e8fe50848b01428e7f87791051b5e3c457a643f29b",
+    "desktop/source.mp4": "6f7966aefbdee367fb7bd63fc7512a005f190d28c853a838c434ddf5fc2f5f7a",
+    "summary.json": "c83d36fab771130d15bf1230e056f59e1cb02d3e091133ee84bf5df029bc2ce4"
+  },
+  "limitations": [
+    "仅本轮 Chrome page-origin 静态 CSP/native 音画链；未重跑 V1/V2/V3",
+    "compact CSS viewport640x450 的全页图高890，允许滚动，不代签完整响应式UX",
+    "未验证 WebKit/安装包/SwiftShader；原黑片FAIL和原CSSzoom2FAIL保留",
+    "旧owned binding仅用于真实marker/source约束，Next已关闭；不作为当前worker/DB重验"
+  ]
+}

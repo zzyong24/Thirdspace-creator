@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "path": "packet.json",
+      "sha256": "8e75f954ae1e802405c4d6449fe882839ff97b1e6b2fe6c57fa3919a78ed4977"
+    },
+    {
+      "path": "SOURCE_BINDING.json",
+      "sha256": "b0d07b354d126143283d40922947bb9870542efe7bc82f4ba757471e481175ba"
+    },
+    {
+      "path": "REPORT.md",
+      "sha256": "dbc8c8eb29fe49bf26f483a26dedb1a67423dcbbf0a3b56670b8b9458d59140c"
+    }
+  ],
+  "reviewOnly": true,
+  "controlWrites": 0
+}

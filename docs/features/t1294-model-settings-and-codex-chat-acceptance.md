@@ -57,3 +57,15 @@ flowchart LR
 安全诊断仅在pending记录已在固定允许名单中的rpcMethod及上游有限整数rpcCode，在CodexHostError本地有限字段保留；不保存或透传原error.message/data、config/account结果、帧或用户密钥。新预检查文案只由上述确定零turn分支产生，不把全局CODEX_RPC_REJECTED说成零回合。实际上游原因仍须零付费协议诊断与真实新聊天完成验收，不允许用waiting_user当聊天成功。
 
 测试覆盖：clean reserved握手拒绝→原call结算、typed配置拒绝、取消/AbortError、reserve未知、host/lease未知、settle抛错及wrong callId/status、旧started/unknown恢复、prepared thread、已尝试admission、已完成原链；RPC错误固定method/integer且不含raw数据、Worker真实消息链保状态和前端安全文案。先实跑新增RED，再修GREEN，完整旧回归、timeout/边界、真实公共新对话同四ID完成与可读持久文本；保留失败不回写为通过。
+
+## 2026-10-15 account/read 间歇内部拒绝的窄补充（第三轮独审）
+
+正常close实现后，独立零turn八轮的第2轮仍有 `CODEX_RPC_REJECTED / account/read / -32603`。后续32个独立controlled-only只读实验已实际在trial3、trial10捕获相同第一次错误；每次仅在同一RPC上再发一次原 `account/read {refreshToken:false}`，第二读均返回真实RPC成功。实验仍重抛第一次error并把原trial记FAIL，没有修改生产成功语义、发送thread/turn或重发旧任务。精确证据为 `docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43/RESULT.json`；后续轮次、最终PID闭包以完成记录为准，不将阶段性2例推成32全通过。这里只确认该有限非付费读取存在同会话可恢复的实际样例，不猜原生账号存储、代理或上游认证的具体根因。
+
+新增准确生产写集仅 `ai-worker/src/execution/codex-app-server.ts` 内原受控会话的account/read调用；直接测试新增 `ai-worker/src/execution/codex-account-precheck.test.ts`。协议类、原持久任务/费用账本、公共端口、凭据协议、原恢复和本轮其它界面范围不扩写。
+
+设计：只有实际 `CodexHostError` 且 `code=CODEX_RPC_REJECTED`、`rpcMethod=account/read`、`rpcCode=-32603` 的第一次非付费账户读取拒绝，才允许在同一个仍受原signal管理的RPC中、原params且refreshToken=false再读取一次。总共最多两次账户读取，不加循环/递归/新session、不重跑initialize/config/MCP检查、不重新reserve、不发送thread/start或turn/start、不刷新登录、不换来源/模型，也不把失败会话标永久ready。普通第一次成功路径仍一次读取。成功必须使用第二次真实response继续原认证与能力校验，不能用缓存或空值伪造成功。第二次失败原样抛出，由原clean-reserved/unknown/取消边界处理，不改已启动/未知调用状态。
+
+额外读前必须检查原signal取消/到期；原signal/持久绝对deadline不续期，两次RPC仍受原受控会话取消与关闭管理。保每个原120000ms请求预算，外层调用者仍有原共享deadline和取消屏障，不为重读创建新执行期限。取消优先；其它方法、其它错误码、缺method/code、非CodexHostError、明确未登录/配置/权限拒绝、timeout等不重读。真实RPC的固定method/int32诊断和close退出屏障保持，依旧不保存raw message/data/config/account。
+
+先独评再应用新测试并实际RED；覆盖第一次成功仅一次、上述精确错误一次后真实response、同一实例/params且仅两次、第二次失败原对象、其它方法/错误/非typed不重读、取消优先、原配置/MCP/认证/图片能力校验仍执行与session正常关闭。不能只测脱离factory的helper：新测试通过原createControlledCodexSession入口记录原调用顺序与会话数，stub与真实零turn实验分别标明。随后运行相关Worker/状态公共链、类型、timeout/边界、正常标准 `pnpm -C ai-worker build`，再由子Agent在普通bundle的fresh库复验完整10项和唯一真实聊天完成。保所有旧失败；新有限非付费恢复不冒充原失败任务已重试或上游根因已完全消除。

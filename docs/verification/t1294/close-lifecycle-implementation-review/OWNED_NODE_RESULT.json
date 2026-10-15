@@ -1,0 +1,81 @@
+{
+  "at": "2026-10-15T04:37:38.286Z",
+  "nonce": "ec46ad49-b056-45e6-917b-cb9681aeba50",
+  "uid": 501,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-close-review-hEXdqy",
+  "requestTimeoutMs": 120000,
+  "outerObservationMs": 180000,
+  "platform": "darwin",
+  "modelCalls": 0,
+  "sourceWrites": 0,
+  "tests": [
+    {
+      "name": "delayed-SIGTERM/concurrent-identity/pending-rejected-once",
+      "status": "PASS",
+      "elapsedMs": 133.11416700000004
+    },
+    {
+      "name": "natural-exit/fail-path/late-close-joins",
+      "status": "PASS",
+      "elapsedMs": 140.63037499999996
+    },
+    {
+      "name": "spawn-error/no-PID-close-barrier",
+      "status": "PASS",
+      "elapsedMs": 1.8564159999999674
+    },
+    {
+      "name": "signal-already-aborted/join-real-close",
+      "status": "PASS",
+      "elapsedMs": 1.0932090000000017
+    },
+    {
+      "name": "abort-after-ready/ignore-SIGTERM/real-SIGKILL",
+      "status": "PASS",
+      "elapsedMs": 1065.6627919999999
+    },
+    {
+      "name": "pipe-held-details",
+      "parentExitCode": 0,
+      "elapsedMs": 1003.772125,
+      "grandPidAbsent": true
+    },
+    {
+      "name": "parent-exit/grandchild-pipe-held/original-group-SIGKILL-until-close",
+      "status": "PASS",
+      "elapsedMs": 1118.0757500000002
+    }
+  ],
+  "processes": [
+    {
+      "name": "gated-term",
+      "pid": 99794
+    },
+    {
+      "name": "natural-exit",
+      "pid": 99803
+    },
+    {
+      "name": "already-aborted",
+      "pid": 99811
+    },
+    {
+      "name": "abort-ready",
+      "pid": 99812
+    },
+    {
+      "name": "pipe-parent",
+      "pid": 99823
+    },
+    {
+      "name": "pipe-grandchild",
+      "pid": 99824
+    }
+  ],
+  "sourceSha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8",
+  "allRecordedPidsAbsent": true,
+  "sourceUnchanged": true,
+  "ownedRootRemoved": true,
+  "finishedAt": "2026-10-15T04:37:40.751Z",
+  "status": "PASS_NODE_ONLY"
+}

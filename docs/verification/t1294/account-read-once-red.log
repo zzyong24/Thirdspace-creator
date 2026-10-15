@@ -1,0 +1,226 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-account-precheck.test.ts (29 tests | 12 failed) 21ms
+     × 只有精确typed内部拒绝才在原RPC原params重读一次，第二真实response决定身份 2ms
+     × 第二次普通Error原对象抛出，无第三次/新会话，原RPC正常关闭 3ms
+     × 第二次同精确内部拒绝原对象抛出，无第三次/新会话，原RPC正常关闭 1ms
+     × 首次精确拒绝时原signal已取消：抛原取消原因，只读一次并close 1ms
+     × 第二次真实未登录响应保持unauthenticated；不拿第一次失败伪造ready 0ms
+     × 图片精确重读成功后仍执行原capabilities与真实default image模型校验 0ms
+     × 重读后图片未登录仍拒绝 1ms
+     × 重读后图片free仍拒绝 0ms
+     × 重读后图片非chatgpt仍拒绝 0ms
+     × 重读后图片能力imageGeneration缺失仍拒绝 0ms
+     × 重读后图片能力namespaceTools缺失仍拒绝 1ms
+     × 重读后default模型不支持image仍拒绝 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 只有精确typed内部拒绝才在原RPC原params重读一次，第二真实response决定身份
+CodexHostError: CODEX_RPC_REJECTED
+ ❯ internal src/execution/codex-account-precheck.test.ts:61:20
+     59| }}};}
+     60| const account={account:{type:'chatgpt',planType:'plus'},requiresOpenai…
+     61| const internal=()=>new CodexHostError('CODEX_RPC_REJECTED',{rpcMethod:…
+       |                    ^
+     62| function session(index=1){const value=fixture.sessions[index];if(!valu…
+     63| const requests=(index=1)=>fixture.sessions[index]?.requests??[];
+ ❯ src/execution/codex-account-precheck.test.ts:107:55
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 第二次普通Error原对象抛出，无第三次/新会话，原RPC正常关闭
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to be Error: fixture-second-read // Object.is equality
+
+- Expected
++ Received
+
+- Error {
+-   "message": "fixture-second-read",
++ CodexHostError {
++   "message": "CODEX_RPC_REJECTED",
++   "code": "CODEX_RPC_REJECTED",
++   "rpcMethod": "account/read",
++   "rpcCode": -32603,
++   "name": "CodexHostError",
+  }
+
+ ❯ src/execution/codex-account-precheck.test.ts:117:25
+    115|  it.each(['普通Error','同精确内部拒绝'])('第二次%s原对象抛出，无第三次/新会话，原RPC正常关闭',async k…
+    116|   const c=new AbortController(),second=kind==='普通Error'?new Error('fix…
+    117|   await expect(create(c)).rejects.toBe(second);assertFactoryBoundary(c…
+       |                         ^
+    118|  });
+    119|  const negatives:Array<[string,()=>unknown]>=[
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 第二次同精确内部拒绝原对象抛出，无第三次/新会话，原RPC正常关闭
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to be CodexHostError: CODEX_RPC_REJECTED { …(3) } // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: CodexHostError: CODEX_RPC_REJECTED { …(3) }
+Received: serializes to the same string
+
+
+Compared values have no visual difference.
+
+ ❯ src/execution/codex-account-precheck.test.ts:117:25
+    115|  it.each(['普通Error','同精确内部拒绝'])('第二次%s原对象抛出，无第三次/新会话，原RPC正常关闭',async k…
+    116|   const c=new AbortController(),second=kind==='普通Error'?new Error('fix…
+    117|   await expect(create(c)).rejects.toBe(second);assertFactoryBoundary(c…
+       |                         ^
+    118|  });
+    119|  const negatives:Array<[string,()=>unknown]>=[
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 首次精确拒绝时原signal已取消：抛原取消原因，只读一次并close
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to be DOMException{ stack: 'AbortError: fi…' } // Object.is equality
+
+- Expected
++ Received
+
+- AbortError {
+-   "message": "fixture-cancelled",
++ CodexHostError {
++   "message": "CODEX_RPC_REJECTED",
++   "code": "CODEX_RPC_REJECTED",
++   "rpcMethod": "account/read",
++   "rpcCode": -32603,
++   "name": "CodexHostError",
+  }
+
+ ❯ src/execution/codex-account-precheck.test.ts:136:25
+    134|  it('首次精确拒绝时原signal已取消：抛原取消原因，只读一次并close',async()=>{
+    135|   const c=new AbortController(),cancel=new DOMException('fixture-cance…
+    136|   await expect(create(c)).rejects.toBe(cancel);assertFactoryBoundary(c…
+       |                         ^
+    137|  });
+    138|  it('第二次真实未登录响应保持unauthenticated；不拿第一次失败伪造ready',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 第二次真实未登录响应保持unauthenticated；不拿第一次失败伪造ready
+CodexHostError: CODEX_RPC_REJECTED
+ ❯ internal src/execution/codex-account-precheck.test.ts:61:20
+     59| }}};}
+     60| const account={account:{type:'chatgpt',planType:'plus'},requiresOpenai…
+     61| const internal=()=>new CodexHostError('CODEX_RPC_REJECTED',{rpcMethod:…
+       |                    ^
+     62| function session(index=1){const value=fixture.sessions[index];if(!valu…
+     63| const requests=(index=1)=>fixture.sessions[index]?.requests??[];
+ ❯ src/execution/codex-account-precheck.test.ts:139:55
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 图片精确重读成功后仍执行原capabilities与真实default image模型校验
+CodexHostError: CODEX_RPC_REJECTED
+ ❯ internal src/execution/codex-account-precheck.test.ts:61:20
+     59| }}};}
+     60| const account={account:{type:'chatgpt',planType:'plus'},requiresOpenai…
+     61| const internal=()=>new CodexHostError('CODEX_RPC_REJECTED',{rpcMethod:…
+       |                    ^
+     62| function session(index=1){const value=fixture.sessions[index];if(!valu…
+     63| const requests=(index=1)=>fixture.sessions[index]?.requests??[];
+ ❯ src/execution/codex-account-precheck.test.ts:147:96
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 重读后图片未登录仍拒绝
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to match object { code: 'CODEX_LOGIN_REQUIRED' }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "CODEX_LOGIN_REQUIRED",
++ CodexHostError {
++   "code": "CODEX_RPC_REJECTED",
+  }
+
+ ❯ src/execution/codex-account-precheck.test.ts:160:30
+    158|  ] as const)('重读后图片%s仍拒绝',async(_name,response,code)=>{
+    159|   const c=new AbortController();fixture.secondConfig=configuration(tru…
+    160|   await expect(create(c,true)).rejects.toMatchObject({code});expect(re…
+       |                              ^
+    161|  });
+    162|  it.each(['imageGeneration','namespaceTools'])('重读后图片能力%s缺失仍拒绝',async …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 重读后图片free仍拒绝
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 重读后图片非chatgpt仍拒绝
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to match object { Object (code) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "CODEX_IMAGE_CAPABILITY_UNAVAILABLE",
++ CodexHostError {
++   "code": "CODEX_RPC_REJECTED",
+  }
+
+ ❯ src/execution/codex-account-precheck.test.ts:160:30
+    158|  ] as const)('重读后图片%s仍拒绝',async(_name,response,code)=>{
+    159|   const c=new AbortController();fixture.secondConfig=configuration(tru…
+    160|   await expect(create(c,true)).rejects.toMatchObject({code});expect(re…
+       |                              ^
+    161|  });
+    162|  it.each(['imageGeneration','namespaceTools'])('重读后图片能力%s缺失仍拒绝',async …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 重读后图片能力imageGeneration缺失仍拒绝
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 重读后图片能力namespaceTools缺失仍拒绝
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to match object { Object (code) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "CODEX_IMAGE_CAPABILITY_UNAVAILABLE",
++ CodexHostError {
++   "code": "CODEX_RPC_REJECTED",
+  }
+
+ ❯ src/execution/codex-account-precheck.test.ts:164:30
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+
+ FAIL  src/execution/codex-account-precheck.test.ts > T1294 原 factory 的 account/read 单次有限恢复（全 stub，无 CLI/网络） > 重读后default模型不支持image仍拒绝
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to match object { Object (code) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "CODEX_IMAGE_MODEL_UNAVAILABLE",
++ CodexHostError {
++   "code": "CODEX_RPC_REJECTED",
+  }
+
+ ❯ src/execution/codex-account-precheck.test.ts:168:30
+    166|  it('重读后default模型不支持image仍拒绝',async()=>{
+    167|   const c=new AbortController();fixture.secondConfig=configuration(tru…
+    168|   await expect(create(c,true)).rejects.toMatchObject({code:'CODEX_IMAG…
+       |                              ^
+    169|  });
+    170|  it.each(['web_search','notification','mcp-enabled','unexpected-mcp','…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  12 failed | 17 passed (29)
+   Start at  13:00:56
+   Duration  209ms (transform 39ms, setup 0ms, import 52ms, tests 21ms, environment 0ms)
+

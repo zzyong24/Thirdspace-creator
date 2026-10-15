@@ -1,0 +1,73 @@
+{
+  "task": "T-1294",
+  "head": "6f75509fc715045035559d622c3fc9ffd932e16f",
+  "startedAt": "2026-10-15T04:42:47.427954+00:00",
+  "ownedEvidenceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/worker-rpc-tap/repeatability-v2-4634b9057c8cfb13",
+  "ownedTemporaryRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-zero-turn-v2-j16_wtfx",
+  "ownerSHA256": "2541c5280c1be3749a1c42cdbb06ab31ac8126a8881322d206ae2ed39437f7a9",
+  "runtimeOwnerSHA256": "2541c5280c1be3749a1c42cdbb06ab31ac8126a8881322d206ae2ed39437f7a9",
+  "environment": "normal tool shell allowlist inheritance; HOME/CODEX_HOME unchanged; values not read from other processes/files or printed/persisted; TMPDIR/TMP/TEMP isolated",
+  "codeBefore": [
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "sha256": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-status-entry.ts",
+      "sha256": "17bb483c5d83c416ca3fca6bcd21efb7b280a396b288ffa199a69fce6d1e8829"
+    },
+    {
+      "path": "ai-worker/dist/codex-status-worker.cjs",
+      "sha256": "1de879a6a271b2283cbf2437bd8b1070088141dbb3ff4ede8d0d5a55199aee58"
+    },
+    {
+      "path": "ai-worker/dist/execution-worker.cjs",
+      "sha256": "cd50a5069fafdc67d0825cebea5e6eda6a5a9448428b272a2fbc1d5ec6405233"
+    }
+  ],
+  "candidateFiles": [
+    {
+      "path": "run.mts",
+      "sha256": "b87257c0fe612ba41414253e2e38a4efb7fa67d4d91c1a418db160411696404c"
+    },
+    {
+      "path": "status-watch.cjs",
+      "sha256": "f73531645948ff92a87d940d24fd3ade9fbbfcc1efc3219093bbe59e0d5ea3d0"
+    }
+  ],
+  "nextStarted": false,
+  "models": 0,
+  "funds": 0,
+  "taskReplay": false,
+  "outerObserverBudgetMs": 13000000,
+  "normalShellInherited": true,
+  "launcherChildPid": 2427,
+  "codeAfter": [
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "sha256": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-status-entry.ts",
+      "sha256": "17bb483c5d83c416ca3fca6bcd21efb7b280a396b288ffa199a69fce6d1e8829"
+    },
+    {
+      "path": "ai-worker/dist/codex-status-worker.cjs",
+      "sha256": "1de879a6a271b2283cbf2437bd8b1070088141dbb3ff4ede8d0d5a55199aee58"
+    },
+    {
+      "path": "ai-worker/dist/execution-worker.cjs",
+      "sha256": "cd50a5069fafdc67d0825cebea5e6eda6a5a9448428b272a2fbc1d5ec6405233"
+    }
+  ],
+  "sourceDrift": false,
+  "endedAt": "2026-10-15T04:44:29.265607+00:00"
+}

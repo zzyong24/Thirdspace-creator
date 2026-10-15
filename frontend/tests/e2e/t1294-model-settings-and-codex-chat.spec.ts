@@ -52,7 +52,8 @@ const test=base.extend<{groupId:string;denied:string[]}>({
  },
 });
 test.skip(!process.env.T1294_BINDING,'仅在显式绑定的新隔离库执行；不随普通E2E发起真实Codex对话');
-test.describe.configure({timeout:1_800_000,retries:0});
+// 覆盖原公开准备/保存/提交的完整串行及有限观察；各请求与任务期限保持。
+test.describe.configure({timeout:28_800_000,retries:0});
 
 test('T1294 fresh默认官方，设置无向量/独立图片理解与数据服务分类，充值常驻',async({page,groupId},info)=>{
  const current=await routing(page,groupId);expect(current.choices,'fresh DB不应被普通GET自动持久化').toBeNull();expect(current.effectiveChoices).toEqual(official);
@@ -140,7 +141,8 @@ for(const viewport of [{name:'desktop',width:1536,height:1024,dsf:1},{name:'narr
 }
 
 test('T1294 唯一新本地Codex对话：设置检查一次→直接发送→四ID同任务完成并可读，unknown不重发',async({page,groupId},info)=>{
- test.setTimeout(2_400_000);await saveChoices(page,groupId,official);await models(page);
+ // 外层覆盖全部公开准备/保存/提交、有限观察和导航/清理余量。
+ test.setTimeout(28_800_000);await saveChoices(page,groupId,official);await models(page);
  await page.getByLabel('文本创作与结构化模型来源',{exact:true}).selectOption('codex');
  const saved=page.waitForResponse(r=>operationId(r)===ENDPOINTS.putModelRouting.id,{timeout:settingsMs});await page.getByRole('button',{name:'保存模型来源',exact:true}).click();expect((await saved).status()).toBe(200);
  await expect(page.getByRole('status').filter({hasText:'已保存并读回当前设置'})).toBeVisible();expect((await routing(page,groupId)).choices?.text).toBe('codex');

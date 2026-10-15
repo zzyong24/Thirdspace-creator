@@ -1,9 +1,14 @@
+# T1294 浏览器验收合同
+
+```frontend-journey-contract
 {
   "schema": "frontend-journey-contract/v1",
   "task_id": "T-1294",
   "watched_paths": [
+    "ai-worker/src/execution/codex-account-precheck.test.ts",
     "ai-worker/src/execution/codex-app-server-protocol.ts",
     "ai-worker/src/execution/codex-app-server.test.ts",
+    "ai-worker/src/execution/codex-app-server.ts",
     "ai-worker/src/execution/codex-external-chat-native-run.test.ts",
     "ai-worker/src/execution/external-chat-worker-run.ts",
     "ai-worker/src/execution/worker-runtime.test.ts",
@@ -18,6 +23,12 @@
     "backend/src/modules/settings/model-routing-defaults.ts",
     "backend/src/modules/settings/model-routing.integration.test.ts",
     "backend/src/modules/settings/settings.service.ts",
+    "docs/verification/t1294/browser/driver/launch-next.cjs",
+    "docs/verification/t1294/browser/driver/network-deny.cjs",
+    "docs/verification/t1294/browser/driver/owned-next.cjs",
+    "docs/verification/t1294/browser/driver/playwright.config.cjs",
+    "docs/verification/t1294/browser/driver/prepare.cjs",
+    "docs/verification/t1294/run-journey.cjs",
     "frontend/src/components/shell/top-header.tsx",
     "frontend/src/features/copilot/ai-copilot-content.tsx",
     "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
@@ -67,8 +78,16 @@
       "test_id": "T1294 常驻充值按钮走原空body受控POST，缺官方配置诚实失败且零资金新操作"
     },
     {
-      "id": "layouts",
-      "test_id": "T1294 设置与助手 三档真实context 可读可操作且无画布/检查横条"
+      "id": "layout-desktop",
+      "test_id": "T1294 设置与助手 desktop 可读可操作且无画布/检查横条"
+    },
+    {
+      "id": "layout-narrow",
+      "test_id": "T1294 设置与助手 narrow 可读可操作且无画布/检查横条"
+    },
+    {
+      "id": "layout-200",
+      "test_id": "T1294 设置与助手 CSS640x450/DSF2等效200% 可读可操作且无画布/检查横条"
     },
     {
       "id": "codex-chat",
@@ -103,3 +122,4 @@
     "原失败任务不重发；未证明上游间歇RPC拒绝的唯一根因"
   ]
 }
+```

@@ -1,0 +1,64 @@
+{
+  "task": "T-1294",
+  "head": "6f75509fc715045035559d622c3fc9ffd932e16f",
+  "startedAt": "2026-10-15T04:52:36.537003+00:00",
+  "ownedEvidenceRoot": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43",
+  "ownedTemporaryRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim",
+  "ownerSHA256": "a757d38d8fdeffb3c3278a3810b8ebb39af989a18029ed92bb30caae099fae81",
+  "runtimeOwnerSHA256": "a757d38d8fdeffb3c3278a3810b8ebb39af989a18029ed92bb30caae099fae81",
+  "environment": "normal shell runtime allowlist; HOME/CODEX_HOME unchanged, no old process/user DB; values not printed",
+  "codeBefore": [
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "sha256": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8"
+    },
+    {
+      "path": "ai-worker/dist/codex-status-worker.cjs",
+      "sha256": "84fb95fd1b90e53cb9583cac8cc8be35cc41fbffe9fd8f5d516a53fa561fb2a2"
+    },
+    {
+      "path": "ai-worker/dist/execution-worker.cjs",
+      "sha256": "fba156f26f430750453ca2f6faa64302d20e5c2a3409272ace8d61243f2d407f"
+    }
+  ],
+  "candidateFiles": [
+    {
+      "path": "controlled32.mts",
+      "sha256": "ec12a93ca581e8a8545511ae283bd98d0c33661e6fec9e32f68bb948f230d658"
+    },
+    {
+      "path": "one-read-observer.cjs",
+      "sha256": "551e3006c1d51aa2cf12d6bed113214af16ca25a5524b0319b99af1528694426"
+    }
+  ],
+  "nextStarted": false,
+  "maxTrials": 32,
+  "perTrialExtraAccountReadMax": 1,
+  "outerObserverBudgetMs": 36000000,
+  "normalShellInherited": true,
+  "launcherChildPid": 4281,
+  "codeAfter": [
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "sha256": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8"
+    },
+    {
+      "path": "ai-worker/dist/codex-status-worker.cjs",
+      "sha256": "c69067d8dd13594ce9f61c9868ff6b3534b04b8be1f841e43992d7d3eaddf3c6"
+    },
+    {
+      "path": "ai-worker/dist/execution-worker.cjs",
+      "sha256": "78ff0ae5e3f9630ed8b629bad5f75a79fd170d2d7c1f463cd63125a0e54994c9"
+    }
+  ],
+  "sourceDrift": true,
+  "endedAt": "2026-10-15T04:55:59.333579+00:00"
+}

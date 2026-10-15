@@ -1,0 +1,75 @@
+{
+  "task": "T-1294",
+  "review": "round3 SPEC recheck",
+  "at": "2026-10-15T05:00:27.794996+00:00",
+  "reviewer": "independent-agent /root/root_route_wiring_design；模型继承未切换，具体标识不猜测",
+  "head": "6f75509fc715045035559d622c3fc9ffd932e16f",
+  "spec": {
+    "path": "docs/features/t1294-model-settings-and-codex-chat-acceptance.md",
+    "sha256": "ccb3ec15c3bcd967956f46fff4503e6fdb31b6f04b5d8be57514cb7e95eb5a78"
+  },
+  "constitution": {
+    "path": "docs/产品定位.md",
+    "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+  },
+  "packetSha256": "8e75f954ae1e802405c4d6449fe882839ff97b1e6b2fe6c57fa3919a78ed4977",
+  "files": [
+    {
+      "path": "docs/features/t1294-model-settings-and-codex-chat-acceptance.md",
+      "sha256": "ccb3ec15c3bcd967956f46fff4503e6fdb31b6f04b5d8be57514cb7e95eb5a78"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "docs/verification/t1294/spec-review-round2/packet.json",
+      "sha256": "51a9d7fe6e7b1f9ffd170001ff4515647d82f18069f9d6f16b4b8c8f46d45baf"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "sha256": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-status-entry.ts",
+      "sha256": "17bb483c5d83c416ca3fca6bcd21efb7b280a396b288ffa199a69fce6d1e8829"
+    },
+    {
+      "path": "docs/verification/t1294/worker-rpc-tap/repeatability-v2-4634b9057c8cfb13/REPORT.md",
+      "sha256": "ca118c58d5ecfca5e8365ee1c491aee88aeb6d5256894ea3b347a77169211b74"
+    },
+    {
+      "path": "docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43/RESULT.json",
+      "sha256": "6bd0d5d403c67103a06b471a111056e8e0955ce7c9116c769e10e0440f1e09a4"
+    },
+    {
+      "path": "docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43/REPORT.md",
+      "sha256": "beb31fcf54e6695267b492814e286723c31488823d349e248d465968e78a0e57"
+    },
+    {
+      "path": "docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43/BINDING.json",
+      "sha256": "d142e2938de1207bc946924bc20d2886902a8e339ba2e40ce4fe607d4e41f04f"
+    },
+    {
+      "path": "docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43/CLOSURE.json",
+      "sha256": "c3575d6d698b0115325b24280b602009cec4183d807539f59cf8f4ab3cb903fe"
+    },
+    {
+      "path": "docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43/one-read-observer.cjs",
+      "sha256": "551e3006c1d51aa2cf12d6bed113214af16ca25a5524b0319b99af1528694426"
+    }
+  ],
+  "newTestPath": "ai-worker/src/execution/codex-account-precheck.test.ts",
+  "newTestExistsAtRead": false,
+  "productionWrites": 0,
+  "testWrites": 0,
+  "controlWrites": 0,
+  "modelCalls": 0,
+  "runtimeTests": "NOT-RUN",
+  "implementationReview": "NOT-RUN",
+  "finalNewChat": "NOT-RUN"
+}

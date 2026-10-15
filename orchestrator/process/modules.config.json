@@ -13156,7 +13156,9 @@
         "ai-worker/src/execution/codex-app-server.test.ts",
         "ai-worker/src/execution/worker-runtime.test.ts",
         "frontend/src/lib/ai-error-humanize.ts",
-        "frontend/src/lib/ai-error-humanize.test.ts"
+        "frontend/src/lib/ai-error-humanize.test.ts",
+        "ai-worker/src/execution/codex-app-server.ts",
+        "ai-worker/src/execution/codex-account-precheck.test.ts"
       ],
       "isolated_from": [
         "Root唯一正式writer，Agent只独占候选和证据；无新增worktree",

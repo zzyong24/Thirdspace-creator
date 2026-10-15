@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-15T04:36:05.428590+00:00",
+  "status": "FIXTURE_INCOMPLETE_NOT_PRODUCT_RED",
+  "ownRunnerPid": 98267,
+  "reason": "首稿通知使用错误换行编码，没有取得ready；另发现spawn-error夹具误用signal spread。仅终止本独占runner，原记录保留，不能计生产失败或通过。",
+  "productionWrites": 0,
+  "models": 0
+}

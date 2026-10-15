@@ -24,7 +24,7 @@ async function main(){
   const report=JSON.parse(fs.readFileSync(path.join(out,'playwright.json'),'utf8'));if(report.stats.expected!==10||report.stats.unexpected!==0||report.stats.flaky!==0||report.stats.skipped!==0)throw Error('TEN_REAL_CASES_REQUIRED');
  }finally{
   clearTimeout(readyTimer);if(!launcherEnded)launcher.kill('SIGTERM');
-  let cleanupTimer;try{shutdown=await Promise.race([launcherExit,new Promise((_,reject)=>{cleanupTimer=setTimeout(()=>reject(Error('OWNED_SHUTDOWN_UNCONFIRMED:'+out)),300000);})]);}finally{clearTimeout(cleanupTimer);log.end();}
+  let cleanupTimer;try{shutdown=await Promise.race([launcherExit,new Promise((_,reject)=>{cleanupTimer=setTimeout(()=>reject(Error('OWNED_SHUTDOWN_UNCONFIRMED:'+out)),1800000);})]);}finally{clearTimeout(cleanupTimer);log.end();}
   save('strict-run-result',{test:result??null,shutdown,appStopped:false,userDataTouched:false,ownedRoot:binding.ownedRoot,binding:prepared.bindingPath,finishedAt:new Date().toISOString()});
   if(shutdown.code!==0)throw Error('OWNED_SHUTDOWN_FAILED:'+out);
  }

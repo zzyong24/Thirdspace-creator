@@ -1,3 +1,6 @@
+# T1295 浏览器验收合同
+
+```frontend-journey-contract
 {
   "schema": "frontend-journey-contract/v1",
   "task_id": "T-1295",
@@ -48,3 +51,4 @@
     "既有AAC padding时长独立T1277，不擅自裁音"
   ]
 }
+```

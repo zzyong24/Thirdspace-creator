@@ -1,0 +1,29 @@
+[
+  {
+    "event": "listening",
+    "pid": 1290,
+    "at": "2026-10-15T04:40:17.080Z",
+    "port": 64062
+  },
+  {
+    "event": "http-closed",
+    "pid": 1290,
+    "at": "2026-10-15T04:41:35.213Z"
+  },
+  {
+    "event": "dispose-reachable",
+    "pid": 1290,
+    "at": "2026-10-15T04:41:35.213Z",
+    "reachable": true
+  },
+  {
+    "event": "persistence-closed",
+    "pid": 1290,
+    "at": "2026-10-15T04:41:35.333Z"
+  },
+  {
+    "event": "next-closed",
+    "pid": 1290,
+    "at": "2026-10-15T04:41:35.335Z"
+  }
+]

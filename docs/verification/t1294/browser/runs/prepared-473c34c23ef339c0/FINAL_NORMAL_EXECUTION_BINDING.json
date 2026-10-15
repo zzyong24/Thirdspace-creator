@@ -1,0 +1,22 @@
+{
+  "sourceHead": "6f75509fc715045035559d622c3fc9ffd932e16f",
+  "baseURL": "http://127.0.0.1:64062",
+  "port": 64062,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-urUnNR",
+  "markerSha256": "697f1cb2a8be07207d2f0b492f6d98a7d8b7812f6a6c8e866c5ade2cc2cfdae5",
+  "preparedAt": "2026-10-15T04:40:15.178Z",
+  "executionAndStatusBundles": [
+    {
+      "path": "ai-worker/dist/codex-status-worker.cjs",
+      "sha256": "1de879a6a271b2283cbf2437bd8b1070088141dbb3ff4ede8d0d5a55199aee58"
+    },
+    {
+      "path": "ai-worker/dist/execution-worker.cjs",
+      "sha256": "cd50a5069fafdc67d0825cebea5e6eda6a5a9448428b272a2fbc1d5ec6405233"
+    }
+  ],
+  "diagnosticTap": false,
+  "expectedExecutionSha256": "cd50a5069fafdc67d0825cebea5e6eda6a5a9448428b272a2fbc1d5ec6405233",
+  "testSha256": "750561c25396f2946611706619feba54a4eb413af9200336610ab4b9eb71f8d9",
+  "runnerSha256": "93073fec570a66340bc56fa24c7eab7de678e1dbd4b84b59551a8fcf2024b1b5"
+}

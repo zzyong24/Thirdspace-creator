@@ -1,0 +1,467 @@
+{
+  "status": "PASS_NORMAL_FRESH_10",
+  "stats": {
+    "startTime": "2026-10-15T04:40:17.551Z",
+    "duration": 77630.537,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "T1294 fresh默认官方，设置无向量/独立图片理解与数据服务分类，充值常驻",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 10229
+    },
+    {
+      "title": "T1294 已保存混合图片与自配选择重开保留，主动改图片同次CAS只统一vision/image",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 4256
+    },
+    {
+      "title": "T1294 实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 1949
+    },
+    {
+      "title": "T1294 RedFox在模型页实际保存/掩码/重开/删除，旧深链仍可达且零查询费用",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 3132
+    },
+    {
+      "title": "T1294 旧向量测试明确停用，真实资料创建/修订/搜索保原文与组隔离",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 1481
+    },
+    {
+      "title": "T1294 常驻充值按钮走原空body受控POST，缺官方配置诚实失败且零资金新操作",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 1545
+    },
+    {
+      "title": "T1294 唯一新本地Codex对话：设置检查一次→直接发送→四ID同任务完成并可读，unknown不重发",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 44588,
+      "original-task-ids": {
+        "groupId": "grp-49f13d97-256",
+        "conversationId": "ai-conv-49f13d97-288",
+        "sourceMessageId": "ai-msg-49f13d97-289",
+        "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+        "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565"
+      },
+      "original-task-final-observation": {
+        "ids": {
+          "groupId": "grp-49f13d97-256",
+          "conversationId": "ai-conv-49f13d97-288",
+          "sourceMessageId": "ai-msg-49f13d97-289",
+          "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+          "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565"
+        },
+        "last": {
+          "groupId": "grp-49f13d97-256",
+          "conversationId": "ai-conv-49f13d97-288",
+          "sourceMessageId": "ai-msg-49f13d97-289",
+          "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+          "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565",
+          "status": "succeeded",
+          "errorCode": null
+        },
+        "chatPosts": 1,
+        "receipts": [
+          {
+            "conversationId": "ai-conv-49f13d97-288",
+            "sourceMessageId": "ai-msg-49f13d97-289",
+            "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+            "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565"
+          }
+        ],
+        "uiSubmits": 1,
+        "workbenchSummary": "account-null-requires-platform-account-not-claimed",
+        "legacyStatusGets": 0,
+        "retryInvoked": false,
+        "resumeInvoked": false,
+        "readableCompletion": "see_actual_assertions"
+      }
+    },
+    {
+      "title": "T1294 设置与助手 desktop 可读可操作且无画布/检查横条",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 3272,
+      "actual-css-viewport-and-dsf": {
+        "width": 1536,
+        "height": 1024,
+        "dsf": 1,
+        "zoom": "1",
+        "scrollWidth": 1536
+      }
+    },
+    {
+      "title": "T1294 设置与助手 narrow 可读可操作且无画布/检查横条",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 2830,
+      "actual-css-viewport-and-dsf": {
+        "width": 390,
+        "height": 844,
+        "dsf": 1,
+        "zoom": "1",
+        "scrollWidth": 390
+      }
+    },
+    {
+      "title": "T1294 设置与助手 CSS640x450/DSF2等效200% 可读可操作且无画布/检查横条",
+      "status": "passed",
+      "retry": 0,
+      "durationMs": 3005,
+      "actual-css-viewport-and-dsf": {
+        "width": 640,
+        "height": 450,
+        "dsf": 2,
+        "zoom": "1",
+        "scrollWidth": 640
+      }
+    }
+  ],
+  "geometry200": {
+    "width": 640,
+    "height": 450,
+    "dsf": 2,
+    "zoom": "1",
+    "scrollWidth": 640
+  },
+  "screenshots": [
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/settings-desktop.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "987ea179d49b42ceec40ab57f6163342732d5eb2fb7cdf1dd41e89047e5f6eb7",
+      "bytes": 183437
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/assistant-desktop.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "f6062cafdee96b8ed05e4becc4b25989492c8401b08b8d20899117cf85319fe5",
+      "bytes": 213783
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-92d20-实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留/real-cas-conflict-preserved.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "0f08b0c438abd3f55c7c200c42fea5c6636b48f979f43ab04a5092d3cb10f971",
+      "bytes": 183881
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-85c77-官方，设置无向量-独立图片理解与数据服务分类，充值常驻/official-default-model-settings.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "5a6df7514d02f629e95f69da4a894b1b36a6dc18486e6cee5025093ad6bec5e8",
+      "bytes": 182930
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-33355-留，主动改图片同次CAS只统一vision-image/explicit-and-mixed-sources.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "bad86baa7ed74804b41d3d7a2ac05d5cf28e2a3e35fcf582bb6154be799f9811",
+      "bytes": 184877
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-d5f10-量测试明确停用，真实资料创建-修订-搜索保原文与组隔离/keyword-only-real-knowledge.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "19337b2408f079a7a5028cd85cdead28c7a0998dcfd2068663c5903370803b23",
+      "bytes": 108127
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/settings-narrow.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "547ba36abf54e88468d2d2ec5ad512d758493a63b6a002d566148baef1fa9e06",
+      "bytes": 56226
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/assistant-narrow.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "9586db0fffd72d6a3ab4b354700d9fa3fbb5a0deac39b67a9cc339074ee1fb35",
+      "bytes": 84900
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-0ab97-页实际保存-掩码-重开-删除，旧深链仍可达且零查询费用/redfox-saved-masked.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "c0531c17e7c18c816963346dfd9b3c1d9adba3611afc517031effe04a6aa3932",
+      "bytes": 197283
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-91fe0-body受控POST，缺官方配置诚实失败且零资金新操作/credits-honest-unconfigured.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "7dddc295933aeb826a8dde21400a0a85795d67d76c4914e2256afef82b376617",
+      "bytes": 316862
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/codex-setting-checked.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "d49bc249ddc3277b857f73e75f32f557666a60873133d80cc22eb3e1710a80d4",
+      "bytes": 182390
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/codex-original-task-readable-complete.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "79eec7cd44f7d8d2a171982e69b1d9d2cc8a056cb1162c6003dccf8fa5bdc8de",
+      "bytes": 216388
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/assistant-equivalent200-after-original-scroll.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "5bbb0222e39cb4c9514b6848b08befd2b8a004860c49681b81e04ab6c03803cd",
+      "bytes": 130467
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/settings-CSS640x450/DSF2等效200%.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "97cf3f871d67d70a8d9510c4c95bcbd1181225614f43035fde76b16d824f1cf1",
+      "bytes": 83457
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/attachments/settings-CSS640x450-DSF2等效200--27af464fed992d1b9586ee50405ba2595b00cdb2.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "97cf3f871d67d70a8d9510c4c95bcbd1181225614f43035fde76b16d824f1cf1",
+      "bytes": 83457
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-d7a7cf6bff57c6cfd60391b4ecbc1ea9447298a9.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "5bbb0222e39cb4c9514b6848b08befd2b8a004860c49681b81e04ab6c03803cd",
+      "bytes": 130467
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/attachments/codex-original-task-readable-complete-f9b05dad45298dba8da1e688481ce8f3c17421d9.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "79eec7cd44f7d8d2a171982e69b1d9d2cc8a056cb1162c6003dccf8fa5bdc8de",
+      "bytes": 216388
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/attachments/codex-setting-checked-bf20b92e2ac834fa56c82a95efd5284fd5b689f4.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "d49bc249ddc3277b857f73e75f32f557666a60873133d80cc22eb3e1710a80d4",
+      "bytes": 182390
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-91fe0-body受控POST，缺官方配置诚实失败且零资金新操作/attachments/credits-honest-unconfigured-d48226e8a3f1cc3a5d16d2a97e2da9c6dde29ab7.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "7dddc295933aeb826a8dde21400a0a85795d67d76c4914e2256afef82b376617",
+      "bytes": 316862
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-0ab97-页实际保存-掩码-重开-删除，旧深链仍可达且零查询费用/attachments/redfox-saved-masked-2fe0a27e0e4ec388e5afef48c4430f5618ec2ce7.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "c0531c17e7c18c816963346dfd9b3c1d9adba3611afc517031effe04a6aa3932",
+      "bytes": 197283
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-f5aeffb49cff0811a7f214a2ec552ceb2bcd67e0.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "9586db0fffd72d6a3ab4b354700d9fa3fbb5a0deac39b67a9cc339074ee1fb35",
+      "bytes": 84900
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/attachments/settings-narrow-efe88bda7eb7c2fb0399c7e77ec9a0f2a048dcc8.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "547ba36abf54e88468d2d2ec5ad512d758493a63b6a002d566148baef1fa9e06",
+      "bytes": 56226
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-d5f10-量测试明确停用，真实资料创建-修订-搜索保原文与组隔离/attachments/keyword-only-real-knowledge-95e9e9d33b3940daaf8dc663ecc2587338760aab.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "19337b2408f079a7a5028cd85cdead28c7a0998dcfd2068663c5903370803b23",
+      "bytes": 108127
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-33355-留，主动改图片同次CAS只统一vision-image/attachments/explicit-and-mixed-sources-a6fd6af40dc300ea7243b1610896ead38cab60db.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "bad86baa7ed74804b41d3d7a2ac05d5cf28e2a3e35fcf582bb6154be799f9811",
+      "bytes": 184877
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-85c77-官方，设置无向量-独立图片理解与数据服务分类，充值常驻/attachments/official-default-model-settings-cd94997cf6bf28b2cff249f95cdd4ad1d8801478.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "5a6df7514d02f629e95f69da4a894b1b36a6dc18486e6cee5025093ad6bec5e8",
+      "bytes": 182930
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-92d20-实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留/attachments/real-cas-conflict-preserved-7007a1d9633632ca0baf65c94fcea4b88723406e.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "0f08b0c438abd3f55c7c200c42fea5c6636b48f979f43ab04a5092d3cb10f971",
+      "bytes": 183881
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-f9165b07056b2d17d95ca818edff71381c6e5981.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "f6062cafdee96b8ed05e4becc4b25989492c8401b08b8d20899117cf85319fe5",
+      "bytes": 213783
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/attachments/settings-desktop-914ea390d3a6a1cde64bf0fd583c6b00f7640213.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "987ea179d49b42ceec40ab57f6163342732d5eb2fb7cdf1dd41e89047e5f6eb7",
+      "bytes": 183437
+    }
+  ],
+  "uniquePngBytes": 14,
+  "normalBundleNoTap": true,
+  "sourceHead": "6f75509fc715045035559d622c3fc9ffd932e16f",
+  "executionStatusBindings": {
+    "sourceHead": "6f75509fc715045035559d622c3fc9ffd932e16f",
+    "baseURL": "http://127.0.0.1:64062",
+    "port": 64062,
+    "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-urUnNR",
+    "markerSha256": "697f1cb2a8be07207d2f0b492f6d98a7d8b7812f6a6c8e866c5ade2cc2cfdae5",
+    "preparedAt": "2026-10-15T04:40:15.178Z",
+    "executionAndStatusBundles": [
+      {
+        "path": "ai-worker/dist/codex-status-worker.cjs",
+        "sha256": "1de879a6a271b2283cbf2437bd8b1070088141dbb3ff4ede8d0d5a55199aee58"
+      },
+      {
+        "path": "ai-worker/dist/execution-worker.cjs",
+        "sha256": "cd50a5069fafdc67d0825cebea5e6eda6a5a9448428b272a2fbc1d5ec6405233"
+      }
+    ],
+    "diagnosticTap": false,
+    "expectedExecutionSha256": "cd50a5069fafdc67d0825cebea5e6eda6a5a9448428b272a2fbc1d5ec6405233",
+    "testSha256": "750561c25396f2946611706619feba54a4eb413af9200336610ab4b9eb71f8d9",
+    "runnerSha256": "93073fec570a66340bc56fa24c7eab7de678e1dbd4b84b59551a8fcf2024b1b5"
+  },
+  "newChat": {
+    "ids": {
+      "groupId": "grp-49f13d97-256",
+      "conversationId": "ai-conv-49f13d97-288",
+      "sourceMessageId": "ai-msg-49f13d97-289",
+      "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+      "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565"
+    },
+    "last": {
+      "groupId": "grp-49f13d97-256",
+      "conversationId": "ai-conv-49f13d97-288",
+      "sourceMessageId": "ai-msg-49f13d97-289",
+      "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+      "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565",
+      "status": "succeeded",
+      "errorCode": null
+    },
+    "chatPosts": 1,
+    "receipts": [
+      {
+        "conversationId": "ai-conv-49f13d97-288",
+        "sourceMessageId": "ai-msg-49f13d97-289",
+        "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+        "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565"
+      }
+    ],
+    "uiSubmits": 1,
+    "workbenchSummary": "account-null-requires-platform-account-not-claimed",
+    "legacyStatusGets": 0,
+    "retryInvoked": false,
+    "resumeInvoked": false,
+    "readableCompletion": "see_actual_assertions"
+  },
+  "resourcesAndSource": {
+    "at": "2026-10-15T04:43:07.731883+00:00",
+    "sourceEntriesChecked": 4186,
+    "bundlesChecked": 11,
+    "changed": [],
+    "remainingPlaywrightProfileProcesses": [],
+    "serverPid": 1290,
+    "serverPidPresent": false,
+    "port": 64062,
+    "testExit": {
+      "code": 0,
+      "signal": null,
+      "pid": 1300,
+      "args": [
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/driver/playwright.config.cjs",
+        "--workers=1",
+        "--retries=0"
+      ],
+      "startedAt": "2026-10-15T04:40:15.192Z",
+      "endedAt": "2026-10-15T04:41:35.210Z"
+    },
+    "shutdown": {
+      "test": {
+        "code": 0,
+        "signal": null
+      },
+      "shutdown": {
+        "code": 0,
+        "signal": null
+      },
+      "appStopped": false,
+      "userDataTouched": false,
+      "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-urUnNR",
+      "binding": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/binding.json",
+      "finishedAt": "2026-10-15T04:41:35.477Z"
+    },
+    "serverAcks": [
+      {
+        "event": "listening",
+        "pid": 1290,
+        "at": "2026-10-15T04:40:17.080Z",
+        "port": 64062
+      },
+      {
+        "event": "http-closed",
+        "pid": 1290,
+        "at": "2026-10-15T04:41:35.213Z"
+      },
+      {
+        "event": "dispose-reachable",
+        "pid": 1290,
+        "at": "2026-10-15T04:41:35.213Z",
+        "reachable": true
+      },
+      {
+        "event": "persistence-closed",
+        "pid": 1290,
+        "at": "2026-10-15T04:41:35.333Z"
+      },
+      {
+        "event": "next-closed",
+        "pid": 1290,
+        "at": "2026-10-15T04:41:35.335Z"
+      }
+    ],
+    "appStopped": false
+  }
+}

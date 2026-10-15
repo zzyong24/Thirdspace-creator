@@ -1,0 +1,42 @@
+{
+  "task": "T-1294",
+  "status": "CANDIDATE_NOT_APPLIED_NOT_RUN",
+  "at": "2026-10-15T04:59:22.757548+00:00",
+  "head": "6f75509fc715045035559d622c3fc9ffd932e16f",
+  "productionWrites": 0,
+  "formalTestWrites": 0,
+  "controlWrites": 0,
+  "vitestRun": false,
+  "realCLI": 0,
+  "network": 0,
+  "models": 0,
+  "staticTypecheckExit": 0,
+  "staticTypecheckOnly": true,
+  "expectedStaticCaseCount": 29,
+  "sourceBeforeSHA256": {
+    "docs/features/t1294-model-settings-and-codex-chat-acceptance.md": "ccb3ec15c3bcd967956f46fff4503e6fdb31b6f04b5d8be57514cb7e95eb5a78",
+    "ai-worker/src/execution/codex-app-server.ts": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a",
+    "ai-worker/src/execution/codex-app-server-protocol.ts": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8",
+    "ai-worker/src/execution/codex-app-server.test.ts": "dfc1d09b64bba06073393e0bdf8862fdb6591d7970e2ccaed7664c85a5b783de",
+    "ai-worker/tsconfig.json": "d35be6e6f47b86946d0db55816cd9bb7fa4f2ca3355caf7edc11d5060db7c244",
+    "ai-worker/vitest.config.ts": "98194b41915da18a6044883ab0b4cfcc0aaa1309031295b01812c8b5ab80939b"
+  },
+  "sourceAfterCandidateSHA256": {
+    "ai-worker/src/execution/codex-account-precheck.test.ts": "9963f90cf7cdff603475c5e64646df026e524d3c3d251a246e26f590b0be1292",
+    "ai-worker/src/execution/codex-app-server.ts": "0f66f4bb132f2ccd8e13897c9cd985b2c14107886dbeaf329db803e15c96a145"
+  },
+  "candidateSHA256": {
+    "01_TEST.patch": "e98699ea4764adffd1858489771172849c7cf726213b1f95f1c1b8eb9be8f30b",
+    "02_SOURCE.patch": "f8ec7d8b25b3485acaa58c315f38033e81674817cd6d04ea46f479d8b0e0ef94",
+    "REPORT.md": "b62d1c46821a8f6eada7d35216fedd51477415879bcdca0db7b5de977bd2fb74",
+    "STATIC_TYPECHECK.json": "f5bf34ed6f59da03358cdcd0f0f03a672c736a19cae0d1264c57bb355d95e8bb",
+    "STATIC_TYPECHECK_INITIAL_FAIL.json": "395501cbf3f16d34df759fb48739436cf7f917a778fc05b96a8e82ea03dd1540",
+    "mirror/ai-worker/src/execution/codex-account-precheck.test.ts": "9963f90cf7cdff603475c5e64646df026e524d3c3d251a246e26f590b0be1292",
+    "mirror/ai-worker/src/execution/codex-app-server.ts": "0f66f4bb132f2ccd8e13897c9cd985b2c14107886dbeaf329db803e15c96a145",
+    "static-typecheck.cjs": "3b9d495b574797c77827d63e59da0bffb08b01b0e5204ac3dc0825a2cfc915b9"
+  },
+  "proposedWriteSet": [
+    "ai-worker/src/execution/codex-app-server.ts",
+    "ai-worker/src/execution/codex-account-precheck.test.ts"
+  ]
+}

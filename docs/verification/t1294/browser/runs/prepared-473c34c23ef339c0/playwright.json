@@ -1,0 +1,550 @@
+{
+  "config": {
+    "configFile": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/driver/playwright.config.cjs",
+    "rootDir": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests",
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "e2e/t1294-model-settings-and-codex-chat.spec.ts"
+        ],
+        "timeout": 1800000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/playwright.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.60.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+      "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T1294 fresh默认官方，设置无向量/独立图片理解与数据服务分类，充值常驻",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1800000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10229,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T04:40:18.487Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "official-default-model-settings",
+                      "contentType": "image/png",
+                      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-85c77-官方，设置无向量-独立图片理解与数据服务分类，充值常驻/attachments/official-default-model-settings-cd94997cf6bf28b2cff249f95cdd4ad1d8801478.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "639d659b30300d7c8815-b8c3159ac8304904b32c",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 57,
+          "column": 1
+        },
+        {
+          "title": "T1294 已保存混合图片与自配选择重开保留，主动改图片同次CAS只统一vision/image",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1800000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4256,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T04:40:28.991Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "explicit-and-mixed-sources",
+                      "contentType": "image/png",
+                      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-33355-留，主动改图片同次CAS只统一vision-image/attachments/explicit-and-mixed-sources-a6fd6af40dc300ea7243b1610896ead38cab60db.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "639d659b30300d7c8815-10cefe60f4ea553e0085",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "T1294 实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1800000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1949,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T04:40:33.252Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "real-cas-conflict-preserved",
+                      "contentType": "image/png",
+                      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-92d20-实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留/attachments/real-cas-conflict-preserved-7007a1d9633632ca0baf65c94fcea4b88723406e.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "639d659b30300d7c8815-2050b96fe393047a134a",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 81,
+          "column": 1
+        },
+        {
+          "title": "T1294 RedFox在模型页实际保存/掩码/重开/删除，旧深链仍可达且零查询费用",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1800000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3132,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T04:40:35.215Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "redfox-saved-masked",
+                      "contentType": "image/png",
+                      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-0ab97-页实际保存-掩码-重开-删除，旧深链仍可达且零查询费用/attachments/redfox-saved-masked-2fe0a27e0e4ec388e5afef48c4430f5618ec2ce7.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "639d659b30300d7c8815-9ffb541f19ecc82249e6",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 89,
+          "column": 1
+        },
+        {
+          "title": "T1294 旧向量测试明确停用，真实资料创建/修订/搜索保原文与组隔离",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1800000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1481,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T04:40:38.353Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "keyword-only-real-knowledge",
+                      "contentType": "image/png",
+                      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-d5f10-量测试明确停用，真实资料创建-修订-搜索保原文与组隔离/attachments/keyword-only-real-knowledge-95e9e9d33b3940daaf8dc663ecc2587338760aab.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "639d659b30300d7c8815-423a3c84385b53fe1eae",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 99,
+          "column": 1
+        },
+        {
+          "title": "T1294 常驻充值按钮走原空body受控POST，缺官方配置诚实失败且零资金新操作",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1800000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1545,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T04:40:39.839Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "credits-honest-unconfigured",
+                      "contentType": "image/png",
+                      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-91fe0-body受控POST，缺官方配置诚实失败且零资金新操作/attachments/credits-honest-unconfigured-d48226e8a3f1cc3a5d16d2a97e2da9c6dde29ab7.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "639d659b30300d7c8815-4626c2a2ad0abdec5ca9",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 110,
+          "column": 1
+        },
+        {
+          "title": "T1294 唯一新本地Codex对话：设置检查一次→直接发送→四ID同任务完成并可读，unknown不重发",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 2400000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 44588,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-15T04:40:50.513Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "codex-setting-checked",
+                      "contentType": "image/png",
+                      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/attachments/codex-setting-checked-bf20b92e2ac834fa56c82a95efd5284fd5b689f4.png"
+                    },
+                    {
+                      "name": "original-task-ids",
+                      "contentType": "application/json",
+                      "body": "ewogICJncm91cElkIjogImdycC00OWYxM2Q5Ny0yNTYiLAogICJjb252ZXJzYXRpb25JZCI6ICJhaS1jb252LTQ5ZjEzZDk3LTI4OCIsCiAgInNvdXJjZU1lc3NhZ2VJZCI6ICJhaS1tc2ctNDlmMTNkOTctMjg5IiwKICAiYWlUYXNrSWQiOiAiYWktdGFzay03MzAzNmY4Yy02YmE4LTRhZTItOTgzOS02MDc2Yjg5YTZiMTgiLAogICJleGVjdXRpb25UYXNrSWQiOiAiZXhlY3V0aW9uLXRhc2stYjlkZDkxM2ItMGQ5My00MmZhLWE0MGEtYjU2Y2NiYjQ0NTY1Igp9"
+                    },
+                    {
+                      "name": "codex-original-task-readable-complete",
+                      "contentType": "image/png",
+                      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/attachments/codex-original-task-readable-complete-f9b05dad45298dba8da1e688481ce8f3c17421d9.png"
+                    },
+                    {
+                      "name": "original-task-final-observation",
+                      "contentType": "application/json",
+                      "body": "ewogICJpZHMiOiB7CiAgICAiZ3JvdXBJZCI6ICJncnAtNDlmMTNkOTctMjU2IiwKICAgICJjb252ZXJzYXRpb25JZCI6ICJhaS1jb252LTQ5ZjEzZDk3LTI4OCIsCiAgICAic291cmNlTWVzc2FnZUlkIjogImFpLW1zZy00OWYxM2Q5Ny0yODkiLAogICAgImFpVGFza0lkIjogImFpLXRhc2stNzMwMzZmOGMtNmJhOC00YWUyLTk4MzktNjA3NmI4OWE2YjE4IiwKICAgICJleGVjdXRpb25UYXNrSWQiOiAiZXhlY3V0aW9uLXRhc2stYjlkZDkxM2ItMGQ5My00MmZhLWE0MGEtYjU2Y2NiYjQ0NTY1IgogIH0sCiAgImxhc3QiOiB7CiAgICAiZ3JvdXBJZCI6ICJncnAtNDlmMTNkOTctMjU2IiwKICAgICJjb252ZXJzYXRpb25JZCI6ICJhaS1jb252LTQ5ZjEzZDk3LTI4OCIsCiAgICAic291cmNlTWVzc2FnZUlkIjogImFpLW1zZy00OWYxM2Q5Ny0yODkiLAogICAgImFpVGFza0lkIjogImFpLXRhc2stNzMwMzZmOGMtNmJhOC00YWUyLTk4MzktNjA3NmI4OWE2YjE4IiwKICAgICJleGVjdXRpb25UYXNrSWQiOiAiZXhlY3V0aW9uLXRhc2stYjlkZDkxM2ItMGQ5My00MmZhLWE0MGEtYjU2Y2NiYjQ0NTY1IiwKICAgICJzdGF0dXMiOiAic3VjY2VlZGVkIiwKICAgICJlcnJvckNvZGUiOiBudWxsCiAgfSwKICAiY2hhdFBvc3RzIjogMSwKICAicmVjZWlwdHMiOiBbCiAgICB7CiAgICAgICJjb252ZXJzYXRpb25JZCI6ICJhaS1jb252LTQ5ZjEzZDk3LTI4OCIsCiAgICAgICJzb3VyY2VNZXNzYWdlSWQiOiAiYWktbXNnLTQ5ZjEzZDk3LTI4OSIsCiAgICAgICJhaVRhc2tJZCI6ICJhaS10YXNrLTczMDM2ZjhjLTZiYTgtNGFlMi05ODM5LTYwNzZiODlhNmIxOCIsCiAgICAgICJleGVjdXRpb25UYXNrSWQiOiAiZXhlY3V0aW9uLXRhc2stYjlkZDkxM2ItMGQ5My00MmZhLWE0MGEtYjU2Y2NiYjQ0NTY1IgogICAgfQogIF0sCiAgInVpU3VibWl0cyI6IDEsCiAgIndvcmtiZW5jaFN1bW1hcnkiOiAiYWNjb3VudC1udWxsLXJlcXVpcmVzLXBsYXRmb3JtLWFjY291bnQtbm90LWNsYWltZWQiLAogICJsZWdhY3lTdGF0dXNHZXRzIjogMCwKICAicmV0cnlJbnZva2VkIjogZmFsc2UsCiAgInJlc3VtZUludm9rZWQiOiBmYWxzZSwKICAicmVhZGFibGVDb21wbGV0aW9uIjogInNlZV9hY3R1YWxfYXNzZXJ0aW9ucyIKfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "639d659b30300d7c8815-d86607e1318f71127311",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 142,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "视口 desktop",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 121,
+          "column": 7,
+          "specs": [
+            {
+              "title": "T1294 设置与助手 desktop 可读可操作且无画布/检查横条",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1800000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3272,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-15T04:40:41.390Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "settings-desktop",
+                          "contentType": "image/png",
+                          "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/attachments/settings-desktop-914ea390d3a6a1cde64bf0fd583c6b00f7640213.png"
+                        },
+                        {
+                          "name": "actual-css-viewport-and-dsf",
+                          "contentType": "application/json",
+                          "body": "ewogICJ3aWR0aCI6IDE1MzYsCiAgImhlaWdodCI6IDEwMjQsCiAgImRzZiI6IDEsCiAgInpvb20iOiAiMSIsCiAgInNjcm9sbFdpZHRoIjogMTUzNgp9"
+                        },
+                        {
+                          "name": "assistant-all-controls-in-viewport",
+                          "contentType": "image/png",
+                          "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-f9165b07056b2d17d95ca818edff71381c6e5981.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "639d659b30300d7c8815-1edb7b8595fef7ca72e5",
+              "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+              "line": 123,
+              "column": 2
+            }
+          ]
+        },
+        {
+          "title": "视口 narrow",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 121,
+          "column": 7,
+          "specs": [
+            {
+              "title": "T1294 设置与助手 narrow 可读可操作且无画布/检查横条",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1800000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2830,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-15T04:40:44.667Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "settings-narrow",
+                          "contentType": "image/png",
+                          "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/attachments/settings-narrow-efe88bda7eb7c2fb0399c7e77ec9a0f2a048dcc8.png"
+                        },
+                        {
+                          "name": "actual-css-viewport-and-dsf",
+                          "contentType": "application/json",
+                          "body": "ewogICJ3aWR0aCI6IDM5MCwKICAiaGVpZ2h0IjogODQ0LAogICJkc2YiOiAxLAogICJ6b29tIjogIjEiLAogICJzY3JvbGxXaWR0aCI6IDM5MAp9"
+                        },
+                        {
+                          "name": "assistant-all-controls-in-viewport",
+                          "contentType": "image/png",
+                          "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-f5aeffb49cff0811a7f214a2ec552ceb2bcd67e0.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "639d659b30300d7c8815-17d7ed70de5dfe5182d2",
+              "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+              "line": 123,
+              "column": 2
+            }
+          ]
+        },
+        {
+          "title": "视口 CSS640x450/DSF2等效200%",
+          "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+          "line": 121,
+          "column": 7,
+          "specs": [
+            {
+              "title": "T1294 设置与助手 CSS640x450/DSF2等效200% 可读可操作且无画布/检查横条",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 1800000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3005,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-15T04:40:47.503Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "settings-CSS640x450/DSF2等效200%",
+                          "contentType": "image/png",
+                          "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/attachments/settings-CSS640x450-DSF2等效200--27af464fed992d1b9586ee50405ba2595b00cdb2.png"
+                        },
+                        {
+                          "name": "actual-css-viewport-and-dsf",
+                          "contentType": "application/json",
+                          "body": "ewogICJ3aWR0aCI6IDY0MCwKICAiaGVpZ2h0IjogNDUwLAogICJkc2YiOiAyLAogICJ6b29tIjogIjEiLAogICJzY3JvbGxXaWR0aCI6IDY0MAp9"
+                        },
+                        {
+                          "name": "assistant-all-controls-in-viewport",
+                          "contentType": "image/png",
+                          "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-d7a7cf6bff57c6cfd60391b4ecbc1ea9447298a9.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "639d659b30300d7c8815-6a2f3d6594fb9bd15264",
+              "file": "e2e/t1294-model-settings-and-codex-chat.spec.ts",
+              "line": 123,
+              "column": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-15T04:40:17.551Z",
+    "duration": 77630.537,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,123 @@
+[
+  {
+    "title": "T1294 fresh默认官方，设置无向量/独立图片理解与数据服务分类，充值常驻",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 10229
+  },
+  {
+    "title": "T1294 已保存混合图片与自配选择重开保留，主动改图片同次CAS只统一vision/image",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 4256
+  },
+  {
+    "title": "T1294 实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 1949
+  },
+  {
+    "title": "T1294 RedFox在模型页实际保存/掩码/重开/删除，旧深链仍可达且零查询费用",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 3132
+  },
+  {
+    "title": "T1294 旧向量测试明确停用，真实资料创建/修订/搜索保原文与组隔离",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 1481
+  },
+  {
+    "title": "T1294 常驻充值按钮走原空body受控POST，缺官方配置诚实失败且零资金新操作",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 1545
+  },
+  {
+    "title": "T1294 唯一新本地Codex对话：设置检查一次→直接发送→四ID同任务完成并可读，unknown不重发",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 44588,
+    "original-task-ids": {
+      "groupId": "grp-49f13d97-256",
+      "conversationId": "ai-conv-49f13d97-288",
+      "sourceMessageId": "ai-msg-49f13d97-289",
+      "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+      "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565"
+    },
+    "original-task-final-observation": {
+      "ids": {
+        "groupId": "grp-49f13d97-256",
+        "conversationId": "ai-conv-49f13d97-288",
+        "sourceMessageId": "ai-msg-49f13d97-289",
+        "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+        "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565"
+      },
+      "last": {
+        "groupId": "grp-49f13d97-256",
+        "conversationId": "ai-conv-49f13d97-288",
+        "sourceMessageId": "ai-msg-49f13d97-289",
+        "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+        "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565",
+        "status": "succeeded",
+        "errorCode": null
+      },
+      "chatPosts": 1,
+      "receipts": [
+        {
+          "conversationId": "ai-conv-49f13d97-288",
+          "sourceMessageId": "ai-msg-49f13d97-289",
+          "aiTaskId": "ai-task-73036f8c-6ba8-4ae2-9839-6076b89a6b18",
+          "executionTaskId": "execution-task-b9dd913b-0d93-42fa-a40a-b56ccbb44565"
+        }
+      ],
+      "uiSubmits": 1,
+      "workbenchSummary": "account-null-requires-platform-account-not-claimed",
+      "legacyStatusGets": 0,
+      "retryInvoked": false,
+      "resumeInvoked": false,
+      "readableCompletion": "see_actual_assertions"
+    }
+  },
+  {
+    "title": "T1294 设置与助手 desktop 可读可操作且无画布/检查横条",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 3272,
+    "actual-css-viewport-and-dsf": {
+      "width": 1536,
+      "height": 1024,
+      "dsf": 1,
+      "zoom": "1",
+      "scrollWidth": 1536
+    }
+  },
+  {
+    "title": "T1294 设置与助手 narrow 可读可操作且无画布/检查横条",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 2830,
+    "actual-css-viewport-and-dsf": {
+      "width": 390,
+      "height": 844,
+      "dsf": 1,
+      "zoom": "1",
+      "scrollWidth": 390
+    }
+  },
+  {
+    "title": "T1294 设置与助手 CSS640x450/DSF2等效200% 可读可操作且无画布/检查横条",
+    "status": "passed",
+    "retry": 0,
+    "durationMs": 3005,
+    "actual-css-viewport-and-dsf": {
+      "width": 640,
+      "height": 450,
+      "dsf": 2,
+      "zoom": "1",
+      "scrollWidth": 640
+    }
+  }
+]

@@ -1,0 +1,70 @@
+{
+  "at": "2026-10-15T04:43:07.731883+00:00",
+  "sourceEntriesChecked": 4186,
+  "bundlesChecked": 11,
+  "changed": [],
+  "remainingPlaywrightProfileProcesses": [],
+  "serverPid": 1290,
+  "serverPidPresent": false,
+  "port": 64062,
+  "testExit": {
+    "code": 0,
+    "signal": null,
+    "pid": 1300,
+    "args": [
+      "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config",
+      "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/driver/playwright.config.cjs",
+      "--workers=1",
+      "--retries=0"
+    ],
+    "startedAt": "2026-10-15T04:40:15.192Z",
+    "endedAt": "2026-10-15T04:41:35.210Z"
+  },
+  "shutdown": {
+    "test": {
+      "code": 0,
+      "signal": null
+    },
+    "shutdown": {
+      "code": 0,
+      "signal": null
+    },
+    "appStopped": false,
+    "userDataTouched": false,
+    "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-urUnNR",
+    "binding": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/binding.json",
+    "finishedAt": "2026-10-15T04:41:35.477Z"
+  },
+  "serverAcks": [
+    {
+      "event": "listening",
+      "pid": 1290,
+      "at": "2026-10-15T04:40:17.080Z",
+      "port": 64062
+    },
+    {
+      "event": "http-closed",
+      "pid": 1290,
+      "at": "2026-10-15T04:41:35.213Z"
+    },
+    {
+      "event": "dispose-reachable",
+      "pid": 1290,
+      "at": "2026-10-15T04:41:35.213Z",
+      "reachable": true
+    },
+    {
+      "event": "persistence-closed",
+      "pid": 1290,
+      "at": "2026-10-15T04:41:35.333Z"
+    },
+    {
+      "event": "next-closed",
+      "pid": 1290,
+      "at": "2026-10-15T04:41:35.335Z"
+    }
+  ],
+  "appStopped": false
+}

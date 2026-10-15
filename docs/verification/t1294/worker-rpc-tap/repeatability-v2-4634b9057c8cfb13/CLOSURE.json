@@ -1,0 +1,242 @@
+{
+  "observedAt": "2026-10-15T04:45:19.736958+00:00",
+  "recordedPids": [
+    {
+      "pid": 2427,
+      "state": "absent"
+    },
+    {
+      "pid": 2435,
+      "state": "absent"
+    },
+    {
+      "pid": 2436,
+      "state": "absent"
+    },
+    {
+      "pid": 2437,
+      "state": "absent"
+    },
+    {
+      "pid": 2438,
+      "state": "absent"
+    },
+    {
+      "pid": 2439,
+      "state": "absent"
+    },
+    {
+      "pid": 2481,
+      "state": "absent"
+    },
+    {
+      "pid": 2482,
+      "state": "absent"
+    },
+    {
+      "pid": 2483,
+      "state": "absent"
+    },
+    {
+      "pid": 2489,
+      "state": "absent"
+    },
+    {
+      "pid": 2490,
+      "state": "absent"
+    },
+    {
+      "pid": 2491,
+      "state": "absent"
+    },
+    {
+      "pid": 2494,
+      "state": "absent"
+    },
+    {
+      "pid": 2495,
+      "state": "absent"
+    },
+    {
+      "pid": 2496,
+      "state": "absent"
+    },
+    {
+      "pid": 2539,
+      "state": "absent"
+    },
+    {
+      "pid": 2549,
+      "state": "absent"
+    },
+    {
+      "pid": 2550,
+      "state": "absent"
+    },
+    {
+      "pid": 2551,
+      "state": "absent"
+    },
+    {
+      "pid": 2556,
+      "state": "absent"
+    },
+    {
+      "pid": 2561,
+      "state": "absent"
+    },
+    {
+      "pid": 2562,
+      "state": "absent"
+    },
+    {
+      "pid": 2563,
+      "state": "absent"
+    },
+    {
+      "pid": 2567,
+      "state": "absent"
+    },
+    {
+      "pid": 2568,
+      "state": "absent"
+    },
+    {
+      "pid": 2569,
+      "state": "absent"
+    },
+    {
+      "pid": 2598,
+      "state": "absent"
+    },
+    {
+      "pid": 2599,
+      "state": "absent"
+    },
+    {
+      "pid": 2600,
+      "state": "absent"
+    },
+    {
+      "pid": 2610,
+      "state": "absent"
+    },
+    {
+      "pid": 2611,
+      "state": "absent"
+    },
+    {
+      "pid": 2612,
+      "state": "absent"
+    },
+    {
+      "pid": 2613,
+      "state": "absent"
+    },
+    {
+      "pid": 2614,
+      "state": "absent"
+    },
+    {
+      "pid": 2615,
+      "state": "absent"
+    },
+    {
+      "pid": 2616,
+      "state": "absent"
+    },
+    {
+      "pid": 2617,
+      "state": "absent"
+    },
+    {
+      "pid": 2650,
+      "state": "absent"
+    },
+    {
+      "pid": 2651,
+      "state": "absent"
+    },
+    {
+      "pid": 2652,
+      "state": "absent"
+    },
+    {
+      "pid": 2663,
+      "state": "absent"
+    },
+    {
+      "pid": 2664,
+      "state": "absent"
+    },
+    {
+      "pid": 2665,
+      "state": "absent"
+    },
+    {
+      "pid": 2688,
+      "state": "absent"
+    },
+    {
+      "pid": 2689,
+      "state": "absent"
+    },
+    {
+      "pid": 2690,
+      "state": "absent"
+    },
+    {
+      "pid": 2691,
+      "state": "absent"
+    },
+    {
+      "pid": 2692,
+      "state": "absent"
+    },
+    {
+      "pid": 2721,
+      "state": "absent"
+    },
+    {
+      "pid": 2722,
+      "state": "absent"
+    },
+    {
+      "pid": 2723,
+      "state": "absent"
+    },
+    {
+      "pid": 2743,
+      "state": "absent"
+    },
+    {
+      "pid": 2744,
+      "state": "absent"
+    },
+    {
+      "pid": 2745,
+      "state": "absent"
+    },
+    {
+      "pid": 2749,
+      "state": "absent"
+    },
+    {
+      "pid": 2750,
+      "state": "absent"
+    },
+    {
+      "pid": 2751,
+      "state": "absent"
+    }
+  ],
+  "allRecordedAbsent": true,
+  "ownedRunnerPgid": 2427,
+  "remainingInOwnedPgid": [],
+  "ownedTempOpenHandleScanExit": 1,
+  "ownedTempOpenHandleRows": 0,
+  "ownedTemporaryRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-zero-turn-v2-j16_wtfx",
+  "dataPreserved": true,
+  "models": 0,
+  "newNextStarted": false
+}

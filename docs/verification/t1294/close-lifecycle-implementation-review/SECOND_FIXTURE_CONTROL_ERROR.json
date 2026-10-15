@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-15T04:37:38.089209+00:00",
+  "status": "FIXTURE_CONTROL_ERROR_NOT_PRODUCT_RED",
+  "stoppedOwnedRunnerPids": [
+    98971
+  ],
+  "reason": "close后closed=true令协议notification链丢弃，fixture错误等待fixture/term通知；应以独立owned marker观测SIGTERM。",
+  "models": 0,
+  "sourceWrites": 0
+}

@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-15T04:38:56.415023+00:00",
+  "cleanup": [
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-close-review-VciyQO",
+      "markerSha256": "b09728789d51f15a35a5e77be550677e169b01ecb6a62685575054ed12cae969",
+      "activeOwnedPids": [],
+      "failureSourcesPreserved": "docs/verification/t1294/close-lifecycle-implementation-review/failed-fixture-sources/47d3e272-0ac9-4569-a797-9cb725c1f4de",
+      "removed": true
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-close-review-N5ASOQ",
+      "markerSha256": "296a3164741c6590dd99e76e333b54366abc33eeaf11ab32ebd1019457f26a5b",
+      "activeOwnedPids": [],
+      "failureSourcesPreserved": "docs/verification/t1294/close-lifecycle-implementation-review/failed-fixture-sources/3f2d70d3-a2ac-4c77-8690-589a8eb22103",
+      "removed": true
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-15T04:39:37.478872+00:00",
+  "reviewer": "independent-agent /root/root_route_wiring_design；未参与此生产实现",
+  "head": "6f75509fc715045035559d622c3fc9ffd932e16f",
+  "files": [
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.test.ts",
+      "sha256": "dfc1d09b64bba06073393e0bdf8862fdb6591d7970e2ccaed7664c85a5b783de"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "sha256": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "sha256": "8344d96bf0425a9df03ebff4161b9adfc1b388ac4ee8482d3c5c8053505df6c1"
+    },
+    {
+      "path": "docs/features/t1294-model-settings-and-codex-chat-acceptance.md",
+      "sha256": "8566bd08588a0a58935cc96309b713dc076cde52277471c62607e61d5af40afd"
+    }
+  ],
+  "findings": [],
+  "windowsRuntime": "NOT-RUN",
+  "extraNodeFixtureFamilies": 6,
+  "productionWrites": 0,
+  "distBuilds": 0,
+  "models": 0
+}
