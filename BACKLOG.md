@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1293|安装并打开已交付本地验收包|✅|—|—|[用户明确安装授权](docs/features/t1293-install-open-local-acceptance-app.md)|核已交付DMG和App，替换正式安装并打开，保数据/激活；记录真实启动，不冒全功能验收或开启原生自动化。|
 |T-1292|核对合并后的全局对账失败并逐项归因|📋|待审|待验|[原32项现场失败](docs/features/t1292-post-integration-global-reconcile-findings.md)|原对账32ERROR保留；T1286在途旧receipt已新审，不补签全绿；历史review漂移及10项消费者门先准确归因，人工验收包已生成，不冒全功能通过。|
 |T-1291|核对旧原生编辑器验证器与当前715源码库存|📋|待审|待验|[原额外验证真实失败](docs/features/t1291-legacy-native-verifier-source-inventory.md)|旧manifest及710模块/合同复制哨兵与715漂移，隔离组合仍FAIL；不补假模块/洗validator，不在固定本地包调用链，保独立欠债。|
 |T-1290|合并全部项目worktree到main、本地打包与交付后清理|✅|PASS[REV:ab3b917f4c41]|—|[用户本轮明确交付范围](docs/features/t1290-merge-all-worktrees-local-package-cleanup.md)|盘点并保护全部代码，普通合main并冻结打本地包供用户验收；完成后才清旧worktree和可再生产物，保数据/最新包/真实未验。|
