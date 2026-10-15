@@ -1,0 +1,25 @@
+{
+  "observations": [
+    {
+      "trial": 3,
+      "trialStartToFirstErrorSec": 15.099
+    },
+    {
+      "trial": 10,
+      "trialStartToFirstErrorSec": 15.093
+    },
+    {
+      "trial": 19,
+      "trialStartToFirstErrorSec": 15.099
+    },
+    {
+      "trial": 22,
+      "trialStartToFirstErrorSec": 15.095
+    },
+    {
+      "trial": 31,
+      "trialStartToFirstErrorSec": 15.125
+    }
+  ],
+  "interpretation": "includes version/init/config/first close; consistent with upstream15sec but not proof which routing branch fired; no raw provider error inspected"
+}

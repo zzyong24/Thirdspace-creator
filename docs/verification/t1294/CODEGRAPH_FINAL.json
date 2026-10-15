@@ -1,0 +1,8 @@
+{
+  "command": "codegraph index --force --quiet .",
+  "exitCode": 0,
+  "observedAt": "2026-10-15T05:21:33.540401+00:00",
+  "sourceHead": "d2691bc6ed5a938adc516f211e80fa611374d673",
+  "log": "docs/verification/t1294/codegraph-final.log",
+  "note": "原命令session44778真实返回exit0，quiet日志为空；不补称全局对账通过。"
+}

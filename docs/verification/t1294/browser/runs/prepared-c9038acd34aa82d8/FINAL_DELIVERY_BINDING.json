@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-15T05:10:48.556312+00:00",
+  "run": "prepared-c9038acd34aa82d8",
+  "verdict": "10_PASS_RECORDED_DEV_ISSUE",
+  "sourceHead": "d2691bc6ed5a938adc516f211e80fa611374d673",
+  "files": [
+    {
+      "path": "REPORT.md",
+      "sha256": "1feec5ee954e6018dc1268a07f6a362bccb73b6be0af4b5cb8aed34c3752fab7"
+    },
+    {
+      "path": "FINAL_RESULT.json",
+      "sha256": "7d27583b678991f585b969b5f5745b212b588ef1d057b6a1f13f945b13e3b31c"
+    },
+    {
+      "path": "FINAL_CASES.json",
+      "sha256": "26afb203ec6acf6e753b1d1e496ff20bb2252bb4c23d611de9a6927800cecf11"
+    },
+    {
+      "path": "FINAL_RESOURCES_AND_SOURCE.json",
+      "sha256": "97496434aed481b4d17881e740a3b210daab6db27575d6b0fd9d9144aefdd6ed"
+    },
+    {
+      "path": "SCREENSHOT_BINDING.json",
+      "sha256": "8b92477832d170870f7312d0af6df074768cf96c80504c6c8aa3b0e614de93d2"
+    },
+    {
+      "path": "NEXT_DEV_ISSUE_OBSERVATION.json",
+      "sha256": "3118032a6ff9603e84d610d319dbd600a18be73debb525aa9907c4d07a2e459b"
+    },
+    {
+      "path": "binding.json",
+      "sha256": "7162e776a153283a5c4eae9839f4ffba1804580658b960dc2ef38c25f8aff6a0"
+    },
+    {
+      "path": "playwright.json",
+      "sha256": "79a5447ec642bd09913170758e0fac736ff165923fd2b39213d3edbb0ac048d9"
+    },
+    {
+      "path": "strict-run-result.json",
+      "sha256": "208eeec14457c5b6c1aefbb4e9985be0d56029f9605abcf0463cb49713f63f3c"
+    },
+    {
+      "path": "server-acks.json",
+      "sha256": "5694a4faa5d6f486006d789befdddddb442ef4ba147e79fbfc22e1759c29baf2"
+    },
+    {
+      "path": "server-exit.json",
+      "sha256": "a5671ecf98e2ad476dbef054bc1f648ca7f7eac2b65e251015751d162965762d"
+    },
+    {
+      "path": "strict-playwright.log",
+      "sha256": "7de9f7fdc89ac6349b334f3bcb5ba2c7b842772cbea4a4e673a89e4cba877a8d"
+    },
+    {
+      "path": "original-task-ids.json",
+      "sha256": "478dba0b24838cd9552ed5ef2d1491bf06a4f8aaf1ee5b552fe1540bbe6f6d0f"
+    },
+    {
+      "path": "original-task-final-observation.json",
+      "sha256": "f64d041a20c585898472202b7a69f8fa0e8ed2db81038ac8a5812cbc91208005"
+    },
+    {
+      "path": "NORMAL_FINAL_PRE_BINDING.json",
+      "sha256": "6ff390ccbff2ff4ddcf486e87be4f866eb6972954be7bdc8a1c9e717e6cc6166"
+    },
+    {
+      "path": "NORMAL_BUNDLE_OBSERVATIONS.json",
+      "sha256": "512c73124d7eb4e21ff13ae8ee6469c291eef33622aae29fc107edca3193f521"
+    }
+  ]
+}

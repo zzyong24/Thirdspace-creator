@@ -1,0 +1,63 @@
+{
+  "badgeObservedInActualScreenshot": true,
+  "label": "1 Issue",
+  "badgeOpened": false,
+  "existingNextLogSha256": "44ba3ef0374eb2ab65422ab80b6146100e8c2b39e151de617aba995ec8150d55",
+  "safeObservedLogReferences": [
+    {
+      "lines": [
+        164,
+        165,
+        166,
+        200,
+        201,
+        202,
+        241,
+        242,
+        243,
+        281,
+        282,
+        283,
+        324,
+        325,
+        326
+      ],
+      "class": "Error",
+      "message": "请先进入此账号组，再查看共享资源。",
+      "stack": [
+        "ResourceGrantsPanel.useCallback[check] (src/features/platform-account/resource-grants-panel.tsx:22:128)",
+        "ResourceGrantsPanel.useCallback[load] (src/features/platform-account/resource-grants-panel.tsx:34:5)"
+      ]
+    },
+    {
+      "lines": [
+        7,
+        14,
+        27,
+        34,
+        43,
+        50,
+        63,
+        70,
+        84,
+        91,
+        108,
+        115,
+        125,
+        132,
+        185,
+        192,
+        225,
+        232,
+        265,
+        272,
+        305,
+        312
+      ],
+      "operation": "ingestion.douyin.status",
+      "errorName": "AccountRequiredError"
+    }
+  ],
+  "exactBadgeAttribution": "未展开 dev badge，不据日志相关性认定唯一来源，也不把它当作全应用无异常的证据。",
+  "additionalBrowserOrModelOpened": false
+}

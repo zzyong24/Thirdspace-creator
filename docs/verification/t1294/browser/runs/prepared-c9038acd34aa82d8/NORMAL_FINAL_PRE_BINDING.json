@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-15T05:05:10.938882+00:00",
+  "head": "d2691bc6ed5a938adc516f211e80fa611374d673",
+  "baseURL": "http://127.0.0.1:52121",
+  "port": 52121,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-EmPRHI",
+  "bundleBinding": [
+    {
+      "path": "ai-worker/dist/codex-status-worker.cjs",
+      "sha256": "fad676c12723a49b444f74c1dd5f1d663eb4d4bb3ba52717dd3869c531df97d5"
+    },
+    {
+      "path": "ai-worker/dist/execution-worker.cjs",
+      "sha256": "bc110a9ff2b84551299d771e2b45c0ed9e87cefee8a69871a4f561e33febd82f"
+    }
+  ],
+  "expectedOrdinaryBuildMatched": true,
+  "diagnosticBundle": false,
+  "testSha256": "5d2a2641c0b0f368e3bef796dab15eb319924c8e4d69dc24dd18d11d56f39d9b",
+  "runnerSha256": "1f1c315b9b5bd0c3010683947f992f0cffcc63732f9ad105b9cac4665a7df1e7",
+  "bindingSha256": "7162e776a153283a5c4eae9839f4ffba1804580658b960dc2ef38c25f8aff6a0",
+  "parallelReconcileMayRebuildDist": true
+}

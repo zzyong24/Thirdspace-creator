@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-15T05:09:13.816465+00:00",
+  "headNow": "d2691bc6ed5a938adc516f211e80fa611374d673",
+  "sourceHead": "d2691bc6ed5a938adc516f211e80fa611374d673",
+  "comparison": {
+    "files": {
+      "checked": 4187,
+      "drift": []
+    },
+    "bundles": {
+      "checked": 11,
+      "drift": []
+    }
+  },
+  "ownedPidsCheck": {
+    "pids": [
+      8689,
+      8701
+    ],
+    "exitCode": 1,
+    "output": ""
+  },
+  "ownedPortCheck": {
+    "port": 52121,
+    "exitCode": 1,
+    "output": ""
+  },
+  "testSha256Now": "5d2a2641c0b0f368e3bef796dab15eb319924c8e4d69dc24dd18d11d56f39d9b",
+  "runnerSha256Now": "1f1c315b9b5bd0c3010683947f992f0cffcc63732f9ad105b9cac4665a7df1e7",
+  "serverExit": {
+    "pid": 8689,
+    "code": 0,
+    "signal": null,
+    "originalAppStopped": false,
+    "dataPreserved": true
+  }
+}

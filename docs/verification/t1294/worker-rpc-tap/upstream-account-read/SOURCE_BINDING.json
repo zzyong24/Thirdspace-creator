@@ -1,0 +1,49 @@
+{
+  "repository": "https://github.com/openai/codex",
+  "version": "0.159.3",
+  "tag": "rust-v0.159.3",
+  "annotatedTagObject": "8e46774a94a745ffdf676bd7a8aa36466bbd4f99",
+  "peeledCommit": "01fc69f4026735edfdf6789820549727a4867b11",
+  "observedAt": "2026-10-15T05:05:56.661804+00:00",
+  "tagBindingMethod": "git ls-remote --tags refs/tags/rust-v0.159.3* (includes ^{})",
+  "files": [
+    {
+      "localFile": "workspace_routing.rs",
+      "officialPath": "codex-rs/app-server/src/request_processors/account_processor/workspace_routing.rs",
+      "url": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/request_processors/account_processor/workspace_routing.rs",
+      "sha256": "2d2e1badd55ac8805ac344f8b921ac10d7f6bc0b8b9679108ddb3bb288f09c92"
+    },
+    {
+      "localFile": "account_processor.rs",
+      "officialPath": "codex-rs/app-server/src/request_processors/account_processor.rs",
+      "url": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/request_processors/account_processor.rs",
+      "sha256": "a28e9125a67d6e972fefdab8d8b191d8ec38a3294019f0c77d5e2077c2991831"
+    },
+    {
+      "localFile": "codex-rs__app-server__src__request_processors.rs",
+      "officialPath": "codex-rs/app-server/src/request_processors.rs",
+      "url": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/request_processors.rs",
+      "sha256": "cf69dd90de963bc3e7206af7975d88a8572c5c03061461a357544cf5931412a0"
+    },
+    {
+      "localFile": "codex-rs__app-server__src__message_processor.rs",
+      "officialPath": "codex-rs/app-server/src/message_processor.rs",
+      "url": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/message_processor.rs",
+      "sha256": "f1a1bb0029e7c2f46de3048cbbc52b55ccca413dacb8ce67c63796372468318f"
+    },
+    {
+      "localFile": "codex-rs__app-server__src__error_code.rs",
+      "officialPath": "codex-rs/app-server/src/error_code.rs",
+      "url": "https://github.com/openai/codex/blob/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/error_code.rs",
+      "sha256": "7dddd4d0e24c24466d36d221e22e2c3af650d7b51b92bba3aa264c89fe7edcdf"
+    }
+  ],
+  "userAccountConfigErrorMessageDataRead": false,
+  "newProtocolOrModelCallsForInvestigation": 0,
+  "lookupLimitations": [
+    "web tool backend429",
+    "official unauth directory API403",
+    "initial historical processor path404; retained all attempt logs",
+    "annotated tag object is not commit; numeric tag raw404 retained, corrected using peeled commit"
+  ]
+}

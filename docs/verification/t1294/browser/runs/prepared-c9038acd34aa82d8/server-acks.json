@@ -1,0 +1,29 @@
+[
+  {
+    "event": "listening",
+    "pid": 8689,
+    "at": "2026-10-15T05:04:41.675Z",
+    "port": 52121
+  },
+  {
+    "event": "http-closed",
+    "pid": 8689,
+    "at": "2026-10-15T05:05:58.733Z"
+  },
+  {
+    "event": "dispose-reachable",
+    "pid": 8689,
+    "at": "2026-10-15T05:05:58.733Z",
+    "reachable": true
+  },
+  {
+    "event": "persistence-closed",
+    "pid": 8689,
+    "at": "2026-10-15T05:05:59.559Z"
+  },
+  {
+    "event": "next-closed",
+    "pid": 8689,
+    "at": "2026-10-15T05:05:59.560Z"
+  }
+]

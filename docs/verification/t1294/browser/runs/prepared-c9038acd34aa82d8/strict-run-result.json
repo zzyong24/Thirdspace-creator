@@ -1,0 +1,15 @@
+{
+  "test": {
+    "code": 0,
+    "signal": null
+  },
+  "shutdown": {
+    "code": 0,
+    "signal": null
+  },
+  "appStopped": false,
+  "userDataTouched": false,
+  "ownedRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-EmPRHI",
+  "binding": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-c9038acd34aa82d8/binding.json",
+  "finishedAt": "2026-10-15T05:05:59.694Z"
+}

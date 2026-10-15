@@ -1,0 +1,72 @@
+{
+  "verdict": "PASS_WITH_RECORDED_DEV_ISSUE",
+  "scope": "普通构建、fresh owned DB、原正式完整10项，仅一次新Codex聊天；不扩大到安装App或全应用无异常",
+  "head": "d2691bc6ed5a938adc516f211e80fa611374d673",
+  "test": {
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "workers": 1,
+    "retries": 0,
+    "durationMs": 76449.681
+  },
+  "normalDiagnosticTap": false,
+  "normalBuildStartEndHashMatch": true,
+  "sourceFilesChecked": 4187,
+  "bundleFilesChecked": 11,
+  "caseResults": "FINAL_CASES.json",
+  "task": {
+    "ids": {
+      "groupId": "grp-b2a58019-256",
+      "conversationId": "ai-conv-b2a58019-288",
+      "sourceMessageId": "ai-msg-b2a58019-289",
+      "aiTaskId": "ai-task-dad2d192-5d85-4e00-bb52-b2339749287e",
+      "executionTaskId": "execution-task-fbad045f-2883-4cf6-82b1-9daba969b67f"
+    },
+    "last": {
+      "groupId": "grp-b2a58019-256",
+      "conversationId": "ai-conv-b2a58019-288",
+      "sourceMessageId": "ai-msg-b2a58019-289",
+      "aiTaskId": "ai-task-dad2d192-5d85-4e00-bb52-b2339749287e",
+      "executionTaskId": "execution-task-fbad045f-2883-4cf6-82b1-9daba969b67f",
+      "status": "succeeded",
+      "errorCode": null
+    },
+    "chatPosts": 1,
+    "receipts": [
+      {
+        "conversationId": "ai-conv-b2a58019-288",
+        "sourceMessageId": "ai-msg-b2a58019-289",
+        "aiTaskId": "ai-task-dad2d192-5d85-4e00-bb52-b2339749287e",
+        "executionTaskId": "execution-task-fbad045f-2883-4cf6-82b1-9daba969b67f"
+      }
+    ],
+    "uiSubmits": 1,
+    "workbenchSummary": "account-null-requires-platform-account-not-claimed",
+    "legacyStatusGets": 0,
+    "retryInvoked": false,
+    "resumeInvoked": false,
+    "readableCompletion": "see_actual_assertions"
+  },
+  "shutdown": {
+    "code": 0,
+    "signal": null
+  },
+  "ownedServerPid": 8689,
+  "port": 52121,
+  "ownedProcessAbsent": true,
+  "ownedListenerAbsent": true,
+  "playwrightOwnedContexts": "原Playwright进程自然exit0与测试teardown；未另开浏览器，本轮owned浏览器均随runner关闭",
+  "screenshots": {
+    "fileCount": 28,
+    "distinctByteHashes": 13
+  },
+  "limits": [
+    "没有持续采样每毫秒dist；binding启动快照与末尾4187源/11bundle逐个核对一致。",
+    "05:06:23观察原误标last-chat-inflight，已按真实finishedAt更正为post-run-observation，原标记保留。",
+    "Next dev 1 Issue原图保留；既有安全日志记录ResourceGrantsPanel错误与独立AccountRequiredError，不猜badge唯一来源。",
+    "本轮一次成功不能证明间歇故障已永久消失；旧失败和32trial原FAIL不改写。",
+    "没有额外读取用户DB、重新开模型/服务，未签真钱充值或平台账号摘要可用。"
+  ]
+}

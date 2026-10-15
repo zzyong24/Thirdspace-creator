@@ -1,0 +1,15 @@
+{
+  "code": 0,
+  "signal": null,
+  "pid": 8699,
+  "args": [
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@playwright+test@1.60.0/node_modules/@playwright/test/cli.js",
+    "test",
+    "--config",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/driver/playwright.config.cjs",
+    "--workers=1",
+    "--retries=0"
+  ],
+  "startedAt": "2026-10-15T05:04:39.623Z",
+  "endedAt": "2026-10-15T05:05:58.731Z"
+}

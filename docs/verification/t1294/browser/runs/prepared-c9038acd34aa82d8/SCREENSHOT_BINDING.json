@@ -1,0 +1,170 @@
+[
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-0ab97-页实际保存-掩码-重开-删除，旧深链仍可达且零查询费用/attachments/redfox-saved-masked-c9503236f419c9b47162efea152d53b71b55497d.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "c0a012b2ce7240db0b89615f593c0b21daf2684a62988c7c721c19feb223196a"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-0ab97-页实际保存-掩码-重开-删除，旧深链仍可达且零查询费用/redfox-saved-masked.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "c0a012b2ce7240db0b89615f593c0b21daf2684a62988c7c721c19feb223196a"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-33355-留，主动改图片同次CAS只统一vision-image/attachments/explicit-and-mixed-sources-b6f1369c7c63ec9a2b7a4f39e89927073932d05e.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "bad86baa7ed74804b41d3d7a2ac05d5cf28e2a3e35fcf582bb6154be799f9811"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-33355-留，主动改图片同次CAS只统一vision-image/explicit-and-mixed-sources.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "bad86baa7ed74804b41d3d7a2ac05d5cf28e2a3e35fcf582bb6154be799f9811"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/assistant-desktop.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "2615b60263d19adfb5a1b8ff10310d807c9f42d07fbb0ee9571d55eac46db6a8"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-0f119a608e946fbc50dc48e39093349f84d47896.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "2615b60263d19adfb5a1b8ff10310d807c9f42d07fbb0ee9571d55eac46db6a8"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/attachments/settings-desktop-80786d1c3a4ac5f8ca6f5318cb41d2f7feda8335.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "987ea179d49b42ceec40ab57f6163342732d5eb2fb7cdf1dd41e89047e5f6eb7"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-4c61a-置与助手-desktop-可读可操作且无画布-检查横条/settings-desktop.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "987ea179d49b42ceec40ab57f6163342732d5eb2fb7cdf1dd41e89047e5f6eb7"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/attachments/codex-original-task-readable-complete-5d8d4910a32b923a12d81152492d49b39e2f8a66.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "c403ddee877497ca6360fbb971ab07b0d818c92b8a387e0b5e00f39290aec4f5"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/attachments/codex-setting-checked-9d11bd2a67c6022579fe1366079749008da8ea50.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "d49bc249ddc3277b857f73e75f32f557666a60873133d80cc22eb3e1710a80d4"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/codex-original-task-readable-complete.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "c403ddee877497ca6360fbb971ab07b0d818c92b8a387e0b5e00f39290aec4f5"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/codex-setting-checked.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "d49bc249ddc3277b857f73e75f32f557666a60873133d80cc22eb3e1710a80d4"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-85c77-官方，设置无向量-独立图片理解与数据服务分类，充值常驻/attachments/official-default-model-settings-f15d8fc3379b52c4a1343757a888cd0e594494a5.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "987ea179d49b42ceec40ab57f6163342732d5eb2fb7cdf1dd41e89047e5f6eb7"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-85c77-官方，设置无向量-独立图片理解与数据服务分类，充值常驻/official-default-model-settings.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "987ea179d49b42ceec40ab57f6163342732d5eb2fb7cdf1dd41e89047e5f6eb7"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-91fe0-body受控POST，缺官方配置诚实失败且零资金新操作/attachments/credits-honest-unconfigured-8177284a350f7c52843a9a99adb2e6ac29f45154.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "e5a2d52fd88e958547ff79d2981ac03c01afec31e9e6af1da68109529fda36f1"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-91fe0-body受控POST，缺官方配置诚实失败且零资金新操作/credits-honest-unconfigured.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "e5a2d52fd88e958547ff79d2981ac03c01afec31e9e6af1da68109529fda36f1"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-92d20-实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留/attachments/real-cas-conflict-preserved-4dfe0d9af863ef5db6e1c092425b98c8642c355a.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "5a187d70a0c8d7d7ccdc50df8e1513379420770183f6ef0f69fd4f9187b061f9"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-92d20-实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留/real-cas-conflict-preserved.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "5a187d70a0c8d7d7ccdc50df8e1513379420770183f6ef0f69fd4f9187b061f9"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/assistant-narrow.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "78957090f3864a07674f1700309c0a8eb0e24544bb5bcd430ee25c2e1b1cdf4e"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-290cc8d3e24692a98a9c8acfdff702b28a01f396.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "78957090f3864a07674f1700309c0a8eb0e24544bb5bcd430ee25c2e1b1cdf4e"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/attachments/settings-narrow-64408b2aefb615b3240106a306d22159a9434310.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "547ba36abf54e88468d2d2ec5ad512d758493a63b6a002d566148baef1fa9e06"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-ba281-设置与助手-narrow-可读可操作且无画布-检查横条/settings-narrow.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "547ba36abf54e88468d2d2ec5ad512d758493a63b6a002d566148baef1fa9e06"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-d5f10-量测试明确停用，真实资料创建-修订-搜索保原文与组隔离/attachments/keyword-only-real-knowledge-3c077ad9cfca58316076a53b3d70df9e4426c4cf.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "19337b2408f079a7a5028cd85cdead28c7a0998dcfd2068663c5903370803b23"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-d5f10-量测试明确停用，真实资料创建-修订-搜索保原文与组隔离/keyword-only-real-knowledge.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "19337b2408f079a7a5028cd85cdead28c7a0998dcfd2068663c5903370803b23"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/assistant-equivalent200-after-original-scroll.png",
+    "width": 1280,
+    "height": 900,
+    "sha256": "6b330214e2c9404d30c65efb842a5a35b6669d2ca934a73c056762ecf83c4084"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/attachments/assistant-all-controls-in-viewport-8ba74b059dce949163010678393c68e3db129c5a.png",
+    "width": 1280,
+    "height": 900,
+    "sha256": "6b330214e2c9404d30c65efb842a5a35b6669d2ca934a73c056762ecf83c4084"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/attachments/settings-CSS640x450-DSF2等效200--e083e827bf4e89ac3c3a7c5aa96d56c3b68f6366.png",
+    "width": 1280,
+    "height": 900,
+    "sha256": "455a341e874c447ba369f39b7667f4a3944fbc86ea679a4a6f2d3d89c62446fd"
+  },
+  {
+    "path": "artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/settings-CSS640x450/DSF2等效200%.png",
+    "width": 1280,
+    "height": 900,
+    "sha256": "455a341e874c447ba369f39b7667f4a3944fbc86ea679a4a6f2d3d89c62446fd"
+  }
+]

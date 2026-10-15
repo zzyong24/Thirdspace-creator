@@ -1,0 +1,18 @@
+[
+  {
+    "at": "2026-10-15T05:06:23.118815+00:00",
+    "phase": "post-run-observation",
+    "bundles": [
+      {
+        "path": "ai-worker/dist/execution-worker.cjs",
+        "sha256": "bc110a9ff2b84551299d771e2b45c0ed9e87cefee8a69871a4f561e33febd82f"
+      },
+      {
+        "path": "ai-worker/dist/codex-status-worker.cjs",
+        "sha256": "fad676c12723a49b444f74c1dd5f1d663eb4d4bb3ba52717dd3869c531df97d5"
+      }
+    ],
+    "originalPhase": "last-chat-inflight",
+    "correction": "按 runner finishedAt 05:05:59.694Z，此05:06:23采样实际在退出之后，不能用作在途采样。"
+  }
+]

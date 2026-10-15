@@ -1,0 +1,24 @@
+{
+  "head": "d2691bc6ed5a938adc516f211e80fa611374d673",
+  "rows": [
+    {
+      "source": "docs/verification/t1294/browser/runs/prepared-c9038acd34aa82d8/artifacts/e2e-t1294-model-settings-a-85c77-官方，设置无向量-独立图片理解与数据服务分类，充值常驻/official-default-model-settings.png",
+      "target": "docs/verification/t1294/acceptance-screenshots/official-default-model-settings.png",
+      "sha256": "987ea179d49b42ceec40ab57f6163342732d5eb2fb7cdf1dd41e89047e5f6eb7",
+      "rootViewed": true
+    },
+    {
+      "source": "docs/verification/t1294/browser/runs/prepared-c9038acd34aa82d8/artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/codex-original-task-readable-complete.png",
+      "target": "docs/verification/t1294/acceptance-screenshots/codex-original-task-readable-complete.png",
+      "sha256": "c403ddee877497ca6360fbb971ab07b0d818c92b8a387e0b5e00f39290aec4f5",
+      "rootViewed": true
+    },
+    {
+      "source": "docs/verification/t1294/browser/runs/prepared-c9038acd34aa82d8/artifacts/e2e-t1294-model-settings-a-f1e6f-50-DSF2等效200-可读可操作且无画布-检查横条/assistant-equivalent200-after-original-scroll.png",
+      "target": "docs/verification/t1294/acceptance-screenshots/assistant-equivalent200-after-original-scroll.png",
+      "sha256": "6b330214e2c9404d30c65efb842a5a35b6669d2ca934a73c056762ecf83c4084",
+      "rootViewed": true
+    }
+  ],
+  "note": "真实原图复制；Next dev Issue保留，未冒原生App或全console验收"
+}

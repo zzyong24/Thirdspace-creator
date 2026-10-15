@@ -1,0 +1,14 @@
+{
+  "originalErrorCount": 32,
+  "currentErrorCount": 29,
+  "newKeys": [],
+  "noLongerFailingKeysThisRun": [
+    "LED-014",
+    "LED-047",
+    "T-1286"
+  ],
+  "original": "docs/verification/t1290/root-inventory/reconcile-before-package.log",
+  "current": "docs/verification/t1294/reconcile-final-scope.log",
+  "exitCode": 1,
+  "note": "本轮完整对账真实退出1；比较门身份，不改写历史。"
+}

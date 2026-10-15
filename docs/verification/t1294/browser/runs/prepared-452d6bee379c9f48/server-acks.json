@@ -1,0 +1,29 @@
+[
+  {
+    "event": "listening",
+    "pid": 13133,
+    "at": "2026-10-15T05:24:15.431Z",
+    "port": 55324
+  },
+  {
+    "event": "http-closed",
+    "pid": 13133,
+    "at": "2026-10-15T05:27:19.809Z"
+  },
+  {
+    "event": "dispose-reachable",
+    "pid": 13133,
+    "at": "2026-10-15T05:27:19.809Z",
+    "reachable": true
+  },
+  {
+    "event": "persistence-closed",
+    "pid": 13133,
+    "at": "2026-10-15T05:27:19.927Z"
+  },
+  {
+    "event": "next-closed",
+    "pid": 13133,
+    "at": "2026-10-15T05:27:19.928Z"
+  }
+]

@@ -1,0 +1,1672 @@
+{
+  "task": "T-1294",
+  "purpose": "read-only cleanup candidate, no deletion",
+  "at": "2026-10-15T05:08:55.635958+00:00",
+  "uid": 501,
+  "deletedBytes": 0,
+  "excludedCurrentBinding": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/browser/runs/prepared-c9038acd34aa82d8/binding.json",
+  "excludedCurrentRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-EmPRHI",
+  "excludedCurrentPort": 52121,
+  "excludeAllNewServicesAtOrAfter": "2026-10-15T05:04:39.356Z",
+  "preserve": [
+    "all docs evidence/screenshots/closure/hash receipts except explicitly listed three derived bundle copies",
+    "latest installer and old installer backup until new package acceptance",
+    "all /Applications, real HOME/Codex auth/state and user databases",
+    "reconcile currently running test temp directories",
+    "all new Root services"
+  ],
+  "rows": [
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-ELJKLy",
+      "category": "old-browser-db-media-auth-cache",
+      "evidence": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/binding.json",
+      "closureEvidence": [
+        "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/server-acks.json",
+        "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/server-exit.json",
+        "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/post-graceful-process-cleanup.json"
+      ],
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "checkedAt": "2026-10-15T05:08:53.294932+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 54098181,
+        "allocatedBytes": 54755328,
+        "files": 2519,
+        "directories": 166,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "machine-id": {
+            "directory": false,
+            "symlink": false
+          },
+          "app": {
+            "directory": true,
+            "symlink": false
+          },
+          "cache": {
+            "directory": true,
+            "symlink": false
+          },
+          "config": {
+            "directory": true,
+            "symlink": false
+          },
+          "auth-douyin": {
+            "directory": true,
+            "symlink": false
+          },
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          },
+          "network-denied.ndjson": {
+            "directory": false,
+            "symlink": false
+          },
+          "pglite": {
+            "directory": true,
+            "symlink": false
+          },
+          "logs": {
+            "directory": true,
+            "symlink": false
+          },
+          "browser-profile": {
+            "directory": true,
+            "symlink": false
+          },
+          "tmp": {
+            "directory": true,
+            "symlink": false
+          },
+          "backups": {
+            "directory": true,
+            "symlink": false
+          },
+          "auth-web": {
+            "directory": true,
+            "symlink": false
+          },
+          "media": {
+            "directory": true,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1294",
+        "uid": 501,
+        "nonce": "6e52fda6-94b7-4df9-9c0a-1ed50c63397c",
+        "purpose": "owned-browser-db-auth-media-cache-only",
+        "at": "2026-10-15T03:08:04.030Z"
+      },
+      "markerSHA256": "2555a32056c4700523a7f9ba0009c333f71439c8fac5987e955e2ca284b7b53a",
+      "markerMatchesExpected": true,
+      "pidObservations": [
+        {
+          "pid": 73120,
+          "alive": false
+        },
+        {
+          "pid": 73127,
+          "alive": false
+        },
+        {
+          "pid": 73128,
+          "alive": false
+        }
+      ],
+      "portObservations": [
+        {
+          "port": 62653,
+          "connectionRefused": true
+        }
+      ],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "exact prior owned marker, no live PID/listener/open handle observed; recheck immediately before Root cleanup"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-aXr6zo",
+      "category": "old-browser-db-media-auth-cache",
+      "evidence": "docs/verification/t1294/browser/runs/prepared-bc5eb415f026993f/binding.json",
+      "closureEvidence": [
+        "docs/verification/t1294/browser/runs/prepared-bc5eb415f026993f/server-acks.json",
+        "docs/verification/t1294/browser/runs/prepared-bc5eb415f026993f/server-exit.json",
+        "docs/verification/t1294/browser/runs/prepared-bc5eb415f026993f/FINAL_RESOURCE_SOURCE_CHECK.json"
+      ],
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "checkedAt": "2026-10-15T05:08:53.625292+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 51040713,
+        "allocatedBytes": 51326976,
+        "files": 2291,
+        "directories": 58,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "machine-id": {
+            "directory": false,
+            "symlink": false
+          },
+          "app": {
+            "directory": true,
+            "symlink": false
+          },
+          "cache": {
+            "directory": true,
+            "symlink": false
+          },
+          "config": {
+            "directory": true,
+            "symlink": false
+          },
+          "auth-douyin": {
+            "directory": true,
+            "symlink": false
+          },
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          },
+          "network-denied.ndjson": {
+            "directory": false,
+            "symlink": false
+          },
+          "pglite": {
+            "directory": true,
+            "symlink": false
+          },
+          "logs": {
+            "directory": true,
+            "symlink": false
+          },
+          "browser-profile": {
+            "directory": true,
+            "symlink": false
+          },
+          "tmp": {
+            "directory": true,
+            "symlink": false
+          },
+          "backups": {
+            "directory": true,
+            "symlink": false
+          },
+          "auth-web": {
+            "directory": true,
+            "symlink": false
+          },
+          "media": {
+            "directory": true,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1294",
+        "uid": 501,
+        "nonce": "eb4ce568-6fce-4b20-acaf-dd0122bb2bc5",
+        "purpose": "owned-browser-db-auth-media-cache-only",
+        "at": "2026-10-15T03:57:14.364Z"
+      },
+      "markerSHA256": "673050632851a12de46e2fd90b3349ce85c37ed51a91014b03afc36af936b276",
+      "markerMatchesExpected": true,
+      "pidObservations": [
+        {
+          "pid": 87420,
+          "alive": false
+        }
+      ],
+      "portObservations": [
+        {
+          "port": 55594,
+          "connectionRefused": true
+        }
+      ],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "exact prior owned marker, no live PID/listener/open handle observed; recheck immediately before Root cleanup"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq",
+      "category": "old-browser-db-media-auth-cache",
+      "evidence": "docs/verification/t1294/browser/runs/prepared-ffc9e9c416bcc55c/binding.json",
+      "closureEvidence": [
+        "docs/verification/t1294/browser/runs/prepared-ffc9e9c416bcc55c/server-acks.json",
+        "docs/verification/t1294/browser/runs/prepared-ffc9e9c416bcc55c/server-exit.json"
+      ],
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "checkedAt": "2026-10-15T05:08:53.862561+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 47430081,
+        "allocatedBytes": 47644672,
+        "files": 2244,
+        "directories": 64,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "machine-id": {
+            "directory": false,
+            "symlink": false
+          },
+          "app": {
+            "directory": true,
+            "symlink": false
+          },
+          "cache": {
+            "directory": true,
+            "symlink": false
+          },
+          "config": {
+            "directory": true,
+            "symlink": false
+          },
+          "auth-douyin": {
+            "directory": true,
+            "symlink": false
+          },
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          },
+          "network-denied.ndjson": {
+            "directory": false,
+            "symlink": false
+          },
+          "pglite": {
+            "directory": true,
+            "symlink": false
+          },
+          "logs": {
+            "directory": true,
+            "symlink": false
+          },
+          "browser-profile": {
+            "directory": true,
+            "symlink": false
+          },
+          "tmp": {
+            "directory": true,
+            "symlink": false
+          },
+          "backups": {
+            "directory": true,
+            "symlink": false
+          },
+          "auth-web": {
+            "directory": true,
+            "symlink": false
+          },
+          "media": {
+            "directory": true,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1294",
+        "uid": 501,
+        "nonce": "73fa71e1-17b1-44ce-9950-3b0b3237d6aa",
+        "purpose": "owned-browser-db-auth-media-cache-only",
+        "at": "2026-10-15T04:12:21.325Z"
+      },
+      "markerSHA256": "6cbfd1d85aa74edc43b0da98fa40d15adbb940808636e942382efe48b451d85d",
+      "markerMatchesExpected": true,
+      "pidObservations": [
+        {
+          "pid": 92329,
+          "alive": false
+        }
+      ],
+      "portObservations": [
+        {
+          "port": 59136,
+          "connectionRefused": true
+        }
+      ],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "exact prior owned marker, no live PID/listener/open handle observed; recheck immediately before Root cleanup"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-urUnNR",
+      "category": "old-browser-db-media-auth-cache",
+      "evidence": "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/binding.json",
+      "closureEvidence": [
+        "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/server-acks.json",
+        "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/server-exit.json",
+        "docs/verification/t1294/browser/runs/prepared-473c34c23ef339c0/FINAL_RESOURCES_AND_SOURCE.json"
+      ],
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "checkedAt": "2026-10-15T05:08:54.092392+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 42122087,
+        "allocatedBytes": 42151936,
+        "files": 2181,
+        "directories": 39,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "machine-id": {
+            "directory": false,
+            "symlink": false
+          },
+          "app": {
+            "directory": true,
+            "symlink": false
+          },
+          "cache": {
+            "directory": true,
+            "symlink": false
+          },
+          "config": {
+            "directory": true,
+            "symlink": false
+          },
+          "auth-douyin": {
+            "directory": true,
+            "symlink": false
+          },
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          },
+          "network-denied.ndjson": {
+            "directory": false,
+            "symlink": false
+          },
+          "pglite": {
+            "directory": true,
+            "symlink": false
+          },
+          "logs": {
+            "directory": true,
+            "symlink": false
+          },
+          "browser-profile": {
+            "directory": true,
+            "symlink": false
+          },
+          "tmp": {
+            "directory": true,
+            "symlink": false
+          },
+          "backups": {
+            "directory": true,
+            "symlink": false
+          },
+          "auth-web": {
+            "directory": true,
+            "symlink": false
+          },
+          "media": {
+            "directory": true,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1294",
+        "uid": 501,
+        "nonce": "350cadc4-02e3-48eb-91eb-a9a706cc6322",
+        "purpose": "owned-browser-db-auth-media-cache-only",
+        "at": "2026-10-15T04:40:14.922Z"
+      },
+      "markerSHA256": "697f1cb2a8be07207d2f0b492f6d98a7d8b7812f6a6c8e866c5ade2cc2cfdae5",
+      "markerMatchesExpected": true,
+      "pidObservations": [
+        {
+          "pid": 1290,
+          "alive": false
+        },
+        {
+          "pid": 1300,
+          "alive": false
+        }
+      ],
+      "portObservations": [
+        {
+          "port": 64062,
+          "connectionRefused": true
+        }
+      ],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "exact prior owned marker, no live PID/listener/open handle observed; recheck immediately before Root cleanup"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-zero-turn-v2-j16_wtfx",
+      "category": "zero-turn-owned-temp",
+      "evidence": "docs/verification/t1294/worker-rpc-tap/repeatability-v2-4634b9057c8cfb13/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1294/worker-rpc-tap/repeatability-v2-4634b9057c8cfb13/CLOSURE.json"
+      ],
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "checkedAt": "2026-10-15T05:08:54.319826+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 39764,
+        "allocatedBytes": 49152,
+        "files": 4,
+        "directories": 11,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "creatoros-native-codex-workspaces": {
+            "directory": true,
+            "symlink": false
+          },
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          },
+          "tsx-501": {
+            "directory": true,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1294",
+        "uid": 501,
+        "nonce": "4634b9057c8cfb13",
+        "purpose": "new independent root-shell zero-turn v2 comparison; no Next/no original task replay",
+        "ownedTemporaryRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-zero-turn-v2-j16_wtfx"
+      },
+      "markerSHA256": "2541c5280c1be3749a1c42cdbb06ab31ac8126a8881322d206ae2ed39437f7a9",
+      "markerMatchesExpected": true,
+      "pidObservations": [
+        {
+          "pid": 2427,
+          "alive": false
+        },
+        {
+          "pid": 2435,
+          "alive": false
+        },
+        {
+          "pid": 2436,
+          "alive": false
+        },
+        {
+          "pid": 2437,
+          "alive": false
+        },
+        {
+          "pid": 2438,
+          "alive": false
+        },
+        {
+          "pid": 2439,
+          "alive": false
+        },
+        {
+          "pid": 2481,
+          "alive": false
+        },
+        {
+          "pid": 2482,
+          "alive": false
+        },
+        {
+          "pid": 2483,
+          "alive": false
+        },
+        {
+          "pid": 2489,
+          "alive": false
+        },
+        {
+          "pid": 2490,
+          "alive": false
+        },
+        {
+          "pid": 2491,
+          "alive": false
+        },
+        {
+          "pid": 2494,
+          "alive": false
+        },
+        {
+          "pid": 2495,
+          "alive": false
+        },
+        {
+          "pid": 2496,
+          "alive": false
+        },
+        {
+          "pid": 2539,
+          "alive": false
+        },
+        {
+          "pid": 2549,
+          "alive": false
+        },
+        {
+          "pid": 2550,
+          "alive": false
+        },
+        {
+          "pid": 2551,
+          "alive": false
+        },
+        {
+          "pid": 2556,
+          "alive": false
+        },
+        {
+          "pid": 2561,
+          "alive": false
+        },
+        {
+          "pid": 2562,
+          "alive": false
+        },
+        {
+          "pid": 2563,
+          "alive": false
+        },
+        {
+          "pid": 2567,
+          "alive": false
+        },
+        {
+          "pid": 2568,
+          "alive": false
+        },
+        {
+          "pid": 2569,
+          "alive": false
+        },
+        {
+          "pid": 2598,
+          "alive": false
+        },
+        {
+          "pid": 2599,
+          "alive": false
+        },
+        {
+          "pid": 2600,
+          "alive": false
+        },
+        {
+          "pid": 2610,
+          "alive": false
+        },
+        {
+          "pid": 2611,
+          "alive": false
+        },
+        {
+          "pid": 2612,
+          "alive": false
+        },
+        {
+          "pid": 2613,
+          "alive": false
+        },
+        {
+          "pid": 2614,
+          "alive": false
+        },
+        {
+          "pid": 2615,
+          "alive": false
+        },
+        {
+          "pid": 2616,
+          "alive": false
+        },
+        {
+          "pid": 2617,
+          "alive": false
+        },
+        {
+          "pid": 2650,
+          "alive": false
+        },
+        {
+          "pid": 2651,
+          "alive": false
+        },
+        {
+          "pid": 2652,
+          "alive": false
+        },
+        {
+          "pid": 2663,
+          "alive": false
+        },
+        {
+          "pid": 2664,
+          "alive": false
+        },
+        {
+          "pid": 2665,
+          "alive": false
+        },
+        {
+          "pid": 2688,
+          "alive": false
+        },
+        {
+          "pid": 2689,
+          "alive": false
+        },
+        {
+          "pid": 2690,
+          "alive": false
+        },
+        {
+          "pid": 2691,
+          "alive": false
+        },
+        {
+          "pid": 2692,
+          "alive": false
+        },
+        {
+          "pid": 2721,
+          "alive": false
+        },
+        {
+          "pid": 2722,
+          "alive": false
+        },
+        {
+          "pid": 2723,
+          "alive": false
+        },
+        {
+          "pid": 2743,
+          "alive": false
+        },
+        {
+          "pid": 2744,
+          "alive": false
+        },
+        {
+          "pid": 2745,
+          "alive": false
+        },
+        {
+          "pid": 2749,
+          "alive": false
+        },
+        {
+          "pid": 2750,
+          "alive": false
+        },
+        {
+          "pid": 2751,
+          "alive": false
+        }
+      ],
+      "portObservations": [],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "exact prior owned marker, no live PID/listener/open handle observed; recheck immediately before Root cleanup"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-qz3pl6i7",
+      "category": "zero-turn-owned-temp",
+      "evidence": "docs/verification/t1294/worker-rpc-tap/same-session32-b6358fb1667c0398/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1294/worker-rpc-tap/same-session32-b6358fb1667c0398/PRELAUNCH_FAILURE.json"
+      ],
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "checkedAt": "2026-10-15T05:08:54.468054+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 436,
+        "allocatedBytes": 4096,
+        "files": 1,
+        "directories": 1,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1294",
+        "uid": 501,
+        "nonce": "b6358fb1667c0398",
+        "purpose": "Root authorized single 32 trial same-RPC extra read observation, original failures never cleared",
+        "ownedTemporaryRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-qz3pl6i7"
+      },
+      "markerSHA256": "f2860bea702f8c74a5d2568900e6119c711e1e0a840fe047d363ff9a20619e92",
+      "markerMatchesExpected": true,
+      "pidObservations": [],
+      "portObservations": [],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "exact prior owned marker, no live PID/listener/open handle observed; recheck immediately before Root cleanup"
+    },
+    {
+      "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim",
+      "category": "zero-turn-owned-temp",
+      "evidence": "docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1294/worker-rpc-tap/same-session32-dd08884b319acb43/CLOSURE.json"
+      ],
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "checkedAt": "2026-10-15T05:08:54.613129+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 35694,
+        "allocatedBytes": 40960,
+        "files": 4,
+        "directories": 35,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "creatoros-native-codex-workspaces": {
+            "directory": true,
+            "symlink": false
+          },
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          },
+          "tsx-501": {
+            "directory": true,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1294",
+        "uid": 501,
+        "nonce": "dd08884b319acb43",
+        "purpose": "Root-authorized one 32-trial experiment; prior nonce preflight did not start SDK",
+        "ownedTemporaryRoot": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-same-session32-9uc3huim"
+      },
+      "markerSHA256": "a757d38d8fdeffb3c3278a3810b8ebb39af989a18029ed92bb30caae099fae81",
+      "markerMatchesExpected": true,
+      "pidObservations": [
+        {
+          "pid": 4281,
+          "alive": false
+        },
+        {
+          "pid": 4290,
+          "alive": false
+        },
+        {
+          "pid": 4292,
+          "alive": false
+        },
+        {
+          "pid": 4293,
+          "alive": false
+        },
+        {
+          "pid": 4299,
+          "alive": false
+        },
+        {
+          "pid": 4300,
+          "alive": false
+        },
+        {
+          "pid": 4301,
+          "alive": false
+        },
+        {
+          "pid": 4302,
+          "alive": false
+        },
+        {
+          "pid": 4303,
+          "alive": false
+        },
+        {
+          "pid": 4304,
+          "alive": false
+        },
+        {
+          "pid": 4353,
+          "alive": false
+        },
+        {
+          "pid": 4354,
+          "alive": false
+        },
+        {
+          "pid": 4355,
+          "alive": false
+        },
+        {
+          "pid": 4357,
+          "alive": false
+        },
+        {
+          "pid": 4358,
+          "alive": false
+        },
+        {
+          "pid": 4359,
+          "alive": false
+        },
+        {
+          "pid": 4383,
+          "alive": false
+        },
+        {
+          "pid": 4384,
+          "alive": false
+        },
+        {
+          "pid": 4386,
+          "alive": false
+        },
+        {
+          "pid": 4414,
+          "alive": false
+        },
+        {
+          "pid": 4415,
+          "alive": false
+        },
+        {
+          "pid": 4416,
+          "alive": false
+        },
+        {
+          "pid": 4466,
+          "alive": false
+        },
+        {
+          "pid": 4467,
+          "alive": false
+        },
+        {
+          "pid": 4468,
+          "alive": false
+        },
+        {
+          "pid": 4485,
+          "alive": false
+        },
+        {
+          "pid": 4486,
+          "alive": false
+        },
+        {
+          "pid": 4488,
+          "alive": false
+        },
+        {
+          "pid": 4552,
+          "alive": false
+        },
+        {
+          "pid": 4553,
+          "alive": false
+        },
+        {
+          "pid": 4554,
+          "alive": false
+        },
+        {
+          "pid": 4722,
+          "alive": false
+        },
+        {
+          "pid": 4723,
+          "alive": false
+        },
+        {
+          "pid": 4724,
+          "alive": false
+        },
+        {
+          "pid": 4752,
+          "alive": false
+        },
+        {
+          "pid": 4753,
+          "alive": false
+        },
+        {
+          "pid": 4754,
+          "alive": false
+        },
+        {
+          "pid": 4756,
+          "alive": false
+        },
+        {
+          "pid": 4757,
+          "alive": false
+        },
+        {
+          "pid": 4758,
+          "alive": false
+        },
+        {
+          "pid": 4762,
+          "alive": false
+        },
+        {
+          "pid": 4763,
+          "alive": false
+        },
+        {
+          "pid": 4764,
+          "alive": false
+        },
+        {
+          "pid": 4766,
+          "alive": false
+        },
+        {
+          "pid": 4767,
+          "alive": false
+        },
+        {
+          "pid": 4768,
+          "alive": false
+        },
+        {
+          "pid": 4770,
+          "alive": false
+        },
+        {
+          "pid": 4771,
+          "alive": false
+        },
+        {
+          "pid": 4772,
+          "alive": false
+        },
+        {
+          "pid": 4778,
+          "alive": false
+        },
+        {
+          "pid": 4779,
+          "alive": false
+        },
+        {
+          "pid": 4780,
+          "alive": false
+        },
+        {
+          "pid": 4781,
+          "alive": false
+        },
+        {
+          "pid": 4782,
+          "alive": false
+        },
+        {
+          "pid": 4783,
+          "alive": false
+        },
+        {
+          "pid": 4787,
+          "alive": false
+        },
+        {
+          "pid": 4788,
+          "alive": false
+        },
+        {
+          "pid": 4789,
+          "alive": false
+        },
+        {
+          "pid": 4837,
+          "alive": false
+        },
+        {
+          "pid": 4838,
+          "alive": false
+        },
+        {
+          "pid": 4839,
+          "alive": false
+        },
+        {
+          "pid": 4844,
+          "alive": false
+        },
+        {
+          "pid": 4845,
+          "alive": false
+        },
+        {
+          "pid": 4846,
+          "alive": false
+        },
+        {
+          "pid": 4890,
+          "alive": false
+        },
+        {
+          "pid": 4891,
+          "alive": false
+        },
+        {
+          "pid": 4892,
+          "alive": false
+        },
+        {
+          "pid": 4969,
+          "alive": false
+        },
+        {
+          "pid": 4970,
+          "alive": false
+        },
+        {
+          "pid": 4971,
+          "alive": false
+        },
+        {
+          "pid": 4997,
+          "alive": false
+        },
+        {
+          "pid": 4998,
+          "alive": false
+        },
+        {
+          "pid": 4999,
+          "alive": false
+        },
+        {
+          "pid": 5001,
+          "alive": false
+        },
+        {
+          "pid": 5002,
+          "alive": false
+        },
+        {
+          "pid": 5003,
+          "alive": false
+        },
+        {
+          "pid": 5017,
+          "alive": false
+        },
+        {
+          "pid": 5018,
+          "alive": false
+        },
+        {
+          "pid": 5019,
+          "alive": false
+        },
+        {
+          "pid": 5085,
+          "alive": false
+        },
+        {
+          "pid": 5086,
+          "alive": false
+        },
+        {
+          "pid": 5087,
+          "alive": false
+        },
+        {
+          "pid": 5100,
+          "alive": false
+        },
+        {
+          "pid": 5101,
+          "alive": false
+        },
+        {
+          "pid": 5102,
+          "alive": false
+        },
+        {
+          "pid": 5110,
+          "alive": false
+        },
+        {
+          "pid": 5111,
+          "alive": false
+        },
+        {
+          "pid": 5112,
+          "alive": false
+        },
+        {
+          "pid": 5158,
+          "alive": false
+        },
+        {
+          "pid": 5159,
+          "alive": false
+        },
+        {
+          "pid": 5160,
+          "alive": false
+        },
+        {
+          "pid": 5166,
+          "alive": false
+        },
+        {
+          "pid": 5167,
+          "alive": false
+        },
+        {
+          "pid": 5168,
+          "alive": false
+        },
+        {
+          "pid": 5439,
+          "alive": false
+        },
+        {
+          "pid": 5440,
+          "alive": false
+        },
+        {
+          "pid": 5441,
+          "alive": false
+        }
+      ],
+      "portObservations": [],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "exact prior owned marker, no live PID/listener/open handle observed; recheck immediately before Root cleanup"
+    },
+    {
+      "path": "/tmp/t1295-csp-QgXkaV",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/baseline-0ce566e24f53/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/baseline-0ce566e24f53/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.765808+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-eBZuBX",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/baseline-78fb7751d626/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/baseline-78fb7751d626/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.766492+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-QRbm5a",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/closed.json"
+      ],
+      "decision": "KEEP",
+      "checkedAt": "2026-10-15T05:08:54.767227+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 561082,
+        "allocatedBytes": 565248,
+        "files": 2,
+        "directories": 1,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "source.mp4": {
+            "directory": false,
+            "symlink": false
+          },
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1295",
+        "uid": 501,
+        "nonce": "e0abb4ab-37ed-4d83-9650-04b8e549433f",
+        "at": "2026-10-15T04:00:24.562Z",
+        "ownedRoot": "/tmp/t1295-csp-QRbm5a"
+      },
+      "markerSHA256": "57bf082965b45fcc15b844e570a0fe357eb39e13900d8318ff05f2b0c47ccc40",
+      "markerMatchesExpected": false,
+      "pidObservations": [
+        {
+          "pid": 88998,
+          "alive": false
+        }
+      ],
+      "portObservations": [
+        {
+          "port": 56519,
+          "connectionRefused": true
+        }
+      ],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "one or more ownership/closure/no-symlink guards not established; inspect fields, do not delete"
+    },
+    {
+      "path": "/tmp/t1295-csp-6KvnPR",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-220daba9b615/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-220daba9b615/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.913318+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-xmMB0Q",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-299f98874253/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-299f98874253/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.914128+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-2zVX0i",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-2b1dae7b2e71/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-2b1dae7b2e71/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.915045+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-s4AdSw",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-4880c2e38c31/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-4880c2e38c31/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.915882+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-gkCjYX",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-4a708c952f96/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-4a708c952f96/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.916553+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-C6Wozq",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-71f3bd521021/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-71f3bd521021/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.917101+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-9gnzKc",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-b663925f4edd/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-b663925f4edd/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.917577+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-lidwKZ",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-c553b3b99da6/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-c553b3b99da6/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.918186+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-AaTNpV",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-d25e2dbf227b/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-d25e2dbf227b/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:54.918947+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-RB270A",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-d8c439977a8c/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-d8c439977a8c/closed.json"
+      ],
+      "decision": "KEEP",
+      "checkedAt": "2026-10-15T05:08:54.919528+00:00",
+      "inventory": {
+        "exists": true,
+        "bytes": 561082,
+        "allocatedBytes": 565248,
+        "files": 2,
+        "directories": 1,
+        "uids": [
+          501
+        ],
+        "symlinks": [],
+        "topLevel": {
+          "source.mp4": {
+            "directory": false,
+            "symlink": false
+          },
+          "owner.json": {
+            "directory": false,
+            "symlink": false
+          }
+        }
+      },
+      "marker": {
+        "task": "T-1295",
+        "uid": 501,
+        "nonce": "1b6952e1-04c3-4c84-8b39-df32b783aaaf",
+        "at": "2026-10-15T03:59:18.596Z",
+        "ownedRoot": "/tmp/t1295-csp-RB270A"
+      },
+      "markerSHA256": "6b85e87e0ec45827f4d2defbc23ebc6569bbefb4db2b06233c1b4d690d1f88a0",
+      "markerMatchesExpected": false,
+      "pidObservations": [
+        {
+          "pid": 87908,
+          "alive": false
+        }
+      ],
+      "portObservations": [
+        {
+          "port": 55977,
+          "connectionRefused": true
+        }
+      ],
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "reason": "one or more ownership/closure/no-symlink guards not established; inspect fields, do not delete"
+    },
+    {
+      "path": "/tmp/t1295-csp-HLxyW8",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/current-ebeccb70a24e/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/current-ebeccb70a24e/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:55.065762+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-Dkqrli",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/strict-csp-35b85972efabd93d/compact/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/strict-csp-35b85972efabd93d/compact/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:55.066687+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-4SwZEk",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/strict-csp-35b85972efabd93d/desktop/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/strict-csp-35b85972efabd93d/desktop/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:55.067404+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-3wp7cJ",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/strict-csp-b36a4d60c398dd07/compact/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/strict-csp-b36a4d60c398dd07/compact/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:55.068426+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/tmp/t1295-csp-FoAoke",
+      "category": "old-owned-static-native-temp",
+      "evidence": "docs/verification/t1295/browser/runs/strict-csp-b36a4d60c398dd07/desktop/owner.json",
+      "closureEvidence": [
+        "docs/verification/t1295/browser/runs/strict-csp-b36a4d60c398dd07/desktop/closed.json"
+      ],
+      "decision": "ALREADY_ABSENT",
+      "checkedAt": "2026-10-15T05:08:55.068979+00:00",
+      "inventory": {
+        "exists": false,
+        "bytes": 0
+      },
+      "reason": "no remaining bytes"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/worker-rpc-tap/normal-bundle.before-diagnostic.cjs",
+      "category": "restored-diagnostic-bundle-copy",
+      "bytes": 5614496,
+      "uid": 501,
+      "sha256": "f65897ceeaabb193182b312d19fef6c852c98d49b807f29c74b2701e1409fac1",
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "normalRestorationReceipt": "docs/verification/t1294/worker-rpc-tap/NORMAL_RESTORED.json",
+      "normalRestoration": {
+        "normalBundleSHA256": "f65897ceeaabb193182b312d19fef6c852c98d49b807f29c74b2701e1409fac1",
+        "diagnosticTapAbsent": true,
+        "restoredBy": "normal scripts/build.mjs, no source modifications"
+      },
+      "gitTracked": false,
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "reason": "only derived bundle bytes; keep small hash/restore/diff/diagnostic receipts and all screenshots; Root should check no future restore requirement"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/worker-rpc-tap/execution-worker.diagnostic.candidate.cjs",
+      "category": "restored-diagnostic-bundle-copy",
+      "bytes": 5617476,
+      "uid": 501,
+      "sha256": "4d01bcef2f41aa5e6ae072a01e99a90fff70cbfbce56453b1b73e95b09ec7303",
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "normalRestorationReceipt": "docs/verification/t1294/worker-rpc-tap/NORMAL_RESTORED.json",
+      "normalRestoration": {
+        "normalBundleSHA256": "f65897ceeaabb193182b312d19fef6c852c98d49b807f29c74b2701e1409fac1",
+        "diagnosticTapAbsent": true,
+        "restoredBy": "normal scripts/build.mjs, no source modifications"
+      },
+      "gitTracked": false,
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "reason": "only derived bundle bytes; keep small hash/restore/diff/diagnostic receipts and all screenshots; Root should check no future restore requirement"
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/worker-rpc-tap/execution-worker.diagnostic-phase.candidate.cjs",
+      "category": "restored-diagnostic-bundle-copy",
+      "bytes": 5620037,
+      "uid": 501,
+      "sha256": "035a0e999e0334d67d5aba7252089035a89e53d13abc6e7ff99d716ea57d00a2",
+      "openHandles": {
+        "exit": 1,
+        "openHandleRows": 0,
+        "pidRecords": [],
+        "complete": true,
+        "stderrPresent": false
+      },
+      "normalRestorationReceipt": "docs/verification/t1294/worker-rpc-tap/NORMAL_RESTORED.json",
+      "normalRestoration": {
+        "normalBundleSHA256": "f65897ceeaabb193182b312d19fef6c852c98d49b807f29c74b2701e1409fac1",
+        "diagnosticTapAbsent": true,
+        "restoredBy": "normal scripts/build.mjs, no source modifications"
+      },
+      "gitTracked": false,
+      "decision": "CANDIDATE_AFTER_DELIVERY",
+      "reason": "only derived bundle bytes; keep small hash/restore/diff/diagnostic receipts and all screenshots; Root should check no future restore requirement"
+    }
+  ]
+}

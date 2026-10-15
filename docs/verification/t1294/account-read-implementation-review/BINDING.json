@@ -1,0 +1,54 @@
+{
+  "scope": "Root authored third-round account-read factory implementation only; not UI/App/full release",
+  "head": "d2691bc6ed5a938adc516f211e80fa611374d673",
+  "createdAt": "2026-10-15T05:04:32.653415+00:00",
+  "files": [
+    {
+      "path": "docs/features/t1294-model-settings-and-codex-chat-acceptance.md",
+      "sha256": "ccb3ec15c3bcd967956f46fff4503e6fdb31b6f04b5d8be57514cb7e95eb5a78"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "sha256": "0f66f4bb132f2ccd8e13897c9cd985b2c14107886dbeaf329db803e15c96a145"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "3110cc16930c31b7b65a3fa60cf4ce63ab09e10af8bfde57846a2901cbec60a8"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-account-precheck.test.ts",
+      "sha256": "9963f90cf7cdff603475c5e64646df026e524d3c3d251a246e26f590b0be1292"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "sha256": "8344d96bf0425a9df03ebff4161b9adfc1b388ac4ee8482d3c5c8053505df6c1"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-status-entry.ts",
+      "sha256": "17bb483c5d83c416ca3fca6bcd21efb7b280a396b288ffa199a69fce6d1e8829"
+    }
+  ],
+  "independentRun": {
+    "command": "./node_modules/.bin/vitest run src/execution/codex-account-precheck.test.ts",
+    "cwd": "ai-worker",
+    "exitCode": 0,
+    "passed": 29,
+    "logSHA256": "2088608d8b175cef22448d8a78623fe40b4a0691525ff7cdcd215d96695525d4",
+    "actualCLI": false,
+    "actualNetwork": false
+  },
+  "findings": [],
+  "productionWrites": 0,
+  "controlWrites": 0,
+  "authorship": {
+    "productionFactoryAnd29FixtureCandidateAuthor": "/root/asr_owner_closure_audit",
+    "formalSourceWriterIntegratorAndRedGreenExecutor": "/root",
+    "independentImplementationReviewer": "/root/root_capture_code_review",
+    "reviewerAuthoredOnly": "diagnostic observer; not the production factory or 29 fixtures"
+  },
+  "reportSHA256": "c95540bfd68ab2003d72f5913b55a803b4a17a0b340af748499be4474671a080"
+}
