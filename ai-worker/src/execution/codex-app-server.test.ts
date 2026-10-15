@@ -29,3 +29,32 @@ describe("T-1044 Codex 原生接口权限边界",()=>{
   expect(()=>assertCodexMcpDisabled({data:[{name:'surprise',runtimeStatus:'ready'}]},[])).toThrow();
  });
 });
+
+// T1294：真实子进程错误帧仅投影固定方法和有限整数，绝不携带原始元数据。
+it.each([-32602,-32000,undefined,1.5,'secret-code'])('RPC拒绝保安全method/code且不泄露帧（%s）',async upstreamCode=>{
+ const {CodexRpcSession}=await import('./codex-app-server-protocol');
+ const script=`const readline=require('node:readline');readline.createInterface({input:process.stdin}).on('line',line=>{const frame=JSON.parse(line);if(frame.id)process.stdout.write(JSON.stringify({id:frame.id,error:{code:${JSON.stringify(upstreamCode)??'undefined'},message:'secret-provider-key-and-account',data:{token:'private-token'}}})+'\\n');});`;
+ const rpc=new CodexRpcSession(process.execPath,['-e',script],{cwd:process.cwd(),env:{PATH:process.env.PATH},signal:AbortSignal.timeout(120000)});
+ try{
+  const failure=await rpc.request('account/read',{refreshToken:false}).catch(error=>error);
+  expect(failure).toMatchObject({code:'CODEX_RPC_REJECTED',rpcMethod:'account/read'});
+  expect((failure as {rpcCode?:number}).rpcCode).toBe(Number.isSafeInteger(upstreamCode)?upstreamCode:undefined);
+  expect(String(failure)).toBe('CodexHostError: CODEX_RPC_REJECTED');
+  expect(JSON.stringify(failure)).not.toMatch(/secret-provider|private-token|message|data/);
+ }finally{await rpc.close();}
+},180000);
+
+it.each(['delayed-term','ignore-term'] as const)('close等待owned进程真实结束，%s清理不提前完成',async mode=>{
+ const {CodexRpcSession}=await import('./codex-app-server-protocol');
+ const source=`process.on('SIGTERM',()=>{${mode==='delayed-term'?"setTimeout(()=>process.exit(0),80)":""}});process.stdout.write(JSON.stringify({method:'fixture/ready'})+'\\n');setInterval(()=>{},1000);`;
+ const rpc=new CodexRpcSession(process.execPath,['-e',source],{cwd:process.cwd(),env:{PATH:process.env.PATH},signal:AbortSignal.timeout(120000)});
+ const child=(rpc as unknown as {child:import('node:child_process').ChildProcess}).child;
+ let closed=false;const stopped=new Promise<void>(resolve=>child.once('close',()=>{closed=true;resolve();}));
+ try{
+  await new Promise<void>(resolve=>{rpc.onNotification=method=>{if(method==='fixture/ready')resolve();};});
+  const closing=rpc.close(),joined=rpc.close();
+  await joined;expect(closed,'重复close也必须等待同一个真实退出屏障').toBe(true);await closing;
+  expect(child.exitCode!==null||child.signalCode!==null).toBe(true);
+  if(mode==='ignore-term')expect(child.signalCode).toBe('SIGKILL');
+ }finally{await rpc.close();await stopped;}
+},180000);

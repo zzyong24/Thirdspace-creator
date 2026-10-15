@@ -15,7 +15,7 @@ import { resolveMinimaxH3Endpoints } from "@creatoros/ai-worker";
  *   - chat.fallback:resolveDedicatedLlm(只认专配行,不回退主模型)→ 同上最小流式探测。
  *   - asset.classify(视觉,OpenAI 兼容 chat):resolveMultimodal → 纯文本 1 token 补全
  *     (校验鉴权 + 模型可达;不传图,足以判连通)。
- *   - knowledge.search.embed:resolveEmbed → POST /embeddings 单短串(本就是最小调用)。
+ *   - knowledge.search.embed:已停用；在配置解析与网络前明确返回，不再测试向量模型。
  *   - image.generate:resolveMultimodal → **真实最小生图调用**(供应商无免费探测端点;
  *     消耗少量额度 —— UI 文案已提示)。definitive:出字节 = 真连通。
  *   - video.generate:生视频分钟级且计费,不真生成 —— 对生成端点发**缺 prompt 的鉴权探测**
@@ -81,7 +81,7 @@ export interface SettingsModelTestDeps {
   ) => Promise<MmSpecLite>;
   /** ASR 解析：云端配置优先，未配返回 whisper-local。 */
   resolveTranscribe: (ctx: RequestContext) => Promise<MmSpecLite>;
-  /** embedding 解析:未配 → null。 */
+  /** 旧注入形状兼容：T1294停用embedding测试，此端口不再调用。 */
   resolveEmbed: (ctx: RequestContext) => Promise<LlmSpecLite | null>;
   /** 搜索解析:未配 → 抛 SearchConfigError。 */
   resolveSearch: (ctx: RequestContext) => Promise<SearchSpecLite>;
@@ -357,39 +357,6 @@ async function modelsListProbe(
   }
 }
 
-// ── embedding 最小真实调用 ────────────────────────────────────────────────────────
-async function embedProbe(
-  spec: LlmSpecLite,
-  fetchImpl: typeof fetch,
-): Promise<{ ok: boolean; detail: string }> {
-  try {
-    const url = `${trimBase(spec.baseUrl ?? SILICONFLOW_V1_DEFAULT)}/embeddings`;
-    const res = await fetchImpl(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${spec.token}`,
-      },
-      body: JSON.stringify({ model: spec.model, input: "ping" }),
-    });
-    if (res.ok) return { ok: true, detail: "已算一条最小 embedding,连通。" };
-    logProbeFailure("embedProbe", {
-      category: "provider_rejected",
-      status: res.status,
-    });
-    return {
-      ok: false,
-      detail: "连接失败:密钥或接口地址可能不对,请核对后重试。",
-    };
-  } catch {
-    logProbeFailure("embedProbe", { category: "network_error" });
-    return {
-      ok: false,
-      detail: "连接失败,请检查网络和接口地址后重试。",
-    };
-  }
-}
-
 /** 按 name 判「未配置」类错误(LlmCredentialError / MultimodalConfigError /
  *  SearchConfigError —— 跨包同名类 instanceof 不可靠,与 describeMultimodalFailure 同理)。 */
 function isUnconfiguredError(err: unknown): boolean {
@@ -462,12 +429,12 @@ export async function runModelConnectionTest(
         };
       }
       case "knowledge.search.embed": {
-        const spec = await deps.resolveEmbed(ctx);
-        if (!spec) return unconfigured("请先保存语义搜索模型配置。");
-        const r = await embedProbe(spec, fetchImpl);
         return {
-          ...r,
-          ...resultIdentity(spec, spec.apiFormat, spec.model),
+          ok: false,
+          status: "fail",
+          provider: "",
+          model: "",
+          detail: "向量检索已停用，知识搜索使用关键词，无需配置或测试向量模型。",
         };
       }
       case "image.generate": {

@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 19d33ac65
+LAST_SYNCED: main @ 6ff8b6e31
 
 ## 这是什么(定位)
 
@@ -23,6 +23,8 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1295 恢复正式桌面CSP下的视频WebAssembly执行并复验制作链
+- [wip] T-1294 按安装验收简化模型设置并恢复Codex聊天
 - [open] T-1292 核对合并后的全局对账失败并逐项归因
 - [open] T-1291 核对旧原生编辑器验证器与当前715源码库存
 - [wip] T-1289 修复原生构建清单随解包目录深度变化

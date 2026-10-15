@@ -388,7 +388,9 @@
     "cover-group-aspect:e2e": "node docs/verification/t1149/run-aspect-journey.mjs",
     "wechat-native-report:e2e": "node docs/verification/t1159/run-report-journey.mjs",
     "canvas-upload-navigation:e2e": "node docs/verification/t1220/verify.mjs",
-    "codex-engine-settings:e2e": "node docs/verification/t1238/run-ui-journey.cjs"
+    "codex-engine-settings:e2e": "node docs/verification/t1238/run-ui-journey.cjs",
+    "model-settings-codex-current:e2e": "node docs/verification/t1294/run-journey.cjs",
+    "desktop-csp-native-current:e2e": "node docs/verification/t1295/run-strict-csp.cjs . docs/verification/t1295/browser/v3-native-ui-candidate/owned-normal-binding.json"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",

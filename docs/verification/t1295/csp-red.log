@@ -1,0 +1,81 @@
+✔ 独立冒烟也剥更新根路径，父构建环境不被修改 (0.771625ms)
+✖ 桌面CSP允许现有sandbox预览的精确GSAP脚本，仍禁止eval (0.488167ms)
+✖ 桌面CSP只增专用WASM许可，来源和其它全部指令保持原边界 (1.523667ms)
+✔ 普通构建子环境剥更新根私钥路径并保持其它构建值 (0.096333ms)
+✔ 正式clean缓存绑定实际JS内容，旧标记及历史转换/新诱饵使复用失效 (4.248875ms)
+✔ 7项正式链禁止混淆/字节码/诱饵/增包盖章且保独立真实冒烟 (1.498708ms)
+✔ 最终tar出口签名、skip clean policy与直接依赖 (1.423291ms)
+✔ 独立冒烟保boot、HTTP、dispatch、Chromium hydration、原超时与关闭 (0.375917ms)
+✖ desktop release CSP保inline/blob预览且web/debug无头 (7.452875ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 6
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 175.7245
+
+✖ failing tests:
+
+test at frontend/scripts/desktop/release-clean-boundary.node.test.mjs:19:1
+✖ 桌面CSP允许现有sandbox预览的精确GSAP脚本，仍禁止eval (0.488167ms)
+  AssertionError [ERR_ASSERTION]: 实际视频WASM需要专用编译许可
+      at TestContext.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/frontend/scripts/desktop/release-clean-boundary.node.test.mjs:23:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at frontend/scripts/desktop/release-clean-boundary.node.test.mjs:27:1
+✖ 桌面CSP只增专用WASM许可，来源和其它全部指令保持原边界 (1.523667ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      "'self'",
+      "'unsafe-inline'",
+  -   "'wasm-unsafe-eval'",
+      'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js'
+    ]
+  
+      at TestContext.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/frontend/scripts/desktop/release-clean-boundary.node.test.mjs:31:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ "'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js' ],
+    expected: [ "'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at frontend/scripts/desktop/release-hardening.node.test.mjs:23:1
+✖ desktop release CSP保inline/blob预览且web/debug无头 (7.452875ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(scriptTokens.includes("'wasm-unsafe-eval'"))
+  
+      at TestContext.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/frontend/scripts/desktop/release-hardening.node.test.mjs:33:9)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

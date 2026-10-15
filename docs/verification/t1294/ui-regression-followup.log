@@ -1,0 +1,30 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:72871) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/settings-model-region.codex.test.tsx (11 tests | 1 failed) 390ms
+     × GET pending 不伪造已保存配置，读回 text=self 后按需打开原控件 379ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/settings-model-region.codex.test.tsx > T1278 模型区域按用途展示原配置（迁移旧 Codex 全局隐藏断言） > GET pending 不伪造已保存配置，读回 text=self 后按需打开原控件
+AssertionError: expected [ <select …(4)>…(4)</select>, …(3) ] to have a length of 6 but got 4
+
+- Expected
++ Received
+
+- 6
++ 4
+
+ ❯ src/features/settings/settings-model-region.codex.test.tsx:22:192
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (2)
+      Tests  1 failed (11)
+   Start at  11:06:54
+   Duration  2.19s (transform 817ms, setup 105ms, import 1.24s, tests 390ms, environment 335ms)
+

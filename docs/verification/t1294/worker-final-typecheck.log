@@ -1,0 +1,10 @@
+
+> @creatoros/ai-worker@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> tsc --noEmit
+
+src/execution/codex-app-server.test.ts(41,10): error TS18046: 'failure' is of type 'unknown'.
+src/execution/codex-external-chat-native-run.test.ts(94,49): error TS2532: Object is possibly 'undefined'.
+src/execution/codex-external-chat-native-run.test.ts(101,49): error TS2532: Object is possibly 'undefined'.
+src/execution/codex-external-chat-native-run.test.ts(108,49): error TS2532: Object is possibly 'undefined'.
+src/execution/codex-external-chat-native-run.test.ts(139,49): error TS2532: Object is possibly 'undefined'.
+ ELIFECYCLE  Command failed with exit code 2.

@@ -1,0 +1,1 @@
+✗ Task Packet control contract: T-1294 缺 task binding；module id 必须等于 task ID，或显式声明 task_id

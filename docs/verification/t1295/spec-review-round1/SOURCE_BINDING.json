@@ -1,0 +1,82 @@
+{
+  "capturedAt": "2026-10-15T03:34:59.145500+00:00",
+  "task": "T-1295",
+  "reviewer": "independent-agent /root/root_route_wiring_design；继承父模型，未切换，具体model标识未由本工具暴露，不猜测",
+  "reviewMode": "independent-agent",
+  "phase": "PLAN initial SPEC review",
+  "sourceHead": "6ff8b6e317330711e08426b1cbc39aeb243f16c1",
+  "spec": {
+    "path": "docs/features/t1295-desktop-csp-wasm-video.md",
+    "sha256": "2d2a920ec26fd8f9066230aa08c4bdc6733a7c77310d7510fc62050946de0336"
+  },
+  "constitution": {
+    "path": "docs/产品定位.md",
+    "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+  },
+  "packetSha256": "6da0ebfac08e3e7493e6ac050f0780d709919fe5eea235dacb8455bf3a9e0fda",
+  "readBindings": [
+    {
+      "path": "docs/features/t1295-desktop-csp-wasm-video.md",
+      "sha256": "2d2a920ec26fd8f9066230aa08c4bdc6733a7c77310d7510fc62050946de0336"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "frontend/scripts/desktop/desktop-csp.mjs",
+      "sha256": "352fa0bd9462481d0593ee611b46a8f4f6ecef4085168d508f189d57a046659c"
+    },
+    {
+      "path": "frontend/scripts/desktop/release-clean-boundary.node.test.mjs",
+      "sha256": "631eefc3779066cc7b403af29755f01ccad41b4d6fe37006212afe530e656bda"
+    },
+    {
+      "path": "frontend/scripts/desktop/release-hardening.node.test.mjs",
+      "sha256": "a81b34b2bb789cf7bfada321855941a5c4f72120dc042fea85d60db08a305b94"
+    },
+    {
+      "path": "frontend/next.config.ts",
+      "sha256": "72b455b55b5ea8d4d36f22a2b17854852e7182f0a49650c5368c8e17c6c4dd9d"
+    },
+    {
+      "path": "frontend/src-tauri/tauri.conf.json",
+      "sha256": "dce9f12f36d1a4e6d6e3209b6f487f0f2fe9e89004425002cb229ed7b7301684"
+    },
+    {
+      "path": "frontend/src-tauri/src/lib.rs",
+      "sha256": "131e44d9091a997901809c09f8dd83fdb523272f40b6fccb0affb3acde78f9fb"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-loader.ts",
+      "sha256": "ab09e9b6eace951ca14559b62c01db0f8496d56a11d6e3562d7d28a2cc7acf29"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-surface.tsx",
+      "sha256": "d1e01e2cd63a6fc9ea56f22da4fd5f6088bbed3092d233fac5b685b1f933eb8c"
+    },
+    {
+      "path": "reference-editors/opencut-classic/native/native.js",
+      "sha256": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90"
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "sha256": "bf28451b8c59619b22e8a5f4654ece823db5dfcbd2368fa89c0c49b38b6dff90"
+    },
+    {
+      "path": "docs/verification/t1284/public-legacy-caption/run.mjs",
+      "sha256": "04db3310c06aa8466e7da91559f5f5ffb8ddd235448196763e420c58bbaa0380"
+    },
+    {
+      "path": "docs/verification/t1281/public-families/run.mjs",
+      "sha256": "e9619e47a33110d66e4a1adad7ff719c2f5a4dc0c406f82d7fb3cb6778885878"
+    }
+  ],
+  "productionWrites": 0,
+  "testWrites": 0,
+  "controlWrites": 0,
+  "modelCalls": 0,
+  "browserValidation": "NOT-RUN",
+  "videoPreviewRenderExport": "NOT-RUN",
+  "nativeApp": "NOT-RUN"
+}

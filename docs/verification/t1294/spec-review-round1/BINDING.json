@@ -1,0 +1,89 @@
+{
+  "schema": "independent-spec-review-binding/v1",
+  "at": "2026-10-15T02:51:13.077019+00:00",
+  "task": "T-1294",
+  "reviewKind": "initial",
+  "mainHead": "6ff8b6e317330711e08426b1cbc39aeb243f16c1",
+  "specPath": "docs/features/t1294-model-settings-and-codex-chat-acceptance.md",
+  "specSha256": "eb607988a1506936137420f8f94b292d0c23566fc6e7ccd6d17c2f22ea28f569",
+  "constitutionPath": "docs/产品定位.md",
+  "constitutionSha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "approvalEvidence": "DEC-129401及Root转达的本轮用户明确安装反馈；截图本身只证明可见失败状态",
+  "inputs": {
+    "BACKLOG.md": "f4ed881f2ac334557ba2ec307421a128cd281263bd32b8c6e96bc876a00f1332",
+    "PROJECT.md": "a35d460e597b2c02916e5324c6c76c7eec72c1fbd6d1b5546939f2e3acee6d88",
+    "PROJECT_CONTEXT.md": "dc3449ada5eca565afd8682c575d3c598a1a5ad1a522784d906238e1a5978fed",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+    "orchestrator/DECISION_LOG.md": "fe50d15be6f66683208daa85f17a3defe86313c6a19d9dca791d3c42e27e5129",
+    "docs/features/t1294-model-settings-and-codex-chat-acceptance.md": "eb607988a1506936137420f8f94b292d0c23566fc6e7ccd6d17c2f22ea28f569",
+    "docs/产品定位.md": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "docs/verification/t1294/context-plan.json": "767c70b63f4921395eaa3a77d488f39a94fb41d5d6a85da2da512f14c7134473",
+    "docs/verification/t1294/codex-diagnosis/REPORT.md": "34d4355aed4480523cd7930d77d7f16bcbddb402bf1cc3954ffa59e8e82652bb",
+    "docs/verification/t1294/codex-diagnosis/DIAGNOSIS.json": "8d3eb3613f28456aa3cbc094bf627dedfae84947d363150a396362a6c0d1e5fc",
+    "docs/verification/t1294/codex-diagnosis/SOURCE_BINDING.json": "0684a69d4ef7abeac9596835d52ea5d6b3925f4872f43047347010a70321464f",
+    "docs/verification/t1294/routing-ui-inventory/REPORT.md": "bf3a5b94ad1d93153827d7bc4445a5a1a703a022580f374c275cc9fc17e90f8c",
+    "docs/verification/t1294/baseline/user-chat-stalled.png": "6499ec3e193763906b37eefa37b9a5c932b135ba12b3cc5d84738e0c8580a2ef",
+    "docs/verification/t1294/baseline/user-codex-checking.png": "ee1bc5096475fa8618ccb70a024c737231f12d18666726bf7a930862a2562edb",
+    ".agents/skills/oil-ui-pro/SKILL.md": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+    ".agents/skills/oil-ui-pro/references/existing-project.md": "82a39fe64cb7fc183e1b3349d1829f6e163aee214c268ce2b921fd30c7f74aed",
+    "docs/features/t1022-account-group-workspace/UI_RULES.md": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76",
+    "backend/src/modules/settings/settings.service.ts": "f809cbcc9adc1d1fd82139d74654f56842cee94d099ad6eedfe522a5f76066f9",
+    "backend/src/modules/ai-runtime/local-codex-status.service.ts": "2765b35b0649b242efbb264dfcd1f8eab29e542deb529343c88c4f55611daf2c",
+    "backend/src/modules/ai-runtime/capability-model-routing.ts": "f0d45d127faa3a61c2a357b2bace590474cd11d50eb466f149420f4cd2e8786a",
+    "backend/src/modules/ai-runtime/multimodal/resolve.ts": "6fd7cc0d3929ca2170ff7f194adb7308305e3a0715bb7e36ed89ba6a915bd7e6",
+    "backend/src/modules/search/knowledge-search-runtime.service.ts": "710a377cf0dffc016e8b828fdfdc22bd7345cda29c9d62e76752bce7c784bc85",
+    "frontend/src/server/persistence-client.ts": "01e4eaa0a10c3e7f2ada587a0b5d3083a17d4d05fd35df369fa669f53c0b9895",
+    "frontend/src/server/settings-model-test-wrap.ts": "5d5f23af7392c13e5e157d227419b39637fcfbb7da097eda49cbc9c4dcd0b437",
+    "frontend/src/features/copilot/use-assistant-engine.ts": "2ae4a8ebe36a6410ad471c83d9690e5c3706644611edc007a577fb129017c932",
+    "frontend/src/features/copilot/assistant-engine.ts": "292f9c9180ae0aeb804b51ab75b033247e3df5f4e1b526be2f37a6953642a697",
+    "frontend/src/features/settings/model-capability-source.tsx": "ad82b42c54028e0cfe3ef986088d438aaa3cb32fec0a18b564d3caa1f1bcf902",
+    "frontend/src/app/api/chat/engines/route.ts": "d38e63de005c4a13faef807f0ae1431612b71dce6ad88fdd264a1da646b9a591",
+    "contract/src/internal/model-routing.ts": "0f9d54aad9eb92c5f7580e956d78f316b60c86c3747db9fd98e83ed00a81cd03",
+    "contract/src/internal/local-codex-status.ts": "37cb87544c0d7dd7a9c67ca64b36101d1123e0b8a15d0a78068e4dd9fb607b7f",
+    "docs/verification/t1294/routing-ui-inventory/WRITE_SET.json": "ec8b0d5c056945f736b525dead3234c643b43812d1983da2726e458b26f7a10e",
+    "docs/verification/t1294/routing-ui-inventory/SOURCE_BINDING.json": "c3b6d7e7b517009a62637fc1d99dd30e40cf30d4cde6c1b7b0cdedd59579670f",
+    "frontend/src/features/settings/channel-model-configuration.tsx": "5fe448ed7dc8cf83ca6408c7b2b631e170392d2e184cce9d54aaaa61eb9913c3",
+    "frontend/src/server/activation/ai-credit-link.server.ts": "8ee1da509ebbc462855470565f5872182cd4a05e9ca3c78a5a4df81b4e9720dc",
+    "contract/src/request-context.ts": "85de07c38e0acb8baed83aa7f1d46b19a68d589b61cd1a9be6d936735c4e61ba"
+  },
+  "diagnosisSourceBindingHead": "6ff8b6e317330711e08426b1cbc39aeb243f16c1",
+  "diagnosisSourceDriftAtRead": [],
+  "skills": {
+    "product-to-code-orchestrator": "3.29.0",
+    "projectProcess": "3.29.0",
+    "oil-ui-pro": "0.10.0"
+  },
+  "screenshotsActuallyViewed": [
+    "user-chat-stalled.png",
+    "user-codex-checking.png"
+  ],
+  "readOnlyBoundaries": {
+    "productionWrites": 0,
+    "controlWrites": 0,
+    "testsExecuted": 0,
+    "networkCalls": 0,
+    "userBusinessReads": 0,
+    "modelRequests": 0,
+    "fundsRequests": 0,
+    "AppAutomation": 0
+  },
+  "originalHelloTaskDiagnosis": "尚未取得所属group/task/Worker账本；不推断根因，不签修复",
+  "implementationBrowserPackageAcceptance": "NOT-RUN",
+  "beforeLocalCreditDialogUnrecorded": {
+    "packet.json": "d96a396a09818bb7b102f554c40a7347f0ce38d133c36b00d7bd11fa2c7eb05d",
+    "REPORT.md": "4aa4c61aa764f495935e41b49864e11a127d7a7858c2df97a30188774af5019f",
+    "BINDING.json": "86d30d1b250a063667091a3dc2e59e61b0abdf621e579c66f42805ecad5928b0"
+  },
+  "intermediateDialogSpecNotRecorded": {
+    "sha256": "6eec3ced260e75ed428726f8452a86b0c9465a439a10893fa7654d71ab7cf76f",
+    "observation": "原Card的attempt/ref/inFlight仅本地实例；Root撤回第二Card/Dialog并限新入口不发bootstrap，未声明修复旧Card历史卸载"
+  },
+  "finalCreditScope": {
+    "newSource": "frontend/src/features/settings/ai-credit-entry.tsx",
+    "reuses": "openAiCreditCenter({signal,isCurrent})",
+    "noNewDialogOrCard": true,
+    "noNewBootstrapAuthorityOrSharedFundingState": true,
+    "inventoryDialogSuggestionSupersededByFinalSpec": true
+  },
+  "httpAbortBoundary": "RequestContext无AbortSignal；内部service observer有显式signal才可证明取消。客户端中断已受理PUT保持unknown，原revision读回，不自动重发，不声称服务端零提交。"
+}

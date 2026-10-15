@@ -1,0 +1,61 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts (28 tests | 2 failed) 37ms
+   × v2冻结真实模型身份不符保原拒绝码，不能换模型或创建session 5ms
+   × session期间取消优先于typed/本地拒绝，不制造拒绝账本 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > v2冻结真实模型身份不符保原拒绝码，不能换模型或创建session
+AssertionError: expected Error: CODEX_PRECHECK_RESULT_UNKNOWN { …(3) } to match object { outcome: 'waiting_user', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "MODEL_ROUTE_IDENTITY_CHANGED",
+-   "outcome": "waiting_user",
++ GenerationFailure {
++   "errorCode": "CODEX_PRECHECK_RESULT_UNKNOWN",
++   "outcome": "unknown_result",
+  }
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts:107:106
+    105| it('v2冻结真实模型身份不符保原拒绝码，不能换模型或创建session',async()=>{
+    106|  const f=preAdmissionFixture({v2:true,credential:{engine:'codex',reque…
+    107|  expect(await preAdmissionError(runExternalChatInWorker(f.source,new A…
+       |                                                                                                          ^
+    108|  expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0][1])…
+    109|  expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > session期间取消优先于typed/本地拒绝，不制造拒绝账本
+AssertionError: expected Error: CODEX_PRECHECK_RESULT_UNKNOWN { …(3) } to match object { name: 'AbortError' }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ GenerationFailure {
++   "message": "CODEX_PRECHECK_RESULT_UNKNOWN",
++   "outcome": "unknown_result",
++   "errorCode": "CODEX_PRECHECK_RESULT_UNKNOWN",
++   "retryAfterMs": undefined,
+  }
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts:152:95
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  2 failed | 92 passed (94)
+   Start at  11:48:28
+   Duration  4.06s (transform 1.01s, setup 0ms, import 2.76s, tests 788ms, environment 0ms)
+

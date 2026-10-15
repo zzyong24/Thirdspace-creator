@@ -1,0 +1,177 @@
+{
+  "at": "2026-10-15T03:34:02.269574+00:00",
+  "root": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "head": "6ff8b6e317330711e08426b1cbc39aeb243f16c1",
+  "reviewScope": "read-only defaults/settings projection/Codex cache/hook; excludes self-authored search implementation",
+  "source": [
+    {
+      "path": "docs/features/t1294-model-settings-and-codex-chat-acceptance.md",
+      "sha256": "eb607988a1506936137420f8f94b292d0c23566fc6e7ccd6d17c2f22ea28f569",
+      "bytes": 7765
+    },
+    {
+      "path": "orchestrator/context/T-1294.md",
+      "sha256": "c34c4f8d590d1189b2791a1ae18be113ec10d6794b5a884d54a848e98c3571e3",
+      "bytes": 10642
+    },
+    {
+      "path": "backend/src/modules/settings/model-routing-defaults.ts",
+      "sha256": "30dc6375086ee82ac26d864268b60345db0b0d9ab67940f602ad33f98248b2c6",
+      "bytes": 627
+    },
+    {
+      "path": "backend/src/modules/settings/settings.service.ts",
+      "sha256": "80f19241fb4377d1f142d420b10bfe5bb94600e69cd92260bce6069dbb0349f3",
+      "bytes": 46070
+    },
+    {
+      "path": "backend/src/modules/settings/model-routing.integration.test.ts",
+      "sha256": "14b2f95870e295eca7977f1a115ea19f897151ebaa02cb8546de9efc8405ba28",
+      "bytes": 9541
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/local-codex-status.service.ts",
+      "sha256": "56ea42fab0305cd19b809365b88bb0f7ae8577484f20c37cd9f869e17dd60644",
+      "bytes": 6278
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/local-codex-status.service.test.ts",
+      "sha256": "60d14d5e7df8070471c027e7d873551734c3be72cb963003fde4e682dfd02aeb",
+      "bytes": 10446
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/local-codex-status-handoff.public.test.ts",
+      "sha256": "8698f6584fd332153b62480684d843786608a17d39b07217e511608edb4d0d21",
+      "bytes": 8249
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "sha256": "2b9d6ec76ddecec372e8203707f408af9beaddf790ba434fe9c8b99741a03860",
+      "bytes": 478465
+    },
+    {
+      "path": "frontend/src/features/copilot/use-assistant-engine.ts",
+      "sha256": "cf41fa8fdbc2cf82a4df4e77572ea6850f62f5319ff138a9baca17ab33ee3e6f",
+      "bytes": 3183
+    },
+    {
+      "path": "frontend/src/features/copilot/use-assistant-engine.test.tsx",
+      "sha256": "11218e5b4d10ee134f509de358ce2abcda07306306dd0bf4f00e9302cc725f9f",
+      "bytes": 19983
+    },
+    {
+      "path": "frontend/src/features/copilot/assistant-engine.ts",
+      "sha256": "292f9c9180ae0aeb804b51ab75b033247e3df5f4e1b526be2f37a6953642a697",
+      "bytes": 10376
+    },
+    {
+      "path": "frontend/src/features/settings/settings-model-region.tsx",
+      "sha256": "66fee47b6a1e068c1398ef5f97d6310d2f8b59f74aac23476b6076bc8b93c0b3",
+      "bytes": 7399
+    },
+    {
+      "path": "backend/src/modules/execution/local-codex-worker-env.ts",
+      "sha256": "e7415f444c4262bb33ea01d819382793bdca8852b46e5121d70f769b0631e031",
+      "bytes": 446
+    },
+    {
+      "path": ".agents/skills/oil-ui-pro/SKILL.md",
+      "sha256": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+      "bytes": 14717
+    },
+    {
+      "path": "docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "sha256": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76",
+      "bytes": 5803
+    }
+  ],
+  "receipts": [
+    {
+      "path": "docs/verification/t1294/cold-focus-default-red.log",
+      "sha256": "32468713d7030f473443417f16238a38e637082096bb6eb53649572ff299d4df",
+      "executionOwner": "Root",
+      "independentRerun": false
+    },
+    {
+      "path": "docs/verification/t1294/cold-focus-default-green.log",
+      "sha256": "22df5ea97a90a02466bb4f60bf9a2d573d636e6045afa267a50371dc4525ec71",
+      "executionOwner": "Root",
+      "independentRerun": false
+    },
+    {
+      "path": "docs/verification/t1294/codex-recovery-admission-red.log",
+      "sha256": "9163ef2290cf6e221722ebd73e808708e6c7a6b0b70e128c60643c35c9d0b096",
+      "executionOwner": "Root",
+      "independentRerun": false
+    },
+    {
+      "path": "docs/verification/t1294/codex-recovery-admission-green.log",
+      "sha256": "c91da11c1fd453228a7677042029ffde30a5799406902a4573a1708efee0f691",
+      "executionOwner": "Root",
+      "independentRerun": false
+    },
+    {
+      "path": "docs/verification/t1294/defaults-verification-green.log",
+      "sha256": "d3331fcb26a56605ecc50c26c670f5d1bfc97644f2847e8d04bec01a5883e69a",
+      "executionOwner": "Root",
+      "independentRerun": false
+    },
+    {
+      "path": "docs/verification/t1294/codex-cache-fixture-green.log",
+      "sha256": "3328f617a2e68ef5c32fdf5853e03c68eff718f49900460736e50c7f7a6ed827",
+      "executionOwner": "Root",
+      "independentRerun": false
+    },
+    {
+      "path": "docs/verification/t1294/codex-cache-green.log",
+      "sha256": "cc715bdf4a08fd0a14e5d977050586286ac942bca9cb51fb9521130f0782011c",
+      "executionOwner": "Root",
+      "independentRerun": false
+    },
+    {
+      "path": "docs/verification/t1294/codex-cache-behavior-red.log",
+      "sha256": "82f49ad8506eb4e566430056963c7d8d2d1a862aecb18bc7cc80b3b4f1073423",
+      "executionOwner": "Root",
+      "independentRerun": false
+    }
+  ],
+  "independentTestRuns": [
+    {
+      "log": "cold-focus-initial-import-failed.log",
+      "executedTests": 0,
+      "validBehaviorRed": false,
+      "reason": "module resolution before discovery"
+    },
+    {
+      "log": "cold-focus-second-actual.log",
+      "executedTests": 0,
+      "validBehaviorRed": false,
+      "reason": "Vitest it signature before discovery"
+    }
+  ],
+  "productionWritesByReviewer": 0,
+  "modelsStarted": 0,
+  "networkRequestsByReview": 0,
+  "databaseReadsByReview": 0,
+  "allBoundBytesUnchangedWhileGenerating": true,
+  "currentFindings": [
+    {
+      "id": "hook-cold-focus-implicit-legacy-write",
+      "status": "fixed-by-Root/current-source-rechecked",
+      "red": "1FAIL/25skipped",
+      "green": "3files/90PASS"
+    },
+    {
+      "id": "hook-negative-cache-lock",
+      "status": "fixed-by-Root/current-source-rechecked",
+      "red": "4FAIL/21skipped",
+      "green": "2files/86PASS"
+    },
+    {
+      "id": "current-setting-recheck-button",
+      "status": "withdrawn-stale-observation",
+      "currentButtonPresent": false
+    }
+  ],
+  "scopeStatus": "No new confirmed blocker in reviewed source; no full task/chat PASS"
+}

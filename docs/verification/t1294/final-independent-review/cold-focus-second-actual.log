@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:78183) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ ../docs/verification/t1294/final-independent-review/cold-focus-default.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  ../docs/verification/t1294/final-independent-review/cold-focus-default.test.ts [ ../docs/verification/t1294/final-independent-review/cold-focus-default.test.ts ]
+TypeError: Signature "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.
+ ❯ ../docs/verification/t1294/final-independent-review/cold-focus-default.test.ts:6:1
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  11:28:01
+   Duration  790ms (transform 31ms, setup 133ms, import 0ms, tests 0ms, environment 467ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run --config /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1294/final-independent-review/vitest.independent.config.cjs --retry=0 --maxWorkers=1

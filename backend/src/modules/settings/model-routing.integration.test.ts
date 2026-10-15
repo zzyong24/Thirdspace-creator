@@ -2,7 +2,7 @@ import {describe,expect,it} from 'vitest';
 import {createDb, sql, type RequestContext} from '@creatoros/backend';
 import {ENDPOINTS} from '@creatoros/contract';
 import {createSettingsRepository} from './settings.repository';
-import {createSettingsService} from './settings.service';
+import {createSettingsService,type ModelRoutingProjectionReader} from './settings.service';
 import {createSettingsTransport} from './settings.transport';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -11,7 +11,7 @@ import {join} from 'node:path';
 const ctx:RequestContext={userId:'routing-owner',requestId:'routing-test',source:'user'};
 const choices={text:'codex',vision:'official',image:'self',video:'self',audio:'local',embed:'official'} as const;
 
-async function fixture(dataDir?:string){
+async function fixture(dataDir?:string,projection?:ModelRoutingProjectionReader){
   const {db,client}=await createDb(dataDir?{dataDir}:undefined);let serial=0;
   const deps={now:()=>new Date().toISOString(),nextId:(prefix:string)=>`${prefix}-routing-${++serial}`};
   const repo=createSettingsRepository(db,deps);
@@ -19,7 +19,7 @@ async function fixture(dataDir?:string){
     async(owner,write)=>db.transaction(async tx=>{
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('creatoros:preferences'),hashtext(${owner.userId}))`);
       return write(createSettingsRepository(tx as never,deps));
-    }));
+    }),projection);
   return {db,client,repo,service};
 }
 
@@ -85,3 +85,54 @@ describe('T1278 真实偏好库及公开设置传输',()=>{
     }finally{await f.client.close();}
   },180_000);
 });
+
+// T1294：默认只读投影与执行共用策略，不按旧激活或现存密钥猜自配。
+it('T1294 未存选择默认全部官方，保密钥且GET不写入',async()=>{
+ const f=await fixture();try{
+  await f.service().setModelConfiguration(ctx,'default',{provider:'own',modelName:'kept-model',secret:'kept-private'});
+  expect(await f.service().getModelRouting(ctx)).toMatchObject({choices:null,revision:0,effectiveChoices:{text:'official',vision:'official',image:'official',video:'official',audio:'official',embed:'official'}});
+  expect(await f.repo.getPreferences(ctx)).toBeNull();
+  expect((await f.service().getModelConfig(ctx,'default'))?.secretValue).toBe('kept-private');
+ }finally{await f.client.close();}
+},180_000);
+it('T1294 服务端旧Codex显式选择优先，完整组合仍原样优先',async()=>{
+ const f=await fixture();try{
+  await f.service().updatePreferences(ctx,{assistantExecutionEngine:'codex'});
+  expect(await f.service().getModelRouting(ctx)).toMatchObject({choices:null,effectiveChoices:{text:'codex',vision:'codex',image:'codex',video:'official',audio:'official',embed:'official'}});
+  await f.service().putModelRouting(ctx,{schemaVersion:1,choices,expectedRevision:0});
+  expect(await f.service().getModelRouting(ctx)).toMatchObject({choices,effectiveChoices:choices});
+ }finally{await f.client.close();}
+},180_000);
+
+it('T1294 新选择Codex必须在写锁外通过检查，失败零写；后续读和无关切换不复检',async()=>{
+ let allow=false;const checks:boolean[]=[];
+ const projection:ModelRoutingProjectionReader=async(_ctx,value,options)=>{
+  checks.push(options?.checkCodex===true);
+  const effectiveChoices=value.choices!;
+  return {effectiveChoices,capabilities:[{mode:'text',capability:'copilot.assist',source:'codex',status:allow?'ready':'unavailable',reasonCode:allow?null:'CODEX_LOGIN_REQUIRED'}]};
+ };
+ const f=await fixture(undefined,projection);try{
+  const selected={text:'codex',vision:'official',image:'official',video:'official',audio:'official',embed:'official'} as const;
+  await expect(f.service().putModelRouting(ctx,{schemaVersion:1,choices:selected,expectedRevision:0})).rejects.toThrow('尚未通过');
+  expect(await f.repo.getPreferences(ctx)).toBeNull();expect(checks).toEqual([true]);
+  allow=true;await f.service().putModelRouting(ctx,{schemaVersion:1,choices:selected,expectedRevision:0});
+  await f.service().getModelRouting(ctx);
+  await f.service().putModelRouting(ctx,{schemaVersion:1,choices:{...selected,video:'self'},expectedRevision:1});
+  expect(checks.filter(Boolean)).toHaveLength(2);
+  expect((await f.repo.getPreferences(ctx))?.modelRoutingRevision).toBe(2);
+ }finally{await f.client.close();}
+},180_000);
+it('T1294 Codex检查期间并发保存仍以最终原revision CAS拒绝，不覆盖胜出选择',async()=>{
+ let checked!:()=>void,release!:()=>void;
+ const reached=new Promise<void>(resolve=>{checked=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});
+ const f=await fixture(undefined,async(_ctx,value,options)=>{
+  if(options?.checkCodex){checked();await gate;}
+  return {effectiveChoices:value.choices!,capabilities:[{mode:'text',capability:'copilot.assist',source:'codex',status:'ready',reasonCode:null}]};
+ });try{
+  const selected={text:'codex',vision:'official',image:'official',video:'official',audio:'official',embed:'official'} as const;
+  const pending=f.service().putModelRouting(ctx,{schemaVersion:1,choices:selected,expectedRevision:0});
+  const refused=expect(pending).rejects.toMatchObject({details:{domainCode:'MODEL_ROUTING_CONFLICT'}});
+  await reached;await f.service().putModelRouting(ctx,{schemaVersion:1,choices:{...selected,text:'official'},expectedRevision:0});release();await refused;
+  expect((await f.repo.getPreferences(ctx))?.modelRouting?.text).toBe('official');
+ }finally{release();await f.client.close();}
+},180_000);

@@ -2639,7 +2639,6 @@ export function AICopilotContent({
             未关联项目 · 输入 @ 引用一个项目
           </span>
         )}
-        <Link href={activeProjectChip?`/canvases?projectId=${encodeURIComponent(activeProjectChip.id)}`:"/canvases"} className="rounded-md border px-2.5 py-1 text-xs text-foreground hover:bg-surface-muted">在画布中打开</Link>
         {objectChip ? (
           <span
             data-slot="context-chip"
@@ -3547,9 +3546,9 @@ export function AICopilotContent({
             data-slot="prompt-form"
           >
             {!hasCreationWorkspace && <p role="status" data-slot="copilot-workspace-required" className="text-sm text-muted-foreground">先选择或创建账号组，再发送新请求。空组也可以创作，无需先绑定平台账号。<Link href="/accounts" onClick={preserveWorkspaceReturnDraft} className="ml-2 text-brand underline underline-offset-4">选择或创建账号组</Link></p>}
-            {!selectedEngineAvailable && (
+            {!assistantEngine.checking && !selectedEngineAvailable && (
               <p role="status" data-slot="assistant-engine-status" className="text-sm text-muted-foreground">
-                {assistantEngine.v2&&attachmentState.ids.length>0?"附带内容所需模型当前尚不可用，请核对文本与图片理解设置；输入与附件已保留":assistantEngine.status}。<Link href="/settings?highlight=assistant-engine" className="ml-2 text-brand underline underline-offset-4">设置编导引擎</Link>
+                {assistantEngine.v2&&attachmentState.ids.length>0?"附带内容所需模型当前尚不可用，请核对文本与图片理解设置；输入与附件已保留":assistantEngine.status}。<Link href="/settings?highlight=assistant-engine" className="ml-2 text-brand underline underline-offset-4">模型设置</Link>
               </p>
             )}
             {/* @项目引用(T-039b):relative 容器锚定下拉;输入 @ 弹真项目列表,选中插入 chip +

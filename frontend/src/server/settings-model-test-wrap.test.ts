@@ -535,3 +535,27 @@ describe("createSettingsWithModelTest — wrap 拦截与透传", () => {
     expect(passthrough).toHaveBeenCalledTimes(1);
   });
 });
+
+
+describe('T1294 已停用向量连接测试',()=>{
+  const disabled={ok:false,status:'fail',provider:'',model:'',detail:'向量检索已停用，知识搜索使用关键词，无需配置或测试向量模型。'};
+  function noProbe(deps:ReturnType<typeof makeDeps>){
+    for(const name of ['resolveEmbed','resolveLlm','resolveDedicatedLlm','resolveMultimodal','resolveTranscribe','resolveSearch','probeTextModel','generateImageMinimal','searchMinimal','fetchImpl'] as const)expect(deps[name]).not.toHaveBeenCalled();
+  }
+  it.each(['configured','missing','broken'] as const)('旧%s配置均在resolver与网络之前明确停用',async kind=>{
+    const resolver=vi.fn(async()=>{if(kind==='broken')throw new Error('private-secret');return kind==='missing'?null:llmSpec;});
+    const deps=makeDeps({resolveEmbed:resolver});
+    await expect(runModelConnectionTest(ctx,'knowledge.search.embed',deps)).resolves.toEqual(disabled);noProbe(deps);
+  });
+  it('原公开transport返回停用envelope，既不透传旧model test也不调用任何探针',async()=>{
+    const deps=makeDeps(),passthrough=vi.fn(async()=>({data:[],meta:{requestId:'r1'}}));
+    const wrapped=createSettingsWithModelTest({settings:{request:passthrough},...deps});
+    await expect(wrapped.request(ENDPOINTS.testModelConnection,{params:{capability:'knowledge.search.embed'},query:undefined,body:undefined},ctx)).resolves.toEqual({data:disabled,meta:{requestId:'r1'}});
+    expect(passthrough).not.toHaveBeenCalled();noProbe(deps);
+  });
+  it('旧embedding test仍需真实ctx，不能借停用旁路认证',async()=>{
+    const deps=makeDeps(),passthrough=vi.fn(async()=>({data:[]}));const wrapped=createSettingsWithModelTest({settings:{request:passthrough},...deps});
+    await expect(wrapped.request(ENDPOINTS.testModelConnection,{params:{capability:'knowledge.search.embed'},query:undefined,body:undefined})).rejects.toThrow('AuthenticationError');
+    expect(passthrough).not.toHaveBeenCalled();noProbe(deps);
+  });
+});

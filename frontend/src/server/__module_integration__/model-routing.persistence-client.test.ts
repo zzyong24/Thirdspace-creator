@@ -27,6 +27,13 @@ it('公开保存选择→真实组合根创建task冻结完整map，切偏好和
   const ctx={...user,accountId:account.id};
   const project=await call(ENDPOINTS.createProject,ctx,undefined,{title:'原路由冻结',brief:'测试元数据与真实根入口'});
   await call(ENDPOINTS.putModel,ctx,{capability:'default'},{provider:'openai',modelName:'fixture-frozen-text',apiFormat:'openai_chat',baseUrl:'https://fixture.invalid/v1',secret:'public-root-private-fixture',settings:{structuredOutputs:true}});
+  // T1294：现存自配密钥不改变默认；公开创建的真实task同样冻结官方，不能只在UI显示官方。
+  expect(await call(ENDPOINTS.getModelRouting,ctx)).toMatchObject({choices:null,revision:0,effectiveChoices:{text:'official',vision:'official',image:'official',video:'official',audio:'official',embed:'official'}});
+  const defaultRuntime=await getChatRuntime();
+  const defaultTask=await defaultRuntime.ai.createTask(ctx,{taskType:'script.draft',attemptId:'t1294-default-official-root-0001',inputData:{projectId:project.id,prompt:'默认来源隔离测试'}});
+  const defaultFrozen=await defaultRuntime.ai.getTaskRuntimeData(ctx,defaultTask.id);
+  expect(defaultFrozen.executionRoute).toMatchObject({schemaVersion:2,selectionRevision:0,routes:{'structured:script.draft':{source:'official'},'image:image.generate':{source:'official'},'asr:transcribe.audio':{source:'official'}}});
+  expect(await call(ENDPOINTS.getModelRouting,ctx)).toMatchObject({choices:null,revision:0});
   const choices={text:'self',vision:'self',image:'self',video:'self',audio:'local',embed:'self'};
   expect(await call(ENDPOINTS.putModelRouting,ctx,undefined,{schemaVersion:1,choices,expectedRevision:0})).toMatchObject({revision:1,choices,capabilities:expect.arrayContaining([{capability:'script.draft',mode:'structured',source:'self',status:'ready',reasonCode:null}])});
   const runtime=await getChatRuntime();

@@ -1,0 +1,554 @@
+{
+  "scope": "8 independent zero-turn protocols; not task retry/chat acceptance",
+  "rounds": [
+    {
+      "round": 1,
+      "kind": "status-then-controlled",
+      "startedAt": "2026-10-15T04:23:03.441Z",
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:23:29.360Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:23:29.388Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:23:29.398Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:23:29.427Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "startedAt": "2026-10-15T04:23:29.436Z",
+          "outcome": "OK"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 95205,
+          "closed": true
+        },
+        {
+          "pid": 95206,
+          "closed": true
+        },
+        {
+          "pid": 95207,
+          "closed": true
+        }
+      ],
+      "controlled": "OK",
+      "status": {
+        "producerPid": 95100,
+        "result": "OK",
+        "log": "round-1-status-pids.jsonl",
+        "producerClosed": false,
+        "nativePids": [
+          {
+            "pid": 95101,
+            "closed": true
+          },
+          {
+            "pid": 95102,
+            "closed": true
+          },
+          {
+            "pid": 95103,
+            "closed": true
+          },
+          {
+            "pid": 95104,
+            "closed": true
+          },
+          {
+            "pid": 95139,
+            "closed": true
+          },
+          {
+            "pid": 95140,
+            "closed": true
+          },
+          {
+            "pid": 95141,
+            "closed": true
+          }
+        ],
+        "forbidden": 0,
+        "allNativeClosed": true
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq/tmp/creatoros-native-codex-workspaces/798f2ba35737c07cb8643caa145d76c7339ddbfc22e51c535649fa4f55b3de8c",
+      "directChildrenClosed": true,
+      "endedAt": "2026-10-15T04:25:31.781Z"
+    },
+    {
+      "round": 2,
+      "kind": "controlled-only",
+      "startedAt": "2026-10-15T04:25:31.783Z",
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:25:31.799Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:25:31.829Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:25:31.840Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:25:31.872Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "startedAt": "2026-10-15T04:25:31.881Z",
+          "outcome": "OK"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 95662,
+          "closed": true
+        },
+        {
+          "pid": 95663,
+          "closed": true
+        },
+        {
+          "pid": 95664,
+          "closed": true
+        }
+      ],
+      "controlled": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq/tmp/creatoros-native-codex-workspaces/4f7c7b2b09ef0fccb9a86f9b0fed80b0b8bb7a3fde71344ebfbf55a556912a16",
+      "directChildrenClosed": true,
+      "endedAt": "2026-10-15T04:25:36.230Z"
+    },
+    {
+      "round": 3,
+      "kind": "status-then-controlled",
+      "startedAt": "2026-10-15T04:25:36.231Z",
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:25:54.358Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:25:54.395Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:25:54.406Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:25:54.441Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "startedAt": "2026-10-15T04:25:54.452Z",
+          "outcome": "OK"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 95738,
+          "closed": true
+        },
+        {
+          "pid": 95739,
+          "closed": true
+        },
+        {
+          "pid": 95740,
+          "closed": true
+        }
+      ],
+      "controlled": "OK",
+      "status": {
+        "producerPid": 95676,
+        "result": "OK",
+        "log": "round-3-status-pids.jsonl",
+        "producerClosed": false,
+        "nativePids": [
+          {
+            "pid": 95677,
+            "closed": true
+          },
+          {
+            "pid": 95678,
+            "closed": true
+          },
+          {
+            "pid": 95679,
+            "closed": true
+          },
+          {
+            "pid": 95680,
+            "closed": true
+          },
+          {
+            "pid": 95696,
+            "closed": true
+          },
+          {
+            "pid": 95697,
+            "closed": true
+          },
+          {
+            "pid": 95698,
+            "closed": true
+          }
+        ],
+        "forbidden": 0,
+        "allNativeClosed": true
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq/tmp/creatoros-native-codex-workspaces/0084a6d8ebb182ec497be2a28901dfa73cdb168c30fe51e4cb71eea4025efcf5",
+      "directChildrenClosed": true,
+      "endedAt": "2026-10-15T04:28:01.173Z"
+    },
+    {
+      "round": 4,
+      "kind": "controlled-only",
+      "startedAt": "2026-10-15T04:28:01.174Z",
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:28:01.196Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:28:01.225Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:28:01.235Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:28:01.264Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "startedAt": "2026-10-15T04:28:01.273Z",
+          "outcome": "OK"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 96183,
+          "closed": true
+        },
+        {
+          "pid": 96184,
+          "closed": true
+        },
+        {
+          "pid": 96186,
+          "closed": true
+        }
+      ],
+      "controlled": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq/tmp/creatoros-native-codex-workspaces/004a74a9795580cfc4c429d436ad0970aed37d8ee0c2441a774178ab9ed2b8e6",
+      "directChildrenClosed": true,
+      "endedAt": "2026-10-15T04:28:13.026Z"
+    },
+    {
+      "round": 5,
+      "kind": "status-then-controlled",
+      "startedAt": "2026-10-15T04:28:13.027Z",
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:28:24.548Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:28:24.577Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:28:24.587Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:28:24.618Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "startedAt": "2026-10-15T04:28:24.627Z",
+          "outcome": "OK"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 96218,
+          "closed": true
+        },
+        {
+          "pid": 96219,
+          "closed": true
+        },
+        {
+          "pid": 96220,
+          "closed": true
+        }
+      ],
+      "controlled": "OK",
+      "status": {
+        "producerPid": 96197,
+        "result": "OK",
+        "log": "round-5-status-pids.jsonl",
+        "producerClosed": false,
+        "nativePids": [
+          {
+            "pid": 96199,
+            "closed": true
+          },
+          {
+            "pid": 96200,
+            "closed": true
+          },
+          {
+            "pid": 96201,
+            "closed": true
+          },
+          {
+            "pid": 96202,
+            "closed": true
+          },
+          {
+            "pid": 96214,
+            "closed": true
+          },
+          {
+            "pid": 96215,
+            "closed": true
+          },
+          {
+            "pid": 96216,
+            "closed": true
+          }
+        ],
+        "forbidden": 0,
+        "allNativeClosed": true
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq/tmp/creatoros-native-codex-workspaces/fbbbe587df0ea17ecb4440bbd1533f1e4d4460199d92d731113c1c20b1559294",
+      "directChildrenClosed": true,
+      "endedAt": "2026-10-15T04:30:33.038Z"
+    },
+    {
+      "round": 6,
+      "kind": "controlled-only",
+      "startedAt": "2026-10-15T04:30:33.039Z",
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:30:33.099Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:30:33.293Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:30:33.313Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:30:33.345Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "startedAt": "2026-10-15T04:30:33.357Z",
+          "outcome": "OK"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 97161,
+          "closed": true
+        },
+        {
+          "pid": 97162,
+          "closed": true
+        },
+        {
+          "pid": 97164,
+          "closed": true
+        }
+      ],
+      "controlled": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq/tmp/creatoros-native-codex-workspaces/e0cd8a8cab80ef9414c1c4dad316adc6ddfa5189643a1c1adf02ae6f0581d03f",
+      "directChildrenClosed": true,
+      "endedAt": "2026-10-15T04:30:38.178Z"
+    },
+    {
+      "round": 7,
+      "kind": "status-then-controlled",
+      "startedAt": "2026-10-15T04:30:38.178Z",
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:30:53.511Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:30:53.552Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:30:53.563Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:30:53.597Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "startedAt": "2026-10-15T04:30:53.606Z",
+          "outcome": "OK"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 97550,
+          "closed": true
+        },
+        {
+          "pid": 97551,
+          "closed": true
+        },
+        {
+          "pid": 97552,
+          "closed": true
+        }
+      ],
+      "controlled": "OK",
+      "status": {
+        "producerPid": 97377,
+        "result": {
+          "code": "CODEX_RPC_REJECTED",
+          "method": null,
+          "rpcCode": null
+        },
+        "log": "round-7-status-pids.jsonl",
+        "producerClosed": false,
+        "nativePids": [
+          {
+            "pid": 97378,
+            "closed": true
+          },
+          {
+            "pid": 97379,
+            "closed": true
+          },
+          {
+            "pid": 97401,
+            "closed": true
+          },
+          {
+            "pid": 97407,
+            "closed": true
+          }
+        ],
+        "forbidden": 0,
+        "allNativeClosed": true
+      },
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq/tmp/creatoros-native-codex-workspaces/513a425234e6dc44f0621265730d1ba146a96031ceb9378f93651d92a650d408",
+      "directChildrenClosed": true,
+      "endedAt": "2026-10-15T04:33:08.579Z"
+    },
+    {
+      "round": 8,
+      "kind": "controlled-only",
+      "startedAt": "2026-10-15T04:33:08.581Z",
+      "rpcEvents": [
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:33:08.599Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:33:08.628Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "initialize",
+          "startedAt": "2026-10-15T04:33:08.638Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "config/read",
+          "startedAt": "2026-10-15T04:33:08.669Z",
+          "outcome": "OK"
+        },
+        {
+          "method": "account/read",
+          "startedAt": "2026-10-15T04:33:08.678Z",
+          "outcome": "OK"
+        }
+      ],
+      "pids": [
+        {
+          "pid": 98179,
+          "closed": true
+        },
+        {
+          "pid": 98180,
+          "closed": true
+        },
+        {
+          "pid": 98181,
+          "closed": true
+        }
+      ],
+      "controlled": "OK",
+      "cwd": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1294-browser-rAtSDq/tmp/creatoros-native-codex-workspaces/1a5d40d3e6e3999ae2f3e5bb550142fc9c28d6e57545db6d3b71aa5c04e70f35",
+      "directChildrenClosed": true,
+      "endedAt": "2026-10-15T04:33:12.307Z"
+    }
+  ],
+  "forbiddenRequests": 0,
+  "threadStartRequests": 0,
+  "turnStartRequests": 0,
+  "models": 0,
+  "funds": 0
+}

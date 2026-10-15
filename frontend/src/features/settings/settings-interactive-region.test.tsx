@@ -52,6 +52,9 @@ vi.mock("@tauri-apps/plugin-opener", () => ({
 }));
 
 const mockClient = {
+  getRedfox:vi.fn().mockResolvedValue({configured:false}),
+  putRedfox:vi.fn().mockResolvedValue({configured:true}),
+  deleteRedfox:vi.fn().mockResolvedValue({configured:false}),
   getModelRouting: vi.fn().mockResolvedValue({schemaVersion:1,revision:0,choices:null,legacyExecutionEngine:'pi',effectiveChoices:{},capabilities:[]}),
   putModelRouting: vi.fn(),
   getPreferences: vi.fn().mockResolvedValue({assistantExecutionEngine:"pi"}),
@@ -89,6 +92,9 @@ const mockClient = {
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    getRedfox: () => mockClient.getRedfox(),
+    putRedfox: (input:unknown) => mockClient.putRedfox(input),
+    deleteRedfox: () => mockClient.deleteRedfox(),
     getModelRouting: () => mockClient.getModelRouting(),
     putModelRouting: (input:unknown) => mockClient.putModelRouting(input),
     getPreferences: () => mockClient.getPreferences(),
@@ -643,7 +649,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     ) as HTMLInputElement;
     expect(input).not.toBeNull();
     await userEvent.type(input, "sk-local");
-    fireEvent.click(screen.getByRole("button", { name: "保存密钥" }));
+    fireEvent.click(input.closest('[data-slot="channel-model-service-credential"]')!.querySelector('button')!);
     await waitFor(() =>
       expect(mockClient.putChannelModelCredential).toHaveBeenCalledWith({
         params: { serviceId: "relay-a" },
@@ -1117,9 +1123,13 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       }),
     );
   });
-  it("[T1278/T645] 六槽可达，旧四类原配置保留且新增 vision/embed/edit，不新增雷达/search",()=>{
-    const doc=renderDialog();for(const kind of ['audio','image','imageEdit','video','embed','vision'])expect(doc.querySelector(`[data-slot="multimodal-${kind}-card"]`)).not.toBeNull();
-    expect(doc.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();for(const kind of ['review','search','fallback'])expect(doc.querySelector(`[data-slot="multimodal-${kind}-card"]`)).toBeNull();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+  it("[T1294/T645] 四用途保原配置，图片理解合并且编辑高级覆盖可达，无向量/雷达/search",()=>{
+    const doc=renderDialog();for(const kind of ['audio','image','video','vision'])expect(doc.querySelector(`[data-slot="multimodal-${kind}-card"]`)).not.toBeNull();
+    expect(doc.querySelector('[data-model-family="vision"]')).toBeNull();expect(doc.querySelector('[data-model-family="embed"]')).toBeNull();
+    expect(doc.querySelector('[data-slot="multimodal-imageEdit-card"]')).toBeNull();
+    const detail=Array.from(doc.querySelectorAll('details')).find(item=>item.querySelector('summary')?.textContent?.includes('独立编辑配置'))!;
+    detail.open=true;fireEvent(detail,new Event('toggle'));expect(doc.querySelector('[data-slot="multimodal-imageEdit-card"]')).not.toBeNull();
+    expect(doc.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();for(const kind of ['review','search','fallback','embed'])expect(doc.querySelector(`[data-slot="multimodal-${kind}-card"]`)).toBeNull();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
   });
 
   it("[T-590] 模型配置不再增加内容雷达专用卡", () => {
@@ -2326,4 +2336,14 @@ describe("T1278 原资金等待只继承原900000截止，unknown保原idem（�
       expect(fetchMock).toHaveBeenCalledTimes(2);expect(new Headers(fetchMock.mock.calls[1]![1]!.headers).get('Idempotency-Key')).toBe(originalKey);expect(screen.getByRole('status')).toHaveTextContent('本次兑换已到账');
     }finally{view.unmount();release?.(stage==='fetch'?receipt():{});await flush();vi.useRealTimers();vi.unstubAllGlobals();}
   },180_000);
+});
+
+
+it('T1294 redfox旧deep link切到模型并只有一份真实密钥入口，额度卡无旧license条件',{timeout:180_000,retry:0},async()=>{
+ mockSearchParams=new URLSearchParams('highlight=redfox');mockClient.getRedfox.mockClear();const scroll=vi.fn();const original=Element.prototype.scrollIntoView;Element.prototype.scrollIntoView=scroll;
+ try{
+  const doc=renderDialog();await act(async()=>{await new Promise(resolve=>requestAnimationFrame(()=>resolve(null)));await new Promise(resolve=>setTimeout(resolve,0));});
+  expect(doc.querySelector('[data-slot="settings-panel"][data-tab-id="models"]')).toHaveAttribute('data-active','true');expect(screen.queryByRole('button',{name:'数据服务'})).toBeNull();expect(doc.querySelector('[data-slot="settings-panel"][data-tab-id="data-services"]')).toBeNull();
+  const card=doc.querySelector('[data-highlight="redfox"]');expect(card).not.toBeNull();expect(scroll).toHaveBeenCalled();await waitFor(()=>expect(mockClient.getRedfox).toHaveBeenCalledTimes(1),{timeout:120_000});expect(doc.querySelectorAll('#redfox-key')).toHaveLength(1);expect(doc.querySelector('[data-slot="ai-credit-center-card"]')).not.toBeNull();
+ }finally{Element.prototype.scrollIntoView=original;}
 });

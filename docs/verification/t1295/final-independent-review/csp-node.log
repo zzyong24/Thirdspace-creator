@@ -1,0 +1,17 @@
+✔ 独立冒烟也剥更新根路径，父构建环境不被修改 (0.733125ms)
+✔ 桌面CSP允许现有sandbox预览的精确GSAP脚本，仍禁止eval (0.146042ms)
+✔ 桌面CSP只增专用WASM许可，来源和其它全部指令保持原边界 (0.71825ms)
+✔ 普通构建子环境剥更新根私钥路径并保持其它构建值 (0.085333ms)
+✔ 正式clean缓存绑定实际JS内容，旧标记及历史转换/新诱饵使复用失效 (4.096166ms)
+✔ 7项正式链禁止混淆/字节码/诱饵/增包盖章且保独立真实冒烟 (1.383667ms)
+✔ 最终tar出口签名、skip clean policy与直接依赖 (1.069375ms)
+✔ 独立冒烟保boot、HTTP、dispatch、Chromium hydration、原超时与关闭 (0.285375ms)
+✔ desktop release CSP保inline/blob预览且web/debug无头 (1.166541ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 150.535

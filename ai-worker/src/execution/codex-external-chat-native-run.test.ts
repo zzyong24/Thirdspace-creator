@@ -63,3 +63,125 @@ it('原生聊天真实imageGeneration item字节走原素材端口后再结算�
  const saved=ports.mock.calls.find(([port])=>port==='saveExternalChatImage')![1];expect(saved).toMatchObject({callId:'image-root',sessionId:'image-thread',toolCallId:'actual-image-item',imageIndex:0,nativeSource:{providerTurnId:'image-turn',itemId:'actual-image-item'}});expect(Buffer.from(saved.bytes)).toEqual(bytes);
  expect(ports.mock.calls.find(([port,data])=>port==='settleExternalChatTurn'&&data.status==='settled')?.[1].receipt).toMatchObject({images:[{assetId:'pending-image'}]});expect(boundaries.session).toHaveBeenCalledWith(expect.anything(),expect.anything(),undefined,true);
 });
+
+// T1294：运行真实external-chat入口，只替换非付费宿主/会话边界；禁止真CLI/turn。
+import {GenerationFailure as PreAdmissionFailure} from './generation-error';
+import {CodexHostError as PreAdmissionCodexError} from './codex-app-server-protocol';
+function preAdmissionFixture(options:{reservation?:unknown;reserveError?:unknown;credential?:unknown;credentialError?:unknown;ack?:unknown;settleError?:unknown;v2?:boolean}={}){
+ boundaries.native.mockReset();boundaries.read.mockReset();boundaries.session.mockReset();boundaries.close.mockReset();
+ boundaries.close.mockResolvedValue(undefined);
+ boundaries.session.mockRejectedValue(new PreAdmissionCodexError('CODEX_RPC_REJECTED'));
+ const source=chatWorkerInputSchema.parse({...input,tools:[],messages:[{role:'user',content:'仅受控握手fixture'}],...(options.v2?{modelRoutingVersion:2,codexNativeImageGeneration:false,requestedModel:'fixture-real-default'}:{})});
+ const ports=vi.fn(async(port:WorkerPort,data:any)=>{
+  if(port==='reserveExternalChatTurn'){if(options.reserveError)throw options.reserveError;return 'reservation' in options?options.reservation:{callId:'precheck-original-call',status:'reserved'};}
+  if(port==='resolveModelCredential'){if(options.credentialError)throw options.credentialError;return options.credential??{engine:'codex',protocolKind:'codex-app-server',runtimeVersion:'0.159.3',requestedModel:'fixture-real-default'};}
+  if(port==='settleExternalChatTurn'){if(options.settleError)throw options.settleError;return 'ack' in options?options.ack:{callId:data.callId,status:data.status};}
+  if(port==='prepareExternalChatThread')return {callId:data.callId,status:'reserved',sessionId:data.sessionId};
+  if(port==='startExternalChatTurn')throw Error('FIXTURE_ADMISSION_ACK_LOST');
+  if(port==='listExternalTaskTools')return {tools:[]};
+  throw Error(`UNEXPECTED_FIXTURE_PORT:${port}`);
+ });
+ const settleCalls=()=>ports.mock.calls.filter(([port])=>port==='settleExternalChatTurn');
+ return {source,ports,settleCalls};
+}
+async function preAdmissionError(task:Promise<unknown>){return task.then(()=>{throw Error('EXPECTED_PRE_ADMISSION_FAILURE');},error=>error);}
+function expectNoNewTurn(){expect(boundaries.native).not.toHaveBeenCalled();expect(boundaries.read).not.toHaveBeenCalled();}
+
+it('clean reserved本地握手拒绝只结算原call，严格ACK后投预检查阶段，零turn且不重reserve',async()=>{
+ const f=preAdmissionFixture();
+ const error=await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports));
+ expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error).toMatchObject({outcome:'waiting_user',errorCode:'CODEX_SESSION_PRECHECK_REJECTED'});
+ expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0]![1]).toEqual({callId:'precheck-original-call',status:'rejected',rejectionCode:'CODEX_RPC_REJECTED'});
+ expect(f.ports.mock.calls.filter(([p])=>p==='reserveExternalChatTurn')).toHaveLength(1);expectNoNewTurn();
+});
+
+it.each(['MODEL_AUTHORITY_CHANGED','MODEL_CREDENTIAL_UNAVAILABLE'] as const)('v2 typed %s保原安全码，不误报本地Codex预检查',async code=>{
+ const f=preAdmissionFixture({v2:true,credentialError:new PreAdmissionFailure('waiting_user',code)});
+ expect(await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports))).toMatchObject({outcome:'waiting_user',errorCode:code});
+ expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0]![1]).toEqual({callId:'precheck-original-call',status:'rejected',rejectionCode:code});
+ expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+});
+
+it('v2冻结真实模型身份不符保原拒绝码，不能换模型或创建session',async()=>{
+ const f=preAdmissionFixture({v2:true,credential:{engine:'codex',protocolKind:'codex-app-server',runtimeVersion:'0.159.3',requestedModel:'different-real-model'}});
+ expect(await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports))).toMatchObject({outcome:'waiting_user',errorCode:'MODEL_ROUTE_IDENTITY_CHANGED'});
+ expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0]![1]).toMatchObject({callId:'precheck-original-call',status:'rejected',rejectionCode:'MODEL_ROUTE_IDENTITY_CHANGED'});
+ expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+});
+
+it.each(['HOST_PORT_REJECTED','HOST_PORT_TIMEOUT','LEASE_FENCE_MISMATCH'])('v2宿主%s不按字符串猜配置，不伪造rejected',async code=>{
+ const f=preAdmissionFixture({v2:true,credentialError:new Error(code)});
+ const error=await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports));
+ expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcome).toBe('unknown_result');expect(f.settleCalls().some(([,d])=>d.status==='rejected')).toBe(false);
+ expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+});
+
+it.each([
+ {name:'reserve通讯失败',reserveError:new Error('HOST_PORT_TIMEOUT')},
+ {name:'reserve无回执',reservation:undefined},
+ {name:'reserve无callId',reservation:{status:'reserved'}},
+ {name:'reserve空callId',reservation:{callId:'',status:'reserved'}},
+])('$name无可信原call，不结算也不再reserve',async options=>{
+ const f=preAdmissionFixture(options);const error=await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports));
+ expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcome).toBe('unknown_result');expect(f.settleCalls()).toHaveLength(0);
+ expect(f.ports.mock.calls.filter(([p])=>p==='reserveExternalChatTurn')).toHaveLength(1);expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+});
+
+it.each([
+ {name:'结算抛错',settleError:new Error('ACK_LOST')},
+ {name:'丢结算ACK',ack:undefined},
+ {name:'错callId',ack:{callId:'other-call',status:'rejected'}},
+ {name:'错status',ack:{callId:'precheck-original-call',status:'started'}},
+ {name:'畸形ACK',ack:{callId:'precheck-original-call'}},
+])('本地拒绝但$name只保unknown，一次原结算不冒waiting_user',async options=>{
+ const f=preAdmissionFixture(options);const error=await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports));
+ expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcome).toBe('unknown_result');expect(error.errorCode).not.toBe('CODEX_SESSION_PRECHECK_REJECTED');
+ expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0]![1]).toMatchObject({callId:'precheck-original-call',status:'rejected'});expectNoNewTurn();
+});
+
+it('进入前已取消：原AbortError，不reserve、不创建会话、不结算rejected',async()=>{
+ const f=preAdmissionFixture(),controller=new AbortController();controller.abort();
+ expect(await preAdmissionError(runExternalChatInWorker(f.source,controller.signal,f.ports))).toMatchObject({name:'AbortError'});
+ expect(f.ports).not.toHaveBeenCalled();expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+});
+
+it.each(['resolve','session'] as const)('%s期间取消优先于typed/本地拒绝，不制造拒绝账本',async phase=>{
+ const controller=new AbortController();const f=preAdmissionFixture({v2:true});
+ if(phase==='session')boundaries.session.mockImplementation(async()=>{controller.abort();throw new PreAdmissionCodexError('CODEX_RPC_REJECTED');});
+ else f.ports.mockImplementation(async(port:WorkerPort)=>{if(port==='reserveExternalChatTurn')return {callId:'precheck-original-call',status:'reserved'};if(port==='resolveModelCredential'){controller.abort();throw new PreAdmissionFailure('waiting_user','MODEL_AUTHORITY_CHANGED');}throw Error('UNEXPECTED_FIXTURE_PORT');});
+ expect(await preAdmissionError(runExternalChatInWorker(f.source,controller.signal,f.ports))).toMatchObject({name:'AbortError'});
+ expect(f.settleCalls().some(([,d])=>d.status==='rejected')).toBe(false);expectNoNewTurn();
+});
+
+it('会话返回AbortError即取消，不把无显式signal标记的取消冒能力失败',async()=>{
+ const f=preAdmissionFixture();boundaries.session.mockRejectedValue(new DOMException('fixture cancellation','AbortError'));
+ expect(await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports))).toMatchObject({name:'AbortError'});
+ expect(f.settleCalls().some(([,d])=>d.status==='rejected')).toBe(false);expectNoNewTurn();
+});
+
+it.each(['started','unknown'] as const)('进入即%s的旧回合，握手失败仍保原thread/turn，绝不按局部admission=false拒绝',async status=>{
+ const f=preAdmissionFixture({reservation:{callId:'precheck-original-call',status,protocolKind:'codex-app-server',protocolVersion:1,sessionId:'original-thread',providerTurnId:'original-turn'}});
+ const error=await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports));
+ expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcome).toBe('unknown_result');expect(f.settleCalls().some(([,d])=>d.status==='rejected')).toBe(false);expectNoNewTurn();
+ expect(f.ports.mock.calls.some(([p])=>p==='startExternalChatTurn'||p==='prepareExternalChatThread')).toBe(false);
+});
+
+it('reserved已有thread保持原reconciliation guard，不建立新会话/turn',async()=>{
+ const f=preAdmissionFixture({reservation:{callId:'precheck-original-call',status:'reserved',sessionId:'original-thread'}});
+ expect(await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports))).toMatchObject({outcome:'waiting_user',errorCode:'CODEX_PREPARED_THREAD_REQUIRES_RECONCILIATION'});
+ expect(f.settleCalls()).toHaveLength(0);expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+});
+
+it('reserved只有既有providerTurnId也不是clean，不能拒绝原回合或开新turn',async()=>{
+ const f=preAdmissionFixture({reservation:{callId:'precheck-original-call',status:'reserved',providerTurnId:'original-turn'}});
+ const error=await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports));
+ expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcome).toBe('unknown_result');expect(f.settleCalls().some(([,d])=>d.status==='rejected')).toBe(false);expectNoNewTurn();
+});
+
+it('已尝试admission且ACK丢失：保unknown，不能因尚未收到turn回执而结算rejected',async()=>{
+ const f=preAdmissionFixture();boundaries.session.mockResolvedValue({authenticated:true,mcpNames:[],rpc:{close:boundaries.close}});
+ boundaries.native.mockImplementation(async options=>{await options.onThread('new-thread');await options.onAdmission('new-thread');throw Error('UNREACHABLE_AFTER_ADMISSION_ACK_LOST');});
+ const error=await preAdmissionError(runExternalChatInWorker(f.source,new AbortController().signal,f.ports));
+ expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcome).toBe('unknown_result');expect(f.settleCalls().some(([,d])=>d.status==='rejected')).toBe(false);
+ expect(boundaries.native).toHaveBeenCalledTimes(1);expect(f.ports.mock.calls.filter(([p])=>p==='startExternalChatTurn')).toHaveLength(1);expect(boundaries.close).toHaveBeenCalledTimes(1);
+});

@@ -1,0 +1,61 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/local-codex-status-handoff.public.test.ts (5 tests | 1 failed) 938ms
+   × 公共状态宿主保留authenticated边界 172ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/local-codex-status-handoff.public.test.ts > 公共状态宿主保留authenticated边界
+AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
+  {
+    available: true,
++   availableModels: [],
+    capabilities: {
++     imageEditing: 'unverified',
+      imageGeneration: true,
++     imageUnderstanding: false,
+-     imageUnderstanding: true,
+      text: true
+    },
+    engine: 'codex',
+    installed: true,
+    loginStatus: 'authenticated',
+
+
+- Expected
++ Received
+
+@@ -1,10 +1,12 @@
+  {
+    "available": true,
++   "availableModels": [],
+    "capabilities": {
++     "imageEditing": "unverified",
+      "imageGeneration": true,
+-     "imageUnderstanding": true,
++     "imageUnderstanding": false,
+      "text": true,
+    },
+    "engine": "codex",
+    "installed": true,
+    "loginStatus": "authenticated",
+
+ ❯ exercise src/modules/ai-runtime/local-codex-status-handoff.public.test.ts:68:12
+     66|    const [value]=await Promise.all(jobs);assert.ok(value);
+     67|    if(kind==='authenticated'){
+     68|     assert.deepEqual(value,{engine:'codex',installed:true,available:tr…
+       |            ^
+     69|     assert.equal(rows().filter(x=>x.type==='cleanup-finished').length,…
+     70|     const reply=rows().find(x=>x.type==='output'&&x.message?.type==='r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 20 passed (21)
+   Start at  11:01:04
+   Duration  1.66s (transform 202ms, setup 0ms, import 459ms, tests 956ms, environment 0ms)
+

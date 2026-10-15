@@ -30,19 +30,18 @@ describe('T1278 向量真实模型身份与批次冻结',()=>{
   expect(await repo.listMissingEmbeddings('knowledge',8,digestB)).toEqual([]);
   expect(await createSearchRepository(store.db,{...ctx,userId:'other',now,nextId:p=>p}).listMissingEmbeddings('knowledge',8,digestA)).toEqual([]);
  },180_000);
- it('补算在等待文档列表之前冻结来源，等候中切设置不能改已捕获Spec',async()=>{
-  let selected={model:'old',digest:digestA};let release!:()=>void;let entered!:()=>void;
-  const enteredPromise=new Promise<void>(resolve=>entered=resolve),wait=new Promise<void>(resolve=>release=resolve);
-  const row={id:'doc',entityType:'knowledge',entityId:'k',indexedAt:now(),title:'t',body:'b',searchText:'t b',embedding:[]};
-  const embed=vi.fn(async(_c:unknown,spec:typeof selected)=>{expect(spec.model).toBe('old');return [[1,0]];});
-  const search={upsertDocument:vi.fn(),listMissingEmbeddings:vi.fn(async()=>{entered();await wait;return [row];}),fillMissingEmbedding:vi.fn(async()=>true),hybridSearch:vi.fn(async()=>[]),recordSearch:vi.fn()};
-  const runtime=createKnowledgeSearchRuntime({knowledge:{getKnowledge:async()=>({id:'k',title:'t',currentRevisionId:'rev'}) as never,listRevisions:async()=>[{id:'rev',content:'b'}] as never},search,resolveEmbedSpec:async()=>structuredClone(selected),embeddingConfigDigest:spec=>spec.digest,embedTexts:embed});
+ it('T1294 索引和查询均不解析向量来源，切设置也不启动历史补算',async()=>{
+  let selected={model:'old',digest:digestA};
+  const resolveEmbedSpec=vi.fn(async()=>structuredClone(selected)),embed=vi.fn(async()=>[[1,0]]),digest=vi.fn((spec:typeof selected)=>spec.digest);
+  const search={upsertDocument:vi.fn(),listMissingEmbeddings:vi.fn(async()=>{throw new Error('停用后不可读补算库存');}),fillMissingEmbedding:vi.fn(async()=>true),hybridSearch:vi.fn(async()=>[]),recordSearch:vi.fn()};
+  const runtime=createKnowledgeSearchRuntime({knowledge:{getKnowledge:async()=>({id:'k',title:'t',currentRevisionId:'rev'}) as never,listRevisions:async()=>[{id:'rev',content:'b'}] as never},search,resolveEmbedSpec,embeddingConfigDigest:digest,embedTexts:embed});
   closes.push(()=>runtime.stop());
-  await runtime.indexKnowledgeDocumentBestEffort(ctx,'k');await enteredPromise;
-  selected={model:'new',digest:digestB};release();
-  // 等同一生命周期受管flight完成；stop会取消，不能用stop冒充自然完成。
-  await vi.waitFor(()=>expect(search.fillMissingEmbedding).toHaveBeenCalled(),{timeout:120_000,interval:10});
-  expect(search.listMissingEmbeddings).toHaveBeenCalledWith(ctx,'knowledge',8,digestA);
-  expect(search.fillMissingEmbedding).toHaveBeenCalledWith(ctx,row,[1,0],expect.any(AbortSignal),digestA);
+  await runtime.indexKnowledgeDocumentBestEffort(ctx,'k');selected={model:'new',digest:digestB};
+  await expect(runtime.hybridSearch(ctx,'q')).resolves.toEqual({semanticEnabled:false,semanticError:null,hits:[]});
+  expect(search.upsertDocument).toHaveBeenCalledExactlyOnceWith(ctx,{entityType:'knowledge',entityId:'k',title:'t',body:JSON.stringify({excerpt:'b',tags:[]}),searchText:'t\nb'});
+  expect(search.hybridSearch).toHaveBeenCalledExactlyOnceWith(ctx,'q',{entityType:'knowledge',limit:20,queryEmbedding:null});
+  expect(search.recordSearch).toHaveBeenCalledExactlyOnceWith(ctx,{query:'q',filters:{entityType:'knowledge',semantic:false},resultCount:0});
+  await runtime.stop();
+  expect(resolveEmbedSpec).not.toHaveBeenCalled();expect(digest).not.toHaveBeenCalled();expect(embed).not.toHaveBeenCalled();expect(search.listMissingEmbeddings).not.toHaveBeenCalled();expect(search.fillMissingEmbedding).not.toHaveBeenCalled();
  },180_000);
 });

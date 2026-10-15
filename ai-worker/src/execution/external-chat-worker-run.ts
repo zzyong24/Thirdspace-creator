@@ -90,6 +90,7 @@ async function recoverRoutedChatChildren(signal:AbortSignal,call:Call){
 }
 export async function runExternalChatInWorker(raw:ChatInput,signal:AbortSignal,call:Call,onText?:(text:string)=>void|Promise<void>):Promise<{callId:string}>{
  const input=chatWorkerInputSchema.parse(raw);
+ signal.throwIfAborted();
  if(input.externalAgentBinding){
   if(input.modelRoutingVersion===2)throw new GenerationFailure('waiting_user','CODEX_V2_PROTOCOL_MISMATCH');
   return runCodexAcpInWorker(input,signal,call,onText);
@@ -97,21 +98,41 @@ export async function runExternalChatInWorker(raw:ChatInput,signal:AbortSignal,c
  if(input.modelRoutingVersion===2&&(!input.requestedModel||input.codexNativeImageGeneration!==false))throw new GenerationFailure('waiting_user','MODEL_ROUTE_NOT_FROZEN');
  if(input.executionEngine!=='codex')throw new GenerationFailure('waiting_user','CODEX_ENGINE_UNAVAILABLE');
  const images:Array<{url:string}>=[],prompt=externalChatPrompt(input,images),cwd=await externalAgentWorkingDirectory(input);
- const reservation=externalChatTurnStateSchema.parse(await call('reserveExternalChatTurn',{},signal));
+ let reservation:z.infer<typeof externalChatTurnStateSchema>;
+ try{reservation=externalChatTurnStateSchema.parse(await call('reserveExternalChatTurn',{},signal));}
+ catch(error){signal.throwIfAborted();if(error instanceof Error&&error.name==='AbortError')throw error;throw new GenerationFailure('unknown_result','CODEX_RESERVATION_RESULT_UNKNOWN');}
  if(reservation.status==='settled')return {callId:reservation.callId};
  if(reservation.status==='rejected')throw new GenerationFailure('waiting_user','CODEX_PREVIOUS_TURN_REJECTED');
  if(reservation.status==='reserved'&&reservation.sessionId)throw new GenerationFailure('waiting_user','CODEX_PREPARED_THREAD_REQUIRES_RECONCILIATION');
+ if(reservation.status==='reserved'&&reservation.providerTurnId)throw new GenerationFailure('unknown_result','CODEX_TURN_RESULT_UNKNOWN');
+ let owned:Awaited<ReturnType<typeof createControlledCodexSession>>;
+ try{
  if(input.modelRoutingVersion===2&&reservation.status==='reserved'){
   const selected=executionModelSpecSchema.parse(await call('resolveModelCredential',{capability:input.capability},signal));
   if(!('engine' in selected)||selected.engine!=='codex'||selected.requestedModel!==input.requestedModel)throw new GenerationFailure('waiting_user','MODEL_ROUTE_IDENTITY_CHANGED');
  }
  const nativeImages=input.modelRoutingVersion!==2;
- let owned:Awaited<ReturnType<typeof createControlledCodexSession>>;
  try{owned=await createControlledCodexSession(cwd,signal,undefined,nativeImages);}catch(error){
   if(!nativeImages||!(error instanceof CodexHostError)||!['CODEX_IMAGE_CAPABILITY_UNAVAILABLE','CODEX_IMAGE_MODEL_UNAVAILABLE'].includes(error.code))throw error;
   owned=await createControlledCodexSession(cwd,signal);
  }
- let admission=false,sessionId:string|undefined,actualTurnId:string|undefined,recoveredFacts:{model:string|null;modelProvider:string|null}|undefined;
+ }catch(error){
+  signal.throwIfAborted();if(error instanceof Error&&error.name==='AbortError')throw error;
+  const clean=reservation.status==='reserved'&&!reservation.sessionId&&!reservation.providerTurnId;
+  const localRejection=error instanceof CodexHostError;
+  const credentialRejection=error instanceof GenerationFailure&&error.outcome==='waiting_user'&&['MODEL_AUTHORITY_CHANGED','MODEL_CREDENTIAL_UNAVAILABLE','MODEL_ROUTE_IDENTITY_CHANGED'].includes(error.errorCode);
+  if(!clean||(!localRejection&&!credentialRejection))throw new GenerationFailure('unknown_result',localRejection?error.code:'CODEX_PRECHECK_RESULT_UNKNOWN');
+  const rejectionCode=localRejection?error.code:(error as GenerationFailure).errorCode;
+  try{
+   const saved=externalChatTurnStateSchema.parse(await call('settleExternalChatTurn',{callId:reservation.callId,status:'rejected',rejectionCode},signal));
+   if(saved.callId!==reservation.callId||saved.status!=='rejected')throw new Error('UNCONFIRMED_SETTLEMENT');
+  }catch(settlementError){
+   signal.throwIfAborted();if(settlementError instanceof Error&&settlementError.name==='AbortError')throw settlementError;
+   throw new GenerationFailure('unknown_result','CODEX_SETTLEMENT_RECEIPT_UNKNOWN');
+  }
+  throw new GenerationFailure('waiting_user',localRejection?'CODEX_SESSION_PRECHECK_REJECTED':rejectionCode);
+ }
+ let admission=reservation.status==='started'||reservation.status==='unknown',sessionId:string|undefined,actualTurnId:string|undefined,recoveredFacts:{model:string|null;modelProvider:string|null}|undefined;
  const consumer=createExternalChatToolConsumer(input,reservation.callId,signal,call);
  try{
   let result;
@@ -147,6 +168,7 @@ export async function runExternalChatInWorker(raw:ChatInput,signal:AbortSignal,c
   if(saved.callId!==reservation.callId||saved.status!=='settled')throw new CodexHostError('CODEX_SETTLEMENT_RECEIPT_UNKNOWN');
   return {callId:reservation.callId};
  }catch(error){
+  signal.throwIfAborted();if(error instanceof Error&&error.name==='AbortError')throw error;
   const errorCode=error instanceof CodexHostError?error.code:'CODEX_HOST_FAILED';
   try{await call('settleExternalChatTurn',admission?{callId:reservation.callId,status:'unknown'}:{callId:reservation.callId,status:'rejected',rejectionCode:errorCode});}catch{/* 原始故障与账本留给宿主对账。 */}
   throw new GenerationFailure(admission?'unknown_result':'waiting_user',errorCode);

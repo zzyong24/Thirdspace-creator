@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "docs/verification/t1295/spec-review-round1/REPORT.md",
+      "sha256": "669275c63d8da85b7a816e20d235f5a896910463ee536807b594e0e0f148f94c"
+    },
+    {
+      "path": "docs/verification/t1295/spec-review-round1/SOURCE_BINDING.json",
+      "sha256": "a9d82d700b65c8b5abe64eee4f196f7d578ef38cba8b948580201bba12f00df9"
+    },
+    {
+      "path": "docs/verification/t1295/spec-review-round1/probe-page.html",
+      "sha256": "f915d51f435ef74a2796b2659dee72cc3325e488722391ecee134385722fc70e"
+    },
+    {
+      "path": "docs/verification/t1295/spec-review-round1/round-1.json",
+      "sha256": "6da0ebfac08e3e7493e6ac050f0780d709919fe5eea235dacb8455bf3a9e0fda"
+    }
+  ],
+  "runtimeTests": "NOT-RUN",
+  "sourceWrites": 0,
+  "controlWrites": 0
+}

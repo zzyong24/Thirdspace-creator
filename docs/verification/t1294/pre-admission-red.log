@@ -1,0 +1,358 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts (28 tests | 22 failed) 45ms
+   × clean reserved本地握手拒绝只结算原call，严格ACK后投预检查阶段，零turn且不重reserve 3ms
+   × v2 typed MODEL_AUTHORITY_CHANGED保原安全码，不误报本地Codex预检查 2ms
+   × v2 typed MODEL_CREDENTIAL_UNAVAILABLE保原安全码，不误报本地Codex预检查 1ms
+   × v2冻结真实模型身份不符保原拒绝码，不能换模型或创建session 2ms
+   × v2宿主HOST_PORT_REJECTED不按字符串猜配置，不伪造rejected 1ms
+   × v2宿主HOST_PORT_TIMEOUT不按字符串猜配置，不伪造rejected 1ms
+   × v2宿主LEASE_FENCE_MISMATCH不按字符串猜配置，不伪造rejected 1ms
+   × 'reserve通讯失败'无可信原call，不结算也不再reserve 1ms
+   × 'reserve无回执'无可信原call，不结算也不再reserve 1ms
+   × 'reserve无callId'无可信原call，不结算也不再reserve 1ms
+   × 'reserve空callId'无可信原call，不结算也不再reserve 1ms
+   × 本地拒绝但'结算抛错'只保unknown，一次原结算不冒waiting_user 0ms
+   × 本地拒绝但'丢结算ACK'只保unknown，一次原结算不冒waiting_user 0ms
+   × 本地拒绝但'错callId'只保unknown，一次原结算不冒waiting_user 0ms
+   × 本地拒绝但'错status'只保unknown，一次原结算不冒waiting_user 0ms
+   × 本地拒绝但'畸形ACK'只保unknown，一次原结算不冒waiting_user 15ms
+   × 进入前已取消：原AbortError，不reserve、不创建会话、不结算rejected 1ms
+   × resolve期间取消优先于typed/本地拒绝，不制造拒绝账本 1ms
+   × session期间取消优先于typed/本地拒绝，不制造拒绝账本 1ms
+   × 进入即started的旧回合，握手失败仍保原thread/turn，绝不按局部admission=false拒绝 1ms
+   × 进入即unknown的旧回合，握手失败仍保原thread/turn，绝不按局部admission=false拒绝 0ms
+   × reserved只有既有providerTurnId也不是clean，不能拒绝原回合或开新turn 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 22 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > clean reserved本地握手拒绝只结算原call，严格ACK后投预检查阶段，零turn且不重reserve
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:93:16
+     91|  const f=preAdmissionFixture();
+     92|  const error=await preAdmissionError(runExternalChatInWorker(f.source,…
+     93|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error).toMat…
+       |                ^
+     94|  expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0][1])…
+     95|  expect(f.ports.mock.calls.filter(([p])=>p==='reserveExternalChatTurn'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > v2 typed MODEL_AUTHORITY_CHANGED保原安全码，不误报本地Codex预检查
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > v2 typed MODEL_CREDENTIAL_UNAVAILABLE保原安全码，不误报本地Codex预检查
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts:101:26
+     99|  const f=preAdmissionFixture({v2:true,credentialError:new PreAdmission…
+    100|  expect(await preAdmissionError(runExternalChatInWorker(f.source,new A…
+    101|  expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0][1])…
+       |                          ^
+    102|  expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+    103| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > v2冻结真实模型身份不符保原拒绝码，不能换模型或创建session
+AssertionError: expected ZodError: [
+  {
+    "code": "invalid_unio… { …(8) } to match object { outcome: 'waiting_user', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "MODEL_ROUTE_IDENTITY_CHANGED",
+-   "outcome": "waiting_user",
++ ZodError {
++   "message": "[
++   {
++     \"code\": \"invalid_union\",
++     \"errors\": [
++       [
++         {
++           \"code\": \"invalid_value\",
++           \"values\": [
++             \"anthropic\",
++             \"openai_chat\",
++             \"openai_responses\"
++           ],
++           \"path\": [
++             \"apiFormat\"
++           ],
++           \"message\": \"Invalid option: expected one of \\\"anthropic\\\"|\\\"openai_chat\\\"|\\\"openai_responses\\\"\"
++         },
++         {
++           \"expected\": \"string\",
++           \"code\": \"invalid_type\",
++           \"path\": [
++             \"baseUrl\"
++           ],
++           \"message\": \"Invalid input: expected string, received undefined\"
++         },
++         {
++           \"expected\": \"string\",
++           \"code\": \"invalid_type\",
++           \"path\": [
++             \"model\"
++           ],
++           \"message\": \"Invalid input: expected string, received undefined\"
++         },
++         {
++           \"expected\": \"string\",
++           \"code\": \"invalid_type\",
++           \"path\": [
++             \"token\"
++           ],
++           \"message\": \"Invalid input: expected string, received undefined\"
++         }
++       ],
++       [
++         {
++           \"code\": \"invalid_value\",
++           \"values\": [
++             \"codex-app-server\"
++           ],
++           \"path\": [
++             \"protocolKind\"
++           ],
++           \"message\": \"Invalid input: expected \\\"codex-app-server\\\"\"
++         },
++         {
++           \"code\": \"invalid_value\",
++           \"values\": [
++             \"0.159.3\"
++           ],
++           \"path\": [
++             \"runtimeVersion\"
++           ],
++           \"message\": \"Invalid input: expected \\\"0.159.3\\\"\"
++         }
++       ]
++     ],
++     \"path\": [],
++     \"message\": \"Invalid input\"
++   }
++ ]",
++   "name": "ZodError",
+  }
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts:107:106
+    105| it('v2冻结真实模型身份不符保原拒绝码，不能换模型或创建session',async()=>{
+    106|  const f=preAdmissionFixture({v2:true,credential:{engine:'codex',reque…
+    107|  expect(await preAdmissionError(runExternalChatInWorker(f.source,new A…
+       |                                                                                                          ^
+    108|  expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0][1])…
+    109|  expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > v2宿主HOST_PORT_REJECTED不按字符串猜配置，不伪造rejected
+AssertionError: expected Error: HOST_PORT_REJECTED to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:115:16
+    113|  const f=preAdmissionFixture({v2:true,credentialError:new Error(code)}…
+    114|  const error=await preAdmissionError(runExternalChatInWorker(f.source,…
+    115|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    116|  expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+    117| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > v2宿主HOST_PORT_TIMEOUT不按字符串猜配置，不伪造rejected
+AssertionError: expected Error: HOST_PORT_TIMEOUT to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:115:16
+    113|  const f=preAdmissionFixture({v2:true,credentialError:new Error(code)}…
+    114|  const error=await preAdmissionError(runExternalChatInWorker(f.source,…
+    115|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    116|  expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+    117| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > v2宿主LEASE_FENCE_MISMATCH不按字符串猜配置，不伪造rejected
+AssertionError: expected Error: LEASE_FENCE_MISMATCH to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:115:16
+    113|  const f=preAdmissionFixture({v2:true,credentialError:new Error(code)}…
+    114|  const error=await preAdmissionError(runExternalChatInWorker(f.source,…
+    115|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    116|  expect(boundaries.session).not.toHaveBeenCalled();expectNoNewTurn();
+    117| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 'reserve通讯失败'无可信原call，不结算也不再reserve
+AssertionError: expected Error: HOST_PORT_TIMEOUT to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:126:16
+    124| ])('$name无可信原call，不结算也不再reserve',async options=>{
+    125|  const f=preAdmissionFixture(options);const error=await preAdmissionEr…
+    126|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    127|  expect(f.ports.mock.calls.filter(([p])=>p==='reserveExternalChatTurn'…
+    128| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 'reserve无回执'无可信原call，不结算也不再reserve
+AssertionError: expected ZodError: [
+  {
+    "expected": "object",… { …(8) } to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:126:16
+    124| ])('$name无可信原call，不结算也不再reserve',async options=>{
+    125|  const f=preAdmissionFixture(options);const error=await preAdmissionEr…
+    126|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    127|  expect(f.ports.mock.calls.filter(([p])=>p==='reserveExternalChatTurn'…
+    128| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 'reserve无callId'无可信原call，不结算也不再reserve
+AssertionError: expected ZodError: [
+  {
+    "expected": "string",… { …(8) } to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:126:16
+    124| ])('$name无可信原call，不结算也不再reserve',async options=>{
+    125|  const f=preAdmissionFixture(options);const error=await preAdmissionEr…
+    126|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    127|  expect(f.ports.mock.calls.filter(([p])=>p==='reserveExternalChatTurn'…
+    128| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 'reserve空callId'无可信原call，不结算也不再reserve
+AssertionError: expected ZodError: [
+  {
+    "origin": "string",
+ … { …(8) } to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:126:16
+    124| ])('$name无可信原call，不结算也不再reserve',async options=>{
+    125|  const f=preAdmissionFixture(options);const error=await preAdmissionEr…
+    126|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    127|  expect(f.ports.mock.calls.filter(([p])=>p==='reserveExternalChatTurn'…
+    128| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 本地拒绝但'结算抛错'只保unknown，一次原结算不冒waiting_user
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 本地拒绝但'丢结算ACK'只保unknown，一次原结算不冒waiting_user
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 本地拒绝但'错callId'只保unknown，一次原结算不冒waiting_user
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 本地拒绝但'错status'只保unknown，一次原结算不冒waiting_user
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 本地拒绝但'畸形ACK'只保unknown，一次原结算不冒waiting_user
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:138:16
+    136| ])('本地拒绝但$name只保unknown，一次原结算不冒waiting_user',async options=>{
+    137|  const f=preAdmissionFixture(options);const error=await preAdmissionEr…
+    138|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    139|  expect(f.settleCalls()).toHaveLength(1);expect(f.settleCalls()[0][1])…
+    140| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 进入前已取消：原AbortError，不reserve、不创建会话、不结算rejected
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to match object { name: 'AbortError' }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ CodexHostError {
++   "name": "CodexHostError",
+  }
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts:144:95
+    142| it('进入前已取消：原AbortError，不reserve、不创建会话、不结算rejected',async()=>{
+    143|  const f=preAdmissionFixture(),controller=new AbortController();contro…
+    144|  expect(await preAdmissionError(runExternalChatInWorker(f.source,contr…
+       |                                                                                               ^
+    145|  expect(f.ports).not.toHaveBeenCalled();expect(boundaries.session).not…
+    146| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > resolve期间取消优先于typed/本地拒绝，不制造拒绝账本
+AssertionError: expected Error: MODEL_AUTHORITY_CHANGED { …(3) } to match object { name: 'AbortError' }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ GenerationFailure {
++   "message": "MODEL_AUTHORITY_CHANGED",
++   "outcome": "waiting_user",
++   "errorCode": "MODEL_AUTHORITY_CHANGED",
++   "retryAfterMs": undefined,
+  }
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts:152:95
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > session期间取消优先于typed/本地拒绝，不制造拒绝账本
+AssertionError: expected ZodError: [
+  {
+    "code": "invalid_unio… { …(8) } to match object { name: 'AbortError' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ ZodError {
++   "name": "ZodError",
+  }
+
+ ❯ src/execution/codex-external-chat-native-run.test.ts:152:95
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 进入即started的旧回合，握手失败仍保原thread/turn，绝不按局部admission=false拒绝
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > 进入即unknown的旧回合，握手失败仍保原thread/turn，绝不按局部admission=false拒绝
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:165:16
+    163|  const f=preAdmissionFixture({reservation:{callId:'precheck-original-c…
+    164|  const error=await preAdmissionError(runExternalChatInWorker(f.source,…
+    165|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    166|  expect(f.ports.mock.calls.some(([p])=>p==='startExternalChatTurn'||p=…
+    167| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/22]⎯
+
+ FAIL  src/execution/codex-external-chat-native-run.test.ts > reserved只有既有providerTurnId也不是clean，不能拒绝原回合或开新turn
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { …(3) } to be an instance of GenerationFailure
+ ❯ src/execution/codex-external-chat-native-run.test.ts:178:16
+    176|  const f=preAdmissionFixture({reservation:{callId:'precheck-original-c…
+    177|  const error=await preAdmissionError(runExternalChatInWorker(f.source,…
+    178|  expect(error).toBeInstanceOf(PreAdmissionFailure);expect(error.outcom…
+       |                ^
+    179| });
+    180|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/22]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  22 failed | 6 passed (28)
+   Start at  11:48:20
+   Duration  2.11s (transform 887ms, setup 0ms, import 1.90s, tests 45ms, environment 0ms)
+

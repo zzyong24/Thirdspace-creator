@@ -1,0 +1,13 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> vitest run -- --retry=0
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  79 passed (79)
+      Tests  519 passed (519)
+   Start at  11:24:26
+   Duration  18.81s (transform 8.32s, setup 0ms, import 35.00s, tests 21.39s, environment 7ms)
+

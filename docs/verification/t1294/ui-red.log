@@ -1,0 +1,2488 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:70549) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/settings-interactive-region.test.tsx (115 tests | 1 failed | 114 skipped) 566ms
+   × T1294 redfox旧deep link切到模型并只有一份真实密钥入口，额度卡无旧license条件 563ms
+(node:70621) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/model-capability-source.test.tsx (12 tests | 4 failed | 8 skipped) 797ms
+     × 四个可见来源，无向量配置和独立图片理解来源 326ms
+     × null官方effective为当前默认，未修改不需首保存；首次真修改仍完整六槽CAS 177ms
+     × 旧mixed图片改文本时原vision/image与隐藏embed原样保存 153ms
+     × 主动选图片来源才同一次CAS统一理解与生成编辑，隐藏embed不改 141ms
+(node:70622) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/ai-credit-entry.test.tsx (10 tests | 10 failed) 159ms
+     × 模式global永久入口，挂载零资金请求 85ms
+     × 模式project-overview永久入口，挂载零资金请求 6ms
+     × 模式project-workspace永久入口，挂载零资金请求 15ms
+     × 模式search永久入口，挂载零资金请求 10ms
+     × 模式overlay-background永久入口，挂载零资金请求 6ms
+     × 同一次点击走原connect/no-store，双击只一单，实际受控opener一次 6ms
+     × scope后connect晚回不打开，不走浏览器fallback 7ms
+     × unmount后connect晚回不打开，不走浏览器fallback 7ms
+     × json读取晚回、错组后不得打开旧额度中心 6ms
+     × 真实受控失败保原错误与显式模型设置路径，不发新bootstrap 11ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > 模式global永久入口，挂载零资金请求
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+    [33mdata-layout[39m=[32m"overlay"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"global"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "搜索项目":
+  [36m<a[39m
+    [33maria-label[39m=[32m"搜索项目"[39m
+    [33mclass[39m=[32m"flex h-10 w-10 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+    [33mhref[39m=[32m"/search"[39m
+  [36m/>[39m
+
+  Name "＋ 新建项目":
+  [36m<a[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mhref[39m=[32m"/projects/new"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+      [33mdata-layout[39m=[32m"overlay"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"global"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [33mdata-slot[39m=[32m"header-page-heading"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"pointer-events-auto flex shrink-0 items-center gap-2 sm:gap-3"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"搜索项目"[39m
+          [33mclass[39m=[32m"flex h-10 w-10 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+          [33mhref[39m=[32m"/search"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-search size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m21 21-4.34-4.34"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"11"[39m
+              [33mcy[39m=[32m"11"[39m
+              [33mr[39m=[32m"8"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"hidden flex-1 md:block"[39m
+          [36m>[39m
+            [0m搜索项目名称、关键词...[0m
+          [36m</span>[39m
+          [36m<kbd[39m
+            [33mclass[39m=[32m"hidden rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] md:block"[39m
+          [36m>[39m
+            [0m⌘ K[0m
+          [36m</kbd>[39m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+          [33mhref[39m=[32m"/projects/new"[39m
+        [36m>[39m
+          [0m＋ 新建项目[0m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:18:17
+     16|  it.each(['global','project-overview','project-workspace','search','ov…
+     17|   const fetch=vi.spyOn(globalThis,'fetch').mockRejectedValue(Error('禁止…
+     18|   expect(screen.getByRole('button',{name:'充值'})).toBeEnabled();expect(…
+       |                 ^
+     19|  });
+     20|  it('同一次点击走原connect/no-store，双击只一单，实际受控opener一次',{timeout:180_000,retr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > 模式project-overview永久入口，挂载零资金请求
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 gap-3 px-page-gutter h-40 shrink-0 items-start border-b border-border bg-surface py-5"[39m
+    [33mdata-layout[39m=[32m"flow"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"project-overview"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 gap-3 px-page-gutter h-40 shrink-0 items-start border-b border-border bg-surface py-5"[39m
+      [33mdata-layout[39m=[32m"flow"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"project-overview"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex min-w-0 flex-1 gap-card-gap flex-col items-start"[39m
+        [33mdata-slot[39m=[32m"header-project-identity"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex min-w-0 flex-col gap-2"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m项目　›　[0m
+            [0m项目概览[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"truncate text-2xl font-semibold text-foreground"[39m
+          [36m>[39m
+            [0m项目概览[0m
+          [36m</span>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex shrink-0 items-center gap-3 pt-0.5"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m/>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:18:17
+     16|  it.each(['global','project-overview','project-workspace','search','ov…
+     17|   const fetch=vi.spyOn(globalThis,'fetch').mockRejectedValue(Error('禁止…
+     18|   expect(screen.getByRole('button',{name:'充值'})).toBeEnabled();expect(…
+       |                 ^
+     19|  });
+     20|  it('同一次点击走原connect/no-store，双击只一单，实际受控opener一次',{timeout:180_000,retr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > 模式project-workspace永久入口，挂载零资金请求
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface"[39m
+    [33mdata-layout[39m=[32m"flow"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"project-workspace"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "项目阶段":
+  [36m<ol[39m
+    [33maria-label[39m=[32m"项目阶段"[39m
+    [33mclass[39m=[32m"relative min-w-0 flex-1 items-stretch overflow-x-auto hidden md:flex"[39m
+    [33mdata-current[39m=[32m"script"[39m
+    [33mdata-slot[39m=[32m"header-stage-stepper"[39m
+    [33mrole[39m=[32m"list"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+    [33mdata-current[39m=[32m"false"[39m
+    [33mdata-status[39m=[32m"completed"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+    [33mdata-current[39m=[32m"false"[39m
+    [33mdata-status[39m=[32m"completed"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+    [33mdata-current[39m=[32m"true"[39m
+    [33mdata-status[39m=[32m"in_progress"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+    [33mdata-current[39m=[32m"false"[39m
+    [33mdata-status[39m=[32m"pending"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+    [33mdata-current[39m=[32m"false"[39m
+    [33mdata-status[39m=[32m"pending"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+    [33mdata-current[39m=[32m"false"[39m
+    [33mdata-status[39m=[32m"pending"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "搜索":
+  [36m<a[39m
+    [33maria-label[39m=[32m"搜索"[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 size-9"[39m
+    [33mhref[39m=[32m"/search"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface"[39m
+      [33mdata-layout[39m=[32m"flow"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"project-workspace"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex min-w-0 flex-1 gap-card-gap items-center"[39m
+        [33mdata-slot[39m=[32m"header-project-identity"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex w-32 min-w-0 shrink-0 flex-col lg:w-64"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"truncate text-sm font-medium text-foreground"[39m
+          [36m>[39m
+            [0m项目[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"truncate text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m最近更新 —[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<ol[39m
+          [33maria-label[39m=[32m"项目阶段"[39m
+          [33mclass[39m=[32m"relative min-w-0 flex-1 items-stretch overflow-x-auto hidden md:flex"[39m
+          [33mdata-current[39m=[32m"script"[39m
+          [33mdata-slot[39m=[32m"header-stage-stepper"[39m
+          [33mrole[39m=[32m"list"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+            [33mdata-current[39m=[32m"false"[39m
+            [33mdata-status[39m=[32m"completed"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground border-l"[39m
+              [33mdata-testid[39m=[32m"stage-segment-research"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"size-1.5 rounded-full bg-success"[39m
+              [36m/>[39m
+              [0m研究[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+            [33mdata-current[39m=[32m"false"[39m
+            [33mdata-status[39m=[32m"completed"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground"[39m
+              [33mdata-testid[39m=[32m"stage-segment-planning"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"size-1.5 rounded-full bg-success"[39m
+              [36m/>[39m
+              [0m策划[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+            [33mdata-current[39m=[32m"true"[39m
+            [33mdata-status[39m=[32m"in_progress"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-current[39m=[32m"step"[39m
+              [33mclass[39m=[32m"flex h-full w-full items-center justify-center gap-1 border-y border-r px-3 text-xs border-brand/30 bg-brand-soft font-medium text-brand"[39m
+              [33mdata-testid[39m=[32m"stage-segment-script"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"size-1.5 rounded-full bg-brand"[39m
+              [36m/>[39m
+              [0m写稿[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+            [33mdata-current[39m=[32m"false"[39m
+            [33mdata-status[39m=[32m"pending"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground"[39m
+              [33mdata-testid[39m=[32m"stage-segment-production"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"size-1.5 rounded-full bg-border-strong"[39m
+              [36m/>[39m
+              [0m制作[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+            [33mdata-current[39m=[32m"false"[39m
+            [33mdata-status[39m=[32m"pending"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-disabled[39m=[32m"true"[39m
+              [33mclass[39m=[32m"flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground cursor-not-allowed opacity-70"[39m
+              [33mdata-testid[39m=[32m"stage-segment-publishing"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"size-1.5 rounded-full bg-border-strong"[39m
+              [36m/>[39m
+              [0m发布[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex h-12 flex-1 items-stretch min-w-24"[39m
+            [33mdata-current[39m=[32m"false"[39m
+            [33mdata-status[39m=[32m"pending"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-disabled[39m=[32m"true"[39m
+              [33mclass[39m=[32m"flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground cursor-not-allowed opacity-70"[39m
+              [33mdata-testid[39m=[32m"stage-segment-review"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"size-1.5 rounded-full bg-border-strong"[39m
+              [36m/>[39m
+              [0m复盘[0m
+            [36m</span>[39m
+          [36m</li>[39m
+        [36m</ol>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex shrink-0 items-center gap-3"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"搜索"[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 size-9"[39m
+          [33mhref[39m=[32m"/search"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-search size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m21 21-4.34-4.34"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"11"[39m
+              [33mcy[39m=[32m"11"[39m
+              [33mr[39m=[32m"8"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:18:17
+     16|  it.each(['global','project-overview','project-workspace','search','ov…
+     17|   const fetch=vi.spyOn(globalThis,'fetch').mockRejectedValue(Error('禁止…
+     18|   expect(screen.getByRole('button',{name:'充值'})).toBeEnabled();expect(…
+       |                 ^
+     19|  });
+     20|  it('同一次点击走原connect/no-store，双击只一单，实际受控opener一次',{timeout:180_000,retr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > 模式search永久入口，挂载零资金请求
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface"[39m
+    [33mdata-layout[39m=[32m"flow"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"search"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  search:
+
+  Name "":
+  [36m<form[39m
+    [33mclass[39m=[32m"flex min-w-0 flex-1 items-center gap-2"[39m
+    [33mdata-slot[39m=[32m"header-search"[39m
+    [33mrole[39m=[32m"search"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  searchbox:
+
+  Name "全局搜索":
+  [36m<input[39m
+    [33mautocomplete[39m=[32m"off"[39m
+    [33mclass[39m=[32m"min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 h-9 w-full pl-8"[39m
+    [33mdata-slot[39m=[32m"header-search-input"[39m
+    [33mid[39m=[32m"app-header-search"[39m
+    [33mplaceholder[39m=[32m"搜索项目、素材或知识"[39m
+    [33mtype[39m=[32m"search"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter h-header shrink-0 border-b border-border bg-surface"[39m
+      [33mdata-layout[39m=[32m"flow"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"search"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<form[39m
+        [33mclass[39m=[32m"flex min-w-0 flex-1 items-center gap-2"[39m
+        [33mdata-slot[39m=[32m"header-search"[39m
+        [33mrole[39m=[32m"search"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"sr-only"[39m
+          [33mfor[39m=[32m"app-header-search"[39m
+        [36m>[39m
+          [0m全局搜索[0m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex flex-1 items-center"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-search pointer-events-none absolute left-2.5 size-4 text-muted-foreground"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m21 21-4.34-4.34"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"11"[39m
+              [33mcy[39m=[32m"11"[39m
+              [33mr[39m=[32m"8"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"off"[39m
+            [33mclass[39m=[32m"min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 h-9 w-full pl-8"[39m
+            [33mdata-slot[39m=[32m"header-search-input"[39m
+            [33mid[39m=[32m"app-header-search"[39m
+            [33mplaceholder[39m=[32m"搜索项目、素材或知识"[39m
+            [33mtype[39m=[32m"search"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</form>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex shrink-0 items-center gap-2"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m/>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:18:17
+     16|  it.each(['global','project-overview','project-workspace','search','ov…
+     17|   const fetch=vi.spyOn(globalThis,'fetch').mockRejectedValue(Error('禁止…
+     18|   expect(screen.getByRole('button',{name:'充值'})).toBeEnabled();expect(…
+       |                 ^
+     19|  });
+     20|  it('同一次点击走原connect/no-store，双击只一单，实际受控opener一次',{timeout:180_000,retr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > 模式overlay-background永久入口，挂载零资金请求
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+    [33mdata-layout[39m=[32m"overlay"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"overlay-background"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "搜索项目":
+  [36m<a[39m
+    [33maria-label[39m=[32m"搜索项目"[39m
+    [33mclass[39m=[32m"flex h-10 w-10 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+    [33mhref[39m=[32m"/search"[39m
+  [36m/>[39m
+
+  Name "＋ 新建项目":
+  [36m<a[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mhref[39m=[32m"/projects/new"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+      [33mdata-layout[39m=[32m"overlay"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"overlay-background"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [33mdata-slot[39m=[32m"header-page-heading"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"pointer-events-auto flex shrink-0 items-center gap-2 sm:gap-3"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"搜索项目"[39m
+          [33mclass[39m=[32m"flex h-10 w-10 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+          [33mhref[39m=[32m"/search"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-search size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m21 21-4.34-4.34"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"11"[39m
+              [33mcy[39m=[32m"11"[39m
+              [33mr[39m=[32m"8"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"hidden flex-1 md:block"[39m
+          [36m>[39m
+            [0m搜索项目名称、关键词...[0m
+          [36m</span>[39m
+          [36m<kbd[39m
+            [33mclass[39m=[32m"hidden rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] md:block"[39m
+          [36m>[39m
+            [0m⌘ K[0m
+          [36m</kbd>[39m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+          [33mhref[39m=[32m"/projects/new"[39m
+        [36m>[39m
+          [0m＋ 新建项目[0m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:18:17
+     16|  it.each(['global','project-overview','project-workspace','search','ov…
+     17|   const fetch=vi.spyOn(globalThis,'fetch').mockRejectedValue(Error('禁止…
+     18|   expect(screen.getByRole('button',{name:'充值'})).toBeEnabled();expect(…
+       |                 ^
+     19|  });
+     20|  it('同一次点击走原connect/no-store，双击只一单，实际受控opener一次',{timeout:180_000,retr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > 同一次点击走原connect/no-store，双击只一单，实际受控opener一次
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+    [33mdata-layout[39m=[32m"overlay"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"global"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "搜索":
+  [36m<a[39m
+    [33maria-label[39m=[32m"搜索"[39m
+    [33mclass[39m=[32m"flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+    [33mhref[39m=[32m"/search"[39m
+  [36m/>[39m
+
+  Name "＋ 新建项目":
+  [36m<a[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mhref[39m=[32m"/projects/new"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+      [33mdata-layout[39m=[32m"overlay"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"global"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [33mdata-slot[39m=[32m"header-page-heading"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"pointer-events-auto flex shrink-0 items-center gap-2 sm:gap-3"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"搜索"[39m
+          [33mclass[39m=[32m"flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+          [33mhref[39m=[32m"/search"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-search size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m21 21-4.34-4.34"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"11"[39m
+              [33mcy[39m=[32m"11"[39m
+              [33mr[39m=[32m"8"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"hidden flex-1 md:block"[39m
+          [36m>[39m
+            [0m搜索项目、内容、素材...[0m
+          [36m</span>[39m
+          [36m<kbd[39m
+            [33mclass[39m=[32m"hidden rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] md:block"[39m
+          [36m>[39m
+            [0m⌘ K[0m
+          [36m</kbd>[39m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+          [33mhref[39m=[32m"/projects/new"[39m
+        [36m>[39m
+          [0m＋ 新建项目[0m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:22:26
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > scope后connect晚回不打开，不走浏览器fallback
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > unmount后connect晚回不打开，不走浏览器fallback
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+    [33mdata-layout[39m=[32m"overlay"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"global"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "搜索":
+  [36m<a[39m
+    [33maria-label[39m=[32m"搜索"[39m
+    [33mclass[39m=[32m"flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+    [33mhref[39m=[32m"/search"[39m
+  [36m/>[39m
+
+  Name "＋ 新建项目":
+  [36m<a[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mhref[39m=[32m"/projects/new"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+      [33mdata-layout[39m=[32m"overlay"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"global"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [33mdata-slot[39m=[32m"header-page-heading"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"pointer-events-auto flex shrink-0 items-center gap-2 sm:gap-3"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"搜索"[39m
+          [33mclass[39m=[32m"flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+          [33mhref[39m=[32m"/search"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-search size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m21 21-4.34-4.34"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"11"[39m
+              [33mcy[39m=[32m"11"[39m
+              [33mr[39m=[32m"8"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"hidden flex-1 md:block"[39m
+          [36m>[39m
+            [0m搜索项目、内容、素材...[0m
+          [36m</span>[39m
+          [36m<kbd[39m
+            [33mclass[39m=[32m"hidden rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] md:block"[39m
+          [36m>[39m
+            [0m⌘ K[0m
+          [36m</kbd>[39m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+          [33mhref[39m=[32m"/projects/new"[39m
+        [36m>[39m
+          [0m＋ 新建项目[0m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:28:26
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > json读取晚回、错组后不得打开旧额度中心
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+    [33mdata-layout[39m=[32m"overlay"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"global"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "搜索":
+  [36m<a[39m
+    [33maria-label[39m=[32m"搜索"[39m
+    [33mclass[39m=[32m"flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+    [33mhref[39m=[32m"/search"[39m
+  [36m/>[39m
+
+  Name "＋ 新建项目":
+  [36m<a[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mhref[39m=[32m"/projects/new"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+      [33mdata-layout[39m=[32m"overlay"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"global"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [33mdata-slot[39m=[32m"header-page-heading"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"pointer-events-auto flex shrink-0 items-center gap-2 sm:gap-3"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"搜索"[39m
+          [33mclass[39m=[32m"flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+          [33mhref[39m=[32m"/search"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-search size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m21 21-4.34-4.34"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"11"[39m
+              [33mcy[39m=[32m"11"[39m
+              [33mr[39m=[32m"8"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"hidden flex-1 md:block"[39m
+          [36m>[39m
+            [0m搜索项目、内容、素材...[0m
+          [36m</span>[39m
+          [36m<kbd[39m
+            [33mclass[39m=[32m"hidden rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] md:block"[39m
+          [36m>[39m
+            [0m⌘ K[0m
+          [36m</kbd>[39m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+          [33mhref[39m=[32m"/projects/new"[39m
+        [36m>[39m
+          [0m＋ 新建项目[0m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:34:26
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+
+ FAIL  src/features/settings/ai-credit-entry.test.tsx > T1294真实TopHeader消费者与原额度helper（受控fetch/opener，零外部网络） > 真实受控失败保原错误与显式模型设置路径，不发新bootstrap
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "充值"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+    [33mdata-layout[39m=[32m"overlay"[39m
+    [33mdata-masked[39m=[32m"false"[39m
+    [33mdata-mode[39m=[32m"global"[39m
+    [33mdata-slot[39m=[32m"app-top-header"[39m
+    [33mdata-testid[39m=[32m"app-top-header"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "搜索":
+  [36m<a[39m
+    [33maria-label[39m=[32m"搜索"[39m
+    [33mclass[39m=[32m"flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+    [33mhref[39m=[32m"/search"[39m
+  [36m/>[39m
+
+  Name "＋ 新建项目":
+  [36m<a[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mhref[39m=[32m"/projects/new"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"z-header flex min-w-0 items-center gap-3 px-page-gutter pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"[39m
+      [33mdata-layout[39m=[32m"overlay"[39m
+      [33mdata-masked[39m=[32m"false"[39m
+      [33mdata-mode[39m=[32m"global"[39m
+      [33mdata-slot[39m=[32m"app-top-header"[39m
+      [33mdata-testid[39m=[32m"app-top-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [33mdata-slot[39m=[32m"header-page-heading"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"pointer-events-auto flex shrink-0 items-center gap-2 sm:gap-3"[39m
+        [33mdata-slot[39m=[32m"header-actions"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"搜索"[39m
+          [33mclass[39m=[32m"flex h-9 w-9 items-center justify-center gap-2 rounded-control border border-border bg-surface md:w-72 md:px-3 text-sm text-muted-foreground shadow-sm"[39m
+          [33mhref[39m=[32m"/search"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-search size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m21 21-4.34-4.34"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"11"[39m
+              [33mcy[39m=[32m"11"[39m
+              [33mr[39m=[32m"8"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"hidden flex-1 md:block"[39m
+          [36m>[39m
+            [0m搜索项目、内容、素材...[0m
+          [36m</span>[39m
+          [36m<kbd[39m
+            [33mclass[39m=[32m"hidden rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] md:block"[39m
+          [36m>[39m
+            [0m⌘ K[0m
+          [36m</kbd>[39m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+          [33mhref[39m=[32m"/projects/new"[39m
+        [36m>[39m
+          [0m＋ 新建项目[0m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</header>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/ai-credit-entry.test.tsx:37:181
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+
+ FAIL  src/features/settings/model-capability-source.test.tsx > T1294 四用途来源与既有六槽真实HTTP保存 > 四个可见来源，无向量配置和独立图片理解来源
+AssertionError: expected [ <select …(3)>…(4)</select>, …(5) ] to have a length of 4 but got 6
+
+- Expected
++ Received
+
+- 4
++ 6
+
+ ❯ src/features/settings/model-capability-source.test.tsx:83:92
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯
+
+ FAIL  src/features/settings/model-capability-source.test.tsx > T1294 四用途来源与既有六槽真实HTTP保存 > null官方effective为当前默认，未修改不需首保存；首次真修改仍完整六槽CAS
+TestingLibraryElementError: Unable to find an accessible element with the role "combobox" and name "图片模型来源"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "按用途选择模型":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-按用途选择模型"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "文本创作与结构化模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"文本创作与结构化模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-text"[39m
+  [36m/>[39m
+
+  Name "图片理解模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"图片理解模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-vision"[39m
+  [36m/>[39m
+
+  Name "图片生成与编辑模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"图片生成与编辑模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-image"[39m
+  [36m/>[39m
+
+  Name "视频生成模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"视频生成模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-video"[39m
+  [36m/>[39m
+
+  Name "语音转文字模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"语音转文字模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-audio"[39m
+  [36m/>[39m
+
+  Name "检索向量模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"检索向量模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-embed"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  option:
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地转录（Whisper）":
+  [36m<option[39m
+    [33mvalue[39m=[32m"local"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-text"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-text"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-vision"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-vision"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-image"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-image"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-video"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-video"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-audio"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-audio"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-embed"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-embed"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "保存模型来源":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "重新读取当前设置":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  status:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mrole[39m=[32m"status"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-highlight[39m=[32m"assistant-engine"[39m
+      [33mdata-slot[39m=[32m"model-capability-source"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33maria-labelledby[39m=[32m"section-card-按用途选择模型"[39m
+        [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+        [33mdata-size[39m=[32m"default"[39m
+        [33mdata-slot[39m=[32m"section-card"[39m
+        [33mrole[39m=[32m"region"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+          [33mdata-slot[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+              [33mid[39m=[32m"section-card-按用途选择模型"[39m
+            [36m>[39m
+              [0m按用途选择模型[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0m保存后对新任务生效，在途任务沿用原选择。[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+          [33mdata-slot[39m=[32m"card-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-col gap-2"[39m
+              [33mdata-model-family[39m=[32m"text"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+                [33mdata-control-id[39m=[32m"model-source-text"[39m
+                [33mdata-slot[39m=[32m"settings-form-row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+                  [33mdata-slot[39m=[32m"form-row-label"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                    [33mfor[39m=[32m"model-source-text"[39m
+                  [36m>[39m
+                    [0m文本创作与结构化[0m
+                  [36m</label>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex min-w-0 items-center justify-start"[39m
+                  [33mdata-slot[39m=[32m"form-row-control"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"flex min-w-0 w-full flex-col gap-2"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+                    [36m>[39m
+                      [36m<select[39m
+                        [33maria-label[39m=[32m"文本创作与结构化模型来源"[39m
+                        [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+                        [33mid[39m=[32m"model-source-text"[39m
+                      [36m>[39m
+                        [36m<option[39m
+                          [33mdisabled[39m=[32m""[39m
+                          [33mvalue[39m=[32m""[39m
+                        [36m>[39m
+                          [0m请选择来源[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"official"[39m
+                        [36m>[39m
+                          [0m官方模型[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"self"[39m
+                        [36m>[39m
+                          [0m自配模型[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"codex"[39m
+                        [36m>[39m
+                          [0m本地 Codex[0m
+                        [36m</option>[39m
+                      [36m</select>[39m
+                    [36m</div>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                      [33mdata-slot[39m=[32m"model-source-current-text"[39m
+                    [36m>[39m
+                      [0m当前使用：[0m
+                      [0m官方模型[0m
+                      [0m · 沿用原设置[0m
+                    [36m</p>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                      [33mdata-slot[39m=[32m"model-source-status-text"[39m
+                    [36m>[39m
+                      [0m状态未核实[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-col gap-2"[39m
+              [33mdata-model-family[39m=[32m"vision"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+                [33mdata-control-id[39m=[32m"model-source-vision"[39m
+                [33mdata-slot[39m=[32m"settings-form-row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+                  [33mdata-slot[39m=[32m"form-row-label"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                    [33mfor[39m=[32m"mode...
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/model-capability-source.test.tsx:89:17
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/15]⎯
+
+ FAIL  src/features/settings/model-capability-source.test.tsx > T1294 四用途来源与既有六槽真实HTTP保存 > 旧mixed图片改文本时原vision/image与隐藏embed原样保存
+TestingLibraryElementError: Unable to find an accessible element with the role "combobox" and name "图片模型来源"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "按用途选择模型":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-按用途选择模型"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "文本创作与结构化模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"文本创作与结构化模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-text"[39m
+  [36m/>[39m
+
+  Name "图片理解模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"图片理解模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-vision"[39m
+  [36m/>[39m
+
+  Name "图片生成与编辑模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"图片生成与编辑模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-image"[39m
+  [36m/>[39m
+
+  Name "视频生成模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"视频生成模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-video"[39m
+  [36m/>[39m
+
+  Name "语音转文字模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"语音转文字模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-audio"[39m
+  [36m/>[39m
+
+  Name "检索向量模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"检索向量模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-embed"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  option:
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地转录（Whisper）":
+  [36m<option[39m
+    [33mvalue[39m=[32m"local"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-text"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-text"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-vision"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-vision"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-image"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-image"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-video"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-video"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-audio"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-audio"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-embed"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-embed"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "保存模型来源":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "重新读取当前设置":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  status:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mrole[39m=[32m"status"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-highlight[39m=[32m"assistant-engine"[39m
+      [33mdata-slot[39m=[32m"model-capability-source"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33maria-labelledby[39m=[32m"section-card-按用途选择模型"[39m
+        [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+        [33mdata-size[39m=[32m"default"[39m
+        [33mdata-slot[39m=[32m"section-card"[39m
+        [33mrole[39m=[32m"region"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+          [33mdata-slot[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+              [33mid[39m=[32m"section-card-按用途选择模型"[39m
+            [36m>[39m
+              [0m按用途选择模型[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0m保存后对新任务生效，在途任务沿用原选择。[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+          [33mdata-slot[39m=[32m"card-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-col gap-2"[39m
+              [33mdata-model-family[39m=[32m"text"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+                [33mdata-control-id[39m=[32m"model-source-text"[39m
+                [33mdata-slot[39m=[32m"settings-form-row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+                  [33mdata-slot[39m=[32m"form-row-label"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                    [33mfor[39m=[32m"model-source-text"[39m
+                  [36m>[39m
+                    [0m文本创作与结构化[0m
+                  [36m</label>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex min-w-0 items-center justify-start"[39m
+                  [33mdata-slot[39m=[32m"form-row-control"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"flex min-w-0 w-full flex-col gap-2"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+                    [36m>[39m
+                      [36m<select[39m
+                        [33maria-label[39m=[32m"文本创作与结构化模型来源"[39m
+                        [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+                        [33mid[39m=[32m"model-source-text"[39m
+                      [36m>[39m
+                        [36m<option[39m
+                          [33mdisabled[39m=[32m""[39m
+                          [33mvalue[39m=[32m""[39m
+                        [36m>[39m
+                          [0m请选择来源[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"official"[39m
+                        [36m>[39m
+                          [0m官方模型[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"self"[39m
+                        [36m>[39m
+                          [0m自配模型[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"codex"[39m
+                        [36m>[39m
+                          [0m本地 Codex[0m
+                        [36m</option>[39m
+                      [36m</select>[39m
+                    [36m</div>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                      [33mdata-slot[39m=[32m"model-source-current-text"[39m
+                    [36m>[39m
+                      [0m当前使用：[0m
+                      [0m自配模型[0m
+                    [36m</p>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                      [33mdata-slot[39m=[32m"model-source-status-text"[39m
+                    [36m>[39m
+                      [0m0/1 项已返回用途可用；用途尚未配置[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-col gap-2"[39m
+              [33mdata-model-family[39m=[32m"vision"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+                [33mdata-control-id[39m=[32m"model-source-vision"[39m
+                [33mdata-slot[39m=[32m"settings-form-row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+                  [33mdata-slot[39m=[32m"form-row-label"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                    [33mfor[39m=[32m"model-source-vision"[39m
+   ...
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/model-capability-source.test.tsx:94:46
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/15]⎯
+
+ FAIL  src/features/settings/model-capability-source.test.tsx > T1294 四用途来源与既有六槽真实HTTP保存 > 主动选图片来源才同一次CAS统一理解与生成编辑，隐藏embed不改
+TestingLibraryElementError: Unable to find an accessible element with the role "combobox" and name "图片模型来源"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "按用途选择模型":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-按用途选择模型"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "文本创作与结构化模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"文本创作与结构化模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-text"[39m
+  [36m/>[39m
+
+  Name "图片理解模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"图片理解模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-vision"[39m
+  [36m/>[39m
+
+  Name "图片生成与编辑模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"图片生成与编辑模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-image"[39m
+  [36m/>[39m
+
+  Name "视频生成模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"视频生成模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-video"[39m
+  [36m/>[39m
+
+  Name "语音转文字模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"语音转文字模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-audio"[39m
+  [36m/>[39m
+
+  Name "检索向量模型来源":
+  [36m<select[39m
+    [33maria-label[39m=[32m"检索向量模型来源"[39m
+    [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+    [33mid[39m=[32m"model-source-embed"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  option:
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地 Codex":
+  [36m<option[39m
+    [33mvalue[39m=[32m"codex"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  Name "本地转录（Whisper）":
+  [36m<option[39m
+    [33mvalue[39m=[32m"local"[39m
+  [36m/>[39m
+
+  Name "请选择来源":
+  [36m<option[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "官方模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"official"[39m
+  [36m/>[39m
+
+  Name "自配模型":
+  [36m<option[39m
+    [33mvalue[39m=[32m"self"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-text"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-text"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-vision"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-vision"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-image"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-image"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-video"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-video"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-audio"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-audio"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-current-embed"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mdata-slot[39m=[32m"model-source-status-embed"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "保存模型来源":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "重新读取当前设置":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  status:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+    [33mrole[39m=[32m"status"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-highlight[39m=[32m"assistant-engine"[39m
+      [33mdata-slot[39m=[32m"model-capability-source"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33maria-labelledby[39m=[32m"section-card-按用途选择模型"[39m
+        [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+        [33mdata-size[39m=[32m"default"[39m
+        [33mdata-slot[39m=[32m"section-card"[39m
+        [33mrole[39m=[32m"region"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+          [33mdata-slot[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+              [33mid[39m=[32m"section-card-按用途选择模型"[39m
+            [36m>[39m
+              [0m按用途选择模型[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0m保存后对新任务生效，在途任务沿用原选择。[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+          [33mdata-slot[39m=[32m"card-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-col gap-2"[39m
+              [33mdata-model-family[39m=[32m"text"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+                [33mdata-control-id[39m=[32m"model-source-text"[39m
+                [33mdata-slot[39m=[32m"settings-form-row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+                  [33mdata-slot[39m=[32m"form-row-label"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                    [33mfor[39m=[32m"model-source-text"[39m
+                  [36m>[39m
+                    [0m文本创作与结构化[0m
+                  [36m</label>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex min-w-0 items-center justify-start"[39m
+                  [33mdata-slot[39m=[32m"form-row-control"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"flex min-w-0 w-full flex-col gap-2"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+                    [36m>[39m
+                      [36m<select[39m
+                        [33maria-label[39m=[32m"文本创作与结构化模型来源"[39m
+                        [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+                        [33mid[39m=[32m"model-source-text"[39m
+                      [36m>[39m
+                        [36m<option[39m
+                          [33mdisabled[39m=[32m""[39m
+                          [33mvalue[39m=[32m""[39m
+                        [36m>[39m
+                          [0m请选择来源[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"official"[39m
+                        [36m>[39m
+                          [0m官方模型[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"self"[39m
+                        [36m>[39m
+                          [0m自配模型[0m
+                        [36m</option>[39m
+                        [36m<option[39m
+                          [33mvalue[39m=[32m"codex"[39m
+                        [36m>[39m
+                          [0m本地 Codex[0m
+                        [36m</option>[39m
+                      [36m</select>[39m
+                    [36m</div>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                      [33mdata-slot[39m=[32m"model-source-current-text"[39m
+                    [36m>[39m
+                      [0m当前使用：[0m
+                      [0m自配模型[0m
+                    [36m</p>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                      [33mdata-slot[39m=[32m"model-source-status-text"[39m
+                    [36m>[39m
+                      [0m0/1 项已返回用途可用；用途尚未配置[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-col gap-2"[39m
+              [33mdata-model-family[39m=[32m"vision"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+                [33mdata-control-id[39m=[32m"model-source-vision"[39m
+                [33mdata-slot[39m=[32m"settings-form-row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+                  [33mdata-slot[39m=[32m"form-row-label"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                    [33mfor[39m=[32m"model-source-vision"[39m
+   ...
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/settings/model-capability-source.test.tsx:99:56
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯
+
+ FAIL  src/features/settings/settings-interactive-region.test.tsx > T1294 redfox旧deep link切到模型并只有一份真实密钥入口，额度卡无旧license条件
+Error: expect(element).toHaveAttribute("data-active", "true") // element.getAttribute("data-active") === "true"
+
+Expected the element to have attribute:
+  data-active="true"
+Received:
+  data-active="false"
+ ❯ src/features/settings/settings-interactive-region.test.tsx:2342:83
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  15 failed | 122 skipped (137)
+   Start at  11:00:25
+   Duration  5.59s (transform 962ms, setup 280ms, import 2.24s, tests 1.52s, environment 1.14s)
+

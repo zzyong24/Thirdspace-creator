@@ -1,0 +1,346 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts (10 tests | 8 failed) 12ms
+     × 查询保留原返回shape与搜索记录，不解析配置、不发向量或补算 6ms
+     × 已停用的resolver即使抛错也完全不进入，关键词结果不受旧配置阻断 1ms
+     × 索引取原currentRevision而非首个revision，保原正文投影/归属并零补算 1ms
+     × 历史currentRevision缺失时仍保原首条revision回退 1ms
+     × 无revision仍保原空正文索引，不补造内容或模型调用 0ms
+     × 查询启动时复制原上下文，不被调用方随后的切组重绑 0ms
+     × 关键词读失败仍抛原错误，不写假搜索记录或假空结果 0ms
+     × stop保原在途读取清理责任，晚回结果不再record并拒绝新操作 1ms
+ ❯ src/modules/search/knowledge-model-routing.test.ts (3 tests | 1 failed) 3947ms
+     × T1294 索引和查询均不解析向量来源，切设置也不启动历史补算 6ms
+ ❯ src/modules/search/knowledge-search-timeout.test.ts (2 tests | 2 failed) 9ms
+   × T1294 关键词读取超过120秒仍继承原操作，不额外截短或调用向量 7ms
+   × T1294 stop立即拒绝新工作，等待原关键词读清理且阻止晚到记录 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/search/knowledge-model-routing.test.ts > T1278 向量真实模型身份与批次冻结 > T1294 索引和查询均不解析向量来源，切设置也不启动历史补算
+AssertionError: expected { semanticEnabled: true, …(2) } to deeply equal { semanticEnabled: false, …(2) }
+
+- Expected
++ Received
+
+  {
+    "hits": [],
+-   "semanticEnabled": false,
++   "semanticEnabled": true,
+    "semanticError": null,
+  }
+
+ ❯ src/modules/search/knowledge-model-routing.test.ts:40:45
+     38|   closes.push(()=>runtime.stop());
+     39|   await runtime.indexKnowledgeDocumentBestEffort(ctx,'k');selected={mo…
+     40|   await expect(runtime.hybridSearch(ctx,'q')).resolves.toEqual({semant…
+       |                                             ^
+     41|   expect(search.upsertDocument).toHaveBeenCalledExactlyOnceWith(ctx,{e…
+     42|   expect(search.hybridSearch).toHaveBeenCalledExactlyOnceWith(ctx,'q',…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-runtime.service.test.ts > T1294 知识搜索只消费原关键词索引 > 查询保留原返回shape与搜索记录，不解析配置、不发向量或补算
+AssertionError: expected { semanticEnabled: true, …(2) } to deeply equal { semanticEnabled: false, …(2) }
+
+- Expected
++ Received
+
+  {
+    "hits": [],
+-   "semanticEnabled": false,
++   "semanticEnabled": true,
+    "semanticError": null,
+  }
+
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts:21:49
+     19|  it('查询保留原返回shape与搜索记录，不解析配置、不发向量或补算',async()=>{
+     20|   const f=fixture();
+     21|   await expect(f.runtime.hybridSearch(ctx,'原查询')).resolves.toEqual({se…
+       |                                                 ^
+     22|   expect(f.search.hybridSearch).toHaveBeenCalledExactlyOnceWith(ctx,'原…
+     23|   expect(f.search.recordSearch).toHaveBeenCalledExactlyOnceWith(ctx,{q…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-runtime.service.test.ts > T1294 知识搜索只消费原关键词索引 > 已停用的resolver即使抛错也完全不进入，关键词结果不受旧配置阻断
+AssertionError: expected { semanticEnabled: false, …(2) } to deeply equal { semanticEnabled: false, …(2) }
+
+- Expected
++ Received
+
+  {
+    "hits": [],
+    "semanticEnabled": false,
+-   "semanticError": null,
++   "semanticError": "旧密钥失效",
+  }
+
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts:28:47
+     26|  it('已停用的resolver即使抛错也完全不进入，关键词结果不受旧配置阻断',async()=>{
+     27|   const f=fixture();f.resolveEmbedSpec.mockRejectedValue(new Error('旧密…
+     28|   await expect(f.runtime.hybridSearch(ctx,'q')).resolves.toEqual({sema…
+       |                                               ^
+     29|   await f.runtime.stop();noVector(f);
+     30|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-runtime.service.test.ts > T1294 知识搜索只消费原关键词索引 > 索引取原currentRevision而非首个revision，保原正文投影/归属并零补算
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": null,
+        "groupId": "g",
+        "requestId": "r",
+        "source": "user",
+        "userId": "u",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ noVector src/modules/search/knowledge-search-runtime.service.test.ts:14:33
+     12| }
+     13| function noVector(f:ReturnType<typeof fixture>){
+     14|  expect(f.resolveEmbedSpec).not.toHaveBeenCalled();expect(f.embeddingC…
+       |                                 ^
+     15|  expect(f.search.listMissingEmbeddings).not.toHaveBeenCalled();expect(…
+     16| }
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts:35:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-runtime.service.test.ts > T1294 知识搜索只消费原关键词索引 > 历史currentRevision缺失时仍保原首条revision回退
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": null,
+        "groupId": "g",
+        "requestId": "r",
+        "source": "user",
+        "userId": "u",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ noVector src/modules/search/knowledge-search-runtime.service.test.ts:14:33
+     12| }
+     13| function noVector(f:ReturnType<typeof fixture>){
+     14|  expect(f.resolveEmbedSpec).not.toHaveBeenCalled();expect(f.embeddingC…
+       |                                 ^
+     15|  expect(f.search.listMissingEmbeddings).not.toHaveBeenCalled();expect(…
+     16| }
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts:40:132
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-runtime.service.test.ts > T1294 知识搜索只消费原关键词索引 > 无revision仍保原空正文索引，不补造内容或模型调用
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": null,
+        "groupId": "g",
+        "requestId": "r",
+        "source": "user",
+        "userId": "u",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ noVector src/modules/search/knowledge-search-runtime.service.test.ts:14:33
+     12| }
+     13| function noVector(f:ReturnType<typeof fixture>){
+     14|  expect(f.resolveEmbedSpec).not.toHaveBeenCalled();expect(f.embeddingC…
+       |                                 ^
+     15|  expect(f.search.listMissingEmbeddings).not.toHaveBeenCalled();expect(…
+     16| }
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts:44:169
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-runtime.service.test.ts > T1294 知识搜索只消费原关键词索引 > 查询启动时复制原上下文，不被调用方随后的切组重绑
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 2 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": null,
+        "groupId": "g",
+        "requestId": "r",
+        "source": "user",
+        "userId": "u",
+      },
+    ]
+
+  2nd vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": null,
+        "groupId": "g",
+        "requestId": "r",
+        "source": "user",
+        "userId": "u",
+      },
+    ]
+
+
+Number of calls: 2
+
+ ❯ noVector src/modules/search/knowledge-search-runtime.service.test.ts:14:33
+     12| }
+     13| function noVector(f:ReturnType<typeof fixture>){
+     14|  expect(f.resolveEmbedSpec).not.toHaveBeenCalled();expect(f.embeddingC…
+       |                                 ^
+     15|  expect(f.search.listMissingEmbeddings).not.toHaveBeenCalled();expect(…
+     16| }
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts:53:180
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-runtime.service.test.ts > T1294 知识搜索只消费原关键词索引 > 关键词读失败仍抛原错误，不写假搜索记录或假空结果
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": null,
+        "groupId": "g",
+        "requestId": "r",
+        "source": "user",
+        "userId": "u",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ noVector src/modules/search/knowledge-search-runtime.service.test.ts:14:33
+     12| }
+     13| function noVector(f:ReturnType<typeof fixture>){
+     14|  expect(f.resolveEmbedSpec).not.toHaveBeenCalled();expect(f.embeddingC…
+       |                                 ^
+     15|  expect(f.search.listMissingEmbeddings).not.toHaveBeenCalled();expect(…
+     16| }
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts:57:147
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-runtime.service.test.ts > T1294 知识搜索只消费原关键词索引 > stop保原在途读取清理责任，晚回结果不再record并拒绝新操作
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": null,
+        "groupId": "g",
+        "requestId": "r",
+        "source": "user",
+        "userId": "u",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ noVector src/modules/search/knowledge-search-runtime.service.test.ts:14:33
+     12| }
+     13| function noVector(f:ReturnType<typeof fixture>){
+     14|  expect(f.resolveEmbedSpec).not.toHaveBeenCalled();expect(f.embeddingC…
+       |                                 ^
+     15|  expect(f.search.listMissingEmbeddings).not.toHaveBeenCalled();expect(…
+     16| }
+ ❯ src/modules/search/knowledge-search-runtime.service.test.ts:64:125
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-timeout.test.ts > T1294 关键词读取超过120秒仍继承原操作，不额外截短或调用向量
+AssertionError: expected "vi.fn()" to be called once with arguments: [ Array(3) ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -7,8 +7,11 @@
+    },
+    "query",
+    {
+      "entityType": "knowledge",
+      "limit": 20,
+-     "queryEmbedding": null,
++     "queryEmbedding": [
++       1,
++       2,
++     ],
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/modules/search/knowledge-search-timeout.test.ts:14:105
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  src/modules/search/knowledge-search-timeout.test.ts > T1294 stop立即拒绝新工作，等待原关键词读清理且阻止晚到记录
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": "a",
+        "requestId": "r",
+        "source": "user",
+        "userId": "u",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/modules/search/knowledge-search-timeout.test.ts:23:33
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  11 failed | 4 passed (15)
+   Start at  10:53:51
+   Duration  5.36s (transform 573ms, setup 0ms, import 1.04s, tests 3.97s, environment 0ms)
+

@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:77093) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  11:24:24
+   Duration  7.40s (transform 1.12s, setup 105ms, import 1.50s, tests 5.30s, environment 334ms)
+

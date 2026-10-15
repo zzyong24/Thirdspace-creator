@@ -56,6 +56,15 @@ interface AiErrorRule {
  */
 export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
   {
+    // 仅可信的未启动调用取得拒绝结算回执后产生，不推断其它RPC错误的执行阶段。
+    pattern: /\bCODEX_SESSION_PRECHECK_REJECTED\b/,
+    human: {
+      code: "model_not_configured",
+      message: "本地 Codex 会话预检查未通过，本轮尚未开始。请检查本地 Codex 的登录与配置后再试。",
+      suggestSwitchModel: true,
+    },
+  },
+  {
     pattern: /\bCHAT_MODEL_RESPONSE_INTERRUPTED\b/,
     human: {
       code: "model_response_interrupted",

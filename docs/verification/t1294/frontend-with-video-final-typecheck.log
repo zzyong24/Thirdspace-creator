@@ -1,0 +1,8 @@
+
+> creatoros-frontend@1.2.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully
+tests/e2e/t1295-desktop-csp-wasm-video.spec.ts(78,15): error TS2532: Object is possibly 'undefined'.
+ ELIFECYCLE  Command failed with exit code 2.

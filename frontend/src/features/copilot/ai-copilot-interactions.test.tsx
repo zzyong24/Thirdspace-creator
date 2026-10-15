@@ -236,14 +236,16 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   it("[T-1055] Codex 不可用时保留输入并指向真实设置卡", async () => {
     window.localStorage.setItem("creatoros:assistant-engine:v1", "codex");
     getPreferences.mockResolvedValue({assistantExecutionEngine:'codex'});
+    const choices={text:'codex',vision:'codex',image:'codex',video:'official',audio:'official',embed:'official'};
+    getModelRouting.mockResolvedValue({schemaVersion:1,revision:1,choices,legacyExecutionEngine:'codex',effectiveChoices:choices,capabilities:[{mode:'text',capability:'copilot.assist',source:'codex',status:'unavailable',reasonCode:'CODEX_VERSION_UNSUPPORTED'}]});
     await loadModelRouting(true);
-    await loadAssistantEngine(true);
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({engines: [{engine: "codex", installed: true, available: false, version: null, loginStatus: "unauthenticated"}]}), {status: 200}));
+    const probe=vi.spyOn(globalThis, "fetch");
     const user = userEvent.setup();
     render(<AICopilotContent viewModel={VM} />);
     await user.type(screen.getByLabelText("我能帮你做什么"), "保留我的输入");
     await waitFor(() => expect(screen.getByLabelText("提交提示给 Copilot")).toBeDisabled());
-    expect(screen.getByRole("link", {name: "设置编导引擎"})).toHaveAttribute("href", "/settings?highlight=assistant-engine");
+    expect(screen.getByRole("link", {name: "模型设置"})).toHaveAttribute("href", "/settings?highlight=assistant-engine");
+    expect(probe).not.toHaveBeenCalled();
     expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("保留我的输入");
     expect(sendMessage).not.toHaveBeenCalled();
   });

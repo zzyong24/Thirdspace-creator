@@ -4,7 +4,7 @@ import {modelRoutingResourceSchema,type ModelRoutingChoices,type ModelRoutingRes
 import '@testing-library/jest-dom/vitest';
 const choices:ModelRoutingChoices={text:'self',vision:'codex',image:'official',video:'self',audio:'local',embed:'self'};
 const envelope=(data:unknown)=>new Response(JSON.stringify({data,meta:{requestId:'controlled-ui'}}),{status:200,headers:{'content-type':'application/json'}});
-function resource(revision=1,selected:ModelRoutingChoices|null=choices):ModelRoutingResource{return modelRoutingResourceSchema.parse({schemaVersion:1,revision,choices:selected,legacyExecutionEngine:'codex',effectiveChoices:selected??{text:'codex',vision:'codex',image:'codex',video:'self',audio:'local',embed:'self'},capabilities:[
+function resource(revision=1,selected:ModelRoutingChoices|null=choices):ModelRoutingResource{return modelRoutingResourceSchema.parse({schemaVersion:1,revision,choices:selected,legacyExecutionEngine:'codex',effectiveChoices:selected??{text:'codex',vision:'codex',image:'codex',video:'official',audio:'official',embed:'official'},capabilities:[
  {capability:'copilot.assist',mode:'text',source:selected?.text??'codex',status:'not_configured',reasonCode:'MODEL_NOT_CONFIGURED'},
  {capability:'copilot.assist',mode:'vision',source:selected?.vision??'codex',status:'ready',reasonCode:null},
  {capability:'image.generate',mode:'image',source:selected?.image??'codex',status:'ready',reasonCode:null},
@@ -28,24 +28,25 @@ function http(initial=resource(),put?:(request:Request)=>Promise<Response>|Respo
 }
 async function mount(){const {ModelCapabilitySource}=await import('./model-capability-source');render(<ModelCapabilitySource/>);await waitFor(()=>expect(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'})).toBeEnabled(),{timeout:120_000});}
 describe('T1278 真实 contract client / HTTP adapter 的来源表单',()=>{
- it('六槽合法选项来自严格枚举，图片生成与编辑分别显示，旧 global engine 不出现',{timeout:180_000,retry:0},async()=>{
+ it('四用途合法选项来自严格枚举，图片状态分项，旧global与向量配置不出现',{timeout:180_000,retry:0},async()=>{
   const f=http();await mount();
-  const expected={'文本创作与结构化':['','official','self','codex'],'图片理解':['','official','self','codex'],'图片生成与编辑':['','official','self','codex'],'视频生成':['','official','self'],'语音转文字':['','official','self','local'],'检索向量':['','official','self']};
+  const expected={'文本创作与结构化':['','official','self','codex'],'图片':['','mixed','official','self','codex'],'视频生成':['','official','self'],'语音转文字':['','official','self','local']};
+  expect(screen.getAllByRole('combobox')).toHaveLength(4);expect(screen.queryByRole('combobox',{name:'检索向量模型来源'})).toBeNull();expect(screen.queryByRole('combobox',{name:'图片理解模型来源'})).toBeNull();
   for(const [name,options] of Object.entries(expected)){const select=screen.getByRole('combobox',{name:`${name}模型来源`}) as HTMLSelectElement;expect(Array.from(select.options).map(option=>option.value)).toEqual(options);}
-  expect(screen.getByText('生成：可用；编辑：未核实')).toBeInTheDocument();expect(screen.queryByRole('combobox',{name:'编导引擎'})).toBeNull();
+  expect(screen.getByText('理解：未核实；生成：可用；编辑：未核实')).toBeInTheDocument();expect(screen.queryByRole('combobox',{name:'编导引擎'})).toBeNull();
   expect(f.requests.map(request=>request.id)).toEqual(['settings.modelRouting.get']);
  });
- it('choices=null 只显示后端 effectiveChoices，首次显式保存才写全六槽',{timeout:180_000,retry:0},async()=>{
-  const f=http(resource(0,null));await mount();expect(screen.getAllByText(/沿用原设置/)).toHaveLength(6);expect(f.requests.filter(request=>request.id.includes('put'))).toHaveLength(0);
-  fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存并读回当前设置',{}, {timeout:120_000});
+ it('choices=null旧Codex默认来自后端effective，未修改不PUT，首次真实修改保存完整六槽',{timeout:180_000,retry:0},async()=>{
+  const f=http(resource(0,null));await mount();expect(screen.getByRole('combobox',{name:'图片模型来源'})).toHaveValue('codex');expect(screen.getByRole('button',{name:'保存模型来源'})).toBeDisabled();expect(screen.getByRole('status')).toHaveTextContent('未修改');expect(f.requests.filter(request=>request.id.includes('put'))).toHaveLength(0);
+  fireEvent.change(screen.getByRole('combobox',{name:'语音转文字模型来源'}),{target:{value:'local'}});fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存并读回当前设置',{}, {timeout:120_000});
   expect(f.requests.map(request=>request.id)).toEqual(['settings.modelRouting.get','settings.modelRouting.put','settings.modelRouting.get']);
-  expect(f.requests[1]!.input.body).toEqual({schemaVersion:1,choices:{text:'codex',vision:'codex',image:'codex',video:'self',audio:'local',embed:'self'},expectedRevision:0});
+  expect(f.requests[1]!.input.body).toEqual({schemaVersion:1,choices:{text:'codex',vision:'codex',image:'codex',video:'official',audio:'local',embed:'official'},expectedRevision:0});
  });
  it('一次来源修改走 PUT 原 revision 再 GET；卸载再进入读服务值',{timeout:180_000,retry:0},async()=>{
-  const f=http();await mount();fireEvent.change(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'}),{target:{value:'codex'}});fireEvent.change(screen.getByRole('combobox',{name:'图片生成与编辑模型来源'}),{target:{value:'self'}});
+  const f=http();await mount();fireEvent.change(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'}),{target:{value:'codex'}});fireEvent.change(screen.getByRole('combobox',{name:'图片模型来源'}),{target:{value:'self'}});
   expect(document.querySelector('[data-slot="model-source-current-text"]')).toHaveTextContent('当前使用：自配模型');expect(f.requests).toHaveLength(1);
   fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存并读回当前设置',{}, {timeout:120_000});
-  expect(f.requests[1]!.input.body).toEqual({schemaVersion:1,choices:{...choices,text:'codex',image:'self'},expectedRevision:1});
+  expect(f.requests[1]!.input.body).toEqual({schemaVersion:1,choices:{...choices,text:'codex',vision:'self',image:'self'},expectedRevision:1});
   cleanup();const module=await import('@/features/copilot/assistant-engine');await act(async()=>module.loadModelRouting(true));await mount();expect(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'})).toHaveValue('codex');expect(f.current().revision).toBe(2);
  });
  it('CAS 冲突保草稿，读回其它窗口值后须显式核对才能按新 revision 再保存',{timeout:180_000,retry:0},async()=>{
@@ -73,5 +74,30 @@ describe('T1278 真实 contract client / HTTP adapter 的来源表单',()=>{
  });
  it('用途状态缺失不伪造可用，也不代替宿主准入阻断合法提交',{timeout:180_000,retry:0},async()=>{
   http({...resource(),capabilities:[]});const {useAssistantEngine}=await import('@/features/copilot/use-assistant-engine');const {result}=renderHook(()=>useAssistantEngine());await waitFor(()=>expect(result.current.routing.ready).toBe(true),{timeout:120_000});expect(result.current).toMatchObject({textAvailable:false,visionAvailable:false,canSubmitText:true,canSubmitVision:true,status:'文本状态未核实'});
+ });
+});
+
+
+describe('T1294 四用途来源与既有六槽真实HTTP保存',()=>{
+ const official:ModelRoutingChoices={text:'official',vision:'official',image:'official',video:'official',audio:'official',embed:'official'};
+ it('四个可见来源，无向量配置和独立图片理解来源',{timeout:180_000,retry:0},async()=>{
+  const f=http(resource(1,official));await mount();expect(screen.getAllByRole('combobox')).toHaveLength(4);
+  for(const name of ['文本创作与结构化','图片','视频生成','语音转文字'])expect(screen.getByRole('combobox',{name:`${name}模型来源`})).toBeInTheDocument();
+  expect(screen.queryByRole('combobox',{name:'图片理解模型来源'})).toBeNull();expect(screen.queryByRole('combobox',{name:'检索向量模型来源'})).toBeNull();expect(f.requests.map(x=>x.id)).toEqual(['settings.modelRouting.get']);
+ });
+ it('null官方effective为当前默认，未修改不需首保存；首次真修改仍完整六槽CAS',{timeout:180_000,retry:0},async()=>{
+  const f=http({...resource(0,null),legacyExecutionEngine:'pi',effectiveChoices:official,capabilities:[]});await mount();
+  expect(screen.getByRole('combobox',{name:'图片模型来源'})).toHaveValue('official');expect(screen.getByRole('button',{name:'保存模型来源'})).toBeDisabled();expect(screen.getByRole('status')).toHaveTextContent('未修改');expect(f.requests.filter(x=>x.id==='settings.modelRouting.put')).toHaveLength(0);
+  fireEvent.change(screen.getByRole('combobox',{name:'语音转文字模型来源'}),{target:{value:'self'}});fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await waitFor(()=>expect(f.requests.filter(x=>x.id==='settings.modelRouting.put')).toHaveLength(1),{timeout:120_000});
+  expect(f.requests.find(x=>x.id==='settings.modelRouting.put')!.input.body).toEqual({schemaVersion:1,expectedRevision:0,choices:{...official,audio:'self'}});
+ });
+ it('旧mixed图片改文本时原vision/image与隐藏embed原样保存',{timeout:180_000,retry:0},async()=>{
+  const f=http();await mount();expect(screen.getByRole('combobox',{name:'图片模型来源'})).toHaveValue('mixed');
+  fireEvent.change(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'}),{target:{value:'codex'}});fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await waitFor(()=>expect(f.requests.some(x=>x.id==='settings.modelRouting.put')).toBe(true),{timeout:120_000});
+  expect(f.requests.find(x=>x.id==='settings.modelRouting.put')!.input.body!.choices).toEqual({...choices,text:'codex'});
+ });
+ it('主动选图片来源才同一次CAS统一理解与生成编辑，隐藏embed不改',{timeout:180_000,retry:0},async()=>{
+  const f=http();await mount();fireEvent.change(screen.getByRole('combobox',{name:'图片模型来源'}),{target:{value:'self'}});fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await waitFor(()=>expect(f.requests.some(x=>x.id==='settings.modelRouting.put')).toBe(true),{timeout:120_000});
+  expect(f.requests.filter(x=>x.id==='settings.modelRouting.put')).toHaveLength(1);expect(f.requests.find(x=>x.id==='settings.modelRouting.put')!.input.body).toEqual({schemaVersion:1,expectedRevision:1,choices:{...choices,vision:'self',image:'self'}});
  });
 });

@@ -1,0 +1,23 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:75007) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/settings-interactive-region.test.tsx (115 tests | 1 failed) 8678ms
+     × [T1278/T645] 六槽可达，旧四类原配置保留且新增 vision/embed/edit，不新增雷达/search 102ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/settings-interactive-region.test.tsx > Settings island wiring (needs-backend → op + refresh) > [T1278/T645] 六槽可达，旧四类原配置保留且新增 vision/embed/edit，不新增雷达/search
+AssertionError: expected null not to be null
+ ❯ src/features/settings/settings-interactive-region.test.tsx:1127:174
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (5)
+      Tests  1 failed | 48 passed (115)
+   Start at  11:15:51
+   Duration  10.33s (transform 703ms, setup 96ms, import 1.10s, tests 8.68s, environment 327ms)
+

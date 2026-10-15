@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:78225) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/use-assistant-engine.test.tsx (26 tests | 1 failed | 25 skipped) 299ms
+   × T1294 冷窗口focus与来源GET并发不按浏览器旧Codex缓存初始化服务端偏好 298ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T1294 冷窗口focus与来源GET并发不按浏览器旧Codex缓存初始化服务端偏好
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "body": undefined,
+        "params": undefined,
+        "query": undefined,
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/features/copilot/use-assistant-engine.test.tsx:131:34
+    129|  try{
+    130|   expect(result.current.routing.ready).toBe(false);await act(async()=>…
+    131|   expect(api.getPreferences).not.toHaveBeenCalled();expect(api.patchPr…
+       |                                  ^
+    132|  }finally{await act(async()=>{release({...dto(null),effectiveChoices:{…
+    133|  expect(result.current).toMatchObject({engine:'pi',v2:true,canSubmitTe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 skipped (26)
+   Start at  11:28:09
+   Duration  1.70s (transform 494ms, setup 123ms, import 694ms, tests 299ms, environment 459ms)
+

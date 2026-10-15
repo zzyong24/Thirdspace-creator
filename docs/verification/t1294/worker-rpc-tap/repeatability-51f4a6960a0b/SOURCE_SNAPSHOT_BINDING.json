@@ -1,0 +1,25 @@
+{
+  "moduleLoad": "one import before all rounds; original source module cached in memory",
+  "rows": [
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "startSHA": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a",
+      "snapshotSHA": "af38c7ede2f8c5a056a384f1d2e8a2433a0b7df7a53da125472c99134ce4105a"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "startSHA": "9cbc438bf97444108f58a4483e52ddb07fb6b6d2fcd16887a5b6577bbeda348e",
+      "snapshotSHA": "9cbc438bf97444108f58a4483e52ddb07fb6b6d2fcd16887a5b6577bbeda348e"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "startSHA": "8344d96bf0425a9df03ebff4161b9adfc1b388ac4ee8482d3c5c8053505df6c1",
+      "snapshotSHA": "8344d96bf0425a9df03ebff4161b9adfc1b388ac4ee8482d3c5c8053505df6c1"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-status-entry.ts",
+      "startSHA": "17bb483c5d83c416ca3fca6bcd21efb7b280a396b288ffa199a69fce6d1e8829",
+      "snapshotSHA": "17bb483c5d83c416ca3fca6bcd21efb7b280a396b288ffa199a69fce6d1e8829"
+    }
+  ]
+}

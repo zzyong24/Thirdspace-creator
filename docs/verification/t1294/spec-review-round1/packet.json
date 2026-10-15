@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T1294首次initial最终字节，Main 6ff8b6e317330711e08426b1cbc39aeb243f16c1，SPEC eb607988a1506936137420f8f94b292d0c23566fc6e7ccd6d17c2f22ea28f569、宪法86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。此前pre-header未record工件原样留before-local-credit-dialog。独读DEC129401/两截图/真实诊断与库存：保完整choices和server旧Codex、同backend默认策略/旧冻结；图片主动同CAS保mixed/协议/edit覆盖；向量query/backfill/context/probe均停且保历史schema数据；RedFox原user密钥/深链；Codex metadata只peek、空缓存unverified、user+宿主代际singleflight/单observer取消隔离、冷次真实ID后freeze。新增ai-credit-entry直接原受控helper signal/isCurrent，header不添第二Card/Dialog/表单/bootstrap或共享资金权威；原Card实例状态不能跨卸载存活的中间方案已撤回，库存旧Dialog建议不准入。settings-model-test-wrap网络前禁embedprobe是必要窄接线。RequestContext无AbortSignal，不冒HTTP取消全链已实现；已受理PUT取消后可能unknown，保原revision读回且不自动重发，不伪报保存。原你好无group/task证据，不将重复预检当原根因；Worker/stream/unknown若变仍先补准确SPEC复审。UI沿oil存量方向/隔离Playwright及同真实任务完成；App自动化未授权、未实现测试模型钱或包验收。本当前确认规格无待修finding，不重签T1278旧cycle、不控面，Root准确候选/公共链实证继续。",
+  "findings": []
+}

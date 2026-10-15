@@ -1,0 +1,64 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/worker-runtime.test.ts (48 tests | 6 failed) 2179ms
+   × Codex 'local'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic 4ms
+   × Codex 'typed-authority'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic 0ms
+   × Codex 'typed-credential'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic 0ms
+   × Codex host-unknown：真实Worker投unknown，不能committed waiting_user或成功 0ms
+   × Codex wrong-ack：真实Worker投unknown，不能committed waiting_user或成功 0ms
+   × Codex真实消息取消：会话准备中同租约cancel仅停止，不结算拒绝/失败、不重发 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > Codex 'local'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic
+ FAIL  src/execution/worker-runtime.test.ts > Codex 'typed-authority'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic
+ FAIL  src/execution/worker-runtime.test.ts > Codex 'typed-credential'：真实消息链结算原call后commit 'waiting_user'及原安全码，非generic
+ZodError: [
+  {
+    "code": "custom",
+    "message": "聊天缺少组或真实账号范围",
+    "path": []
+  }
+]
+ ❯ precheckWorkerFixture src/execution/worker-runtime.test.ts:491:34
+
+ ❯ src/execution/worker-runtime.test.ts:526:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > Codex host-unknown：真实Worker投unknown，不能committed waiting_user或成功
+ FAIL  src/execution/worker-runtime.test.ts > Codex wrong-ack：真实Worker投unknown，不能committed waiting_user或成功
+ZodError: [
+  {
+    "code": "custom",
+    "message": "聊天缺少组或真实账号范围",
+    "path": []
+  }
+]
+ ❯ precheckWorkerFixture src/execution/worker-runtime.test.ts:491:34
+
+ ❯ src/execution/worker-runtime.test.ts:544:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > Codex真实消息取消：会话准备中同租约cancel仅停止，不结算拒绝/失败、不重发
+ZodError: [
+  {
+    "code": "custom",
+    "message": "聊天缺少组或真实账号范围",
+    "path": []
+  }
+]
+ ❯ precheckWorkerFixture src/execution/worker-runtime.test.ts:491:34
+
+ ❯ src/execution/worker-runtime.test.ts:561:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 42 passed (48)
+   Start at  11:52:11
+   Duration  4.77s (transform 1.34s, setup 0ms, import 2.44s, tests 2.18s, environment 0ms)
+

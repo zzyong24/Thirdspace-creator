@@ -1,0 +1,65 @@
+{
+  "task": "T-1294",
+  "review": "round2-spec-recheck",
+  "createdAt": "2026-10-15T03:45:14.459945+00:00",
+  "mainHead": "6ff8b6e317330711e08426b1cbc39aeb243f16c1",
+  "scope": "只读规格复审；无正式source/tests/control变更，无新模型、服务或付费调用",
+  "files": [
+    {
+      "path": "docs/features/t1294-model-settings-and-codex-chat-acceptance.md",
+      "sha256": "8566bd08588a0a58935cc96309b713dc076cde52277471c62607e61d5af40afd"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "dde682e0ad114048daa5cfd8686a1450ccf902a8ab56a48411e88399a51ccc15"
+    },
+    {
+      "path": "docs/verification/t1294/spec-review-round1/packet.json",
+      "sha256": "915de39ac9d52a240292db32d54f55e4c69dd353bb0d73dbebddb2312d416e2f"
+    },
+    {
+      "path": "docs/verification/t1294/root-worker-diagnostic/RESULT.json",
+      "sha256": "49d2804edf0a6c111aeae9fc665a8690ed06fccc739579e2c3978b198fbac61e"
+    },
+    {
+      "path": "docs/verification/t1294/codex-protocol-diagnosis/PRE_ADMISSION_REVIEW.md",
+      "sha256": "930f495c2afe1b7e9a1a54c74ae4aeb445b6a44051bdf981205068b85757c124"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "sha256": "ebe256f3af0701f66ec9eb316ba0219bf0d489a0f59d0ddb5ca6d912551edf07"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "48ed5d371a9fd52efa1078337784c9b7837c28c37bcaa4d4df554463f0b87220"
+    },
+    {
+      "path": "frontend/src/lib/ai-error-humanize.ts",
+      "sha256": "4fe33a5e977424aa07e6e4292993986e9d9b09f94bd0abbdfa0121e953b9bebb"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-external-chat-native-run.test.ts",
+      "sha256": "07a449eb371a38597c88955110b3bac7ac23fea0912efb8f5d734ca586898232"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.test.ts",
+      "sha256": "fdd294ba3709b4a5bb157ea04d27610bd48f3be5e2e8164f1a93adf626e532c7"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.test.ts",
+      "sha256": "1a39e660b50f3c40a1f45b97381d5cb95fa76eb5694c0c6c30cabd3e926a2023"
+    },
+    {
+      "path": "frontend/src/lib/ai-error-humanize.test.ts",
+      "sha256": "a29982c0ffec58cb06c185a756247a160edb265310f9c17972a982b0ffbdbdc8"
+    }
+  ]
+}

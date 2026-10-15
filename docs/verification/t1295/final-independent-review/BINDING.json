@@ -1,0 +1,163 @@
+{
+  "taskScope": [
+    "T-1294 humanize/precheck/RPC only",
+    "T-1295 CSP source + exact node/E2E tests only"
+  ],
+  "mainHead": "6ff8b6e317330711e08426b1cbc39aeb243f16c1",
+  "at": "2026-10-15T04:03:13.302765+00:00",
+  "sourceFiles": [
+    {
+      "path": "docs/features/t1294-model-settings-and-codex-chat-acceptance.md",
+      "sha256": "8566bd08588a0a58935cc96309b713dc076cde52277471c62607e61d5af40afd"
+    },
+    {
+      "path": "docs/features/t1295-desktop-csp-wasm-video.md",
+      "sha256": "2d2a920ec26fd8f9066230aa08c4bdc6733a7c77310d7510fc62050946de0336"
+    },
+    {
+      "path": "docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "sha256": "8344d96bf0425a9df03ebff4161b9adfc1b388ac4ee8482d3c5c8053505df6c1"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "sha256": "9cbc438bf97444108f58a4483e52ddb07fb6b6d2fcd16887a5b6577bbeda348e"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.test.ts",
+      "sha256": "18f006bf0b15e8398d16a13cf045faa4b53deb46d536a8e68212088c883dde37"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.test.ts",
+      "sha256": "2d1ce63b5e5a4fc8b16b394a3d27340b544fbffae48fdef6c4f99853799e681e"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-external-chat-native-run.test.ts",
+      "sha256": "bf20cc0a89dfa56ba0500b3827562fa68a97e45097044c7e13406945316417ab"
+    },
+    {
+      "path": "frontend/src/lib/ai-error-humanize.ts",
+      "sha256": "73f75243a761898b8cc5a1882f0c035523a66c92391b675db214781ca99ed56a"
+    },
+    {
+      "path": "frontend/src/lib/ai-error-humanize.test.ts",
+      "sha256": "d99113ffa96b39cc05e8b0070df1475d1a2760e0a8d83905abfb40d187b2efef"
+    },
+    {
+      "path": "frontend/scripts/desktop/desktop-csp.mjs",
+      "sha256": "8e5aa8dc7e6f5ebb5495075d268eb5dc61fc9816e38ebf5c7cdc5a22c68e4279"
+    },
+    {
+      "path": "frontend/scripts/desktop/release-clean-boundary.node.test.mjs",
+      "sha256": "19715fefcaf235e66fec38982a6e61aa8193eb098a32609423ddb32cb1ead150"
+    },
+    {
+      "path": "frontend/scripts/desktop/release-hardening.node.test.mjs",
+      "sha256": "7857e3dedbd0ec64014e7b183d2e6696f4ef7986e06fdd634fae8ceb2050127b"
+    },
+    {
+      "path": "frontend/tests/e2e/t1295-desktop-csp-wasm-video.spec.ts",
+      "sha256": "f31c74bc26b718e5b845275749f4c1196cfc4e04cefe6592b4b57923c991d03b"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "docs/verification/t1294/root-live-chat-after-precheck/RESULT.json",
+      "sha256": "cfb47ecf3c909bdd6366b76f6d5828d5a04247e1ea28a7a0bc01fee03a02a88e"
+    },
+    {
+      "path": "docs/verification/t1294/root-live-chat-after-precheck/terminal.png",
+      "sha256": "3fcc02767e69389ae257adb542ffda918a5b38cf1fc2fe2e150c14d38270aa98"
+    },
+    {
+      "path": "docs/verification/t1295/browser/REPORT.md",
+      "sha256": "2a3a5f814df7d47f1786ef87c52cff4b0b6d070a612e6561945826dafa832ffc"
+    },
+    {
+      "path": "docs/verification/t1295/browser/formal-driver.log",
+      "sha256": "76174b5293adf8082240323e40329638f4f42b25029757b6d452321140e1455c"
+    },
+    {
+      "path": "docs/verification/t1295/browser/formal-driver-final.log",
+      "sha256": "3103e4758365c87e1c0fd83cd5d9862f5d240631d2de0c8d5712a2e881a1fb3a"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/binding.json",
+      "sha256": "6ff1596d4d5ed76312cd108dc951eaf1d7b2fd49a6100acca5c817b8654db26a"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/public-result.json",
+      "sha256": "845dd9600a583c0f338d2c4ce442b2147180c35e809db5848889fb9553e8f9d8"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/closed.json",
+      "sha256": "6971a6da1dad09da9e89269bdd84d5dc8ebb5e50e3007ec92d32e07be45868c3"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/native-export-artifact.json",
+      "sha256": "1fa2a39421287c3f0ec7bd92c677049891ccbf9caabce956fb783a4839182f6c"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/public-export-artifact.json",
+      "sha256": "76af8a683d4f584d37e8d09cd24d1b3758a84b02d3d9d4135466f3317beedc95"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/page-probe.json",
+      "sha256": "4a269a0bcd2fb907e8962be893f102c21431b57bacfc21563d480576f24eae1e"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/native-export.mp4",
+      "sha256": "f063c6ab947835eadaa003cbceef5d3d47880a3f3bfe0e231110178bbffe7216"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-1faa8c4c26d7/public-export.mp4",
+      "sha256": "8ffba4163ab5ffe1147230010a00bf3c06625bb2d647cf61d07d8b6cc9a571d5"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-4880c2e38c31/native-export-frame.png",
+      "sha256": "7412394fccbc66b2b60a384a5adcee997c93ae9d8fb0da5a2b4421f8b57d2ddc"
+    },
+    {
+      "path": "docs/verification/t1295/browser/runs/current-ebeccb70a24e/native-export-frame.png",
+      "sha256": "94f21f1dd226cef62139eaccde125d5ef10fc1df7578ee420a4c05a4befa030f"
+    }
+  ],
+  "independentRuns": [
+    {
+      "log": "worker-fixtures.log",
+      "sha256": "11f504382ad5a7b571b3f65851f90e114102170469d4585a0b57a13a8c1894d6",
+      "exitCode": 0,
+      "passed": 85
+    },
+    {
+      "log": "humanize.log",
+      "sha256": "48527aaa784f5bb9d0dbcb9118469897adde7c9a65d5c3b836b1b71896ff3c73",
+      "exitCode": 0,
+      "passed": 37
+    },
+    {
+      "log": "csp-node.log",
+      "sha256": "99b61e8a01b078e6f23a8d76dab553ae2ec709e842c7d0546c63d5b5d82cac2f",
+      "exitCode": 0,
+      "passed": 9
+    }
+  ],
+  "productionWrites": 0,
+  "controlWrites": 0,
+  "newModelOrProtocolCalls": 0,
+  "browserExecutedByThisReviewer": false,
+  "imagesActuallyViewed": [
+    "current-4880 native-export-frame.png colorful",
+    "current-ebeccb native-export-frame.png black"
+  ],
+  "findings": [],
+  "formalPagePolicyMatchesCurrent": true,
+  "formalNativeMatchesBothSources": true,
+  "formalArtifactDigestsMatch": {
+    "native-export": true,
+    "public-export": true
+  }
+}

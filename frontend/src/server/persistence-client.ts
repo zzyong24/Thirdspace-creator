@@ -1,4 +1,4 @@
-import {createSelectedModelSnapshotReader,freezeSelectedModelRoutes,type SelectedModelSnapshot,resolveFrozenModelCredential,type FrozenModelCredential,frozenTranscribeLocalSpec,isFrozenAsrRoutingError,type TranscribeModelOwner,type MultimodalSpec,prepareSelectedModelRoute,assertFrozenRouteIdentity,selectedModelIdentityDigest,CapabilityModelRoutingError} from '@creatoros/backend/modules/ai-runtime';
+import {createSelectedModelSnapshotReader,freezeSelectedModelRoutes,type SelectedModelSnapshot,resolveFrozenModelCredential,type FrozenModelCredential,frozenTranscribeLocalSpec,isFrozenAsrRoutingError,type TranscribeModelOwner,type MultimodalSpec,CapabilityModelRoutingError} from '@creatoros/backend/modules/ai-runtime';
 import {modelRouteCatalog,projectFrozenModelSettings,frozenExecutionRoute,readFrozenModelRoute,type ExecutionRoute,type FrozenModelRoute,type ModelRouteMode} from '@creatoros/contract/execution-worker';
 import {activeEncryptedLogSession} from "./feedback/encrypted-log-upload.server";
 import {createObservabilityCollector,createObservabilityTaskLedger} from "@creatoros/backend/modules/observability";
@@ -125,7 +125,7 @@ import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modul
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
-import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath, resolveCodexStatusWorkerPath } from "./execution-worker-path";
+import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath, resolveCodexStatusWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createNativeFilesWorkbenchHost } from "./workbench-native-host";
 import { createNativeFileRecoveryService } from "./workbench-file-recovery";
@@ -179,7 +179,7 @@ type HybridSearchHit } from "@creatoros/backend/modules/search";
 
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
-import { SECRET_DECRYPT_FAIL_SENTINEL, createOnboardingState, createIntegrationCredentials, createReportingLocal, createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
+import { SECRET_DECRYPT_FAIL_SENTINEL, createOnboardingState, createIntegrationCredentials, createReportingLocal, createSettingsRepository, createSettingsService, effectiveModelRouting, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 import { assembleActivationService, type ActivationService } from "./activation";
@@ -207,7 +207,7 @@ import { createReviewsService, createReviewsTransport } from "@creatoros/backend
 import { createReviewGateService, createReviewGateTransport, buildReviewRuleSeedRows, createReviewGateRepository } from "@creatoros/backend/modules/review";
 import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtime";
 
-import { createEmbeddingIoService, createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
+import { createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
 import { createLearningsService, createLearningsTransport } from "@creatoros/backend/modules/learnings";
 import { createAiService, createAiTransport, createAiRepository, buildAiModelConfigs, buildAiAgentConfigs, type AiService } from "@creatoros/backend/modules/ai";
 import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creatoros/backend/modules/creative-canvas";
@@ -1561,9 +1561,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime,repairSeedTitles}=createKnowledgeApplication(db,deps,{
     assertAssetReadable:async(c,id)=>{const asset=await assetsService.getAsset(c,id);if(asset.status!=="active")throw new OwnershipError("原文件不可用");return asset;},
-    resolveEmbedSpec:c=>resolveEmbedSpec(c),
-    embeddingConfigDigest:spec=>spec.route?.identity.configIdentityDigest,
-    embedTexts:(c,spec,texts,signal)=>embedTexts(c,spec,texts,signal),
+    resolveEmbedSpec:async()=>null,
+    embedTexts:async()=>{throw new Error('KNOWLEDGE_EMBEDDING_DISABLED');},
   });
 
   // Assets (module 07): one user-scoped repository over the shared db (the repo
@@ -5785,12 +5784,10 @@ FAVORITES_PROMOTE_PER_RUN
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('creatoros:preferences'),hashtext(${ctx.userId}))`);
       return write(createSettingsRepository(tx as unknown as typeof db,{...deps,masterKey}));
     }),
-    async(ctx,value)=>{
-      // 旧null配置不补造整套来源；明确保存的选择才投影各真实消费者元数据。
-      if(!value.choices)return {effectiveChoices:{},capabilities:[]};
-      const choices=structuredClone(value.choices),snapshot=await captureSelectedModelSnapshot(ctx,store,Object.values(choices)),read=createSelectedModelSnapshotReader(snapshot);
+    async(ctx,value,options)=>{
+      const choices=effectiveModelRouting(value),snapshot=await captureSelectedModelSnapshot(ctx,store,Object.values(choices),undefined,options?.checkCodex?'check':'peek'),read=createSelectedModelSnapshotReader(snapshot);
       const capabilities=await Promise.all(modelRouteCatalog.map(async entry=>{
-        const source=choices[entry.family],metadata=await read(entry,source);
+        const source=choices[entry.family],metadata=source==='codex'&&!snapshot.codex?{status:'unverified' as const,reasonCode:'CODEX_STATUS_UNAVAILABLE'}:await read(entry,source);
         return {capability:entry.capability,mode:entry.mode,source,status:metadata.status,reasonCode:metadata.reasonCode??null};
       }));
       return {effectiveChoices:choices,capabilities};
@@ -5799,13 +5796,13 @@ FAVORITES_PROMOTE_PER_RUN
   const settingsService=settingsServiceFor(db);
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
-  async function captureSelectedModelSnapshot(ctx:RequestContext,store:Db,sources:readonly string[],signal?:AbortSignal):Promise<SelectedModelSnapshot>{
+  async function captureSelectedModelSnapshot(ctx:RequestContext,store:Db,sources:readonly string[],signal?:AbortSignal,purpose:'read'|'peek'|'check'='read'):Promise<SelectedModelSnapshot>{
     signal?.throwIfAborted();
     const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey});
     const [rows,authority,codex]=await Promise.all([
       repo.listModels(ctx),
       sources.includes('official')?readChannelModelAuthority():Promise.resolve(null),
-      sources.includes('codex')?localCodexStatus.read(ctx,signal).catch(()=>null):Promise.resolve(null),
+      sources.includes('codex')?(purpose==='peek'?Promise.resolve(localCodexStatus.peek(ctx)):localCodexStatus.read(ctx,signal,purpose==='check').catch(error=>{signal?.throwIfAborted();if(purpose==='check')throw error;return null;})):Promise.resolve(null),
     ]);
     signal?.throwIfAborted();
     let official:SelectedModelSnapshot['official']=null;
@@ -5842,19 +5839,14 @@ FAVORITES_PROMOTE_PER_RUN
     if(trustedRoute)return frozenExecutionRoute({executionRoute:trustedRoute});
     const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey});
     const preference=await repo.getPreferences(ctx);
-    if(!preference?.modelRouting)return createExecutionRoute(preference?.assistantExecutionEngine==='codex'?'codex':'pi');
-    const choices=structuredClone(preference.modelRouting);
+    const choices=effectiveModelRouting({choices:preference?.modelRouting??null,legacyExecutionEngine:preference?.assistantExecutionEngine==='codex'?'codex':'pi'});
     const snapshot=await captureSelectedModelSnapshot(ctx,store,Object.values(choices));
     // 通用任务还未由业务adapter产生真实模型步骤；这里只冻结完整map，实际消费者再核自己的项。
-    return freezeSelectedModelRoutes({choices,revision:preference.modelRoutingRevision,read:createSelectedModelSnapshotReader(snapshot)});
+    return freezeSelectedModelRoutes({choices,revision:preference?.modelRoutingRevision??0,read:createSelectedModelSnapshotReader(snapshot)});
   }
   async function prepareChatRouting(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"}){
     const preference=await settingsRepo.getPreferences(ctx);
-    if(!preference?.modelRouting){
-      const engine=input.executionEngine??input.legacyExecutionEngine??(preference?.assistantExecutionEngine==='codex'?'codex':'pi');
-      return {executionEngine:engine,engineForMode:()=>engine,freeze:async()=>createExecutionRoute(engine,input.executionEngine===undefined?'preference':'chat-explicit')};
-    }
-    const choices=structuredClone(preference.modelRouting),revision=preference.modelRoutingRevision;
+    const choices=effectiveModelRouting({choices:preference?.modelRouting??null,legacyExecutionEngine:preference?.assistantExecutionEngine==='codex'?'codex':'pi'}),revision=preference?.modelRoutingRevision??0;
     const snapshot=await captureSelectedModelSnapshot(ctx,db,[...Object.values(choices),...(input.executionEngine==='codex'?['codex']:[])]);
     const read=createSelectedModelSnapshotReader(snapshot);
     const engineForMode=(mode:'text'|'vision'):'pi'|'codex'=>input.executionEngine==='codex'||choices[mode]==='codex'?'codex':'pi';
@@ -6536,7 +6528,7 @@ FAVORITES_PROMOTE_PER_RUN
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{observabilityHost?.stop();stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),videoVisualReviewService.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);await observabilityObserver.drain();observabilityObserver.dispose();};
+  stopExecutionWorker=async()=>{observabilityHost?.stop();stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),modelProbeIo.stop(),localCodexStatus.stop(),videoVisualReviewService.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);await observabilityObserver.drain();observabilityObserver.dispose();};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -6553,128 +6545,8 @@ FAVORITES_PROMOTE_PER_RUN
     }
   };
 
-  // ── [T-093] 知识库 AI 搜索:可配 embedding 管线 ─────────────────────────────
-  // capability "knowledge.search.embed" **只认专配行,不回退 default 聊天模型**
-  // (把 chat LLM 当 embedding 用是错的;未配 = 诚实降级纯关键词,前端渲提示条)。
-  const resolveEnvSecretRef = (secretRef: string | undefined): string => {
-    if (!secretRef) return "";
-    const m = /^env:(.+)$/.exec(secretRef.trim());
-    if (!m) return "";
-    return (process.env[m[1]!] ?? "").trim();
-  };
-  const resolveLegacyEmbedSpec = async (
-    ctx: RequestContext,
-  ): Promise<{
-    apiFormat: "anthropic" | "openai_chat" | "openai_responses";
-    baseUrl: string | null;
-    model: string;
-    token: string;
-  } | null> => {
-    const channel = await getChannelModelConfig();
-    if (channel) {
-      const route = resolveChannelCapabilityRoute(
-        channel,
-        "knowledge.search.embed",
-      );
-      if (route) {
-        const credential = route.serviceId
-          ? await getChannelModelCredential(ctx, route.serviceId)
-          : null;
-        const cfg = channelLlmConfigFromRoute(route, credential);
-        return {
-          apiFormat: cfg.apiFormat,
-          baseUrl: cfg.baseUrl,
-          model: cfg.model,
-          token: cfg.token,
-          ...(cfg.displayModelKey
-            ? { displayModelKey: cfg.displayModelKey }
-            : {}),
-        };
-      }
-    }
-    const row = await settingsService.getModelConfig(
-      ctx,
-      "knowledge.search.embed",
-    );
-    if (!row) return null;
-    const token =
-      row.secretValue?.trim() || resolveEnvSecretRef(row.secretReference);
-    if (!token) return null;
-    return {
-      apiFormat: row.apiFormat,
-      baseUrl: row.baseUrl ?? null,
-      model: row.modelName,
-      token,
-    };
-  };
-
-  type ApiEmbeddingRoute=Extract<FrozenModelRoute,{readiness:'configured';source:'self'|'official'}>;
-  // 仅作组合根配置捕获；真正请求在私有IO发送前取同身份当前凭据。
-  const readSelectedEmbedding=async(ctx:RequestContext,source:'self'|'official',original?:ApiEmbeddingRoute)=>{
-    const entry=modelRouteCatalog.find(item=>item.routeKey==='embedding:knowledge.search.embed')!;
-    let token:string,identity:unknown;
-    if(source==='self'){
-      const row=await settingsRepo.getModel(ctx,'knowledge.search.embed');
-      if(!row)throw new CapabilityModelRoutingError('MODEL_NOT_CONFIGURED',entry.routeKey);
-      token=row.secretValue?.trim()||resolveEnvSecretRef(row.secretReference);
-      // 原embedding HTTP适配器只消费bearer；配置身份按真实协议投影。
-      identity={provider:row.provider,model:row.modelName,apiFormat:row.apiFormat,authStyle:'bearer',endpoint:row.baseUrl??null,settings:projectFrozenModelSettings(row.settings),configuration:{kind:'row',id:row.id,capability:row.capability},configIdentityDigest:selectedModelIdentityDigest({})};
-    }else{
-      const authority=await readChannelModelAuthority();
-      if(authority.authority!=='channel'||!authority.bundleDigest)throw new CapabilityModelRoutingError('MODEL_NOT_CONFIGURED',entry.routeKey);
-      let selected:string|null;
-      if(original?.source==='official')selected=original.identity.optionId;
-      else{
-        const stored=await settingsRepo.getChannelModelCredential(ctx,authority.scopeId,`__model_selection__:${entry.capability}`);
-        if(!stored)selected=null;
-        else try{const value=JSON.parse(stored) as {id?:unknown};selected=typeof value?.id==='string'&&value.id.trim()?value.id.trim():null;}
-        catch{selected=stored.trim()||null;}
-      }
-      const route=resolveChannelCapabilityRoute(authority.payload,entry.capability,{selectedOptionId:selected});
-      if(!route?.serviceId||!route.optionId||!route.credentialLifecycle)throw new CapabilityModelRoutingError('MODEL_NOT_CONFIGURED',entry.routeKey);
-      const selectedIdentity={scopeId:authority.scopeId,serviceId:route.serviceId,optionId:route.optionId,provider:route.provider,model:route.model,apiFormat:route.apiFormat,authStyle:'bearer',endpoint:route.baseUrl,settings:projectFrozenModelSettings(route.settings),credentialLifecycle:route.credentialLifecycle};
-      identity={...selectedIdentity,authorityRouteDigest:selectedModelIdentityDigest(selectedIdentity),freezeBundleDigest:authority.bundleDigest,configIdentityDigest:selectedModelIdentityDigest({})};
-      // 固定本次已验签scope，不在等候后从另一渠道取Key。
-      token=route.inlineToken??await settingsRepo.getChannelModelCredential(ctx,authority.scopeId,route.serviceId)??'';
-    }
-    if(!token||token===SECRET_DECRYPT_FAIL_SENTINEL)throw new CapabilityModelRoutingError('MODEL_CREDENTIAL_UNAVAILABLE',entry.routeKey);
-    const route=prepareSelectedModelRoute(entry,source,{status:'ready',identity});
-    if(route.readiness!=='configured'||(route.source!=='self'&&route.source!=='official'))throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',entry.routeKey);
-    if(original)assertFrozenRouteIdentity(original,route.identity);
-    return {route,token};
-  };
-  const resolveEmbedSpec=async(ctx:RequestContext)=>{
-    const preference=await settingsRepo.getPreferences(ctx);
-    if(!preference?.modelRouting){const legacySpec=await resolveLegacyEmbedSpec(ctx);return legacySpec?{legacySpec}:null;}
-    const {route}=await readSelectedEmbedding(ctx,preference.modelRouting.embed);
-    // 不持有等待前的token，不向IPC添加内部route元数据。
-    return {route};
-  };
-
-  // 交互向量请求复用 IO Worker；领域权限与索引写入仍由当前 service 负责。
+  // 文本/图片连接测试保留原IO；知识搜索已使用关键词，不装配向量凭据或Worker。
   const modelProbeIo = createModelProbeIoService({entryPath:resolveModelProbeWorkerPath});
-  const embeddingIo = createEmbeddingIoService({entryPath:resolveEmbeddingWorkerPath});
-  const resolveEmbeddingCredential=async(ctx:RequestContext,spec:NonNullable<Awaited<ReturnType<typeof resolveEmbedSpec>>>):Promise<NonNullable<Awaited<ReturnType<typeof resolveLegacyEmbedSpec>>>>=>{
-    if(spec.legacySpec)return spec.legacySpec;
-    if(!spec.route)throw new Error('MODEL_ROUTE_NOT_FROZEN');
-    const {route,token}=await readSelectedEmbedding(ctx,spec.route.source,spec.route);
-    const apiFormat=route.identity.apiFormat;
-    if(apiFormat!=='anthropic'&&apiFormat!=='openai_chat'&&apiFormat!=='openai_responses')throw new Error('MODEL_ROUTE_UNSUPPORTED');
-    return {apiFormat,baseUrl:route.identity.endpoint,model:route.identity.model,token};
-  };
-  const embedTexts = async (
-    ctx: RequestContext,
-    spec: NonNullable<Awaited<ReturnType<typeof resolveEmbedSpec>>>,
-    texts: string[],signal?: AbortSignal,
-  ): Promise<number[][]> => {
-    if(spec.legacySpec)return embeddingIo.embed(ctx,spec.legacySpec,texts,signal);
-    return embeddingIo.embed(ctx,async preparationSignal=>{
-      preparationSignal.throwIfAborted();
-      const credential=await resolveEmbeddingCredential(ctx,spec);
-      preparationSignal.throwIfAborted();
-      return credential;
-    },texts,signal);
-  };
 
   // resolveMultimodalSpec — L5 asset.generate 的多模态解析(SPEC 2026-07-01 §2.2 / M2),与文本
   // 层 resolveModelSpec 并列:复用同一套 getModelConfig(settings 拥有 model_configurations)+
@@ -6839,10 +6711,7 @@ FAVORITES_PROMOTE_PER_RUN
         getChannelModelSelection: (selectedCapability) =>
           getChannelModelSelection(ctx, selectedCapability),
       }),
-    resolveEmbed: async (ctx) => {
-      const spec=await resolveEmbedSpec(ctx);
-      return spec?{...await resolveEmbeddingCredential(ctx,spec),authStyle:'bearer' as const}:null;
-    },
+    resolveEmbed: async () => null,
     resolveSearch: (ctx) => resolveSearchSpec(ctx),
     generateImageMinimal: (spec,c) => modelProbeIo.probeImage(c,spec),
     // 真实最小检索(count=1;bocha/tavily/serpapi 消耗少量额度)。

@@ -1,0 +1,71 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/settings/model-routing.integration.test.ts (7 tests | 2 failed) 23588ms
+   × T1294 未存选择默认全部官方，保密钥且GET不写入 2543ms
+   × T1294 服务端旧Codex显式选择优先，完整组合仍原样优先 2480ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/settings/model-routing.integration.test.ts > T1294 未存选择默认全部官方，保密钥且GET不写入
+AssertionError: expected { Object (schemaVersion, revision, ...) } to match object { choices: null, revision: +0, …(1) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "choices": null,
+-   "effectiveChoices": {
+-     "audio": "official",
+-     "embed": "official",
+-     "image": "official",
+-     "text": "official",
+-     "video": "official",
+-     "vision": "official",
+-   },
++   "effectiveChoices": {},
+    "revision": 0,
+  }
+
+ ❯ src/modules/settings/model-routing.integration.test.ts:93:50
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/settings/model-routing.integration.test.ts > T1294 服务端旧Codex显式选择优先，完整组合仍原样优先
+AssertionError: expected { Object (schemaVersion, revision, ...) } to match object { choices: null, …(1) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "choices": null,
+-   "effectiveChoices": {
+-     "audio": "official",
+-     "embed": "official",
+-     "image": "codex",
+-     "text": "codex",
+-     "video": "official",
+-     "vision": "codex",
+-   },
++   "effectiveChoices": {},
+  }
+
+ ❯ src/modules/settings/model-routing.integration.test.ts:101:50
+     99|  const f=await fixture();try{
+    100|   await f.service().updatePreferences(ctx,{assistantExecutionEngine:'c…
+    101|   expect(await f.service().getModelRouting(ctx)).toMatchObject({choice…
+       |                                                  ^
+    102|   await f.service().putModelRouting(ctx,{schemaVersion:1,choices,expec…
+    103|   expect(await f.service().getModelRouting(ctx)).toMatchObject({choice…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  10:52:53
+   Duration  25.61s (transform 993ms, setup 0ms, import 1.89s, tests 23.59s, environment 0ms)
+

@@ -22,9 +22,14 @@ test('独立冒烟保boot、HTTP、dispatch、Chromium hydration、原超时与�
 });
 test('desktop release CSP保inline/blob预览且web/debug无头',async()=>{
  const {desktopReleaseHeaders}=await import(file('scripts/desktop/desktop-csp.mjs'));
+ assert.deepEqual(desktopReleaseHeaders({}),[]);
+ assert.deepEqual(desktopReleaseHeaders({CREATOROS_DESKTOP:'0',CREATOROS_SIDECAR_SIGNING_REQUIRED:'1'}),[]);
+ assert.deepEqual(desktopReleaseHeaders({CREATOROS_DESKTOP:'1',CREATOROS_SIDECAR_SIGNING_REQUIRED:'0'}),[]);
  assert.deepEqual(desktopReleaseHeaders({CREATOROS_DESKTOP:'1'}),[]);
  assert.deepEqual(desktopReleaseHeaders({CREATOROS_SIDECAR_SIGNING_REQUIRED:'1'}),[]);
  const policy=desktopReleaseHeaders({CREATOROS_DESKTOP:'1',CREATOROS_SIDECAR_SIGNING_REQUIRED:'1'})[0].headers[0].value;
  for(const text of ["script-src 'self' 'unsafe-inline'","frame-src 'self' blob:","worker-src 'self' blob:","object-src 'none'"])assert.ok(policy.includes(text));
- assert.ok(!policy.includes('unsafe-eval'));
+ const scriptTokens=policy.split(';').map(value=>value.trim()).find(value=>value.startsWith('script-src ')).split(/\s+/).slice(1);
+ assert.ok(scriptTokens.includes("'wasm-unsafe-eval'"));
+ assert.ok(!scriptTokens.includes("'unsafe-eval'"));
 });

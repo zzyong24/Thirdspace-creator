@@ -1,0 +1,15 @@
+{
+  "actualExit": 1,
+  "before": {
+    "frontend/src/features/copilot/assistant-engine.ts": "292f9c9180ae0aeb804b51ab75b033247e3df5f4e1b526be2f37a6953642a697",
+    "frontend/src/features/copilot/use-assistant-engine.ts": "e358e116ff1a4ec77c744bba03e872df33e5f97383bf65e2f7893fda62068a60"
+  },
+  "after": {
+    "frontend/src/features/copilot/assistant-engine.ts": "292f9c9180ae0aeb804b51ab75b033247e3df5f4e1b526be2f37a6953642a697",
+    "frontend/src/features/copilot/use-assistant-engine.ts": "e358e116ff1a4ec77c744bba03e872df33e5f97383bf65e2f7893fda62068a60"
+  },
+  "productionWrites": 0,
+  "network": 0,
+  "db": 0,
+  "models": 0
+}

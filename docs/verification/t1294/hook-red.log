@@ -1,0 +1,70 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:67963) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/use-assistant-engine.test.tsx (21 tests | 2 failed | 18 skipped) 499ms
+     × 未存完整choices仍消费服务端官方effectiveChoices，不自动保存 246ms
+     × 冷启动Codex未核实可提交，由实际准入取得真实模型ID；双hook不另请求engines 134ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T1294 聊天仅消费统一来源，不另做Codex预检 > 未存完整choices仍消费服务端官方effectiveChoices，不自动保存
+AssertionError: expected { engine: 'pi', …(14) } to match object { v2: true, engine: 'pi', …(2) }
+(21 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "canSubmitText": true,
+    "checking": false,
+    "engine": "pi",
+-   "v2": true,
++   "v2": false,
+  }
+
+ ❯ src/features/copilot/use-assistant-engine.test.tsx:101:26
+     99|   current={...dto(null),effectiveChoices:{text:'official',vision:'offi…
+    100|   await store.loadModelRouting(true);const fetch=vi.spyOn(globalThis,'…
+    101|   expect(result.current).toMatchObject({v2:true,engine:'pi',checking:f…
+       |                          ^
+    102|   expect(fetch).not.toHaveBeenCalled();expect(api.putModelRouting).not…
+    103|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T1294 聊天仅消费统一来源，不另做Codex预检 > 冷启动Codex未核实可提交，由实际准入取得真实模型ID；双hook不另请求engines
+AssertionError: expected { engine: 'codex', …(14) } to match object { engine: 'codex', …(4) }
+(20 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "available": false,
+-   "canSubmitText": true,
+-   "checking": false,
++   "canSubmitText": false,
++   "checking": true,
+    "engine": "codex",
+-   "v2": true,
++   "v2": false,
+  }
+
+ ❯ src/features/copilot/use-assistant-engine.test.tsx:108:32
+    106|   await store.loadModelRouting(true);const fetch=vi.spyOn(globalThis,'…
+    107|   const first=observe(),second=renderHook(()=>hook.useAssistantEngine(…
+    108|   expect(first.result.current).toMatchObject({engine:'codex',checking:…
+       |                                ^
+    109|   expect(second.result.current.canSubmitText).toBe(true);await act(asy…
+    110|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed | 18 skipped (21)
+   Start at  10:53:13
+   Duration  1.88s (transform 518ms, setup 137ms, import 609ms, tests 499ms, environment 501ms)
+

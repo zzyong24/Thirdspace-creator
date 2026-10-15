@@ -478,3 +478,93 @@ it.each(["executeAgenticTool", "readChatWebReadSession"] as const)("宿主端口
   expect(messages.some(m=>m.type==="call" && m.port==="heartbeat")).toBe(true);
  }finally{worker.close();vi.useRealTimers();}
 });
+
+// T1294：真实Worker receive/reply/consumed/commit链接真实external入口，只替换Codex边界。
+import {codexExecutionSpec as precheckCodexSpec,chatWorkerInputSchema as precheckChatSchema} from '@creatoros/contract/execution-worker';
+import * as precheckSessionModule from './codex-app-server';
+import * as precheckNativeModule from './codex-native-turn';
+import {runExternalChatInWorker as precheckRealExternalChat} from './external-chat-worker-run';
+import {CodexHostError as WorkerPrecheckCodexError} from './codex-app-server-protocol';
+type PrecheckMode='local'|'typed-authority'|'typed-credential'|'host-unknown'|'wrong-ack'|'cancel';
+function precheckWorkerFixture(mode:PrecheckMode){
+ const messages:WorkerMessage[]=[];
+ const source=precheckChatSchema.parse({kind:'chat.run',executionEngine:'codex',modelRoutingVersion:2,codexNativeImageGeneration:false,requestedModel:'fixture-default-model',operationKey:'precheck-chain',capability:'copilot.assist',userId:'fixture-user',accountId:'fixture-account',conversationId:'fixture-conversation',sourceMessageId:'fixture-source',system:'受控系统',messages:[{role:'user',content:'只验证预检查状态链'}],maxSteps:4,maxOutputTokens:128,tools:[]});
+ const selected={...precheckCodexSpec(),requestedModel:source.requestedModel};
+ const session=vi.spyOn(precheckSessionModule,'createControlledCodexSession').mockRejectedValue(new WorkerPrecheckCodexError('CODEX_RPC_REJECTED'));
+ const native=vi.spyOn(precheckNativeModule,'runCodexNativeTurn').mockRejectedValue(new Error('FIXTURE_FORBIDS_REAL_TURN'));
+ const read=vi.spyOn(precheckNativeModule,'recoverCodexNativeTurn').mockRejectedValue(new Error('FIXTURE_FORBIDS_REAL_READ'));
+ if(mode==='cancel')session.mockImplementation(async(_cwd,signal)=>new Promise<never>((_resolve,reject)=>{
+  if(signal?.aborted){reject(new DOMException('fixture cancellation','AbortError'));return;}
+  signal?.addEventListener('abort',()=>reject(new DOMException('fixture cancellation','AbortError')),{once:true});
+ }));
+ const worker=createExecutionWorker({generate:vi.fn(),runChat:vi.fn(async()=>{throw Error('FIXTURE_FORBIDS_PI_CHAT');}),runExternalChat:precheckRealExternalChat,send(message){
+  messages.push(message);if(message.type!=='call')return;
+  queueMicrotask(()=>{
+   let ok=true,errorCode:string|undefined,data:unknown={};
+   if(message.port==='readTaskContext')data=source;
+   else if(message.port==='reserveExternalChatTurn')data={callId:'original-worker-precheck-call',status:'reserved'};
+   else if(message.port==='resolveModelCredential'){
+    if(mode==='typed-authority'||mode==='typed-credential'||mode==='host-unknown'){
+     ok=false;errorCode=mode==='typed-authority'?'MODEL_AUTHORITY_CHANGED':mode==='typed-credential'?'MODEL_CREDENTIAL_UNAVAILABLE':'LEASE_FENCE_MISMATCH';
+    }else data=selected;
+   }else if(message.port==='settleExternalChatTurn')data={callId:mode==='wrong-ack'?'foreign-call':'original-worker-precheck-call',status:'rejected'};
+   else if(message.port!=='commitResult'&&message.port!=='heartbeat'){
+    ok=false;errorCode='UNEXPECTED_FIXTURE_PORT';
+   }
+   worker.receive({version:1,type:'reply',requestId:message.requestId,execution:message.execution,callSeq:message.callSeq,ok,...(ok?{data}:{errorCode})});
+  });
+ }});
+ worker.ready();worker.receive({version:1,type:'run',requestId:'precheck-worker-run',execution,receiptProtocol:'consumed-v1',deadlineAt:Date.now()+120000});
+ return {worker,messages,session,native,read,restore(){worker.close();session.mockRestore();native.mockRestore();read.mockRestore();}};
+}
+
+it.each([
+ {mode:'local' as const,outcome:'waiting_user',errorCode:'CODEX_SESSION_PRECHECK_REJECTED'},
+ {mode:'typed-authority' as const,outcome:'waiting_user',errorCode:'MODEL_AUTHORITY_CHANGED'},
+ {mode:'typed-credential' as const,outcome:'waiting_user',errorCode:'MODEL_CREDENTIAL_UNAVAILABLE'},
+])('Codex $mode：真实消息链结算原call后commit $outcome及原安全码，非generic',async({mode,outcome,errorCode})=>{
+ const f=precheckWorkerFixture(mode);
+ try{
+  await vi.waitFor(()=>expect(f.messages.some(m=>m.type==='stopped')).toBe(true),{timeout:120000});
+  const calls=f.messages.filter((m):m is Extract<WorkerMessage,{type:'call'}>=>m.type==='call');
+  expect(calls.map(m=>m.port)).toEqual(['readTaskContext','reserveExternalChatTurn','resolveModelCredential','settleExternalChatTurn','commitResult']);
+  expect(calls.find(m=>m.port==='settleExternalChatTurn')).toMatchObject({execution,data:{callId:'original-worker-precheck-call',status:'rejected',rejectionCode:mode==='local'?'CODEX_RPC_REJECTED':errorCode}});
+  expect(calls.filter(m=>m.port==='commitResult')).toHaveLength(1);
+  expect(calls.find(m=>m.port==='commitResult')).toMatchObject({data:{outcome,errorCode}});
+  expect(f.messages.find(m=>m.type==='stopped')).toMatchObject({reason:outcome});
+  expect(f.messages.some(m=>m.type==='consumed')).toBe(true);
+  expect(calls.every(m=>m.execution.executionTaskId===execution.executionTaskId&&m.execution.fenceToken===execution.fenceToken&&Number.isInteger(m.callSeq))).toBe(true);
+  if(mode==='local'){expect(f.session).toHaveBeenCalledTimes(1);expect(f.session).toHaveBeenCalledWith(expect.any(String),expect.any(AbortSignal),undefined,false);}else expect(f.session).not.toHaveBeenCalled();
+  expect(f.native).not.toHaveBeenCalled();expect(f.read).not.toHaveBeenCalled();
+  expect(JSON.stringify(f.messages)).not.toContain('WORKER_EXECUTION_INTERRUPTED');
+ }finally{f.restore();}
+});
+
+it.each(['host-unknown','wrong-ack'] as const)('Codex %s：真实Worker投unknown，不能committed waiting_user或成功',async mode=>{
+ const f=precheckWorkerFixture(mode);
+ try{
+  await vi.waitFor(()=>expect(f.messages.some(m=>m.type==='stopped')).toBe(true),{timeout:120000});
+  const calls=f.messages.filter((m):m is Extract<WorkerMessage,{type:'call'}>=>m.type==='call');
+  expect(calls.filter(m=>m.port==='reserveExternalChatTurn')).toHaveLength(1);
+  expect(calls.filter(m=>m.port==='commitResult')).toHaveLength(1);
+  expect(calls.find(m=>m.port==='commitResult')).toMatchObject({data:{outcome:'unknown_result'}});
+  expect(f.messages.find(m=>m.type==='stopped')).toMatchObject({reason:'unknown_result'});
+  const settlements=calls.filter(m=>m.port==='settleExternalChatTurn');
+  if(mode==='host-unknown'){expect(settlements).toHaveLength(0);expect(f.session).not.toHaveBeenCalled();}
+  else{expect(settlements).toHaveLength(1);expect(f.session).toHaveBeenCalledTimes(1);}
+  expect(calls.some(m=>m.port==='commitExternalChatResult'||m.port==='startExternalChatTurn')).toBe(false);
+  expect(f.native).not.toHaveBeenCalled();expect(f.read).not.toHaveBeenCalled();
+ }finally{f.restore();}
+});
+
+it('Codex真实消息取消：会话准备中同租约cancel仅停止，不结算拒绝/失败、不重发',async()=>{
+ const f=precheckWorkerFixture('cancel');
+ try{
+  await vi.waitFor(()=>expect(f.session).toHaveBeenCalledTimes(1),{timeout:120000});
+  f.worker.receive({version:1,type:'cancel',requestId:'precheck-owned-cancel',execution});
+  await vi.waitFor(()=>expect(f.messages.find(m=>m.type==='stopped')).toMatchObject({reason:'cancelled'}),{timeout:120000});
+  const calls=f.messages.filter((m):m is Extract<WorkerMessage,{type:'call'}>=>m.type==='call');
+  expect(calls.map(m=>m.port)).toEqual(['readTaskContext','reserveExternalChatTurn','resolveModelCredential']);
+  expect(f.native).not.toHaveBeenCalled();expect(f.read).not.toHaveBeenCalled();
+ }finally{f.restore();}
+});

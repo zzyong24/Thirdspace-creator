@@ -37,7 +37,7 @@ const MODEL_CAPABILITY = "default";
 const MULTIMODAL_META = {
   image: {
     capability: "image.generate" as const,
-    title: "文生图模型",
+    title: "图片生成与编辑模型",
     icon: Palette,
     description:
       "录制阶段 AI 生成图片素材用;不配则录制页「AI 生成图」禁用。",
@@ -55,8 +55,8 @@ const MULTIMODAL_META = {
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   imageEdit: {
-    capability: "image.edit" as const,title: "参考图编辑模型",icon: Palette,
-    description: "图片编辑与参考图生成使用自己的配置；实际支持以本用途状态为准。",
+    capability: "image.edit" as const,title: "独立编辑配置",icon: Palette,
+    description: "默认复用图片生成配置。仅需独立编辑接口时填写；已有独立配置保持。",
     providerSuggestions: ["openai"] as ReadonlyArray<string>,providerPlaceholder: "openai",
     providerHelp: "使用已接入的 OpenAI 兼容图片编辑接口。",modelHelp: "填写服务商支持图片编辑的准确模型 ID。",
     modelPlaceholder: "",baseUrlPlaceholder: "https://api.example.com/v1",disabledHint: "未配置时编辑状态由真实兼容配置核验。",

@@ -1,3 +1,4 @@
+import {effectiveModelRouting} from './model-routing-defaults';
 import * as fs from "node:fs/promises";
 import {isDeepStrictEqual} from 'node:util';
 import {ConflictError} from '../execution/execution.errors';
@@ -365,7 +366,7 @@ function toPreferenceResource(
 }
 function defaultPreferenceResource(ctx:RequestContext):UserPreferenceResource{return {id:`pref-${ctx.userId}`,userId:ctx.userId,defaultHome:'dashboard',defaultCreationMode:'guided',defaultVisibility:'private',autosaveEnabled:true,fileNamingRule:'{date}-{title}',analyticsEnabled:false,assistantExecutionEngine:null};}
 export type PreferencesWritePort=<T>(ctx:RequestContext,write:(repo:Pick<SettingsRepository,'getPreferences'|'patchPreferences'|'setModelRouting'>)=>Promise<T>)=>Promise<T>;
-export type ModelRoutingProjectionReader=(ctx:RequestContext,value:Pick<ModelRoutingResource,'choices'|'legacyExecutionEngine'>)=>Promise<Pick<ModelRoutingResource,'effectiveChoices'|'capabilities'>>;
+export type ModelRoutingProjectionReader=(ctx:RequestContext,value:Pick<ModelRoutingResource,'choices'|'legacyExecutionEngine'>,options?:{checkCodex?:boolean})=>Promise<Pick<ModelRoutingResource,'effectiveChoices'|'capabilities'>>;
 export class ModelRoutingConflictError extends ConflictError {
   readonly details:{domainCode:'MODEL_ROUTING_CONFLICT';latestRevision:number};
   constructor(latestRevision:number){super('模型来源已在其它窗口修改，请刷新后再保存');this.details={domainCode:'MODEL_ROUTING_CONFLICT',latestRevision};}
@@ -576,7 +577,7 @@ export function createSettingsService(
   const routingResource=async(ctx:RequestContext,row:UserPreferenceRow|null):Promise<ModelRoutingResource>=>{
     const choices=row?.modelRouting??null;
     const legacyExecutionEngine=row?.assistantExecutionEngine==='pi'||row?.assistantExecutionEngine==='codex'?row.assistantExecutionEngine:null;
-    const projection=readModelRoutingProjection?await readModelRoutingProjection(ctx,{choices,legacyExecutionEngine}):{effectiveChoices:choices??{},capabilities:[]};
+    const projection=readModelRoutingProjection?await readModelRoutingProjection(ctx,{choices,legacyExecutionEngine}):{effectiveChoices:effectiveModelRouting({choices,legacyExecutionEngine}),capabilities:[]};
     return modelRoutingResourceSchema.parse({schemaVersion:1,revision:row?.modelRoutingRevision??0,choices,legacyExecutionEngine,...projection});
   };
   const fallbackBase = (id: string): OfficialSkillBase => ({
@@ -620,6 +621,20 @@ export function createSettingsService(
       if(!parsed.success)throw new ModelRoutingValidationError();
       if(!withPreferencesWrite)throw new ConflictError('偏好写锁尚未装配，请从原设置入口保存');
       const input=parsed.data;
+      // 外部协议握手在偏好事务/写锁外；最终仍以原revision做CAS，不长占数据库锁。
+      const previous=await repoForCtx(ctx).getPreferences(ctx);
+      if((previous?.modelRoutingRevision??0)!==input.expectedRevision)throw new ModelRoutingConflictError(previous?.modelRoutingRevision??0);
+      const legacyExecutionEngine=previous?.assistantExecutionEngine==='codex'?'codex':'pi';
+      const effective=effectiveModelRouting({choices:previous?.modelRouting??null,legacyExecutionEngine});
+      const required=([{family:'text',mode:'text',capability:'copilot.assist'},{family:'vision',mode:'vision',capability:'copilot.assist'},{family:'image',mode:'image',capability:'image.generate'}] as const)
+        .filter(row=>input.choices[row.family]==='codex'&&effective[row.family]!=='codex');
+      if(required.length&&readModelRoutingProjection){
+        const checked=await readModelRoutingProjection(ctx,{choices:input.choices,legacyExecutionEngine},{checkCodex:true});
+        for(const entry of required){
+          const status=checked.capabilities.find(row=>row.mode===entry.mode&&row.capability===entry.capability&&row.source==='codex');
+          if(status?.status!=='ready')throw new ConflictError(`本地 Codex 尚未通过${entry.family==='image'?'图片':entry.family==='vision'?'图片理解':'文本'}检查，请确认登录后重新保存（${status?.reasonCode??'CODEX_CAPABILITY_UNVERIFIED'}）`);
+        }
+      }
       const row=await withPreferencesWrite(ctx,async repo=>{
         const current=await repo.getPreferences(ctx);
         if((current?.modelRoutingRevision??0)!==input.expectedRevision)throw new ModelRoutingConflictError(current?.modelRoutingRevision??0);

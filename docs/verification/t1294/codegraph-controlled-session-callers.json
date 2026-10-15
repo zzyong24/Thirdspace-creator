@@ -1,0 +1,65 @@
+{
+  "symbol": "createControlledCodexSession",
+  "callers": [
+    {
+      "name": "createCodexAcpHost",
+      "kind": "function",
+      "filePath": "ai-worker/src/execution/codex-acp-host.ts",
+      "startLine": 54
+    },
+    {
+      "name": "runCodexAcpInWorker",
+      "kind": "function",
+      "filePath": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "startLine": 17
+    },
+    {
+      "name": "runCodexAgenticInWorker",
+      "kind": "function",
+      "filePath": "ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "startLine": 17
+    },
+    {
+      "name": "generateCodexImage",
+      "kind": "function",
+      "filePath": "ai-worker/src/execution/codex-image-generation.ts",
+      "startLine": 9
+    },
+    {
+      "name": "runExternalChatInWorker",
+      "kind": "function",
+      "filePath": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "startLine": 91
+    },
+    {
+      "name": "createCodexProviderModel",
+      "kind": "function",
+      "filePath": "ai-worker/src/runtime/codex-provider.ts",
+      "startLine": 29
+    },
+    {
+      "name": "main",
+      "kind": "function",
+      "filePath": "docs/verification/t1238/native-probe.ts",
+      "startLine": 6
+    },
+    {
+      "name": "main",
+      "kind": "function",
+      "filePath": "docs/verification/t1238/read-image-turn.ts",
+      "startLine": 2
+    },
+    {
+      "name": "runCodexAcpInWorker",
+      "kind": "function",
+      "filePath": "docs/verification/t1246/round-3/source-application/before/ai-worker/src/execution/codex-acp-worker-run.ts",
+      "startLine": 17
+    },
+    {
+      "name": "runCodexAgenticInWorker",
+      "kind": "function",
+      "filePath": "docs/verification/t1246/round-3/source-application/before/ai-worker/src/execution/codex-agentic-worker-run.ts",
+      "startLine": 17
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "用户实际桌面视频报错与正式响应头缺少WASM专用许可相符。SPEC仅在release页面策略加入wasm-unsafe-eval、继续禁止JavaScript unsafe-eval，不放宽来源/网络/iframe/对象/权限；要求两原静态门按完整token区分、实际同策略WASM成功及JS eval/Function拒绝，并以原生视频初始化和隔离公共预览/制作/导出音画产物验收。旧任务/输入保留，不把空WASM或浏览器通过冒充桌面App已验。不发现阻断性范围或必要性缺陷；正式裁决由Root reviewctl登记，实现与运行Gate均未签。",
+  "findings": []
+}

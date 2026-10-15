@@ -1,0 +1,140 @@
+{
+  "at": "2026-10-15T03:34:29.110717+00:00",
+  "reviewerIndependence": "not UI author; shares prior browser verification/history; not blind visual review",
+  "standard": "existing UI_RULES; one round; no score",
+  "images": [
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-85c77-官方，设置无向量-独立图片理解与数据服务分类，充值常驻/official-default-model-settings.png",
+      "sha256": "987ea179d49b42ceec40ab57f6163342732d5eb2fb7cdf1dd41e89047e5f6eb7",
+      "bytes": 183437,
+      "reviewedPixels": true,
+      "meaning": "default model settings / honest official unconfigured"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-92d20-实际CAS冲突不覆盖其它窗口保存，原草稿与失败提示保留/real-cas-conflict-preserved.png",
+      "sha256": "0f08b0c438abd3f55c7c200c42fea5c6636b48f979f43ab04a5092d3cb10f971",
+      "bytes": 183881,
+      "reviewedPixels": true,
+      "meaning": "real conflict preserves draft"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-0ab97-页实际保存-掩码-重开-删除，旧深链仍可达且零查询费用/redfox-saved-masked.png",
+      "sha256": "30dd3c1b3525d0ffbe25fe20021daa8b3d86b5b46b8282182244281484dd3844",
+      "bytes": 197276,
+      "reviewedPixels": true,
+      "meaning": "saved RedFox masked"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-91fe0-body受控POST，缺官方配置诚实失败且零资金新操作/credits-honest-unconfigured.png",
+      "sha256": "d7b051d2fc40c946c49f69187e0d2171b2e73172e75c31a874a0ba04bc1d2851",
+      "bytes": 315702,
+      "reviewedPixels": true,
+      "meaning": "credit entry honest unavailable"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-901c5-置与助手-desktop-可读可操作且无画布-检查横条/assistant-desktop.png",
+      "sha256": "0c2b5edeaefc43d2be8574abca9d10eea966861385677103400b531ebe9ac76f",
+      "bytes": 215142,
+      "reviewedPixels": true,
+      "meaning": "assistant desktop no canvas/probe bar"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-33355-留，主动改图片同次CAS只统一vision-image/explicit-and-mixed-sources.png",
+      "sha256": "bad86baa7ed74804b41d3d7a2ac05d5cf28e2a3e35fcf582bb6154be799f9811",
+      "bytes": 184877,
+      "reviewedPixels": true,
+      "meaning": "saved explicit/mixed sources"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-4d097-设置与助手-narrow-可读可操作且无画布-检查横条/settings-narrow.png",
+      "sha256": "547ba36abf54e88468d2d2ec5ad512d758493a63b6a002d566148baef1fa9e06",
+      "bytes": 56226,
+      "reviewedPixels": true,
+      "meaning": "390 narrow layout"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-5c010-置与助手-zoom200-可读可操作且无画布-检查横条/assistant-zoom200.png",
+      "sha256": "41188f83f37b5377daebc9072833d4e92a082f9994cbcdc2c631a9024d6eb15c",
+      "bytes": 207189,
+      "reviewedPixels": true,
+      "meaning": "original CSS html zoom2 clipping FAIL retained"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/zoom-equivalent-1792034114914/assistant-css640x450-dsf2.png",
+      "sha256": "acd3348c6cdcea8ea6d57e87ae357e0cc5ab54c4070c8641633ee2456e3b5ac4",
+      "bytes": 116649,
+      "reviewedPixels": true,
+      "meaning": "initial equivalent viewport geometry FAIL retained"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/zoom-scroll-proof-1792034173679/assistant-css640x450-dsf2.png",
+      "sha256": "acd3348c6cdcea8ea6d57e87ae357e0cc5ab54c4070c8641633ee2456e3b5ac4",
+      "bytes": 116649,
+      "reviewedPixels": true,
+      "meaning": "initial equivalent viewport geometry FAIL retained"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/zoom-scroll-proof-1792034173679/assistant-after-original-inner-scroll.png",
+      "sha256": "d3492f015b99062e93df704093011dce93205375fa96f6739dd9ccc0a37318ae",
+      "bytes": 133585,
+      "reviewedPixels": true,
+      "meaning": "equivalent viewport original inner scroll reachability"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/artifacts/e2e-t1294-model-settings-a-8483b-直接发送→四ID同任务完成并可读，unknown不重发/test-failed-1.png",
+      "sha256": "30c6f276b996ed689551919f41de06506257c1aaa34a6f5ac7902235f377b187",
+      "bytes": 225676,
+      "reviewedPixels": true,
+      "meaning": "new Codex task failed / no readable assistant completion"
+    }
+  ],
+  "proof": [
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/RESULT.json",
+      "sha256": "1d7b51cb71a412c30a87a8646d55a65cbc4b4b8c69d5a76bebd1e6204b28e9c2"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/RESULT_DIGESTS.json",
+      "sha256": "d59d4eecf46fdccaa8ce1e7adb02eb26dcd1afa5f1c075df12445714d5f5c65a"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/SOURCE_AFTER_RUN.json",
+      "sha256": "6f38dd275dd9ee9b05cf5c17191e7504732f573b6c79685bacc080ec820e0d0c"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/zoom-equivalent-1792034114914/geometry.json",
+      "sha256": "2fa7df894ebafa56db59bcb939008413e4a13c82a4718ca3ea8ebcda5db97e93"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/zoom-scroll-proof-1792034173679/geometry.json",
+      "sha256": "54e410dcb95a54e656429ee99e325008688df8ba5e7f4432c4b0a0d68d8d8c5f"
+    },
+    {
+      "path": "docs/verification/t1294/browser/runs/prepared-7a28c6d61b968c51/zoom-scroll-proof-1792034173679/browser-close.json",
+      "sha256": "2fd1d03b4a21d1365537fff842e377170274103232c6ab7605210d3e4c62248e"
+    }
+  ],
+  "numericScore": null,
+  "originalBrowserResult": {
+    "passed": 9,
+    "failed": 1,
+    "retry": 0,
+    "readableAssistantCompletion": false
+  },
+  "cssZoomOriginalFailRetained": true,
+  "equivalentViewport": {
+    "cssWidth": 640,
+    "cssHeight": 450,
+    "deviceScaleFactor": 2,
+    "htmlZoom": 1,
+    "physicalWidth": 1280,
+    "physicalHeight": 900,
+    "initialSendInViewport": false,
+    "afterOriginalInnerScrollAllFourControlsInViewport": true,
+    "horizontalOverflow": false,
+    "claim": "reachable using original inner scroll; neither zero-scroll same-screen nor native OS zoom proven"
+  },
+  "reviewNoNewTasks": true,
+  "reviewNoConfigWrites": true,
+  "fullTaskPass": false
+}

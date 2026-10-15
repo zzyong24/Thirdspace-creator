@@ -19,7 +19,31 @@ test('独立冒烟也剥更新根路径，父构建环境不被修改', () => {
 test('桌面CSP允许现有sandbox预览的精确GSAP脚本，仍禁止eval', () => {
   const directive = DESKTOP_RELEASE_CSP.split('; ').find(v => v.startsWith('script-src '));
   assert.ok(directive.split(' ').includes('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js'));
-  assert.ok(!directive.includes('unsafe-eval'));
+  const tokens = directive.split(/\s+/).slice(1);
+  assert.ok(tokens.includes("'wasm-unsafe-eval'"), '实际视频WASM需要专用编译许可');
+  assert.ok(!tokens.includes("'unsafe-eval'"), 'JavaScript字符串求值仍禁止');
+});
+
+test('桌面CSP只增专用WASM许可，来源和其它全部指令保持原边界', () => {
+  const directives = DESKTOP_RELEASE_CSP.split(';').map(value => value.trim());
+  const script = directives.filter(value => value.startsWith('script-src '));
+  assert.equal(script.length, 1, '不能靠重复指令制造表面许可');
+  assert.deepEqual(script[0].split(/\s+/).slice(1), [
+    "'self'", "'unsafe-inline'", "'wasm-unsafe-eval'",
+    'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js',
+  ]);
+  assert.deepEqual(directives.filter(value => !value.startsWith('script-src ')), [
+    "default-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* https://growth.aitongban.cloud https://creatoros.aitongban.cloud https://license.aitongban.cloud",
+    "img-src 'self' data: blob: https:",
+    "media-src 'self' blob: data: https:",
+    "font-src 'self' data:",
+    "worker-src 'self' blob:",
+    "frame-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+  ]);
 });
 
 test('普通构建子环境剥更新根私钥路径并保持其它构建值', () => {

@@ -1,0 +1,41 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:85793) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/lib/ai-error-humanize.test.ts (37 tests | 2 failed) 32ms
+     × 只专用阶段码说明尚未开始，不假称已完成/已登录失效 1ms
+     × 固定阶段提示不透传provider message/data/账户或凭据哨兵 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/ai-error-humanize.test.ts > T1294 确定零turn的Codex会话预检查安全提示 > 只专用阶段码说明尚未开始，不假称已完成/已登录失效
+AssertionError: expected null not to be null
+ ❯ src/lib/ai-error-humanize.test.ts:359:21
+    357|  it('只专用阶段码说明尚未开始，不假称已完成/已登录失效',()=>{
+    358|   const human=humanizeAiErrorMessage('CODEX_SESSION_PRECHECK_REJECTED'…
+    359|   expect(human).not.toBeNull();expect(human!.message).toContain('Codex…
+       |                     ^
+    360|   expect(human!.message).not.toMatch(/已完成|登录过期|登录失效|余额不足/);
+    361|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/lib/ai-error-humanize.test.ts > T1294 确定零turn的Codex会话预检查安全提示 > 固定阶段提示不透传provider message/data/账户或凭据哨兵
+AssertionError: expected null not to be null
+ ❯ src/lib/ai-error-humanize.test.ts:372:21
+    370|   (error as Error&{responseBody:string}).responseBody='{"data":{"accou…
+    371|   const human=humanizeAiError(error);
+    372|   expect(human).not.toBeNull();expect(human).toEqual(humanizeAiErrorMe…
+       |                     ^
+    373|   expect(JSON.stringify(human)).not.toMatch(/provider-raw-message|secr…
+    374|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 35 passed (37)
+   Start at  11:52:10
+   Duration  976ms (transform 47ms, setup 162ms, import 23ms, tests 32ms, environment 517ms)
+

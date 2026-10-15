@@ -1,0 +1,47 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:76694) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/use-assistant-engine.test.tsx (25 tests | 4 failed | 21 skipped) 527ms
+   × T1294 已存Codex观察失败CODEX_LOGIN_REQUIRED不永久锁死新提交，真正可用性仍由原准入负责 165ms
+   × T1294 已存Codex观察失败CODEX_STATUS_UNAVAILABLE不永久锁死新提交，真正可用性仍由原准入负责 150ms
+   × T1294 已存Codex观察失败CODEX_CONFIG_CHANGED不永久锁死新提交，真正可用性仍由原准入负责 106ms
+   × T1294 已存Codex观察失败CODEX_RUNTIME_UNAVAILABLE不永久锁死新提交，真正可用性仍由原准入负责 105ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T1294 已存Codex观察失败CODEX_LOGIN_REQUIRED不永久锁死新提交，真正可用性仍由原准入负责
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T1294 已存Codex观察失败CODEX_STATUS_UNAVAILABLE不永久锁死新提交，真正可用性仍由原准入负责
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T1294 已存Codex观察失败CODEX_CONFIG_CHANGED不永久锁死新提交，真正可用性仍由原准入负责
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T1294 已存Codex观察失败CODEX_RUNTIME_UNAVAILABLE不永久锁死新提交，真正可用性仍由原准入负责
+AssertionError: expected { engine: 'codex', …(14) } to match object { available: false, …(3) }
+(21 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "available": false,
+-   "canSubmitText": true,
++   "canSubmitText": false,
+    "checking": false,
+    "textAvailable": false,
+  }
+
+ ❯ src/features/copilot/use-assistant-engine.test.tsx:119:25
+    117|  current={...dto('codex',{...choices,text:'codex'}),capabilities:[{mod…
+    118|  await store.loadModelRouting(true);const fetch=vi.spyOn(globalThis,'f…
+    119|  expect(result.current).toMatchObject({available:false,textAvailable:f…
+       |                         ^
+    120|  expect(result.current.status).toContain('不可用');await act(async()=>{})…
+    121| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 21 skipped (25)
+   Start at  11:22:43
+   Duration  1.97s (transform 502ms, setup 132ms, import 707ms, tests 527ms, environment 475ms)
+

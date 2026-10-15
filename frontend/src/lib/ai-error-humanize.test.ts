@@ -352,3 +352,24 @@ describe("humanizeArtifactType — 产物类型码 → 中文", () => {
     expect(humanizeArtifactType("some_future_type")).toBe("产物");
   });
 });
+
+describe('T1294 确定零turn的Codex会话预检查安全提示',()=>{
+ it('只专用阶段码说明尚未开始，不假称已完成/已登录失效',()=>{
+  const human=humanizeAiErrorMessage('CODEX_SESSION_PRECHECK_REJECTED');
+  expect(human).not.toBeNull();expect(human!.message).toContain('Codex');expect(human!.message).toMatch(/尚未开始|还未开始|未开始/);
+  expect(human!.message).not.toMatch(/已完成|登录过期|登录失效|余额不足/);
+ });
+ it('同一原始错误码在已启动/未知阶段不能被映射为零回合预检查',()=>{
+  for(const code of ['CODEX_RPC_REJECTED','CODEX_TURN_RESULT_UNKNOWN','CODEX_SETTLEMENT_RECEIPT_UNKNOWN','CODEX_PRECHECK_RESULT_UNKNOWN','WORKER_EXECUTION_INTERRUPTED']){
+   const human=humanizeAiErrorMessage(code);
+   expect(human?.message??'').not.toMatch(/尚未开始|还未开始|未开始|预检查/);
+  }
+ });
+ it('固定阶段提示不透传provider message/data/账户或凭据哨兵',()=>{
+  const error=new Error('CODEX_SESSION_PRECHECK_REJECTED provider-raw-message secret-fixture-token');
+  (error as Error&{responseBody:string}).responseBody='{"data":{"account":"fixture-private-account","api_key":"fixture-private-key"}}';
+  const human=humanizeAiError(error);
+  expect(human).not.toBeNull();expect(human).toEqual(humanizeAiErrorMessage('CODEX_SESSION_PRECHECK_REJECTED'));
+  expect(JSON.stringify(human)).not.toMatch(/provider-raw-message|secret-fixture-token|fixture-private-account|fixture-private-key|responseBody|api_key/);
+ });
+});

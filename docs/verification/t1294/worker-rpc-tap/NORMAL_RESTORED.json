@@ -1,0 +1,5 @@
+{
+  "normalBundleSHA256": "f65897ceeaabb193182b312d19fef6c852c98d49b807f29c74b2701e1409fac1",
+  "diagnosticTapAbsent": true,
+  "restoredBy": "normal scripts/build.mjs, no source modifications"
+}

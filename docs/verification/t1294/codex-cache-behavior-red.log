@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/local-codex-status.service.test.ts (16 tests | 1 failed | 15 skipped) 8ms
+   × 同user成功状态复用，组/账号不成为本机状态权威，真实ID与能力原样保留 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/local-codex-status.service.test.ts > 同user成功状态复用，组/账号不成为本机状态权威，真实ID与能力原样保留
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/modules/ai-runtime/local-codex-status.service.test.ts:30:114
+     28| it('同user成功状态复用，组/账号不成为本机状态权威，真实ID与能力原样保留',async()=>{
+     29|  const service=create();const work=service.read(ctx());pending().resol…
+     30|  const next=service.read({...ctx('user-a','group-b'),requestId:'anothe…
+       |                                                                                                                  ^
+     31| });
+     32| it('同user同时read只有一个flight且force可join；不同user不借快照',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 skipped (16)
+   Start at  11:00:24
+   Duration  442ms (transform 192ms, setup 0ms, import 305ms, tests 8ms, environment 0ms)
+

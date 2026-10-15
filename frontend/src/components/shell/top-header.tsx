@@ -16,6 +16,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import {AiCreditEntry} from "@/features/settings/ai-credit-entry";
 
 import { buttonVariants } from "@/components/ui/button";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
@@ -161,6 +162,7 @@ export function TopHeader({
         notifications={notifications}
         primaryActionLabel={primaryActionLabel}
       />
+      <AiCreditEntry/>
     </header>
   );
 }

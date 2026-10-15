@@ -33,7 +33,7 @@ async function exercise(kind:Kind){
  let wires=0;process.on('message',m=>{log({type:'input',message:m});if(m.type==='status'){const n=++wires;log({type:'wire',id:m.requestId,n});setImmediate(()=>log({type:'wire-handled',n}));}});
  export const CODEX_RUNTIME_VERSION='0.159.3';export class CodexHostError extends Error{constructor(code){super(code);this.code=code;}}
  export async function resolveBundledCodex(){log({type:'admission'});${kind==='runtime-failure'?"throw new CodexHostError('CODEX_RUNTIME_UNAVAILABLE');":"return 'external-protocol-fixture-not-executed';"}}
- export async function createControlledCodexSession(cwd,signal,env,image){log({type:'session',cwd,image:!!image});return {authenticated:${kind==='authenticated'},loginStatus:'${kind==='authenticated'?'authenticated':'unauthenticated'}',mcpNames:[],rpc:{async request(method){log({type:'rpc',method});return {data:[{isDefault:true,inputModalities:['text','image']}]};},async close(){log({type:'cleanup-start',cwd});${kind==='cleanup-failure'?"throw Error('external-close-fixture-failure');":kind==='fifo'||kind==='cancel'?`const deadline=Date.now()+120000;while(!fs.existsSync(${JSON.stringify(gate)})){if(Date.now()>=deadline)throw Error('FIXTURE_CLEANUP_DEADLINE');await new Promise(r=>setTimeout(r,20));}`:''}log({type:'cleanup-finished',cwd});}}};}`;
+ export async function createControlledCodexSession(cwd,signal,env,image){log({type:'session',cwd,image:!!image});return {authenticated:${kind==='authenticated'},loginStatus:'${kind==='authenticated'?'authenticated':'unauthenticated'}',mcpNames:[],rpc:{async request(method){log({type:'rpc',method});return {data:[{id:'fixture-real-model-id',isDefault:true,inputModalities:['text','image']}]};},async close(){log({type:'cleanup-start',cwd});${kind==='cleanup-failure'?"throw Error('external-close-fixture-failure');":kind==='fifo'||kind==='cancel'?`const deadline=Date.now()+120000;while(!fs.existsSync(${JSON.stringify(gate)})){if(Date.now()>=deadline)throw Error('FIXTURE_CLEANUP_DEADLINE');await new Promise(r=>setTimeout(r,20));}`:''}log({type:'cleanup-finished',cwd});}}};}`;
  const sdk=path.join(root,'external-sdk-fixture.ts'),worker=path.join(root,'worker.cjs');fs.writeFileSync(sdk,fixture);
  const source=path.join(repoRoot,'ai-worker/src/execution/codex-status-entry.ts');
  await esbuild.build({entryPoints:[source],outfile:worker,bundle:true,platform:'node',format:'cjs',logLevel:'silent',plugins:[{
@@ -42,7 +42,8 @@ async function exercise(kind:Kind){
  const rows=():Event[]=>fs.existsSync(events)?fs.readFileSync(events,'utf8').trim().split('\n').filter(Boolean).map(line=>JSON.parse(line)):[];
  const io=createLocalCodexStatusService({entryPath:()=>worker});
  const controllers=Array.from({length:kind==='fifo'||kind==='cancel'?3:1},()=>new AbortController());
- const jobs=controllers.map((controller,n)=>io.read({userId:'fixture-status-user',accountId:null,groupId:'fixture-status-group',requestId:kind+n,source:'user'},controller.signal));
+ const jobs=controllers.map((controller,n)=>io.read({userId:controllers.length===3?'fixture-status-user-'+n:'fixture-status-user',accountId:null,groupId:'fixture-status-group',requestId:kind+n,source:'user'},controller.signal));
+ jobs.forEach(job=>{void job.catch(()=>undefined);});
  try{
   if(kind==='fifo'){
    await waitUntil(()=>rows().filter(x=>x.type==='cleanup-start').length===2,'two-owned-cleanups');
@@ -55,16 +56,16 @@ async function exercise(kind:Kind){
    for(const x of log.filter(x=>x.type==='session'))assert.equal(fs.existsSync(x.cwd!),false,'session directory removed before reply');
   }else if(kind==='cancel'){
    await waitUntil(()=>rows().filter(x=>x.type==='cleanup-start').length===2,'original-two-close-gates');controllers[0]!.abort();
-   const cancelled=await jobs[0]!;assert.equal(cancelled.loginStatus,'unchecked');assert.equal(cancelled.available,false);assert.equal(cancelled.errorCode,'CODEX_STATUS_UNAVAILABLE');
+   await assert.rejects(jobs[0]!,{name:'AbortError'});
    assert.equal(rows().filter(x=>x.type==='input'&&x.message?.type==='status').length,2,'observer cancellation cannot recycle real in-flight slot before cleanup');
-   fs.writeFileSync(gate,'release');const values=await Promise.all(jobs);
-   for(const value of values.slice(1)){assert.equal(value.loginStatus,'unauthenticated');assert.equal(value.errorCode,'CODEX_LOGIN_REQUIRED');}
+   fs.writeFileSync(gate,'release');const values=await Promise.all(jobs.slice(1));
+   for(const value of values){assert.equal(value.loginStatus,'unauthenticated');assert.equal(value.errorCode,'CODEX_LOGIN_REQUIRED');}
    assert.equal(rows().filter(x=>x.type==='input'&&x.message?.type==='status').length,3);
    assert.equal(rows().filter(x=>x.type==='input'&&x.message?.type==='cancel').length,1);assert.equal(rows().filter(x=>x.type==='cleanup-finished').length,3);
   }else{
    const [value]=await Promise.all(jobs);assert.ok(value);
    if(kind==='authenticated'){
-    assert.deepEqual(value,{engine:'codex',installed:true,available:true,version:'0.159.3',loginStatus:'authenticated',capabilities:{text:true,imageUnderstanding:true,imageGeneration:true}});
+    assert.deepEqual(value,{engine:'codex',installed:true,available:true,version:'0.159.3',defaultModelId:'fixture-real-model-id',availableModels:[{id:'fixture-real-model-id',inputModalities:['text','image']}],loginStatus:'authenticated',capabilities:{text:true,imageUnderstanding:true,imageGeneration:true,imageEditing:'unverified'}});
     assert.equal(rows().filter(x=>x.type==='cleanup-finished').length,2);
     const reply=rows().find(x=>x.type==='output'&&x.message?.type==='result');assert.ok(reply);
     assert.ok(rows().filter(x=>x.type==='cleanup-finished').every(x=>x.time<=reply.time));
@@ -75,7 +76,7 @@ async function exercise(kind:Kind){
    }
   }
  }finally{
-  fs.writeFileSync(gate,'release-final');controllers.forEach(controller=>controller.abort());await Promise.all(jobs);await io.stop();
+  fs.writeFileSync(gate,'release-final');controllers.forEach(controller=>controller.abort());await Promise.allSettled(jobs);await io.stop();
   for(const pid of new Set(rows().map(x=>x.pid))){let present=true;try{process.kill(pid,0);}catch(error){if((error as NodeJS.ErrnoException).code==='ESRCH')present=false;else throw error;}
    assert.equal(present,false,'owned producer closed after public stop');}
  }

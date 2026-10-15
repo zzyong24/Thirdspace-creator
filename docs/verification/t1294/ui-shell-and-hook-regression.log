@@ -1,0 +1,98 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:73331) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/features/settings/settings-page.test.tsx > SettingsPage > mounts the TopHeader in global mode with the settings title
+Received `false` for a non-boolean attribute `prefetch`.
+
+If you want to write it to the DOM, pass a string instead: prefetch="false" or prefetch={value.toString()}.
+
+If you used to conditionally omit it with prefetch={condition && value}, pass prefetch={condition ? value : undefined} instead.
+Unknown event handler property `onNavigate`. It will be ignored.
+
+ ❯ src/features/settings/settings-page.test.tsx (30 tests | 26 failed) 2457ms
+     × mounts the TopHeader in global mode with the settings title 315ms
+     × marks the Settings nav item as the active page in the sidebar 53ms
+     × uses the assistant contextual-card variant (NOT storage) 40ms
+     × renders the settings dialog with 7 vertical tabs in the approved order 43ms
+     × opens as a centered dialog (not a full-page flood layout) 35ms
+     × mounts every settings card (account/preference/system/storage/model) 40ms
+     × [T-645] 只锁渠道完整返回的能力，未返回的 ASR 仍可由用户配置 35ms
+     × [T1278/T701] 官方缺渠道身份只阻塞官方该行，不伪造就绪或清自配 29ms
+     × [T-679] 按 Growth 下发顺序展示真实模型名和 model，移除旧选择时提示已回退 36ms
+     × [T-645] 渠道只提供 ASR 时，文本模型仍保留用户本地表单 33ms
+     × renders form rows with the compact label + control pattern 23ms
+     × renders StorageUsageCard with a progress bar 40ms
+       × 无 model/storage props(读取失败态)→ 模型卡输入为空(不预填伪造模型),存储诚实显 0 MB 56ms
+     × keeps the page inside the single AppShell — no second Sidebar/TopHeader 23ms
+     × renders the page-internal main region with the settings page marker 22ms
+       × web / 未装配(activation undefined)→ 诚实空态卡「桌面端专属」 20ms
+       × 已激活(active)→ 绿徽章 + 授权类型/到期/机器码/最后在线校验 27ms
+       × [T-534] 商业售后/下载与购买/续费分离展示 23ms
+       × [T-396b] 渠道 purchaseUrl 下发 → 购买/续期入口跳渠道链接 31ms
+       × 永久激活(expiresAt=null)→ 授权类型「永久激活」+ 到期「永久」 21ms
+       × 离线宽限(grace)→ 黄徽章 + 到期「离线宽限中」 22ms
+       × 已过期(expired)→ 红徽章「已过期」 28ms
+       × [L3] 上次在线确认:有记录 → 「X 天前(日期)」相对文案 29ms
+       × [L3] 上次在线确认:无记录(null)→ 诚实「未知」,行不藏 24ms
+       × [L3] 内测离线宽限(grace)→ 显倒计时行;无壳层实时判定(web/单测)→ 诚实「未知」 37ms
+       × [L3] 非宽限态(active)→ 不渲染倒计时行 25ms
+(node:73368) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73372) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+(node:73385) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 26 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > mounts the TopHeader in global mode with the settings title
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > marks the Settings nav item as the active page in the sidebar
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > uses the assistant contextual-card variant (NOT storage)
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > renders the settings dialog with 7 vertical tabs in the approved order
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > opens as a centered dialog (not a full-page flood layout)
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > mounts every settings card (account/preference/system/storage/model)
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > [T-645] 只锁渠道完整返回的能力，未返回的 ASR 仍可由用户配置
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > [T1278/T701] 官方缺渠道身份只阻塞官方该行，不伪造就绪或清自配
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > [T-679] 按 Growth 下发顺序展示真实模型名和 model，移除旧选择时提示已回退
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > [T-645] 渠道只提供 ASR 时，文本模型仍保留用户本地表单
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > renders form rows with the compact label + control pattern
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > renders StorageUsageCard with a progress bar
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > honest fallback (FE-H02) > 无 model/storage props(读取失败态)→ 模型卡输入为空(不预填伪造模型),存储诚实显 0 MB
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > keeps the page inside the single AppShell — no second Sidebar/TopHeader
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > renders the page-internal main region with the settings page marker
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > web / 未装配(activation undefined)→ 诚实空态卡「桌面端专属」
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > 已激活(active)→ 绿徽章 + 授权类型/到期/机器码/最后在线校验
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > [T-534] 商业售后/下载与购买/续费分离展示
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > [T-396b] 渠道 purchaseUrl 下发 → 购买/续期入口跳渠道链接
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > 永久激活(expiresAt=null)→ 授权类型「永久激活」+ 到期「永久」
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > 离线宽限(grace)→ 黄徽章 + 到期「离线宽限中」
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > 已过期(expired)→ 红徽章「已过期」
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > [L3] 上次在线确认:有记录 → 「X 天前(日期)」相对文案
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > [L3] 上次在线确认:无记录(null)→ 诚实「未知」,行不藏
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > [L3] 内测离线宽限(grace)→ 显倒计时行;无壳层实时判定(web/单测)→ 诚实「未知」
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > ActivationStatusCard (T-167) > [L3] 非宽限态(active)→ 不渲染倒计时行
+TypeError: client.getRedfox is not a function
+ ❯ src/features/settings/redfox-configuration.tsx:9:39
+
+ ❯ Object.react_stack_bottom_frame ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:25989:20
+ ❯ runWithFiberInDEV ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ commitHookEffectListMount ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:13249:29
+ ❯ commitHookPassiveMountEffects ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:13336:11
+ ❯ commitPassiveMountOnFiber ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:15484:13
+ ❯ recursivelyTraversePassiveMountEffects ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:15439:11
+ ❯ commitPassiveMountOnFiber ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:15718:11
+ ❯ recursivelyTraversePassiveMountEffects ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:15439:11
+ ❯ commitPassiveMountOnFiber ../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:15718:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/26]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  26 failed | 80 passed (106)
+   Start at  11:09:02
+   Duration  9.56s (transform 1.29s, setup 391ms, import 742ms, tests 6.17s, environment 1.44s)
+

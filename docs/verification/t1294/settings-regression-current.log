@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:75779) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:75829) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/settings-page.test.tsx (30 tests | 1 failed) 1335ms
+     × renders the settings dialog with 7 vertical tabs in the approved order 141ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > renders the settings dialog with 7 vertical tabs in the approved order
+AssertionError: expected [ Array(6) ] to deeply equal [ '账户', '偏好', '外观', '模型配置', …(3) ]
+
+- Expected
++ Received
+
+  [
+    "账户",
+    "偏好",
+    "外观",
+    "模型配置",
+-   "数据服务",
+    "技能",
+    "存储",
+  ]
+
+ ❯ src/features/settings/settings-page.test.tsx:280:22
+    278|       tabs!.querySelectorAll('[role="tab"]'),
+    279|     ).map((node) => node.textContent?.trim() ?? "");
+    280|     expect(triggers).toEqual([
+       |                      ^
+    281|       "账户",
+    282|       "偏好",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (5)
+      Tests  1 failed | 121 passed (145)
+   Start at  11:19:09
+   Duration  20.75s (transform 926ms, setup 232ms, import 1.22s, tests 18.05s, environment 974ms)
+

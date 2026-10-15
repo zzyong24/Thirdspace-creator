@@ -1,0 +1,35 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-app-server.test.ts (11 tests | 2 failed) 1512ms
+   × close等待owned进程真实结束，delayed-term清理不提前完成 142ms
+   × close等待owned进程真实结束，ignore-term清理不提前完成 1070ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-app-server.test.ts > close等待owned进程真实结束，delayed-term清理不提前完成
+ FAIL  src/execution/codex-app-server.test.ts > close等待owned进程真实结束，ignore-term清理不提前完成
+AssertionError: 重复close也必须等待同一个真实退出屏障: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/execution/codex-app-server.test.ts:56:55
+     54|   await new Promise<void>(resolve=>{rpc.onNotification=method=>{if(met…
+     55|   const closing=rpc.close(),joined=rpc.close();
+     56|   await joined;expect(closed,'重复close也必须等待同一个真实退出屏障').toBe(true);await…
+       |                                                       ^
+     57|   expect(child.exitCode!==null||child.signalCode!==null).toBe(true);
+     58|   if(mode==='ignore-term')expect(child.signalCode).toBe('SIGKILL');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 9 passed (11)
+   Start at  12:25:21
+   Duration  1.67s (transform 28ms, setup 0ms, import 38ms, tests 1.51s, environment 0ms)
+

@@ -86,3 +86,5 @@ export { createOnboardingState, type OnboardingAccountReader } from "./onboardin
 export { createReportingLocal, REPORTING_CONSENT_VERSION } from "./reporting-local";
 
 export {createEncryptedLogReporting} from "./encrypted-log-reporting";
+
+export {effectiveModelRouting} from './model-routing-defaults';

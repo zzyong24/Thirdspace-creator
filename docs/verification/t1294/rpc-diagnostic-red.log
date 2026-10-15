@@ -1,0 +1,45 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-app-server.test.ts (9 tests | 5 failed) 346ms
+   × RPC拒绝保安全method/code且不泄露帧（-32602） 76ms
+   × RPC拒绝保安全method/code且不泄露帧（-32000） 65ms
+   × RPC拒绝保安全method/code且不泄露帧（undefined） 67ms
+   × RPC拒绝保安全method/code且不泄露帧（1.5） 67ms
+   × RPC拒绝保安全method/code且不泄露帧（secret-code） 68ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-app-server.test.ts > RPC拒绝保安全method/code且不泄露帧（-32602）
+ FAIL  src/execution/codex-app-server.test.ts > RPC拒绝保安全method/code且不泄露帧（-32000）
+ FAIL  src/execution/codex-app-server.test.ts > RPC拒绝保安全method/code且不泄露帧（undefined）
+ FAIL  src/execution/codex-app-server.test.ts > RPC拒绝保安全method/code且不泄露帧（1.5）
+ FAIL  src/execution/codex-app-server.test.ts > RPC拒绝保安全method/code且不泄露帧（secret-code）
+AssertionError: expected CodexHostError: CODEX_RPC_REJECTED { code: '…' } to match object { code: 'CODEX_RPC_REJECTED', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
++ CodexHostError {
+    "code": "CODEX_RPC_REJECTED",
+-   "rpcMethod": "account/read",
+  }
+
+ ❯ src/execution/codex-app-server.test.ts:40:19
+     38|  try{
+     39|   const failure=await rpc.request('account/read',{refreshToken:false})…
+     40|   expect(failure).toMatchObject({code:'CODEX_RPC_REJECTED',rpcMethod:'…
+       |                   ^
+     41|   expect(failure.rpcCode).toBe(Number.isSafeInteger(upstreamCode)?upst…
+     42|   expect(String(failure)).toBe('CodexHostError: CODEX_RPC_REJECTED');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 4 passed (9)
+   Start at  11:45:33
+   Duration  533ms (transform 34ms, setup 0ms, import 46ms, tests 346ms, environment 0ms)
+
