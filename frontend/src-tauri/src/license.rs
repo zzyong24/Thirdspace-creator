@@ -2647,6 +2647,14 @@ impl ClientConfigRefreshTrigger {
     }
 }
 
+fn client_config_refresh_wait_ms(trigger: ClientConfigRefreshTrigger) -> u64 {
+    match trigger {
+        // 原授权结果先返回；此值仅约束独立后台观察六次有界请求和清理。
+        ClientConfigRefreshTrigger::Activation => 730_000,
+        _ => 120_000,
+    }
+}
+
 fn sanitized_client_config_reason(value: Option<&str>) -> &'static str {
     match value {
         Some("configured") => "configured",
@@ -2667,7 +2675,7 @@ pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx, trigger: ClientConfi
         return;
     }
     let client = match reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(120))
+        .timeout(std::time::Duration::from_millis(client_config_refresh_wait_ms(trigger)))
         .build()
     {
         Ok(client) => client,
@@ -3286,6 +3294,13 @@ mod tests {
         let pk_b64 =
             base64::engine::general_purpose::STANDARD.encode(sk.verifying_key().to_bytes());
         (sk, pk_b64)
+    }
+
+    #[test]
+    fn activation_credit_wait_does_not_change_other_refresh_budgets() {
+        assert_eq!(client_config_refresh_wait_ms(ClientConfigRefreshTrigger::Activation), 730_000);
+        assert_eq!(client_config_refresh_wait_ms(ClientConfigRefreshTrigger::Startup), 120_000);
+        assert_eq!(client_config_refresh_wait_ms(ClientConfigRefreshTrigger::Scheduled), 120_000);
     }
 
     const TEST_HOST: &str = "license.test";

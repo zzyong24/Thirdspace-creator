@@ -215,6 +215,7 @@ export function deriveChannelModelScopeId(identity: {
 }
 
 type Dependencies = {
+  readonly signal?: AbortSignal;
   /** 私有模型调用绑定；在同一次activeVerdict捕获后核验，不能从新的全局scope发票据。 */
   readonly expectedScopeId?:string;
   readonly env?: Record<string, string | undefined>;
@@ -489,6 +490,17 @@ function activeVerdict(
     );
   }
   return verdict;
+}
+
+function assertConfigObserverLive(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new DOMException("已停止等待，原权益仍可重新核对", "AbortError");
+}
+function observedConfigFetch(fetchImpl: typeof fetch, signal?: AbortSignal): typeof fetch {
+  if (!signal) return fetchImpl;
+  return (input, init) => {
+    assertConfigObserverLive(signal);
+    return fetchImpl(input, { ...init, signal: init?.signal ? AbortSignal.any([signal, init.signal]) : signal });
+  };
 }
 
 async function fetchNoRedirect(
@@ -1464,9 +1476,10 @@ async function requestTicketForVerdict(input: {
 export async function requestFreshClientConfigAccess(
   dependencies: Pick<
     Dependencies,
-    "env" | "now" | "nonce" | "fetchImpl" | "readVerdict" | "expectedScopeId"
+    "env" | "now" | "nonce" | "fetchImpl" | "readVerdict" | "expectedScopeId" | "signal"
   > & { readonly purpose?: "ai-credit-bootstrap" | "ai-credit-link" } = {},
 ): Promise<FreshClientConfigAccess> {
+  assertConfigObserverLive(dependencies.signal);
   const env = dependencies.env ?? process.env;
   if (env.CREATOROS_CLIENT_CONFIG_PULL_ENABLED?.trim() !== "1") {
     fail("CLIENT_CONFIG_PENDING", "权益配置同步尚未启用", false);
@@ -1505,7 +1518,7 @@ export async function requestFreshClientConfigAccess(
     nonce: (
       dependencies.nonce ?? (() => randomBytes(16).toString("base64url"))
     )(),
-    fetchImpl: dependencies.fetchImpl ?? fetch,
+    fetchImpl: observedConfigFetch(dependencies.fetchImpl ?? fetch, dependencies.signal),
     verdict,
     amOrigin,
     growthOrigin,
@@ -1513,6 +1526,65 @@ export async function requestFreshClientConfigAccess(
       ? { legacyDirectoryNonce: dependencies.nonce ?? (() => randomBytes(16).toString("base64url")) }
       : {}),
   });
+}
+
+export type ActivationIncludedCreditResult = {
+  readonly status: "ready" | "not_eligible" | "pending" | "unavailable";
+  readonly action: string;
+  readonly retryable: boolean;
+};
+
+/** 独立履行原已含权益；目录同步不得调用本动作。完整凭据留在本server-only边界。 */
+export async function fulfillActivationIncludedCredit(dependencies: Pick<Dependencies,
+  "env" | "now" | "nonce" | "fetchImpl" | "readVerdict" | "expectedScopeId" | "signal"> = {}): Promise<ActivationIncludedCreditResult> {
+  try {
+    assertConfigObserverLive(dependencies.signal);
+    const access = await requestFreshClientConfigAccess(dependencies);
+    assertConfigObserverLive(dependencies.signal);
+    const url = new URL(MANAGED_CREDENTIAL_PATH, access.growthOrigin);
+    url.searchParams.set("serviceId", "omnihi-main"); url.searchParams.set("activationFulfillment", "1");
+    const response = await fetchNoRedirect(observedConfigFetch(dependencies.fetchImpl ?? fetch, dependencies.signal), url.toString(),
+      { method: "GET", headers: { Accept: "application/json", Authorization: `Bearer ${access.configAccessTicket}` } });
+    assertConfigObserverLive(dependencies.signal);
+    if (response.headers.get("cache-control") !== "private, no-store" || response.headers.get("pragma") !== "no-cache")
+      fail("CLIENT_CONFIG_INVALID", "官方额度启用结果无法验证，请稍后核对", false);
+    let body: unknown;
+    try { body = JSON.parse((await limitedBytes(response)).toString("utf8")); }
+    catch { fail("CLIENT_CONFIG_INVALID", "官方额度启用结果无法验证，请稍后核对", false); }
+    assertConfigObserverLive(dependencies.signal);
+    const value = body as Record<string, unknown>;
+    if (response.status === 200) {
+      const credential = value?.credential as Record<string, unknown> | undefined;
+      if (value?.contractVersion !== MANAGED_CREDENTIAL_CONTRACT || value.serviceId !== "omnihi-main" ||
+          credential?.type !== "api_key" || typeof credential.token !== "string" || !credential.token.trim())
+        fail("CLIENT_CONFIG_INVALID", "官方额度启用结果无法验证，请稍后核对", false);
+      const wallet = value.wallet;
+      if (!exactObject(wallet, ["linked", "availableUnits", "referenceId"]) || wallet.linked !== true ||
+          typeof wallet.referenceId !== "string" || !/^AICA-[A-Za-z0-9_-]{6,96}$/.test(wallet.referenceId) ||
+          typeof wallet.availableUnits !== "number" || !Number.isSafeInteger(wallet.availableUnits) || wallet.availableUnits < 0)
+        return { status: "unavailable", action: "已找到原模型凭据，但额度账户尚未就绪；不会重复开户或赠额，请联系官方核对，也可先用自配模型", retryable: true };
+      return { status: "ready", action: "产品已含额度已启用，已有余额保持不变", retryable: false };
+    }
+    if (!exactObject(body, ["error"]) || !exactObject(body.error, ["code", "message"]) || typeof body.error.code !== "string")
+      fail("CLIENT_CONFIG_INVALID", "官方额度启用结果无法验证，请稍后核对", false);
+    const code = body.error.code;
+    if (response.status === 422 && code === "ACTIVATION_UNIT_UNSUPPORTED")
+      return { status: "not_eligible", action: "当前授权未包含可直接启用的官方额度，可使用自配模型、本地Codex或自己的充值码", retryable: false };
+    if (response.status === 422 && code === "CLIENT_EXTENSION_INVALID")
+      return { status: "unavailable", action: "官方额度启用服务暂未接通，可稍后重试或先使用自配模型", retryable: true };
+    if (response.status === 409 && ["ACTIVATION_ACCOUNT_PROVISIONING", "MODEL_PROVIDER_CREATION_UNKNOWN", "AI_CREDIT_BOOTSTRAP_PENDING"].includes(code))
+      return { status: "pending", action: "原权益仍在确认中，请稍后重新核对；不会重复发放，也可先使用自配模型", retryable: true };
+    if (response.status === 503)
+      return { status: "pending", action: "本次启用结果尚未确认，请稍后重新核对原权益，也可先使用自配模型", retryable: true };
+    return parseGrowthError(response, body);
+  } catch (error) {
+    assertConfigObserverLive(dependencies.signal);
+    if (error instanceof ClientConfigPullError && error.code === "CLIENT_CONFIG_NOT_APPLICABLE")
+      return { status: "not_eligible", action: "当前授权未包含可直接启用的官方额度，可使用自配模型、本地Codex或自己的充值码", retryable: false };
+    if (error instanceof ClientConfigPullError && error.code === "CLIENT_CONFIG_NETWORK_UNAVAILABLE")
+      return { status: "pending", action: "启用结果尚未确认，请稍后重新核对原权益，也可先使用自配模型", retryable: true };
+    throw error;
+  }
 }
 
 /**
@@ -1524,6 +1596,7 @@ export async function requestFreshClientConfigAccess(
 export async function refreshClientConfig(
   dependencies: Dependencies = {},
 ): Promise<ClientConfigProjection> {
+  assertConfigObserverLive(dependencies.signal);
   const env = dependencies.env ?? process.env;
   if (env.CREATOROS_CLIENT_CONFIG_PULL_ENABLED?.trim() !== "1") {
     fail("CLIENT_CONFIG_PENDING", "渠道配置同步尚未启用", false);
@@ -1557,7 +1630,13 @@ export async function refreshClientConfig(
       false,
     );
   }
-  const store = dependencies.store ?? defaultStore(env);
+  const backingStore = dependencies.store ?? defaultStore(env);
+  const store: ClientConfigStore = { load: () => backingStore.load(), save: record => {
+    assertConfigObserverLive(dependencies.signal); return backingStore.save(record);
+  }};
+  const putManagedCredential: Dependencies["putManagedCredential"] = dependencies.putManagedCredential ? async (...args) => {
+    assertConfigObserverLive(dependencies.signal); await dependencies.putManagedCredential!(...args);
+  } : undefined;
   const activeLocator = locatorFromVerdict(verdict);
   let previous: ClientConfigCacheRecord | null;
   try {
@@ -1575,7 +1654,7 @@ export async function refreshClientConfig(
     });
     return project("local", "security_error");
   }
-  const fetchImpl = dependencies.fetchImpl ?? fetch;
+  const fetchImpl = observedConfigFetch(dependencies.fetchImpl ?? fetch, dependencies.signal);
   const nonce = (
     dependencies.nonce ?? (() => randomBytes(16).toString("base64url"))
   )();
@@ -1669,7 +1748,7 @@ export async function refreshClientConfig(
       await store.save(refreshed);
     previous=refreshed;
     if(extension&&refreshed.channel){
-      const states=await pullManagedCredentials({growthOrigin,ticket:ticket.configAccessTicket,payload:extension.payload,scopeId:deriveChannelModelScopeId(activeLocator),fetchImpl,putManagedCredential:dependencies.putManagedCredential});
+      const states=await pullManagedCredentials({growthOrigin,ticket:ticket.configAccessTicket,payload:extension.payload,scopeId:deriveChannelModelScopeId(activeLocator),fetchImpl,putManagedCredential});
       if(Object.keys(states).length){const withStatus={...refreshed,channel:{...refreshed.channel,managedCredentials:states}};await store.save(withStatus);previous=withStatus;}
     }
       console.info(
@@ -1757,7 +1836,7 @@ export async function refreshClientConfig(
     await store.save(next);
     previous=next;
     if(extension&&next.channel){
-      const states=await pullManagedCredentials({growthOrigin,ticket:ticket.configAccessTicket,payload:extension.payload,scopeId:deriveChannelModelScopeId(activeLocator),fetchImpl,putManagedCredential:dependencies.putManagedCredential});
+      const states=await pullManagedCredentials({growthOrigin,ticket:ticket.configAccessTicket,payload:extension.payload,scopeId:deriveChannelModelScopeId(activeLocator),fetchImpl,putManagedCredential});
       if(Object.keys(states).length){const withStatus={...next,channel:{...next.channel,managedCredentials:states}};await store.save(withStatus);previous=withStatus;}
     }
     console.info(
@@ -1767,6 +1846,7 @@ export async function refreshClientConfig(
       ? project("channel", "configured")
       : project("local", "not_configured");
   } catch (error) {
+    assertConfigObserverLive(dependencies.signal);
     if (error instanceof ClientConfigPullError) {
       console.info(
         `[client-config] ${JSON.stringify({

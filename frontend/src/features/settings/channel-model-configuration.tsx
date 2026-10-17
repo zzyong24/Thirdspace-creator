@@ -24,6 +24,61 @@ import type {
 
 import { TestConnectionButton } from "./model-connection-test";
 import { useSettingsMutation } from "./use-settings-mutation";
+const INCLUDED_CREDIT_WAIT_MS = 730_000;
+function IncludedCreditActivation() {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const generation = React.useRef(0), active = React.useRef<AbortController | null>(null);
+  React.useEffect(() => {
+    let scope = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+    const changed = () => {
+      const next = JSON.stringify([readCurrentGroupId(), readCurrentAccountId()]);
+      if (next === scope) return;
+      scope = next; generation.current++; active.current?.abort(); active.current = null; setBusy(false); setMessage(null);
+    };
+    window.addEventListener("creatoros:accounts-changed", changed); window.addEventListener("storage", changed);
+    return () => { generation.current++; active.current?.abort(); window.removeEventListener("creatoros:accounts-changed", changed); window.removeEventListener("storage", changed); };
+  }, []);
+  const activate = async () => {
+    if (active.current) return;
+    const current = ++generation.current, controller = new AbortController(); active.current = controller;
+    const scope = { groupId: readCurrentGroupId(), accountId: readCurrentAccountId() };
+    const live = () => current === generation.current && !controller.signal.aborted && scope.groupId === readCurrentGroupId() && scope.accountId === readCurrentAccountId();
+    const timer = setTimeout(() => controller.abort(), INCLUDED_CREDIT_WAIT_MS);
+    setBusy(true); setMessage("正在核对产品已含额度，你可以继续使用其它功能");
+    try {
+      const response = await waitForAiCreditCenter(() => fetchCreatorApi("/api/v1/local/client-config", {
+        method: "POST", cache: "no-store", signal: controller.signal, headers: { "x-creatoros-config-trigger": "activation" },
+      }, scope), controller.signal);
+      const body = await waitForAiCreditCenter(() => response.json(), controller.signal) as {
+        authority?: string; outcome?: string; activationFulfillment?: { status?: string; action?: string };
+      };
+      if (!live()) return;
+      const result = body.activationFulfillment;
+      if (!response.ok || !result || !["ready", "pending", "not_eligible", "unavailable"].includes(result.status ?? "") || typeof result.action !== "string" || result.action.length > 400)
+        throw new Error("启用结果尚未确认，请重新核对原权益，也可先切换为自配模型");
+      setMessage(result.status === "ready" && (body.authority !== "channel" || body.outcome !== "configured")
+        ? "产品已含额度已开通，模型配置仍在同步，可稍后再核对或先用自配模型" : result.action);
+      if (result.status === "ready") router.refresh();
+    } catch (error) {
+      if (live()) setMessage(error instanceof Error ? error.message : "启用结果尚未确认，请稍后核对原权益");
+      else if (current === generation.current) setMessage("已停止等待，服务端结果仍需核对；可再次启用核对原权益，也可先用自配模型");
+    } finally {
+      clearTimeout(timer);
+      if (current === generation.current) { active.current = null; setBusy(false); }
+    }
+  };
+  return <div data-slot="included-credit-activation" className="flex w-full flex-col gap-3 border-b border-border/70 pb-4">
+    <p className="text-base leading-6 text-muted-foreground">产品已包含的官方额度可在这里启用，无需另购充值码。没有包含额度时，也可在模型来源中选择自配模型或本地 Codex 继续使用。</p>
+    <div className="flex flex-wrap gap-3">
+      <Button type="button" className="min-h-11 text-base" disabled={busy} onClick={() => void activate()}>{busy ? "正在核对已含额度…" : "启用产品已含额度"}</Button>
+      {busy && <Button type="button" className="min-h-11 text-base" variant="outline" onClick={() => active.current?.abort()}>取消等待</Button>}
+    </div>
+    {message && <p role="status" className="text-base leading-6">{message}</p>}
+  </div>;
+}
+
 export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?: "ready" | "not_configured" | "unverified" } = {}) {
   const [opening, setOpening] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -64,11 +119,12 @@ export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?:
       title="AI 额度与消耗"
       description="前往额度中心查看总额度、已消耗和剩余额度，并进行购买或充值。"
     >
+      {accountStatus !== "ready" && <IncludedCreditActivation />}
       <div
         data-slot="ai-credit-center-card"
         className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between"
       >
-        <p className="text-xs leading-5 text-muted-foreground">
+        <p className="text-base leading-6 text-muted-foreground">
           首次使用时按页面提示完成账号连接；之后可从这里直接进入额度中心。
         </p>
         {accountStatus !== "not_configured" ? <Button
@@ -84,7 +140,7 @@ export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?:
         </Button> : null}
       </div>
       {error ? (
-        <p data-slot="ai-credit-center-error" className="mt-2 text-xs text-destructive">
+        <p data-slot="ai-credit-center-error" className="mt-2 text-base text-destructive">
           {error}
         </p>
       ) : null}

@@ -45,6 +45,7 @@ import {
   readChannelModelAuthority,
   refreshClientConfig,
   requestFreshClientConfigAccess,
+  fulfillActivationIncludedCredit,
   type ClientConfigCacheRecord,
   type ClientConfigStore,
   type SignedClientConfigBundle,
@@ -1742,6 +1743,33 @@ describe("T-575 config.pull Creator consumer", () => {
     });
     }
   });
+
+  it.each([[200,'ready'],[409,'pending'],[422,'not_eligible']] as const)('T238 独立已含权益履约 %s 只用严格v3和显式API265且不泄密',async(status,wanted)=>{
+    const base=successfulFetch(),calls:string[]=[];
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      calls.push(String(input));if(String(input).includes('client-config-tickets'))return base(input,init);
+      expect(String(input)).toBe(`${GROWTH_ORIGIN}/api/client-config/managed-credentials/current?serviceId=omnihi-main&activationFulfillment=1`);
+      expect(init?.method).toBe('GET');expect(init?.headers).toMatchObject({Authorization:'Bearer header.payload.signature'});
+      return Response.json(status===200?{contractVersion:'growth-managed-model-credential-v1',serviceId:'omnihi-main',credential:{type:'api_key',token:'private-included-key'},wallet:{linked:true,referenceId:'AICA-T238TESTACCOUNT',availableUnits:250000}}:{error:{code:status===409?'MODEL_PROVIDER_CREATION_UNKNOWN':'ACTIVATION_UNIT_UNSUPPORTED',message:'private-upstream'}},{status,headers:{'cache-control':'private, no-store',pragma:'no-cache'}});
+    });
+    const result=await fulfillActivationIncludedCredit({env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready',verdict})});
+    expect(result.status).toBe(wanted);expect(calls).toHaveLength(2);expect(JSON.stringify(result)).not.toMatch(/private-included-key|header.payload|private-upstream/);
+  },180_000);
+  it('T238 旧服务器不认识显式动作时不去参数重试隐式赠额',async()=>{
+    const base=successfulFetch(),urls:string[]=[];const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{
+      urls.push(String(input));if(String(input).includes('client-config-tickets'))return base(input,init);
+      return Response.json({error:{code:'CLIENT_EXTENSION_INVALID',message:'old-server'}},{status:422,headers:{'cache-control':'private, no-store',pragma:'no-cache'}});
+    });
+    const result=await fulfillActivationIncludedCredit({env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,readVerdict:async()=>({state:'ready',verdict})});
+    expect(result.status).toBe('unavailable');expect(urls).toHaveLength(2);expect(urls[1]).toContain('activationFulfillment=1');
+  },180_000);
+
+  it('T238 取消票据观察后不发下一个额度履约请求',async()=>{
+    const controller=new AbortController(),base=successfulFetch();let calls=0;
+    const fetchImpl=vi.fn<typeof fetch>(async(input,init)=>{calls++;const response=await base(input,init);controller.abort();return response;});
+    await expect(fulfillActivationIncludedCredit({env:env(),now:()=>NOW,nonce:()=> 'nonce-client-config-0001',fetchImpl,signal:controller.signal,readVerdict:async()=>({state:'ready',verdict})})).rejects.toMatchObject({name:'AbortError'});
+    expect(calls).toBe(1);
+  },180_000);
 });
 
 describe("T1278 bootstrap 原 server/route 消费者", () => {

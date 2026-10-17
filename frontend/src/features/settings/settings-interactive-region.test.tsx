@@ -2347,3 +2347,31 @@ it('T1294 redfox旧deep link切到模型并只有一份真实密钥入口，额�
   const card=doc.querySelector('[data-highlight="redfox"]');expect(card).not.toBeNull();expect(scroll).toHaveBeenCalled();await waitFor(()=>expect(mockClient.getRedfox).toHaveBeenCalledTimes(1),{timeout:120_000});expect(doc.querySelectorAll('#redfox-key')).toHaveLength(1);expect(doc.querySelector('[data-slot="ai-credit-center-card"]')).not.toBeNull();
  }finally{Element.prototype.scrollIntoView=original;}
 });
+
+it('T238 未开通用户有明确已含权益恢复按钮，保AICR和来源选择不被自动改写',async()=>{
+ const {AiCreditCenterCard}=await import('./channel-model-configuration');
+ const calls:string[]=[];vi.spyOn(globalThis,'fetch').mockImplementation(async(url)=>{calls.push(String(url));return Response.json({authority:'channel',outcome:'configured',activationFulfillment:{status:'ready',action:'产品已含额度已启用',retryable:false}});});
+ rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);
+ await userEvent.click(screen.getByRole('button',{name:'启用产品已含额度'}));
+ await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('产品已含额度已启用'),{timeout:120_000});
+ expect(calls).toEqual(['/api/v1/local/client-config']);expect(mockClient.putModelRouting).not.toHaveBeenCalled();
+ expect(screen.getByText('使用充值码开通官方额度')).toBeInTheDocument();
+},180_000);
+
+it('T238 取消只停止观察，迟到成功不刷新界面也不假称撤销权益',async()=>{
+ const {AiCreditCenterCard}=await import('./channel-model-configuration');let finish!:(value:Response)=>void;
+ const fetchMock=vi.spyOn(globalThis,'fetch').mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+ rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);await userEvent.click(screen.getByRole('button',{name:'启用产品已含额度'}));
+ expect(screen.getByRole('button',{name:'取消等待'})).toBeEnabled();await userEvent.click(screen.getByRole('button',{name:'取消等待'}));
+ await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('已停止等待'),{timeout:120_000});
+ await act(async()=>{finish(Response.json({authority:'channel',outcome:'configured',activationFulfillment:{status:'ready',action:'产品已含额度已启用',retryable:false}}));});
+ expect(fetchMock).toHaveBeenCalledTimes(1);expect(mockRouter.refresh).not.toHaveBeenCalled();expect(screen.getByRole('status')).toHaveTextContent('服务端结果仍需核对');
+},180_000);
+it('T238 换组取消观察，旧scope迟到结果不覆盖新窗口',async()=>{
+ const {AiCreditCenterCard}=await import('./channel-model-configuration');let finish!:(value:Response)=>void;
+ vi.spyOn(globalThis,'fetch').mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+ rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);await userEvent.click(screen.getByRole('button',{name:'启用产品已含额度'}));
+ await act(async()=>{window.localStorage.setItem(CURRENT_GROUP_KEY,'new-t238-group');window.dispatchEvent(new Event('creatoros:accounts-changed'));});
+ await act(async()=>{finish(Response.json({authority:'channel',outcome:'configured',activationFulfillment:{status:'ready',action:'旧组已含额度已启用',retryable:false}}));});
+ expect(screen.queryByText('旧组已含额度已启用')).not.toBeInTheDocument();expect(mockRouter.refresh).not.toHaveBeenCalled();
+},180_000);

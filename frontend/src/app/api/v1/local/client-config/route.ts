@@ -7,6 +7,7 @@ import {
 import {
   ClientConfigPullError,
   refreshClientConfig,
+  fulfillActivationIncludedCredit,
 } from "@/server/activation/client-config.server";
 import { readSessionCookie } from "../../auth/_session";
 import {
@@ -115,11 +116,20 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
   const settings = await getSettingsService();
-  return refreshClientConfig({
-    putManagedCredential: async (scopeId, serviceId, token) => {
-      await settings.setChannelModelCredential(ctx, scopeId, serviceId, token);
-    },
-  }).then(
+  return (async () => {
+    if (request.signal.aborted) throw new DOMException("已停止等待", "AbortError");
+    const activationFulfillment = trigger === "activation"
+      ? await fulfillActivationIncludedCredit({ signal: request.signal }) : undefined;
+    if (request.signal.aborted) throw new DOMException("已停止等待", "AbortError");
+    const result = await refreshClientConfig({
+      signal: request.signal,
+      putManagedCredential: async (scopeId, serviceId, token) => {
+        if (request.signal.aborted) throw new DOMException("已停止等待", "AbortError");
+        await settings.setChannelModelCredential(ctx, scopeId, serviceId, token);
+      },
+    });
+    return { ...result, ...(activationFulfillment ? { activationFulfillment } : {}) };
+  })().then(
     (result) => {
       logSync({
         phase: "config_sync",
