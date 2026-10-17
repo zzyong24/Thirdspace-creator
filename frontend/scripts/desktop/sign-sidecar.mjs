@@ -53,6 +53,17 @@ export function signSidecarSync({ tarball, signature = `${tarball}.sig`, ...keyP
   return {bytes:104,digest:digest.toString('hex')};
 }
 
+// 离线签名消费只读固定既有公根；不接受receipt/CLI/env选择新的信任根。
+export function verifySignedSidecarSync({ tarball, signature = `${tarball}.sig` }) {
+  const root = createPublicKey(readFileSync(ROOT_PATH));
+  if (root.asymmetricKeyType !== 'ed25519' || root.export({type:'spki',format:'der'}).toString('base64') !== ROOT_SPKI_B64) {
+    throw new Error('sidecar公钥不是已批准creatoros-update-root-20260805信任根');
+  }
+  const digest = digestTarball(tarball);
+  verifySidecarEnvelope(readFileSync(signature), digest, root);
+  return { rootId: ROOT_ID, digest: digest.toString('hex'), bytes: 104 };
+}
+
 // 构建驱动只调用子进程；只有该专用签名进程读取私钥。
 export function runSidecarSigning({ tarball, preflight = false, env = process.env } = {}) {
   const result = spawnSync(process.execPath, [fileURLToPath(import.meta.url),

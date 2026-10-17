@@ -35,6 +35,7 @@ import { verifyPackagedVerdictHardening } from "./verdict-artifact-hardening.mjs
 import { assertClientConfigBuildEnv } from "./client-config-release.mjs";
 import { tauriMacSigningOverride } from "./tauri-signing-config.mjs";
 import { runSidecarSigning } from "./sign-sidecar.mjs";
+import { verifyAdoptedCapsule } from "../../../tools/windows-closure-rat/signed-sidecar-capsule.mjs";
 import { resolveLocalDmgLayoutEnv } from "./local-dmg-layout-env.mjs";
 
 // 必须早于预清 DMG、写构建报告和任何重型构建步骤。Homebrew node@22 抢 PATH 时，
@@ -49,6 +50,7 @@ console.log(
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const buildOnly = process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1";
+const signedCapsuleInput = process.env.CREATOROS_SIGNED_SIDECAR_CAPSULE_PATH?.trim();
 const packageIdentity = process.env.CREATOROS_PACKAGE_IDENTITY_PATH?.trim()
   ? JSON.parse(readFileSync(process.env.CREATOROS_PACKAGE_IDENTITY_PATH.trim(), "utf8"))
   : null;
@@ -383,7 +385,10 @@ if (process.argv.includes("--preclean-only")) {
 
 // [T-535] 必须在任何构建重活前硬失败。本地 release-fast 与正式 release 使用同一闸，
 // 不再允许 build-sidecar 的 dev 警告一路漏成“能产包、安装后必白屏”的 .app。
-runSidecarSigning({ preflight: true });
+if (signedCapsuleInput) {
+  if (platform !== "win32") throw new Error("已签capsule仅供Windows构建");
+  verifyAdoptedCapsule(signedCapsuleInput);
+} else runSidecarSigning({ preflight: true });
 const licenseProjectKey = assertLicenseProjectKey();
 console.log(
   `[desktop:package] ✓ [T-545] 产品级 projectKey=${licenseProjectKey}；渠道身份继续由激活码的签名 channelRef 决定。`,
@@ -394,7 +399,7 @@ console.log("[desktop:package] ✓ [T-535] verdict 双密钥存在、格式合�
 // 1) sidecar 二进制化(内部会跑 CREATOROS_DESKTOP=1 next build)。这里只产/恢复展开后的
 // clean runtime；约 1GB tar 必须等混淆/字节码/诱饵/法律声明全部完成后，由 Tauri
 // beforeBuild 唯一压一次。否则 cache miss 与 cache hit 都会多做一次无效压缩。
-step(
+if (!signedCapsuleInput) step(
   "sidecar 二进制化",
   process.execPath,
   [join("scripts", "desktop", "build-sidecar.mjs")],
@@ -410,7 +415,7 @@ if (!buildOnly) step(
 );
 
 // 最终tar和签名在Cargo之前完成；Tauri beforeBuild只核clean来源，不接触root私钥。
-step("最终sidecar tar与既有root签名", process.execPath,
+if (!signedCapsuleInput) step("最终sidecar tar与既有root签名", process.execPath,
   [join("scripts", "desktop", "build-sidecar.mjs")], {
     CREATOROS_SKIP_SIDECAR_REBUILD: "1", CREATOROS_SIDECAR_SIGNING_REQUIRED: "1",
     CREATOROS_ALLOW_SIDECAR_SIGNING_KEY: "1",

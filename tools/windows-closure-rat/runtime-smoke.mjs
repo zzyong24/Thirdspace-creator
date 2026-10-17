@@ -19,6 +19,17 @@ import { createBuildSmokeVerdictToken } from "../../frontend/scripts/desktop/ver
 
 import { reportCapacity } from "./runtime-diagnostics.mjs";
 
+// T247_CREDENTIAL_CAPTURE_BEGIN
+// 正式shell→sidecar gate材料仅供本驱动签一次原build_smoke声明。
+// 先从全局env移除，防ffmpeg/Chromium等默认继承；不宣JS字符串物理擦除。
+const localBuildSmokeVerdictEnv = {
+  CREATOROS_VERDICT_SIGNING_KEY_B64: process.env.CREATOROS_VERDICT_SIGNING_KEY_B64,
+  CREATOROS_VERDICT_PUBKEY_B64: process.env.CREATOROS_VERDICT_PUBKEY_B64,
+};
+delete process.env.CREATOROS_VERDICT_SIGNING_KEY_B64;
+delete process.env.CREATOROS_VERDICT_PUBKEY_B64;
+// T247_CREDENTIAL_CAPTURE_END
+
 const [closureArg] = process.argv.slice(2);
 if (!closureArg) {
   throw new Error("usage: node runtime-smoke.mjs <closure-dir>");
@@ -73,14 +84,15 @@ const moduleResolver = resolve(
   "creatoros-module-resolver.cjs",
 );
 const results = {};
+let buildSmokeStatements = 0;
 const startedAt = Date.now();
 // 失败也保留已经发生的消费者结果；不能把部分成功当完整通过。
 const smokeReportPath = resolve(runtimeRoot, "runtime-smoke-results.json");
 const saveProgress = () => writeFileSync(smokeReportPath, JSON.stringify({
-  schemaVersion: 1, target, status: "running", durationMs: Date.now() - startedAt, results,
+  schemaVersion: 1, target, buildSmokeStatements, status: "running", durationMs: Date.now() - startedAt, results,
 }, null, 2) + "\n");
 process.on("uncaughtExceptionMonitor", (error) => {
-  writeFileSync(smokeReportPath, JSON.stringify({schemaVersion:1,target,status:"failed",durationMs:Date.now()-startedAt,results,error:error.message},null,2)+"\n");
+  writeFileSync(smokeReportPath, JSON.stringify({schemaVersion:1,target,buildSmokeStatements,status:"failed",durationMs:Date.now()-startedAt,results,error:error.message},null,2)+"\n");
 });
 saveProgress();
 const record = (name, value = true) => {
@@ -391,7 +403,17 @@ async function freePort() {
 }
 
 const port = await freePort();
-const verdictToken = createBuildSmokeVerdictToken({ sidecarPort: port });
+// T247_LOCAL_VERDICT_BEGIN
+let verdictToken;
+try {
+  // 仍在Next启动前取得端口后签发，沿原≤5分钟TTL/nonce/公钥对校验。
+  verdictToken = createBuildSmokeVerdictToken({ sidecarPort: port }, localBuildSmokeVerdictEnv);
+  buildSmokeStatements++;
+} finally {
+  delete localBuildSmokeVerdictEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
+  delete localBuildSmokeVerdictEnv.CREATOROS_VERDICT_PUBKEY_B64;
+}
+// T247_LOCAL_VERDICT_END
 const serverLogs = [];
 const sidecarEnv = {
   ...process.env,
@@ -437,7 +459,7 @@ try {
   }
   if (!mainHtml.includes(expectedMainTitle)) {
     throw new Error(
-      `[closure-rat] Next 主页面 150 秒内未就绪(expectedTitle=${expectedMainTitle}, exit=${sidecar.exitCode})\n${serverLogs.join("").slice(-8000)}`,
+      `[closure-rat] Next 主页面 150 秒内未就绪(expectedTitle=${expectedMainTitle}, exit=${sidecar.exitCode})\n${serverLogs.join("").split(verdictToken).join("<local-build-smoke-verdict>").slice(-8000)}`,
     );
   }
   record(
@@ -489,6 +511,7 @@ record("runtime-structure", "node_modules=0");
 const report = {
   schemaVersion: 1,
   status: "passed",
+  buildSmokeStatements,
   capacityWarnings: capacity,
   target,
   durationMs: Date.now() - startedAt,

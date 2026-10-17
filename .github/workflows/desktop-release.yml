@@ -48,6 +48,36 @@ on:
         required: false
         type: boolean
         default: false
+      windows_capsule_mode:
+        description: "T247 固定tar准备/已签消费；默认打包保持原流程"
+        required: false
+        type: choice
+        options: ["none", "prepare", "consume"]
+        default: "none"
+      capsule_source_commit:
+        description: "consume：已签tar的准确40位源码commit"
+        type: string
+        required: false
+      capsule_run_id:
+        description: "consume：固定成功prepare run ID"
+        type: string
+        required: false
+      capsule_artifact_id:
+        description: "consume：固定unsigned capsule artifact ID"
+        type: string
+        required: false
+      capsule_artifact_digest:
+        description: "consume：固定artifact SHA256（不带前缀）"
+        type: string
+        required: false
+      capsule_manifest_sha256:
+        description: "consume：真实capsule-manifest.json SHA256"
+        type: string
+        required: false
+      capsule_signature_commit:
+        description: "consume：仅公共104B签名/非秘密回执的准确commit"
+        type: string
+        required: false
   push:
     tags: ["v*"]
 
@@ -87,6 +117,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CREATOROS_PACKAGE_BUILD_ONLY: "1"
+      CREATOROS_CREATOR_RELEASE_COMMIT: ${{ inputs.windows_capsule_mode == 'consume' && inputs.capsule_source_commit || github.sha }}
       # T247：同一e315运行源，两门贯穿Next/closure、sidecar及Rust；仅本任务分支artifact。
       CREATOROS_OWNED_DEVICES_ENABLED: "1"
       CREATOROS_MODEL_BENEFITS_ENABLED: "1"
@@ -103,7 +134,35 @@ jobs:
           git config --global core.longpaths true
           test "$(git config --global --get core.longpaths)" = "true"
 
+      - name: 限定固定tar恢复输入(T-247)
+        env:
+          MODE: ${{ inputs.windows_capsule_mode }}
+          ONLY: ${{ inputs.only }}
+          VALIDATE: ${{ inputs.validate_installers }}
+          RAT_RUNTIME: ${{ inputs.windows_runtime_rat }}
+          RAT_CLOSURE: ${{ inputs.windows_closure_rat }}
+          RAT_PACKAGE: ${{ inputs.windows_package_rat }}
+          SOURCE: ${{ inputs.capsule_source_commit }}
+          PREPARE_RUN: ${{ inputs.capsule_run_id }}
+          ARTIFACT: ${{ inputs.capsule_artifact_id }}
+          ARTIFACT_SHA: ${{ inputs.capsule_artifact_digest }}
+          MANIFEST_SHA: ${{ inputs.capsule_manifest_sha256 }}
+          SIGNATURE_COMMIT: ${{ inputs.capsule_signature_commit }}
+        run: |
+          if [ -n "$MODE" ] && [ "$MODE" != "none" ]; then
+            test "$GITHUB_EVENT_NAME" = "workflow_dispatch"
+            test "$GITHUB_REF" = "refs/heads/codex/t247-windows-e315-build-20261017"
+            test "$ONLY" = "windows" && test "$VALIDATE" = "true"
+            test "$RAT_RUNTIME" != "true" && test "$RAT_CLOSURE" != "true" && test "$RAT_PACKAGE" != "true"
+            test "$MODE" = "prepare" || test "$MODE" = "consume"
+            if [ "$MODE" = "consume" ]; then
+              node -e 'for(const k of ["SOURCE","SIGNATURE_COMMIT"])if(!/^[a-f0-9]{40}$/.test(process.env[k]||""))throw Error("invalid commit");for(const k of ["ARTIFACT_SHA","MANIFEST_SHA"])if(!/^[a-f0-9]{64}$/.test(process.env[k]||""))throw Error("invalid digest");for(const k of ["PREPARE_RUN","ARTIFACT"])if(!/^[1-9][0-9]{0,19}$/.test(process.env[k]||"")||!Number.isSafeInteger(Number(process.env[k])))throw Error("invalid ID");'
+            fi
+          fi
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.windows_capsule_mode == 'consume' && inputs.capsule_source_commit || github.sha }}
 
       - uses: pnpm/action-setup@v4 # 版本读根 package.json 的 packageManager
 
@@ -113,8 +172,10 @@ jobs:
           cache: pnpm
 
       - uses: dtolnay/rust-toolchain@stable
+        if: inputs.windows_capsule_mode != 'prepare'
 
       - uses: Swatinem/rust-cache@v2
+        if: inputs.windows_capsule_mode != 'prepare'
         with:
           workspaces: frontend/src-tauri
           key: t247-e315-owned1-policy1
@@ -123,13 +184,13 @@ jobs:
         run: pnpm install --frozen-lockfile
       # 只缓存编译中间态，最终运行文件、凭据和用户数据不进入此缓存。
       - name: 恢复 Windows Next 编译缓存
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.windows_capsule_mode != 'consume'
         uses: actions/cache@v4
         with:
           path: frontend/.next/cache
-          key: next-win-x64-node25.9.0-v2-owned1-policy1-${{ hashFiles('pnpm-lock.yaml', 'frontend/next.config.*', 'tools/windows-closure-rat/**', 'frontend/scripts/desktop/package-flavor.mjs') }}-${{ github.sha }}
+          key: next-win-x64-node25.9.0-v2-owned1-policy1${{ inputs.windows_capsule_mode == 'prepare' && '-capsule-release-csp1' || '' }}-${{ hashFiles('pnpm-lock.yaml', 'frontend/next.config.*', 'tools/windows-closure-rat/**', 'frontend/scripts/desktop/package-flavor.mjs') }}-${{ github.sha }}
           restore-keys: |
-            next-win-x64-node25.9.0-v2-owned1-policy1-${{ hashFiles('pnpm-lock.yaml', 'frontend/next.config.*', 'tools/windows-closure-rat/**', 'frontend/scripts/desktop/package-flavor.mjs') }}-
+            next-win-x64-node25.9.0-v2-owned1-policy1${{ inputs.windows_capsule_mode == 'prepare' && '-capsule-release-csp1' || '' }}-${{ hashFiles('pnpm-lock.yaml', 'frontend/next.config.*', 'tools/windows-closure-rat/**', 'frontend/scripts/desktop/package-flavor.mjs') }}-
 
       - name: 缓存 Windows 媒体工具
         if: runner.os == 'Windows'
@@ -390,7 +451,7 @@ jobs:
       # [T-675] Windows 正式包与 7 月 26 日候选包复用同一个少文件 production
       # closure 入口。禁止再调用 full build-sidecar，把开发依赖树打回用户安装包。
       - name: 安装 Windows production closure 的 Chromium
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.windows_capsule_mode != 'consume'
         run: pnpm -C frontend exec playwright install chromium
 
       - name: 验证 Windows Worker 依赖图与原生路径语义(T-247)
@@ -398,23 +459,118 @@ jobs:
         run: node --test tools/windows-closure-rat/worker-dependency-graph.test.mjs
 
       - name: 构建并接入 Windows production closure(T-675)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.windows_capsule_mode != 'consume'
         env:
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          CREATOROS_CLIENT_CONFIG_PULL_ENABLED: ${{ inputs.windows_capsule_mode == 'prepare' && '1' || '' }}
+          CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN: ${{ inputs.windows_capsule_mode == 'prepare' && 'https://growth.aitongban.cloud' || '' }}
+          CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: ${{ inputs.windows_capsule_mode == 'prepare' && secrets.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 || '' }}
+          CREATOROS_GROWTH_CONFIG_KEY_ID: ${{ inputs.windows_capsule_mode == 'prepare' && vars.CREATOROS_GROWTH_CONFIG_KEY_ID || '' }}
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
           CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0"
           CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
+          CREATOROS_SIDECAR_SIGNING_REQUIRED: ${{ inputs.windows_capsule_mode == 'prepare' && '1' || '' }}
         run: node tools/windows-closure-rat/build-production-closure.mjs --prepare-package --build-only
 
+      - name: 验证固定tar工具负例(T-247)
+        if: runner.os == 'Windows' && inputs.windows_capsule_mode != 'none' && inputs.windows_capsule_mode != ''
+        run: node --test tools/windows-closure-rat/signed-sidecar-capsule.test.mjs
+
+      - name: 准备唯一未签最终tar(T-247，不可交付)
+        if: inputs.windows_capsule_mode == 'prepare'
+        env:
+          CREATOROS_SIDECAR_SIGNING_REQUIRED: "1"
+          CREATOROS_LICENSE_PROJECT_KEY: "creatoros"
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: ${{ secrets.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 }}
+          CREATOROS_GROWTH_CONFIG_KEY_ID: ${{ vars.CREATOROS_GROWTH_CONFIG_KEY_ID }}
+        run: |
+          python --version
+          node tools/windows-closure-rat/signed-sidecar-capsule.mjs prepare frontend/src-tauri/target/t247-capsule
+
+      - name: 上传未签准备capsule（不是安装包）
+        if: inputs.windows_capsule_mode == 'prepare'
+        uses: actions/upload-artifact@v4
+        with:
+          name: t247-unsigned-windows-capsule
+          path: frontend/src-tauri/target/t247-capsule/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+      - name: 完整下载固定ZIP、核原root签名并采用同一tar(T-247)
+        if: inputs.windows_capsule_mode == 'consume'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CREATOROS_LICENSE_PROJECT_KEY: "creatoros"
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: ${{ secrets.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 }}
+          CREATOROS_GROWTH_CONFIG_KEY_ID: ${{ vars.CREATOROS_GROWTH_CONFIG_KEY_ID }}
+          CREATOROS_CAPSULE_RUN_ID: ${{ inputs.capsule_run_id }}
+          CREATOROS_CAPSULE_ARTIFACT_ID: ${{ inputs.capsule_artifact_id }}
+          CREATOROS_CAPSULE_ARTIFACT_DIGEST: ${{ inputs.capsule_artifact_digest }}
+          CREATOROS_CAPSULE_MANIFEST_SHA256: ${{ inputs.capsule_manifest_sha256 }}
+          CREATOROS_CAPSULE_SIGNATURE_COMMIT: ${{ inputs.capsule_signature_commit }}
+        run: |
+          python --version
+          node tools/windows-closure-rat/signed-sidecar-capsule.mjs acquire frontend/src-tauri/target/t247-capsule
+          node tools/windows-closure-rat/signed-sidecar-capsule.mjs adopt frontend/src-tauri/target/t247-capsule
+
+      - name: 取得固定控制版本的仅验证工具(T-247)
+        if: inputs.windows_capsule_mode == 'consume'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: .t247-validation-control
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            tools/windows-closure-rat/runtime-smoke.mjs
+            tools/windows-closure-rat/render-probe-policy.mjs
+            tools/windows-closure-rat/worker-smoke.mjs
+            tools/windows-closure-rat/runtime-diagnostics.mjs
+            frontend/scripts/desktop/verdict-key-material.mjs
+            frontend/scripts/desktop/execution-worker-runtime.mjs
+            frontend/scripts/desktop/timeout-policy.mjs
+            frontend/scripts/desktop/runtime-inventory.mjs
+
+      - name: 同固定已签tar的真实消费阻断门(T-247)
+        if: inputs.windows_capsule_mode == 'consume'
+        env:
+          CREATOROS_CAPSULE_VALIDATION_CONTROL_COMMIT: ${{ github.sha }}
+          CREATOROS_LICENSE_PROJECT_KEY: "creatoros"
+          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: ${{ secrets.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 }}
+          CREATOROS_GROWTH_CONFIG_KEY_ID: ${{ vars.CREATOROS_GROWTH_CONFIG_KEY_ID }}
+        run: node tools/windows-closure-rat/signed-sidecar-capsule.mjs smoke frontend/src-tauri/target/t247-capsule
+
+      - name: 保留同tar消费结果（失败亦保，不冒成功）
+        if: always() && inputs.windows_capsule_mode == 'consume'
+        uses: actions/upload-artifact@v4
+        with:
+          name: t247-fixed-capsule-runtime-evidence-${{ github.run_attempt }}
+          path: |
+            frontend/src-tauri/target/t247-runtime-consumer-result.json
+            ${{ runner.temp }}/t247-signed-runtime-smoke-*/two-parent.stdout.log
+            ${{ runner.temp }}/t247-signed-runtime-smoke-*/two-parent.stderr.log
+            ${{ runner.temp }}/t247-signed-runtime-smoke-*/smoke.stdout.log
+            ${{ runner.temp }}/t247-signed-runtime-smoke-*/smoke.stderr.log
+            ${{ runner.temp }}/t247-signed-runtime-smoke-*/runtime-paths.jsonl
+            ${{ runner.temp }}/t247-signed-runtime-smoke-*/tools/windows-closure-rat/out/runtime/runtime-smoke-results.json
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: 读版本号
+        if: inputs.windows_capsule_mode != 'prepare'
         id: version
         run: echo "version=$(node -p "require('./frontend/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: 校验发布包领取关闭与反馈配置(T-635)
-        if: inputs.validate_installers == true
+        if: ${{ (inputs.validate_installers == true) && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         env:
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
@@ -456,6 +612,7 @@ jobs:
           NODE
 
       - name: 打包(release.mjs 全链)
+        if: inputs.windows_capsule_mode != 'prepare'
         working-directory: frontend
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -483,7 +640,7 @@ jobs:
           CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN: "https://growth.aitongban.cloud"
           CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: ${{ secrets.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 }}
           CREATOROS_GROWTH_CONFIG_KEY_ID: ${{ vars.CREATOROS_GROWTH_CONFIG_KEY_ID }}
-          CREATOROS_CREATOR_RELEASE_COMMIT: ${{ github.sha }}
+          CREATOROS_CREATOR_RELEASE_COMMIT: ${{ inputs.windows_capsule_mode == 'consume' && inputs.capsule_source_commit || github.sha }}
           # [T-452 后修] CI 打的是正式发布包,走 fat lto `release` profile(而非本地内测的
           #   release-fast)—— 后续 T-446/updater/收集产物 校验步骤全按 target/release/bundle 找。
           #   本地日常打包不设此 env,走 release-fast 快通道。
@@ -491,12 +648,14 @@ jobs:
           # 上面已精确恢复或构建 clean runtime；package 只做混淆/字节码/Tauri，
           # 不再重复跑 Next build + 生产依赖闭包组装。
           CREATOROS_SKIP_SIDECAR_REBUILD: "1"
+          CREATOROS_SIGNED_SIDECAR_CAPSULE_PATH: ${{ inputs.windows_capsule_mode == 'consume' && format('{0}/frontend/src-tauri/target/t247-capsule', github.workspace) || '' }}
           # [T-675] Windows 已由公共入口准备少文件闭包；package 保留正式保护链，但
           # 不得通过旧 bytecode 布局重新引入 node_modules。
           CREATOROS_PRODUCTION_CLOSURE: ${{ runner.os == 'Windows' && '1' || '0' }}
         run: node scripts/desktop/release.mjs
 
       - name: 收集用户安装包(T-492)
+        if: inputs.windows_capsule_mode != 'prepare'
         run: |
           node frontend/scripts/desktop/collect-user-installers.mjs \
             "${{ matrix.updater_target }}" \
@@ -506,6 +665,7 @@ jobs:
 
       # 制品先交付；额外验收由显式开关单独选择，真实结果仍保留。
       - name: 上传已生成的安装包（额外验收不阻断）
+        if: inputs.windows_capsule_mode != 'prepare'
         uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.updater_target }}
@@ -513,7 +673,7 @@ jobs:
           if-no-files-found: error
 
       - name: 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
-        if: inputs.validate_installers == true && runner.os == 'Windows'
+        if: ${{ (inputs.validate_installers == true && runner.os == 'Windows') && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         run: |
           setup=$(find frontend/src-tauri/target/release/bundle/nsis -type f -iname '*-setup.exe' -print -quit)
@@ -538,7 +698,7 @@ jobs:
           echo "[T-675] ✓ setupBytes=$setup_bytes"
 
       - name: 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
-        if: inputs.validate_installers == true
+        if: ${{ (inputs.validate_installers == true) && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         run: |
           find frontend/src-tauri/sidecar \
@@ -549,7 +709,7 @@ jobs:
       # 安装到 RUNNER_TEMP（通常是 D:）证明：目录选择生效、POSTINSTALL hook 真执行、
       # current 指针/关键入口存在、成功后 tar 已删除。独立验收结果只进入报告。
       - name: Windows 安装期 runtime 原生冒烟(T-487)
-        if: inputs.validate_installers == true && runner.os == 'Windows'
+        if: ${{ (inputs.validate_installers == true && runner.os == 'Windows') && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         shell: pwsh
         env:
@@ -637,7 +797,7 @@ jobs:
           Write-Host "[T-675] ✓ 原生安装期物化通过: $server"
 
       - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
-        if: inputs.validate_installers == true
+        if: ${{ (inputs.validate_installers == true) && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         run: |
           found=$(find frontend/src-tauri/target/release/bundle \
@@ -646,7 +806,7 @@ jobs:
           test -n "$found" || { echo "::error::未找到 updater 产物/.sig"; exit 1; }
 
       - name: macOS Developer ID、公证与 Gatekeeper 门(T-709)
-        if: inputs.validate_installers == true && runner.os == 'macOS'
+        if: ${{ (inputs.validate_installers == true && runner.os == 'macOS') && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -701,7 +861,7 @@ jobs:
       # 解压时却会写成 server.app 内的真实文件，破坏签名并被 AMFI 以 SIGKILL 终止。
       # 工作流层再次按用户机语义回放，避免构建脚本门禁未来被绕过或回退。
       - name: macOS sidecar 可搬运归档与解压后签名门(T-705)
-        if: inputs.validate_installers == true && runner.os == 'macOS'
+        if: ${{ (inputs.validate_installers == true && runner.os == 'macOS') && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -734,7 +894,7 @@ jobs:
           echo "[T-705] ✓ 归档零 AppleDouble；解压后的 server.app 严格签名有效"
 
       - name: macOS 真启动与主页面加载冒烟(T-663)
-        if: inputs.validate_installers == true && runner.os == 'macOS'
+        if: ${{ (inputs.validate_installers == true && runner.os == 'macOS') && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -787,6 +947,7 @@ jobs:
           echo "[T-663] ✓ macOS CreatorOS 真启动并完成主页面加载"
 
       - name: 上传 T-635 产品身份与 release attestation（非发布产物）
+        if: inputs.windows_capsule_mode != 'prepare'
         uses: actions/upload-artifact@v4
         with:
           name: t635-product-identity-${{ matrix.updater_target }}-${{ github.run_attempt }}
@@ -801,7 +962,7 @@ jobs:
       # CreatorOS.exe，因此 sidecar cwd/verdict 公钥/WebView 导航回归都能带病上传。
       # Windows 安装、首启与主动卸载为独立可选验收，结果不影响已生成的制品。
       - name: Windows 安装后真启动与主页面加载冒烟(T-562)
-        if: inputs.validate_installers == true && runner.os == 'Windows'
+        if: ${{ (inputs.validate_installers == true && runner.os == 'Windows') && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         shell: pwsh
         run: |
@@ -918,7 +1079,7 @@ jobs:
 
       # 上传后可选择验主动卸载；真实失败只进入验收报告。
       - name: Windows 主动卸载清理冒烟(T-557)
-        if: inputs.validate_installers == true && runner.os == 'Windows'
+        if: ${{ (inputs.validate_installers == true && runner.os == 'Windows') && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         shell: pwsh
         run: |
