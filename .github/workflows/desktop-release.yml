@@ -96,6 +96,13 @@ jobs:
       run:
         shell: bash
     steps:
+      # T247：仅临时Windows runner兼容既有深层证据路径，不删文件或改变运行源。
+      - name: 开启 Windows Git 长路径支持
+        if: runner.os == 'Windows'
+        run: |
+          git config --global core.longpaths true
+          test "$(git config --global --get core.longpaths)" = "true"
+
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4 # 版本读根 package.json 的 packageManager
