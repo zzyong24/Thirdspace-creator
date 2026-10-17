@@ -393,6 +393,10 @@ jobs:
         if: runner.os == 'Windows'
         run: pnpm -C frontend exec playwright install chromium
 
+      - name: 验证 Windows Worker 依赖图与原生路径语义(T-247)
+        if: runner.os == 'Windows'
+        run: node --test tools/windows-closure-rat/worker-dependency-graph.test.mjs
+
       - name: 构建并接入 Windows production closure(T-675)
         if: runner.os == 'Windows'
         env:
