@@ -1,0 +1,66 @@
+{
+  "status": "FROZEN_FOR_INDEPENDENT_REVIEW",
+  "author": "entitlement_models",
+  "root": "/Volumes/T7-MacData/CodexBuilds/T243-CreatorOS-20261017/source",
+  "baseline": "3cd2446ca8e71ce1cc35b6bc54db7ef9b3b0b21a",
+  "files": [
+    {
+      "path": "frontend/scripts/desktop/package-local.mjs",
+      "beforeSHA256": "a24193b83f19f7217421838d1128e4156b2b4ccb7725da0732f021d0de2b7881",
+      "afterSHA256": "4cc8c44ab99388e3a1a0efb27a7dd29be883807482ad609728f84c00f8015890"
+    },
+    {
+      "path": "frontend/src-tauri/build.rs",
+      "beforeSHA256": "6ac5266526f9b5328d654c2e210e0c61c04cd494eb4a6e1831dbe862d5479630",
+      "afterSHA256": "204ed82513ecedb7338dd75d9915a8191026efeaf39b2463b0fb3e49c2980e32"
+    },
+    {
+      "path": "frontend/src-tauri/src/lib.rs",
+      "beforeSHA256": "131e44d9091a997901809c09f8dd83fdb523272f40b6fccb0affb3acde78f9fb",
+      "afterSHA256": "6bc62a933082651a60f221da5760e3cdb7bc428c2f33be55b8e5209c171844b2"
+    },
+    {
+      "path": "frontend/src/app/api/v1/local/ai-credits/connect/route.ts",
+      "beforeSHA256": "0a448cbd0fb4fc13ced4f65f9debc71d141da0b4953f9b00ec7d8f39415078c9",
+      "afterSHA256": "770b7e2631a1e851c6f51dfdf75a259a1fd869d2e22737b868059c23ff1749aa"
+    },
+    {
+      "path": "frontend/src/server/activation/ai-credit-link.server.ts",
+      "beforeSHA256": "8ee1da509ebbc462855470565f5872182cd4a05e9ca3c78a5a4df81b4e9720dc",
+      "afterSHA256": "f0f02cdf3c7f93f07618f6d1bcd23d73de1d69046f26adef2cd292b1b8ffb43b"
+    },
+    {
+      "path": "frontend/src/server/activation/client-config.server.ts",
+      "beforeSHA256": "f095325e92371ae1906131e846e7e88742106bdca6afedde22017c85ea673471",
+      "afterSHA256": "2d77cc04c99d2be1cfa12bb5c5b7e2a3d1b4b51050bd33e5607c6510ea1bbf1c"
+    },
+    {
+      "path": "frontend/src/server/activation/model-benefit.server.ts",
+      "beforeSHA256": null,
+      "afterSHA256": "2edac6e1989ba9e6285327bb68a995286c848c58f0006cfea6ff3864508df874"
+    },
+    {
+      "path": "frontend/src/server/activation/model-benefit.server.test.ts",
+      "beforeSHA256": null,
+      "afterSHA256": "470803f7a645b660aa3baa0be6957a420646a7c7aa3c355ee28c0fa3986b01a1"
+    }
+  ],
+  "patchSHA256": "928a6a62c038bb5829a3f72fad43ae5e749a0abc6b87a66af55f5c1e6b5c614a",
+  "contract": {
+    "path": "docs/integrations/growth-t243-model-benefit-consumer.md",
+    "sha256": "44922e7825c563536399fefa3e6d2c4f5b3afab9d0ba6ba326f97113226f0099"
+  },
+  "validation": {
+    "cacheRecovery": "consumer-cache-recovery-r6.log 13P；真实密文file/dir fsync及认证readback故障，阶段恢复不盲回滚",
+    "focused": "consumer-focused-r5.log 134P；此前save阶段文案增量单独由13P覆盖",
+    "types": "types-r4.log TS2345恢复测试合成record漏必填reasonCode；只补reasonCode:null后types-r6.log在执行，未弱化类型",
+    "crossRepo": "growth-consumer-cross-repo-samples.json aa7fecf8 实际Growthservice签名/credential/link，model-benefit-cross-repo-fixture.json cd8ced45；当前为实际DTO消费者，非双方动态服务联验/真人UAT",
+    "baselineRed": "consumer-null-baseline-red.log；准确3cd旧client-config重放null拒，恢复after；如实为实现后baseline对照"
+  },
+  "limitations": [
+    "尚无最终新Rust/sidecar包",
+    "尚无原生UI真人UAT",
+    "双方动态HTTPS/HMAC/PG链路准备中"
+  ],
+  "productionWrites": false
+}

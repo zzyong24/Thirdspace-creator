@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /Volumes/T7-MacData/CodexBuilds/T243-CreatorOS-20261017/source/frontend
+
+(node:55494) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  15:41:56
+   Duration  9.35s (transform 4.81s, setup 258ms, import 6.81s, tests 1.01s, environment 911ms)
+

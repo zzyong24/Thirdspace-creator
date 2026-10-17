@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "boundary": "仅合成签名fixture，非生产proof/业务事实；同一原hash双设备及epoch/channel变化不造第二经济身份",
+  "kid": "activity-policy-synthetic-20261017",
+  "publicKeyBase64": "yPuzBWfVl2A9vWF/GgAMYbcuoy0/uv+6XtjWOewNkPQ=",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAyPuzBWfVl2A9vWF/GgAMYbcuoy0/uv+6XtjWOewNkPQ=\n-----END PUBLIC KEY-----\n",
+  "privateSigningKeyExported": false,
+  "proofNow": "2026-10-17T08:00:00.000Z",
+  "eligibilityNow": "2026-10-17T08:00:05.000Z",
+  "cases": [
+    {
+      "name": "assigned",
+      "proofNonce": "synthetic-proof-nonce-assigned",
+      "requestNonce": "synthetic-hmac-nonce-assigned",
+      "proofClaims": {
+        "type": "model-benefit-proof",
+        "contractVersion": "model-benefit-proof-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": "official",
+        "modelScope": {
+          "kind": "channel",
+          "channelRef": "official"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 3,
+        "machineBindingDigest": "sha256:6caff40398475da72a558ddef17ab331e2f072e7717deffd03f125d9e1e4140a",
+        "nonce": "synthetic-proof-nonce-assigned",
+        "jti": "01M54DZY00HR91188MGV0AMN9J",
+        "issuedAt": "2026-10-17T08:00:00.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjMsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBIUjkxMTg4TUdWMEFNTjlKIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsiY2hhbm5lbFJlZiI6Im9mZmljaWFsIiwia2luZCI6ImNoYW5uZWwifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtYXNzaWduZWQiLCJwb2xpY3lJZCI6ImNyZWF0b3Jvcy1mb3JtYWwtbW9kZWwtMjAyNjEwMTctdjEiLCJwcm9qZWN0S2V5IjoiY3JlYXRvcm9zIiwicHVycG9zZSI6Im1vZGVsLWJlbmVmaXQiLCJzb3VyY2VDaGFubmVsUmVmIjoib2ZmaWNpYWwiLCJ0eXBlIjoibW9kZWwtYmVuZWZpdC1wcm9vZiJ9.7IOIoV-uvqMCiCfWgwtEjOqbaPf35u2FzImrbgdeiUUSB1RZ6XoJiY7nBVRgo3IHB4Y_KN63gPhktPsYZNkPDg",
+      "eligibilityRequest": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjMsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBIUjkxMTg4TUdWMEFNTjlKIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsiY2hhbm5lbFJlZiI6Im9mZmljaWFsIiwia2luZCI6ImNoYW5uZWwifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtYXNzaWduZWQiLCJwb2xpY3lJZCI6ImNyZWF0b3Jvcy1mb3JtYWwtbW9kZWwtMjAyNjEwMTctdjEiLCJwcm9qZWN0S2V5IjoiY3JlYXRvcm9zIiwicHVycG9zZSI6Im1vZGVsLWJlbmVmaXQiLCJzb3VyY2VDaGFubmVsUmVmIjoib2ZmaWNpYWwiLCJ0eXBlIjoibW9kZWwtYmVuZWZpdC1wcm9vZiJ9.7IOIoV-uvqMCiCfWgwtEjOqbaPf35u2FzImrbgdeiUUSB1RZ6XoJiY7nBVRgo3IHB4Y_KN63gPhktPsYZNkPDg"
+      },
+      "eligibilityClaims": {
+        "type": "model-benefit-eligibility",
+        "contractVersion": "model-benefit-eligibility-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit-eligibility",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": "official",
+        "modelScope": {
+          "kind": "channel",
+          "channelRef": "official"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 3,
+        "machineBindingDigest": "sha256:6caff40398475da72a558ddef17ab331e2f072e7717deffd03f125d9e1e4140a",
+        "proofDigest": "sha256:abe181e11c11884a3d1e4a1a7f5b31e55742f0532663dde7103a8c4f7dcc6ec9",
+        "requestNonce": "synthetic-hmac-nonce-assigned",
+        "jti": "01M54E02W84D9H9RMTP8ZN56FT",
+        "issuedAt": "2026-10-17T08:00:05.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "eligibilityResponse": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "active": true,
+        "modelBenefitEligibility": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULUVMSUdJQklMSVRZIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjMsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtZWxpZ2liaWxpdHktdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDUuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RTAyVzg0RDlIOVJNVFA4Wk41NkZUIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsiY2hhbm5lbFJlZiI6Im9mZmljaWFsIiwia2luZCI6ImNoYW5uZWwifSwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInByb29mRGlnZXN0Ijoic2hhMjU2OmFiZTE4MWUxMWMxMTg4NGEzZDFlNGExYTdmNWIzMWU1NTc0MmYwNTMyNjYzZGRlNzEwM2E4YzRmN2RjYzZlYzkiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSIsInJlcXVlc3ROb25jZSI6InN5bnRoZXRpYy1obWFjLW5vbmNlLWFzc2lnbmVkIiwic291cmNlQ2hhbm5lbFJlZiI6Im9mZmljaWFsIiwidHlwZSI6Im1vZGVsLWJlbmVmaXQtZWxpZ2liaWxpdHkifQ.LJOvNiUa9XbV7z37B3cg3RMKOvTm8DDpYmmlwBVSjZm0MPGB49lYYbupa65T_1x_08xiirzOf-89dua-wzZWBA"
+      }
+    },
+    {
+      "name": "unassigned",
+      "proofNonce": "synthetic-proof-nonce-unassigned",
+      "requestNonce": "synthetic-hmac-nonce-unassigned",
+      "proofClaims": {
+        "type": "model-benefit-proof",
+        "contractVersion": "model-benefit-proof-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "machineBindingDigest": "sha256:6caff40398475da72a558ddef17ab331e2f072e7717deffd03f125d9e1e4140a",
+        "nonce": "synthetic-proof-nonce-unassigned",
+        "jti": "01M54DZY00CCK1NQBRMHZ99ZW3",
+        "issuedAt": "2026-10-17T08:00:00.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw",
+      "eligibilityRequest": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBDQ0sxTlFCUk1IWjk5WlczIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZCIsInBvbGljeUlkIjoiY3JlYXRvcm9zLWZvcm1hbC1tb2RlbC0yMDI2MTAxNy12MSIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdCIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LXByb29mIn0.zFkmf-RVlsS8IkQ3A56z5aPIl0UuFgc1iX87nQl-pffMKe7mHyEImRPkhey12JkNAHGHbnC8YdWYLRwax_txBw"
+      },
+      "eligibilityClaims": {
+        "type": "model-benefit-eligibility",
+        "contractVersion": "model-benefit-eligibility-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit-eligibility",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "machineBindingDigest": "sha256:6caff40398475da72a558ddef17ab331e2f072e7717deffd03f125d9e1e4140a",
+        "proofDigest": "sha256:8e45959a670c89bf580d9aa7bcfcdf38007110841c0840a17ee97dbc931deb36",
+        "requestNonce": "synthetic-hmac-nonce-unassigned",
+        "jti": "01M54E02W8Z5JTM1A9KY9XCYYK",
+        "issuedAt": "2026-10-17T08:00:05.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "eligibilityResponse": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "active": true,
+        "modelBenefitEligibility": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULUVMSUdJQklMSVRZIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtZWxpZ2liaWxpdHktdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDUuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RTAyVzhaNUpUTTFBOUtZOVhDWVlLIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NmNhZmY0MDM5ODQ3NWRhNzJhNTU4ZGRlZjE3YWIzMzFlMmYwNzJlNzcxN2RlZmZkMDNmMTI1ZDllMWU0MTQwYSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInByb29mRGlnZXN0Ijoic2hhMjU2OjhlNDU5NTlhNjcwYzg5YmY1ODBkOWFhN2JjZmNkZjM4MDA3MTEwODQxYzA4NDBhMTdlZTk3ZGJjOTMxZGViMzYiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSIsInJlcXVlc3ROb25jZSI6InN5bnRoZXRpYy1obWFjLW5vbmNlLXVuYXNzaWduZWQiLCJzb3VyY2VDaGFubmVsUmVmIjpudWxsLCJ0eXBlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSJ9.TD2m8eoAkn3a6vQHpQXL-bzIH6dTBX_TRNwv_iAPsF2xbg6KEpvfHusrYkAJ1bqFhR8VhOrxtf6ahxV9pX0lBA"
+      }
+    },
+    {
+      "name": "unassigned-second-device",
+      "proofNonce": "synthetic-proof-nonce-unassigned-second-device",
+      "requestNonce": "synthetic-hmac-nonce-unassigned-second-device",
+      "proofClaims": {
+        "type": "model-benefit-proof",
+        "contractVersion": "model-benefit-proof-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "machineBindingDigest": "sha256:771ec268e42b239f13c0e870be6e920de090ed1c127555b0b8875a8ca73c1c1e",
+        "nonce": "synthetic-proof-nonce-unassigned-second-device",
+        "jti": "01M54DZY00N0XPMXEPS7AZC12A",
+        "issuedAt": "2026-10-17T08:00:00.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBOMFhQTVhFUFM3QVpDMTJBIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NzcxZWMyNjhlNDJiMjM5ZjEzYzBlODcwYmU2ZTkyMGRlMDkwZWQxYzEyNzU1NWIwYjg4NzVhOGNhNzNjMWMxZSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZC1zZWNvbmQtZGV2aWNlIiwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInB1cnBvc2UiOiJtb2RlbC1iZW5lZml0Iiwic291cmNlQ2hhbm5lbFJlZiI6bnVsbCwidHlwZSI6Im1vZGVsLWJlbmVmaXQtcHJvb2YifQ.oKkCWuYOJZVC5jkxhQHBfaEGharC-WvYrLABE7oVtmM2tI0rMdZjqPLCoW9bCLfhdeo2KwbwILo3-BXQkUvUDQ",
+      "eligibilityRequest": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "modelBenefitProof": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULVBST09GIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtcHJvb2YtdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDAuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RFpZMDBOMFhQTVhFUFM3QVpDMTJBIiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NzcxZWMyNjhlNDJiMjM5ZjEzYzBlODcwYmU2ZTkyMGRlMDkwZWQxYzEyNzU1NWIwYjg4NzVhOGNhNzNjMWMxZSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwibm9uY2UiOiJzeW50aGV0aWMtcHJvb2Ytbm9uY2UtdW5hc3NpZ25lZC1zZWNvbmQtZGV2aWNlIiwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInB1cnBvc2UiOiJtb2RlbC1iZW5lZml0Iiwic291cmNlQ2hhbm5lbFJlZiI6bnVsbCwidHlwZSI6Im1vZGVsLWJlbmVmaXQtcHJvb2YifQ.oKkCWuYOJZVC5jkxhQHBfaEGharC-WvYrLABE7oVtmM2tI0rMdZjqPLCoW9bCLfhdeo2KwbwILo3-BXQkUvUDQ"
+      },
+      "eligibilityClaims": {
+        "type": "model-benefit-eligibility",
+        "contractVersion": "model-benefit-eligibility-v1",
+        "issuer": "activation-manager",
+        "audience": "growth.model-benefit",
+        "purpose": "model-benefit-eligibility",
+        "policyId": "creatoros-formal-model-20261017-v1",
+        "projectKey": "creatoros",
+        "sourceChannelRef": null,
+        "modelScope": {
+          "kind": "unassigned"
+        },
+        "entitlementBindingHash": "sha256:a1c96a95b1b086374dd8b1d7ccc39c091a91c54b9c1c86c1447bdbd8992d9f01",
+        "authorizationVersion": 4,
+        "machineBindingDigest": "sha256:771ec268e42b239f13c0e870be6e920de090ed1c127555b0b8875a8ca73c1c1e",
+        "proofDigest": "sha256:a4718d2cb6ef0607fe257d75d9511fe9ec01a214707454ca5bcc5c974201265a",
+        "requestNonce": "synthetic-hmac-nonce-unassigned-second-device",
+        "jti": "01M54E02W8552RDSK13TMPD358",
+        "issuedAt": "2026-10-17T08:00:05.000Z",
+        "expiresAt": "2026-10-17T08:05:00.000Z"
+      },
+      "eligibilityResponse": {
+        "contractVersion": "model-benefit-eligibility-v1",
+        "active": true,
+        "modelBenefitEligibility": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFjdGl2aXR5LXBvbGljeS1zeW50aGV0aWMtMjAyNjEwMTciLCJ0eXAiOiJUUy1NT0RFTC1CRU5FRklULUVMSUdJQklMSVRZIn0.eyJhdWRpZW5jZSI6Imdyb3d0aC5tb2RlbC1iZW5lZml0IiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjQsImNvbnRyYWN0VmVyc2lvbiI6Im1vZGVsLWJlbmVmaXQtZWxpZ2liaWxpdHktdjEiLCJlbnRpdGxlbWVudEJpbmRpbmdIYXNoIjoic2hhMjU2OmExYzk2YTk1YjFiMDg2Mzc0ZGQ4YjFkN2NjYzM5YzA5MWE5MWM1NGI5YzFjODZjMTQ0N2JkYmQ4OTkyZDlmMDEiLCJleHBpcmVzQXQiOiIyMDI2LTEwLTE3VDA4OjA1OjAwLjAwMFoiLCJpc3N1ZWRBdCI6IjIwMjYtMTAtMTdUMDg6MDA6MDUuMDAwWiIsImlzc3VlciI6ImFjdGl2YXRpb24tbWFuYWdlciIsImp0aSI6IjAxTTU0RTAyVzg1NTJSRFNLMTNUTVBEMzU4IiwibWFjaGluZUJpbmRpbmdEaWdlc3QiOiJzaGEyNTY6NzcxZWMyNjhlNDJiMjM5ZjEzYzBlODcwYmU2ZTkyMGRlMDkwZWQxYzEyNzU1NWIwYjg4NzVhOGNhNzNjMWMxZSIsIm1vZGVsU2NvcGUiOnsia2luZCI6InVuYXNzaWduZWQifSwicG9saWN5SWQiOiJjcmVhdG9yb3MtZm9ybWFsLW1vZGVsLTIwMjYxMDE3LXYxIiwicHJvamVjdEtleSI6ImNyZWF0b3JvcyIsInByb29mRGlnZXN0Ijoic2hhMjU2OmE0NzE4ZDJjYjZlZjA2MDdmZTI1N2Q3NWQ5NTExZmU5ZWMwMWEyMTQ3MDc0NTRjYTViY2M1Yzk3NDIwMTI2NWEiLCJwdXJwb3NlIjoibW9kZWwtYmVuZWZpdC1lbGlnaWJpbGl0eSIsInJlcXVlc3ROb25jZSI6InN5bnRoZXRpYy1obWFjLW5vbmNlLXVuYXNzaWduZWQtc2Vjb25kLWRldmljZSIsInNvdXJjZUNoYW5uZWxSZWYiOm51bGwsInR5cGUiOiJtb2RlbC1iZW5lZml0LWVsaWdpYmlsaXR5In0.FaeBEF3U2uAXP228TvtMqqM6jAyr_NLZWNTsBKz-vW33F9vdfm4kO5t6eHI99GQ6SDi5goK8IgJFbZJEbY0lAQ"
+      }
+    }
+  ]
+}

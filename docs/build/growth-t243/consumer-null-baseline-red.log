@@ -1,0 +1,31 @@
+
+ RUN  v4.1.8 /Volumes/T7-MacData/CodexBuilds/T243-CreatorOS-20261017/source/frontend
+
+(node:96377) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/server/activation/model-benefit.server.test.ts (7 tests | 1 failed | 6 skipped) 17ms
+     × 真null经专用proof→实际Growth签名目录→existingOnly Key→真实加密缓存→原路由scope 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/activation/model-benefit.server.test.ts > Growth T243真实跨仓DTO消费者（本地合成、非真人UAT） > 真null经专用proof→实际Growth签名目录→existingOnly Key→真实加密缓存→原路由scope
+ClientConfigPullError: 授权缺少渠道信息，无法同步受管模型
+ ❯ fail src/server/activation/client-config.server.ts:350:9
+    348|
+    349| function fail(code: string, message: string, retryable: boolean): neve…
+    350|   throw new ClientConfigPullError(code, message, retryable);
+       |         ^
+    351| }
+    352|
+ ❯ activeVerdict src/server/activation/client-config.server.ts:486:5
+ ❯ refreshClientConfig src/server/activation/client-config.server.ts:1622:19
+ ❯ src/server/activation/model-benefit.server.test.ts:38:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  15:25:24
+   Duration  12.92s (transform 6.10s, setup 993ms, import 9.41s, tests 17ms, environment 2.09s)
+

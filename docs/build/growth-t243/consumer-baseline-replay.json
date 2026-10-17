@@ -1,0 +1,8 @@
+{
+  "beforeSource": "frontend/src/server/activation/client-config.server.ts",
+  "beforeHEAD": "3cd2446ca8e71ce1cc35b6bc54db7ef9b3b0b21a",
+  "beforeSHA256": "f095325e92371ae1906131e846e7e88742106bdca6afedde22017c85ea673471",
+  "restoredAfterSHA256": "2d77cc04c99d2be1cfa12bb5c5b7e2a3d1b4b51050bd33e5607c6510ea1bbf1c",
+  "exitCode": 1,
+  "boundary": "对准确未改before重放新增真实跨仓fixture用例；不把先写helper后的对照冒原始先测TDD chronology；新dispatcher写回后已7P"
+}

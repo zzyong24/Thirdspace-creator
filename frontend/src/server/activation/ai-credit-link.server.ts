@@ -34,6 +34,10 @@ type Dependencies = {
   readonly now?: () => Date;
   readonly requestAccess?: () => Promise<FreshClientConfigAccess>;
   readonly idempotencyKey?: () => string;
+  readonly env?: Record<string, string | undefined>;
+  readonly nonce?: () => string;
+  readonly signal?: AbortSignal;
+  readonly readVerdict?: import("./model-benefit.server").ModelBenefitDependencies["readVerdict"];
 };
 
 function fail(code: string, message: string, retryable: boolean): never {
@@ -116,33 +120,42 @@ function mapHttpError(status: number): never {
 export async function createAiCreditPortalLink(
   dependencies: Dependencies = {},
 ): Promise<AiCreditPortalLink> {
-  const access = await (dependencies.requestAccess ??
-    (() => requestFreshClientConfigAccess({ purpose: "ai-credit-link" })))();
-  const growthOrigin = new URL(access.growthOrigin);
-  const endpoint = new URL(LINK_SESSION_PATH, growthOrigin);
   const idempotencyKey = (
     dependencies.idempotencyKey ??
     (() => randomBytes(18).toString("base64url"))
   )();
   let response: Response;
+  let growthOrigin: URL;
   try {
-    response = await (dependencies.fetchImpl ?? fetch)(endpoint.toString(), {
+    if ((dependencies.env ?? process.env).CREATOROS_MODEL_BENEFITS_ENABLED === "1") {
+      const result = await (await import("./model-benefit.server")).requestModelBenefitLink(dependencies, idempotencyKey);
+      response = result.response;
+      growthOrigin = result.growthOrigin;
+    } else {
+      const access = await (dependencies.requestAccess ??
+        (() => requestFreshClientConfigAccess({ purpose: "ai-credit-link", signal: dependencies.signal })))();
+      growthOrigin = new URL(access.growthOrigin);
+      const endpoint = new URL(LINK_SESSION_PATH, growthOrigin);
+      response = await (dependencies.fetchImpl ?? fetch)(endpoint.toString(), {
       method: "POST",
       redirect: "manual",
-      signal: AbortSignal.timeout(executionTimeoutMs(10_000)),
+      signal: dependencies.signal ? AbortSignal.any([dependencies.signal, AbortSignal.timeout(executionTimeoutMs(10_000))]) : AbortSignal.timeout(executionTimeoutMs(10_000)),
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${access.configAccessTicket}`,
         "Idempotency-Key": idempotencyKey,
       },
-    });
+      });
+    }
   } catch {
+    if (dependencies.signal?.aborted) throw new DOMException("本次额度页面打开已取消", "AbortError");
     return fail(
       "AI_CREDIT_LINK_UNAVAILABLE",
       "AI 额度服务暂时不可用，请稍后重试",
       true,
     );
   }
+  if (dependencies.signal?.aborted) throw new DOMException("本次额度页面打开已取消", "AbortError");
   validateNoStore(response);
   const value = await readJson(response);
   if (response.status !== 200 && response.status !== 201) {

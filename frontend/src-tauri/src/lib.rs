@@ -2672,6 +2672,10 @@ pub fn run() {
                 "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
                 option_env!("CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED").unwrap_or("0"),
             );
+            let model_benefits_enabled = packaged_binary_flag(
+                "CREATOROS_MODEL_BENEFITS_ENABLED",
+                option_env!("CREATOROS_BUILTIN_MODEL_BENEFITS_ENABLED").unwrap_or("0"),
+            );
             let model_configuration_authority = packaged_text(
                 "CREATOROS_MODEL_CONFIGURATION_AUTHORITY",
                 option_env!("CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY")
@@ -2918,6 +2922,7 @@ pub fn run() {
                         "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
                         &client_config_pull_enabled,
                     )
+                    .env("CREATOROS_MODEL_BENEFITS_ENABLED", &model_benefits_enabled)
                     .env(
                         "CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY",
                         &model_configuration_authority,
@@ -3137,6 +3142,7 @@ pub fn run() {
                         "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
                         &client_config_pull_enabled,
                     )
+                    .env("CREATOROS_MODEL_BENEFITS_ENABLED", &model_benefits_enabled)
                     .env(
                         "CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY",
                         &model_configuration_authority,

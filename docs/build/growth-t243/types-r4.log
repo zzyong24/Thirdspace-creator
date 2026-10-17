@@ -1,0 +1,5 @@
+src/server/activation/model-benefit.server.test.ts(102,33): error TS2345: Argument of type '{ managedCredentials: { "omnihi-main": { status: "not_configured"; }; }; schema: "creatoros-model-benefit-cache-v1"; licenseDigest: string; directory: Directory; }' is not assignable to parameter of type 'ModelBenefitCache'.
+  Types of property 'managedCredentials' are incompatible.
+    Type '{ "omnihi-main": { status: "not_configured"; }; }' is not assignable to type 'Readonly<Record<string, { status: "ready" | "unavailable" | "not_configured" | "unverified"; reasonCode: string | null; accountStatus?: "ready" | "not_configured" | "unverified" | undefined; }>>'.
+      Property '"omnihi-main"' is incompatible with index signature.
+        Property 'reasonCode' is missing in type '{ status: "not_configured"; }' but required in type '{ status: "ready" | "unavailable" | "not_configured" | "unverified"; reasonCode: string | null; accountStatus?: "ready" | "not_configured" | "unverified" | undefined; }'.

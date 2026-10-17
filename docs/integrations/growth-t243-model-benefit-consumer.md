@@ -1,0 +1,21 @@
+# Growth T243 正式码政策桌面消费者
+
+授权为Growth DEC233及Root明确转达的fdb07完整null接缝、a0ec持久合同；本仓唯一作者entitlement_models。执行阶段为已批准合同的BUILD/SHIP候选，不代签真人UAT。基线3cd2446ca为8bbbe79d加已审T238准确七路径，未把当前Main其它变化混入。任务源仍以Growth T243统筹，不新造同义编号/改共享台账。
+
+操作者持当前本机已激活的有效CreatorOS正式码，拿到即时许可证结果后，可继续创作或打开模型设置。新消费者后台/明确恢复动作申请专用只读fresh proof，Growth在线重验并交回原身份的公共官方目录和私有Key；完整Key只交原系统密钥库服务。目录与Key使用同一真实project/hash/modelScope，不把null伪成official/channel字符串。取消/切授权/卸载后不发下一网络请求、不回写迟到Key/目录；取消不声称撤销服务端已经完成的权益。未知状态同授权重试，不创造第二份身份/额度；始终可切自配继续。
+
+新增`frontend/src/server/activation/model-benefit.server.ts`及测试，作为现桌面宿主的外部协议适配器；不建立frontend业务模块/DB写者。沿原加密license读取、产品身份guard、Ed25519/签名目录校验，旧v2/v3/T701闭合wire与非空channel guard保持。新`ModelBenefitScope`为channel真实值或unassigned联合。私有cache用独立AES-GCM目的、完整scope/hash/epoch和原证明截止；缓存绝不把proof/Key普通落盘。Key仍经已有settings.setChannelModelCredential服务口写受控vault，不在新模块建第二密钥库。
+
+现`ChannelModelAuthority.authority='channel'`是旧受管路由适配tag；新分支明确附`sourceKind:'model_benefit'`及真实modelScope，完全没有channelRef伪造。新的scopeId使用独立目的与原hash/真实scope，绑定当前epoch；原scope算法本身不变。私有cache凭当前本机license摘要、机器摘要及epoch验证，只有未过期且当前授权一致才可投影。payload通过现完整模型协议validator后才交原路由；不改公共官方默认模型或个人选择。
+
+现client-config.server的fulfill/refresh/readAuthority在编译开关`CREATOROS_MODEL_BENEFITS_ENABLED=1`时调用新适配器；关闭时旧路径保持，开启的新端点错误不去旧v2猜降级。package-local默认1，build.rs固化并在lib.rs两启动路径传入sidecar，实际产物须验证该贯通，旧T238制品不能作证。新包要在Activity/Growth配套就绪后交付，不安装到用户现应用。
+
+Growth四POST `fulfill/credentials/directory/link-session`均closed `{contractVersion:'growth-model-benefit-request-v1',modelBenefitProof}`并带Idempotency-Key；不带经营cookie，proof不入URL。fulfill只显式激活或恢复；普通refresh仅目录+existingOnly credentials零经济写。目录最小实现总取200，不为实现ETag而冒未验证304；收到无法绑定未过期同身份私有envelope的304安全失败，不续签旧缓存。link沿原flow/verificationUrl安全解析，真null也能开额度中心，失败可恢复/切自配。正式资格/5元与已有账户不补由Activity/Growth决定，客户端不猜plan/金额或自报正式。
+
+写集：上述新模块/测试；现client-config.server.ts/ai-credit-link.server.ts及其窄测试；现local ai-credit connect/client-config route按必要取消接缝；package-local.mjs/build.rs/lib.rs三处开关及针对性构建测试。现16px恢复UI/默认官方与自由自配持久化保持；不改原压缩资源、授权期限、设备容量、支付或真实用户数据。
+
+预算：每个实际网络正请求保原最短120000ms；一次显式恢复fulfill(2请求)→目录同步proof/directory/credential(3请求)共5请求≤600000ms加清理，沿原730000ms独立激活观察上限；许可证结果仍由Rust先返回并后台spawn。额度中心proof+link两串行请求外层至少250000ms，可取消等待但不取消服务器已提交事实。原普通路径预算不缩短。
+
+恢复：原加密cache损坏/材料不就绪不覆盖旧cache或私Key；保存经原子替换、目录fsync和认证读回；rename前失败保旧文件，rename后chmod/fsync/读回失败属于已提交但持久确认不确定，认证重读并保留当前新文件（或损坏则failclosed），不覆盖第三方后续提交，也不假称旧文件未变，可fresh同步恢复；新scope无旧cache时显示不可用及恢复入口，不能借另一授权scope凭据。旧目录/个人自配配置不删除。测试先真null拒旧guard的RED，再专用proof→实际目录→原vault服务交接GREEN；独评最终准确source/map后才提交/打包。
+
+补充：每个外部目录/凭据/履约/链接请求都用本次fresh proof并由Growth在线核资格；短签缓存只在原截止内供本机模型路由，不是撤权在线证明。当前模型新命令generation在主进程内使旧观察者失效，Key服务口+cache提交串行收尾，不能让已开始的旧写追过新提交。默认cache按license/机器/真实channel指纹分文件，epoch在scopeId与签名记录中隔离。旧epoch的外部读取/经济请求仍须fresh核验；本机license文件未提供服务端epoch时不伪称可从本地缓存得知当前全局epoch。

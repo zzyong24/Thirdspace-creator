@@ -169,6 +169,9 @@ export type ChannelModelAuthority =
       readonly scopeId: string;
       readonly bundleDigest?: string;
       readonly managedCredentials?:ManagedCredentialStates;
+      /** 旧channel仅受管路由tag；政策分支保真null scope，不构造渠道locator。 */
+      readonly sourceKind?: "model_benefit";
+      readonly modelScope?: import("./model-benefit.server").ModelBenefitScope;
     }
   | {
       readonly authority: "local";
@@ -224,6 +227,7 @@ type Dependencies = {
   readonly fetchImpl?: typeof fetch;
   readonly readVerdict?: () => ReturnType<typeof readLicenseVerdictDetailed>;
   readonly store?: ClientConfigStore;
+  readonly modelBenefitStore?: import("./model-benefit.server").ModelBenefitStore;
   /**
    * T-679：完整子 Key 只允许从 no-store 响应直接写入系统密钥库支持的密文仓库，
    * 不能进入公开 bundle、client-config cache、日志或 Web DTO。
@@ -1537,6 +1541,9 @@ export type ActivationIncludedCreditResult = {
 /** 独立履行原已含权益；目录同步不得调用本动作。完整凭据留在本server-only边界。 */
 export async function fulfillActivationIncludedCredit(dependencies: Pick<Dependencies,
   "env" | "now" | "nonce" | "fetchImpl" | "readVerdict" | "expectedScopeId" | "signal"> = {}): Promise<ActivationIncludedCreditResult> {
+  if ((dependencies.env ?? process.env).CREATOROS_MODEL_BENEFITS_ENABLED === "1") {
+    return (await import("./model-benefit.server")).fulfillModelBenefits(dependencies);
+  }
   try {
     assertConfigObserverLive(dependencies.signal);
     const access = await requestFreshClientConfigAccess(dependencies);
@@ -1596,6 +1603,9 @@ export async function fulfillActivationIncludedCredit(dependencies: Pick<Depende
 export async function refreshClientConfig(
   dependencies: Dependencies = {},
 ): Promise<ClientConfigProjection> {
+  if ((dependencies.env ?? process.env).CREATOROS_MODEL_BENEFITS_ENABLED === "1") {
+    return (await import("./model-benefit.server")).refreshModelBenefits(dependencies);
+  }
   assertConfigObserverLive(dependencies.signal);
   const env = dependencies.env ?? process.env;
   if (env.CREATOROS_CLIENT_CONFIG_PULL_ENABLED?.trim() !== "1") {
@@ -1914,8 +1924,11 @@ export async function refreshClientConfig(
  * 其他任何状态都返回 local，且从不把 opaque JSON 投影到 Web。
  */
 export async function readChannelModelAuthority(
-  dependencies: Pick<Dependencies, "env" | "readVerdict" | "store"> = {},
+  dependencies: Pick<Dependencies, "env" | "readVerdict" | "store" | "modelBenefitStore" | "now"> = {},
 ): Promise<ChannelModelAuthority> {
+  if ((dependencies.env ?? process.env).CREATOROS_MODEL_BENEFITS_ENABLED === "1") {
+    return (await import("./model-benefit.server")).readModelBenefitAuthority(dependencies);
+  }
   const env = dependencies.env ?? process.env;
   if (env.CREATOROS_CLIENT_CONFIG_PULL_ENABLED?.trim() !== "1") {
     return { authority: "local", outcome: "unreachable", payload: null };

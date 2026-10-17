@@ -83,6 +83,7 @@ fn main() {
         "GROWTH_ENTITLEMENT_API_ORIGIN",
         "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
         "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
+        "CREATOROS_MODEL_BENEFITS_ENABLED",
         "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
         "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
         "CREATOROS_GROWTH_CONFIG_KEY_ID",
@@ -127,6 +128,10 @@ fn main() {
     let client_config_pull_enabled = build_flag("CREATOROS_CLIENT_CONFIG_PULL_ENABLED");
     println!(
         "cargo:rustc-env=CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED={client_config_pull_enabled}"
+    );
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_MODEL_BENEFITS_ENABLED={}",
+        build_flag("CREATOROS_MODEL_BENEFITS_ENABLED")
     );
     let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
     let requested_authority = std::env::var("CREATOROS_MODEL_CONFIGURATION_AUTHORITY")
