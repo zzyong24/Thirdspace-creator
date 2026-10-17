@@ -542,6 +542,9 @@ jobs:
             frontend/scripts/desktop/execution-worker-runtime.mjs
             frontend/scripts/desktop/timeout-policy.mjs
             frontend/scripts/desktop/runtime-inventory.mjs
+            frontend/src-tauri/windows/installer-hooks.nsh
+            frontend/scripts/desktop/windows-runtime-config.test.mjs
+            .github/workflows/desktop-release.yml
 
       - name: 按固定control commit原字节装配8测试blob(T-247)
         if: inputs.windows_capsule_mode == 'consume'
@@ -629,6 +632,94 @@ jobs:
             ${{ runner.temp }}/t247-signed-runtime-smoke-*/tools/windows-closure-rat/out/runtime/runtime-smoke-results.json
           if-no-files-found: warn
           retention-days: 7
+
+      - name: 按精确H原blob装配Windows安装控制并验证(T-247)
+        if: inputs.windows_capsule_mode == 'consume'
+        env:
+          CREATOROS_T247_INSTALLER_CONTROL_COMMIT: ${{ github.sha }}
+          CREATOROS_T247_SIDECAR_SOURCE_COMMIT: ${{ inputs.capsule_source_commit }}
+          CREATOROS_WINDOWS_INSTALLER_TEST_CONTROL: ${{ github.workspace }}/.t247-validation-control
+        run: |
+          node --input-type=module <<'NODE'
+          // T247_INSTALLER_CONTROL_BEGIN
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import {createHash,randomUUID} from 'node:crypto';
+          import {spawnSync} from 'node:child_process';
+          const installerPaths={
+           'frontend/src-tauri/windows/installer-hooks.nsh':'d4d343bce0279250aff6a78385da26ff28d19ff98673a9d0236887b1fd07ddf7',
+           'frontend/scripts/desktop/windows-runtime-config.test.mjs':'2318d74f2dfb4e9f48fda39579b3154a862e45d6d6acb0fa1f6be929dea7749b',
+          };
+          const workflowPath='.github/workflows/desktop-release.yml';
+          const sha=b=>createHash('sha256').update(b).digest('hex');
+          const stats=b=>({bytes:b.length,LF:[...b].filter(x=>x===10).length,CRLF:b.toString('utf8').split('\r\n').length-1});
+          function regular(root,name){
+           const file=path.resolve(root,name),rel=path.relative(root,file);
+           if(rel==='..'||rel.startsWith('..'+path.sep)||path.isAbsolute(rel))throw Error('INSTALLER_PATH_ESCAPE');
+           let p=root;if(fs.lstatSync(p).isSymbolicLink()||!fs.lstatSync(p).isDirectory())throw Error('INSTALLER_ROOT_INVALID');
+           for(const part of rel.split(path.sep)){p=path.join(p,part);const st=fs.lstatSync(p);if(st.isSymbolicLink()||p!==file&&!st.isDirectory())throw Error('INSTALLER_LINK_OR_PARENT');}
+           if(!fs.lstatSync(file).isFile())throw Error('INSTALLER_NOT_REGULAR');return file;
+          }
+          function git(root,args){
+           const env={GIT_NO_LAZY_FETCH:'1',GIT_TERMINAL_PROMPT:'0'};
+           for(const k of ['PATH','Path','SystemRoot','SYSTEMROOT','HOME','USERPROFILE','TEMP','TMP'])if(process.env[k])env[k]=process.env[k];
+           const p=spawnSync('git',['-C',root,...args],{env,maxBuffer:4*1024*1024});
+           if(p.status!==0)throw Error('INSTALLER_GIT_FAILED');return p.stdout;
+          }
+          function blob(root,commit,name){
+           const mode=git(root,['ls-tree',commit,'--',name]).toString('utf8');
+           if(!/^100644 blob [a-f0-9]{40}\t/.test(mode)||mode.trim().split('\t')[1]!==name)throw Error('INSTALLER_GIT_MODE');
+           return git(root,['show',commit+':'+name]);
+          }
+          function equivalent(actual,expected){
+           const text=expected.toString('utf8');if(!Buffer.from(text).equals(expected))throw Error('INSTALLER_NON_UTF8');
+           if(actual.equals(expected))return 'exact';
+           if(!text.includes('\r')&&actual.equals(Buffer.from(text.replace(/\n/g,'\r\n'))))return 'exact-LF-to-CRLF';
+           throw Error('INSTALLER_FOREIGN_CONTENT');
+          }
+          function fileHash(file){const h=createHash('sha256'),fd=fs.openSync(file,'r'),chunk=Buffer.alloc(1048576);try{let n;while((n=fs.readSync(fd,chunk,0,chunk.length,null))>0)h.update(chunk.subarray(0,n));}finally{fs.closeSync(fd);}return h.digest('hex');}
+          function materializeInstallerControl({root,control,source,commit,anchors,expectedBefore=installerPaths}){
+           if(!/^[a-f0-9]{40}$/.test(source??'')||!/^[a-f0-9]{40}$/.test(commit??''))throw Error('INSTALLER_COMMIT_FORMAT');
+           if(git(root,['rev-parse','HEAD']).toString().trim()!==source||git(control,['rev-parse','HEAD']).toString().trim()!==commit)throw Error('INSTALLER_HEAD_MISMATCH');
+           if(Object.keys(expectedBefore).join('|')!==Object.keys(installerPaths).join('|'))throw Error('INSTALLER_PATH_ALLOWLIST');
+           const report={status:'checking',sidecarSource:source,installerControlCommit:commit,paths:[],anchorsBefore:{},anchorsAfter:{}};
+           const readAnchors=()=>Object.fromEntries(Object.entries(anchors).map(([name,expected])=>{const file=regular(root,name),actual=fileHash(file);if(actual!==expected)throw Error('INSTALLER_ANCHOR_MISMATCH');return [name,actual];}));
+           report.anchorsBefore=readAnchors();
+           // H workflow只读给测试，不覆盖主N workflow；原8验证blob完全独立。
+           const wf=regular(control,workflowPath),wfRaw=blob(control,commit,workflowPath);equivalent(fs.readFileSync(wf),wfRaw);report.readonlyWorkflowSHA256=sha(wfRaw);
+           const accepted=[];
+           for(const [name,before]of Object.entries(expectedBefore)){
+            const old=blob(root,source,name);if(sha(old)!==before)throw Error('INSTALLER_SOURCE_BLOB_MISMATCH');
+            const target=regular(root,name),actual=fs.readFileSync(target),next=blob(control,commit,name),from=regular(control,name);
+            const row={path:name,sourceBlobSHA256:before,actualBeforeSHA256:sha(actual),controlBlobSHA256:sha(next),source:stats(old),actual:stats(actual),control:stats(next),sourceKind:equivalent(actual,old),controlKind:equivalent(fs.readFileSync(from),next)};
+            report.paths.push(row);accepted.push({target,actual,next,row});
+           }
+           // 两项先完整预审；写前再次CAS，未知dirty绝不覆盖。任何失败阻断release。
+           const staged=[];
+           try{
+            for(const item of accepted){const tmp=item.target+'.t247-installer-'+randomUUID();const fd=fs.openSync(tmp,'wx',0o600);try{fs.writeFileSync(fd,item.next);fs.fsyncSync(fd);}finally{fs.closeSync(fd);}staged.push({...item,tmp});}
+            for(const item of staged){regular(root,item.row.path);if(!fs.readFileSync(item.target).equals(item.actual))throw Error('INSTALLER_CHANGED_BEFORE_RENAME');}
+            for(const item of staged){regular(root,item.row.path);if(!fs.readFileSync(item.target).equals(item.actual))throw Error('INSTALLER_CHANGED_BEFORE_RENAME');fs.renameSync(item.tmp,item.target);regular(root,item.row.path);item.row.afterSHA256=fileHash(item.target);if(item.row.afterSHA256!==item.row.controlBlobSHA256)throw Error('INSTALLER_AFTER_MISMATCH');}
+           }finally{for(const item of staged)if(fs.existsSync(item.tmp))fs.unlinkSync(item.tmp);}
+           report.anchorsAfter=readAnchors();report.status='passed';return report;
+          }
+          // T247_INSTALLER_CONTROL_LIBRARY_END
+          const root=path.resolve('.'),control=path.resolve('.t247-validation-control');
+          const anchors={
+           'frontend/src-tauri/sidecar.tar.gz':'84b1f27b9b59ed43e09a51308aecb97bd3efb9375db42e42fa739e6731693210',
+           'frontend/src-tauri/sidecar.tar.gz.sig':'b99c19ca2652e44ade6548682be09eaf4f018653ab08ca2a93e39cd6af198d27',
+           'frontend/src-tauri/binaries/creatoros-server-x86_64-pc-windows-msvc.exe':'98843732431bad6c2c165908bb7dde6fe2a221ddbc491a955d548a2e6ab9ebff',
+           'frontend/src-tauri/target/t247-capsule/capsule-manifest.json':'ea12ff6974733bf0f1a5fce282cdb33f2520a56167699fa5b2ab789c966325fe',
+          };
+          const reportFile=path.resolve('frontend/src-tauri/target/t247-installer-control-materialization.json');
+          let report;
+          try{report=materializeInstallerControl({root,control,source:process.env.CREATOROS_T247_SIDECAR_SOURCE_COMMIT,commit:process.env.CREATOROS_T247_INSTALLER_CONTROL_COMMIT,anchors});}
+          catch(e){report={status:'failed',error:e.code??e.message};process.exitCode=1;}
+          fs.mkdirSync(path.dirname(reportFile),{recursive:true});fs.writeFileSync(reportFile,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
+          if(report.status==='passed')fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'t247-installer-vitest.config.mjs'),'export default {test:{environment:"node",pool:"forks",maxWorkers:1,fileParallelism:false}};\n');
+          // T247_INSTALLER_CONTROL_END
+          NODE
+          pnpm -C frontend exec vitest run scripts/desktop/windows-runtime-config.test.mjs --config "$RUNNER_TEMP/t247-installer-vitest.config.mjs"
 
       - name: 读版本号
         if: inputs.windows_capsule_mode != 'prepare'
@@ -849,8 +940,21 @@ jobs:
           if (-not (Test-Path $cliNode -PathType Leaf)) {
             throw "[T-847] 安装期 runtime 缺 cli/node.exe"
           }
-          if (Test-Path (Join-Path $installDir "sidecar.tar.gz")) {
-            throw "[T-487] 安装成功后仍残留 sidecar.tar.gz"
+          # release启动签名门及主页后BLAKE3持续使用原归档；不可由测试补资源。
+          $archiveEvidence = [ordered]@{}
+          foreach ($resource in @("sidecar.tar.gz", "sidecar.tar.gz.sig")) {
+            $installedResource = Get-Item (Join-Path $installDir $resource) -Force
+            if ($installedResource.PSIsContainer -or ($installedResource.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+              throw "[T-487] 已安装签名资源不是普通文件:$resource"
+            }
+            $inputResource = Join-Path "frontend/src-tauri" $resource
+            $inputHash = (Get-FileHash $inputResource -Algorithm SHA256).Hash
+            $installedHash = (Get-FileHash $installedResource.FullName -Algorithm SHA256).Hash
+            if ($installedHash -ne $inputHash) { throw "[T-487] 已安装签名资源字节不符:$resource" }
+            if ($resource -eq "sidecar.tar.gz.sig" -and $installedResource.Length -ne 104) {
+              throw "[T-487] 公签名必须104字节"
+            }
+            $archiveEvidence[$resource] = [ordered]@{ bytes = $installedResource.Length; sha256 = $installedHash.ToLowerInvariant() }
           }
           $runtime = Join-Path $installDir "runtime-images/$runtimeId/sidecar"
           $runtimeFiles = @(Get-ChildItem $runtime -Recurse -File)
@@ -873,9 +977,11 @@ jobs:
             runtimeBytes = $runtimeBytes
             nodeModulesDirectories = $nodeModules.Count
             linksOrReparsePoints = $links.Count
+            retainedSignedResources = $archiveEvidence
           }
-          $evidence | ConvertTo-Json | Out-File `
-            "tools/windows-closure-rat/out/official-package-results.json" -Encoding utf8
+          $evidencePath = "tools/windows-closure-rat/out/official-package-results.json"
+          $null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent $evidencePath)
+          $evidence | ConvertTo-Json -Depth 6 | Out-File $evidencePath -Encoding utf8
           Write-Host "[T-675] ✓ 原生安装期物化通过: $server"
 
       - name: Windows 已安装 runtime verdict 只读泄漏扫描(T-656)
@@ -1218,6 +1324,7 @@ jobs:
             tools/windows-closure-rat/out/build-timings.json
             frontend/src-tauri/target/runtime-reports/build-timings.package.json
             tools/windows-closure-rat/out/official-package-results.json
+            frontend/src-tauri/target/t247-installer-control-materialization.json
             tools/windows-closure-rat/out/validation-status.json
           if-no-files-found: warn
           retention-days: 30
