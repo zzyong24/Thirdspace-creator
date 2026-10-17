@@ -18,18 +18,18 @@ import zipfile
 
 REPO = 'zzyong24/Thirdspace-creator'
 BRANCH = 'codex/t247-windows-e315-build-20261017'
-SOURCE = 'd162de8bc4ed3789828513a2ff59b882dc25b03b'
+SOURCE = '76d0ff4749ebe4b08fb81afeb7d36c60de922bd8'
 MAIN = '75968755b53126b13ea45947151bea239d5f3997'
-PREPARE_RUN = 39049847136
-ARTIFACT = 12107223823
-ZIP_BYTES = 971196244
-ZIP_SHA = 'aafd8cae616e8e9b9993ff54e09e1c931b787e3c5ba26cee66046fc771e83b4d'
-TAR_BYTES = 873121911
-TAR_SHA = 'e260ad81ef179f68b312c2bb2de4639740ef06ab712fbfb08cf88f1e7a58684c'
-TAR_BLAKE3_CLAIM = 'f66237d021e7ec4bb3b33366e7df6cddbbe543d73f01a3e0830cd59583b99b91'
+PREPARE_RUN = 39056633545
+ARTIFACT = 12109873404
+ZIP_BYTES = 971194844
+ZIP_SHA = '1defc50d7512d644761140775375b7c197de07570a5486c3169ab17653371401'
+TAR_BYTES = 873120518
+TAR_SHA = '84b1f27b9b59ed43e09a51308aecb97bd3efb9375db42e42fa739e6731693210'
+TAR_BLAKE3_CLAIM = '9e420690bd72e22f2e5374af48c2ecbe3a5066652730f998373ce5e89dacd0a4'
 NODE_SHA = '98843732431bad6c2c165908bb7dde6fe2a221ddbc491a955d548a2e6ab9ebff'
 NODE_BYTES = 95618048
-SUMMARY_SHA = '46247becb8c80204c78b60a1e143f5b30bfb271eba6d41ec5d705f2d98587275'
+SUMMARY_SHA = '63833cd3c66affb669de30c3dee34b2c76e29515bbe4fa3ecd0f79b5e4fe5c06'
 VERDICT_SHA = '1d1adea7a5bcd7e65f3e06be2c92eb24099da2d6685664d97141f83484d54e55'
 CONFIG_SHA = '7997176cd671dbf21eb8f757deb8a42501afe648cf9545bc007e609c833b4e0b'
 CONFIG_KID = 'growth-client-config-20260805-01'
@@ -405,7 +405,7 @@ def main():
         save(output, report)
         report['phase'] = 'download-fixed-zip'
         save(output, report)
-        archive = base/'artifact-12107223823.zip'
+        archive = base/'artifact-12109873404.zip'
         client.download(archive)
         with open(archive, 'rb') as prefix_file:
             prefix = prefix_file.read(2097152)
@@ -417,7 +417,7 @@ def main():
         extract_four(archive, members)
         report['audit'] = audit_four(members)
         report['phase'] = 'before-create-draft'
-        tag = 't247-transfer-39049847136-12107223823-'+run_id
+        tag = 't247-transfer-39056633545-12109873404-'+run_id
         require(client.api('/releases/tags/'+tag, missing=True) is None
                 and client.api('/git/ref/tags/'+tag, missing=True) is None, '临时名称已存在；禁止复用或 clobber')
         require(client.api('/git/ref/heads/main')['object']['sha'] == MAIN, '创建前 main CAS 漂移')
@@ -425,7 +425,7 @@ def main():
         save(output, report)
         draft = client.api('/releases', 'POST', {'tag_name': tag, 'target_commitish': MAIN,
                  'name': 'T247 未签临时中转 '+run_id+'（不可交付）',
-                 'body': '仅固定 artifact 12107223823 的原 ZIP 中转；未签、未发布、不可安装交付。产品 source '+SOURCE+'；transport target '+MAIN+'。',
+                 'body': '仅固定 artifact 12109873404 的原 ZIP 中转；未签、未发布、不可安装交付。产品 source '+SOURCE+'；transport target '+MAIN+'。',
                  'draft': True, 'prerelease': True, 'make_latest': 'false', 'generate_release_notes': False})
         report['releaseId'] = draft.get('id')  # 即使后续验证失败也保留已发生的准确对象。
         save(output, report)
@@ -433,7 +433,7 @@ def main():
         require(draft.get('assets') == [], '新 draft 非空，停止防覆盖')
         report['phase'] = 'upload-original-zip'
         save(output, report)
-        asset_name = 'artifact-12107223823-aafd8cae.zip'
+        asset_name = 'artifact-12109873404-1defc50d.zip'
         asset = client.upload(draft['id'], archive, asset_name)
         report['assetId'] = asset.get('id')
         save(output, report)
