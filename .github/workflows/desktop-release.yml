@@ -542,6 +542,65 @@ jobs:
             frontend/scripts/desktop/timeout-policy.mjs
             frontend/scripts/desktop/runtime-inventory.mjs
 
+      - name: 按固定control commit原字节装配8测试blob(T-247)
+        if: inputs.windows_capsule_mode == 'consume'
+        env:
+          CREATOROS_CAPSULE_VALIDATION_CONTROL_COMMIT: ${{ github.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          // T247_CONTROL_RAW_BLOB_BEGIN
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import {createHash,randomUUID} from 'node:crypto';
+          import {spawnSync} from 'node:child_process';
+          const paths=[
+           'tools/windows-closure-rat/runtime-smoke.mjs','tools/windows-closure-rat/render-probe-policy.mjs','tools/windows-closure-rat/worker-smoke.mjs','tools/windows-closure-rat/runtime-diagnostics.mjs',
+           'frontend/scripts/desktop/verdict-key-material.mjs','frontend/scripts/desktop/execution-worker-runtime.mjs','frontend/scripts/desktop/timeout-policy.mjs','frontend/scripts/desktop/runtime-inventory.mjs',
+          ];
+          const root=path.resolve('.t247-validation-control'),commit=process.env.CREATOROS_CAPSULE_VALIDATION_CONTROL_COMMIT;
+          const reportFile=path.resolve('frontend/src-tauri/target/t247-control-blob-materialization.json');
+          const report={status:'checking',controlCommit:commit,paths:[]};
+          const sha=b=>createHash('sha256').update(b).digest('hex');
+          const stats=b=>({bytes:b.length,LF:[...b].filter(x=>x===10).length,CRLF:b.toString('utf8').split('\r\n').length-1});
+          const gitEnv={};for(const k of ['PATH','Path','SystemRoot','SYSTEMROOT','HOME','USERPROFILE','TEMP','TMP'])if(process.env[k])gitEnv[k]=process.env[k];
+          gitEnv.GIT_NO_LAZY_FETCH='1';gitEnv.GIT_TERMINAL_PROMPT='0';
+          const git=args=>spawnSync('git',['-C',root,...args],{env:gitEnv,maxBuffer:4*1024*1024});
+          function regular(file){
+           const rel=path.relative(root,file);if(rel==='..'||rel.startsWith('..'+path.sep)||path.isAbsolute(rel))throw Error('CONTROL_PATH_ESCAPE');
+           let p=root;const rs=fs.lstatSync(p);if(rs.isSymbolicLink()||!rs.isDirectory())throw Error('CONTROL_ROOT_NOT_DIRECTORY');
+           for(const piece of rel.split(path.sep)){p=path.join(p,piece);const st=fs.lstatSync(p);if(st.isSymbolicLink())throw Error('CONTROL_LINK_REJECTED');if(p!==file&&!st.isDirectory())throw Error('CONTROL_PARENT_NOT_DIRECTORY');}
+           if(!fs.lstatSync(file).isFile())throw Error('CONTROL_FILE_NOT_REGULAR');
+          }
+          try{
+           if(typeof commit!=='string'||!/^[a-f0-9]{40}$/.test(commit))throw Error('CONTROL_COMMIT_FORMAT');
+           regular(path.join(root,paths[0]));
+           const head=git(['rev-parse','HEAD']);if(head.status!==0||head.stdout.toString('utf8').trim()!==commit)throw Error('CONTROL_HEAD_MISMATCH');
+           const accepted=[];
+           for(const name of paths){
+            const file=path.join(root,name),row={path:name};report.paths.push(row);regular(file);
+            const result=git(['show',commit+':'+name]);row.gitStatus=result.status;row.gitErrorCode=result.error?.code??null;
+            if(result.status!==0)throw Error('CONTROL_GIT_BLOB_UNAVAILABLE:'+name);
+            const expected=result.stdout,actual=fs.readFileSync(file);Object.assign(row,{expectedSHA256:sha(expected),actualSHA256:sha(actual),expected:stats(expected),actual:stats(actual)});
+            const utf8=expected.toString('utf8');if(!Buffer.from(utf8).equals(expected))throw Error('CONTROL_NON_UTF8:'+name);
+            row.kind=actual.equals(expected)?'exact':actual.equals(Buffer.from(utf8.replace(/\n/g,'\r\n')))?'exact-LF-to-CRLF':'foreign';
+            if(row.kind==='foreign')throw Error('CONTROL_FOREIGN_CONTENT:'+name);
+            accepted.push({file,expected,row});
+           }
+           // 全部8个先核，再仅回写可信Git原blob，不归一后放宽原helper校验。
+           for(const {file,expected,row} of accepted){
+            regular(file);if(sha(fs.readFileSync(file))!==row.actualSHA256)throw Error('CONTROL_CHANGED_DURING_CHECK:'+row.path);
+            if(row.kind!=='exact'){
+             const tmp=file+'.t247-rawblob-'+randomUUID();let fd;
+             try{fd=fs.openSync(tmp,'wx',0o600);fs.writeFileSync(fd,expected);fs.fsyncSync(fd);fs.closeSync(fd);fd=undefined;regular(file);if(sha(fs.readFileSync(file))!==row.actualSHA256)throw Error('CONTROL_CHANGED_BEFORE_RENAME:'+row.path);fs.renameSync(tmp,file);}finally{if(fd!==undefined)fs.closeSync(fd);if(fs.existsSync(tmp))fs.unlinkSync(tmp);}
+            }
+            regular(file);row.materializedSHA256=sha(fs.readFileSync(file));if(row.materializedSHA256!==row.expectedSHA256)throw Error('CONTROL_MATERIALIZED_MISMATCH:'+row.path);
+           }
+           report.status='passed';
+          }catch(error){report.status='failed';report.error=error.code??error.message;process.exitCode=1;}
+          finally{fs.mkdirSync(path.dirname(reportFile),{recursive:true});fs.writeFileSync(reportFile,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));}
+          // T247_CONTROL_RAW_BLOB_END
+          NODE
+
       - name: 同固定已签tar的真实消费阻断门(T-247)
         if: inputs.windows_capsule_mode == 'consume'
         env:
@@ -560,6 +619,7 @@ jobs:
           name: t247-fixed-capsule-runtime-evidence-${{ github.run_attempt }}
           path: |
             frontend/src-tauri/target/t247-runtime-consumer-result.json
+            frontend/src-tauri/target/t247-control-blob-materialization.json
             ${{ runner.temp }}/t247-signed-runtime-smoke-*/two-parent.stdout.log
             ${{ runner.temp }}/t247-signed-runtime-smoke-*/two-parent.stderr.log
             ${{ runner.temp }}/t247-signed-runtime-smoke-*/smoke.stdout.log

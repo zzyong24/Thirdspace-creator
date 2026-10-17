@@ -166,7 +166,10 @@ record("pglite-query");
 const { createRequire: createWorkerRequire } = await import("node:module");
 const workerRequire = createWorkerRequire(resolve(runtimeRoot,"frontend/runtime/execution-worker.cjs"));
 for (const name of ["jsdom","@mozilla/readability","mammoth","pdf-parse","@napi-rs/canvas"]) {
-  const resolved=workerRequire.resolve(name);
+  const dependencyRequire = name === "@napi-rs/canvas"
+    ? createWorkerRequire(workerRequire.resolve("pdf-parse"))
+    : workerRequire;
+  const resolved=dependencyRequire.resolve(name);
   if (!resolved.startsWith(`${runtimeRoot}${sep}`)) throw new Error(`Worker ${name} 解析到了包外`);
   await import(pathToFileURL(resolved).href);
   record(`worker-dependency:${name}`);
