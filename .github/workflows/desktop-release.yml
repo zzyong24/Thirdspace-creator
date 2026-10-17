@@ -713,15 +713,33 @@ jobs:
       # [T-487 RAT-PKG-02] 真执行本轮 setup.exe，不拿 7z 清单冒充安装验收。
       # 安装到 RUNNER_TEMP（通常是 D:）证明：目录选择生效、POSTINSTALL hook 真执行、
       # current 指针/关键入口存在、成功后 tar 已删除。独立验收结果只进入报告。
+      - name: 验证安装器子进程不继承 verdict 材料(T-247，合成)
+        if: ${{ (inputs.validate_installers == true && runner.os == 'Windows') && inputs.windows_capsule_mode != 'prepare' }}
+        shell: pwsh
+        env:
+          CREATOROS_VERDICT_SIGNING_KEY_B64: "t247-synthetic-seed-not-a-key"
+          CREATOROS_VERDICT_PUBKEY_B64: "t247-synthetic-public-not-a-key"
+        run: |
+          $ErrorActionPreference = "Stop"
+          Remove-Item Env:CREATOROS_VERDICT_SIGNING_KEY_B64 -ErrorAction SilentlyContinue
+          Remove-Item Env:CREATOROS_VERDICT_PUBKEY_B64 -ErrorAction SilentlyContinue
+          $state = node -e 'process.stdout.write(JSON.stringify({hasSeed:Object.hasOwn(process.env,"CREATOROS_VERDICT_SIGNING_KEY_B64"),hasPublic:Object.hasOwn(process.env,"CREATOROS_VERDICT_PUBKEY_B64")}))'
+          if ($LASTEXITCODE -ne 0) { throw "[T-247] 合成子进程环境检查失败" }
+          $observed = $state | ConvertFrom-Json
+          if ($observed.hasSeed -or $observed.hasPublic) {
+            throw "[T-247] 安装器子进程仍会继承 verdict 材料"
+          }
+          Write-Host "[T-247] 合成 Node 子进程两项材料均不存在"
+
       - name: Windows 安装期 runtime 原生冒烟(T-487)
+        id: t247_windows_runtime_install
         if: ${{ (inputs.validate_installers == true && runner.os == 'Windows') && inputs.windows_capsule_mode != 'prepare' }}
         continue-on-error: true
         shell: pwsh
-        env:
-          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
-          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
         run: |
           $ErrorActionPreference = "Stop"
+          Remove-Item Env:CREATOROS_VERDICT_SIGNING_KEY_B64 -ErrorAction SilentlyContinue
+          Remove-Item Env:CREATOROS_VERDICT_PUBKEY_B64 -ErrorAction SilentlyContinue
           $setup = Get-ChildItem "frontend/src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" |
             Select-Object -First 1
           if (-not $setup) { throw "[T-487] 未找到 NSIS setup.exe" }
@@ -785,8 +803,6 @@ jobs:
           if ($nodeModules.Count -ne 0 -or $links.Count -ne 0) {
             throw "[T-675] 安装 runtime 结构违规:node_modules=$($nodeModules.Count), links=$($links.Count)"
           }
-          node frontend/scripts/desktop/verdict-artifact-hardening.mjs `
-            --scan-installed-runtime $installDir
           $runtimeBytes = ($runtimeFiles | Measure-Object Length -Sum).Sum
           $evidence = [ordered]@{
             schemaVersion = 1
@@ -800,6 +816,23 @@ jobs:
           $evidence | ConvertTo-Json | Out-File `
             "tools/windows-closure-rat/out/official-package-results.json" -Encoding utf8
           Write-Host "[T-675] ✓ 原生安装期物化通过: $server"
+
+      - name: Windows 已安装 runtime verdict 只读泄漏扫描(T-656)
+        if: ${{ (inputs.validate_installers == true && runner.os == 'Windows') && inputs.windows_capsule_mode != 'prepare' && steps.t247_windows_runtime_install.outcome == 'success' }}
+        continue-on-error: true
+        shell: pwsh
+        env:
+          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          if (-not $env:CREATOROS_VERDICT_SIGNING_KEY_B64 -or -not $env:CREATOROS_VERDICT_PUBKEY_B64) {
+            throw "[T-656] 专用扫描缺少既有 verdict 材料"
+          }
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS 中文 RAT02 Space"
+          node frontend/scripts/desktop/verdict-artifact-hardening.mjs `
+            --scan-installed-runtime $installDir
+          if ($LASTEXITCODE -ne 0) { throw "[T-656] 已安装 runtime 泄漏扫描失败" }
 
       - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
         if: ${{ (inputs.validate_installers == true) && inputs.windows_capsule_mode != 'prepare' }}
