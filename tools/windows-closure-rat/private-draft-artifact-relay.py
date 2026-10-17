@@ -18,18 +18,18 @@ import zipfile
 
 REPO = 'zzyong24/Thirdspace-creator'
 BRANCH = 'codex/t247-windows-e315-build-20261017'
-SOURCE = '2c46f374688b6c71d846ba088fc5aa85fb7e7335'
+SOURCE = 'd162de8bc4ed3789828513a2ff59b882dc25b03b'
 MAIN = '75968755b53126b13ea45947151bea239d5f3997'
-PREPARE_RUN = 39038341754
-ARTIFACT = 12103452170
-ZIP_BYTES = 971160235
-ZIP_SHA = '97a7456634f3fb963f6e1baa28664171b40b5f91fac361f5e3a0cddb3a2e3343'
-TAR_BYTES = 873090225
-TAR_SHA = '1f438fbb545e4988a5969d77328758d4edc04a2aaea9e4ec8494f82d122f5919'
-TAR_BLAKE3_CLAIM = '581739b3f3604f590db9db017171c396ab0481e8377b10e637ffdf44c44fcdb9'
+PREPARE_RUN = 39049847136
+ARTIFACT = 12107223823
+ZIP_BYTES = 971196244
+ZIP_SHA = 'aafd8cae616e8e9b9993ff54e09e1c931b787e3c5ba26cee66046fc771e83b4d'
+TAR_BYTES = 873121911
+TAR_SHA = 'e260ad81ef179f68b312c2bb2de4639740ef06ab712fbfb08cf88f1e7a58684c'
+TAR_BLAKE3_CLAIM = 'f66237d021e7ec4bb3b33366e7df6cddbbe543d73f01a3e0830cd59583b99b91'
 NODE_SHA = '98843732431bad6c2c165908bb7dde6fe2a221ddbc491a955d548a2e6ab9ebff'
 NODE_BYTES = 95618048
-SUMMARY_SHA = 'f8e0fbb9757a2c9e4103a3d7a5a5788106ee55391af9923d9f1e3a36fa20c07d'
+SUMMARY_SHA = '46247becb8c80204c78b60a1e143f5b30bfb271eba6d41ec5d705f2d98587275'
 VERDICT_SHA = '1d1adea7a5bcd7e65f3e06be2c92eb24099da2d6685664d97141f83484d54e55'
 CONFIG_SHA = '7997176cd671dbf21eb8f757deb8a42501afe648cf9545bc007e609c833b4e0b'
 CONFIG_KID = 'growth-client-config-20260805-01'
@@ -273,6 +273,39 @@ def canvas_structure(graph, captured, files):
             'runtimePending': True, 'productGraphUnchanged': True}
 
 
+def declared_npm_structure(graph, captured, files):
+    # 仅核真实图/manifest/实际成员，不解析或执行任何包代码。
+    names = {'punycode', 'buffer', 'string_decoder'}
+    nodes, members, rows, seen = graph['nodes'], {f['path']: f for f in files}, [], set()
+    for owner_id, owner in nodes.items():
+        owner_data = captured.get(owner['root']+'/package.json')
+        require(owner_data is not None and hashlib.sha256(owner_data).hexdigest() == owner['manifestSHA256'], 'npm owner manifest 摘要不符')
+        manifest = json.loads(owner_data)
+        require(manifest.get('name') == owner['name'] and manifest.get('version') == owner['version'], 'npm owner 身份不符')
+        for name in names.intersection(manifest.get('dependencies', {})):
+            target_id = owner['dependencies'].get(name)
+            require(target_id in nodes, '显式同名npm依赖边缺失: '+name)
+            target = nodes[target_id]
+            require(target['name'] == name and name in target['aliases'], 'npm target 身份不符')
+            raw = captured.get(target['root']+'/package.json')
+            require(raw is not None and hashlib.sha256(raw).hexdigest() == target['manifestSHA256'], 'npm target manifest 摘要不符')
+            package = json.loads(raw)
+            require(package.get('name') == name and package.get('version') == target['version'], 'npm target manifest 身份不符')
+            main = package.get('main', 'index.js')
+            require(isinstance(main, str), 'npm main 类型不符')
+            entry = safe_name(target['root']+'/'+(main[2:] if main.startswith('./') else main))
+            require(entry in members and members[entry]['bytes'] > 0, 'npm实际入口成员缺失')
+            rows.append({'ownerId': owner_id, 'ownerName': owner['name'], 'ownerVersion': owner['version'],
+                         'ownerManifestSHA256': owner['manifestSHA256'], 'dependency': name,
+                         'declaredRange': manifest['dependencies'][name], 'targetId': target_id,
+                         'targetName': target['name'], 'targetVersion': target['version'],
+                         'targetManifestSHA256': target['manifestSHA256'], 'actualEntry': members[entry]})
+            seen.add(name)
+    require(seen == names, '缺少本新产物三类同名npm声明证据')
+    return {'status': '真实tar静态边/manifest/成员核验，不是Windows运行', 'rows': rows,
+            'targetPackageCodeExecuted': False}
+
+
 def audit_four(out):
     m = json.loads((out/'capsule-manifest.json').read_bytes())
     b = expected_manifest(m)
@@ -300,6 +333,7 @@ def audit_four(out):
     key = base64.urlsafe_b64decode(verdict['publicKeyB64']+'='*((-len(verdict['publicKeyB64']))%4))
     require(len(key) == 32 and hashlib.sha256(key).hexdigest() == VERDICT_SHA, 'tar 实际 verdict 公根不符')
     canvas = canvas_structure(json.loads(captured['frontend/worker-dependency-map.json']), captured, files)
+    declared_npm = declared_npm_structure(json.loads(captured['frontend/worker-dependency-map.json']), captured, files)
     return {'status': 'readonly-archive-PASS', 'manifestSHA256': sha_file(out/'capsule-manifest.json'),
             'manifest': m, 'actualTarSHA256': TAR_SHA, 'actualExternalAndCliNodeSHA256': NODE_SHA,
             'regularFiles': len(files), 'directoriesAndFiles': count, 'inventoryEveryMemberMatched': True,
@@ -307,7 +341,7 @@ def audit_four(out):
             'actualVerdictPublicKeySHA256': VERDICT_SHA, 'configRootMetadataMatchesExpected': True,
             'configRuntimeInjectionPendingInstaller': True,
             'BLAKE3': {'claimedByPrepare': TAR_BLAKE3_CLAIM, 'independentLocalCalculationPending': True},
-            'canvas': canvas, 'packageCodeExecuted': False, 'rootSigning': False}
+            'canvas': canvas, 'declaredBuiltinNamedNpm': declared_npm, 'packageCodeExecuted': False, 'rootSigning': False}
 
 
 def old_release_projection(value):
@@ -371,15 +405,19 @@ def main():
         save(output, report)
         report['phase'] = 'download-fixed-zip'
         save(output, report)
-        archive = base/'artifact-12103452170.zip'
+        archive = base/'artifact-12107223823.zip'
         client.download(archive)
+        with open(archive, 'rb') as prefix_file:
+            prefix = prefix_file.read(2097152)
+        require(len(prefix) == 2097152, '完整ZIP首段缺失')
+        report['ZIPPrefix'] = {'bytes': len(prefix), 'SHA256': hashlib.sha256(prefix).hexdigest()}
         report['phase'] = 'audit-fixed-bytes'
         save(output, report)
         members = base/'members'
         extract_four(archive, members)
         report['audit'] = audit_four(members)
         report['phase'] = 'before-create-draft'
-        tag = 't247-transfer-39038341754-12103452170-'+run_id
+        tag = 't247-transfer-39049847136-12107223823-'+run_id
         require(client.api('/releases/tags/'+tag, missing=True) is None
                 and client.api('/git/ref/tags/'+tag, missing=True) is None, '临时名称已存在；禁止复用或 clobber')
         require(client.api('/git/ref/heads/main')['object']['sha'] == MAIN, '创建前 main CAS 漂移')
@@ -387,7 +425,7 @@ def main():
         save(output, report)
         draft = client.api('/releases', 'POST', {'tag_name': tag, 'target_commitish': MAIN,
                  'name': 'T247 未签临时中转 '+run_id+'（不可交付）',
-                 'body': '仅固定 artifact 12103452170 的原 ZIP 中转；未签、未发布、不可安装交付。产品 source '+SOURCE+'；transport target '+MAIN+'。',
+                 'body': '仅固定 artifact 12107223823 的原 ZIP 中转；未签、未发布、不可安装交付。产品 source '+SOURCE+'；transport target '+MAIN+'。',
                  'draft': True, 'prerelease': True, 'make_latest': 'false', 'generate_release_notes': False})
         report['releaseId'] = draft.get('id')  # 即使后续验证失败也保留已发生的准确对象。
         save(output, report)
@@ -395,7 +433,7 @@ def main():
         require(draft.get('assets') == [], '新 draft 非空，停止防覆盖')
         report['phase'] = 'upload-original-zip'
         save(output, report)
-        asset_name = 'artifact-12103452170-97a74566.zip'
+        asset_name = 'artifact-12107223823-aafd8cae.zip'
         asset = client.upload(draft['id'], archive, asset_name)
         report['assetId'] = asset.get('id')
         save(output, report)

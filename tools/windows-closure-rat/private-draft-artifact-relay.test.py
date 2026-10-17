@@ -229,5 +229,35 @@ class CanvasStructureTests(unittest.TestCase):
             m.canvas_structure(graph, captured, files)
 
 
+class DeclaredNpmStructureTests(unittest.TestCase):
+    def fixture(self):
+        nodes, captured, files = {}, {}, []
+        for index, name in enumerate(('punycode', 'buffer', 'string_decoder')):
+            owner_id, target_id = f'p{index*2:04}', f'p{index*2+1:04}'
+            for ident, package in ((owner_id, {'name': 'owner-'+name, 'version': '1', 'dependencies': {name: '1'}}),
+                                   (target_id, {'name': name, 'version': '1', 'main': './index.js'})):
+                raw = json.dumps(package).encode(); root = 'frontend/.next/worker-packages/'+ident
+                nodes[ident] = {'name': package['name'], 'version': '1', 'root': root, 'aliases': [package['name']],
+                                'manifestSHA256': hashlib.sha256(raw).hexdigest(), 'dependencies': {name: target_id} if ident == owner_id else {}}
+                captured[root+'/package.json'] = raw
+                files.append({'path': root+'/index.js', 'bytes': 7, 'sha256': 'a'*64})
+        return {'nodes': nodes}, captured, files
+
+    def test_all_three_actual_manifest_edges_and_entry_hashes_reported(self):
+        result = m.declared_npm_structure(*self.fixture())
+        self.assertEqual({r['dependency'] for r in result['rows']}, {'punycode', 'buffer', 'string_decoder'})
+        self.assertTrue(all(r['actualEntry']['sha256'] == 'a'*64 for r in result['rows']))
+        self.assertFalse(result['targetPackageCodeExecuted'])
+
+    def test_missing_edge_manifest_or_member_rejects(self):
+        for mode in ('edge', 'manifest', 'member'):
+            with self.subTest(mode=mode), self.assertRaises(m.RelayError):
+                graph, captured, files = self.fixture()
+                if mode == 'edge': graph['nodes']['p0000']['dependencies'] = {}
+                if mode == 'manifest': captured['frontend/.next/worker-packages/p0001/package.json'] = b'{}'
+                if mode == 'member': files = []
+                m.declared_npm_structure(graph, captured, files)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
