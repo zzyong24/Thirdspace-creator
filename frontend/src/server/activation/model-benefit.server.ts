@@ -197,31 +197,79 @@ function store(deps:ModelBenefitDependencies,licenseDigest:string):ModelBenefitS
   if(!path||master.degraded||master.key.length!==32)fail("CLIENT_CONFIG_STORAGE_UNAVAILABLE","本机官方模型存储尚未就绪",true);
   return new EncryptedModelBenefitStore(join(dirname(path),".model-benefit-config",`${licenseDigest.slice(7)}.cache`),createHash("sha256").update(master.key).update(PURPOSE).digest());
 }
-export async function refreshModelBenefits(deps:ModelBenefitDependencies={}):Promise<ClientConfigProjection>{
+type ModelBenefitReadSnapshot={identity:Awaited<ReturnType<typeof access>>;directory:Directory;pendingToken:string|undefined;linked:boolean;managedCredentials:CredentialStates};
+type ModelBenefitReadFlight={controller:AbortController;promise:Promise<ModelBenefitReadSnapshot>;observers:number;settled:boolean};
+const modelBenefitReadFlights=new Map<string,ModelBenefitReadFlight>();
+async function fetchModelBenefitReadSnapshot(deps:ModelBenefitDependencies):Promise<ModelBenefitReadSnapshot>{
   const identity=await access(deps),response=await post(deps,identity,"directory"),raw=await jsonResponse(response),now=(deps.now??(()=>new Date()))();
   const directory=validateDirectory(raw,identity.env,now);verifyIdentity(raw as Record<string,unknown>,identity,now);
   let managedCredentials:CredentialStates={"omnihi-main":{status:"not_configured",reasonCode:"MODEL_CREDENTIAL_NOT_CONFIGURED"}};
-  let pendingToken:string|undefined;
-  try{const result=credential(await jsonResponse(await post(deps,identity,"credentials")),identity,(deps.now??(()=>new Date()))());pendingToken=result.token;managedCredentials={"omnihi-main":{status:deps.putManagedCredential?"ready":"unverified",reasonCode:deps.putManagedCredential?null:"MODEL_CREDENTIAL_NOT_STORED",accountStatus:result.linked?"ready":"not_configured"}}}
+  let pendingToken:string|undefined,linked=false;
+  try{const result=credential(await jsonResponse(await post(deps,identity,"credentials")),identity,(deps.now??(()=>new Date()))());pendingToken=result.token;linked=result.linked}
   catch(error){live(deps.signal);if(!(error instanceof ClientConfigPullError)||!["MODEL_CREDENTIAL_NOT_CONFIGURED","MODEL_CREDENTIAL_PROVISIONING","AI_CREDIT_BOOTSTRAP_PENDING","CLIENT_CONFIG_NETWORK_UNAVAILABLE"].includes(error.code))throw error;managedCredentials={"omnihi-main":{status:error.code==="MODEL_CREDENTIAL_NOT_CONFIGURED"?"not_configured":"unverified",reasonCode:error.code}}}
-  await commitInOrder(async()=>{
-    await assertCurrent(deps,identity);
-    if(pendingToken&&deps.putManagedCredential)await deps.putManagedCredential(identity.scopeId,"omnihi-main",pendingToken);
-    await assertCurrent(deps,identity);
-    await store(deps,identity.licenseDigest).save({schema:PURPOSE,licenseDigest:identity.licenseDigest,directory,managedCredentials});
-    await assertCurrent(deps,identity);
+  return {identity,directory,pendingToken,linked,managedCredentials};
+}
+async function observeModelBenefitRead<T>(deps:ModelBenefitDependencies,consume:(snapshot:ModelBenefitReadSnapshot)=>Promise<T>):Promise<T>{
+  live(deps.signal);const current=await currentLicense(deps),key=current.licenseDigest;live(deps.signal);
+  let flight=modelBenefitReadFlights.get(key);
+  if(!flight){
+    const controller=new AbortController(),signal=AbortSignal.any([controller.signal,AbortSignal.timeout(executionTimeoutMs(370000))]);
+    const promise=fetchModelBenefitReadSnapshot({...deps,signal,expectedScopeId:undefined,putManagedCredential:undefined});
+    const created:ModelBenefitReadFlight={controller,promise,observers:0,settled:false};
+    flight=created;modelBenefitReadFlights.set(key,created);
+    const settled=()=>{created.settled=true;if(created.observers===0&&modelBenefitReadFlights.get(key)===created)modelBenefitReadFlights.delete(key)};
+    void promise.then(settled,settled);
+  }
+  const active=flight;active.observers++;let released=false;
+  const release=()=>{if(released)return;released=true;active.observers--;if(active.observers===0){active.controller.abort();if(modelBenefitReadFlights.get(key)===active)modelBenefitReadFlights.delete(key)}};
+  let abort!:()=>void;const canceled=new Promise<never>((_,reject)=>{abort=()=>{release();reject(new DOMException("已停止等待，原权益仍可重新核对","AbortError"))};deps.signal?.addEventListener("abort",abort,{once:true});if(deps.signal?.aborted)abort()});
+  const work=active.promise.then(async(snapshot)=>{live(deps.signal);if(snapshot.identity.licenseDigest!==current.licenseDigest||deps.expectedScopeId!==undefined&&deps.expectedScopeId!==snapshot.identity.scopeId)fail("MODEL_ROUTE_IDENTITY_CHANGED","当前模型授权已变化，请重新尝试");await assertCurrent(deps,snapshot.identity);return consume(snapshot)});
+  try{return await Promise.race([work,canceled])}finally{deps.signal?.removeEventListener("abort",abort);release()}
+}
+export async function refreshModelBenefits(deps:ModelBenefitDependencies={}):Promise<ClientConfigProjection>{
+  return observeModelBenefitRead(deps,async({identity,directory,pendingToken,linked,managedCredentials:initialStates})=>{
+    const managedCredentials:CredentialStates=pendingToken?{"omnihi-main":{status:deps.putManagedCredential?"ready":"unverified",reasonCode:deps.putManagedCredential?null:"MODEL_CREDENTIAL_NOT_STORED",accountStatus:linked?"ready":"not_configured"}}:initialStates;
+    await commitInOrder(async()=>{
+      await assertCurrent(deps,identity);
+      if(pendingToken&&deps.putManagedCredential)await deps.putManagedCredential(identity.scopeId,"omnihi-main",pendingToken);
+      await assertCurrent(deps,identity);
+      await store(deps,identity.licenseDigest).save({schema:PURPOSE,licenseDigest:identity.licenseDigest,directory,managedCredentials});
+      await assertCurrent(deps,identity);
+    });
+    return {authority:"channel",outcome:"configured",action:"官方模型已同步，个人模型选择保持不变",retryable:false};
   });
-  return {authority:"channel",outcome:"configured",action:"官方模型已同步，个人模型选择保持不变",retryable:false};
+}
+/** 仅在原owner锁前调用；事务内只消费已准备snapshot，不在此引入DB/自HTTP。 */
+export async function ensureModelBenefitAuthority(deps:ModelBenefitDependencies,hasCredential:(scopeId:string)=>Promise<boolean>):Promise<ChannelModelAuthority>{
+  live(deps.signal);const controller=new AbortController();
+  const signal=deps.signal?AbortSignal.any([deps.signal,controller.signal]):controller.signal;
+  let timer:ReturnType<typeof setTimeout>|undefined;
+  // 只限定本次普通操作的观察等待；共享后台flight的原截止不随加入者延长。
+  const expired=new Promise<never>((_,reject)=>{timer=setTimeout(()=>{
+    reject(new ClientConfigPullError("MODEL_BENEFIT_REFRESH_PENDING","官方模型暂未核对完成，输入已保留。请核对原任务后再继续，或切换自配模型。",true));
+    controller.abort();
+  },executionTimeoutMs(120000));});
+  try{return await Promise.race([ensureModelBenefitAuthorityWithinBudget({...deps,signal},hasCredential),expired])}
+  finally{if(timer!==undefined)clearTimeout(timer)}
+}
+async function ensureModelBenefitAuthorityWithinBudget(deps:ModelBenefitDependencies,hasCredential:(scopeId:string)=>Promise<boolean>):Promise<ChannelModelAuthority>{
+  live(deps.signal);const observed=await currentLicense(deps),cached=await readModelBenefitAuthority(deps);
+  if(cached.authority==="channel"&&deps.expectedScopeId!==undefined&&cached.scopeId!==deps.expectedScopeId)fail("MODEL_ROUTE_IDENTITY_CHANGED","原模型授权范围已变化，请重试当前任务");
+  if(cached.authority==="channel"&&await hasCredential(cached.scopeId)){live(deps.signal);if((await currentLicense(deps)).licenseDigest!==observed.licenseDigest)fail("MODEL_ROUTE_IDENTITY_CHANGED","当前模型授权已变化，请重试当前操作");return cached}
+  try{await refreshModelBenefits(deps);const authority=await readModelBenefitAuthority(deps);if(authority.authority==="channel"&&await hasCredential(authority.scopeId)){live(deps.signal);if((await currentLicense(deps)).licenseDigest!==observed.licenseDigest)fail("MODEL_ROUTE_IDENTITY_CHANGED","当前模型授权已变化，请重试当前操作");return authority}return {authority:"local",outcome:"unreachable",payload:null}}
+  catch(error){live(deps.signal);if(error instanceof ClientConfigPullError)return {authority:"local",outcome:"unreachable",payload:null};throw error}
 }
 export async function fulfillModelBenefits(deps:ModelBenefitDependencies={}):Promise<ActivationIncludedCreditResult>{
   try{const identity=await access(deps);const result=credential(await jsonResponse(await post(deps,identity,"fulfill")),identity,(deps.now??(()=>new Date()))());await assertCurrent(deps,identity);return result.linked?{status:"ready",action:"当前授权已含模型额度已就绪，已有余额保持不变",retryable:false}:{status:"pending",action:"原模型账户仍在恢复中，可重新核对或先使用自配模型",retryable:true}}
   catch(error){live(deps.signal);if(error instanceof ClientConfigPullError)return {status:error.retryable?"pending":"unavailable",action:error.message,retryable:error.retryable};throw error}
 }
 export async function readModelBenefitAuthority(deps:ModelBenefitDependencies={}):Promise<ChannelModelAuthority>{
+  live(deps.signal);
   try{const env=deps.env??process.env,identity=await currentLicense(deps),record=await store(deps,identity.licenseDigest).load();if(!record||record.licenseDigest!==identity.licenseDigest)return {authority:"local",outcome:"unreachable",payload:null};
     const directory=validateDirectory(record.directory,env,(deps.now??(()=>new Date()))());if(directory.sourceChannelRef!==(identity.verdict.channelRef??null))return {authority:"local",outcome:"security_error",payload:null};
+    if((await currentLicense(deps)).licenseDigest!==identity.licenseDigest)return {authority:"local",outcome:"security_error",payload:null};live(deps.signal);
     return {authority:"channel",sourceKind:"model_benefit",modelScope:directory.modelScope,outcome:"configured",scopeId:deriveModelBenefitScopeId(directory),payload:directory.payload,bundleDigest:directory.bundleDigest,managedCredentials:record.managedCredentials};
-  }catch{return {authority:"local",outcome:"security_error",payload:null}}
+  }catch{live(deps.signal);return {authority:"local",outcome:"security_error",payload:null}}
 }
 export async function requestModelBenefitLink(deps:ModelBenefitDependencies={},idempotencyKey?:string){
   const identity=await access(deps),response=await post(deps,identity,"link-session",idempotencyKey);await assertCurrent(deps,identity);return {response,growthOrigin:identity.growthOrigin};

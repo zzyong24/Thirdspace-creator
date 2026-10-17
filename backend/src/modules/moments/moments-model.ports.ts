@@ -7,6 +7,7 @@ import type {MomentsService} from "./moments.service";
 import type {WorkFrozenSource} from "../work-compositions";
 /** 前置协议，不是已装配实现；builder必须绑定传入tx。 */
 export interface MomentsModelPorts{
+ prepareModelAuthority?:(ctx:RequestContext)=>Promise<(tx:Db)=>Promise<void>>;
  moments(tx:Db):Pick<MomentsService,"get"|"save"|"saveReceipt"|"readVersion"|"request">;
  ai(tx:Db):Pick<AiService,"createTask"|"findTaskByAttempt"|"getTask"|"getTaskRuntimeData">;
  readSource(ctx:RequestContext,projectId:string,source:WorkContentSource,tx:Db):Promise<WorkFrozenSource>;

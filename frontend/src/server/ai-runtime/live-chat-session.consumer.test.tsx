@@ -238,3 +238,31 @@ it.each(['turn','scope'])('迟到旧stop不停止新的%s流，也不覆盖其�
  await act(async()=>{streams[1]!.send(frames('succeeded','new-execution').slice(4),true);});
  if(change==='scope'&&!streams[0]!.aborted)await act(async()=>{streams[0]!.send(frames('succeeded').slice(4),true);});
 });
+
+
+it('实际SDK/面板：响应头前停止仅结束观察，原对话和任务中心可核对，不自动重发并可开新轮',async()=>{
+ let firstSignal:AbortSignal|undefined;let calls=0;
+ writeStoredConversationId('project:revisit','known-conversation','group:preheaders-stop');
+ const fetchMock=vi.fn(async(_url:RequestInfo,init:RequestInit)=>{
+  calls++;if(calls===1){firstSignal=init.signal??undefined;return new Promise<Response>((_resolve,reject)=>{init.signal?.addEventListener('abort',()=>reject(new DOMException('本轮观察结束','AbortError')),{once:true})});}
+  return sseResponse('succeeded','new-execution','new-execution');
+ });vi.stubGlobal('fetch',fetchMock);
+ const {mounted,original}=await startConsumer('preheaders-stop');await waitFor(()=>expect(firstSignal).toBeDefined());
+ const progress=screen.getByText('正在准备本轮对话，可停止等待');expect(progress.className).toContain('text-base');
+ const button=screen.getByRole('button',{name:'停止等待'});expect(button.className).toContain('text-base');fireEvent.click(button);
+ await screen.findByText('已停止等待，原请求结果待核对');expect(firstSignal?.aborted).toBe(true);
+ expect(screen.getByRole('link',{name:'核对原任务'})).toHaveAttribute('href','/automations');
+ expect(screen.getByRole('link',{name:'去设置 AI 模型'})).toHaveAttribute('href','/settings?highlight=text-model');
+ expect(screen.getByText('本轮仅停止等待，原请求可能已经建立任务。请先核对原对话或任务中心，再决定是否继续；系统不会自动重发。').className).toContain('text-base');
+ await act(async()=>{await new Promise(resolve=>setTimeout(resolve,650));});expect(calls).toBe(1);
+ expect(readStoredConversationId('project:revisit','group:preheaders-stop')).toBe('known-conversation');expect(original.chat.messages.some(message=>message.role==='user')).toBe(true);
+ fireEvent.change(screen.getByLabelText('我能帮你做什么'),{target:{value:'核对后新的独立请求'}});fireEvent.submit(mounted.container.querySelector('[data-slot="prompt-form"]')!);
+ await waitFor(()=>expect(calls).toBe(2));await waitFor(()=>expect(original.control.currentTaskId()).toBe('new-execution'));
+ expect(screen.queryByText('已停止等待，原请求结果待核对')).toBeNull();mounted.unmount();
+});
+it('实际SDK精确官方等待超时不自动重发，保原消息并交设置/任务中心',async()=>{
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({code:'MODEL_BENEFIT_REFRESH_PENDING',error:'官方模型暂未核对完成，输入已保留。请核对原任务后再继续，或切换自配模型。'},{status:503,headers:{'x-conversation-id':'original-conversation'}})));
+ const {mounted,original}=await startConsumer('foreground-timeout');
+ await screen.findByText('官方模型暂未核对完成');expect(screen.getByRole('link',{name:'核对原任务'})).toHaveAttribute('href','/automations');
+ await act(async()=>{await new Promise(resolve=>setTimeout(resolve,650));});expect(fetch).toHaveBeenCalledTimes(1);expect(original.chat.messages.some(message=>message.role==='user')).toBe(true);mounted.unmount();
+});

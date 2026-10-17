@@ -1383,3 +1383,11 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
     expect(durableSubmit).not.toHaveBeenCalled();
   });
 });
+
+it("普通官方模型短等待返回精确503且不透内部错误，保原会话可回查",async()=>{
+ prepareChatReply.mockRejectedValue(Object.assign(new Error("内部合成内容不能透出"),{code:"MODEL_BENEFIT_REFRESH_PENDING"}));
+ const response=await POST(chatReq({messages:[userMessage("原问题")]},"creatoros_session=tok"));
+ expect(response.status).toBe(503);expect(response.headers.get("x-conversation-id")).toBe("conv-1");
+ expect(await response.json()).toEqual({code:"MODEL_BENEFIT_REFRESH_PENDING",error:"官方模型暂未核对完成，输入已保留。请核对原任务后再继续，或切换自配模型。"});
+ expect(createMessage).toHaveBeenCalledTimes(1);expect(durableSubscribe).not.toHaveBeenCalled();
+});

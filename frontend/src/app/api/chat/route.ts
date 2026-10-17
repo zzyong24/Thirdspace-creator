@@ -646,6 +646,9 @@ export async function POST(req: Request): Promise<Response> {
     if (err instanceof OwnershipError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }
+    if(err && typeof err==="object" && "code" in err && err.code==="MODEL_BENEFIT_REFRESH_PENDING"){
+      return NextResponse.json({code:"MODEL_BENEFIT_REFRESH_PENDING",error:"官方模型暂未核对完成，输入已保留。请核对原任务后再继续，或切换自配模型。"},{status:503,headers:conversationId?{"x-conversation-id":conversationId}:undefined});
+    }
     // 没配 model key(LlmCredentialError)等装配期错误 → 诚实 4xx(不假绿、不静默)。
     // [T-094] 平台类错误(内容审核/限流/配额)先过人话映射,用户拿到能行动的说明。
     const message =

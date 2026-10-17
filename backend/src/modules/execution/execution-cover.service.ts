@@ -19,7 +19,7 @@ import {supportsAssetGenerationMode,referenceImageAllowed,assetGenerationParamet
 import {ConflictError} from "./execution.errors";
 type Call=typeof executionCalls.$inferSelect;
 export interface CoverExecutionPorts {
- resolveImageSpec(ctx:RequestContext,capability:"image.generate"|"image.edit",taskId:string):Promise<unknown>;
+ resolveImageSpec(ctx:RequestContext,capability:"image.generate"|"image.edit",taskId:string,signal?:AbortSignal):Promise<unknown>;
  getReferenceBytes(ctx:RequestContext,assetId:string,assetFileId?:string):Promise<{bytes:Uint8Array;mimeType:string}|null>;
 }
 /** 原模型回执只读回放确定图片输入；无模型请求、无第二账本。 */
@@ -114,7 +114,7 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
       reference={assetId:source.referenceAssetId,...(source.referenceFileId?{assetFileId:source.referenceFileId}:{}),checksum,mimeType:value.mimeType};
     }else if(source.referenceFileId)throw new ConflictError("统一参考的精确文件无法读取，可明确取消参考后重试文生图");
    }
-   const capability=reference?"image.edit":"image.generate",credential=executionAssetCredentialSchema.parse(await deps.resolveImageSpec(initial.context,capability,initial.business.id));signal?.throwIfAborted();
+   const capability=reference?"image.edit":"image.generate",credential=executionAssetCredentialSchema.parse(await deps.resolveImageSpec(initial.context,capability,initial.business.id,signal));signal?.throwIfAborted();
    let value:ReturnType<typeof coverImagePreparationSchema.parse>;
    if("engine" in credential){
     if(referenceBytes&&referenceBytes.byteLength>30*1024*1024)throw new ConflictError('参考图超过原大小限制');
@@ -134,12 +134,12 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
     await scope.tx.update(executionTasks).set({payload:{...state.payload,coverImage:{sourceDigest:state.sourceDigest,value}}}).where(eq(executionTasks.id,scope.task.id));return {status:"prepared" as const,value};
    });
   },
-  async resolveCredential(ctx:RequestContext,owner:{aiTaskId:string;executionTaskId:string}){
+  async resolveCredential(ctx:RequestContext,owner:{aiTaskId:string;executionTaskId:string;signal?:AbortSignal}){
    const [business]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,owner.aiTaskId),eq(aiTasks.executionTaskId,owner.executionTaskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx)));
    const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,owner.executionTaskId),eq(executionTasks.ownerId,owner.aiTaskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
    if(business?.taskType!=="cover.generate"||!execution)throw new ConflictError("封面图片任务不存在");
    const image=coverImagePreparationSchema.parse((execution.payload as {coverImage?:{value?:unknown}}).coverImage?.value);
-   return deps.resolveImageSpec(ctx,image.reference?"image.edit":"image.generate",business.id);
+   return deps.resolveImageSpec(ctx,image.reference?"image.edit":"image.generate",business.id,owner.signal);
   },
   async readReference(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
    const {callId}=workerPortInputSchemas.readCoverReference.parse(raw);

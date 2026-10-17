@@ -33,7 +33,7 @@ function fields(task:Task,legacyPlain=false){
  };
 }
 /** 新调用单向转交；旧素材仅恢复原 provider job 或呈现核对状态，不能重新计费。 */
-export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string):Promise<MultimodalSpec|import("@creatoros/contract/execution-worker").CodexModelSpec>;assertProject(ctx:RequestContext,id:string,tx?:Db,forUpdate?:boolean):Promise<void>;assertCanvasInput?:(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId:string},tx:Db)=>Promise<CanvasProposalAdmission|undefined>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
+export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string,signal?:AbortSignal):Promise<MultimodalSpec|import("@creatoros/contract/execution-worker").CodexModelSpec>;assertProject(ctx:RequestContext,id:string,tx?:Db,forUpdate?:boolean):Promise<void>;assertCanvasInput?:(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId:string},tx:Db)=>Promise<CanvasProposalAdmission|undefined>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
  const controller=new AbortController();
  const authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
@@ -106,7 +106,7 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
    if(task.projectId)await awaitPreparation(()=>deps.assertProject(ctx,task.projectId!),signal);
    let modelInput:import('zod').z.infer<typeof assetGenerationInputSchema>;
    try{
-    const resolved=await awaitPreparation(()=>deps.resolveSpec(ctx,capability,task.id),signal);
+    const resolved=await awaitPreparation(()=>deps.resolveSpec(ctx,capability,task.id,signal),signal);
     const codex="engine" in resolved;
     if(codex&&input.mediaKind!=="image")throw new Error("Codex视频生成能力不属于此合同");
     if(codex){
@@ -171,12 +171,12 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     return prepareLegacyAssetRecovery(db,ctx,original,modelInput,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal:signal!,assertProject:deps.assertProject});
    }
   },
-  async resolveCredential(ctx:RequestContext,owner:{aiTaskId:string;executionTaskId:string}){
+  async resolveCredential(ctx:RequestContext,owner:{aiTaskId:string;executionTaskId:string;signal?:AbortSignal}){
    const [task]=await db.select().from(aiTasks).where(owned(ctx,owner.aiTaskId));
    if(!task || task.executionTaskId!==owner.executionTaskId || task.taskType!=="asset.generate")throw new OwnershipError("素材执行不存在");
    const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,owner.executionTaskId));
    const frozen=assetGenerationInputSchema.parse((execution?.payload as {modelInput?:unknown})?.modelInput);
-   return deps.resolveSpec(ctx,frozen.capability,task.id);
+   return deps.resolveSpec(ctx,frozen.capability,task.id,owner.signal);
   },
   stop(){controller.abort();},
   async recoverQueued(onFailure:(ctx:RequestContext,id:string)=>Promise<void>,shouldStop=()=>false){

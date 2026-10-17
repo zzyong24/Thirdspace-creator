@@ -1,10 +1,10 @@
 import {readFileSync,promises as fsPromises} from "node:fs";
 import {mkdtemp,mkdir,readFile,rm,stat} from "node:fs/promises";
 import {join,resolve} from "node:path";
-import {randomBytes} from "node:crypto";
+import {randomBytes,generateKeyPairSync,sign,createHash} from "node:crypto";
 import {afterEach,describe,expect,it,vi} from "vitest";
 import {refreshClientConfig,readChannelModelAuthority,fulfillActivationIncludedCredit} from "./client-config.server";
-import {EncryptedModelBenefitStore,deriveModelBenefitScopeId,requestModelBenefitLink,type ModelBenefitDependencies} from "./model-benefit.server";
+import {EncryptedModelBenefitStore,deriveModelBenefitScopeId,requestModelBenefitLink,ensureModelBenefitAuthority,type ModelBenefitDependencies} from "./model-benefit.server";
 import {pinModelAuthority} from "../task-model-authority";
 import {createAiCreditPortalLink} from "./ai-credit-link.server";
 
@@ -33,6 +33,24 @@ async function fixture(name="unassigned") {
   const putManagedCredential=vi.fn(async(scope:string,service:string,token:string)=>{puts.set(`${scope}:${service}`,token)});
   const deps:ModelBenefitDependencies={env,fetchImpl,now:()=>now,nonce:()=>am.proofNonce,readVerdict:async()=>({state:"ready" as const,verdict}),modelBenefitStore:store,putManagedCredential};
   return {dir,row,am,env,deps,store,puts,calls,fetchImpl,putManagedCredential,setVerdict:(value:Partial<typeof verdict>)=>{verdict={...verdict,...value}},setNow:(value:Date)=>{now=value}};
+}
+function canonical(value:unknown):string{if(value===null||typeof value!=="object")return JSON.stringify(value);if(Array.isArray(value))return `[${value.map(canonical).join(",")}]`;return `{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonical((value as Record<string,unknown>)[key])}`).join(",")}}`}
+async function retimedFixture(){
+ const f=await fixture(),amKeys=generateKeyPairSync("ed25519"),growthKeys=generateKeyPairSync("ed25519");let clock=new Date(growth.now),offline=false;
+ f.env.CREATOROS_LICENSE_PUBLIC_KEY_B64=amKeys.publicKey.export({format:"der",type:"spki"}).subarray(-32).toString("base64");f.env.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64=growthKeys.publicKey.export({format:"der",type:"spki"}).subarray(-32).toString("base64");
+ const hash=(text:string)=>`sha256:${createHash("sha256").update(text).digest("hex")}`;
+ f.fetchImpl.mockImplementation(async(input,init)=>{
+  if(offline)throw Error("本地合成断网");const path=new URL(String(input)).pathname;f.calls.push(path);
+  const header=JSON.parse(Buffer.from(f.am.modelBenefitProof.split(".")[0],"base64url").toString()),claims=JSON.parse(Buffer.from(f.am.modelBenefitProof.split(".")[1],"base64url").toString());
+  claims.issuedAt=clock.toISOString();claims.expiresAt=new Date(clock.getTime()+300000).toISOString();claims.nonce=f.am.proofNonce;
+  const unsigned=Buffer.from(canonical(header)).toString("base64url")+"."+Buffer.from(canonical(claims)).toString("base64url"),proof=unsigned+"."+sign(null,Buffer.from(unsigned),amKeys.privateKey).toString("base64url");
+  if(path.endsWith("model-benefit-proofs"))return Response.json({contractVersion:"model-benefit-proof-v1",modelBenefitProof:proof},{headers:{"cache-control":"no-store"}});
+  expect(JSON.parse(String(init?.body)).modelBenefitProof).toBe(proof);
+  const row=structuredClone(path.endsWith("directory")?f.row.directory.body:f.row.credentials);row.proofDigest=hash(proof);row.expiresAt=claims.expiresAt;
+  if(path.endsWith("directory")){const semantic={...row};delete semantic.bundleDigest;delete semantic.keyId;delete semantic.signature;row.bundleDigest=hash(canonical(semantic));row.signature=sign(null,Buffer.from(canonical({...semantic,bundleDigest:row.bundleDigest,keyId:row.keyId})),growthKeys.privateKey).toString("base64url")}
+  return Response.json(row,{headers:{"cache-control":"private, no-store"}});
+ });
+ return {...f,advance:(ms:number)=>{clock=new Date(clock.getTime()+ms);f.setNow(clock)},offline:(value:boolean)=>{offline=value}};
 }
 describe("Growth T243真实跨仓DTO消费者（本地合成、非真人UAT）",()=>{
  it("真null经专用proof→实际Growth签名目录→existingOnly Key→真实加密缓存→原路由scope",async()=>{
@@ -104,6 +122,28 @@ describe("Growth T243真实跨仓DTO消费者（本地合成、非真人UAT）",
   else{expect(await readFile(join(f.dir,"cache"))).not.toEqual(before);expect(await f.store.load()).toEqual(changed)}
   await refreshClientConfig(f.deps);expect(await f.store.load()).toEqual(original);
  });
+ it("可控时钟跨5分钟普通后台同步仍同Key；休眠后首操作fresh，断网失败不借过期cache再恢复",async()=>{
+  const f=await retimedFixture(),has=async(scope:string)=>f.puts.has(`${scope}:omnihi-main`);
+  await ensureModelBenefitAuthority(f.deps,has);const first=await readChannelModelAuthority(f.deps);expect(first.authority).toBe("channel");const keys=[...f.puts.values()];
+  for(let i=0;i<3;i++){f.advance(140000);await refreshClientConfig(f.deps);expect(await readChannelModelAuthority(f.deps)).toMatchObject({authority:"channel"})}
+  expect([...f.puts.values()]).toEqual(keys);expect(f.calls.some(path=>path.endsWith("fulfill"))).toBe(false);
+  f.advance(360000);expect(await readChannelModelAuthority(f.deps)).toMatchObject({authority:"local"});f.offline(true);
+  expect(await ensureModelBenefitAuthority(f.deps,has)).toMatchObject({authority:"local",outcome:"unreachable"});expect(await readChannelModelAuthority(f.deps)).toMatchObject({authority:"local"});
+  f.offline(false);expect(await ensureModelBenefitAuthority(f.deps,has)).toMatchObject({authority:"channel"});expect([...f.puts.values()]).toEqual(keys);
+ });
+ it("同identity只共享一次网络快照，各actor/store仍分别写原vault；取消一位不杀其余观察者",async()=>{
+  const f=await fixture(),original=f.fetchImpl.getMockImplementation()!;let entered!:()=>void,release!:()=>void;const reached=new Promise<void>(r=>{entered=r}),gate=new Promise<void>(r=>{release=r});
+  f.fetchImpl.mockImplementation(async(input,init)=>{if(String(input).endsWith("model-benefit-proofs")){entered();await gate}return original(input,init)});
+  const controller=new AbortController(),a=refreshClientConfig({...f.deps,signal:controller.signal}).then(value=>({value,error:null}),error=>({value:null,error}));await reached;
+  const b=await fixture(),bPut=b.putManagedCredential;const second=refreshClientConfig({...f.deps,modelBenefitStore:b.store,putManagedCredential:bPut});await new Promise(r=>setTimeout(r,0));controller.abort();release();
+  expect((await a).error).toMatchObject({name:"AbortError"});expect(await second).toMatchObject({outcome:"configured"});expect(f.calls).toHaveLength(3);expect(f.putManagedCredential).not.toHaveBeenCalled();expect(bPut).toHaveBeenCalledTimes(1);expect(await b.store.load()).not.toBeNull();expect(await f.store.load()).toBeNull();
+ });
+ it("同一网络快照两个事务观察者各自提交，不能把首位未提交的Key当第二位已保存",async()=>{
+  const f=await fixture(),other=await fixture(),original=f.fetchImpl.getMockImplementation()!;let entered!:()=>void,release!:()=>void;const reached=new Promise<void>(r=>{entered=r}),gate=new Promise<void>(r=>{release=r});
+  f.fetchImpl.mockImplementation(async(input,init)=>{if(String(input).endsWith("model-benefit-proofs")){entered();await gate}return original(input,init)});
+  const a=refreshClientConfig(f.deps);await reached;const b=refreshClientConfig({...f.deps,modelBenefitStore:other.store,putManagedCredential:other.putManagedCredential});await new Promise(r=>setTimeout(r,0));release();await Promise.all([a,b]);
+  expect(f.calls).toHaveLength(3);expect(f.putManagedCredential).toHaveBeenCalledTimes(1);expect(other.putManagedCredential).toHaveBeenCalledTimes(1);expect(await f.store.load()).not.toBeNull();expect(await other.store.load()).not.toBeNull();
+ });
  it("null额度中心专用link请求不履约、不带proof URL、保原link DTO",async()=>{
   const f=await fixture(),result=await requestModelBenefitLink(f.deps,"stable-link-test-20261017");expect(await result.response.json()).toEqual(f.row.linkSession);expect(f.calls).toEqual(["/api/license/model-benefit-proofs","/api/client/model-benefits/link-session"]);expect(f.putManagedCredential).not.toHaveBeenCalled();
  });
@@ -113,4 +153,40 @@ describe("Growth T243真实跨仓DTO消费者（本地合成、非真人UAT）",
   const target=new URL(result.openUrl);expect(target.origin).toBe(new URL(f.row.linkSession.verificationUrl).origin);expect(target.pathname).toBe("/credits/connect");expect(target.hash).toBe(`#${f.row.linkSession.userCode}`);expect(target.search).toBe("");
   expect(result.openUrl).not.toContain(f.am.modelBenefitProof);expect(f.calls).toEqual(["/api/license/model-benefit-proofs","/api/client/model-benefits/link-session"]);
  });
+});
+
+it('全部观察者取消立即释放原网络航班，新操作可恢复且旧请求不落Key',async()=>{
+ const f=await fixture(),a=new AbortController(),b=new AbortController(),original=f.fetchImpl.getMockImplementation()!;
+ let release!:()=>void,reached!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve}),atFetch=new Promise<void>(resolve=>{reached=resolve});let first=true;
+ f.fetchImpl.mockImplementation(async(input,init)=>{if(first){first=false;reached();await gate;}return original(input,init);});
+ const left=refreshClientConfig({...f.deps,signal:a.signal}),right=refreshClientConfig({...f.deps,signal:b.signal});
+ const outcomes=Promise.allSettled([left,right]);await atFetch;a.abort();b.abort();expect((await outcomes).every(value=>value.status==='rejected')).toBe(true);
+ const restored=refreshClientConfig(f.deps);release();expect(await restored).toMatchObject({outcome:'configured'});expect(f.putManagedCredential).toHaveBeenCalledTimes(1);
+});
+it('有效cache的vault检查迟到且已切授权，ensure拒绝原Key不提交或借另一scope',async()=>{
+ const f=await fixture();await refreshClientConfig(f.deps);let release!:()=>void,reached!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve}),atVault=new Promise<void>(resolve=>{reached=resolve});
+ const pending=ensureModelBenefitAuthority(f.deps,async()=>{reached();await gate;return true;});await atVault;f.setVerdict({channelRef:'other-valid-channel'});release();
+ await expect(pending).rejects.toMatchObject({code:'MODEL_ROUTE_IDENTITY_CHANGED'});expect(f.calls).toHaveLength(3);expect(f.putManagedCredential).toHaveBeenCalledTimes(1);
+});
+
+
+it("普通任务fresh观察总120秒，后台同flight不续截止且可继续，未落迟到Key",async()=>{
+ const f=await retimedFixture();let release!:(response:Response)=>void;let reached!:()=>void;const entered=new Promise<void>(resolve=>{reached=resolve});
+ const original=f.fetchImpl.getMockImplementation()!;let first=true;
+ f.fetchImpl.mockImplementation(async(input,init)=>{const response=await original(input,init);if(first){first=false;reached();await new Promise<Response>(resolve=>{release=()=>resolve(response)});}return response});
+ const background=refreshClientConfig(f.deps);await entered;
+ vi.useFakeTimers();try{
+  let result:unknown="pending";
+  const ordinary=ensureModelBenefitAuthority(f.deps,async scope=>f.puts.has(`${scope}:omnihi-main`)).then(value=>{result=value},error=>{result=error});
+  // real IO读取完缓存后才推进观察计时；短微任务不依赖fake FS。
+  for(let i=0;i<20;i++)await Promise.resolve();
+  await vi.advanceTimersByTimeAsync(120000);
+  expect(result).toMatchObject({code:"MODEL_BENEFIT_REFRESH_PENDING"});expect(f.putManagedCredential).not.toHaveBeenCalled();
+  release(new Response());await background;await ordinary;expect(f.putManagedCredential).toHaveBeenCalledTimes(1);
+ }finally{vi.useRealTimers();release?.(new Response());await background.catch(()=>undefined)}
+});
+
+it("已有未过期cache及原actor Key立即复用，普通操作零官方请求",async()=>{
+ const f=await retimedFixture();await refreshClientConfig(f.deps);const count=f.calls.length;
+ expect(await ensureModelBenefitAuthority(f.deps,async scope=>f.puts.has(`${scope}:omnihi-main`))).toMatchObject({authority:"channel"});expect(f.calls).toHaveLength(count);
 });

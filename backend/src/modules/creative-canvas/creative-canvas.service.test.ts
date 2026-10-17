@@ -324,3 +324,16 @@ it('T1141 已存在省略比例的旧预约仍严格回放原输入，未采用�
  await expect(db.transaction(tx=>s.reserveGenerationInTransaction(c,created.id,'legacy-ratio',{expectedRevision:changed.revision,attemptId:'legacy-ratio-attempt',snapshot:oldSnapshot},tx as unknown as Db))).rejects.toThrow('重新准备生成候选');
  expect((await db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.id,'legacy-ratio-link')))[0]).toEqual(before);
 });
+
+
+it('官方短签休眠后从画布公开入口锁前恢复，事务内只复核且失效不留预约',async()=>{
+ const events:string[]=[];let expired=false;
+ const s=service({prepareModelAuthority:async(_c,capability)=>{events.push(`fresh:${capability}`);return async tx=>{expect(tx).not.toBe(db);events.push('check');if(expired)throw Error('授权已变化');};},resolveCapability:async()=>{events.push('resolve');return{provider:'minimax',model:'image-01'};}});
+ const c=ctx('account-a'),created=await s.create(c,{title:'锁前恢复'}),saved=await s.save(c,created.id,{expectedRevision:1,document:doc([imageNode('renew-image')])});
+ const before=await s.listTasks(c,created.id);
+ await s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:'renew-image'});
+ expect(events).toEqual(['fresh:image.generate','check','resolve','check']);
+ events.length=0;expired=true;
+ await expect(s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:'renew-image'})).rejects.toThrow('授权已变化');
+ expect(events).toEqual(['fresh:image.generate','check']);expect(await s.listTasks(c,created.id)).toEqual(before);
+});

@@ -71,6 +71,7 @@ export type PersistentTaskCommand = "pause" | "resume" | "cancel" | "retry";
 type TaskRow = typeof executionTasks.$inferSelect;
 
 export interface PersistentTaskServiceDeps {
+ prepareModelAuthority?(ctx:RequestContext,input:EnqueuePersistentTaskInput):Promise<((tx:Db)=>Promise<void>)|undefined>;
   /** 私有同store根快照；已有payload/可信父优先，重放不捕获当前选择。 */
   resolveRootExecutionRoute?(ctx:RequestContext,input:EnqueuePersistentTaskInput,tx:Db):Promise<ExecutionRoute>;
   observeSettlement?: (event:{taskId:string;userId:string;attempt:number;kind:string;status:string;occurredAt:string})=>Promise<void>;
@@ -377,6 +378,9 @@ export function createPersistentTaskService(
     async readObservabilityLedger(ctx,cursor){return (await db.execute(sql`SELECT id,user_id,kind,status,attempt,created_at,updated_at FROM execution_tasks WHERE user_id=${ctx.userId} AND (updated_at>${cursor.updatedAt} OR (updated_at=${cursor.updatedAt} AND id>${cursor.taskId})) ORDER BY updated_at,id LIMIT 100`)).rows as Array<{id:string;user_id:string;kind:string;status:string;attempt:number;created_at:string;updated_at:string}>;},
     async enqueue(ctx, input) {
       requireWorkspace(ctx);
+      // 精确重放与可信父路由无需捕获当前模型；只在无路由的新根进行锁前准备。
+      const priorRoot=await db.select({id:executionTasks.id}).from(executionTasks).where(and(eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx),eq(executionTasks.kind,input.kind),eq(executionTasks.idempotencyKey,input.idempotencyKey))).limit(1);
+      const checkModelAuthority=!priorRoot.length&&!input.modelRouteParent&&input.payload.executionRoute===undefined?await deps.prepareModelAuthority?.(ctx,input):undefined;
       return db.transaction(async tx => {
       const jobPayload=input.payload.job as {id?:string;sourceKind?:string}|undefined;
       const privateAdmission=input.kind==="automation_sync"&&input.ownerType==="scheduled_job"&&ctx.source==="ingestion"&&!!ctx.groupId&&!!ctx.accountId&&jobPayload?.id===input.ownerId&&PRIVATE_COLLECTION_SOURCE_KINDS.has(jobPayload?.sourceKind??"");
@@ -448,9 +452,11 @@ export function createPersistentTaskService(
         if(input.payload.executionRoute!==undefined&&stableJson(input.payload.executionRoute)!==stableJson(executionRoute))throw new ConflictError('指定路由与原父执行不符');
       }
       if(!executionRoute){
+        await checkModelAuthority?.(tx as unknown as Db);
         if(deps.resolveRootExecutionRoute)executionRoute=frozenExecutionRoute({executionRoute:await deps.resolveRootExecutionRoute(ctx,input,tx as unknown as Db)});
         else{const [preference]=await tx.select().from(userPreferences).where(eq(userPreferences.userId,ctx.userId));executionRoute=createExecutionRoute(preference?.assistantExecutionEngine==='codex'?'codex':'pi');}
       }
+      await checkModelAuthority?.(tx as unknown as Db);
       const row = {
         executionBudget,
         deadlineAt: executionBudget === null ? null : newExecutionBudgetDeadline(executionBudget, stamp),

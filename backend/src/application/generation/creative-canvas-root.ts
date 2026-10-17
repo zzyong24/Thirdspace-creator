@@ -10,6 +10,7 @@ import {readCommittedGeneratedAssetFile} from '@creatoros/backend/modules/assets
 import {createExecutionCandidateService,type ExecutionCandidateDeps} from '../../modules/ai/execution-candidate.service';
 import {createAiTaskSubmissionService} from '../../modules/ai/ai-task-submission.service';
 export interface CreativeCanvasRootPorts {
+ prepareModelAuthority?:Parameters<typeof createCreativeCanvasService>[1]["prepareModelAuthority"];
  /** 原AI owner，runtime resolver也必须绑定传入store，不捕获root Settings repo。 */
  ai(store:Db):Pick<AiService,'createTask'|'findTaskByAttempt'|'getTask'|'listResults'|'getAssetResultProof'>;
  assets(store:Db):Pick<AssetsService,'getAsset'|'readMediaFile'|'readImageReference'|'getAssetFileDownloadUrl'>;
@@ -35,7 +36,7 @@ export function createCreativeCanvasRoot(db:Db,deps:{now:()=>string},ports:Creat
   readTaskResults:(c,id,tx=db)=>ports.ai(tx).listResults(c,id),
   getCommittedAssetResult:(c,input,tx)=>proofFor(tx).getCommittedAssetResult(c,input),
   submitTask:async(c,input)=>{const ai=ports.ai(db),submissions=createAiTaskSubmissionService({findTaskByAttempt:ai.findTaskByAttempt,submit:ai.createTask}),task=await submissions.submit(c,{taskType:'asset.generate',attemptId:input.attemptId,inputData:input.inputData});await ports.wake(c,task.id);return{id:task.id};},
-  resolveCapability:ports.resolveCapability,
+  resolveCapability:ports.resolveCapability,prepareModelAuthority:ports.prepareModelAuthority,
   assertProposalAdmission:ports.assertProposalAdmission,
   resolveTemplateRequirement:ports.resolveTemplateRequirement,
   findTaskByAttempt:(c,attempt)=>ports.ai(db).findTaskByAttempt(c,"asset.generate",attempt),
@@ -43,6 +44,7 @@ export function createCreativeCanvasRoot(db:Db,deps:{now:()=>string},ports:Creat
  const generation=ports.assetLimit?{
   assetLimit:canvasAssetLimitSchema.parse(ports.assetLimit),
   prepare:service.prepareGenerateProposal,
+  prepareModelAuthority:service.prepareGenerationModelAuthority,
   reserve:service.reserveGenerationInTransaction,
   attach:service.attachReservedTaskInTransaction,
   async createTask(ctx:RequestContext,input:{attemptId:string;inputData:CanvasTaskInput},store:Db){

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   extractChatApiPublicError,
+  isModelBenefitRefreshPending,
   isTerminalScriptSelectionError,
 } from "./chat-api-error";
 
@@ -70,4 +71,10 @@ describe("[T-716] Copilot 附件错误提示", () => {
     ).toBeNull();
     expect(extractChatApiPublicError(new Error("ECONNREFUSED 127.0.0.1"))).toBeNull();
   });
+});
+
+it("官方短等待仅精确code暂停自动重发，不以未知文字判任务状态",()=>{
+ expect(isModelBenefitRefreshPending(new Error(JSON.stringify({code:"MODEL_BENEFIT_REFRESH_PENDING",error:"本地安全提示"})))).toBe(true);
+ expect(isModelBenefitRefreshPending(new Error("MODEL_BENEFIT_REFRESH_PENDING"))).toBe(false);
+ expect(isModelBenefitRefreshPending(new Error(JSON.stringify({code:["MODEL_BENEFIT_REFRESH_PENDING"]})))).toBe(false);
 });

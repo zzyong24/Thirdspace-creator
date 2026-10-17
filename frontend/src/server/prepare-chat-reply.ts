@@ -41,7 +41,8 @@ export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,
    for(const a of attachments)if(a.extractedText?.trim())sources.push({ref:`attachment:${a.assetId}`,label:`文本附件：${a.name}`,text:a.extractedText,truncated:false,sourceType:"attachment",sourceId:a.assetId});
  }
  // 元数据只捕获一次；只在最终实际capability已知后冻结主route。
- const routing=await runtime.prepareChatRouting?.(owner,{mode:uiMessageMode(messages),executionEngine:input?.executionEngine,legacyExecutionEngine:input?.legacyExecutionEngine});
+ const routingInput={mode:uiMessageMode(messages),executionEngine:input?.executionEngine,legacyExecutionEngine:input?.legacyExecutionEngine};
+ const routing=input?.abortSignal?await runtime.prepareChatRouting?.(owner,routingInput,input.abortSignal):await runtime.prepareChatRouting?.(owner,routingInput);
  const initialEngine=routing?.executionEngine??input?.executionEngine??"pi";
  const skillSnapshot=await runtime.resolveEffectiveSkillSnapshot(owner,[...requiredSkillIdsForTask("chat.sync",{surface:chatContext.surface}),"topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill"]);
  const workbenchHost=(runtime.durable as (ChatRuntime["durable"] & {workbenchHost?:{catalog:readonly WorkbenchCapability[];platform:WorkbenchCapability["platforms"][number];capabilities:readonly string[];dispatch:Function}}) | undefined)?.workbenchHost;

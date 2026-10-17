@@ -9,6 +9,8 @@ import {workReviewStatus as workReviewStatusV2} from "@creatoros/contract";
 class Conflict extends Error{readonly code=ErrorCode.ConflictError;}
 export interface WorkReviewTask {id:string;taskType:string;attemptId:string;inputData:Record<string,unknown>;status:string;runtimeStatus?:string;executionTaskId?:string;errorCode?:string|null;errorMessage?:string|null;}
 export interface WorkReviewPorts {
+ /** 网络准备在正式业务锁前；返回值在本事务只读核对原授权。 */
+ prepareModelAuthority?:(ctx:RequestContext)=>Promise<(tx:Db)=>Promise<void>>;
  /** 先锁项目后组合；forUpdate只在同一tx内有效。get/report历史只验组合归属。 */
  assertComposition(ctx:RequestContext,id:string,tx:Db,forUpdate?:boolean):Promise<{projectId:string}>;
  /** 锁当前原owner后读精确field值、明确依赖摘录/fileHash/ruleValue，不猜语义或血缘。 */
@@ -73,8 +75,11 @@ export function createWorkReviewsService(deps:{db:Db;now:()=>string;nextId:(pref
    });
    const pending=await row(ctx,reportId);
    const original:RequestContext={...ctx,userId:pending.userId,accountId:pending.accountId,groupId:pending.groupId,groupVersion:pending.groupVersion??undefined,membershipVersion:pending.membershipVersion??undefined};
+   const existingTask=pending.taskId?await ports.readTask(original,pending.taskId,db):await ports.findTaskByAttempt(original,pending.attemptId,db);
+   const checkModelAuthority=existingTask?undefined:await ports.prepareModelAuthority?.(original);
    const taskId=await db.transaction(async outer=>{await lockWorkspaceMembership(outer,original);return withWorkspaceWrite(outer,ctx,async tx=>{await ports.assertComposition(ctx,input.scope.compositionId,tx,true);const report=await row(ctx,reportId,tx,true);if(report.accountId!==pending.accountId||report.groupId!==pending.groupId||report.groupVersion!==pending.groupVersion||report.membershipVersion!==pending.membershipVersion||report.attemptId!==pending.attemptId||canonical(report.snapshot)!==canonical(pending.snapshot))throw new Conflict("原审核冻结身份在预约后改变");if(report.taskId)return report.taskId;
-    const snapshot=workReviewReport.shape.snapshot.parse(report.snapshot),task=await ports.findTaskByAttempt(original,report.attemptId,tx)??await ports.submitTask(original,{reportId,projectId:report.projectId,attemptId:report.attemptId,fingerprint:snapshot.fingerprint},tx);originalTask(report,task);
+    await checkModelAuthority?.(tx as unknown as Db);
+    const snapshot=workReviewReport.shape.snapshot.parse(report.snapshot),task=await ports.findTaskByAttempt(original,report.attemptId,tx)??await ports.submitTask(original,{reportId,projectId:report.projectId,attemptId:report.attemptId,fingerprint:snapshot.fingerprint},tx);originalTask(report,task);await checkModelAuthority?.(tx as unknown as Db);
     await tx.update(workReviewReports).set({taskId:task.id,executionTaskId:task.executionTaskId??null}).where(reportWhere(ctx,reportId));await tx.update(workReviewRequests).set({status:"committed"}).where(await requestIdentity(tx,ctx,input.clientRequestId));return task.id;
    });});
    const task=await ports.readTask(ctx,taskId,db);if(!["succeeded","failed","cancelled"].includes(task.status))await ports.wakeTask(ctx,taskId);return get(ctx,reportId);

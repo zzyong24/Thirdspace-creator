@@ -434,3 +434,14 @@ it('默认路由冻结不破坏原入队幂等；切偏好保持原任务，显�
   await expect(service.enqueue(ctxA,{...input,payload:{...input.payload,executionRoute:createExecutionRoute('codex')}})).rejects.toMatchObject({name:'ConflictError'});
  }finally{await client.close();}
 },180000);
+
+it('持久模型新根在事务前prepare，事务内只核；重放和显式冻结不调用新prepare',async()=>{
+ const {db,client}=await createDb();const events:string[]=[];let allow=false;
+ const service=createPersistentTaskService(db,{prepareModelAuthority:async()=>{events.push('fresh');return async tx=>{expect(tx).not.toBe(db);events.push('check');if(!allow)throw Error('合成授权变化');};}});
+ const input={kind:'topic_preview' as const,ownerType:'transform' as const,ownerId:'renew-owner',idempotencyKey:'renew-preflight',payload:{}};
+ try{
+  await expect(service.enqueue(ctxA,input)).rejects.toThrow('合成授权变化');expect(await db.select().from(executionTasks)).toHaveLength(0);expect(events).toEqual(['fresh','check']);
+  allow=true;const first=await service.enqueue(ctxA,input);expect((await service.enqueue(ctxA,input)).id).toBe(first.id);expect(events).toEqual(['fresh','check','fresh','check','check']);
+  await service.enqueue(ctxA,{...input,idempotencyKey:'known-route',payload:{executionRoute:createExecutionRoute('pi')}});expect(events).toEqual(['fresh','check','fresh','check','check']);
+ }finally{await client.close();}
+},180000);

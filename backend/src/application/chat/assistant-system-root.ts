@@ -245,7 +245,7 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
   const context=verified.hostContext.chatContext,snapshot=candidate.snapshot;
   if(context.surface!=='canvas'||context.selection?.kind!=='canvas'||context.selection.ids.length!==1||context.selection.ids[0]!==snapshot.canvasId||snapshot.sourceExecutionTaskId!==verified.executionTask.id||snapshot.parentDeadlineAt!==verified.executionTask.deadlineAt)throw new ConflictError('生图候选缺少原单画布与父任务证明');
  }
- function buildAdoption(confirmation?:{canvasId:string;nodeId:string;confirmedAt:string}){return createAssistantActionAdoptionService(db,{source,now:deps.now,
+ function buildAdoption(confirmation?:{canvasId:string;nodeId:string;confirmedAt:string;checkModelAuthority?:((tx:Db)=>Promise<void>)}){return createAssistantActionAdoptionService(db,{source,now:deps.now,
   async resolveScope(ctx,verified){if(verified.toolName!=='system.action.propose')return ctx;const candidate=assistantActionCandidateSchema.parse({...verified.candidate,source:verified.source});return await actionOwner(candidate.request.action).resolveScope?.(ctx,candidate.request.action,candidate.observations)??ctx;},
   async apply(ctx,verified,tx){
    if(verified.toolName==='canvas.create.propose'){
@@ -262,8 +262,10 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
     const admission=canvasProposalAdmissionSchema.parse({source:verified.source,sourceExecutionTaskId:verified.executionTask.id,confirmedAt:confirmation.confirmedAt,deadlineAt,assetLimit:snapshot.assetLimit});
     if(Date.parse(deps.now())>=Date.parse(deadlineAt))throw new ConflictError('原生成确认期限已耗尽');
     const attemptId=`canvas-proposal:${verified.source.callId}`;
+    await confirmation.checkModelAuthority?.(tx as unknown as Db);
     const reserved=await ports.generation.reserve(ctx,snapshot.canvasId,candidate.request.nodeId,{expectedRevision:candidate.request.baseRevision,attemptId,snapshot,proposalAdmission:admission},tx as unknown as Db);
     const task=await ports.generation.createTask(reserved.context,{attemptId,inputData:reserved.inputData},tx as unknown as Db);
+    await confirmation.checkModelAuthority?.(tx as unknown as Db);
     if(Date.parse(task.requestedAt)>=Date.parse(deadlineAt)||Date.parse(deps.now())>=Date.parse(deadlineAt))throw new ConflictError('原生成确认期限已耗尽');
     const generated=await ports.generation.attach(ctx,reserved.link.id,task.id,tx as unknown as Db);
     return {status:'accepted',operationId:'canvas.node.generate',result:generated,afterCommit:()=>ports.generation!.wake(reserved.context,task.id),assertBeforeCommit:async()=>{if(Date.parse(deps.now())>=Date.parse(deadlineAt))throw new ConflictError('原生成确认期限已耗尽');}};
@@ -376,7 +378,16 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
    if(verified.toolName!=='canvas.generate.propose')throw new ConflictError('请确认原画布生成候选');
    const candidate=canvasGenerateCandidateSchema.parse({...verified.candidate,source:verified.source});
    if(candidate.snapshot.canvasId!==canvasId||candidate.request.nodeId!==nodeId)throw new ConflictError('确认目标与原画布节点不符');
-   return buildAdoption({canvasId,nodeId,confirmedAt}).adopt(ctx,raw);
+   // 已提交回执沿原锁内重放，不以当前节点/新模型配置阻断已有结果。
+   if((await adoption.receipt(ctx,raw)).receipt)return buildAdoption({canvasId,nodeId,confirmedAt}).adopt(ctx,raw);
+   let checkModelAuthority:((tx:Db)=>Promise<void>)|undefined;
+   try{checkModelAuthority=await ports.generation?.prepareModelAuthority?.(ctx,canvasId,nodeId,candidate.snapshot.inputRevision);}
+   catch(error){
+    // 准备期间另一同源请求可能已经完成；仍由原adopt锁内核原回执，不重发任务。
+    if(!(await adoption.receipt(ctx,raw)).receipt)throw error;
+    return buildAdoption({canvasId,nodeId,confirmedAt}).adopt(ctx,raw);
+   }
+   return buildAdoption({canvasId,nodeId,confirmedAt,checkModelAuthority}).adopt(ctx,raw);
   },
   /** 原Canvas/asset准备端口；所有来源和采用回执读取都绑定调用方store。 */
   async assertGenerationAdmission(ctx:RequestContext,input:{attemptId:string;inputData:import('../../modules/creative-canvas/creative-canvas.service').CanvasTaskInput;taskId:string;generationLinkId:string},store:Db){

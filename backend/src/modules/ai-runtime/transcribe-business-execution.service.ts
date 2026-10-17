@@ -41,7 +41,7 @@ export function transcribeConfiguration(spec:MultimodalSpec):TranscribeConfigura
 }
 function ids(task:Task){const input=task.inputData as Record<string,unknown>;return Array.isArray(input.awemeIds)?input.awemeIds:typeof input.awemeId==='string'?[input.awemeId]:[];}
 /** 只有没有旧执行事实的任务才转交；配置读取在事务外，提交时重新核对原任务。 */
-export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,owner:TranscribeModelOwner):Promise<MultimodalSpec>}){
+export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,owner:TranscribeModelOwner,signal?:AbortSignal):Promise<MultimodalSpec>}){
  const controller=new AbortController(),authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
  async function legacy(tx:Pick<Db,'select'>,task:Task){
@@ -56,7 +56,7 @@ export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:Boun
    if(task.executionTaskId){const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId));const frozen=transcribeTaskInputSchema.parse((execution?.payload as Record<string,unknown>)?.modelInput);if(!isDeepStrictEqual(frozen.awemeIds,ids(task)))throw new Error('转写原作品输入已改变');abort.throwIfAborted();return authority.bindAiTask(ctx,task.id);}
    if(task.status!=='queued'||task.leaseOwner||task.leaseToken||task.modelCallStartedAt)throw new Error('转写任务已开始，须沿原执行恢复');
    if(await legacy(db,task))return {legacy:true};
-   const spec=await awaitPreparation(()=>deps.resolveSpec(ctx,{aiTaskId:task.id}),abort);
+   const spec=await awaitPreparation(()=>deps.resolveSpec(ctx,{aiTaskId:task.id},abort),abort);
    const modelInput=transcribeTaskInputSchema.parse({kind:'transcribe.douyin',awemeIds:ids(task),language:'zh',configuration:transcribeConfiguration(spec)});
    // 批量转写按已授权作品数预留识别/后处理额度，不共用一次文本生成的6次调用上限。
    // 只在首次绑定时冻结，恢复不扩大原任务预算或期限。

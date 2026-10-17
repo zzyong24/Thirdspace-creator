@@ -239,6 +239,7 @@ import {
 } from "./copilot-attachment-picker";
 import {
   extractChatApiPublicError,
+  isModelBenefitRefreshPending,
   isTerminalScriptSelectionError,
 } from "./chat-api-error";
 
@@ -1249,6 +1250,7 @@ export function AICopilotContent({
       setConversationId(liveSession.conversationId);
     }
   }, [liveSession, messages, status]);
+  const [stoppedObservation,setStoppedObservation]=React.useState<{session:typeof liveSession;epoch:number}|null>(null);
   const stopTask=async()=>{
     if(stopPending)return;
     const session=liveSessionRef.current,epoch=session.epoch;
@@ -1256,7 +1258,10 @@ export function AICopilotContent({
     setPendingStop(intent);
     try{
       const accepted=await session.control.cancel();
-      if(accepted&&session.epoch===epoch&&session.control.turnKey===undefined)session.chat.stop();
+      if(accepted&&session.epoch===epoch&&session.control.turnKey===undefined){
+        if(session.control.stopOutcome==="waiting_stopped"&&liveSessionRef.current===session){setStoppedObservation({session,epoch});setComposerLifecycleError("原请求提交结果尚待确认");}
+        session.chat.stop();
+      }
     }catch{
       if(liveSessionRef.current===session&&session.epoch===epoch&&session.control.turnKey===intent.turnKey)setComposerLifecycleError("停止请求尚未确认，请重试停止，或到任务中心核对原任务。");
     }finally{setPendingStop(current=>current===intent?null:current);}
@@ -1361,8 +1366,14 @@ export function AICopilotContent({
   const receiptForRecovery=preparedReceipt.current;
   const chatError = React.useMemo<{
     title:string;message:string;suggestSwitchModel:boolean;suggestOpenCredits:boolean;suggestOpenPositioning:boolean;
-    suggestOpenEngine?:boolean;suggestOpenWorkspace?:boolean;canRetry:boolean;autoRecover:boolean;retryLabel?:string;retryDisabled?:boolean;canRetryWithoutMessages?:boolean;
+    suggestOpenEngine?:boolean;suggestOpenWorkspace?:boolean;suggestInspectTasks?:boolean;canRetry:boolean;autoRecover:boolean;retryLabel?:string;retryDisabled?:boolean;canRetryWithoutMessages?:boolean;
   }|null>(() => {
+    const waitingStopped=stoppedObservation?.session===liveSession&&stoppedObservation.epoch===liveSession.epoch&&liveSession.control.stopOutcome==="waiting_stopped";
+    if(waitingStopped||isModelBenefitRefreshPending(error))return {
+      title:waitingStopped?"已停止等待，原请求结果待核对":"官方模型暂未核对完成",
+      message:waitingStopped?"本轮仅停止等待，原请求可能已经建立任务。请先核对原对话或任务中心，再决定是否继续；系统不会自动重发。":"刚才输入和原对话已保留。请先核对原任务，再决定是否继续；也可以切换自配模型。系统不会自动重发。",
+      suggestSwitchModel:true,suggestInspectTasks:true,suggestOpenCredits:false,suggestOpenPositioning:false,canRetry:false,autoRecover:false,
+    };
     if (!error && !composerLifecycleError) return null;
     if(composerLifecycleError&&currentSubmissionAttempt&&!currentSubmissionAttempt.networkStarted&&currentSubmissionAttempt.preparationFailure){
       if(currentSubmissionAttempt.preparationFailure==="workspace_required"){
@@ -1483,6 +1494,7 @@ export function AICopilotContent({
       autoRecover,
     };
   }, [
+    stoppedObservation,liveSession,
     composerLifecycleError,
     currentSubmissionAttempt,
     hasCreationWorkspace,
@@ -3421,13 +3433,14 @@ export function AICopilotContent({
                   role="alert"
                   className="flex w-full max-w-[440px] flex-col gap-2 self-start rounded-xl border border-border bg-surface px-3.5 py-3 shadow-sm"
                 >
-                  <strong className="text-[13px] font-semibold text-foreground">
+                  <strong className="text-base font-semibold text-foreground">
                     {chatError.title}
                   </strong>
-                  <span className="text-[12px] leading-relaxed text-muted-foreground">
+                  <span className="text-base leading-relaxed text-muted-foreground">
                     {chatError.message}
                   </span>
                   <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                    {chatError.suggestInspectTasks?<Link href="/automations" data-slot="copilot-error-task-center-link" className="inline-flex min-h-10 items-center rounded-md border border-border px-3 text-base font-medium">核对原任务</Link>:null}
                     {chatError.suggestOpenWorkspace ? <Link href="/accounts" onClick={preserveWorkspaceReturnDraft} data-slot="copilot-error-workspace-link" className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white">选择或创建账号组</Link> : null}
                     {chatError.suggestOpenEngine ? (
                       <Link
@@ -3442,7 +3455,7 @@ export function AICopilotContent({
                       <Link
                         href="/settings?highlight=text-model"
                         data-slot="copilot-error-settings-link"
-                        className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                        className="inline-flex min-h-10 items-center rounded-md bg-brand px-3 text-base font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       >
                         去设置 AI 模型
                       </Link>
@@ -3506,10 +3519,10 @@ export function AICopilotContent({
                 <li
                   data-slot="copilot-thinking"
                   aria-live="polite"
-                  className="flex items-center gap-1.5 self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-xs text-muted-foreground"
+                  className="flex items-center gap-1.5 self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-base text-muted-foreground"
                 >
                   <span className="size-3 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-                  编导思考中…
+                  {status==="submitted"?"正在准备本轮对话，可停止等待":"编导思考中…"}
                 </li>
               ) : null}
             </ol>
@@ -3651,14 +3664,14 @@ export function AICopilotContent({
                     disabled={stopPending}
                     data-slot="prompt-stop"
                     data-testid="stop-button"
-                    aria-label="停止生成"
-                    className="flex size-9 items-center justify-center rounded-full border border-border bg-surface text-foreground transition-colors hover:bg-surface-muted focus:outline-none"
+                    aria-label={status==="submitted"&&!liveSession.control.currentTaskId()?"停止等待":"停止生成"}
+                    className="flex min-h-10 gap-2 px-3 text-base items-center justify-center rounded-full border border-border bg-surface text-foreground transition-colors hover:bg-surface-muted focus:outline-none"
                   >
                     <span
                       className="size-3 rounded-[2px] bg-foreground"
                       aria-hidden="true"
                     />
-                    <span className="sr-only">停止</span>
+                    <span>{status==="submitted"&&!liveSession.control.currentTaskId()?"停止等待":"停止生成"}</span>
                   </button>
                 ) : (
                   <button

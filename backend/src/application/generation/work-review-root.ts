@@ -9,6 +9,7 @@ import type {createWorkSourceService} from '../../modules/work-compositions/work
 import {createWorkReviewReader,type ReviewOwners} from '@creatoros/backend/modules/review';
 import {createProductionReviewFiles,type FrozenProductionFilePort} from '../../modules/review/production-review-files';
 export interface WorkReviewRootPorts {
+ prepareModelAuthority?:(ctx:RequestContext)=>Promise<(tx:Db)=>Promise<void>>;
  /** 同tx原owner；不能捕获root db。本工厂不创建第二AI队列。 */
  owners(tx:Db):ReviewOwners;
  artifacts(tx:Db):Pick<ArtifactsService,'getArtifact'>;
@@ -36,7 +37,7 @@ export function createWorkReviewRoot(db:Db,deps:{now:()=>string;nextId:(prefix:s
   readRule:(ctx,ref,tx)=>ports.positioning(tx).getStatement(ctx,ref.versionId),
   productionFiles:createProductionReviewFiles(ports.frozenProductionFiles),
  });
- const service=createWorkReviewsService({db,...deps,ports:{...createWorkReviewTaskPorts(ports.ai,ports.wake),readCurrent,
+ const service=createWorkReviewsService({db,...deps,ports:{...createWorkReviewTaskPorts(ports.ai,ports.wake),readCurrent,prepareModelAuthority:ports.prepareModelAuthority,
   async assertComposition(ctx,id,tx,forUpdate=false){const owner=ports.owners(tx).compositions;await owner.assertCompositionOwned(ctx,id,forUpdate);return{projectId:(await owner.get(ctx,id)).projectId};}
  }});
  return {service,readCurrent,transport:createWorkReviewsTransport(()=>service),opIds:WORK_REVIEW_OP_IDS,

@@ -143,3 +143,15 @@ it.each(['same-group','moved','no-member'] as const)('T1062旧targetId空预约�
   expect(await f.db.select().from(executionCalls)).toHaveLength(0);
  }finally{await f.opened.client.close();}
 },180000);
+
+it('朋友圈短签锁前准备失败可重试，锁内授权变化不留候选，原task重放不等待新fresh',async()=>{
+ const f=await fixture();const events:string[]=[];let changed=true;
+ try{
+  f.ports.prepareModelAuthority=async()=>{events.push('fresh');return async tx=>{expect(tx).not.toBe(f.db);events.push('check');if(changed)throw Error('合成授权已变化');};};
+  await expect(f.service.generate(ctx,f.target.momentsId,f.input)).rejects.toThrow('合成授权已变化');
+  expect(events).toEqual(['fresh','check']);expect(await f.db.select().from(momentsCandidates)).toHaveLength(0);expect(await f.db.select().from(aiTasks)).toHaveLength(0);
+  changed=false;const first=await f.service.generate(ctx,f.target.momentsId,f.input);expect(first.taskId).toBeTruthy();
+  f.ports.prepareModelAuthority=async()=>{throw Error('原task重放不应捕获新来源');};
+  expect((await f.service.generate(ctx,f.target.momentsId,f.input)).taskId).toBe(first.taskId);
+ }finally{await f.opened.client.close();}
+});

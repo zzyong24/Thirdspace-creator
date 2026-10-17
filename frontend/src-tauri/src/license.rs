@@ -2624,10 +2624,23 @@ fn client_config_pull_enabled() -> bool {
     }
 }
 
-fn client_config_refresh_interval_secs(sidecar_port: u16) -> u64 {
+fn model_benefits_config_enabled() -> bool {
+    let built_in = option_env!("CREATOROS_BUILTIN_MODEL_BENEFITS_ENABLED").unwrap_or("0").trim() == "1";
+    if cfg!(debug_assertions) {
+        std::env::var("CREATOROS_MODEL_BENEFITS_ENABLED").ok()
+            .map(|value| value.trim() == "1").unwrap_or(built_in)
+    } else { built_in }
+}
+
+fn client_config_refresh_interval_for_policy(sidecar_port: u16, model_benefits: bool) -> u64 {
+    if model_benefits { return 120 + u64::from(sidecar_port) % 31; }
     const SIX_HOURS_SECONDS: u64 = 6 * 60 * 60;
     const MAX_JITTER_SECONDS: u64 = 15 * 60;
     SIX_HOURS_SECONDS + u64::from(sidecar_port) % (MAX_JITTER_SECONDS + 1)
+}
+
+fn client_config_refresh_interval_secs(sidecar_port: u16) -> u64 {
+    client_config_refresh_interval_for_policy(sidecar_port, model_benefits_config_enabled())
 }
 
 #[derive(Clone, Copy)]
@@ -2647,12 +2660,18 @@ impl ClientConfigRefreshTrigger {
     }
 }
 
-fn client_config_refresh_wait_ms(trigger: ClientConfigRefreshTrigger) -> u64 {
+fn client_config_refresh_wait_for_policy(trigger: ClientConfigRefreshTrigger, model_benefits: bool) -> u64 {
     match trigger {
-        // 原授权结果先返回；此值仅约束独立后台观察六次有界请求和清理。
+        // 原授权结果先返回；此值仅约束独立后台观察，不阻塞许可证结果。
         ClientConfigRefreshTrigger::Activation => 730_000,
+        // 普通政策同步为proof/directory/existingOnly credentials，三次120秒加收尾。
+        _ if model_benefits => 370_000,
         _ => 120_000,
     }
+}
+
+fn client_config_refresh_wait_ms(trigger: ClientConfigRefreshTrigger) -> u64 {
+    client_config_refresh_wait_for_policy(trigger, model_benefits_config_enabled())
 }
 
 fn sanitized_client_config_reason(value: Option<&str>) -> &'static str {
@@ -3275,6 +3294,18 @@ mod tests {
     use std::cell::{Cell, RefCell};
 
     #[test]
+    fn model_benefit_refresh_uses_short_signature_cadence_and_full_read_budget() {
+        for port in [0, 43127, u16::MAX] {
+            assert!((120..=150).contains(&client_config_refresh_interval_for_policy(port, true)));
+            assert!((21_600..=22_500).contains(&client_config_refresh_interval_for_policy(port, false)));
+        }
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Startup, true), 370_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Scheduled, true), 370_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Activation, true), 730_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Scheduled, false), 120_000);
+    }
+
+    #[test]
     fn reconstructs_masked_verdict_seed_and_rejects_wrong_blob_length() {
         let seed = [0x5au8; 32];
         let mask = [0xa5u8; 32];
@@ -3298,9 +3329,9 @@ mod tests {
 
     #[test]
     fn activation_credit_wait_does_not_change_other_refresh_budgets() {
-        assert_eq!(client_config_refresh_wait_ms(ClientConfigRefreshTrigger::Activation), 730_000);
-        assert_eq!(client_config_refresh_wait_ms(ClientConfigRefreshTrigger::Startup), 120_000);
-        assert_eq!(client_config_refresh_wait_ms(ClientConfigRefreshTrigger::Scheduled), 120_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Activation, false), 730_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Startup, false), 120_000);
+        assert_eq!(client_config_refresh_wait_for_policy(ClientConfigRefreshTrigger::Scheduled, false), 120_000);
     }
 
     const TEST_HOST: &str = "license.test";
@@ -5331,7 +5362,7 @@ mod tests {
             startup.contains("spawn_client_config_refresh_loop(ctx.clone());"),
             "长时间运行必须启动独立的定时配置刷新"
         );
-        let interval = client_config_refresh_interval_secs(43127);
+        let interval = client_config_refresh_interval_for_policy(43127, false);
         assert!(
             (21_600..=22_500).contains(&interval),
             "刷新间隔应为 6 小时并带最多 15 分钟稳定抖动"

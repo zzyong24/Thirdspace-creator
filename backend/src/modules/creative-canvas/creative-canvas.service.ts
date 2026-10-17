@@ -46,6 +46,7 @@ export interface CanvasMaterialPage extends CanvasMaterialSelection {assetId:str
 export interface CanvasMaterialPlan {canvasId:string;projectId:string|null;revision:number;group:{id:string;libraryKind:"cover"|"xhs";caption:string;aspectRatio:string;pageOrder:string[]};pages:CanvasMaterialPage[];}
 export function createCreativeCanvasService(db:Db,deps:{
  now?:()=>string;
+ prepareModelAuthority?:(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate")=>Promise<(tx:Db)=>Promise<void>>;
  assertProject:(ctx:RequestContext,id:string,tx?:Db,forUpdate?:boolean)=>Promise<void>;
  assertMediaAsset:(ctx:RequestContext,id:string,type:"image"|"video",fileId?:string,tx?:Db)=>Promise<{fileId:string;checksum:string}>;
  assertReferenceAsset:(ctx:RequestContext,id:string,tx?:Db)=>Promise<void>;
@@ -116,6 +117,13 @@ export function createCreativeCanvasService(db:Db,deps:{
    }
   }
   return doc;
+ }
+ async function prepareGenerationModelAuthority(ctx:RequestContext,canvasId:string,nodeId:string,expectedRevision?:number){
+  const canvas=await requireCanvas(ctx,canvasId);
+  if(expectedRevision!==undefined&&canvas.revision!==expectedRevision)throw new CanvasConflictError("画布已更新，请重新读取保存后的节点");
+  const node=canvasDocumentSchema.parse(canvas.documentJson).nodes.find(item=>item.id===nodeId);
+  if(!node||(node.type!=="image_generation"&&node.type!=="video_generation"))throw new CanvasConflictError("生成节点不存在");
+  return deps.prepareModelAuthority?.(ctx,capabilityForAssetMode(node.mode));
  }
  async function prepareGenerationInput(ctx:RequestContext,canvas:CanvasRow,nodeId:string,store:Db,attemptId?:string,proposal=false,options:{preserveLegacyImageRatio?:boolean}={}):Promise<CanvasTaskInput>{
   const doc=canvasDocumentSchema.parse(canvas.documentJson),node=doc.nodes.find(value=>value.id===nodeId);
@@ -202,15 +210,18 @@ export function createCreativeCanvasService(db:Db,deps:{
    const doc=canvasDocumentSchema.parse(canvas.documentJson);
    for(const page of plan.pages){if(!page.taskId)continue;const node=doc.nodes.find(node=>node.id===page.nodeId);if(node?.type!=="image_generation")throw new CanvasConflictError("生成节点已变化");const verified=await verifyGeneratedPage(ctx,canvas,node,page,true);if(!isDeepStrictEqual(verified,page))throw new CanvasConflictError("采纳产物与所选原候选不符");}
   },
-  /** 只验证原节点和引用，没有预约、AI任务或外部调用。 */
+  prepareGenerationModelAuthority,
+ /** 只验证原节点和引用，没有预约、AI任务或外部调用。 */
   async prepareGenerateProposal(ctx:RequestContext,canvasId:string,input:{baseRevision:number;nodeId:string}){
-   account(ctx);return db.transaction(async tx=>{
+   account(ctx);const checkModelAuthority=await prepareGenerationModelAuthority(ctx,canvasId,input.nodeId,input.baseRevision);return db.transaction(async tx=>{
     const originalContext=ctx.groupId?{...ctx,accountId:null,membershipVersion:undefined}:ctx;
     const freeze=await lockWorkspaceMembership(tx,originalContext);
     const canvas=await requireCanvas(ctx,canvasId,tx as unknown as Db);
     if(canvas.revision!==input.baseRevision)throw new CanvasConflictError('画布已更新，请读取保存后的节点');
     if(canvas.projectId)await deps.assertProject(originalContext,canvas.projectId,tx as unknown as Db);
+    await checkModelAuthority?.(tx as unknown as Db);
     const inputData=await prepareGenerationInput(originalContext,canvas,input.nodeId,tx as unknown as Db,undefined,true);
+    await checkModelAuthority?.(tx as unknown as Db);
     if(inputData.canvasOwner.groupId){inputData.canvasOwner.groupVersion=freeze.groupVersion;inputData.canvasOwner.membershipVersion=freeze.membershipVersion;inputData.canvasOwner.inputDigest=canvasInputDigest(canvas.revision,input.nodeId,inputData);}
     return {canvasId,inputRevision:canvas.revision,inputDigest:inputData.canvasOwner.inputDigest,inputData};
    });
@@ -434,7 +445,8 @@ export function createCreativeCanvasService(db:Db,deps:{
    if(existing){const current=await requireCanvas(ctx,canvasId);if(input.expectedRevision!==existing.inputRevision&&input.expectedRevision!==current.revision)throw new CanvasConflictError("生成请求版本与原提交不符");}
    let reservation=existing;
    if(!reservation){
-    const reserved=await db.transaction(tx=>this.reserveGenerationInTransaction(ctx,canvasId,nodeId,input,tx as unknown as Db));
+    const checkModelAuthority=await prepareGenerationModelAuthority(ctx,canvasId,nodeId,input.expectedRevision);
+    const reserved=await db.transaction(async tx=>{await checkModelAuthority?.(tx as unknown as Db);const reserved=await this.reserveGenerationInTransaction(ctx,canvasId,nodeId,input,tx as unknown as Db);await checkModelAuthority?.(tx as unknown as Db);return reserved;});
     [reservation]=await db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.id,reserved.link.id));
    }
    if(!reservation)throw new CanvasConflictError("生成请求未预留");

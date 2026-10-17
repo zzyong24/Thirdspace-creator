@@ -52,3 +52,12 @@ describe('组图沿原封面持久调用传精确参考和画幅',()=>{
  });
 });
 beforeEach(()=>{h.object={imagePrompt:'一位创作者在纸上画出起因与结果的关系，保持统一的铅笔色调和清晰构图。',altText:'结果页'};});
+
+it('封面实际prepareImage把取消传给官方fresh，迟到结果不保存coverImage',async()=>{
+ const f=fixture({context,visualRequirements:''}),controller=new AbortController();let seen:AbortSignal|undefined,entered!:()=>void,release!:()=>void;
+ const atNetwork=new Promise<void>(r=>{entered=r}),gate=new Promise<void>(r=>{release=r});
+ const service=createExecutionCoverService(h.scope.tx,{now:()=>new Date().toISOString(),getReferenceBytes:f.getReferenceBytes,resolveImageSpec:async(_ctx,_capability,_id,signal)=>{seen=signal;entered();await gate;signal?.throwIfAborted();return{provider:'minimax',model:'image-01',baseUrl:null,token:'synthetic',kind:'image'};}});
+ const work=service.prepareImage(ref,{},controller.signal),settled=Promise.allSettled([work]);await atNetwork;
+ try{expect(seen).toBe(controller.signal);}finally{controller.abort();release();await settled;}
+ expect(h.state.payload.coverImage).toBeUndefined();
+});

@@ -143,3 +143,12 @@ it.skipIf(!assetLockPg)('T1062真实PG账号 transfer 先持账号/member 等组
   const executions=await f.setup.db.select().from(executionTasks);expect(executions).toHaveLength(1);await f.business(f.setup.db).prepare(scope,task.id);expect(await f.setup.db.select().from(executionTasks)).toEqual(executions);expect(await f.setup.db.select().from(executionCalls)).toHaveLength(0);
  }finally{await f.releaseGroup();await Promise.allSettled(pending);await f.close();}
 },180000);
+
+it('素材实际prepare把取消传给官方fresh，迟到结果不转交执行',async()=>{
+ const f=await fixture(),controller=new AbortController();let seen:AbortSignal|undefined,entered!:()=>void,release!:()=>void;
+ const atNetwork=new Promise<void>(r=>{entered=r}),gate=new Promise<void>(r=>{release=r});
+ const service=createAssetBusinessExecutionService(db,{now:()=>stamp,budget:{maxCalls:6,maxTokens:10000,deadlineMs:600000},assertProject:f.assertProject,resolveSpec:async(_ctx,_capability,_id,signal)=>{seen=signal;entered();await gate;signal?.throwIfAborted();return spec;}});
+ const work=service.prepare(ctx,f.id,controller.signal),settled=Promise.allSettled([work]);await atNetwork;
+ try{expect(seen).toBeInstanceOf(AbortSignal);}finally{controller.abort();release();await settled;}
+ expect(seen?.aborted).toBe(true);expect((await db.select().from(aiTasks).where(eq(aiTasks.id,f.id)))[0]?.executionTaskId).toBeNull();
+});

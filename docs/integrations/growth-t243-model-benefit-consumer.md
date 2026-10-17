@@ -19,3 +19,52 @@ Growth四POST `fulfill/credentials/directory/link-session`均closed `{contractVe
 恢复：原加密cache损坏/材料不就绪不覆盖旧cache或私Key；保存经原子替换、目录fsync和认证读回；rename前失败保旧文件，rename后chmod/fsync/读回失败属于已提交但持久确认不确定，认证重读并保留当前新文件（或损坏则failclosed），不覆盖第三方后续提交，也不假称旧文件未变，可fresh同步恢复；新scope无旧cache时显示不可用及恢复入口，不能借另一授权scope凭据。旧目录/个人自配配置不删除。测试先真null拒旧guard的RED，再专用proof→实际目录→原vault服务交接GREEN；独评最终准确source/map后才提交/打包。
 
 补充：每个外部目录/凭据/履约/链接请求都用本次fresh proof并由Growth在线核资格；短签缓存只在原截止内供本机模型路由，不是撤权在线证明。当前模型新命令generation在主进程内使旧观察者失效，Key服务口+cache提交串行收尾，不能让已开始的旧写追过新提交。默认cache按license/机器/真实channel指纹分文件，epoch在scopeId与签名记录中隔离。旧epoch的外部读取/经济请求仍须fresh核验；本机license文件未提供服务端epoch时不伪称可从本地缓存得知当前全局epoch。
+
+## 持续使用、休眠和断网恢复补充（待独审窄实现）
+
+已发现原6小时后台刷新与新证明/目录最多300秒的真实接缝；0fc八源源码准入和其构建基线不代表长时闭环已过。修复只改现模型协议适配器、现正式模型选择快照装配与原Rust调度，不新建配置所有者/任务队列。
+
+policy flag1：原Rust后台串行线程每120–150秒尝试普通同步，flag0完全保6小时及原抖动。许可证激活仍先返回，后台串行等待，不在激活页阻塞。普通policy同步实际三请求（proof、directory、existingOnly credentials），外层至少370000ms；激活沿730000ms；每个网络请求原120000ms最短预算不缩。后台本次结束再等待下一周期，不叠加并发或忙轮询。
+
+仅定时器不代表唤醒可用。现公开owner锁前准备在本次主family确实选择official时，使用同actor/root store的原SettingsService接缝：未过期签名cache且当前actor当前scope的vault Key存在则直接读取；否则按需等待一次fresh proof→directory→existingOnly credentials同步，再投影当前authority；`captureSelectedModelSnapshot`本身仍是纯cache/vault读取，transaction store绝不在此出网。self/codex未选择official时不触发这条网络链。不在全局readAuthority内动态导入persistence，不自HTTP，不循环装配，不在目录/读取中fulfill/ensure/grant。
+
+同本机真实license/code/machine/channel指纹的普通同步共享一次进行中的私有网络快照，原proof截止和总预算从首次开始，不因加入重试续期；完整Key只在该server-only闭包短暂内存。每个调用者仍使用自己的ctx/store回调在原受控vault提交，不把另一事务的未提交vault结果当本事务可见；Key/account还是原project/hash/service，不创建另一账户。不同license/scope不共享，已有scope/epoch核验不放宽。共享flight在全部观察者收尾后释放，不持久化明文或proof。
+
+每位观察者取消只停止自己的等待/提交；最后观察者取消才abort共享网络。中途取消不能声称撤销服务端事实；已经开始的磁盘写按原提交队列收尾，后续当前结果不能被旧提交追过。单航班仅覆盖普通只读目录/凭据链，显式首次履约和链接动作仍各自既有幂等语义，不合并经济动作。
+
+离线/撤权/耗尽/过期时不借旧过期cache或另一scope Key；按需失败返回明确未就绪和现恢复/自配动作，原self选择及Key不清除。网络恢复后的下一次official操作可立即重新尝试，不要求手动重启或等6小时；无无限自动重试。真实新scope/epoch必须经过同actor vault写入才能供该操作使用。
+
+验收必须包含：原八源准确before长时缺口对照；连续使用跨5分钟后台更新不丢authority；休眠模拟跳过调度后首official操作按需恢复；断网失败不借旧cache→网络恢复下一操作成功；同identity并发只三次外部请求、跨actor提交隔离、单个/全部取消与迟到收尾；不同scope不共享；self持久选择零写；flag0原节奏/预算不变。原动态HTTPS/HMAC/PG双case和0fc包作为基线保留，增量源码/测试/最终包另冻结独审。
+
+### 锁前与主能力准确边界修订
+
+只读调用审查已证明：部分capture收到的store来自持有parent/workspace/report/canvas锁的事务，不能在该capture里盲等网络。因此capture本身保持纯cache/vault读；按需fresh前置到现公开owner的锁前准备端口。进入事务后只读自己store并重核现license/scope/epoch/原路由身份，漂移明确重试，不借另一事务未提交凭据。
+
+- 聊天：prepareChatRouting在原根db上按本次text/vision主能力及显式引擎预备；text主动self/codex、image仍official时不等待无关官方。完整map仍沿原已验状态冻结，不能以主能力self作为其它能力已ready证明。
+- 冻结worker凭据：resolveFrozenCredential仅在root db、route.source=official时预备；transaction store只核冻结identity与自己vault，不出网。原ASR前置captureAsrConfiguration/createTaskWithFrozenRouting保原可信route链。
+- 审核/朋友圈/粗剪：在其已解析且真实归属通过的公开create/generate准备入口、进入workspace/report/project事务之前，新增可选私有prepareModelAuthority端口（主能力为原协议text，不按内容猜）；之后原owner同事务锁、幂等/冻结输入不变。旧flag0端口不出网。
+- 画布：公开prepareGenerateProposal、手工generate及确认提交的原根准备入口，依据已保存节点mode映射的image/video能力预备；事务reserve/resolveCapability内只读并核对原快照。不能只靠UI曾访问capabilities作为前提。
+- 持久任务新根：已有payload/trusted parent route优先保持，不对重放重新捕获；真正需要模型的新根在enqueue外层准备。source_sync/migration/account_binding等非模型经营动作不能因官方核验变成全局等待门。准确typed kind→现能力关系及缺口逐入口表随实现绑定，不从提示词或泛前缀猜能力。
+
+新增精确写集为现helper与其测试、license.rs；persistence-client.ts根装配；按上表实际需要的原业务owner/组合root/ports及针对性测试（review、moments、creative-canvas/原确认owner、production-rough-cut、persistent-task）。均为可选私有准备回调/同owner传递，不新增公共wire/表/第二队列，不改T243金额/资格或自配设置。源码冻结前逐入口核清，尚未实现的路径不能宣称长时恢复全覆盖。
+
+### 本轮实际调用与取消闭包
+
+操作者是持有效正式授权、已选择官方或自配模型的桌面用户；已有对象为当前授权、原来源偏好、原vault及可能到期的签名cache。结果是下一次实际任务能使用原选择继续，交给原AI/持久执行owner。失败保原对象，官方未就绪时可恢复原权益或切自配；不强杀已有任务、不续其截止、不重复经济动作。
+
+- 根聊天按input.mode text/vision与显式Codex准确准备，完整choices中的其它official不引发网络。原prepareChatReply.abortSignal经可选私有参数传入单航班观察者。
+- workReview在已提交原report预约、实际缺原task时锁前准备text；task已存在重放跳过。Moments读同请求原候选后，仅缺task的初始生成锁前准备text。粗剪原预约没有execution绑定才在attach事务前准备text。原恢复/原task身份保持。
+- 画布读取已保存的image/video节点mode再准备对应family；prepareGenerateProposal和手工generate在db.transaction之前准备，confirmGeneration在原adoption锁之前准备。事务开始及创建task后提交前都只读核原授权，不等待网络；等待锁过期会因readAuthority返回local明确拒绝，而不是隐式换self。
+- persistent公开root enqueue仅transcribe→audio、topic_preview/script_candidate→text；明确transcribeAfterImport的分享父→audio；radar_project_upgrade按真实getItem原逐字稿是否已完成，仅缺逐字稿时预备audio，之后topic子任务走其自己的text准备。纯source_sync、普通分享、migration、account_binding、非模型automation采集不触发官方网络。已有payload route、可信modelRouteParent及精确重放不重新捕获。
+- 两处nested store!==db的persistent工厂保持事务纯读，用于原领域只读/采集owner；它们不拥有新的模型preflight或第二队列。workReviewAiFor/roughCut事务runtime resolver只消费各公开owner已准备cache和自己vault；scheduled可信父route继续inherit，不申请新选择。新泛AI根resolveTaskRuntimeData仅无trustedRoute时按原task协议辨认asset image/video、benchmark audio、其余实际模型text准备；ASR公开captureAsrConfiguration在root准备audio并沿原createTaskWithFrozenRouting传递trustedRoute。
+- frozen worker root凭据恢复只接受原official identity.scopeId，epoch/hash/scope不符拒绝，不用当前self选择替代原task。asset/cover/transcribe原已有的outer signal经可选私有参数完整传到fresh观察者；取消只停止本观察者等待与尚未开始的提交，已开始原提交按原队列收尾，不声称撤销服务端。
+
+提交前checker核原preference revision、本次family仍official、原scopeId（含hash/真实scope/epoch）、本事务自身vault Key、当前签名cache仍未过期；Key等待后最后再读authority。create/reserve与提交前再次check，期间变更会使原事务回滚，保可恢复原预约。没有额外偏好反向锁、没有事务内370秒网络，也不重设原任务执行budget/deadline。
+
+### 普通操作短等待与停止观察（同域最小修订）
+
+已有未过期证明/cache且同actor原scope Key可读的任务立即复用，不等待官方网络；主能力self/Codex不等无关official。仅缺失/到期时锁前按需fresh。普通ensure观察者从本次开始总等待不超过120000ms，加入同单航班不重置原core370000ms截止；后台完整链370000ms、激活独立730000ms保持。超时/取消只摘除本观察者，其他观察者可继续；最后一位离开才中止网络。过期快照不借用、read链不履约/开户/赠额、不覆盖个人选择。
+
+用户提交立即显示可读字号至少16px的准备反馈及“停止等待”。响应头前停止只结束本轮HTTP观察，原请求可能已在服务端建立任务，明确“提交结果尚待确认”；原对话/任务中心可核对，不自动重发、不宣已取消/回滚。原会话和消息保留，新turn或自配选择可继续。旧A迟到响应头不得覆盖新B任务ID；scope切换后的旧观察者不回写新状态。已收到真实任务回执后停止仍沿原任务command取消，不能把accepted冒终态。
+
+普通超时使用精确公开code MODEL_BENEFIT_REFRESH_PENDING，服务端仅在模型锁前准备阶段交回，用户可核对原对话/任务中心或打开模型设置；禁止泛型自动恢复重复提交。新UI只增加同工作台状态和动作，不另建任务/会话所有者。验收需实际controller→fetch信号→真实SDK/UI覆盖即时停止、未知结果回查、A晚回不盖B、显式后续新turn和≥16px，不把fixture或辅助测试冒原生/真人验收。

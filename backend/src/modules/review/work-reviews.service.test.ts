@@ -109,3 +109,14 @@ it("T1062 已迁移旧账号审核确认精确重放不造NULL行，双来源明
  await db.insert(workReviewRequests).values({...rows[0]!,id:"second-legacy-review-receipt",accountId:"other-old-account"});const ambiguous=await db.select().from(workReviewRequests);
  await expect(service().confirm(group,input)).rejects.toMatchObject({code:"ConflictError"});expect(await db.select().from(workReviewRequests)).toEqual(ambiguous);
 });
+
+
+it('审核公开请求在提交AI事务前恢复原模型，锁内检查失败不创建task且保留可恢复原预约',async()=>{
+ const events:string[]=[];let allow=false;
+ ports.prepareModelAuthority=async()=>{events.push('fresh');return async tx=>{expect(tx).not.toBe(db);events.push('check');if(!allow)throw Error('本地合成授权变化');};};
+ const input={scope,clientRequestId:'review-authority-recovery'};
+ await expect(service().create(ctx,input)).rejects.toThrow('本地合成授权变化');
+ expect(events).toEqual(['fresh','check']);expect(await db.select().from(aiTasks)).toHaveLength(0);expect(await db.select().from(workReviewReports)).toHaveLength(1);
+ allow=true;const result=await service().create(ctx,input);expect(result.taskId).toBeTruthy();expect(await db.select().from(aiTasks)).toHaveLength(1);expect(await db.select().from(workReviewReports)).toHaveLength(1);
+ expect(events).toEqual(['fresh','check','fresh','check','check']);
+});

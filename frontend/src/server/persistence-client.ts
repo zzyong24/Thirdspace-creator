@@ -149,6 +149,7 @@ import { ENDPOINTS } from "@creatoros/contract";
 import {createAssistantSystemRoot,createAssistantActionOwners} from "@creatoros/backend/application/chat/assistant-system-root";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
+import {ensureModelBenefitAuthority} from "@/server/activation/model-benefit.server";
 import { requestFreshClientConfigAccess,readChannelModelAuthority } from "@/server/activation/client-config.server";
 import {requestManagedAsrLease} from "@/server/activation/managed-credential-lease.server";
 import { prepareManagedTranscribeSpec } from "@/server/activation/managed-asr.server";
@@ -826,7 +827,7 @@ interface PersistenceBundle {
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
   /** 捕获一次无秘密模型元数据；engine仅装配工具，freeze等待真实capability/mode。 */
-  prepareChatRouting?:(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"})=>Promise<{
+  prepareChatRouting?:(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"},signal?:AbortSignal)=>Promise<{
     executionEngine:"pi"|"codex";
     engineForMode:(mode:"text"|"vision")=>"pi"|"codex";
     freeze:(capability:string,mode:"text"|"vision")=>Promise<ExecutionRoute>;
@@ -2864,7 +2865,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: deps.now,
     nextId: deps.nextId,
     resolveTaskRuntimeData: async (ctx, taskType, inputData,trustedRoute) => {
-      const executionRoute=await resolveRootExecutionRoute(ctx,db,trustedRoute);
+      const family:RoutingFamily=taskType==="benchmark.transcribe"?"audio":taskType==="asset.generate"?((inputData as {kind?:unknown}).kind==="video"?"video":"image"):"text";
+      const executionRoute=await resolveRootExecutionRoute(ctx,db,trustedRoute,family);
       // 纯 ASR 使用业务提交冻结的音源/配置及按次凭据，不申请文本 Skill。
       if(taskType==="benchmark.transcribe")return {executionRoute};
       if (!resolveEffectiveSkillSnapshotForRuntime) {
@@ -3892,6 +3894,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     abortRun: abortExecutionTask,
   });
   const persistentTaskService = createPersistentTaskService(db, {
+    prepareModelAuthority:async(c,input)=>{
+      let family:RoutingFamily|null=input.kind==='transcribe'?'audio':input.kind==='topic_preview'||input.kind==='script_candidate'?'text':null;
+      // 仅明确授权的转写父步骤需要audio；纯分享/采集/数据库任务不访问官方模型。
+      if(input.kind==='share_import'&&input.payload.transcribeAfterImport===true)family='audio';
+      if(input.kind==='radar_project_upgrade'){
+        const detail=await intelligenceService.getItem(c,input.ownerId);
+        if(detail.transcript.status!=='done'||!detail.transcript.text?.trim())family='audio';
+      }
+      return family?prepareModelAuthority(c,family):undefined;
+    },
     resolveRootExecutionRoute:(c,_input,tx)=>resolveRootExecutionRoute(c,tx),
     now: deps.now,
     nextId: deps.nextId,
@@ -5796,6 +5808,39 @@ FAVORITES_PROMOTE_PER_RUN
   const settingsService=settingsServiceFor(db);
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
+  type RoutingFamily=keyof ReturnType<typeof effectiveModelRouting>;
+  async function ensureOfficialAuthority(ctx:RequestContext,signal?:AbortSignal,expectedScopeId?:string){
+    if(process.env.CREATOROS_MODEL_BENEFITS_ENABLED!=="1")return readChannelModelAuthority();
+    return ensureModelBenefitAuthority({signal,expectedScopeId,
+      putManagedCredential:(scopeId,serviceId,token)=>settingsService.setChannelModelCredential(ctx,scopeId,serviceId,token).then(()=>undefined),
+    },async scopeId=>{const token=await settingsRepo.getChannelModelCredential(ctx,scopeId,"omnihi-main");return !!token&&token!==SECRET_DECRYPT_FAIL_SENTINEL;});
+  }
+  /** 正式owner锁前准备；返回值不出网，只核本事务自己的偏好、授权scope/epoch和Key。 */
+  async function prepareModelAuthority(ctx:RequestContext,family:RoutingFamily,signal?:AbortSignal):Promise<(store:Db)=>Promise<void>>{
+    if(process.env.CREATOROS_MODEL_BENEFITS_ENABLED!=="1")return async()=>undefined;
+    const preference=await settingsRepo.getPreferences(ctx),revision=preference?.modelRoutingRevision??0;
+    const choices=effectiveModelRouting({choices:preference?.modelRouting??null,legacyExecutionEngine:preference?.assistantExecutionEngine==='codex'?'codex':'pi'});
+    if(choices[family]!=="official")return async()=>undefined;
+    const authority=await ensureOfficialAuthority(ctx,signal);
+    if(authority.authority!=="channel")throw new CapabilityModelRoutingError('MODEL_CREDENTIAL_UNAVAILABLE',family);
+    return async store=>{
+      signal?.throwIfAborted();
+      const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey}),current=await repo.getPreferences(ctx);
+      const currentChoices=effectiveModelRouting({choices:current?.modelRouting??null,legacyExecutionEngine:current?.assistantExecutionEngine==='codex'?'codex':'pi'});
+      const token=await repo.getChannelModelCredential(ctx,authority.scopeId,"omnihi-main"),live=await readChannelModelAuthority();
+      if((current?.modelRoutingRevision??0)!==revision||currentChoices[family]!=="official"||live.authority!=="channel"||live.scopeId!==authority.scopeId||!token||token===SECRET_DECRYPT_FAIL_SENTINEL)
+        throw new CapabilityModelRoutingError('MODEL_ROUTE_IDENTITY_CHANGED',family);
+      signal?.throwIfAborted();
+    };
+  }
+  function familyForCapability(capability:string):RoutingFamily{
+    if(capability==='asset.classify')return 'vision';
+    if(capability==='image.generate'||capability==='image.edit')return 'image';
+    if(capability==='video.generate')return 'video';
+    if(capability==='transcribe.audio')return 'audio';
+    if(capability==='knowledge.search.embed')return 'embed';
+    return 'text';
+  }
   async function captureSelectedModelSnapshot(ctx:RequestContext,store:Db,sources:readonly string[],signal?:AbortSignal,purpose:'read'|'peek'|'check'='read'):Promise<SelectedModelSnapshot>{
     signal?.throwIfAborted();
     const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey});
@@ -5835,8 +5880,9 @@ FAVORITES_PROMOTE_PER_RUN
     }
     return {ctx,rows:rows.map(row=>({...row,settings:row.settings&&typeof row.settings==='object'&&!Array.isArray(row.settings)?row.settings as Record<string,unknown>:{}})),env:{...process.env},official,codex};
   }
-  async function resolveRootExecutionRoute(ctx:RequestContext,store:Db,trustedRoute?:ExecutionRoute):Promise<ExecutionRoute>{
+  async function resolveRootExecutionRoute(ctx:RequestContext,store:Db,trustedRoute?:ExecutionRoute,family?:RoutingFamily):Promise<ExecutionRoute>{
     if(trustedRoute)return frozenExecutionRoute({executionRoute:trustedRoute});
+    if(store===db&&family){const check=await prepareModelAuthority(ctx,family);await check(db);}
     const repo=store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey});
     const preference=await repo.getPreferences(ctx);
     const choices=effectiveModelRouting({choices:preference?.modelRouting??null,legacyExecutionEngine:preference?.assistantExecutionEngine==='codex'?'codex':'pi'});
@@ -5844,10 +5890,12 @@ FAVORITES_PROMOTE_PER_RUN
     // 通用任务还未由业务adapter产生真实模型步骤；这里只冻结完整map，实际消费者再核自己的项。
     return freezeSelectedModelRoutes({choices,revision:preference?.modelRoutingRevision??0,read:createSelectedModelSnapshotReader(snapshot)});
   }
-  async function prepareChatRouting(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"}){
+  async function prepareChatRouting(ctx:RequestContext,input:{mode:"text"|"vision";executionEngine?:"pi"|"codex";legacyExecutionEngine?:"pi"|"codex"},signal?:AbortSignal){
+    signal?.throwIfAborted();
+    if(input.executionEngine!=='codex'){const check=await prepareModelAuthority(ctx,input.mode,signal);await check(db);}
     const preference=await settingsRepo.getPreferences(ctx);
     const choices=effectiveModelRouting({choices:preference?.modelRouting??null,legacyExecutionEngine:preference?.assistantExecutionEngine==='codex'?'codex':'pi'}),revision=preference?.modelRoutingRevision??0;
-    const snapshot=await captureSelectedModelSnapshot(ctx,db,[...Object.values(choices),...(input.executionEngine==='codex'?['codex']:[])]);
+    const snapshot=await captureSelectedModelSnapshot(ctx,db,[...Object.values(choices),...(input.executionEngine==='codex'?['codex']:[])],signal);
     const read=createSelectedModelSnapshotReader(snapshot);
     const engineForMode=(mode:'text'|'vision'):'pi'|'codex'=>input.executionEngine==='codex'||choices[mode]==='codex'?'codex':'pi';
     // 不提前以text可用性拦截vision；显式pi冲突由真实主route的freeze准确拒绝。
@@ -5887,6 +5935,7 @@ FAVORITES_PROMOTE_PER_RUN
   let assistantSystemRoot!:Awaited<ReturnType<typeof createAssistantSystemRoot>>;
   const creativeCanvasRoot=createCreativeCanvasRoot(db,deps,{
     ai:workReviewAiFor,assets:workAssetsFor,projects:workProjectsFor,
+    prepareModelAuthority:(c,capability)=>prepareModelAuthority(c,familyForCapability(capability)),
     resolveTemplateRequirement:(c,id,version,tx)=>tx?createVisualTemplateService(tx,{assertImageReference:async(context,ref)=>{const owner=workAssetsFor(tx),asset=await owner.getAsset(context,ref.assetId);if(asset.assetType!=="image"||asset.status!=="active")throw new AssetConflictError("参考图片不是可用素材");const exact=await owner.readImageReference(context,ref.assetId,ref.fileId);if(exact.checksum!==ref.checksum)throw new AssetConflictError("图片文件已变化，请重新选择");return {fileId:exact.fileId,checksum:exact.checksum};}}).resolveRequirement(c,id,version):visualTemplateService.resolveRequirement(c,id,version),
     resolveCapability:async(c,capability,store)=>{const spec=capability==="video.generate"?await resolveMultimodalSpec(c,capability,store):await assertImageCapability(c,capability,store);return "engine" in spec?spec:{provider:spec.provider,model:spec.model};},
     assetLimit:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},
@@ -5899,7 +5948,7 @@ FAVORITES_PROMOTE_PER_RUN
     owners:store=>({projects:workProjectsFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),
       moments:workMomentsFor(store),compositions:workCompositionsFor(store),assets:workAssetsFor(store),
       production:workProductionFor(store),outputScripts:workScriptsFor(store),publishing:workPublishingFor(store)}),
-    artifacts:workArtifactsFor,ai:workReviewAiFor,
+    artifacts:workArtifactsFor,ai:workReviewAiFor,prepareModelAuthority:c=>prepareModelAuthority(c,'text'),
     positioning:store=>createPositioningService({...positioningOwnerDeps,db:store}),
     materials:workMaterialsFor,sources:workSourceService,
     // root先装配真实Production frozen-file owner；其历史capture缺证据必须null，不读currentFile。
@@ -5910,7 +5959,7 @@ FAVORITES_PROMOTE_PER_RUN
 
   // T1045：朋友圈模型只产候选；正式稿与组合血缘在原owner同一事务采纳。
   const momentsModelPorts:MomentsModelPorts={
-    moments:workMomentsFor,ai:workReviewAiFor,
+    moments:workMomentsFor,ai:workReviewAiFor,prepareModelAuthority:c=>prepareModelAuthority(c,'text'),
     readSource:(c,id,ref,tx)=>workSourceService.read(c,id,ref,tx),
     readRule:(c,ref,tx)=>createPositioningService({...positioningOwnerDeps,db:tx}).getStatement(c,ref.versionId),
     async readAllowedFile(c,projectId,file,tx){
@@ -5965,8 +6014,8 @@ FAVORITES_PROMOTE_PER_RUN
     return {apiFormat:spec.apiFormat as 'anthropic'|'openai_chat'|'openai_responses',authStyle:spec.authStyle,baseUrl:spec.baseUrl,model:spec.model,token:spec.token,
       ...(spec.displayModelKey?{displayModelKey:spec.displayModelKey}:{}),...(typeof spec.settings.structuredOutputs==='boolean'?{structuredOutputs:spec.settings.structuredOutputs}:{})};
   }
-  async function resolveFrozenAssetSpec(c:RequestContext,route:FrozenModelRoute,store:typeof db=db):Promise<MultimodalSpec|(CodexModelSpec&{kind:'image'})>{
-    const value=await resolveFrozenCredential(c,route,false,undefined,store);
+  async function resolveFrozenAssetSpec(c:RequestContext,route:FrozenModelRoute,store:typeof db=db,signal?:AbortSignal):Promise<MultimodalSpec|(CodexModelSpec&{kind:'image'})>{
+    const value=await resolveFrozenCredential(c,route,false,signal,store);
     if(value.kind==='codex')return {...value.spec,kind:'image'};
     if(value.kind!=='api'||!['image','video','vision'].includes(route.mode))throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
     const spec=value.spec;
@@ -5974,7 +6023,7 @@ FAVORITES_PROMOTE_PER_RUN
       ...(spec.displayModelKey?{displayModelKey:spec.displayModelKey}:{}),...(spec.serviceId?{serviceId:spec.serviceId}:{}),...(spec.credentialLifecycle?{credentialLifecycle:spec.credentialLifecycle}:{})};
   }
   const assertImageCapability=async(ctx:RequestContext,capability:'image.generate'|'image.edit'|'asset.classify',store?:typeof db)=>{
-    const executionRoute=await resolveRootExecutionRoute(ctx,store??db),route=readFrozenModelRoute({executionRoute},capability==='asset.classify'?'vision':'image',capability);
+    const executionRoute=await resolveRootExecutionRoute(ctx,store??db,undefined,familyForCapability(capability)),route=readFrozenModelRoute({executionRoute},capability==='asset.classify'?'vision':'image',capability);
     if(route)return resolveFrozenAssetSpec(ctx,route,store??db);
     if(frozenExecutionEngine({executionRoute})==='codex'){
       await assertCodexCapability(ctx,capability==='asset.classify'?'imageUnderstanding':'imageGeneration');
@@ -5984,7 +6033,7 @@ FAVORITES_PROMOTE_PER_RUN
   };
   // 无任务的公开准备读取一次新根；原任务和后台步骤只消费原冻结route。
   const resolveModelSpec = async (ctx: RequestContext, capability: string,owner?:ModelRuntimeOwner) => {
-    const runtime=owner?await readOwnedModelRuntime(ctx,owner):{executionRoute:await resolveRootExecutionRoute(ctx,db)};
+    const runtime=owner?await readOwnedModelRuntime(ctx,owner):{executionRoute:await resolveRootExecutionRoute(ctx,db,undefined,familyForCapability(capability))};
     const route=readFrozenModelRoute(runtime,owner?.mode??(capability==='asset.classify'?'vision':'structured'),capability);
     if(route)return resolveFrozenExecutionSpec(ctx,route);
     if(frozenExecutionEngine(runtime)==='codex'){
@@ -6192,6 +6241,7 @@ FAVORITES_PROMOTE_PER_RUN
     });
   }
   async function resolveFrozenCredential(c:RequestContext,route:FrozenModelRoute,deferAsrPerRequest=false,signal?:AbortSignal,store:typeof db=db):Promise<FrozenModelCredential>{
+    if(store===db&&route.source==='official'&&route.readiness==='configured')await ensureOfficialAuthority(c,signal,route.identity.scopeId);
     return resolveFrozenModelCredential(c,route,{
       ...(deferAsrPerRequest?{deferAsrPerRequest:true as const}:{}),
       readSnapshot:()=>captureSelectedModelSnapshot(c,store,[route.source],signal),
@@ -6200,13 +6250,13 @@ FAVORITES_PROMOTE_PER_RUN
       acquireOfficialPerRequest:async()=>{throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);},
     },signal);
   }
-  async function resolveTranscribeRuntimeSpec(c:RequestContext,owner:TranscribeModelOwner):Promise<MultimodalSpec>{
+  async function resolveTranscribeRuntimeSpec(c:RequestContext,owner:TranscribeModelOwner,signal?:AbortSignal):Promise<MultimodalSpec>{
     const runtime=await readOriginalAsrRuntime(c,owner),route=readFrozenModelRoute(runtime,'asr','transcribe.audio');
     if(!route)return resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)});
     if(route.source==='local'||route.readiness==='unavailable')return frozenTranscribeLocalSpec(runtime);
     let value:FrozenModelCredential;
-    try{value=await resolveFrozenCredential(c,route,true);}
-    catch(error){if(isFrozenAsrRoutingError(error))throw error;return frozenTranscribeLocalSpec(runtime);}
+    try{value=await resolveFrozenCredential(c,route,true,signal);}
+    catch(error){signal?.throwIfAborted();if(isFrozenAsrRoutingError(error))throw error;return frozenTranscribeLocalSpec(runtime);}
 
     if(value.kind==='codex')throw new CapabilityModelRoutingError('MODEL_ROUTE_UNSUPPORTED',route.routeKey);
     if(value.kind==='local')return value.spec;
@@ -6264,7 +6314,7 @@ FAVORITES_PROMOTE_PER_RUN
     return route&&prepared.provider==='whisper-local'?frozenTranscribeLocalSpec(original):prepared;
   }
   async function captureAsrConfiguration(c:RequestContext){
-    const executionRoute=await resolveRootExecutionRoute(c,db);
+    const executionRoute=await resolveRootExecutionRoute(c,db,undefined,'audio');
     let spec:MultimodalSpec;
     try{spec=await resolveTranscribeRuntimeSpec(c,{executionRoute});}
     catch(error){if(isFrozenAsrRoutingError(error))throw error;spec=frozenTranscribeLocalSpec({executionRoute});}
@@ -6278,7 +6328,7 @@ FAVORITES_PROMOTE_PER_RUN
   const productionExactAsrFile=createProductionAsrExactReader({assets:(_c,tx)=>tx?createAssetsService(createAssetRepository(tx,deps),objectStorageForStore(tx),deps):assetsService,assertProjectAsset:assertProductionEditorAsset});
   const assetAsrOwner=createAssetAsrOwner(db,{...deps,assertProductionReservation:(c,proof,tx)=>productionService.assertAssetAsrReservation(c,proof,tx),budget:workerBudget,objectStorageForCtx,readExactFile:(c,input,signal)=>productionExactAsrFile(c,input,undefined,signal),extractAudio:extractProductionAsrAudio,prepareSpec:async(c,configuration,intentId,audioBytes,owner,signal)=>{const spec=await resolveTranscribeRuntimeSpec(c,owner);if(spec.provider!=='whisper-local'&&canonical(transcribeConfiguration(spec))!==canonical(configuration))throw new ProductionConflictError("冻结转写配置已变化，不能替换原执行");return prepareOwnedTranscribeSpec(c,spec,{intentId,audioBytes},owner,signal);}});
   productionRoughCut=createProductionRoughCutReservations(db,{
-    ...deps,onVersionSaved:productionOwnerDeps.onVersionSaved,onRecoveryError:()=>console.warn("[T850] 粗剪原预约恢复失败，请核对原请求"),
+    ...deps,prepareModelAuthority:c=>prepareModelAuthority(c,'text'),onVersionSaved:productionOwnerDeps.onVersionSaved,onRecoveryError:()=>console.warn("[T850] 粗剪原预约恢复失败，请核对原请求"),
     readAuthoritativeScript:async(c,projectId,outputId)=>{const script=await outputScriptsService.getSavedScript(c,outputId);if(script&&script.projectId!==projectId)throw new Error("粗剪权威稿归属不符");return script;},
     async assertExactSources(c,projectId,plan,tx){
       const scoped=tx?createAssetsService(createAssetRepository(tx,deps),objectStorageForStore(tx),deps):assetsService;
@@ -6311,10 +6361,10 @@ FAVORITES_PROMOTE_PER_RUN
     if(!stoppingPreparation)modelWorker.start();
   }
   const coverExecutionPorts={
-    async resolveImageSpec(c:RequestContext,capability:"image.generate"|"image.edit",taskId:string){
+    async resolveImageSpec(c:RequestContext,capability:"image.generate"|"image.edit",taskId:string,signal?:AbortSignal){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
       const route=readFrozenModelRoute(runtime,'image',capability);
-      if(route)return resolveFrozenAssetSpec(c,route);
+      if(route)return resolveFrozenAssetSpec(c,route,db,signal);
       if(frozenExecutionEngine(runtime)==="codex"&&(capability==="image.generate"||capability==="image.edit"))return {...codexExecutionSpec(),kind:"image" as const};
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
@@ -6331,10 +6381,10 @@ FAVORITES_PROMOTE_PER_RUN
       if(store)await workProjectsFor(store).getProject(c,id,lock);
       else await projectsService.getProjectOverviewCore(c,id);
     },
-    async resolveSpec(c,capability,taskId){
+    async resolveSpec(c,capability,taskId,signal){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
       const route=readFrozenModelRoute(runtime,capability==='video.generate'?'video':'image',capability);
-      if(route)return resolveFrozenAssetSpec(c,route);
+      if(route)return resolveFrozenAssetSpec(c,route,db,signal);
       if(frozenExecutionEngine(runtime)==="codex"&&(capability==="image.generate"||capability==="image.edit"))return {...codexExecutionSpec(),kind:"image" as const};
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");

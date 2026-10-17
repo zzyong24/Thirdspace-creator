@@ -62,3 +62,9 @@ it('先真实消息部件确定模式，准备一次路由后用实际capability
  expect(freeze).toHaveBeenCalledWith(result.capability,'text');expect(result.executionEngine).toBe('codex');expect(result.chatModelMode).toBe('text');
  expect(result.executionRoute).toMatchObject({engine:'codex'});
 },180_000);
+
+it('实际prepareChatReply把原取消信号交到模型准备接缝，不新建超时或后台任务',async()=>{
+ const f=creationRuntime(),controller=new AbortController();const prepareChatRouting=vi.fn(async(_ctx:unknown,_input:unknown,signal?:AbortSignal)=>{expect(signal).toBe(controller.signal);throw new DOMException('原请求取消','AbortError');});
+ await expect(prepareChatReply({...f.runtime,prepareChatRouting} as never,f.owner as never,f.snapshot as never,{abortSignal:controller.signal})).rejects.toMatchObject({name:'AbortError'});
+ expect(prepareChatRouting).toHaveBeenCalledTimes(1);
+});
