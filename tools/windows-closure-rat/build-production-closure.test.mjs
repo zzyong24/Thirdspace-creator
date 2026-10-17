@@ -196,8 +196,20 @@ test("official Windows release and RAT are wired to the same guarded closure", (
       workflow.indexOf("Windows 主动卸载清理冒烟"),
     "Windows 安装制品在可选卸载验收前上传",
   );
-  assert.match(packageSource, /CREATOROS_PRODUCTION_CLOSURE/);
-  assert.match(packageSource, /跳过依赖旧 node_modules 布局的 V8 字节码步骤/);
+  // T247: 原两项只匹配已失效文案；保实际不变量：同一已签closure不回旧构建/不重tar。
+  assert.match(workflow, /signed-sidecar-capsule\.mjs acquire frontend\/src-tauri\/target\/t247-capsule/);
+  assert.match(workflow, /signed-sidecar-capsule\.mjs adopt frontend\/src-tauri\/target\/t247-capsule/);
+  assert.match(workflow, /CREATOROS_SIGNED_SIDECAR_CAPSULE_PATH:.*inputs\.windows_capsule_mode == 'consume'/);
+  assert.match(packageSource, /if \(signedCapsuleInput\) \{\s*if \(platform !== "win32"\)[^\n]*\n\s*verifyAdoptedCapsule\(signedCapsuleInput\)/);
+  assert.ok(packageSource.indexOf("verifyAdoptedCapsule(signedCapsuleInput)") < packageSource.indexOf("if (!signedCapsuleInput) step("));
+  assert.match(packageSource, /else runSidecarSigning\(\{ preflight: true \}\)/);
+  assert.match(packageSource, /if \(!signedCapsuleInput\) step\(\s*"sidecar 二进制化"/);
+  assert.match(packageSource, /if \(!signedCapsuleInput\) step\("最终sidecar tar与既有root签名"/);
+  const tauri = packageSource.slice(packageSource.indexOf('step("tauri build(含 updater 签名/占位)"'));
+  assert.match(tauri, /CREATOROS_SKIP_SIDECAR_REBUILD: "1"/);
+  assert.match(tauri, /CREATOROS_SKIP_TARBALL: "1"/);
+  assert.match(packageSource, /assertLicenseProjectKey\(\)/);
+  assert.match(packageSource, /assertVerdictKeyMaterial\(\)/);
 });
 
 test("closure and packaged runtime share one verdict-key baker", () => {
@@ -237,4 +249,82 @@ test("Windows 分层入口必须装配 Worker 并由公共 smoke 真握手", () 
   assert.match(smoke,/await smokeWorker\(/);
   assert.match(readFileSync(resolve(HERE,"worker-smoke.mjs"),"utf8"),/execArgv:\[\]/);
   assert.match(smoke,/worker-ready:/);
+});
+
+// T247: 期望由本次仓库的真实Git blob及独立冻结lineages取得，不从打包副本生成。
+import { spawnSync as migrationSpawn } from "node:child_process";
+import { mkdtempSync as migrationTemp, mkdirSync as migrationMkdir, writeFileSync as migrationWrite, rmSync as migrationRemove, existsSync as migrationExists } from "node:fs";
+import { tmpdir as migrationTmpdir } from "node:os";
+import { join as migrationJoin } from "node:path";
+import { createHash as migrationHash } from "node:crypto";
+import * as migrationBuilder from "./build-production-closure.mjs";
+const migrationSha = data => migrationHash("sha256").update(data).digest("hex");
+const migrationGitEnv = Object.fromEntries(["PATH","SystemRoot","WINDIR","TEMP","TMP","TMPDIR","LANG"].filter(k=>process.env[k]).map(k=>[k,process.env[k]]));
+Object.assign(migrationGitEnv,{GIT_CONFIG_GLOBAL:process.platform==="win32"?"NUL":"/dev/null",GIT_CONFIG_NOSYSTEM:"1",GIT_NO_LAZY_FETCH:"1",GIT_TERMINAL_PROMPT:"0"});
+function migrationGit(root,args){const result=migrationSpawn("git",args,{cwd:root,env:migrationGitEnv,maxBuffer:32*1024*1024});assert.equal(result.status,0,String(result.stderr));return result.stdout;}
+let migrationCanonical;
+function migrationOriginal(){
+ if(migrationCanonical)return migrationCanonical;
+ const paths=migrationGit(REPO_ROOT,["ls-tree","-r","--name-only","HEAD","--","backend/drizzle"]).toString().trim().split("\n").filter(p=>p.endsWith(".sql")||p.endsWith("/_journal.json"));
+ const rows=paths.map(path=>({path,raw:migrationGit(REPO_ROOT,["show","HEAD:"+path])}));
+ const frozen={...JSON.parse(migrationGit(REPO_ROOT,["show","HEAD:backend/src/migration-convergence-lineages.json"])),...JSON.parse(migrationGit(REPO_ROOT,["show","HEAD:backend/src/migration-convergence-installed-lineages.json"]))};
+ const map=new Map(rows.map(row=>[row.path,row.raw]));let refs=0;
+ for(const [name,lineage] of Object.entries(frozen)){assert.equal(migrationSha(map.get(`backend/drizzle/lineages/${name}/meta/_journal.json`)),lineage.journalSha256);refs++;for(const entry of lineage.entries){assert.equal(migrationSha(map.get(`backend/drizzle/lineages/${name}/${entry.tag}.sql`)),entry.hash);refs++;}}
+ assert.equal(rows.length,798);assert.equal(refs,634);migrationCanonical={rows,refs};return migrationCanonical;
+}
+function migrationFixture(t,attributes){
+ const root=migrationTemp(migrationJoin(migrationTmpdir(),"t247-migration-bytes-"));t.after(()=>migrationRemove(root,{recursive:true,force:true}));migrationGit(root,["init","-q"]);
+ for(const {path,raw} of migrationOriginal().rows){const f=migrationJoin(root,path);migrationMkdir(dirname(f),{recursive:true});migrationWrite(f,raw);}
+ for(const name of ["migration-convergence-lineages.json","migration-convergence-installed-lineages.json"]){const f=migrationJoin(root,"backend/src",name);migrationMkdir(dirname(f),{recursive:true});migrationWrite(f,migrationGit(REPO_ROOT,["show","HEAD:backend/src/"+name]));}
+ if(attributes)migrationWrite(migrationJoin(root,".gitattributes"),attributes);
+ migrationGit(root,["-c","core.autocrlf=false","add","."]);migrationGit(root,["-c","user.name=T247 fixture","-c","user.email=t247@invalid","commit","--no-gpg-sign","-qm","fixture"]);
+ migrationGit(root,["config","core.autocrlf","true"]);migrationRemove(migrationJoin(root,"backend/drizzle"),{recursive:true});migrationGit(root,["checkout","--","backend/drizzle"]);return root;
+}
+test("T247 完整798迁移资产在真实autocrlf checkout保持Git原字节",t=>{
+ const attr=migrationJoin(REPO_ROOT,".gitattributes");const root=migrationFixture(t,migrationExists(attr)?readFileSync(attr):null);const original=migrationOriginal();
+ const mismatches=original.rows.filter(row=>!readFileSync(migrationJoin(root,row.path)).equals(row.raw));
+ assert.equal(mismatches.length,0,`798项原字节不符数量=${mismatches.length}，首项=${mismatches[0]?.path}`);
+ assert.equal(original.refs,634);
+});
+
+import { cpSync as migrationCopy, symlinkSync as migrationLink, unlinkSync as migrationUnlink } from "node:fs";
+function migrationRequired(root){return {CREATOROS_MIGRATION_ASSET_GIT_VERIFY:"1",CREATOROS_CREATOR_RELEASE_COMMIT:migrationGit(root,["rev-parse","HEAD"]).toString().trim()};}
+test("T247 原Git身份全集跨source trace sidecar严格核验并拒绝外来身份",t=>{
+ const root=migrationFixture(t,readFileSync(resolve(REPO_ROOT,".gitattributes")));
+ // 非迁移snapshot即使有其他合法Git文件mode，也不能扩成迁移身份要求。
+ migrationWrite(migrationJoin(root,"backend/drizzle/meta/non-asset-snapshot.json"),"{}");migrationGit(root,["add","backend/drizzle/meta/non-asset-snapshot.json"]);migrationGit(root,["update-index","--chmod=+x","backend/drizzle/meta/non-asset-snapshot.json"]);migrationGit(root,["-c","user.name=T247 fixture","-c","user.email=t247@invalid","commit","--no-gpg-sign","-qm","snapshot outside migration identity"]);
+ const env=migrationRequired(root);const identity=migrationBuilder.captureMigrationAssetIdentity({repoRoot:root,env});
+ assert.equal(identity.assets.length,798);assert.equal(identity.frozenReferences,634);
+ assert.equal(migrationBuilder.verifyMigrationAssetIdentity(identity,root).assetCount,798);
+ const stage=migrationJoin(root,"validation-trace"),sidecar=migrationJoin(root,"validation-sidecar");
+ for(const target of [stage,sidecar]){migrationMkdir(migrationJoin(target,"backend"),{recursive:true});migrationCopy(migrationJoin(root,"backend/drizzle"),migrationJoin(target,"backend/drizzle"),{recursive:true});assert.equal(migrationBuilder.verifyMigrationAssetIdentity(identity,target).frozenReferences,634);}
+ // 其他既有snapshot不是本门的迁移身份，不误当额外SQL/journal拒绝。
+ migrationWrite(migrationJoin(stage,"backend/drizzle/meta/unrelated-snapshot.json"),"{}\n");assert.equal(migrationBuilder.verifyMigrationAssetIdentity(identity,stage).assetCount,798);
+ const sql=identity.assets.find(x=>x.path.endsWith(".sql")),journal=identity.assets.find(x=>x.path.endsWith("/_journal.json"));
+ for(const row of [sql,journal]){const file=migrationJoin(stage,row.path),raw=readFileSync(file);migrationWrite(file,Buffer.concat([raw,Buffer.from(" ")]));assert.throws(()=>migrationBuilder.verifyMigrationAssetIdentity(identity,stage),/BYTES_MISMATCH/);migrationWrite(file,raw);}
+ const file=migrationJoin(stage,sql.path),raw=readFileSync(file);migrationRemove(file);assert.throws(()=>migrationBuilder.verifyMigrationAssetIdentity(identity,stage),/SET_MISMATCH/);migrationWrite(file,raw);
+ const extra=migrationJoin(stage,"backend/drizzle/not-in-original.sql");migrationWrite(extra,"SELECT 1;");assert.throws(()=>migrationBuilder.verifyMigrationAssetIdentity(identity,stage),/SET_MISMATCH/);migrationRemove(extra);
+ const outside=migrationJoin(root,"outside.sql");migrationWrite(outside,raw);migrationRemove(file);migrationLink(outside,file);assert.throws(()=>migrationBuilder.verifyMigrationAssetIdentity(identity,stage),/NOT_REGULAR/);migrationUnlink(file);migrationWrite(file,raw);
+ assert.throws(()=>migrationBuilder.verifyMigrationAssetIdentity({...identity,assets:[{...sql,path:"../escape.sql"}]},stage),/SET_MISMATCH|PATH_ESCAPE/);
+ // 确实删除本测试新建Git的一个原blob，缺对象不能从worktree回填为期待。
+ const oid=migrationGit(root,["rev-parse",env.CREATOROS_CREATOR_RELEASE_COMMIT+":"+sql.path]).toString().trim(),object=migrationJoin(root,".git/objects",oid.slice(0,2),oid.slice(2)),saved=readFileSync(object);migrationRemove(object);
+ try{assert.throws(()=>migrationBuilder.captureMigrationAssetIdentity({repoRoot:root,env}),/GIT_UNAVAILABLE|BLOB_MISSING/);}finally{migrationWrite(object,saved);}
+ const frozen=migrationJoin(root,"backend/src/migration-convergence-lineages.json"),data=JSON.parse(readFileSync(frozen));data.root.journalSha256="0".repeat(64);migrationWrite(frozen,JSON.stringify(data));migrationGit(root,["add","backend/src/migration-convergence-lineages.json"]);migrationGit(root,["-c","user.name=T247 fixture","-c","user.email=t247@invalid","commit","--no-gpg-sign","-qm","invalid frozen expectation"]);
+ assert.throws(()=>migrationBuilder.verifyMigrationAssetIdentity(identity,sidecar),/SOURCE_CHANGED/);
+ assert.throws(()=>migrationBuilder.captureMigrationAssetIdentity({repoRoot:root,env:migrationRequired(root)}),/FROZEN_IDENTITY_MISMATCH/);
+});
+test("T247 受控路径明确要求Git和准确source而通用无Git入口不添前提",t=>{
+ const root=migrationTemp(migrationJoin(migrationTmpdir(),"t247-no-git-"));t.after(()=>migrationRemove(root,{recursive:true,force:true}));
+ assert.equal(migrationBuilder.captureMigrationAssetIdentity({repoRoot:root,env:{}}),null);assert.equal(migrationBuilder.verifyMigrationAssetIdentity(null,root),null);
+ assert.throws(()=>migrationBuilder.captureMigrationAssetIdentity({repoRoot:root,env:{CREATOROS_MIGRATION_ASSET_GIT_VERIFY:"1"}}),/SOURCE_REQUIRED/);
+ assert.throws(()=>migrationBuilder.captureMigrationAssetIdentity({repoRoot:root,env:{CREATOROS_MIGRATION_ASSET_GIT_VERIFY:"1",CREATOROS_CREATOR_RELEASE_COMMIT:"a".repeat(40)}}),/GIT_UNAVAILABLE/);
+ assert.throws(()=>migrationBuilder.captureMigrationAssetIdentity({repoRoot:root,env:{CREATOROS_MIGRATION_ASSET_GIT_VERIFY:"0"}}),/FLAG_INVALID/);
+ assert.throws(()=>migrationBuilder.captureMigrationAssetIdentity({repoRoot:REPO_ROOT,env:{CREATOROS_MIGRATION_ASSET_GIT_VERIFY:"1",CREATOROS_CREATOR_RELEASE_COMMIT:"0".repeat(40)}}),/SOURCE_MISMATCH/);
+});
+test("T247 三阶段原字节门保原plan步序且build-only不能跳过",()=>{
+ const source=readFileSync(resolve(HERE,"build-production-closure.mjs"),"utf8");const begin=source.indexOf("const migrationIdentity = captureMigrationAssetIdentity()");assert.ok(begin>0&&begin<source.indexOf("rmSync(OUT_ROOT"));
+ assert.match(source,/verifyMigrationAssetIdentity\(migrationIdentity, REPO_ROOT\)/);assert.match(source,/step.name === "materialize traced closure" \? CLOSURE_ROOT/);assert.match(source,/step.name === "prepare Tauri packaged runtime"/);
+ assert.match(source,/if \(migrationIdentity && migrationRoot\)/);assert.doesNotMatch(source,/!buildOnly[^;\n]*migrationIdentity/);
+ const workflow=readFileSync(resolve(REPO_ROOT,".github/workflows/desktop-release.yml"),"utf8");assert.equal((workflow.match(/CREATOROS_MIGRATION_ASSET_GIT_VERIFY: "1"/g)||[]).length,1);
+ assert.match(workflow,/构建并接入 Windows production closure\(T-675\)[\s\S]*?env:\s*CREATOROS_MIGRATION_ASSET_GIT_VERIFY: "1"/);
 });

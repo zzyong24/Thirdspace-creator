@@ -466,6 +466,7 @@ jobs:
       - name: 构建并接入 Windows production closure(T-675)
         if: runner.os == 'Windows' && inputs.windows_capsule_mode != 'consume'
         env:
+          CREATOROS_MIGRATION_ASSET_GIT_VERIFY: "1"
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
           CREATOROS_CLIENT_CONFIG_PULL_ENABLED: ${{ inputs.windows_capsule_mode == 'prepare' && '1' || '' }}
