@@ -48,6 +48,11 @@ on:
         required: false
         type: boolean
         default: false
+      t247_private_asset_relay:
+        description: "仅固定未签ZIP的私有draft临时中转，不构建、不发布、不签名"
+        required: false
+        type: boolean
+        default: false
       windows_capsule_mode:
         description: "T247 固定tar准备/已签消费；默认打包保持原流程"
         required: false
@@ -88,7 +93,7 @@ concurrency:
 jobs:
   # 按 only input 算出要跑的端(job 级 if 不能引用 matrix 上下文,故用动态 matrix)。
   plan:
-    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) || (inputs.windows_package_rat == true && inputs.only == 'macos') }}
+    if: ${{ inputs.t247_private_asset_relay != true && (github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) || (inputs.windows_package_rat == true && inputs.only == 'macos')) }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.m.outputs.matrix }}
@@ -108,7 +113,7 @@ jobs:
           fi
 
   build:
-    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) || (inputs.windows_package_rat == true && inputs.only == 'macos') }}
+    if: ${{ inputs.t247_private_asset_relay != true && (github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) || (inputs.windows_package_rat == true && inputs.only == 'macos')) }}
     needs: plan
     strategy:
       fail-fast: false
@@ -1135,7 +1140,7 @@ jobs:
           echo "[T-709] ✓ 一次性签名钥匙串与证书文件已清理"
 
   windows-runtime-rat:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_runtime_rat == true }}
+    if: ${{ inputs.t247_private_asset_relay != true && (github.event_name == 'workflow_dispatch' && inputs.windows_runtime_rat == true) }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -1158,7 +1163,7 @@ jobs:
           retention-days: 14
 
   windows-closure-rat:
-    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.windows_closure_rat == true || inputs.windows_package_rat == true) }}
+    if: ${{ inputs.t247_private_asset_relay != true && (github.event_name == 'workflow_dispatch' && (inputs.windows_closure_rat == true || inputs.windows_package_rat == true)) }}
     runs-on: windows-latest
     env:
       CREATOROS_PACKAGE_BUILD_ONLY: ${{ inputs.windows_package_rat == true && '1' || '0' }}
@@ -1534,7 +1539,7 @@ jobs:
 
   draft-release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: ${{ inputs.t247_private_asset_relay != true && (startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -1556,3 +1561,52 @@ jobs:
           gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
             || gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --title "$tag" --notes "CreatorOS 用户安装包（macOS DMG / Windows setup.exe）"
           gh release upload "$tag" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
+
+
+  t247-private-asset-relay:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.t247_private_asset_relay == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/workflows/desktop-release.yml
+            /tools/windows-closure-rat/private-draft-artifact-relay.py
+            /tools/windows-closure-rat/private-draft-artifact-relay.test.py
+
+      - name: 验证固定私有中转控制面（合成输入，不连网）
+        run: python3 -B tools/windows-closure-rat/private-draft-artifact-relay.test.py
+
+      - name: 固定原ZIP只读审计与唯一未发布draft中转
+        id: relay
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELAY_ONLY: ${{ inputs.only }}
+          RELAY_VALIDATE: ${{ inputs.validate_installers }}
+          RELAY_RAT_RUNTIME: ${{ inputs.windows_runtime_rat }}
+          RELAY_RAT_CLOSURE: ${{ inputs.windows_closure_rat }}
+          RELAY_RAT_PACKAGE: ${{ inputs.windows_package_rat }}
+          RELAY_CAPSULE_MODE: ${{ inputs.windows_capsule_mode }}
+          RELAY_SOURCE: ${{ inputs.capsule_source_commit }}
+          RELAY_PREPARE_RUN: ${{ inputs.capsule_run_id }}
+          RELAY_ARTIFACT: ${{ inputs.capsule_artifact_id }}
+          RELAY_DIGEST: ${{ inputs.capsule_artifact_digest }}
+          RELAY_MANIFEST: ${{ inputs.capsule_manifest_sha256 }}
+          RELAY_SIGNATURE: ${{ inputs.capsule_signature_commit }}
+        run: python3 -B tools/windows-closure-rat/private-draft-artifact-relay.py
+
+      - name: 保留小体积公开审计与精确中转ID（失败亦保）
+        if: ${{ always() && steps.relay.outputs.report_path != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: t247-private-relay-audit-${{ github.run_id }}
+          path: ${{ steps.relay.outputs.report_path }}
+          if-no-files-found: error
+          retention-days: 7
