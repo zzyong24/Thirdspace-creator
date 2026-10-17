@@ -1,5 +1,5 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
-import { createRequire, isBuiltin } from 'node:module';
+import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve, relative } from 'node:path';
 import { stageExecutionWorkerRuntime } from '../../frontend/scripts/desktop/execution-worker-runtime.mjs';
@@ -86,7 +86,8 @@ export function stageMissingDependencies({from, vendorRoot, existingVendorRoots=
 // 使用 Node 为该 importer 产生的搜索路径定位包本体；不要求包导出 package.json/require 入口。
 function scopedPackageRoot(from,name) {
   const req=createRequire(join(from,'package.json'));
-  for(const base of req.resolve.paths(name)??[]) {
+  // 显式npm声明允许与builtin同名，包子路径强制取得npm搜索位置。
+  for(const base of req.resolve.paths(`${name}/package.json`)??[]) {
     const candidate=join(base,name,'package.json');
     if(!existsSync(candidate))continue;
     const root=dirname(realpathSync(candidate));const identity=JSON.parse(readFileSync(candidate,'utf8'));
@@ -119,7 +120,7 @@ export function stageScopedWorkerDependencies({from,runtimeRoot,packages,entries
     const optionalDeps=manifest.optionalDependencies??{};
     const peers=manifest.peerDependencies??{};
     for(const dep of Object.keys({...peers,...manifest.dependencies,...optionalDeps})) {
-      if(isBuiltin(dep))continue; // Node 内置优先，不把同名声明物化成另一身份。
+      // 保留真实npm声明的同名边；裸builtin/node:仍由原运行解析器优先处理。
       const optional=Object.hasOwn(optionalDeps,dep)||(!Object.hasOwn(manifest.dependencies??{},dep)&&manifest.peerDependenciesMeta?.[dep]?.optional===true);
       const target=visit(source,dep,optional);
       if(target)node.dependencies[dep]=target;

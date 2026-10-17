@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join,dirname} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {createRequire} from 'node:module';
 import {stageScopedWorkerDependencies,stageMissingDependencies,assertLayeredWorkerNativeFiles} from './stage-layered-workers.mjs';
 const resolver=fileURLToPath(new URL('./creatoros-module-resolver.cjs',import.meta.url));
 function pkg(base,name,manifest,files) {const p=join(base,'node_modules',name);mkdirSync(p,{recursive:true});writeFileSync(join(p,'package.json'),JSON.stringify({name,version:'1',main:'index.js',...manifest}));for(const [n,s]of Object.entries(files)){mkdirSync(dirname(join(p,n)),{recursive:true});writeFileSync(join(p,n),s);}return p;}
@@ -59,3 +60,26 @@ test('CJS相对与裸subpath JSON和目录main沿Node规则，exports条件顺�
 test('Worker绝对文件路径沿原生下一跳，不作为裸依赖或借全局包',()=>{const f=fixture();try{stageScopedWorkerDependencies(f.options);const local=join(f.runtimeRoot,'owned-absolute.cjs');writeFileSync(local,'module.exports="absolute"');writeFileSync(f.entry,`console.log(require(${JSON.stringify(local)}))`);const p=run(f);assert.equal(p.status,0,p.stderr);assert.equal(p.stdout.trim(),'absolute');}finally{rmSync(f.root,{recursive:true,force:true});}});
 
 test('Windows UNC不存在路径必须由原生解析器拒绝，不误作Worker裸依赖',{skip:process.platform!=='win32'},()=>{const f=fixture();try{stageScopedWorkerDependencies(f.options);const unc=String.raw`\\localhost\creatoros_t247_nonexistent_share\missing.cjs`;writeFileSync(f.entry,`try{require(${JSON.stringify(unc)});process.exitCode=9}catch(e){if(e.code!=='MODULE_NOT_FOUND'||e.message.includes('Worker 依赖图'))throw e;console.log('native-UNC-MODULE_NOT_FOUND')}`);const p=run(f);assert.equal(p.status,0,p.stderr);assert.equal(p.stdout.trim(),'native-UNC-MODULE_NOT_FOUND');}finally{rmSync(f.root,{recursive:true,force:true});}});
+
+// T247：npm显式声明即便与内置同名，强制包路径也必须保留其父包身份。
+for(const name of ['punycode','buffer','string_decoder'])test(`T247显式npm ${name}与裸builtin/node:并存，CJS强制包路径和ESM显式文件保父边`,()=>{const f=fixture();try{
+ const manifest=JSON.parse(readFileSync(join(f.a,'package.json')));manifest.dependencies[name]='2.3.1';writeFileSync(join(f.a,'package.json'),JSON.stringify(manifest));
+ pkg(f.a,name,{version:'2.3.1'},{'index.js':`module.exports={marker:${JSON.stringify('npm:'+name)}}`});
+ writeFileSync(join(f.a,'index.js'),`module.exports={bare:require.resolve(${JSON.stringify(name)}),node:require.resolve(${JSON.stringify('node:'+name)}),npm:require(${JSON.stringify(name+'/')}).marker,version:require(${JSON.stringify(name+'/package.json')}).version}`);
+ writeFileSync(join(f.a,'esm.mjs'),`import npm from ${JSON.stringify(name+'/index.js')};export default npm.marker;`);
+ const g=stageScopedWorkerDependencies(f.options),owner=Object.values(g.nodes).find(n=>n.name==='a');assert.ok(owner.dependencies[name],'显式同名npm依赖边不可被builtin过滤');assert.equal(g.nodes[owner.dependencies[name]].name,name);
+ writeFileSync(f.entry,"Promise.all([import('a'),Promise.resolve(require('a'))]).then(([esm,cjs])=>console.log(JSON.stringify({esm:esm.default,cjs}))).catch(e=>{console.error(e.code,e.message);process.exitCode=1})");
+ const p=run(f);assert.equal(p.status,0,p.stderr);assert.deepEqual(JSON.parse(p.stdout),{esm:'npm:'+name,cjs:{bare:name,node:'node:'+name,npm:'npm:'+name,version:'2.3.1'}});
+ }finally{rmSync(f.root,{recursive:true,force:true});}});
+for(const name of ['punycode','buffer','string_decoder'])test(`T247显式npm ${name}必需声明缺真实包仍拒，不能借builtin假满足`,()=>{const f=fixture();try{
+ const manifest=JSON.parse(readFileSync(join(f.a,'package.json')));manifest.dependencies[name]='1';writeFileSync(join(f.a,'package.json'),JSON.stringify(manifest));
+ assert.throws(()=>stageScopedWorkerDependencies(f.options),/Cannot find module/);
+ }finally{rmSync(f.root,{recursive:true,force:true});}});
+test('T247显式npm 真实锁定tr46声明punycode强制包路径中文转换可消费',()=>{const f=fixture();try{
+ const projectRequire=createRequire(new URL('../../frontend/package.json',import.meta.url));
+ const jsdom=projectRequire.resolve('jsdom'),whatwg=createRequire(jsdom).resolve('whatwg-url');
+ const g=stageScopedWorkerDependencies({...f.options,from:dirname(whatwg),packages:['tr46']}),tr46=Object.values(g.nodes).find(n=>n.name==='tr46');
+ assert.ok(tr46.dependencies.punycode,'真实tr46 npm声明必须有图边');assert.equal(g.nodes[tr46.dependencies.punycode].version,'2.3.1');
+ writeFileSync(f.entry,"const tr46=require('tr46');console.log(JSON.stringify({ascii:tr46.toASCII('例子.测试'),unicode:tr46.toUnicode('xn--fsqu00a.xn--0zwm56d')}))");
+ const p=run(f);assert.equal(p.status,0,p.stderr);assert.deepEqual(JSON.parse(p.stdout),{ascii:'xn--fsqu00a.xn--0zwm56d',unicode:{domain:'例子.测试',error:false}});
+ }finally{rmSync(f.root,{recursive:true,force:true});}});
