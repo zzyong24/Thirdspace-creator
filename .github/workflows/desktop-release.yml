@@ -719,7 +719,37 @@ jobs:
           if(report.status==='passed')fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'t247-installer-vitest.config.mjs'),'export default {test:{environment:"node",pool:"forks",maxWorkers:1,fileParallelism:false}};\n');
           // T247_INSTALLER_CONTROL_END
           NODE
-          pnpm -C frontend exec vitest run scripts/desktop/windows-runtime-config.test.mjs --config "$RUNNER_TEMP/t247-installer-vitest.config.mjs"
+          node --input-type=module <<'NODE'
+          // T247_INSTALLER_IMPORT_DIAGNOSTIC_BEGIN
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import {createHash} from 'node:crypto';
+          import {spawnSync} from 'node:child_process';
+          const started=Date.now(),deadline=started+120000,root=process.cwd(),env={};
+          for(const key of ['PATH','Path','SystemRoot','SYSTEMROOT','TEMP','TMP','TMPDIR','LANG','LC_ALL','HOME','USERPROFILE'])if(process.env[key])env[key]=process.env[key];
+          const names=['windows-runtime-config.test.mjs','build-sidecar.mjs','execution-worker-runtime.mjs','sign-sidecar.mjs','fetch-ffmpeg.mjs','platform-paths.mjs','verdict-key-material.mjs','macos-runtime-compat.mjs','macos-runtime-signing.mjs','creatoros-cli-runtime.mjs'];
+          const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+          const publicStack=text=>text.split(/\r?\n/).filter(line=>/^\s*at\s|^[A-Za-z]*Error:|^(?:file:\/\/\/|[A-Za-z]:[\\/]|\/).*:\d+(?::\d+)?$/.test(line)).join('\n').slice(0,16384);
+          function child(args){
+            if(Date.now()>=deadline)return {status:null,errorCode:'DIAGNOSTIC_BUDGET_EXHAUSTED'};
+            const r=spawnSync(process.execPath,args,{cwd:root,env,encoding:'utf8',timeout:deadline-Date.now(),maxBuffer:1024*1024});
+            return {status:r.status,signal:r.signal,errorCode:r.error?.code??null,stdoutBytes:Buffer.byteLength(r.stdout??''),stdoutSHA256:sha(r.stdout??''),stderrBytes:Buffer.byteLength(r.stderr??''),stderrSHA256:sha(r.stderr??''),stderrStack:publicStack(r.stderr??''),stdout:r.stdout??''};
+          }
+          const report={controlCommit:process.env.CREATOROS_T247_INSTALLER_CONTROL_COMMIT,sidecarSource:process.env.CREATOROS_T247_SIDECAR_SOURCE_COMMIT,syntax:[]};
+          for(const name of names){
+            const relative='frontend/scripts/desktop/'+name;
+            try{const bytes=fs.readFileSync(path.join(root,relative)),r=child(['--check',relative]);delete r.stdout;report.syntax.push({path:relative,bytes:bytes.length,sha256:sha(bytes),LF:bytes.toString().split('\n').length-1,CRLF:bytes.toString().split('\r\n').length-1,...r});}
+            catch(e){report.syntax.push({path:relative,errorName:e.name,errorCode:e.code??null});}
+          }
+          const importCode="import {pathToFileURL} from 'node:url';import {existsSync} from 'node:fs';import {resolve} from 'node:path';try{if(process.argv[1]!=='t247-readonly-import-sentinel'||existsSync(resolve(process.argv[1]))||resolve(process.argv[1])===resolve(process.argv[2]))throw Error('DIAGNOSTIC_IMPORT_ARGV_GUARD');await import(pathToFileURL(process.argv[2]).href);console.log(JSON.stringify({status:'imported'}));}catch(e){console.log(JSON.stringify({status:'failed',name:e.name,code:e.code??null,stack:e.stack}));process.exitCode=1;}";
+          const imported=child(['--input-type=module','-e',importCode,'--','t247-readonly-import-sentinel',path.join(root,'frontend/scripts/desktop/build-sidecar.mjs')]);
+          try{imported.result=JSON.parse(imported.stdout);}catch{imported.result={status:'no-closed-import-result'};}delete imported.stdout;
+          report.buildSidecarImport=imported;report.elapsedMs=Date.now()-started;
+          const output=path.join(root,'frontend/src-tauri/target/t247-installer-import-diagnostics.json');
+          fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
+          // T247_INSTALLER_IMPORT_DIAGNOSTIC_END
+          NODE
+          pnpm -C frontend exec vitest run scripts/desktop/windows-runtime-config.test.mjs --config "$RUNNER_TEMP/t247-installer-vitest.config.mjs" --reporter=default --reporter=json --outputFile.json=src-tauri/target/t247-installer-vitest-results.json
 
       - name: 读版本号
         if: inputs.windows_capsule_mode != 'prepare'
@@ -1325,6 +1355,8 @@ jobs:
             frontend/src-tauri/target/runtime-reports/build-timings.package.json
             tools/windows-closure-rat/out/official-package-results.json
             frontend/src-tauri/target/t247-installer-control-materialization.json
+            frontend/src-tauri/target/t247-installer-import-diagnostics.json
+            frontend/src-tauri/target/t247-installer-vitest-results.json
             tools/windows-closure-rat/out/validation-status.json
           if-no-files-found: warn
           retention-days: 30
