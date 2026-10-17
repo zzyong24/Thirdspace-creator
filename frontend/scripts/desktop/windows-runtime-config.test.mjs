@@ -125,15 +125,15 @@ function workflowText(root=repo,control=process.env.CREATOROS_WINDOWS_INSTALLER_
 }
 const workflow=workflowText();
 const library=workflow.match(/\/\/ T247_INSTALLER_CONTROL_BEGIN\n([\s\S]+?)\/\/ T247_INSTALLER_CONTROL_LIBRARY_END/);
-let materializer;
+let materializer, sourceCliMaterializer;
 const roots=[];
 async function loadMaterializer(){
   if(materializer)return materializer;
   if(!library)throw Error("缺精确安装控制装配");
   const root=fs.mkdtempSync(join(tmpdir(),"t247-installer-library-"));roots.push(root);
   const file=join(root,"materializer.mjs");
-  fs.writeFileSync(file,library[1].split("\n").map(l=>l.replace(/^ {10}/,"")).join("\n")+"\nexport { materializeInstallerControl };\n");
-  materializer=(await import(pathToFileURL(file).href)).materializeInstallerControl;return materializer;
+  fs.writeFileSync(file,library[1].split("\n").map(l=>l.replace(/^ {10}/,"")).join("\n")+"\nexport { materializeInstallerControl, materializeSourceCli };\n");
+  const loaded=await import(pathToFileURL(file).href);materializer=loaded.materializeInstallerControl;sourceCliMaterializer=loaded.materializeSourceCli;return materializer;
 }
 const names=["frontend/src-tauri/windows/installer-hooks.nsh","frontend/scripts/desktop/windows-runtime-config.test.mjs"];
 function fixture(){
@@ -212,5 +212,48 @@ describe("T247 保留可信安装来源及精确H装配",()=>{
     const run=await loadMaterializer(),f=fixture(),rename=fs.renameSync;
     const spy=vi.spyOn(fs,"renameSync").mockImplementation((from,to)=>{const result=rename(from,to);if(to===join(f.root,names[0]))fs.writeFileSync(join(f.root,names[1]),"late foreign\n");return result;});
     try{expect(()=>run(f)).toThrow("INSTALLER_CHANGED_BEFORE_RENAME");expect(readFileSync(join(f.root,names[1])).toString()).toBe("late foreign\n");}finally{spy.mockRestore();}
+  });
+});
+
+const sourceCliNames=["frontend/scripts/desktop/build-sidecar.mjs","frontend/scripts/desktop/fetch-ffmpeg.mjs","frontend/scripts/desktop/macos-runtime-compat.mjs"];
+function sourceCliFixture(){
+  const f=fixture();
+  for(const name of sourceCliNames)fs.writeFileSync(join(f.root,name),git(repo,["show","76d0ff4749ebe4b08fb81afeb7d36c60de922bd8:"+name]));
+  f.source=f.commitFixture(f.root);git(f.root,["config","core.autocrlf","true"]);
+  for(const name of sourceCliNames)fs.unlinkSync(join(f.root,name));git(f.root,["checkout","--",...sourceCliNames]);return f;
+}
+describe("T247 固定N三CLI原blob在Vitest加载边界保持",()=>{
+  it("真实N三份CLI checkout CRLF完整恢复原Git字节，H与锚不动",async()=>{
+    await loadMaterializer();const f=sourceCliFixture(),anchor=readFileSync(join(f.root,"anchor.bin")),h=f.commit;
+    const result=sourceCliMaterializer(f);expect(result.status).toBe("passed");expect(result.paths.map(x=>x.path)).toEqual(sourceCliNames);
+    expect(result.paths.every(x=>x.beforeKind==="exact-LF-to-CRLF")).toBe(true);
+    for(const name of sourceCliNames)expect(readFileSync(join(f.root,name))).toEqual(git(f.root,["show",f.source+":"+name]));
+    expect(readFileSync(join(f.root,"anchor.bin"))).toEqual(anchor);expect(git(f.control,["rev-parse","HEAD"]).toString().trim()).toBe(h);
+    expect(sourceCliMaterializer(f).paths.every(x=>x.beforeKind==="exact")).toBe(true);
+  });
+  it("错HEAD、缺blob、foreign、link、错误身份与额外集合全预检拒，第一项不先写",async()=>{
+    await loadMaterializer();
+    for(const kind of ["head","missing","foreign","link","identity","extra"]){
+      const f=sourceCliFixture(),first=readFileSync(join(f.root,sourceCliNames[0]));
+      if(kind==="head")f.source="0".repeat(40);
+      if(kind==="missing"){fs.unlinkSync(join(f.root,sourceCliNames[2]));f.source=f.commitFixture(f.root);}
+      if(kind==="foreign")fs.writeFileSync(join(f.root,sourceCliNames[2]),"foreign\n");
+      if(kind==="link"){fs.unlinkSync(join(f.root,sourceCliNames[2]));fs.symlinkSync(join(f.root,sourceCliNames[1]),join(f.root,sourceCliNames[2]));}
+      if(kind==="identity")f.expected=Object.fromEntries(sourceCliNames.map(name=>[name,"0".repeat(64)]));
+      if(kind==="extra")f.expected={"../foreign":"0".repeat(64)};
+      expect(()=>sourceCliMaterializer(f),kind).toThrow();expect(readFileSync(join(f.root,sourceCliNames[0]))).toEqual(first);
+    }
+  });
+  it("N三CLI逐写前CAS拒迟到修改，不把未知内容清洗为可信字节",async()=>{
+    await loadMaterializer();const f=sourceCliFixture(),rename=fs.renameSync;
+    const spy=vi.spyOn(fs,"renameSync").mockImplementation((from,to)=>{const result=rename(from,to);if(to===join(f.root,sourceCliNames[0]))fs.writeFileSync(join(f.root,sourceCliNames[1]),"late foreign\n");return result;});
+    try{expect(()=>sourceCliMaterializer(f)).toThrow("SOURCE_CLI_CHANGED_BEFORE_RENAME");expect(readFileSync(join(f.root,sourceCliNames[1])).toString()).toBe("late foreign\n");}finally{spy.mockRestore();}
+  });
+  it("正式H装配调用显式启用N三CLI门，仍包在原tar签名锚前后且原测试照跑",()=>{
+    expect(workflow).toContain("anchors,sourceCliRequired:true});");
+    const before=workflow.indexOf("report.anchorsBefore=readAnchors();"),gate=workflow.indexOf("if(sourceCliRequired===true)report.sourceCli=materializeSourceCli({root,source});"),after=workflow.indexOf("report.anchorsAfter=readAnchors();");
+    expect(before).toBeGreaterThan(-1);expect(gate).toBeGreaterThan(before);expect(after).toBeGreaterThan(gate);
+    expect(workflow).toContain('pnpm -C frontend exec vitest run scripts/desktop/windows-runtime-config.test.mjs');
+    for(const name of sourceCliNames)expect(workflow).toContain("'"+name+"':'"+sha(git(repo,["show","76d0ff4749ebe4b08fb81afeb7d36c60de922bd8:"+name]))+"'");
   });
 });

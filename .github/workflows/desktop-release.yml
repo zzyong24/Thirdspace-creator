@@ -650,6 +650,11 @@ jobs:
            'frontend/src-tauri/windows/installer-hooks.nsh':'d4d343bce0279250aff6a78385da26ff28d19ff98673a9d0236887b1fd07ddf7',
            'frontend/scripts/desktop/windows-runtime-config.test.mjs':'2318d74f2dfb4e9f48fda39579b3154a862e45d6d6acb0fa1f6be929dea7749b',
           };
+          const sourceCliPaths={
+           'frontend/scripts/desktop/build-sidecar.mjs':'ea29bc426c8e5af4eb0c8ce18362f1a76593242da5fa27b5404d7fa641027ef5',
+           'frontend/scripts/desktop/fetch-ffmpeg.mjs':'14d86a849a53886c066eb461f8089b8f07386c259aa326ad82dd32da9f6fc6cb',
+           'frontend/scripts/desktop/macos-runtime-compat.mjs':'a620d73879073723f4736423e56b473731cd8795ca350e14c2cc82f21c62c777',
+          };
           const workflowPath='.github/workflows/desktop-release.yml';
           const sha=b=>createHash('sha256').update(b).digest('hex');
           const stats=b=>({bytes:b.length,LF:[...b].filter(x=>x===10).length,CRLF:b.toString('utf8').split('\r\n').length-1});
@@ -678,7 +683,25 @@ jobs:
            throw Error('INSTALLER_FOREIGN_CONTENT');
           }
           function fileHash(file){const h=createHash('sha256'),fd=fs.openSync(file,'r'),chunk=Buffer.alloc(1048576);try{let n;while((n=fs.readSync(fd,chunk,0,chunk.length,null))>0)h.update(chunk.subarray(0,n));}finally{fs.closeSync(fd);}return h.digest('hex');}
-          function materializeInstallerControl({root,control,source,commit,anchors,expectedBefore=installerPaths}){
+          function materializeSourceCli({root,source,expected=sourceCliPaths}){
+           if(!/^[a-f0-9]{40}$/.test(source??'')||git(root,['rev-parse','HEAD']).toString().trim()!==source)throw Error('SOURCE_CLI_HEAD_MISMATCH');
+           if(Object.keys(expected).join('|')!==Object.keys(sourceCliPaths).join('|'))throw Error('SOURCE_CLI_PATH_ALLOWLIST');
+           const report={status:'checking',sidecarSource:source,paths:[]},accepted=[],staged=[];
+           for(const [name,identity]of Object.entries(expected)){
+            const next=blob(root,source,name);if(sha(next)!==identity)throw Error('SOURCE_CLI_BLOB_MISMATCH');
+            const target=regular(root,name),actual=fs.readFileSync(target);
+            const row={path:name,sourceBlobSHA256:identity,actualBeforeSHA256:sha(actual),source:stats(next),actual:stats(actual),beforeKind:equivalent(actual,next)};
+            report.paths.push(row);accepted.push({target,actual,next,row});
+           }
+           // 三份N原blob全预检，绝不将任意dirty文本规范化为可信来源。
+           try{
+            for(const item of accepted){const tmp=item.target+'.t247-source-cli-'+randomUUID();const fd=fs.openSync(tmp,'wx',0o600);try{fs.writeFileSync(fd,item.next);fs.fsyncSync(fd);}finally{fs.closeSync(fd);}staged.push({...item,tmp});}
+            for(const item of staged){regular(root,item.row.path);if(!fs.readFileSync(item.target).equals(item.actual))throw Error('SOURCE_CLI_CHANGED_BEFORE_RENAME');}
+            for(const item of staged){regular(root,item.row.path);if(!fs.readFileSync(item.target).equals(item.actual))throw Error('SOURCE_CLI_CHANGED_BEFORE_RENAME');fs.renameSync(item.tmp,item.target);regular(root,item.row.path);item.row.afterSHA256=fileHash(item.target);if(item.row.afterSHA256!==item.row.sourceBlobSHA256)throw Error('SOURCE_CLI_AFTER_MISMATCH');}
+           }finally{for(const item of staged)if(fs.existsSync(item.tmp))fs.unlinkSync(item.tmp);}
+           report.status='passed';return report;
+          }
+          function materializeInstallerControl({root,control,source,commit,anchors,expectedBefore=installerPaths,sourceCliRequired=false}){
            if(!/^[a-f0-9]{40}$/.test(source??'')||!/^[a-f0-9]{40}$/.test(commit??''))throw Error('INSTALLER_COMMIT_FORMAT');
            if(git(root,['rev-parse','HEAD']).toString().trim()!==source||git(control,['rev-parse','HEAD']).toString().trim()!==commit)throw Error('INSTALLER_HEAD_MISMATCH');
            if(Object.keys(expectedBefore).join('|')!==Object.keys(installerPaths).join('|'))throw Error('INSTALLER_PATH_ALLOWLIST');
@@ -694,6 +717,8 @@ jobs:
             const row={path:name,sourceBlobSHA256:before,actualBeforeSHA256:sha(actual),controlBlobSHA256:sha(next),source:stats(old),actual:stats(actual),control:stats(next),sourceKind:equivalent(actual,old),controlKind:equivalent(fs.readFileSync(from),next)};
             report.paths.push(row);accepted.push({target,actual,next,row});
            }
+           if(sourceCliRequired===true)report.sourceCli=materializeSourceCli({root,source});
+           else if(sourceCliRequired!==false)throw Error('SOURCE_CLI_REQUIRED_BOOLEAN');
            // 两项先完整预审；写前再次CAS，未知dirty绝不覆盖。任何失败阻断release。
            const staged=[];
            try{
@@ -713,7 +738,7 @@ jobs:
           };
           const reportFile=path.resolve('frontend/src-tauri/target/t247-installer-control-materialization.json');
           let report;
-          try{report=materializeInstallerControl({root,control,source:process.env.CREATOROS_T247_SIDECAR_SOURCE_COMMIT,commit:process.env.CREATOROS_T247_INSTALLER_CONTROL_COMMIT,anchors});}
+          try{report=materializeInstallerControl({root,control,source:process.env.CREATOROS_T247_SIDECAR_SOURCE_COMMIT,commit:process.env.CREATOROS_T247_INSTALLER_CONTROL_COMMIT,anchors,sourceCliRequired:true});}
           catch(e){report={status:'failed',error:e.code??e.message};process.exitCode=1;}
           fs.mkdirSync(path.dirname(reportFile),{recursive:true});fs.writeFileSync(reportFile,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
           if(report.status==='passed')fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'t247-installer-vitest.config.mjs'),'export default {test:{environment:"node",pool:"forks",maxWorkers:1,fileParallelism:false}};\n');
