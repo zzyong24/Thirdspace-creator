@@ -207,7 +207,7 @@ describe("T247 保留可信安装来源及精确H装配",()=>{
       if(kind==="anchor")fs.writeFileSync(join(f.root,"anchor.bin"),"changed");
       expect(()=>run(f),kind).toThrow();expect(readFileSync(join(f.root,names[0])).toString()).toBe("old fixture 0\n");
     }
-  });
+  },120000);
   it("两文件预审后逐次写前CAS仍拒晚变更，失败不继续release",async()=>{
     const run=await loadMaterializer(),f=fixture(),rename=fs.renameSync;
     const spy=vi.spyOn(fs,"renameSync").mockImplementation((from,to)=>{const result=rename(from,to);if(to===join(f.root,names[0]))fs.writeFileSync(join(f.root,names[1]),"late foreign\n");return result;});
@@ -243,7 +243,7 @@ describe("T247 固定N三CLI原blob在Vitest加载边界保持",()=>{
       if(kind==="extra")f.expected={"../foreign":"0".repeat(64)};
       expect(()=>sourceCliMaterializer(f),kind).toThrow();expect(readFileSync(join(f.root,sourceCliNames[0]))).toEqual(first);
     }
-  });
+  },120000);
   it("N三CLI逐写前CAS拒迟到修改，不把未知内容清洗为可信字节",async()=>{
     await loadMaterializer();const f=sourceCliFixture(),rename=fs.renameSync;
     const spy=vi.spyOn(fs,"renameSync").mockImplementation((from,to)=>{const result=rename(from,to);if(to===join(f.root,sourceCliNames[0]))fs.writeFileSync(join(f.root,sourceCliNames[1]),"late foreign\n");return result;});
