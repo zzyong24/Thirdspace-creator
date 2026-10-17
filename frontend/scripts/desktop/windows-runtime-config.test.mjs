@@ -151,6 +151,16 @@ function fixture(){
 import { afterAll, vi } from "vitest";
 afterAll(()=>{for(const root of roots.reverse())fs.rmSync(root,{recursive:true,force:true});});
 describe("T247 保留可信安装来源及精确H装配",()=>{
+  it("仅Windows consume隔离Rust target缓存，其他模式/平台保持且已有目标硬门不变",()=>{
+    const condition=workflow.match(/- uses: Swatinem\/rust-cache@v2\n\s+if: ([^\n]+)\n/)[1].trim();
+    expect(condition).toBe("inputs.windows_capsule_mode != 'prepare' && !(runner.os == 'Windows' && inputs.windows_capsule_mode == 'consume')");
+    const evaluate=new Function("inputs","runner","return ("+condition+");");
+    for(const [os,mode,wanted]of [["Windows","consume",false],["Windows","none",true],["Windows","",true],["Windows","prepare",false],["macOS","consume",true],["macOS","none",true],["macOS","",true],["macOS","prepare",false]])
+      expect(evaluate({windows_capsule_mode:mode},{os}),os+":"+mode).toBe(wanted);
+    const helper=readFileSync(join(repo,"tools/windows-closure-rat/signed-sidecar-capsule.mjs"),"utf8");
+    expect(helper).toContain("if(existsSync(zip)||existsSync(root))throw Error('固定下载目标已存在')");
+  });
+
   it("成功安装保留原签名归档供原Rust启动和后台BLAKE3，卸载仍清目录",()=>{
     const hook=readFileSync(join(process.cwd(),"src-tauri/windows/installer-hooks.nsh"),"utf8");
     expect(hook).not.toMatch(/^\s*Delete\s+"\$INSTDIR\\sidecar\.tar\.gz(?:\.sig)?"/m);

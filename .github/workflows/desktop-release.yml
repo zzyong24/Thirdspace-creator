@@ -180,7 +180,7 @@ jobs:
         if: inputs.windows_capsule_mode != 'prepare'
 
       - uses: Swatinem/rust-cache@v2
-        if: inputs.windows_capsule_mode != 'prepare'
+        if: inputs.windows_capsule_mode != 'prepare' && !(runner.os == 'Windows' && inputs.windows_capsule_mode == 'consume')
         with:
           workspaces: frontend/src-tauri
           key: t247-e315-owned1-policy1
