@@ -1838,9 +1838,13 @@ jobs:
             /.github/workflows/desktop-release.yml
             /tools/windows-closure-rat/private-draft-artifact-relay.py
             /tools/windows-closure-rat/private-draft-artifact-relay.test.py
+            /tools/windows-closure-rat/private-draft-installer-relay.py
+            /tools/windows-closure-rat/private-draft-installer-relay.test.py
 
       - name: 验证固定私有中转控制面（合成输入，不连网）
-        run: python3 -B tools/windows-closure-rat/private-draft-artifact-relay.test.py
+        run: |
+          python3 -B tools/windows-closure-rat/private-draft-artifact-relay.test.py
+          python3 -B tools/windows-closure-rat/private-draft-installer-relay.test.py
 
       - name: 固定原ZIP只读审计与唯一未发布draft中转
         id: relay
@@ -1858,7 +1862,7 @@ jobs:
           RELAY_DIGEST: ${{ inputs.capsule_artifact_digest }}
           RELAY_MANIFEST: ${{ inputs.capsule_manifest_sha256 }}
           RELAY_SIGNATURE: ${{ inputs.capsule_signature_commit }}
-        run: python3 -B tools/windows-closure-rat/private-draft-artifact-relay.py
+        run: python3 -B tools/windows-closure-rat/private-draft-installer-relay.py
 
       - name: 保留小体积公开审计与精确中转ID（失败亦保）
         if: ${{ always() && steps.relay.outputs.report_path != '' }}
